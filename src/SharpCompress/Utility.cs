@@ -139,7 +139,7 @@ internal static class Utility
             return limitedStream.Position;
         }
 
-        public async Task<long> TransferToAsync(
+        public async ValueTask<long> TransferToAsync(
             Stream destination,
             long maxLength,
             CancellationToken cancellationToken = default
@@ -156,7 +156,7 @@ internal static class Utility
 
     extension(Stream source)
     {
-        public async Task SkipAsync(
+        public async ValueTask SkipAsync(
             long advanceAmount,
             CancellationToken cancellationToken = default
         )
@@ -247,7 +247,7 @@ internal static class Utility
         }
 #endif
 
-        public async Task<bool> ReadFullyAsync(
+        public async ValueTask<bool> ReadFullyAsync(
             byte[] buffer,
             CancellationToken cancellationToken = default
         )
@@ -271,7 +271,7 @@ internal static class Utility
             return (total >= buffer.Length);
         }
 
-        public async Task<bool> ReadFullyAsync(
+        public async ValueTask<bool> ReadFullyAsync(
             byte[] buffer,
             int offset,
             int count,
@@ -339,7 +339,7 @@ internal static class Utility
     /// <summary>
     /// Read exactly the requested number of bytes from a stream asynchronously. Throws EndOfStreamException if not enough data is available.
     /// </summary>
-    public static async Task ReadExactAsync(
+    public static async ValueTask ReadExactAsync(
         this Stream stream,
         byte[] buffer,
         int offset,

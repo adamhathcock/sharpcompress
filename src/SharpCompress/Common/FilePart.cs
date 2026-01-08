@@ -17,7 +17,7 @@ public abstract class FilePart
     internal abstract Stream? GetRawStream();
     internal bool Skipped { get; set; }
 
-    internal virtual Task<Stream?> GetCompressedStreamAsync(
+    internal virtual ValueTask<Stream?> GetCompressedStreamAsync(
         CancellationToken cancellationToken = default
-    ) => Task.FromResult(GetCompressedStream());
+    ) => new(GetCompressedStream());
 }

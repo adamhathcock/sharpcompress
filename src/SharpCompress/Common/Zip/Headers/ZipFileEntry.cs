@@ -59,7 +59,7 @@ internal abstract class ZipFileEntry(ZipHeaderType type, ArchiveEncoding archive
         return encryptionData;
     }
 
-    internal async Task<PkwareTraditionalEncryptionData> ComposeEncryptionDataAsync(
+    internal async ValueTask<PkwareTraditionalEncryptionData> ComposeEncryptionDataAsync(
         Stream archiveStream,
         CancellationToken cancellationToken = default
     )

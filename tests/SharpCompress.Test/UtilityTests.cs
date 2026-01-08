@@ -161,7 +161,7 @@ public class UtilityTests
     #region ReadByteAsync Tests
 
     [Fact]
-    public async Task ReadByteAsync_ReadsOneByte()
+    public async ValueTask ReadByteAsync_ReadsOneByte()
     {
         var data = new byte[] { 42, 1, 2, 3 };
         using var stream = new MemoryStream(data);
@@ -174,7 +174,7 @@ public class UtilityTests
     }
 
     [Fact]
-    public async Task ReadByteAsync_EmptyStream_ThrowsEndOfStreamException()
+    public async ValueTask ReadByteAsync_EmptyStream_ThrowsEndOfStreamException()
     {
         using var stream = new MemoryStream();
         using var reader = new BinaryReader(stream);
@@ -183,7 +183,7 @@ public class UtilityTests
     }
 
     [Fact]
-    public async Task ReadByteAsync_MultipleReads_ReadsSequentially()
+    public async ValueTask ReadByteAsync_MultipleReads_ReadsSequentially()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
@@ -203,7 +203,7 @@ public class UtilityTests
     #region ReadBytesAsync Tests
 
     [Fact]
-    public async Task ReadBytesAsync_ReadsExactlyRequiredBytes()
+    public async ValueTask ReadBytesAsync_ReadsExactlyRequiredBytes()
     {
         var data = new byte[] { 1, 2, 3, 4, 5 };
         using var stream = new MemoryStream(data);
@@ -216,7 +216,7 @@ public class UtilityTests
     }
 
     [Fact]
-    public async Task ReadBytesAsync_NotEnoughData_ThrowsEndOfStreamException()
+    public async ValueTask ReadBytesAsync_NotEnoughData_ThrowsEndOfStreamException()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
@@ -226,7 +226,7 @@ public class UtilityTests
     }
 
     [Fact]
-    public async Task ReadBytesAsync_EmptyStream_ThrowsEndOfStreamException()
+    public async ValueTask ReadBytesAsync_EmptyStream_ThrowsEndOfStreamException()
     {
         using var stream = new MemoryStream();
         using var reader = new BinaryReader(stream);
@@ -235,7 +235,7 @@ public class UtilityTests
     }
 
     [Fact]
-    public async Task ReadBytesAsync_ZeroBytes_ReturnsEmptyArray()
+    public async ValueTask ReadBytesAsync_ZeroBytes_ReturnsEmptyArray()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);

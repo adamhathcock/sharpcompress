@@ -12,7 +12,7 @@ public static class IAsyncReaderExtensions
         /// <summary>
         /// Extract to specific directory asynchronously, retaining filename
         /// </summary>
-        public async Task WriteEntryToDirectoryAsync(
+        public async ValueTask WriteEntryToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
@@ -30,7 +30,7 @@ public static class IAsyncReaderExtensions
         /// <summary>
         /// Extract to specific file asynchronously
         /// </summary>
-        public async Task WriteEntryToFileAsync(
+        public async ValueTask WriteEntryToFileAsync(
             string destinationFileName,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
@@ -52,7 +52,7 @@ public static class IAsyncReaderExtensions
         /// <summary>
         /// Extract all remaining unread entries to specific directory asynchronously, retaining filename
         /// </summary>
-        public async Task WriteAllToDirectoryAsync(
+        public async ValueTask WriteAllToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default

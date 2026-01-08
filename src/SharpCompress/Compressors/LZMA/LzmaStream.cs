@@ -429,7 +429,7 @@ public class LzmaStream : Stream, IStreamStack
     {
         var controlBuffer = new byte[1];
         await _inputStream
-            .ReadExactlyAsync(controlBuffer, 0, 1, cancellationToken)
+            .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
             .ConfigureAwait(false);
         var control = controlBuffer[0];
         _inputPosition++;
@@ -458,13 +458,13 @@ public class LzmaStream : Stream, IStreamStack
             _availableBytes = (control & 0x1F) << 16;
             var buffer = new byte[2];
             await _inputStream
-                .ReadExactlyAsync(buffer, 0, 2, cancellationToken)
+                .ReadExactAsync(buffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
             _availableBytes += (buffer[0] << 8) + buffer[1] + 1;
             _inputPosition += 2;
 
             await _inputStream
-                .ReadExactlyAsync(buffer, 0, 2, cancellationToken)
+                .ReadExactAsync(buffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
             _rangeDecoderLimit = (buffer[0] << 8) + buffer[1] + 1;
             _inputPosition += 2;
@@ -473,7 +473,7 @@ public class LzmaStream : Stream, IStreamStack
             {
                 _needProps = false;
                 await _inputStream
-                    .ReadExactlyAsync(controlBuffer, 0, 1, cancellationToken)
+                    .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
                     .ConfigureAwait(false);
                 Properties[0] = controlBuffer[0];
                 _inputPosition++;
@@ -502,7 +502,7 @@ public class LzmaStream : Stream, IStreamStack
             _uncompressedChunk = true;
             var buffer = new byte[2];
             await _inputStream
-                .ReadExactlyAsync(buffer, 0, 2, cancellationToken)
+                .ReadExactAsync(buffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
             _availableBytes = (buffer[0] << 8) + buffer[1] + 1;
             _inputPosition += 2;

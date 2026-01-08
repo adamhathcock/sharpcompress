@@ -202,10 +202,13 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         SaveTo(stream, new WriterOptions(CompressionType.GZip));
     }
 
-    public Task SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
+    public ValueTask SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
         SaveToAsync(new FileInfo(filePath), cancellationToken);
 
-    public async Task SaveToAsync(FileInfo fileInfo, CancellationToken cancellationToken = default)
+    public async ValueTask SaveToAsync(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
     {
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
         await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken)
@@ -299,7 +302,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         }
     }
 
-    protected override async Task SaveToAsync(
+    protected override async ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
         IEnumerable<GZipArchiveEntry> oldEntries,

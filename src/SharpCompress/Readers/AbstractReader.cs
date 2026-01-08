@@ -118,7 +118,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
         return false;
     }
 
-    public async Task<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default)
     {
         if (_completed)
         {
@@ -229,7 +229,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
         }
     }
 
-    private async Task SkipEntryAsync(CancellationToken cancellationToken)
+    private async ValueTask SkipEntryAsync(CancellationToken cancellationToken)
     {
         if (!Entry.IsDirectory)
         {
@@ -259,7 +259,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
         s.SkipEntry();
     }
 
-    private async Task SkipAsync(CancellationToken cancellationToken)
+    private async ValueTask SkipAsync(CancellationToken cancellationToken)
     {
         var part = Entry.Parts.First();
 
@@ -308,7 +308,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
         _wroteCurrentEntry = true;
     }
 
-    public async Task WriteEntryToAsync(
+    public async ValueTask WriteEntryToAsync(
         Stream writableStream,
         CancellationToken cancellationToken = default
     )
@@ -342,7 +342,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
         sourceStream.CopyTo(writeStream, 81920);
     }
 
-    internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
+    internal async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
 #if NETFRAMEWORK || NETSTANDARD2_0
         using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
@@ -400,7 +400,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
         return stream;
     }
 
-    public async Task<EntryStream> OpenEntryStreamAsync(
+    public async ValueTask<EntryStream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
     )
     {

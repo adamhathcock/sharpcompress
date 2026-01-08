@@ -18,7 +18,7 @@ public class ExtractAllTests : TestBase
     [InlineData("7Zip.solid.7z")]
     [InlineData("7Zip.nonsolid.7z")]
     [InlineData("7Zip.LZMA.7z")]
-    public async Task ExtractAllEntriesAsync(string archivePath)
+    public async ValueTask ExtractAllEntriesAsync(string archivePath)
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
         var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };

@@ -536,7 +536,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
-    protected override async Task SaveToAsync(
+    protected override async ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
         IEnumerable<ZipArchiveEntry> oldEntries,

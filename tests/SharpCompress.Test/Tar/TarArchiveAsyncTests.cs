@@ -19,10 +19,10 @@ public class TarArchiveAsyncTests : ArchiveTests
     public TarArchiveAsyncTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public async Task TarArchiveStreamRead_Async() => await ArchiveStreamReadAsync("Tar.tar");
+    public async ValueTask TarArchiveStreamRead_Async() => await ArchiveStreamReadAsync("Tar.tar");
 
     [Fact]
-    public async Task Tar_FileName_Exactly_100_Characters_Async()
+    public async ValueTask Tar_FileName_Exactly_100_Characters_Async()
     {
         var archive = "Tar_FileName_Exactly_100_Characters.tar";
 
@@ -61,7 +61,7 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task Tar_VeryLongFilepathReadback_Async()
+    public async ValueTask Tar_VeryLongFilepathReadback_Async()
     {
         var archive = "Tar_VeryLongFilepathReadback.tar";
 
@@ -105,7 +105,7 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task Tar_Create_New_Async()
+    public async ValueTask Tar_Create_New_Async()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
@@ -121,7 +121,7 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task Tar_Random_Write_Add_Async()
+    public async ValueTask Tar_Random_Write_Add_Async()
     {
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.mod.tar");
@@ -137,7 +137,7 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task Tar_Random_Write_Remove_Async()
+    public async ValueTask Tar_Random_Write_Remove_Async()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.mod.tar");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
@@ -157,7 +157,7 @@ public class TarArchiveAsyncTests : ArchiveTests
     [Theory]
     [InlineData(10)]
     [InlineData(128)]
-    public async Task Tar_Japanese_Name_Async(int length)
+    public async ValueTask Tar_Japanese_Name_Async(int length)
     {
         using var mstm = new MemoryStream();
         var enc = new ArchiveEncoding { Default = Encoding.UTF8 };
@@ -183,7 +183,7 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task Tar_Read_One_At_A_Time_Async()
+    public async ValueTask Tar_Read_One_At_A_Time_Async()
     {
         var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
         var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)

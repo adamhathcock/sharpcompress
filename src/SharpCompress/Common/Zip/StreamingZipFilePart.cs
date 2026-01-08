@@ -33,7 +33,7 @@ internal sealed class StreamingZipFilePart : ZipFilePart
         return _decompressionStream;
     }
 
-    internal override async Task<Stream?> GetCompressedStreamAsync(
+    internal override async ValueTask<Stream?> GetCompressedStreamAsync(
         CancellationToken cancellationToken = default
     )
     {

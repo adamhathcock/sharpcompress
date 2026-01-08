@@ -63,15 +63,5 @@ public static class StreamExtensions
                 ArrayPool<byte>.Shared.Return(temp);
             }
         }
-
-        internal async Task ReadExactlyAsync(
-            byte[] buffer,
-            int offset,
-            int count,
-            CancellationToken cancellationToken
-        ) =>
-            await stream
-                .ReadExactAsync(buffer, offset, count, cancellationToken)
-                .ConfigureAwait(false);
     }
 }

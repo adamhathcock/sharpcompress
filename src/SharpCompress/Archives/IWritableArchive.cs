@@ -22,7 +22,7 @@ public interface IWritableArchive : IArchive
 
     void SaveTo(Stream stream, WriterOptions options);
 
-    Task SaveToAsync(
+    ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
         CancellationToken cancellationToken = default

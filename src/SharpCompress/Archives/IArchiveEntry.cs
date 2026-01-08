@@ -17,7 +17,7 @@ public interface IArchiveEntry : IEntry
     /// Opens the current entry as a stream that will decompress as it is read asynchronously.
     /// Read the entire stream or use SkipEntry on EntryStream.
     /// </summary>
-    Task<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default);
+    ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// The archive can find all the parts of the archive needed to extract this entry.

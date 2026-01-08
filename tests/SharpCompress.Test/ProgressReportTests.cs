@@ -166,7 +166,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task ZipArchive_Entry_WriteToAsync_ReportsProgress()
+    public async ValueTask ZipArchive_Entry_WriteToAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 
@@ -385,7 +385,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task TarArchive_Entry_WriteToAsync_ReportsProgress()
+    public async ValueTask TarArchive_Entry_WriteToAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 
@@ -521,7 +521,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task Zip_ReadAsync_ReportsProgress()
+    public async ValueTask Zip_ReadAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 
@@ -589,7 +589,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task Tar_WriteAsync_ReportsProgress()
+    public async ValueTask Tar_WriteAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 

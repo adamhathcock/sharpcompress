@@ -13,7 +13,7 @@ public class ZipArchiveEntry : ZipEntry, IArchiveEntry
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
 
-    public virtual async Task<Stream> OpenEntryStreamAsync(
+    public async ValueTask<Stream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
     )
     {

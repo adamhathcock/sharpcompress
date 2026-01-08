@@ -14,11 +14,11 @@ public class GZipReaderAsyncTests : ReaderTests
     public GZipReaderAsyncTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public async Task GZip_Reader_Generic_Async() =>
+    public async ValueTask GZip_Reader_Generic_Async() =>
         await ReadAsync("Tar.tar.gz", CompressionType.GZip);
 
     [Fact]
-    public async Task GZip_Reader_Generic2_Async()
+    public async ValueTask GZip_Reader_Generic2_Async()
     {
         //read only as GZip item
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
@@ -56,7 +56,7 @@ public class GZipReaderAsyncTests : ReaderTests
         VerifyFiles();
     }
 
-    private async Task ReadImplAsync(
+    private async ValueTask ReadImplAsync(
         string testArchive,
         CompressionType expectedCompression,
         ReaderOptions options
@@ -82,7 +82,7 @@ public class GZipReaderAsyncTests : ReaderTests
         Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
     }
 
-    private async Task UseReaderAsync(IAsyncReader reader, CompressionType expectedCompression)
+    private async ValueTask UseReaderAsync(IAsyncReader reader, CompressionType expectedCompression)
     {
         while (await reader.MoveToNextEntryAsync())
         {

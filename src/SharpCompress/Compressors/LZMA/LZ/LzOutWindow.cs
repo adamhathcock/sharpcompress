@@ -87,7 +87,7 @@ internal class OutWindow : IDisposable
         _stream = null;
     }
 
-    public async Task ReleaseStreamAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ReleaseStreamAsync(CancellationToken cancellationToken = default)
     {
         await FlushAsync(cancellationToken).ConfigureAwait(false);
         _stream = null;
@@ -112,7 +112,7 @@ internal class OutWindow : IDisposable
         _streamPos = _pos;
     }
 
-    private async Task FlushAsync(CancellationToken cancellationToken = default)
+    private async ValueTask FlushAsync(CancellationToken cancellationToken = default)
     {
         if (_stream is null)
         {
@@ -303,7 +303,7 @@ internal class OutWindow : IDisposable
         return len - size;
     }
 
-    public async Task<int> CopyStreamAsync(
+    public async ValueTask<int> CopyStreamAsync(
         Stream stream,
         int len,
         CancellationToken cancellationToken = default

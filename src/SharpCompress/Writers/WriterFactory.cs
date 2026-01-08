@@ -31,7 +31,7 @@ public static class WriterFactory
     /// <param name="writerOptions">Writer options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that returns an IWriter.</returns>
-    public static async Task<IWriter> OpenAsync(
+    public static async ValueTask<IWriter> OpenAsync(
         Stream stream,
         ArchiveType archiveType,
         WriterOptions writerOptions,

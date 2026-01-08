@@ -267,7 +267,7 @@ internal abstract class ZipFilePart : FilePart
         return plainStream;
     }
 
-    internal override async Task<Stream?> GetCompressedStreamAsync(
+    internal override async ValueTask<Stream?> GetCompressedStreamAsync(
         CancellationToken cancellationToken = default
     )
     {

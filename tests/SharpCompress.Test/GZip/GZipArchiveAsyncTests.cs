@@ -14,7 +14,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     public GZipArchiveAsyncTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public async Task GZip_Archive_Generic_Async()
+    public async ValueTask GZip_Archive_Generic_Async()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
         using (var archive = ArchiveFactory.Open(stream))
@@ -36,7 +36,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task GZip_Archive_Async()
+    public async ValueTask GZip_Archive_Async()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
         using (var archive = GZipArchive.Open(stream))
@@ -58,7 +58,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task GZip_Archive_NoAdd_Async()
+    public async ValueTask GZip_Archive_NoAdd_Async()
     {
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
@@ -68,7 +68,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task GZip_Archive_Multiple_Reads_Async()
+    public async ValueTask GZip_Archive_Multiple_Reads_Async()
     {
         var inputStream = new MemoryStream();
         using (var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))

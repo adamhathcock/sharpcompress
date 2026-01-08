@@ -130,7 +130,7 @@ public abstract class ReaderTests : TestBase
         VerifyFiles();
     }
 
-    private async Task ReadImplAsync(
+    private async ValueTask ReadImplAsync(
         string testArchive,
         CompressionType? expectedCompression,
         ReaderOptions options,
@@ -163,7 +163,7 @@ public abstract class ReaderTests : TestBase
         Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
     }
 
-    public async Task UseReaderAsync(
+    public async ValueTask UseReaderAsync(
         IAsyncReader reader,
         CompressionType? expectedCompression,
         CancellationToken cancellationToken = default

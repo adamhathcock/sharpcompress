@@ -10,7 +10,7 @@ public static class BinaryReaderExtensions
 {
     extension(BinaryReader reader)
     {
-        public async Task<byte> ReadByteAsync(CancellationToken cancellationToken = default)
+        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default)
         {
             var buffer = new byte[1];
             await reader
@@ -19,7 +19,7 @@ public static class BinaryReaderExtensions
             return buffer[0];
         }
 
-        public async Task<byte[]> ReadBytesAsync(
+        public async ValueTask<byte[]> ReadBytesAsync(
             int count,
             CancellationToken cancellationToken = default
         )

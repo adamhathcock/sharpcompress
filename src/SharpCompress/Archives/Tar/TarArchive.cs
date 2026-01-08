@@ -323,7 +323,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
         }
     }
 
-    protected override async Task SaveToAsync(
+    protected override async ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
         IEnumerable<TarArchiveEntry> oldEntries,

@@ -17,7 +17,10 @@ public interface IAsyncReader : IAsyncDisposable
     /// </summary>
     /// <param name="writableStream"></param>
     /// <param name="cancellationToken"></param>
-    Task WriteEntryToAsync(Stream writableStream, CancellationToken cancellationToken = default);
+    ValueTask WriteEntryToAsync(
+        Stream writableStream,
+        CancellationToken cancellationToken = default
+    );
 
     bool Cancelled { get; }
     void Cancel();
@@ -27,12 +30,12 @@ public interface IAsyncReader : IAsyncDisposable
     /// </summary>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default);
+    ValueTask<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Opens the current entry asynchronously as a stream that will decompress as it is read.
     /// Read the entire stream or use SkipEntry on EntryStream.
     /// </summary>
     /// <param name="cancellationToken"></param>
-    Task<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default);
+    ValueTask<EntryStream> OpenEntryStreamAsync(CancellationToken cancellationToken = default);
 }

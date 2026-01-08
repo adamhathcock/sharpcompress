@@ -124,11 +124,11 @@ internal static class ExtractionMethods
         }
     }
 
-    public static async Task WriteEntryToDirectoryAsync(
+    public static async ValueTask WriteEntryToDirectoryAsync(
         IEntry entry,
         string destinationDirectory,
         ExtractionOptions? options,
-        Func<string, ExtractionOptions?, CancellationToken, Task> writeAsync,
+        Func<string, ExtractionOptions?, CancellationToken, ValueTask> writeAsync,
         CancellationToken cancellationToken = default
     )
     {
@@ -197,11 +197,11 @@ internal static class ExtractionMethods
         }
     }
 
-    public static async Task WriteEntryToFileAsync(
+    public static async ValueTask WriteEntryToFileAsync(
         IEntry entry,
         string destinationFileName,
         ExtractionOptions? options,
-        Func<string, FileMode, CancellationToken, Task> openAndWriteAsync,
+        Func<string, FileMode, CancellationToken, ValueTask> openAndWriteAsync,
         CancellationToken cancellationToken = default
     )
     {

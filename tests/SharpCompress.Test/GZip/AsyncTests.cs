@@ -18,7 +18,7 @@ namespace SharpCompress.Test.GZip;
 public class AsyncTests : TestBase
 {
     [Fact]
-    public async Task Reader_Async_Extract_All()
+    public async ValueTask Reader_Async_Extract_All()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
 #if NETFRAMEWORK
@@ -43,7 +43,7 @@ public class AsyncTests : TestBase
     }
 
     [Fact]
-    public async Task Reader_Async_Extract_Single_Entry()
+    public async ValueTask Reader_Async_Extract_Single_Entry()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
 #if NETFRAMEWORK
@@ -71,7 +71,7 @@ public class AsyncTests : TestBase
     }
 
     [Fact]
-    public async Task Archive_Entry_Async_Open_Stream()
+    public async ValueTask Archive_Entry_Async_Open_Stream()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
         using var archive = ArchiveFactory.Open(testArchive);
@@ -94,7 +94,7 @@ public class AsyncTests : TestBase
     }
 
     [Fact]
-    public async Task Writer_Async_Write_Single_File()
+    public async ValueTask Writer_Async_Write_Single_File()
     {
         var outputPath = Path.Combine(SCRATCH_FILES_PATH, "async_test.zip");
         using (var stream = File.Create(outputPath))
@@ -112,7 +112,7 @@ public class AsyncTests : TestBase
     }
 
     [Fact]
-    public async Task Async_With_Cancellation_Token()
+    public async ValueTask Async_With_Cancellation_Token()
     {
         using var cts = new CancellationTokenSource();
         cts.CancelAfter(10000); // 10 seconds should be plenty
@@ -140,7 +140,7 @@ public class AsyncTests : TestBase
     }
 
     [Fact]
-    public async Task Stream_Extensions_Async()
+    public async ValueTask Stream_Extensions_Async()
     {
         var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
         using var inputStream = File.OpenRead(testFile);
@@ -160,7 +160,7 @@ public class AsyncTests : TestBase
     }
 
     [Fact]
-    public async Task EntryStream_ReadAsync_Works()
+    public async ValueTask EntryStream_ReadAsync_Works()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
         using var stream = File.OpenRead(testArchive);
@@ -188,7 +188,7 @@ public class AsyncTests : TestBase
     }
 
     [Fact]
-    public async Task CompressionStream_Async_ReadWrite()
+    public async ValueTask CompressionStream_Async_ReadWrite()
     {
         var testData = new byte[1024];
         new Random(42).NextBytes(testData);
