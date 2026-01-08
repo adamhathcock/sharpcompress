@@ -82,7 +82,7 @@ public class GZipReaderAsyncTests : ReaderTests
         Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
     }
 
-    private async Task UseReaderAsync(IReaderAsync reader, CompressionType expectedCompression)
+    private async Task UseReaderAsync(IAsyncReader reader, CompressionType expectedCompression)
     {
         while (await reader.MoveToNextEntryAsync())
         {

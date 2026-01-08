@@ -5,9 +5,9 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
 
-public static class IReaderAsyncExtensions
+public static class IAsyncReaderExtensions
 {
-    extension(IReaderAsync reader)
+    extension(IAsyncReader reader)
     {
         /// <summary>
         /// Extract to specific directory asynchronously, retaining filename

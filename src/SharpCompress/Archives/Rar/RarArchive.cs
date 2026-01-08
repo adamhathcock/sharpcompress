@@ -70,7 +70,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     protected override IReader CreateReaderForSolidExtraction() =>
         CreateReaderForSolidExtractionInternal();
 
-    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync() =>
+    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
         new(CreateReaderForSolidExtractionInternal());
 
     private RarReader CreateReaderForSolidExtractionInternal()
@@ -195,7 +195,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -211,7 +211,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -227,7 +227,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -243,7 +243,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

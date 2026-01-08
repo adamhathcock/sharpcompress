@@ -7,7 +7,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
+public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
@@ -133,7 +133,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     }
 
     protected abstract IReader CreateReaderForSolidExtraction();
-    protected abstract ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync();
+    protected abstract ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync();
 
     /// <summary>
     /// Archive is SOLID (this means the Archive saved bytes by reusing information which helps for archives containing many small files).
@@ -187,12 +187,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     }
 
     public virtual IAsyncEnumerable<TEntry> EntriesAsync => _lazyEntriesAsync;
-    IAsyncEnumerable<IArchiveEntry> IArchiveAsync.EntriesAsync =>
+    IAsyncEnumerable<IArchiveEntry> IAsyncArchive.EntriesAsync =>
         EntriesAsync.Cast<TEntry, IArchiveEntry>();
 
     public IAsyncEnumerable<IVolume> VolumesAsync => _lazyVolumesAsync.Cast<TVolume, IVolume>();
 
-    public async ValueTask<IReaderAsync> ExtractAllEntriesAsync()
+    public async ValueTask<IAsyncReader> ExtractAllEntriesAsync()
     {
         if (!IsSolid && Type != ArchiveType.SevenZip)
         {

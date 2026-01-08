@@ -164,7 +164,7 @@ public abstract class ReaderTests : TestBase
     }
 
     public async Task UseReaderAsync(
-        IReaderAsync reader,
+        IAsyncReader reader,
         CompressionType? expectedCompression,
         CancellationToken cancellationToken = default
     )

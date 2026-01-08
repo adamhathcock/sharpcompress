@@ -111,7 +111,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -127,7 +127,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -143,7 +143,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -159,7 +159,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -265,7 +265,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     protected override IReader CreateReaderForSolidExtraction() =>
         new SevenZipReader(ReaderOptions, this);
 
-    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync() =>
+    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
         new(new SevenZipReader(ReaderOptions, this));
 
     public override bool IsSolid =>

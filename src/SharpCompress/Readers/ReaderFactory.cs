@@ -24,7 +24,7 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static ValueTask<IReaderAsync> OpenAsync(
+    public static ValueTask<IAsyncReader> OpenAsync(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -47,7 +47,7 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static ValueTask<IReaderAsync> OpenAsync(
+    public static ValueTask<IAsyncReader> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -110,7 +110,7 @@ public static class ReaderFactory
         );
     }
 
-    public static async ValueTask<IReaderAsync> OpenAsync(
+    public static async ValueTask<IAsyncReader> OpenAsync(
         Stream stream,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default

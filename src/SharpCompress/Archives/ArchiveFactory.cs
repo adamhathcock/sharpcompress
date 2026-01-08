@@ -33,7 +33,7 @@ public static class ArchiveFactory
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static async Task<IAsyncArchive> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -79,7 +79,7 @@ public static class ArchiveFactory
     /// <param name="filePath"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static Task<IArchiveAsync> OpenAsync(
+    public static Task<IAsyncArchive> OpenAsync(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -107,7 +107,7 @@ public static class ArchiveFactory
     /// <param name="fileInfo"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static async Task<IAsyncArchive> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -152,7 +152,7 @@ public static class ArchiveFactory
     /// <param name="fileInfos"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static async Task<IAsyncArchive> OpenAsync(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -212,7 +212,7 @@ public static class ArchiveFactory
     /// <param name="streams"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static async Task<IAsyncArchive> OpenAsync(
         IEnumerable<Stream> streams,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default

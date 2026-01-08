@@ -35,7 +35,7 @@ namespace SharpCompress.Factories
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             ArjReader.Open(stream, options);
 
-        public ValueTask<IReaderAsync> OpenReaderAsync(
+        public ValueTask<IAsyncReader> OpenReaderAsync(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default

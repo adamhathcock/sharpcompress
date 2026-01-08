@@ -113,7 +113,7 @@ public abstract class Factory : IFactory
         return false;
     }
 
-    internal virtual async ValueTask<(bool, IReaderAsync?)> TryOpenReaderAsync(
+    internal virtual async ValueTask<(bool, IAsyncReader?)> TryOpenReaderAsync(
         SharpCompressStream stream,
         ReaderOptions options,
         CancellationToken cancellationToken

@@ -108,7 +108,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -124,7 +124,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -140,7 +140,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -156,7 +156,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IArchiveAsync> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -337,7 +337,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         return GZipReader.Open(stream);
     }
 
-    protected override ValueTask<IReaderAsync> CreateReaderForSolidExtractionAsync()
+    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;

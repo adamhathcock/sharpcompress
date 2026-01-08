@@ -13,7 +13,7 @@ public interface IReaderFactory : Factories.IFactory
     /// <param name="options"></param>
     /// <returns></returns>
     IReader OpenReader(Stream stream, ReaderOptions? options);
-    ValueTask<IReaderAsync> OpenReaderAsync(
+    ValueTask<IAsyncReader> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken

@@ -143,7 +143,7 @@ public class ZipFactory
         ZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IArchiveAsync> OpenAsync(
+    public ValueTask<IAsyncArchive> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -154,7 +154,7 @@ public class ZipFactory
         ZipArchive.Open(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IArchiveAsync> OpenAsync(
+    public ValueTask<IAsyncArchive> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -169,7 +169,7 @@ public class ZipFactory
         ZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IArchiveAsync> OpenAsync(
+    public ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -180,7 +180,7 @@ public class ZipFactory
         ZipArchive.Open(fileInfos, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IArchiveAsync> OpenAsync(
+    public ValueTask<IAsyncArchive> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -195,7 +195,7 @@ public class ZipFactory
         ZipReader.Open(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IReaderAsync> OpenReaderAsync(
+    public ValueTask<IAsyncReader> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
