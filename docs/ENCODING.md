@@ -590,7 +590,7 @@ var options = new ReaderOptions
 | iso-8859-1 | "iso-8859-1" | Western European |
 | cp1252 | "cp1252" | Windows Western European |
 | cp1251 | "cp1251" | Russian/Cyrillic |
-| euc-jp | "eucjp" | Japanese Unix |
+| euc-jp | "euc-jp" | Japanese Unix |
 | euc-kr | "euc-kr" | Korean |
 
 ---
