@@ -20,3 +20,7 @@ artifacts/
 
 .DS_Store
 *.snupkg
+
+# BenchmarkDotNet artifacts
+BenchmarkDotNet.Artifacts/
+**/BenchmarkDotNet.Artifacts/
