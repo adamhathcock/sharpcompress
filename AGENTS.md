@@ -14,6 +14,7 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 - Follow the existing code style and patterns in the codebase.
 
 ## General Instructions
+- **Agents should NEVER commit to git** - Agents should stage files and leave committing to the user. Only create commits when the user explicitly requests them.
 - Make only high confidence suggestions when reviewing code changes.
 - Write code with good maintainability practices, including comments on why certain design decisions were made.
 - Handle edge cases and write clear exception handling.
