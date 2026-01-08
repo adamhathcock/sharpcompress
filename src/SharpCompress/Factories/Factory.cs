@@ -60,7 +60,7 @@ public abstract class Factory : IFactory
     );
 
     /// <inheritdoc/>
-    public virtual Task<bool> IsArchiveAsync(
+    public virtual ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize,
@@ -68,7 +68,7 @@ public abstract class Factory : IFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(IsArchive(stream, password, bufferSize));
+        return new(IsArchive(stream, password, bufferSize));
     }
 
     /// <inheritdoc/>

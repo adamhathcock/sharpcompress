@@ -7,6 +7,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -118,7 +119,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task Zip_Random_Write_Remove_Async()
+    public async Task Zip_Random_Write_Remove_Sync()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
@@ -140,7 +141,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task Zip_Random_Write_Add_Async()
+    public async Task Zip_Random_Write_Add_Sync()
     {
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
@@ -182,9 +183,9 @@ public class ZipArchiveAsyncTests : ArchiveTests
     public async Task Zip_Deflate_Entry_Stream_Async()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
-        using (var archive = ZipArchive.Open(stream))
+        await using (var archive = await ZipArchive.OpenAsync(new AsyncOnlyStream(stream)))
         {
-            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+            await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
             {
                 await entry.WriteToDirectoryAsync(
                     SCRATCH_FILES_PATH,
@@ -199,7 +200,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
     public async Task Zip_Deflate_Archive_WriteToDirectoryAsync()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
-        using (var archive = ZipArchive.Open(stream))
+        await using (var archive = await ZipArchive.OpenAsync(new AsyncOnlyStream(stream)))
         {
             await archive.WriteToDirectoryAsync(
                 SCRATCH_FILES_PATH,
@@ -216,7 +217,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var progress = new Progress<ProgressReport>(report => progressReports.Add(report));
 
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
-        using (var archive = ZipArchive.Open(stream))
+        await using (var archive = await ZipArchive.OpenAsync(new AsyncOnlyStream(stream)))
         {
             await archive.WriteToDirectoryAsync(
                 SCRATCH_FILES_PATH,

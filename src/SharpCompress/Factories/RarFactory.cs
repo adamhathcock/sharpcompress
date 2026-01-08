@@ -50,7 +50,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -61,7 +61,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -76,7 +76,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -87,7 +87,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.Open(fileInfos, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -102,14 +102,14 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarReader.Open(stream, options);
 
     /// <inheritdoc/>
-    public async Task<IReader> OpenReaderAsync(
+    public ValueTask<IReader> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(OpenReader(stream, options)).ConfigureAwait(false);
+        return new(OpenReader(stream, options));
     }
 
     #endregion

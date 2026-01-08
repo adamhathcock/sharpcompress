@@ -19,11 +19,11 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
     internal SeekableZipHeaderFactory(string? password, ArchiveEncoding archiveEncoding)
         : base(StreamingMode.Seekable, password, archiveEncoding) { }
 
-    internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeader(Stream stream)
+    internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeaderAsync(Stream stream)
     {
         var reader = new AsyncBinaryReader(stream);
 
-        await SeekBackToHeader(stream, reader);
+        await SeekBackToHeaderAsync(stream, reader);
 
         var eocd_location = stream.Position;
         var entry = new DirectoryEndHeader();
@@ -153,6 +153,73 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         }
     }
 
+    internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeaderAsync(Stream stream, bool useSync)
+    {
+        var reader = new AsyncBinaryReader(stream);
+
+        await SeekBackToHeaderAsync(stream, reader);
+
+        var eocd_location = stream.Position;
+        var entry = new DirectoryEndHeader();
+        await entry.Read(reader);
+
+        if (entry.IsZip64)
+        {
+            _zip64 = true;
+
+            // ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR should be before the EOCD
+            stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin);
+            var zip64_locator = await reader.ReadUInt32Async();
+            if (zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR)
+            {
+                throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
+            }
+
+            var zip64Locator = new Zip64DirectoryEndLocatorHeader();
+            await zip64Locator.Read(reader);
+
+            stream.Seek(zip64Locator.RelativeOffsetOfTheEndOfDirectoryRecord, SeekOrigin.Begin);
+            var zip64Signature = await reader.ReadUInt32Async();
+            if (zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
+            {
+                throw new ArchiveException("Failed to locate the Zip64 Header");
+            }
+
+            var zip64Entry = new Zip64DirectoryEndHeader();
+            await zip64Entry.Read(reader);
+            stream.Seek(zip64Entry.DirectoryStartOffsetRelativeToDisk, SeekOrigin.Begin);
+        }
+        else
+        {
+            stream.Seek(entry.DirectoryStartOffsetRelativeToDisk, SeekOrigin.Begin);
+        }
+
+        var position = stream.Position;
+        while (true)
+        {
+            stream.Position = position;
+            var signature = await reader.ReadUInt32Async();
+            var nextHeader = await ReadHeader(signature, reader, _zip64);
+            position = stream.Position;
+
+            if (nextHeader is null)
+            {
+                yield break;
+            }
+
+            if (nextHeader is DirectoryEntryHeader entryHeader)
+            {
+                //entry could be zero bytes so we need to know that.
+                entryHeader.HasData = entryHeader.CompressedSize != 0;
+                yield return entryHeader;
+            }
+            else if (nextHeader is DirectoryEndHeader endHeader)
+            {
+                yield return endHeader;
+            }
+        }
+    }
+
     private static bool IsMatch(byte[] haystack, int position, byte[] needle)
     {
         for (var i = 0; i < needle.Length; i++)
@@ -166,7 +233,7 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         return true;
     }
 
-    private static async ValueTask SeekBackToHeader(Stream stream, AsyncBinaryReader reader)
+    private static async ValueTask SeekBackToHeaderAsync(Stream stream, AsyncBinaryReader reader)
     {
         // Minimum EOCD length
         if (stream.Length < MINIMUM_EOCD_LENGTH)
@@ -253,6 +320,33 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         var reader = new BinaryReader(stream);
         var signature = reader.ReadUInt32();
         if (ReadHeader(signature, reader, _zip64) is not LocalEntryHeader localEntryHeader)
+        {
+            throw new InvalidOperationException();
+        }
+
+        // populate fields only known from the DirectoryEntryHeader
+        localEntryHeader.HasData = directoryEntryHeader.HasData;
+        localEntryHeader.ExternalFileAttributes = directoryEntryHeader.ExternalFileAttributes;
+        localEntryHeader.Comment = directoryEntryHeader.Comment;
+
+        if (FlagUtility.HasFlag(localEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
+        {
+            localEntryHeader.Crc = directoryEntryHeader.Crc;
+            localEntryHeader.CompressedSize = directoryEntryHeader.CompressedSize;
+            localEntryHeader.UncompressedSize = directoryEntryHeader.UncompressedSize;
+        }
+        return localEntryHeader;
+    }
+
+    internal async ValueTask<LocalEntryHeader> GetLocalHeaderAsync(
+        Stream stream,
+        DirectoryEntryHeader directoryEntryHeader
+    )
+    {
+        stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
+        var reader = new AsyncBinaryReader(stream);
+        var signature = await reader.ReadUInt32Async();
+        if (await ReadHeader(signature, reader, _zip64) is not LocalEntryHeader localEntryHeader)
         {
             throw new InvalidOperationException();
         }

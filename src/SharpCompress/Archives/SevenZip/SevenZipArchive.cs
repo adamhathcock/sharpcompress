@@ -111,14 +111,14 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(stream, readerOptions)).ConfigureAwait(false);
+        return new(Open(stream, readerOptions));
     }
 
     /// <summary>
@@ -127,14 +127,14 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(fileInfo, readerOptions)).ConfigureAwait(false);
+        return new(Open(fileInfo, readerOptions));
     }
 
     /// <summary>
@@ -143,14 +143,14 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(streams, readerOptions)).ConfigureAwait(false);
+        return new(Open(streams, readerOptions));
     }
 
     /// <summary>
@@ -159,14 +159,14 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(fileInfos, readerOptions)).ConfigureAwait(false);
+        return new(Open(fileInfos, readerOptions));
     }
 
     /// <summary>

@@ -23,7 +23,7 @@ public class ExtractAllTests : TestBase
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
         var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };
 
-        using var archive = ArchiveFactory.Open(testArchive);
+        await using var archive = await ArchiveFactory.OpenAsync(testArchive);
         await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, options);
     }
 

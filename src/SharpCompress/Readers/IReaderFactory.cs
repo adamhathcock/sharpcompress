@@ -21,7 +21,7 @@ public interface IReaderFactory : Factories.IFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<IReader> OpenReaderAsync(
+    ValueTask<IReader> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default

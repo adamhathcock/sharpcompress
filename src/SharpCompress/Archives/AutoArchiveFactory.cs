@@ -8,7 +8,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-class AutoArchiveFactory : IArchiveFactory
+internal class AutoArchiveFactory : IArchiveFactory
 {
     public string Name => nameof(AutoArchiveFactory);
 
@@ -22,7 +22,7 @@ class AutoArchiveFactory : IArchiveFactory
         int bufferSize = ReaderOptions.DefaultBufferSize
     ) => throw new NotSupportedException();
 
-    public Task<bool> IsArchiveAsync(
+    public ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize,
@@ -34,18 +34,18 @@ class AutoArchiveFactory : IArchiveFactory
     public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(stream, readerOptions);
 
-    public Task<IArchiveAsync> OpenAsync(
+    public async ValueTask<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => ArchiveFactory.OpenAsync(stream, readerOptions, cancellationToken);
+    ) => await ArchiveFactory.OpenAsync(stream, readerOptions, cancellationToken);
 
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(fileInfo, readerOptions);
 
-    public Task<IArchiveAsync> OpenAsync(
+    public async ValueTask<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => ArchiveFactory.OpenAsync(fileInfo, readerOptions, cancellationToken);
+    ) => await ArchiveFactory.OpenAsync(fileInfo, readerOptions, cancellationToken);
 }

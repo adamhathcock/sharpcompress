@@ -49,7 +49,7 @@ public class GZipFactory
     ) => GZipArchive.IsGZipFile(stream);
 
     /// <inheritdoc/>
-    public override Task<bool> IsArchiveAsync(
+    public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize,
@@ -65,7 +65,7 @@ public class GZipFactory
         GZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -76,7 +76,7 @@ public class GZipFactory
         GZipArchive.Open(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -91,7 +91,7 @@ public class GZipFactory
         GZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -102,7 +102,7 @@ public class GZipFactory
         GZipArchive.Open(fileInfos, readerOptions);
 
     /// <inheritdoc/>
-    public Task<IArchiveAsync> OpenAsync(
+    public ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -147,14 +147,14 @@ public class GZipFactory
         GZipReader.Open(stream, options);
 
     /// <inheritdoc/>
-    public async Task<IReader> OpenReaderAsync(
+    public ValueTask<IReader> OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(OpenReader(stream, options)).ConfigureAwait(false);
+        return new(OpenReader(stream, options));
     }
 
     #endregion
@@ -172,14 +172,14 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public async Task<IWriter> OpenAsync(
+    public ValueTask<IWriter> OpenAsync(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(stream, writerOptions)).ConfigureAwait(false);
+        return new(Open(stream, writerOptions));
     }
 
     #endregion

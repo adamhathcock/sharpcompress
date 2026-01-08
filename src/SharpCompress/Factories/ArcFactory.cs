@@ -44,14 +44,14 @@ namespace SharpCompress.Factories
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             ArcReader.Open(stream, options);
 
-        public async Task<IReader> OpenReaderAsync(
+        public ValueTask<IReader> OpenReaderAsync(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await Task.FromResult(OpenReader(stream, options)).ConfigureAwait(false);
+            return new(OpenReader(stream, options));
         }
     }
 }

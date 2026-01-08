@@ -130,14 +130,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(stream, readerOptions)).ConfigureAwait(false);
+        return new(Open(stream, readerOptions));
     }
 
     /// <summary>
@@ -146,14 +146,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(fileInfo, readerOptions)).ConfigureAwait(false);
+        return new(Open(fileInfo, readerOptions));
     }
 
     /// <summary>
@@ -162,14 +162,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(streams, readerOptions)).ConfigureAwait(false);
+        return new(Open(streams, readerOptions));
     }
 
     /// <summary>
@@ -178,14 +178,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static async Task<IArchiveAsync> OpenAsync(
+    public static ValueTask<IArchiveAsync> OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return await Task.FromResult(Open(fileInfos, readerOptions)).ConfigureAwait(false);
+        return new(Open(fileInfos, readerOptions));
     }
 
     public static bool IsZipFile(
@@ -283,7 +283,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
-    public static async Task<bool> IsZipFileAsync(
+    public static async ValueTask<bool> IsZipFileAsync(
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize,
@@ -319,7 +319,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
-    public static async Task<bool> IsZipMultiAsync(
+    public static async ValueTask<bool> IsZipMultiAsync(
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize,
@@ -345,7 +345,8 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                     var z = new SeekableZipHeaderFactory(password, new ArchiveEncoding());
                     ZipHeader? x = null;
                     await foreach (
-                        var h in z.ReadSeekableHeader(stream).WithCancellation(cancellationToken)
+                        var h in z.ReadSeekableHeaderAsync(stream)
+                            .WithCancellation(cancellationToken)
                     )
                     {
                         x = h;
@@ -444,6 +445,59 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
                     {
                         var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
                         vols.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
+                        yield break;
+                    }
+                }
+            }
+        }
+    }
+
+    protected override async IAsyncEnumerable<ZipArchiveEntry> LoadEntriesAsync(
+        IAsyncEnumerable<ZipVolume> volumes
+    )
+    {
+        var vols = await volumes.ToListAsync();
+        var volsArray = vols.ToArray();
+
+        await foreach (
+            var h in headerFactory.NotNull().ReadSeekableHeaderAsync(volsArray.Last().Stream)
+        )
+        {
+            if (h != null)
+            {
+                switch (h.ZipHeaderType)
+                {
+                    case ZipHeaderType.DirectoryEntry:
+                        {
+                            var deh = (DirectoryEntryHeader)h;
+                            Stream s;
+                            if (
+                                deh.RelativeOffsetOfEntryHeader + deh.CompressedSize
+                                > volsArray[deh.DiskNumberStart].Stream.Length
+                            )
+                            {
+                                var v = volsArray.Skip(deh.DiskNumberStart).ToArray();
+                                s = new SourceStream(
+                                    v[0].Stream,
+                                    i => i < v.Length ? v[i].Stream : null,
+                                    new ReaderOptions() { LeaveStreamOpen = true }
+                                );
+                            }
+                            else
+                            {
+                                s = volsArray[deh.DiskNumberStart].Stream;
+                            }
+
+                            yield return new ZipArchiveEntry(
+                                this,
+                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
+                            );
+                        }
+                        break;
+                    case ZipHeaderType.DirectoryEnd:
+                    {
+                        var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
+                        volsArray.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
                         yield break;
                     }
                 }

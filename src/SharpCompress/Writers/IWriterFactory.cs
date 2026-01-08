@@ -9,7 +9,7 @@ public interface IWriterFactory : IFactory
 {
     IWriter Open(Stream stream, WriterOptions writerOptions);
 
-    Task<IWriter> OpenAsync(
+    ValueTask<IWriter> OpenAsync(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default

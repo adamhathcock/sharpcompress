@@ -34,7 +34,7 @@ public interface IArchiveFactory : IFactory
     /// <param name="stream">An open, readable and seekable stream.</param>
     /// <param name="readerOptions">reading options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task<IArchiveAsync> OpenAsync(
+    ValueTask<IArchiveAsync> OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -53,7 +53,7 @@ public interface IArchiveFactory : IFactory
     /// <param name="fileInfo">the file to open.</param>
     /// <param name="readerOptions">reading options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task<IArchiveAsync> OpenAsync(
+    ValueTask<IArchiveAsync> OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

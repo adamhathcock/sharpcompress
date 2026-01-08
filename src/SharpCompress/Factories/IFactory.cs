@@ -51,7 +51,7 @@ public interface IFactory
     /// <param name="password">optional password</param>
     /// <param name="bufferSize">buffer size for reading</param>
     /// <param name="cancellationToken">cancellation token</param>
-    Task<bool> IsArchiveAsync(
+    ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize,

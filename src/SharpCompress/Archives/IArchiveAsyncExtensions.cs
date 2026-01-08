@@ -1,57 +1,73 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-public static class IArchiveExtensions
+public static class IArchiveAsyncExtensions
 {
     /// <param name="archive">The archive to extract.</param>
-    extension(IArchive archive)
+    extension(IArchiveAsync archive)
     {
         /// <summary>
-        /// Extract to specific directory with progress reporting
+        /// Extract to specific directory asynchronously with progress reporting and cancellation support
         /// </summary>
         /// <param name="destinationDirectory">The folder to extract into.</param>
         /// <param name="options">Extraction options.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
-        public void WriteToDirectory(
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        public async Task WriteToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options = null,
-            IProgress<ProgressReport>? progress = null
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
         )
         {
             // For solid archives (Rar, 7Zip), use the optimized reader-based approach
-            if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
+            if (await archive.IsSolidAsync() || archive.Type == ArchiveType.SevenZip)
             {
-                using var reader = archive.ExtractAllEntries();
-                reader.WriteAllToDirectory(destinationDirectory, options);
+                using var reader = await archive.ExtractAllEntriesAsync();
+                await reader.WriteAllToDirectoryAsync(
+                    destinationDirectory,
+                    options,
+                    cancellationToken
+                );
             }
             else
             {
                 // For non-solid archives, extract entries directly
-                archive.WriteToDirectoryInternal(destinationDirectory, options, progress);
+                await archive.WriteToDirectoryAsyncInternal(
+                    destinationDirectory,
+                    options,
+                    progress,
+                    cancellationToken
+                );
             }
         }
 
-        private void WriteToDirectoryInternal(
+        private async Task WriteToDirectoryAsyncInternal(
             string destinationDirectory,
             ExtractionOptions? options,
-            IProgress<ProgressReport>? progress
+            IProgress<ProgressReport>? progress,
+            CancellationToken cancellationToken
         )
         {
             // Prepare for progress reporting
-            var totalBytes = archive.TotalUncompressSize;
+            var totalBytes = await archive.TotalUncompressSizeAsync();
             var bytesRead = 0L;
 
             // Tracking for created directories.
             var seenDirectories = new HashSet<string>();
 
             // Extract
-            foreach (var entry in archive.Entries)
+            await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (entry.IsDirectory)
                 {
                     var dirPath = Path.Combine(
@@ -68,8 +84,10 @@ public static class IArchiveExtensions
                     continue;
                 }
 
-                // Use the entry's WriteToDirectory method which respects ExtractionOptions
-                entry.WriteToDirectory(destinationDirectory, options);
+                // Use the entry's WriteToDirectoryAsync method which respects ExtractionOptions
+                await entry
+                    .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Update progress
                 bytesRead += entry.Size;
