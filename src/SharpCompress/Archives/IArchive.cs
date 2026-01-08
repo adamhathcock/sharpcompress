@@ -42,7 +42,6 @@ public interface IArchiveAsync : IAsyncDisposable
     ValueTask<long> TotalUncompressSizeAsync();
 }
 
-
 public interface IArchive : IDisposable
 {
     IEnumerable<IArchiveEntry> Entries { get; }

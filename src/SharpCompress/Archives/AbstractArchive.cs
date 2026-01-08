@@ -25,8 +25,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
         _sourceStream = sourceStream;
         _lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(_sourceStream));
         _lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
-        _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(LoadVolumesAsync(_sourceStream));
-        _lazyEntriesAsync = new LazyAsyncReadOnlyCollection<TEntry>(LoadEntriesAsync(_lazyVolumesAsync));
+        _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(
+            LoadVolumesAsync(_sourceStream)
+        );
+        _lazyEntriesAsync = new LazyAsyncReadOnlyCollection<TEntry>(
+            LoadEntriesAsync(_lazyVolumesAsync)
+        );
     }
 
     internal AbstractArchive(ArchiveType type)
@@ -35,8 +39,12 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
         ReaderOptions = new();
         _lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
         _lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
-        _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(AsyncEnumerableEx.Empty<TVolume>());
-        _lazyEntriesAsync = new LazyAsyncReadOnlyCollection<TEntry>(AsyncEnumerableEx.Empty<TEntry>());
+        _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(
+            AsyncEnumerableEx.Empty<TVolume>()
+        );
+        _lazyEntriesAsync = new LazyAsyncReadOnlyCollection<TEntry>(
+            AsyncEnumerableEx.Empty<TEntry>()
+        );
     }
 
     public ArchiveType Type { get; }
@@ -45,6 +53,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     /// Returns an ReadOnlyCollection of all the RarArchiveEntries across the one or many parts of the RarArchive.
     /// </summary>
     public virtual ICollection<TEntry> Entries => _lazyEntries;
+
     /// <summary>
     /// Returns an ReadOnlyCollection of all the RarArchiveVolumes across the one or many parts of the RarArchive.
     /// </summary>
@@ -65,16 +74,19 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream sourceStream);
     protected abstract IEnumerable<TEntry> LoadEntries(IEnumerable<TVolume> volumes);
 
+    protected virtual IAsyncEnumerable<TVolume> LoadVolumesAsync(SourceStream sourceStream) =>
+        LoadVolumes(sourceStream).ToAsyncEnumerable();
 
-    protected virtual IAsyncEnumerable<TVolume> LoadVolumesAsync(SourceStream sourceStream) => LoadVolumes(sourceStream).ToAsyncEnumerable();
-
-    protected virtual async IAsyncEnumerable<TEntry> LoadEntriesAsync(IAsyncEnumerable<TVolume> volumes)
+    protected virtual async IAsyncEnumerable<TEntry> LoadEntriesAsync(
+        IAsyncEnumerable<TVolume> volumes
+    )
     {
-        foreach (var item in LoadEntries(await volumes.ToListAsync()) )
+        foreach (var item in LoadEntries(await volumes.ToListAsync()))
         {
             yield return item;
         }
     }
+
     IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
 
     IEnumerable<IVolume> IArchive.Volumes => _lazyVolumes.Cast<IVolume>();
@@ -149,14 +161,13 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     private readonly LazyAsyncReadOnlyCollection<TVolume> _lazyVolumesAsync;
     private readonly LazyAsyncReadOnlyCollection<TEntry> _lazyEntriesAsync;
 
-
     public virtual async ValueTask DisposeAsync()
     {
         if (!_disposed)
         {
             await foreach (var v in _lazyVolumesAsync)
             {
-                 v.Dispose();
+                v.Dispose();
             }
             foreach (var v in _lazyEntriesAsync.GetLoaded().Cast<Entry>())
             {
@@ -175,9 +186,11 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
     }
 
     public virtual IAsyncEnumerable<TEntry> EntriesAsync => _lazyEntriesAsync;
-    IAsyncEnumerable<IArchiveEntry> IArchiveAsync.EntriesAsync => EntriesAsync.Cast<TEntry, IArchiveEntry>();
+    IAsyncEnumerable<IArchiveEntry> IArchiveAsync.EntriesAsync =>
+        EntriesAsync.Cast<TEntry, IArchiveEntry>();
 
     public IAsyncEnumerable<IVolume> VolumesAsync => _lazyVolumesAsync.Cast<TVolume, IVolume>();
+
     public async ValueTask<IReader> ExtractAllEntriesAsync()
     {
         if (!IsSolid && Type != ArchiveType.SevenZip)
@@ -190,11 +203,10 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
         return await CreateReaderForSolidExtractionAsync();
     }
 
-
     protected virtual ValueTask<IReader> CreateReaderForSolidExtractionAsync() =>
-        new (CreateReaderForSolidExtraction());
+        new(CreateReaderForSolidExtraction());
 
-    public virtual ValueTask<bool> IsSolidAsync()  => new (false);
+    public virtual ValueTask<bool> IsSolidAsync() => new(false);
 
     public async ValueTask<bool> IsCompleteAsync()
     {
@@ -202,9 +214,11 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IArchiveAsync
         return await EntriesAsync.All(x => x.IsComplete);
     }
 
-    public async ValueTask<long> TotalSizeAsync() =>         await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
+    public async ValueTask<long> TotalSizeAsync() =>
+        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
 
-    public async ValueTask<long> TotalUncompressSizeAsync() =>         await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.Size);
+    public async ValueTask<long> TotalUncompressSizeAsync() =>
+        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.Size);
 
     #endregion
 }

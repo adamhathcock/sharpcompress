@@ -7,13 +7,17 @@ using System.Threading.Tasks;
 
 namespace SharpCompress;
 
-internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source) : IAsyncEnumerable<T>
+internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
+    : IAsyncEnumerable<T>
 {
     private readonly List<T> backing = new();
     private readonly IAsyncEnumerator<T> source = source.GetAsyncEnumerator();
     private bool fullyLoaded;
 
-    private class LazyLoader(LazyAsyncReadOnlyCollection<T> lazyReadOnlyCollection, CancellationToken cancellationToken) : IAsyncEnumerator<T>
+    private class LazyLoader(
+        LazyAsyncReadOnlyCollection<T> lazyReadOnlyCollection,
+        CancellationToken cancellationToken
+    ) : IAsyncEnumerator<T>
     {
         private bool disposed;
         private int index = -1;
@@ -35,7 +39,10 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
                 index++;
                 return true;
             }
-            if (!lazyReadOnlyCollection.fullyLoaded && await lazyReadOnlyCollection.source.MoveNextAsync())
+            if (
+                !lazyReadOnlyCollection.fullyLoaded
+                && await lazyReadOnlyCollection.source.MoveNextAsync()
+            )
             {
                 lazyReadOnlyCollection.backing.Add(lazyReadOnlyCollection.source.Current);
                 index++;
@@ -62,7 +69,6 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
         }
 
         #endregion
-
     }
 
     internal async ValueTask EnsureFullyLoaded()
@@ -92,5 +98,6 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
 
     #endregion
 
-    public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new LazyLoader(this, cancellationToken);
+    public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default) =>
+        new LazyLoader(this, cancellationToken);
 }

@@ -609,7 +609,9 @@ public class ArchiveTests : ReaderTests
             {
                 try
                 {
-                    await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
+                    await foreach (
+                        var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory)
+                    )
                     {
                         await entry.WriteToDirectoryAsync(
                             SCRATCH_FILES_PATH,
