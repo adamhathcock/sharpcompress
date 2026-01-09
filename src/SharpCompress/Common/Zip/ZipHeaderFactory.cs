@@ -21,12 +21,12 @@ internal class ZipHeaderFactory
     protected LocalEntryHeader? _lastEntryHeader;
     private readonly string? _password;
     private readonly StreamingMode _mode;
-    private readonly ArchiveEncoding _archiveEncoding;
+    private readonly IArchiveEncoding _archiveEncoding;
 
     protected ZipHeaderFactory(
         StreamingMode mode,
         string? password,
-        ArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding
     )
     {
         _mode = mode;

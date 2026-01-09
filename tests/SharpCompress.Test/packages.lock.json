@@ -155,8 +155,7 @@
           "Microsoft.Bcl.AsyncInterfaces": "[10.0.0, )",
           "System.Buffers": "[4.6.1, )",
           "System.Memory": "[4.6.3, )",
-          "System.Text.Encoding.CodePages": "[10.0.0, )",
-          "ZstdSharp.Port": "[0.8.6, )"
+          "System.Text.Encoding.CodePages": "[10.0.0, )"
         }
       },
       "Microsoft.Bcl.AsyncInterfaces": {
@@ -194,17 +193,6 @@
           "System.Memory": "4.6.3",
           "System.Runtime.CompilerServices.Unsafe": "6.1.2",
           "System.ValueTuple": "4.6.1"
-        }
-      },
-      "ZstdSharp.Port": {
-        "type": "CentralTransitive",
-        "requested": "[0.8.6, )",
-        "resolved": "0.8.6",
-        "contentHash": "iP4jVLQoQmUjMU88g1WObiNr6YKZGvh4aOXn3yOJsHqZsflwRsxZPcIBvNXgjXO3vQKSLctXGLTpcBPLnWPS8A==",
-        "dependencies": {
-          "Microsoft.Bcl.AsyncInterfaces": "5.0.0",
-          "System.Memory": "4.5.5",
-          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       }
     },
@@ -270,10 +258,7 @@
       "Microsoft.TestPlatform.ObjectModel": {
         "type": "Transitive",
         "resolved": "18.0.1",
-        "contentHash": "qT/mwMcLF9BieRkzOBPL2qCopl8hQu6A1P7JWAoj/FMu5i9vds/7cjbJ/LLtaiwWevWLAeD5v5wjQJ/l6jvhWQ==",
-        "dependencies": {
-          "System.Reflection.Metadata": "8.0.0"
-        }
+        "contentHash": "qT/mwMcLF9BieRkzOBPL2qCopl8hQu6A1P7JWAoj/FMu5i9vds/7cjbJ/LLtaiwWevWLAeD5v5wjQJ/l6jvhWQ=="
       },
       "Microsoft.TestPlatform.TestHost": {
         "type": "Transitive",
@@ -288,19 +273,6 @@
         "type": "Transitive",
         "resolved": "13.0.3",
         "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
-      },
-      "System.Collections.Immutable": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "AurL6Y5BA1WotzlEvVaIDpqzpIPvYnnldxru8oXJU2yFxFUy3+pNXjXd1ymO+RA0rq0+590Q8gaz2l3Sr7fmqg=="
-      },
-      "System.Reflection.Metadata": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "ptvgrFh7PvWI8bcVqG5rsA/weWM09EnthFHR5SCnS6IN+P4mj6rE1lBDC4U8HL9/57htKAqy4KQ3bBj84cfYyQ==",
-        "dependencies": {
-          "System.Collections.Immutable": "8.0.0"
-        }
       },
       "xunit.abstractions": {
         "type": "Transitive",
@@ -343,16 +315,7 @@
         }
       },
       "sharpcompress": {
-        "type": "Project",
-        "dependencies": {
-          "ZstdSharp.Port": "[0.8.6, )"
-        }
-      },
-      "ZstdSharp.Port": {
-        "type": "CentralTransitive",
-        "requested": "[0.8.6, )",
-        "resolved": "0.8.6",
-        "contentHash": "iP4jVLQoQmUjMU88g1WObiNr6YKZGvh4aOXn3yOJsHqZsflwRsxZPcIBvNXgjXO3vQKSLctXGLTpcBPLnWPS8A=="
+        "type": "Project"
       }
     }
   }

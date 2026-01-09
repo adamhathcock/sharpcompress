@@ -194,4 +194,38 @@ public class ZipArchiveAsyncTests : ArchiveTests
         }
         VerifyFiles();
     }
+
+    [Fact]
+    public async Task Zip_Deflate_Archive_WriteToDirectoryAsync()
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
+        using (var archive = ZipArchive.Open(stream))
+        {
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+            );
+        }
+        VerifyFiles();
+    }
+
+    [Fact]
+    public async Task Zip_Deflate_Archive_WriteToDirectoryAsync_WithProgress()
+    {
+        var progressReports = new System.Collections.Generic.List<ProgressReport>();
+        var progress = new Progress<ProgressReport>(report => progressReports.Add(report));
+
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
+        using (var archive = ZipArchive.Open(stream))
+        {
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
+                progress
+            );
+        }
+
+        VerifyFiles();
+        Assert.True(progressReports.Count > 0, "Progress reports should be generated");
+    }
 }

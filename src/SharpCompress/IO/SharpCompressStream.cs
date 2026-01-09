@@ -57,14 +57,8 @@ public class SharpCompressStream : Stream, IStreamStack
                     {
                         ValidateBufferState(); // Add here
                     }
-                    try
-                    {
-                        _internalPosition = Stream.Position;
-                    }
-                    catch
-                    {
-                        _internalPosition = 0;
-                    }
+                    // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
+                    _internalPosition = Stream.CanSeek ? Stream.Position : 0;
                 }
             }
         }
@@ -136,21 +130,13 @@ public class SharpCompressStream : Stream, IStreamStack
         _readOnly = !Stream.CanSeek;
 
         ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
-        try
-        {
-            _baseInitialPos = stream.Position;
-        }
-        catch
-        {
-            _baseInitialPos = 0;
-        }
+        // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
+        _baseInitialPos = Stream.CanSeek ? Stream.Position : 0;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(SharpCompressStream));
 #endif
     }
-
-    internal bool IsRecording { get; private set; }
 
     protected override void Dispose(bool disposing)
     {

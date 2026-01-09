@@ -13,6 +13,7 @@ using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
+using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Zip;
@@ -619,7 +620,7 @@ public class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
-                    return new ZstdSharp.CompressionStream(output, compressionLevel);
+                    return new CompressionStream(output, compressionLevel);
                 }
                 default:
                 {

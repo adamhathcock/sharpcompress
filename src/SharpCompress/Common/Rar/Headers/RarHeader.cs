@@ -13,7 +13,7 @@ internal class RarHeader : IRarHeader
     internal static RarHeader? TryReadBase(
         RarCrcBinaryReader reader,
         bool isRar5,
-        ArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding
     )
     {
         try
@@ -26,7 +26,7 @@ internal class RarHeader : IRarHeader
         }
     }
 
-    private RarHeader(RarCrcBinaryReader reader, bool isRar5, ArchiveEncoding archiveEncoding)
+    private RarHeader(RarCrcBinaryReader reader, bool isRar5, IArchiveEncoding archiveEncoding)
     {
         _headerType = HeaderType.Null;
         _isRar5 = isRar5;
@@ -115,7 +115,7 @@ internal class RarHeader : IRarHeader
 
     protected int HeaderSize { get; }
 
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; }
 
     /// <summary>
     /// Extra header size.

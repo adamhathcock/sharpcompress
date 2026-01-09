@@ -6,7 +6,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Readers;
 
 namespace SharpCompress;
 
@@ -72,48 +71,16 @@ internal static class Utility
             return;
         }
 
-        using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        while (advanceAmount > 0)
-        {
-            var toRead = (int)Math.Min(buffer.Memory.Length, advanceAmount);
-            var read = source.Read(buffer.Memory.Slice(0, toRead).Span);
-            if (read <= 0)
-            {
-                break;
-            }
-            advanceAmount -= read;
-        }
+        using var readOnlySubStream = new IO.ReadOnlySubStream(source, advanceAmount);
+        readOnlySubStream.CopyTo(Stream.Null);
     }
 
-    public static void Skip(this Stream source)
-    {
-        using var buffer = MemoryPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        while (source.Read(buffer.Memory.Span) > 0) { }
-    }
+    public static void Skip(this Stream source) => source.CopyTo(Stream.Null);
 
-    public static async Task SkipAsync(
-        this Stream source,
-        CancellationToken cancellationToken = default
-    )
+    public static Task SkipAsync(this Stream source, CancellationToken cancellationToken = default)
     {
-        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        try
-        {
-            while (true)
-            {
-                var read = await source
-                    .ReadAsync(array, 0, array.Length, cancellationToken)
-                    .ConfigureAwait(false);
-                if (read <= 0)
-                {
-                    break;
-                }
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(array);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
+        return source.CopyToAsync(Stream.Null);
     }
 
     public static DateTime DosDateToDateTime(ushort iDate, ushort iTime)
@@ -216,34 +183,6 @@ internal static class Utility
         }
     }
 
-    public static long TransferTo(
-        this Stream source,
-        Stream destination,
-        Common.Entry entry,
-        IReaderExtractionListener readerExtractionListener
-    )
-    {
-        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        try
-        {
-            var iterations = 0;
-            long total = 0;
-            int count;
-            while ((count = source.Read(array, 0, array.Length)) != 0)
-            {
-                total += count;
-                destination.Write(array, 0, count);
-                iterations++;
-                readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
-            }
-            return total;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(array);
-        }
-    }
-
     public static async Task<long> TransferToAsync(
         this Stream source,
         Stream destination,
@@ -281,43 +220,6 @@ internal static class Utility
                 {
                     maxReadSize = (int)remaining;
                 }
-            }
-            return total;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(array);
-        }
-    }
-
-    public static async Task<long> TransferToAsync(
-        this Stream source,
-        Stream destination,
-        Common.Entry entry,
-        IReaderExtractionListener readerExtractionListener,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
-        try
-        {
-            var iterations = 0;
-            long total = 0;
-            int count;
-            while (
-                (
-                    count = await source
-                        .ReadAsync(array, 0, array.Length, cancellationToken)
-                        .ConfigureAwait(false)
-                ) != 0
-            )
-            {
-                total += count;
-                await destination
-                    .WriteAsync(array, 0, count, cancellationToken)
-                    .ConfigureAwait(false);
-                iterations++;
-                readerExtractionListener.FireEntryExtractionProgress(entry, total, iterations);
             }
             return total;
         }

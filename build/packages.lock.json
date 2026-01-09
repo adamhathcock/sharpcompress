@@ -4,9 +4,9 @@
     "net10.0": {
       "Bullseye": {
         "type": "Direct",
-        "requested": "[6.0.0, )",
-        "resolved": "6.0.0",
-        "contentHash": "vgwwXfzs7jJrskWH7saHRMgPzziq/e86QZNWY1MnMxd7e+De7E7EX4K3C7yrvaK9y02SJoLxNxcLG/q5qUAghw=="
+        "requested": "[6.1.0, )",
+        "resolved": "6.1.0",
+        "contentHash": "fltnAJDe0BEX5eymXGUq+il2rSUA0pHqUonNDRH2TrvRu8SkU17mYG0IVpdmG2ibtfhdjNrv4CuTCxHOwcozCA=="
       },
       "Glob": {
         "type": "Direct",
@@ -16,9 +16,9 @@
       },
       "SimpleExec": {
         "type": "Direct",
-        "requested": "[12.0.0, )",
-        "resolved": "12.0.0",
-        "contentHash": "ptxlWtxC8vM6Y6e3h9ZTxBBkOWnWrm/Sa1HT+2i1xcXY3Hx2hmKDZP5RShPf8Xr9D+ivlrXNy57ktzyH8kyt+Q=="
+        "requested": "[13.0.0, )",
+        "resolved": "13.0.0",
+        "contentHash": "zcCR1pupa1wI1VqBULRiQKeHKKZOuJhi/K+4V5oO+rHJZlaOD53ViFo1c3PavDoMAfSn/FAXGAWpPoF57rwhYg=="
       }
     }
   }

@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 
@@ -475,7 +476,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         return false;
     }
 
-    internal async System.Threading.Tasks.Task<bool> CodeAsync(
+    internal async ValueTask<bool> CodeAsync(
         int dictionarySize,
         OutWindow outWindow,
         RangeCoder.Decoder rangeDecoder,

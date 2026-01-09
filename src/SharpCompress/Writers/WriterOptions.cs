@@ -1,3 +1,4 @@
+using System;
 using SharpCompress.Common;
 using D = SharpCompress.Compressors.Deflate;
 
@@ -35,6 +36,12 @@ public class WriterOptions : OptionsBase
     /// Defaults are set automatically based on compression type in the constructor.
     /// </summary>
     public int CompressionLevel { get; set; }
+
+    /// <summary>
+    /// An optional progress reporter for tracking compression operations.
+    /// When set, progress updates will be reported as entries are written.
+    /// </summary>
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     public static implicit operator WriterOptions(CompressionType compressionType) =>
         new(compressionType);

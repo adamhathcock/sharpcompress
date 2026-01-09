@@ -134,7 +134,7 @@ internal class RarStream : Stream, IStreamStack
             fetch = false;
         }
         _position += outTotal;
-        if (count > 0 && outTotal == 0 && _position != Length)
+        if (count > 0 && outTotal == 0 && _position < Length)
         {
             // sanity check, eg if we try to decompress a redir entry
             throw new InvalidOperationException(
@@ -179,7 +179,7 @@ internal class RarStream : Stream, IStreamStack
             fetch = false;
         }
         _position += outTotal;
-        if (count > 0 && outTotal == 0 && _position != Length)
+        if (count > 0 && outTotal == 0 && _position < Length)
         {
             // sanity check, eg if we try to decompress a redir entry
             throw new InvalidOperationException(

@@ -12,13 +12,13 @@ internal class ZipCentralDirectoryEntry
 {
     private readonly ZipCompressionMethod compression;
     private readonly string fileName;
-    private readonly ArchiveEncoding archiveEncoding;
+    private readonly IArchiveEncoding archiveEncoding;
 
     public ZipCentralDirectoryEntry(
         ZipCompressionMethod compression,
         string fileName,
         ulong headerOffset,
-        ArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding
     )
     {
         this.compression = compression;

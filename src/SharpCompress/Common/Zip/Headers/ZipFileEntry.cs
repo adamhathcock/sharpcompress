@@ -7,7 +7,7 @@ namespace SharpCompress.Common.Zip.Headers;
 
 internal abstract class ZipFileEntry : ZipHeader
 {
-    protected ZipFileEntry(ZipHeaderType type, ArchiveEncoding archiveEncoding)
+    protected ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiveEncoding)
         : base(type)
     {
         Extra = new List<ExtraData>();
@@ -30,7 +30,7 @@ internal abstract class ZipFileEntry : ZipHeader
 
     internal Stream? PackedStream { get; set; }
 
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; }
 
     internal string? Name { get; set; }
 

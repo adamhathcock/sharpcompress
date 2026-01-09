@@ -9,9 +9,9 @@ internal class PkwareTraditionalEncryptionData
 {
     private static readonly CRC32 CRC32 = new();
     private readonly uint[] _keys = { 0x12345678, 0x23456789, 0x34567890 };
-    private readonly ArchiveEncoding _archiveEncoding;
+    private readonly IArchiveEncoding _archiveEncoding;
 
-    private PkwareTraditionalEncryptionData(string password, ArchiveEncoding archiveEncoding)
+    private PkwareTraditionalEncryptionData(string password, IArchiveEncoding archiveEncoding)
     {
         _archiveEncoding = archiveEncoding;
         Initialize(password);
@@ -56,7 +56,7 @@ internal class PkwareTraditionalEncryptionData
     /// <returns>A new encryption data instance.</returns>
     public static PkwareTraditionalEncryptionData ForWrite(
         string password,
-        ArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding
     )
     {
         return new PkwareTraditionalEncryptionData(password, archiveEncoding);
@@ -142,7 +142,7 @@ internal class PkwareTraditionalEncryptionData
 
     internal byte[] StringToByteArray(string value)
     {
-        var a = _archiveEncoding.GetPasswordEncoding().GetBytes(value);
+        var a = _archiveEncoding.Password.GetBytes(value);
         return a;
     }
 
