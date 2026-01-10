@@ -43,12 +43,7 @@ internal class WinzipAesEncryptionStream : Stream
         var keyLength = GetKeyLength(keySize);
         var derivedKeySize = (keyLength * 2) + 2;
 
-#if NETFRAMEWORK
-        var rfc2898 = new Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
-        var keyBytes = rfc2898.GetBytes(keyLength);
-        var ivBytes = rfc2898.GetBytes(keyLength);
-        var passwordVerifyValue = rfc2898.GetBytes(2);
-#elif NET10_0_OR_GREATER
+#if NET10_0_OR_GREATER
         var passwordBytes = Encoding.UTF8.GetBytes(password);
         var derivedKey = Rfc2898DeriveBytes.Pbkdf2(
             passwordBytes,
@@ -60,13 +55,19 @@ internal class WinzipAesEncryptionStream : Stream
         var keyBytes = derivedKey.AsSpan(0, keyLength).ToArray();
         var ivBytes = derivedKey.AsSpan(keyLength, keyLength).ToArray();
         var passwordVerifyValue = derivedKey.AsSpan(keyLength * 2, 2).ToArray();
-#else
+#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
         var rfc2898 = new Rfc2898DeriveBytes(
             password,
             salt,
             RFC2898_ITERATIONS,
             HashAlgorithmName.SHA1
         );
+        var keyBytes = rfc2898.GetBytes(keyLength);
+        var ivBytes = rfc2898.GetBytes(keyLength);
+        var passwordVerifyValue = rfc2898.GetBytes(2);
+#else
+        // .NET Framework and .NET Standard 2.0 only support the 3-parameter constructor
+        var rfc2898 = new Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
         var keyBytes = rfc2898.GetBytes(keyLength);
         var ivBytes = rfc2898.GetBytes(keyLength);
         var passwordVerifyValue = rfc2898.GetBytes(2);
