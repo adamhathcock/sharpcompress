@@ -22,14 +22,12 @@ internal class WinzipAesEncryptionStream : Stream
     private readonly HMACSHA1 _hmac;
     private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
     private readonly byte[] _counterOut = new byte[BLOCK_SIZE_IN_BYTES];
-    private readonly WinzipAesKeySize _keySize;
     private int _nonce = 1;
     private bool _isDisposed;
 
     internal WinzipAesEncryptionStream(Stream stream, string password, WinzipAesKeySize keySize)
     {
         _stream = stream;
-        _keySize = keySize;
 
         // Generate salt
         var saltLength = GetSaltLength(keySize);
@@ -41,9 +39,14 @@ internal class WinzipAesEncryptionStream : Stream
 
         // Derive keys using PBKDF2
         var keyLength = GetKeyLength(keySize);
-        var derivedKeySize = (keyLength * 2) + 2;
 
-#if NET10_0_OR_GREATER
+#if NETFRAMEWORK || NETSTANDARD2_0
+        var rfc2898 = new Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
+        var keyBytes = rfc2898.GetBytes(keyLength);
+        var ivBytes = rfc2898.GetBytes(keyLength);
+        var passwordVerifyValue = rfc2898.GetBytes(2);
+#elif NET10_0_OR_GREATER
+        var derivedKeySize = (keyLength * 2) + 2;
         var passwordBytes = Encoding.UTF8.GetBytes(password);
         var derivedKey = Rfc2898DeriveBytes.Pbkdf2(
             passwordBytes,
@@ -55,19 +58,13 @@ internal class WinzipAesEncryptionStream : Stream
         var keyBytes = derivedKey.AsSpan(0, keyLength).ToArray();
         var ivBytes = derivedKey.AsSpan(keyLength, keyLength).ToArray();
         var passwordVerifyValue = derivedKey.AsSpan(keyLength * 2, 2).ToArray();
-#elif NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+#else
         var rfc2898 = new Rfc2898DeriveBytes(
             password,
             salt,
             RFC2898_ITERATIONS,
             HashAlgorithmName.SHA1
         );
-        var keyBytes = rfc2898.GetBytes(keyLength);
-        var ivBytes = rfc2898.GetBytes(keyLength);
-        var passwordVerifyValue = rfc2898.GetBytes(2);
-#else
-        // .NET Framework and .NET Standard 2.0 only support the 3-parameter constructor
-        var rfc2898 = new Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
         var keyBytes = rfc2898.GetBytes(keyLength);
         var ivBytes = rfc2898.GetBytes(keyLength);
         var passwordVerifyValue = rfc2898.GetBytes(2);
