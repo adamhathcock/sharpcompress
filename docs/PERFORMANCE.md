@@ -391,69 +391,6 @@ catch (OperationCanceledException)
 
 ---
 
-## Memory Efficiency
-
-### Reducing Allocations
-
-```csharp
-// ✗ Wrong - creates new options object each iteration
-foreach (var archiveFile in archiveFiles)
-{
-    using (var archive = ZipArchive.Open(archiveFile))
-    {
-        archive.WriteToDirectory(outputDir, new ExtractionOptions
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        });
-    }
-}
-
-// ✓ Better - reuse options object
-var options = new ExtractionOptions
-{
-    ExtractFullPath = true,
-    Overwrite = true
-};
-foreach (var archiveFile in archiveFiles)
-{
-    using (var archive = ZipArchive.Open(archiveFile))
-    {
-        archive.WriteToDirectory(outputDir, options);
-    }
-}
-```
-
-### Object Pooling for Repeated Operations
-
-```csharp
-// For very high-throughput scenarios, consider pooling
-public class ArchiveExtractionPool
-{
-    private readonly ArrayPool<byte> _bufferPool = ArrayPool<byte>.Shared;
-    
-    public void ExtractMany(IEnumerable<string> archiveFiles, string outputDir)
-    {
-        var options = new ExtractionOptions
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        };
-        
-        foreach (var archiveFile in archiveFiles)
-        {
-            using (var stream = File.OpenRead(archiveFile))
-            using (var archive = ZipArchive.Open(stream))
-            {
-                archive.WriteToDirectory(outputDir, options);
-            }
-        }
-    }
-}
-```
-
----
-
 ## Practical Performance Tips
 
 ### 1. Choose the Right API
@@ -484,26 +421,7 @@ using (var archive = ZipArchive.Open("archive.zip"))
 }
 ```
 
-### 3. Use Appropriate Compression
-
-```csharp
-// For distribution/storage: Best compression
-archive.SaveTo("archive.zip", new WriterOptions(CompressionType.Deflate)
-{
-    CompressionLevel = 9
-});
-
-// For daily backups: Balanced compression
-archive.SaveTo("backup.zip", CompressionType.Deflate);  // Default level 6
-
-// For temporary/streaming: Fast compression
-archive.SaveTo("temp.zip", new WriterOptions(CompressionType.Deflate)
-{
-    CompressionLevel = 1
-});
-```
-
-### 4. Profile Your Code
+### 3. Profile Your Code
 
 ```csharp
 var sw = Stopwatch.StartNew();
