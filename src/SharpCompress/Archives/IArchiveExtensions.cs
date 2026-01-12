@@ -43,7 +43,7 @@ public static class IArchiveExtensions
         )
         {
             // Prepare for progress reporting
-            var totalBytes = archive.TotalUncompressSize;
+            var totalBytes = archive.TotalUncompressedSize;
             var bytesRead = 0L;
 
             // Tracking for created directories.

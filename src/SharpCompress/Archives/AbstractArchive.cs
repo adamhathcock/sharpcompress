@@ -68,7 +68,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     /// <summary>
     /// The total size of the files as uncompressed in the archive.
     /// </summary>
-    public virtual long TotalUncompressSize =>
+    public virtual long TotalUncompressedSize =>
         Entries.Aggregate(0L, (total, cf) => total + cf.Size);
 
     protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream sourceStream);
@@ -231,8 +231,10 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     public async ValueTask<long> TotalSizeAsync() =>
         await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.CompressedSize);
 
-    public async ValueTask<long> TotalUncompressSizeAsync() =>
+    public async ValueTask<long> TotalUncompressedSizeAsync() =>
         await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.Size);
+
+    public ValueTask<bool> IsEncryptedAsync() => new(IsEncrypted);
 
     #endregion
 }

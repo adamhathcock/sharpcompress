@@ -53,7 +53,7 @@ public static class IAsyncArchiveExtensions
     )
     {
         // Prepare for progress reporting
-        var totalBytes = await archive.TotalUncompressSizeAsync();
+        var totalBytes = await archive.TotalUncompressedSizeAsync();
         var bytesRead = 0L;
 
         // Tracking for created directories.

@@ -38,7 +38,10 @@ public interface IArchive : IDisposable
     /// <summary>
     /// The total size of the files as uncompressed in the archive.
     /// </summary>
-    long TotalUncompressSize { get; }
+    long TotalUncompressedSize { get; }
 
+    /// <summary>
+    /// Returns whether the archive is encrypted.
+    /// </summary>
     bool IsEncrypted { get; }
 }

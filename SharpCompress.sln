@@ -21,9 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{CDB425
 		Directory.Packages.props = Directory.Packages.props
 		NuGet.config = NuGet.config
 		.github\workflows\nuget-release.yml = .github\workflows\nuget-release.yml
-		USAGE.md = USAGE.md
 		README.md = README.md
-		FORMATS.md = FORMATS.md
 		AGENTS.md = AGENTS.md
 	EndProjectSection
 EndProject
