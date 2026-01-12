@@ -21,8 +21,8 @@ using (var archive = SevenZipArchive.Open("file.7z"))
 using (var archive = GZipArchive.Open("file.gz"))
 
 // With options
-var options = new ReaderOptions 
-{ 
+var options = new ReaderOptions
+{
     Password = "password",
     LeaveStreamOpen = true,
     ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
@@ -66,23 +66,23 @@ using (var archive = ZipArchive.Create())
 using (var archive = ZipArchive.Open("file.zip"))
 {
     // Get all entries
-    IEnumerable<IEntry> entries = archive.Entries;
-    
+    IEnumerable<IArchiveEntry> entries = archive.Entries;
+
     // Find specific entry
     var entry = archive.Entries.FirstOrDefault(e => e.Key == "file.txt");
-    
+
     // Extract all
     archive.WriteToDirectory(@"C:\output", new ExtractionOptions
     {
         ExtractFullPath = true,
         Overwrite = true
     });
-    
+
     // Extract single entry
     var entry = archive.Entries.First();
     entry.WriteToFile(@"C:\output\file.txt");
     entry.WriteToFile(@"C:\output\file.txt", new ExtractionOptions { Overwrite = true });
-    
+
     // Get entry stream
     using (var stream = entry.OpenEntryStream())
     {
@@ -90,8 +90,15 @@ using (var archive = ZipArchive.Open("file.zip"))
     }
 }
 
-// Async variants
-await archive.WriteToDirectoryAsync(@"C:\output", options, cancellationToken);
+// Async extraction (requires IAsyncArchive)
+using (var asyncArchive = await ZipArchive.OpenAsync("file.zip"))
+{
+    await asyncArchive.WriteToDirectoryAsync(
+        @"C:\output",
+        new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
+        cancellationToken: cancellationToken
+    );
+}
 using (var stream = await entry.OpenEntryStreamAsync(cancellationToken))
 {
     // ...
@@ -118,15 +125,15 @@ foreach (var entry in archive.Entries)
 using (var archive = ZipArchive.Create())
 {
     // Add file
-    archive.AddEntry("file.txt", "C:\\source\\file.txt");
-    
+    archive.AddEntry("file.txt", @"C:\source\file.txt");
+
     // Add multiple files
-    archive.AddAllFromDirectory("C:\\source");
-    archive.AddAllFromDirectory("C:\\source", "*.txt");  // Pattern
-    
+    archive.AddAllFromDirectory(@"C:\source");
+    archive.AddAllFromDirectory(@"C:\source", "*.txt");  // Pattern
+
     // Save to file
     archive.SaveTo("output.zip", CompressionType.Deflate);
-    
+
     // Save to stream
     archive.SaveTo(outputStream, new WriterOptions(CompressionType.Deflate)
     {
@@ -148,14 +155,14 @@ using (var reader = ReaderFactory.Open(stream))
 {
     while (reader.MoveToNextEntry())
     {
-        IEntry entry = reader.Entry;
-        
+        IArchiveEntry entry = reader.Entry;
+
         if (!entry.IsDirectory)
         {
             // Extract entry
             reader.WriteEntryToDirectory(@"C:\output");
             reader.WriteEntryToFile(@"C:\output\file.txt");
-            
+
             // Or get stream
             using (var entryStream = reader.OpenEntryStream())
             {
@@ -165,16 +172,25 @@ using (var reader = ReaderFactory.Open(stream))
     }
 }
 
-// Async variants
-while (await reader.MoveToNextEntryAsync())
+// Async variants (use OpenAsync to get IAsyncReader)
+using (var stream = File.OpenRead("file.zip"))
+using (var reader = await ReaderFactory.OpenAsync(stream))
 {
-    await reader.WriteEntryToFileAsync(@"C:\output\" + reader.Entry.Key, cancellationToken);
-}
+    while (await reader.MoveToNextEntryAsync())
+    {
+        await reader.WriteEntryToFileAsync(
+            @"C:\output\" + reader.Entry.Key,
+            cancellationToken: cancellationToken
+        );
+    }
 
-// Async extraction
-await reader.WriteAllToDirectoryAsync(@"C:\output", 
-    new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-    cancellationToken);
+    // Async extraction of all entries
+    await reader.WriteAllToDirectoryAsync(
+        @"C:\output",
+        new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
+        cancellationToken
+    );
+}
 ```
 
 ---
@@ -262,15 +278,20 @@ archive.WriteToDirectory(@"C:\output", options);
 // For creating archives
 CompressionType.None       // No compression (store)
 CompressionType.Deflate    // DEFLATE (default for ZIP/GZip)
+CompressionType.Deflate64  // Deflate64
 CompressionType.BZip2      // BZip2
 CompressionType.LZMA       // LZMA (for 7Zip, LZip, XZ)
 CompressionType.PPMd       // PPMd (for ZIP)
 CompressionType.Rar        // RAR compression (read-only)
+CompressionType.ZStandard  // ZStandard
+ArchiveType.Arc
+ArchiveType.Arj
+ArchiveType.Ace
 
-// For Tar archives
-// Use CompressionType in TarWriter constructor
-using (var writer = TarWriter(stream, CompressionType.GZip))  // Tar.GZip
-using (var writer = TarWriter(stream, CompressionType.BZip2)) // Tar.BZip2
+// For Tar archives with compression
+// Use WriterFactory to create compressed tar archives
+using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.GZip))  // Tar.GZip
+using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.BZip2)) // Tar.BZip2
 ```
 
 ### Archive Types
@@ -342,11 +363,13 @@ cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 try
 {
-    using (var archive = ZipArchive.Open("archive.zip"))
+    using (var archive = await ZipArchive.OpenAsync("archive.zip"))
     {
-        await archive.WriteToDirectoryAsync(@"C:\output",
+        await archive.WriteToDirectoryAsync(
+            @"C:\output",
             new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-            cts.Token);
+            cancellationToken: cts.Token
+        );
     }
 }
 catch (OperationCanceledException)
