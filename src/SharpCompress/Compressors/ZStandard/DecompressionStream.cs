@@ -177,9 +177,9 @@ public class DecompressionStream : Stream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken);
+    ) => ReadAsync(new Memory<byte>(buffer, offset, count), cancellationToken).AsTask();
 
-    public async Task<int> ReadAsync(
+    public async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
     )

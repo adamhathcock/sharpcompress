@@ -58,7 +58,7 @@ internal static class MultiByteIntegers
             MaxBytes = 9;
         }
 
-        var LastByte = await ReadByteAsync(reader, cancellationToken).ConfigureAwait(false);
+        var LastByte = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
         var Output = (ulong)LastByte & 0x7F;
 
         var i = 0;
@@ -69,7 +69,7 @@ internal static class MultiByteIntegers
                 throw new InvalidFormatException();
             }
 
-            LastByte = await ReadByteAsync(reader, cancellationToken).ConfigureAwait(false);
+            LastByte = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
             if (LastByte == 0)
             {
                 throw new InvalidFormatException();
@@ -78,38 +78,5 @@ internal static class MultiByteIntegers
             Output |= ((ulong)(LastByte & 0x7F)) << (i * 7);
         }
         return Output;
-    }
-
-    public static async Task<byte> ReadByteAsync(
-        this BinaryReader reader,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var buffer = new byte[1];
-        var bytesRead = await reader
-            .BaseStream.ReadAsync(buffer, 0, 1, cancellationToken)
-            .ConfigureAwait(false);
-        if (bytesRead != 1)
-        {
-            throw new EndOfStreamException();
-        }
-        return buffer[0];
-    }
-
-    public static async Task<byte[]> ReadBytesAsync(
-        this BinaryReader reader,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var buffer = new byte[count];
-        var bytesRead = await reader
-            .BaseStream.ReadAsync(buffer, 0, count, cancellationToken)
-            .ConfigureAwait(false);
-        if (bytesRead != count)
-        {
-            throw new EndOfStreamException();
-        }
-        return buffer;
     }
 }

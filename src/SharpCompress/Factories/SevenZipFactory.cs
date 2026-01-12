@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
@@ -43,8 +45,28 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         SevenZipArchive.Open(stream, readerOptions);
 
     /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => SevenZipArchive.OpenAsync(stream, readerOptions, cancellationToken);
+
+    /// <inheritdoc/>
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         SevenZipArchive.Open(fileInfo, readerOptions);
+
+    /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => SevenZipArchive.OpenAsync(fileInfo, readerOptions, cancellationToken);
+
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize
+    ) => new(IsArchive(stream, password, bufferSize));
 
     #endregion
 
@@ -55,8 +77,22 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         SevenZipArchive.Open(streams, readerOptions);
 
     /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => SevenZipArchive.OpenAsync(streams, readerOptions, cancellationToken);
+
+    /// <inheritdoc/>
     public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
         SevenZipArchive.Open(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => SevenZipArchive.OpenAsync(fileInfos, readerOptions, cancellationToken);
 
     #endregion
 

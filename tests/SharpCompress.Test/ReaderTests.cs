@@ -113,7 +113,7 @@ public abstract class ReaderTests : TestBase
 
     protected async Task ReadAsync(
         string testArchive,
-        CompressionType expectedCompression,
+        CompressionType? expectedCompression = null,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
     )
@@ -130,9 +130,9 @@ public abstract class ReaderTests : TestBase
         VerifyFiles();
     }
 
-    private async Task ReadImplAsync(
+    private async ValueTask ReadImplAsync(
         string testArchive,
-        CompressionType expectedCompression,
+        CompressionType? expectedCompression,
         ReaderOptions options,
         CancellationToken cancellationToken = default
     )
@@ -145,7 +145,13 @@ public abstract class ReaderTests : TestBase
             bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
-        using (var reader = ReaderFactory.Open(testStream, options))
+        await using (
+            var reader = await ReaderFactory.OpenAsync(
+                new AsyncOnlyStream(testStream),
+                options,
+                cancellationToken
+            )
+        )
         {
             await UseReaderAsync(reader, expectedCompression, cancellationToken);
             protectedStream.ThrowOnDispose = false;
@@ -157,9 +163,9 @@ public abstract class ReaderTests : TestBase
         Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
     }
 
-    public async Task UseReaderAsync(
-        IReader reader,
-        CompressionType expectedCompression,
+    public async ValueTask UseReaderAsync(
+        IAsyncReader reader,
+        CompressionType? expectedCompression,
         CancellationToken cancellationToken = default
     )
     {
@@ -167,7 +173,11 @@ public abstract class ReaderTests : TestBase
         {
             if (!reader.Entry.IsDirectory)
             {
-                Assert.Equal(expectedCompression, reader.Entry.CompressionType);
+                if (expectedCompression.HasValue)
+                {
+                    Assert.Equal(expectedCompression, reader.Entry.CompressionType);
+                }
+
                 await reader.WriteEntryToDirectoryAsync(
                     SCRATCH_FILES_PATH,
                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true },

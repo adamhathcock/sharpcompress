@@ -15,17 +15,17 @@ public class TarReaderAsyncTests : ReaderTests
     public TarReaderAsyncTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
-    public async Task Tar_Reader_Async() => await ReadAsync("Tar.tar", CompressionType.None);
+    public async ValueTask Tar_Reader_Async() => await ReadAsync("Tar.tar", CompressionType.None);
 
     [Fact]
-    public async Task Tar_Skip_Async()
+    public async ValueTask Tar_Skip_Async()
     {
         using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
         );
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var x = 0;
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {
@@ -42,43 +42,45 @@ public class TarReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Tar_Z_Reader_Async() => await ReadAsync("Tar.tar.Z", CompressionType.Lzw);
+    public async ValueTask Tar_Z_Reader_Async() =>
+        await ReadAsync("Tar.tar.Z", CompressionType.Lzw);
 
     [Fact]
-    public async Task Tar_BZip2_Reader_Async() =>
+    public async ValueTask Tar_BZip2_Reader_Async() =>
         await ReadAsync("Tar.tar.bz2", CompressionType.BZip2);
 
     [Fact]
-    public async Task Tar_GZip_Reader_Async() =>
+    public async ValueTask Tar_GZip_Reader_Async() =>
         await ReadAsync("Tar.tar.gz", CompressionType.GZip);
 
     [Fact]
-    public async Task Tar_ZStandard_Reader_Async() =>
+    public async ValueTask Tar_ZStandard_Reader_Async() =>
         await ReadAsync("Tar.tar.zst", CompressionType.ZStandard);
 
     [Fact]
-    public async Task Tar_LZip_Reader_Async() =>
+    public async ValueTask Tar_LZip_Reader_Async() =>
         await ReadAsync("Tar.tar.lz", CompressionType.LZip);
 
     [Fact]
-    public async Task Tar_Xz_Reader_Async() => await ReadAsync("Tar.tar.xz", CompressionType.Xz);
+    public async ValueTask Tar_Xz_Reader_Async() =>
+        await ReadAsync("Tar.tar.xz", CompressionType.Xz);
 
     [Fact]
-    public async Task Tar_GZip_OldGnu_Reader_Async() =>
+    public async ValueTask Tar_GZip_OldGnu_Reader_Async() =>
         await ReadAsync("Tar.oldgnu.tar.gz", CompressionType.GZip);
 
     [Fact]
-    public async Task Tar_BZip2_Entry_Stream_Async()
+    public async ValueTask Tar_BZip2_Entry_Stream_Async()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
         using (var reader = TarReader.Open(stream))
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    using var entryStream = reader.OpenEntryStream();
+                    using var entryStream = await reader.OpenEntryStreamAsync();
                     var file = Path.GetFileName(reader.Entry.Key);
                     var folder =
                         Path.GetDirectoryName(reader.Entry.Key)
@@ -178,44 +180,51 @@ public class TarReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public async Task Tar_Broken_Stream_Async()
+    public async ValueTask Tar_Broken_Stream_Async()
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var memoryStream = new MemoryStream();
 
-        Assert.True(reader.MoveToNextEntry());
-        Assert.True(reader.MoveToNextEntry());
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.True(await reader.MoveToNextEntryAsync());
         await reader.WriteEntryToAsync(memoryStream);
         stream.Close();
-        Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+            await reader.MoveToNextEntryAsync()
+        );
     }
 
     [Fact]
-    public async Task Tar_Corrupted_Async()
+    public async ValueTask Tar_Corrupted_Async()
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "TarCorrupted.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var memoryStream = new MemoryStream();
 
-        Assert.True(reader.MoveToNextEntry());
-        Assert.True(reader.MoveToNextEntry());
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.True(await reader.MoveToNextEntryAsync());
         await reader.WriteEntryToAsync(memoryStream);
         stream.Close();
-        Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+            await reader.MoveToNextEntryAsync()
+        );
     }
 
 #if LINUX
     [Fact]
-    public async Task Tar_GZip_With_Symlink_Entries_Async()
+    public async ValueTask Tar_GZip_With_Symlink_Entries_Async()
     {
         using Stream stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
         );
-        using var reader = TarReader.Open(stream);
-        while (reader.MoveToNextEntry())
+        await using var reader = await ReaderFactory.OpenAsync(
+            new AsyncOnlyStream(stream),
+            new ReaderOptions { LookForHeader = true }
+        );
+        while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.IsDirectory)
             {

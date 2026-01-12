@@ -10,14 +10,14 @@ public interface IWriter : IDisposable
 {
     ArchiveType WriterType { get; }
     void Write(string filename, Stream source, DateTime? modificationTime);
-    Task WriteAsync(
+    ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
     );
     void WriteDirectory(string directoryName, DateTime? modificationTime);
-    Task WriteDirectoryAsync(
+    ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default

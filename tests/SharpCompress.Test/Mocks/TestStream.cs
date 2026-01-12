@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Test.Mocks;
 
@@ -34,6 +37,20 @@ public class TestStream(Stream stream, bool read, bool write, bool seek) : Strea
 
     public override int Read(byte[] buffer, int offset, int count) =>
         stream.Read(buffer, offset, count);
+
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => stream.ReadAsync(buffer, offset, count, cancellationToken);
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+    public override ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    ) => stream.ReadAsync(buffer, cancellationToken);
+#endif
 
     public override long Seek(long offset, SeekOrigin origin) => stream.Seek(offset, origin);
 

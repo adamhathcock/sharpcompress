@@ -11,7 +11,7 @@ internal sealed class TarHeader
     internal static readonly DateTime EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     public TarHeader(
-        ArchiveEncoding archiveEncoding,
+        IArchiveEncoding archiveEncoding,
         TarHeaderWriteFormat writeFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK
     )
     {
@@ -30,7 +30,7 @@ internal sealed class TarHeader
     internal DateTime LastModifiedTime { get; set; }
     internal EntryType EntryType { get; set; }
     internal Stream? PackedStream { get; set; }
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; }
 
     internal const int BLOCK_SIZE = 512;
 

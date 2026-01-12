@@ -8,7 +8,7 @@ namespace SharpCompress.Test.Streams;
 public class RewindableStreamAsyncTest
 {
     [Fact]
-    public async Task TestRewindAsync()
+    public async ValueTask TestRewindAsync()
     {
         var ms = new MemoryStream();
         var bw = new BinaryWriter(ms);
@@ -46,7 +46,7 @@ public class RewindableStreamAsyncTest
     }
 
     [Fact]
-    public async Task TestIncompleteRewindAsync()
+    public async ValueTask TestIncompleteRewindAsync()
     {
         var ms = new MemoryStream();
         var bw = new BinaryWriter(ms);

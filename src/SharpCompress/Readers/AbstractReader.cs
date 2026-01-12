@@ -12,12 +12,13 @@ namespace SharpCompress.Readers;
 /// <summary>
 /// A generic push reader that reads unseekable comrpessed streams.
 /// </summary>
-public abstract class AbstractReader<TEntry, TVolume> : IReader
+public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
     where TEntry : Entry
     where TVolume : Volume
 {
     private bool _completed;
     private IEnumerator<TEntry>? _entriesForCurrentReadStream;
+    private IAsyncEnumerator<TEntry>? _entriesForCurrentReadStreamAsync;
     private bool _wroteCurrentEntry;
 
     internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
@@ -36,15 +37,34 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     public abstract TVolume? Volume { get; }
 
     /// <summary>
-    /// Current file entry
+    /// Current file entry (from either sync or async enumeration).
     /// </summary>
-    public TEntry Entry => _entriesForCurrentReadStream.NotNull().Current;
+    public TEntry Entry
+    {
+        get
+        {
+            if (_entriesForCurrentReadStreamAsync is not null)
+            {
+                return _entriesForCurrentReadStreamAsync.Current;
+            }
+            return _entriesForCurrentReadStream.NotNull().Current;
+        }
+    }
 
     #region IDisposable Members
 
     public virtual void Dispose()
     {
         _entriesForCurrentReadStream?.Dispose();
+        Volume?.Dispose();
+    }
+
+    public virtual async ValueTask DisposeAsync()
+    {
+        if (_entriesForCurrentReadStreamAsync is not null)
+        {
+            await _entriesForCurrentReadStreamAsync.DisposeAsync();
+        }
         Volume?.Dispose();
     }
 
@@ -67,6 +87,12 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
     public bool MoveToNextEntry()
     {
+        if (_entriesForCurrentReadStreamAsync is not null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(MoveToNextEntry)} cannot be used after {nameof(MoveToNextEntryAsync)} has been used."
+            );
+        }
         if (_completed)
         {
             return false;
@@ -92,7 +118,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         return false;
     }
 
-    public async Task<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<bool> MoveToNextEntryAsync(CancellationToken cancellationToken = default)
     {
         if (_completed)
         {
@@ -102,16 +128,16 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         {
             throw new ReaderCancelledException("Reader has been cancelled.");
         }
-        if (_entriesForCurrentReadStream is null)
+        if (_entriesForCurrentReadStreamAsync is null)
         {
-            return LoadStreamForReading(RequestInitialStream());
+            return await LoadStreamForReadingAsync(RequestInitialStream());
         }
         if (!_wroteCurrentEntry)
         {
             await SkipEntryAsync(cancellationToken).ConfigureAwait(false);
         }
         _wroteCurrentEntry = false;
-        if (NextEntryForCurrentStream())
+        if (await NextEntryForCurrentStreamAsync(cancellationToken))
         {
             return true;
         }
@@ -121,6 +147,12 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 
     protected bool LoadStreamForReading(Stream stream)
     {
+        if (_entriesForCurrentReadStreamAsync is not null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(LoadStreamForReading)} cannot be used after {nameof(LoadStreamForReadingAsync)} has been used."
+            );
+        }
         _entriesForCurrentReadStream?.Dispose();
         if (stream is null || !stream.CanRead)
         {
@@ -134,13 +166,58 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         return _entriesForCurrentReadStream.MoveNext();
     }
 
+    protected async ValueTask<bool> LoadStreamForReadingAsync(Stream stream)
+    {
+        if (_entriesForCurrentReadStreamAsync is not null)
+        {
+            await _entriesForCurrentReadStreamAsync.DisposeAsync();
+        }
+        if (stream is null || !stream.CanRead)
+        {
+            throw new MultipartStreamRequiredException(
+                "File is split into multiple archives: '"
+                    + Entry.Key
+                    + "'. A new readable stream is required.  Use Cancel if it was intended."
+            );
+        }
+        _entriesForCurrentReadStreamAsync = GetEntriesAsync(stream).GetAsyncEnumerator();
+        return await _entriesForCurrentReadStreamAsync.MoveNextAsync();
+    }
+
     protected virtual Stream RequestInitialStream() =>
         Volume.NotNull("Volume isn't loaded.").Stream;
 
     internal virtual bool NextEntryForCurrentStream() =>
         _entriesForCurrentReadStream.NotNull().MoveNext();
 
+    internal virtual ValueTask<bool> NextEntryForCurrentStreamAsync() =>
+        _entriesForCurrentReadStreamAsync.NotNull().MoveNextAsync();
+
+    /// <summary>
+    /// Moves the current async enumerator to the next entry.
+    /// </summary>
+    internal virtual ValueTask<bool> NextEntryForCurrentStreamAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        if (_entriesForCurrentReadStreamAsync is not null)
+        {
+            return _entriesForCurrentReadStreamAsync.MoveNextAsync();
+        }
+
+        return new ValueTask<bool>(NextEntryForCurrentStream());
+    }
+
     protected abstract IEnumerable<TEntry> GetEntries(Stream stream);
+
+    protected virtual async IAsyncEnumerable<TEntry> GetEntriesAsync(Stream stream)
+    {
+        await Task.CompletedTask;
+        foreach (var entry in GetEntries(stream))
+        {
+            yield return entry;
+        }
+    }
 
     #region Entry Skip/Write
 
@@ -152,7 +229,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         }
     }
 
-    private async Task SkipEntryAsync(CancellationToken cancellationToken)
+    private async ValueTask SkipEntryAsync(CancellationToken cancellationToken)
     {
         if (!Entry.IsDirectory)
         {
@@ -182,7 +259,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         s.SkipEntry();
     }
 
-    private async Task SkipAsync(CancellationToken cancellationToken)
+    private async ValueTask SkipAsync(CancellationToken cancellationToken)
     {
         var part = Entry.Parts.First();
 
@@ -231,7 +308,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         _wroteCurrentEntry = true;
     }
 
-    public async Task WriteEntryToAsync(
+    public async ValueTask WriteEntryToAsync(
         Stream writableStream,
         CancellationToken cancellationToken = default
     )
@@ -265,14 +342,14 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         sourceStream.CopyTo(writeStream, 81920);
     }
 
-    internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
+    internal async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
 #if NETFRAMEWORK || NETSTANDARD2_0
-        using Stream s = OpenEntryStream();
+        using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #else
-        await using Stream s = OpenEntryStream();
+        await using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
 #endif
@@ -323,7 +400,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
         return stream;
     }
 
-    public async Task<EntryStream> OpenEntryStreamAsync(
+    public async ValueTask<EntryStream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
     )
     {
@@ -347,11 +424,19 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     protected virtual EntryStream GetEntryStream() =>
         CreateEntryStream(Entry.Parts.First().GetCompressedStream());
 
-    protected virtual Task<EntryStream> GetEntryStreamAsync(
+    protected virtual async Task<EntryStream> GetEntryStreamAsync(
         CancellationToken cancellationToken = default
-    ) => Task.FromResult(GetEntryStream());
+    )
+    {
+        var stream = await Entry
+            .Parts.First()
+            .GetCompressedStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return CreateEntryStream(stream);
+    }
 
     #endregion
 
     IEntry IReader.Entry => Entry;
+    IEntry IAsyncReader.Entry => Entry;
 }

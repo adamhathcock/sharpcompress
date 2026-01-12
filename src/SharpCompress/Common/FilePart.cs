@@ -1,12 +1,14 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common;
 
 public abstract class FilePart
 {
-    protected FilePart(ArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
+    protected FilePart(IArchiveEncoding archiveEncoding) => ArchiveEncoding = archiveEncoding;
 
-    internal ArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; }
 
     internal abstract string? FilePartName { get; }
     public int Index { get; set; }
@@ -14,4 +16,8 @@ public abstract class FilePart
     internal abstract Stream? GetCompressedStream();
     internal abstract Stream? GetRawStream();
     internal bool Skipped { get; set; }
+
+    internal virtual ValueTask<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    ) => new(GetCompressedStream());
 }

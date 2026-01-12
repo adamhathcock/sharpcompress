@@ -62,7 +62,7 @@ public class XZFooter
         }
     }
 
-    public async Task ProcessAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ProcessAsync(CancellationToken cancellationToken = default)
     {
         var crc = await _reader
             .BaseStream.ReadLittleEndianUInt32Async(cancellationToken)

@@ -1,6 +1,6 @@
 # SharpCompress Usage
 
-## Async/Await Support
+## Async/Await Support (Beta)
 
 SharpCompress now provides full async/await support for all I/O operations. All `Read`, `Write`, and extraction operations have async equivalents ending in `Async` that accept an optional `CancellationToken`. This enables better performance and scalability for I/O-bound operations.
 
@@ -13,7 +13,7 @@ SharpCompress now provides full async/await support for all I/O operations. All 
 
 See [Async Examples](#async-examples) section below for usage patterns.
 
-## Stream Rules (changed with 0.21)
+## Stream Rules
 
 When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it. 
 
@@ -113,38 +113,26 @@ using (var archive = RarArchive.Open("Test.rar"))
 }
 ```
 
-### Extract solid Rar or 7Zip archives with manual progress reporting
+### Extract solid Rar or 7Zip archives with progress reporting
 
 `ExtractAllEntries` only works for solid archives (Rar) or 7Zip archives. For optimal performance with these archive types, use this method:
 
 ```C#
-using (var archive = RarArchive.Open("archive.rar")) // Must be solid Rar or 7Zip
+using SharpCompress.Common;
+using SharpCompress.Readers;
+
+var progress = new Progress<ProgressReport>(report =>
 {
-    if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
+    Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
+});
+
+using (var archive = RarArchive.Open("archive.rar", new ReaderOptions { Progress = progress })) // Must be solid Rar or 7Zip
+{
+    archive.WriteToDirectory(@"D:\output", new ExtractionOptions()
     {
-        // Calculate total size for progress reporting
-        double totalSize = archive.Entries.Where(e => !e.IsDirectory).Sum(e => e.Size);
-        long completed = 0;
-
-        using (var reader = archive.ExtractAllEntries())
-        {
-            while (reader.MoveToNextEntry())
-            {
-                if (!reader.Entry.IsDirectory)
-                {
-                    reader.WriteEntryToDirectory(@"D:\output", new ExtractionOptions()
-                    {
-                        ExtractFullPath = true,
-                        Overwrite = true
-                    });
-
-                    completed += reader.Entry.Size;
-                    double progress = completed / totalSize;
-                    Console.WriteLine($"Progress: {progress:P}");
-                }
-            }
-        }
-    }
+        ExtractFullPath = true,
+        Overwrite = true
+    });
 }
 ```
 

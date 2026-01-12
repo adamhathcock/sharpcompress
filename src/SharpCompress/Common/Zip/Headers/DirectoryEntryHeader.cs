@@ -1,11 +1,12 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
 internal class DirectoryEntryHeader : ZipFileEntry
 {
-    public DirectoryEntryHeader(ArchiveEncoding archiveEncoding)
+    public DirectoryEntryHeader(IArchiveEncoding archiveEncoding)
         : base(ZipHeaderType.DirectoryEntry, archiveEncoding) { }
 
     internal override void Read(BinaryReader reader)
@@ -31,7 +32,37 @@ internal class DirectoryEntryHeader : ZipFileEntry
         var extra = reader.ReadBytes(extraLength);
         var comment = reader.ReadBytes(commentLength);
 
-        // According to .ZIP File Format Specification
+        ProcessReadData(name, extra, comment);
+    }
+
+    internal override async ValueTask Read(AsyncBinaryReader reader)
+    {
+        Version = await reader.ReadUInt16Async();
+        VersionNeededToExtract = await reader.ReadUInt16Async();
+        Flags = (HeaderFlags)await reader.ReadUInt16Async();
+        CompressionMethod = (ZipCompressionMethod)await reader.ReadUInt16Async();
+        OriginalLastModifiedTime = LastModifiedTime = await reader.ReadUInt16Async();
+        OriginalLastModifiedDate = LastModifiedDate = await reader.ReadUInt16Async();
+        Crc = await reader.ReadUInt32Async();
+        CompressedSize = await reader.ReadUInt32Async();
+        UncompressedSize = await reader.ReadUInt32Async();
+        var nameLength = await reader.ReadUInt16Async();
+        var extraLength = await reader.ReadUInt16Async();
+        var commentLength = await reader.ReadUInt16Async();
+        DiskNumberStart = await reader.ReadUInt16Async();
+        InternalFileAttributes = await reader.ReadUInt16Async();
+        ExternalFileAttributes = await reader.ReadUInt32Async();
+        RelativeOffsetOfEntryHeader = await reader.ReadUInt32Async();
+
+        var name = await reader.ReadBytesAsync(nameLength);
+        var extra = await reader.ReadBytesAsync(extraLength);
+        var comment = await reader.ReadBytesAsync(commentLength);
+
+        ProcessReadData(name, extra, comment);
+    }
+
+    private void ProcessReadData(byte[] name, byte[] extra, byte[] comment)
+    {
         //
         // For example: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
         //
@@ -41,8 +72,8 @@ internal class DirectoryEntryHeader : ZipFileEntry
 
         if (Flags.HasFlag(HeaderFlags.Efs))
         {
-            Name = ArchiveEncoding.DecodeUTF8(name);
-            Comment = ArchiveEncoding.DecodeUTF8(comment);
+            Name = ArchiveEncoding.Decode(name, EncodingType.UTF8);
+            Comment = ArchiveEncoding.Decode(comment, EncodingType.UTF8);
         }
         else
         {

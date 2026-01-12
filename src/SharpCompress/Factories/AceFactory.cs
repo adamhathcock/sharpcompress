@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Ace.Headers;
@@ -26,12 +27,21 @@ namespace SharpCompress.Factories
             Stream stream,
             string? password = null,
             int bufferSize = ReaderOptions.DefaultBufferSize
-        )
-        {
-            return AceHeader.IsArchive(stream);
-        }
+        ) => AceHeader.IsArchive(stream);
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             AceReader.Open(stream, options);
+
+        public ValueTask<IAsyncReader> OpenReaderAsync(
+            Stream stream,
+            ReaderOptions? options,
+            CancellationToken cancellationToken = default
+        ) => new(AceReader.Open(stream, options));
+
+        public override ValueTask<bool> IsArchiveAsync(
+            Stream stream,
+            string? password = null,
+            int bufferSize = ReaderOptions.DefaultBufferSize
+        ) => new(IsArchive(stream, password, bufferSize));
     }
 }

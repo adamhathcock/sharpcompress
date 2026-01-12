@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Test;
@@ -62,7 +63,11 @@ public class WriterTests : TestBase
         CancellationToken cancellationToken = default
     )
     {
-        using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
+        using (
+            Stream stream = new AsyncOnlyStream(
+                File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive))
+            )
+        )
         {
             var writerOptions = new WriterOptions(compressionType) { LeaveStreamOpen = true };
 
@@ -87,13 +92,15 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var reader = ReaderFactory.Open(
-                SharpCompressStream.Create(stream, leaveOpen: true),
-                readerOptions
+            await using var reader = await ReaderFactory.OpenAsync(
+                new AsyncOnlyStream(SharpCompressStream.Create(stream, leaveOpen: true)),
+                readerOptions,
+                cancellationToken
             );
-            reader.WriteAllToDirectory(
+            await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true }
+                new ExtractionOptions { ExtractFullPath = true },
+                cancellationToken
             );
         }
         VerifyFiles();

@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
@@ -164,7 +166,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task ZipArchive_Entry_WriteToAsync_ReportsProgress()
+    public async ValueTask ZipArchive_Entry_WriteToAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 
@@ -383,7 +385,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task TarArchive_Entry_WriteToAsync_ReportsProgress()
+    public async ValueTask TarArchive_Entry_WriteToAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 
@@ -519,7 +521,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task Zip_ReadAsync_ReportsProgress()
+    public async ValueTask Zip_ReadAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 
@@ -538,9 +540,14 @@ public class ProgressReportTests : TestBase
         archiveStream.Position = 0;
         var readerOptions = new ReaderOptions { Progress = progress };
 
-        using (var reader = ReaderFactory.Open(archiveStream, readerOptions))
+        await using (
+            var reader = await ReaderFactory.OpenAsync(
+                new AsyncOnlyStream(archiveStream),
+                readerOptions
+            )
+        )
         {
-            while (reader.MoveToNextEntry())
+            while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
@@ -582,7 +589,7 @@ public class ProgressReportTests : TestBase
     }
 
     [Fact]
-    public async Task Tar_WriteAsync_ReportsProgress()
+    public async ValueTask Tar_WriteAsync_ReportsProgress()
     {
         var progress = new TestProgress<ProgressReport>();
 

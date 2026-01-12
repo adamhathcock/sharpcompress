@@ -41,7 +41,7 @@ public class XZIndex
         return index;
     }
 
-    public static async Task<XZIndex> FromStreamAsync(
+    public static async ValueTask<XZIndex> FromStreamAsync(
         Stream stream,
         bool indexMarkerAlreadyVerified,
         CancellationToken cancellationToken = default
@@ -71,7 +71,7 @@ public class XZIndex
         VerifyCrc32();
     }
 
-    public async Task ProcessAsync(CancellationToken cancellationToken = default)
+    public async ValueTask ProcessAsync(CancellationToken cancellationToken = default)
     {
         if (!_indexMarkerAlreadyVerified)
         {
@@ -100,7 +100,7 @@ public class XZIndex
         }
     }
 
-    private async Task VerifyIndexMarkerAsync(CancellationToken cancellationToken = default)
+    private async ValueTask VerifyIndexMarkerAsync(CancellationToken cancellationToken = default)
     {
         var marker = await _reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
         if (marker != 0)
@@ -122,7 +122,7 @@ public class XZIndex
         }
     }
 
-    private async Task SkipPaddingAsync(CancellationToken cancellationToken = default)
+    private async ValueTask SkipPaddingAsync(CancellationToken cancellationToken = default)
     {
         var bytes = (int)(_reader.BaseStream.Position - StreamStartPosition) % 4;
         if (bytes > 0)
@@ -143,7 +143,7 @@ public class XZIndex
         // TODO verify this matches
     }
 
-    private async Task VerifyCrc32Async(CancellationToken cancellationToken = default)
+    private async ValueTask VerifyCrc32Async(CancellationToken cancellationToken = default)
     {
         var crc = await _reader
             .BaseStream.ReadLittleEndianUInt32Async(cancellationToken)

@@ -22,7 +22,7 @@ namespace SharpCompress.Common.Ace.Headers
         public List<byte> Comment { get; set; } = new();
         public byte AceVersion { get; private set; }
 
-        public AceMainHeader(ArchiveEncoding archiveEncoding)
+        public AceMainHeader(IArchiveEncoding archiveEncoding)
             : base(archiveEncoding, AceHeaderType.MAIN) { }
 
         /// <summary>

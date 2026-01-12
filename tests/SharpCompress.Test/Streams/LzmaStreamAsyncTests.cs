@@ -10,7 +10,7 @@ namespace SharpCompress.Test.Streams;
 public class LzmaStreamAsyncTests
 {
     [Fact]
-    public async Task TestLzma2Decompress1ByteAsync()
+    public async ValueTask TestLzma2Decompress1ByteAsync()
     {
         var properties = new byte[] { 0x01 };
         var compressedData = new byte[] { 0x01, 0x00, 0x00, 0x58, 0x00 };
@@ -517,7 +517,7 @@ public class LzmaStreamAsyncTests
     ];
 
     [Fact]
-    public async Task TestLzmaBufferAsync()
+    public async ValueTask TestLzmaBufferAsync()
     {
         var input = new MemoryStream(LzmaData);
         using var output = new MemoryStream();
@@ -536,7 +536,7 @@ public class LzmaStreamAsyncTests
     }
 
     [Fact]
-    public async Task TestLzmaStreamEncodingWritesDataAsync()
+    public async ValueTask TestLzmaStreamEncodingWritesDataAsync()
     {
         using var inputStream = new MemoryStream(LzmaResultData);
         using MemoryStream outputStream = new();
@@ -547,7 +547,7 @@ public class LzmaStreamAsyncTests
     }
 
     [Fact]
-    public async Task TestLzmaEncodingAccuracyAsync()
+    public async ValueTask TestLzmaEncodingAccuracyAsync()
     {
         var input = new MemoryStream(LzmaResultData);
         var compressed = new MemoryStream();
