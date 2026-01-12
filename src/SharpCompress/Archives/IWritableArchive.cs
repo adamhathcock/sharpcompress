@@ -28,13 +28,11 @@ public interface IWritableArchiveCommon
 
 public interface IWritableArchive : IArchive, IWritableArchiveCommon
 {
-
     void SaveTo(Stream stream, WriterOptions options);
 }
 
 public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
 {
-
     ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,

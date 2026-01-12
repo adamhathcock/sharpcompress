@@ -601,10 +601,7 @@ public class ArchiveTests : ReaderTests
                 )
             )
             await using (
-                var archive = archiveFactory.OpenAsync(
-                    new AsyncOnlyStream(stream),
-                    readerOptions
-                )
+                var archive = archiveFactory.OpenAsync(new AsyncOnlyStream(stream), readerOptions)
             )
             {
                 try

@@ -12,7 +12,8 @@ namespace SharpCompress.Archives;
 
 public abstract class AbstractWritableArchive<TEntry, TVolume>
     : AbstractArchive<TEntry, TVolume>,
-        IWritableArchive, IWritableAsyncArchive
+        IWritableArchive,
+        IWritableAsyncArchive
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {

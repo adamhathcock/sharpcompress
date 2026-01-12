@@ -71,7 +71,10 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static IWritableArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(
+        IEnumerable<Stream> streams,
+        ReaderOptions? readerOptions = null
+    )
     {
         streams.NotNull(nameof(streams));
         var strms = streams.ToArray();

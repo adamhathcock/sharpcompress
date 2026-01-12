@@ -16,19 +16,13 @@ namespace SharpCompress.Archives.Rar;
 
 public interface IRarArchiveCommon
 {
-
-
     int MinVersion { get; }
     int MaxVersion { get; }
 }
 
-public interface IRarArchive : IArchive, IRarArchiveCommon
-{
-}
+public interface IRarArchive : IArchive, IRarArchiveCommon { }
 
-public interface IRarAsyncArchive : IAsyncArchive, IRarArchiveCommon
-{
-}
+public interface IRarAsyncArchive : IAsyncArchive, IRarArchiveCommon { }
 
 public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, IRarArchive
 {

@@ -180,7 +180,7 @@ public class Zip64Tests : WriterTests
     {
         long count = 0;
         long size = 0;
-        ZipEntry? prev = null;
+        IEntry? prev = null;
         using (var fs = File.OpenRead(filename))
         using (var rd = ZipReader.Open(fs, new ReaderOptions { LookForHeader = false }))
         {

@@ -126,10 +126,12 @@ public static class AsyncEnumerableExtensions
         {
             throw new InvalidOperationException("The source sequence is empty.");
         }
-        var value =   enumerator.Current;
+        var value = enumerator.Current;
         if (await enumerator.MoveNextAsync())
         {
-            throw new InvalidOperationException("The source sequence contains more than one element.");
+            throw new InvalidOperationException(
+                "The source sequence contains more than one element."
+            );
         }
         return value;
     }

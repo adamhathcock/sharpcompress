@@ -18,7 +18,6 @@ public static class RarArchiveExtensions
     public static bool IsMultipartVolume(this IRarArchive archive) =>
         archive.Volumes.Cast<RarVolume>().First().IsMultiVolume;
 
-
     /// <summary>
     /// RarArchive is the first volume of a multi-part archive.  If MultipartVolume is true and IsFirstVolume is false then the first volume file must be missing.
     /// </summary>

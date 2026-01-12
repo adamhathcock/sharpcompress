@@ -13,7 +13,12 @@ public static class IWritableAsyncArchiveExtensions
         string filePath,
         WriterOptions? options = null,
         CancellationToken cancellationToken = default
-    ) => writableArchive.SaveToAsync(new FileInfo(filePath), options ?? new (CompressionType.Deflate), cancellationToken);
+    ) =>
+        writableArchive.SaveToAsync(
+            new FileInfo(filePath),
+            options ?? new(CompressionType.Deflate),
+            cancellationToken
+        );
 
     public static async ValueTask SaveToAsync(
         this IWritableAsyncArchive writableArchive,
@@ -23,7 +28,8 @@ public static class IWritableAsyncArchiveExtensions
     )
     {
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        await writableArchive.SaveToAsync(stream, options?? new (CompressionType.Deflate),  cancellationToken).ConfigureAwait(false);
+        await writableArchive
+            .SaveToAsync(stream, options ?? new(CompressionType.Deflate), cancellationToken)
+            .ConfigureAwait(false);
     }
-
 }
