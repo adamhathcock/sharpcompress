@@ -162,7 +162,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         SaveTo(stream, options, OldEntries, newEntries);
     }
 
-    public async Task SaveToAsync(
+    public async ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
         CancellationToken cancellationToken = default
@@ -208,7 +208,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         IEnumerable<TEntry> newEntries
     );
 
-    protected abstract Task SaveToAsync(
+    protected abstract ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
         IEnumerable<TEntry> oldEntries,

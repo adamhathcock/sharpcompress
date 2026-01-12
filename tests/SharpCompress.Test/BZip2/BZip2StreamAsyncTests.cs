@@ -22,7 +22,7 @@ public class BZip2StreamAsyncTests
     }
 
     [Fact]
-    public async Task BZip2CompressDecompressAsyncTest()
+    public async ValueTask BZip2CompressDecompressAsyncTest()
     {
         var testData = CreateTestData(10000);
         byte[] compressed;
@@ -83,7 +83,7 @@ public class BZip2StreamAsyncTests
     }
 
     [Fact]
-    public async Task BZip2ReadAsyncWithCancellationTest()
+    public async ValueTask BZip2ReadAsyncWithCancellationTest()
     {
         var testData = Encoding.ASCII.GetBytes(new string('A', 5000)); // Repetitive data compresses well
         byte[] compressed;
@@ -127,7 +127,7 @@ public class BZip2StreamAsyncTests
     }
 
     [Fact]
-    public async Task BZip2MultipleAsyncWritesTest()
+    public async ValueTask BZip2MultipleAsyncWritesTest()
     {
         using (var memoryStream = new MemoryStream())
         {
@@ -179,7 +179,7 @@ public class BZip2StreamAsyncTests
     }
 
     [Fact]
-    public async Task BZip2LargeDataAsyncTest()
+    public async ValueTask BZip2LargeDataAsyncTest()
     {
         var largeData = CreateTestData(100000);
 

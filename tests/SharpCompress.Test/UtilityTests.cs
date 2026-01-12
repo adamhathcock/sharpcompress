@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SharpCompress.Test;
@@ -153,6 +154,97 @@ public class UtilityTests
         var result = stream.ReadFully(buffer);
 
         Assert.True(result);
+    }
+
+    #endregion
+
+    #region ReadByteAsync Tests
+
+    [Fact]
+    public async ValueTask ReadByteAsync_ReadsOneByte()
+    {
+        var data = new byte[] { 42, 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+        using var reader = new BinaryReader(stream);
+
+        var result = await reader.ReadByteAsync();
+
+        Assert.Equal(42, result);
+        Assert.Equal(1, stream.Position);
+    }
+
+    [Fact]
+    public async ValueTask ReadByteAsync_EmptyStream_ThrowsEndOfStreamException()
+    {
+        using var stream = new MemoryStream();
+        using var reader = new BinaryReader(stream);
+
+        await Assert.ThrowsAsync<EndOfStreamException>(async () => await reader.ReadByteAsync());
+    }
+
+    [Fact]
+    public async ValueTask ReadByteAsync_MultipleReads_ReadsSequentially()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+        using var reader = new BinaryReader(stream);
+
+        var first = await reader.ReadByteAsync();
+        var second = await reader.ReadByteAsync();
+        var third = await reader.ReadByteAsync();
+
+        Assert.Equal(1, first);
+        Assert.Equal(2, second);
+        Assert.Equal(3, third);
+    }
+
+    #endregion
+
+    #region ReadBytesAsync Tests
+
+    [Fact]
+    public async ValueTask ReadBytesAsync_ReadsExactlyRequiredBytes()
+    {
+        var data = new byte[] { 1, 2, 3, 4, 5 };
+        using var stream = new MemoryStream(data);
+        using var reader = new BinaryReader(stream);
+
+        var result = await reader.ReadBytesAsync(3);
+
+        Assert.Equal(new byte[] { 1, 2, 3 }, result);
+        Assert.Equal(3, stream.Position);
+    }
+
+    [Fact]
+    public async ValueTask ReadBytesAsync_NotEnoughData_ThrowsEndOfStreamException()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+        using var reader = new BinaryReader(stream);
+
+        await Assert.ThrowsAsync<EndOfStreamException>(async () => await reader.ReadBytesAsync(5));
+    }
+
+    [Fact]
+    public async ValueTask ReadBytesAsync_EmptyStream_ThrowsEndOfStreamException()
+    {
+        using var stream = new MemoryStream();
+        using var reader = new BinaryReader(stream);
+
+        await Assert.ThrowsAsync<EndOfStreamException>(async () => await reader.ReadBytesAsync(1));
+    }
+
+    [Fact]
+    public async ValueTask ReadBytesAsync_ZeroBytes_ReturnsEmptyArray()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+        using var reader = new BinaryReader(stream);
+
+        var result = await reader.ReadBytesAsync(0);
+
+        Assert.Empty(result);
+        Assert.Equal(0, stream.Position);
     }
 
     #endregion

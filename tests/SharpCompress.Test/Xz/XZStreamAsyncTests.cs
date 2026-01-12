@@ -8,7 +8,7 @@ namespace SharpCompress.Test.Xz;
 public class XzStreamAsyncTests : XzTestsBase
 {
     [Fact]
-    public async Task CanReadEmptyStreamAsync()
+    public async ValueTask CanReadEmptyStreamAsync()
     {
         var xz = new XZStream(CompressedEmptyStream);
         using var sr = new StreamReader(xz);
@@ -17,7 +17,7 @@ public class XzStreamAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CanReadStreamAsync()
+    public async ValueTask CanReadStreamAsync()
     {
         var xz = new XZStream(CompressedStream);
         using var sr = new StreamReader(xz);
@@ -26,7 +26,7 @@ public class XzStreamAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CanReadIndexedStreamAsync()
+    public async ValueTask CanReadIndexedStreamAsync()
     {
         var xz = new XZStream(CompressedIndexedStream);
         using var sr = new StreamReader(xz);

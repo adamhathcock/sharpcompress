@@ -1,13 +1,12 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal class LocalEntryHeader : ZipFileEntry
+internal class LocalEntryHeader(IArchiveEncoding archiveEncoding)
+    : ZipFileEntry(ZipHeaderType.LocalEntry, archiveEncoding)
 {
-    public LocalEntryHeader(IArchiveEncoding archiveEncoding)
-        : base(ZipHeaderType.LocalEntry, archiveEncoding) { }
-
     internal override void Read(BinaryReader reader)
     {
         Version = reader.ReadUInt16();
@@ -23,7 +22,29 @@ internal class LocalEntryHeader : ZipFileEntry
         var name = reader.ReadBytes(nameLength);
         var extra = reader.ReadBytes(extraLength);
 
-        // According to .ZIP File Format Specification
+        ProcessReadData(name, extra);
+    }
+
+    internal override async ValueTask Read(AsyncBinaryReader reader)
+    {
+        Version = await reader.ReadUInt16Async();
+        Flags = (HeaderFlags)await reader.ReadUInt16Async();
+        CompressionMethod = (ZipCompressionMethod)await reader.ReadUInt16Async();
+        OriginalLastModifiedTime = LastModifiedTime = await reader.ReadUInt16Async();
+        OriginalLastModifiedDate = LastModifiedDate = await reader.ReadUInt16Async();
+        Crc = await reader.ReadUInt32Async();
+        CompressedSize = await reader.ReadUInt32Async();
+        UncompressedSize = await reader.ReadUInt32Async();
+        var nameLength = await reader.ReadUInt16Async();
+        var extraLength = await reader.ReadUInt16Async();
+        var name = await reader.ReadBytesAsync(nameLength);
+        var extra = await reader.ReadBytesAsync(extraLength);
+
+        ProcessReadData(name, extra);
+    }
+
+    private void ProcessReadData(byte[] name, byte[] extra)
+    {
         //
         // For example: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
         //

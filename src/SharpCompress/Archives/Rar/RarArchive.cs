@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
@@ -65,7 +67,13 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
         return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
     }
 
-    protected override IReader CreateReaderForSolidExtraction()
+    protected override IReader CreateReaderForSolidExtraction() =>
+        CreateReaderForSolidExtractionInternal();
+
+    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
+        new(CreateReaderForSolidExtractionInternal());
+
+    private RarReader CreateReaderForSolidExtractionInternal()
     {
         if (this.IsMultipartVolume())
         {
@@ -179,6 +187,70 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
                 readerOptions ?? new ReaderOptions()
             )
         );
+    }
+
+    /// <summary>
+    /// Opens a RarArchive asynchronously from a stream.
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(stream, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a RarArchive asynchronously from a FileInfo.
+    /// </summary>
+    /// <param name="fileInfo"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(fileInfo, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a RarArchive asynchronously from multiple streams.
+    /// </summary>
+    /// <param name="streams"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(streams, readerOptions));
+    }
+
+    /// <summary>
+    /// Opens a RarArchive asynchronously from multiple FileInfo objects.
+    /// </summary>
+    /// <param name="fileInfos"></param>
+    /// <param name="readerOptions"></param>
+    /// <param name="cancellationToken"></param>
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(Open(fileInfos, readerOptions));
     }
 
     public static bool IsRarFile(string filePath) => IsRarFile(new FileInfo(filePath));

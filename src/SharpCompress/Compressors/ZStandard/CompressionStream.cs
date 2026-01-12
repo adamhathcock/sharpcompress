@@ -77,7 +77,7 @@ public class CompressionStream : Stream
 #if !NETSTANDARD2_0 && !NETFRAMEWORK
     public override async ValueTask DisposeAsync()
 #else
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
 #endif
     {
         if (compressor == null)
@@ -137,7 +137,7 @@ public class CompressionStream : Stream
 
     private void FlushInternal(ZSTD_EndDirective directive) => WriteInternal(null, directive);
 
-    private async Task FlushInternalAsync(
+    private async ValueTask FlushInternalAsync(
         ZSTD_EndDirective directive,
         CancellationToken cancellationToken = default
     ) => await WriteInternalAsync(null, directive, cancellationToken).ConfigureAwait(false);
@@ -183,7 +183,7 @@ public class CompressionStream : Stream
         CancellationToken cancellationToken = default
     )
 #else
-    private async Task WriteInternalAsync(
+    private async ValueTask WriteInternalAsync(
         ReadOnlyMemory<byte>? buffer,
         ZSTD_EndDirective directive,
         CancellationToken cancellationToken = default
@@ -235,14 +235,16 @@ public class CompressionStream : Stream
             .ConfigureAwait(false);
 #else
 
-    public override Task WriteAsync(
+    public override async Task WriteAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken);
+    ) =>
+        await WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken)
+            .ConfigureAwait(false);
 
-    public async Task WriteAsync(
+    public async ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
     ) =>

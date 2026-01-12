@@ -368,6 +368,9 @@ dotnet_diagnostic.NX0001.severity = error
 dotnet_diagnostic.NX0002.severity = silent
 dotnet_diagnostic.NX0003.severity = silent
 
+dotnet_diagnostic.VSTHRD110.severity = error
+dotnet_diagnostic.VSTHRD107.severity = error
+
 ##########################################
 # Styles
 ##########################################

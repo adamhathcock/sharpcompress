@@ -26,7 +26,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task OnFindIndexBlockThrowAsync()
+    public async ValueTask OnFindIndexBlockThrowAsync()
     {
         var bytes = new byte[] { 0 };
         using Stream indexBlockStream = new MemoryStream(bytes);
@@ -38,7 +38,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CrcIncorrectThrowsAsync()
+    public async ValueTask CrcIncorrectThrowsAsync()
     {
         var bytes = (byte[])Compressed.Clone();
         bytes[20]++;
@@ -53,7 +53,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CanReadMAsync()
+    public async ValueTask CanReadMAsync()
     {
         var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
         Assert.Equal(
@@ -63,7 +63,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CanReadMaryAsync()
+    public async ValueTask CanReadMaryAsync()
     {
         var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
         Assert.Equal(
@@ -81,7 +81,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task CanReadPoemWithStreamReaderAsync()
+    public async ValueTask CanReadPoemWithStreamReaderAsync()
     {
         var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
         var sr = new StreamReader(xzBlock);
@@ -89,7 +89,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task NoopWhenNoPaddingAsync()
+    public async ValueTask NoopWhenNoPaddingAsync()
     {
         // CompressedStream's only block has no padding.
         var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
@@ -99,7 +99,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task SkipsPaddingWhenPresentAsync()
+    public async ValueTask SkipsPaddingWhenPresentAsync()
     {
         // CompressedIndexedStream's first block has 1-byte padding.
         var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
@@ -109,7 +109,7 @@ public class XzBlockAsyncTests : XzTestsBase
     }
 
     [Fact]
-    public async Task HandlesPaddingInUnalignedBlockAsync()
+    public async ValueTask HandlesPaddingInUnalignedBlockAsync()
     {
         var compressedUnaligned = new byte[Compressed.Length + 1];
         Compressed.CopyTo(compressedUnaligned, 1);

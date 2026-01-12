@@ -36,7 +36,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
     [InlineData(CompressionType.BZip2, 0, 2, 0.035f)] // was 0.8f, actual 0.032
     [InlineData(CompressionType.Deflate, 9, 3, 0.04f)] // was 0.7f, actual 0.038
     [InlineData(CompressionType.ZStandard, 9, 3, 0.003f)] // was 0.7f, actual 0.002
-    public async Task Zip_Create_Archive_With_3_Files_Crc32_Test_Async(
+    public async ValueTask Zip_Create_Archive_With_3_Files_Crc32_Test_Async(
         CompressionType compressionType,
         int compressionLevel,
         int sizeMb,
@@ -110,7 +110,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
     [InlineData(CompressionType.ZStandard, 22, 4, 0.003f)] // was 0.8, actual 0.002
     [InlineData(CompressionType.BZip2, 0, 4, 0.035f)] // was 0.8, actual 0.032
     [InlineData(CompressionType.LZMA, 0, 4, 0.003f)] // was 0.8, actual 0.002
-    public async Task Zip_WriterFactory_Crc32_Test_Async(
+    public async ValueTask Zip_WriterFactory_Crc32_Test_Async(
         CompressionType compressionType,
         int compressionLevel,
         int sizeMb,
@@ -153,7 +153,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         using var archive = ZipArchive.Open(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
-        using var entryStream = entry.OpenEntryStream();
+        using var entryStream = await entry.OpenEntryStreamAsync();
         using var extractedStream = new MemoryStream();
         await entryStream.CopyToAsync(extractedStream);
 
@@ -177,7 +177,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
     [InlineData(CompressionType.ZStandard, 22, 2, 0.005f)] // was 0.7, actual 0.004
     [InlineData(CompressionType.BZip2, 0, 2, 0.035f)] // was 0.8, actual 0.032
     [InlineData(CompressionType.LZMA, 0, 2, 0.005f)] // was 0.8, actual 0.004
-    public async Task Zip_ZipArchiveOpen_Crc32_Test_Async(
+    public async ValueTask Zip_ZipArchiveOpen_Crc32_Test_Async(
         CompressionType compressionType,
         int compressionLevel,
         int sizeMb,
@@ -208,7 +208,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         using var archive = ZipArchive.Open(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
-        using var entryStream = entry.OpenEntryStream();
+        using var entryStream = await entry.OpenEntryStreamAsync();
         using var extractedStream = new MemoryStream();
         await entryStream.CopyToAsync(extractedStream);
 
@@ -238,7 +238,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
     }
 
     // Helper method for async archive content verification
-    private async Task VerifyArchiveContentAsync(
+    private async ValueTask VerifyArchiveContentAsync(
         MemoryStream zipStream,
         Dictionary<string, (byte[] data, uint crc)> expectedFiles
     )
@@ -254,7 +254,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
             );
 
             var expected = expectedFiles[entry.Key!];
-            using var entryStream = entry.OpenEntryStream();
+            using var entryStream = await entry.OpenEntryStreamAsync();
             using var extractedStream = new MemoryStream();
             await entryStream.CopyToAsync(extractedStream);
 

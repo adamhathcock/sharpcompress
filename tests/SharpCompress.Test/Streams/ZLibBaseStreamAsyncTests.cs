@@ -12,7 +12,7 @@ namespace SharpCompress.Test.Streams;
 public class ZLibBaseStreamAsyncTests
 {
     [Fact]
-    public async Task TestChunkedZlibCompressesEverythingAsync()
+    public async ValueTask TestChunkedZlibCompressesEverythingAsync()
     {
         var plainData = new byte[]
         {
@@ -61,7 +61,7 @@ public class ZLibBaseStreamAsyncTests
     }
 
     [Fact]
-    public async Task Zlib_should_read_the_previously_written_message_async()
+    public async ValueTask Zlib_should_read_the_previously_written_message_async()
     {
         var message = new string('a', 131073); // 131073 causes the failure, but 131072 (-1) doesn't
         var bytes = Encoding.ASCII.GetBytes(message);
@@ -83,7 +83,7 @@ public class ZLibBaseStreamAsyncTests
         result.Should().Be(message);
     }
 
-    private async Task CompressAsync(Stream input, Stream output, int compressionLevel)
+    private async ValueTask CompressAsync(Stream input, Stream output, int compressionLevel)
     {
         using var zlibStream = new ZlibStream(
             SharpCompressStream.Create(output, leaveOpen: true),
@@ -94,7 +94,7 @@ public class ZLibBaseStreamAsyncTests
         await input.CopyToAsync(zlibStream).ConfigureAwait(false);
     }
 
-    private async Task DecompressAsync(Stream input, Stream output)
+    private async ValueTask DecompressAsync(Stream input, Stream output)
     {
         using var zlibStream = new ZlibStream(
             SharpCompressStream.Create(input, leaveOpen: true),
@@ -103,7 +103,7 @@ public class ZLibBaseStreamAsyncTests
         await zlibStream.CopyToAsync(output).ConfigureAwait(false);
     }
 
-    private async Task<byte[]> GetBytesAsync(BufferedStream stream)
+    private async ValueTask<byte[]> GetBytesAsync(BufferedStream stream)
     {
         var bytes = new byte[stream.Length];
         await stream.ReadAsync(bytes, 0, (int)stream.Length).ConfigureAwait(false);

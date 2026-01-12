@@ -2,18 +2,14 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal abstract class ZipFileEntry : ZipHeader
+internal abstract class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiveEncoding)
+    : ZipHeader(type)
 {
-    protected ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiveEncoding)
-        : base(type)
-    {
-        Extra = new List<ExtraData>();
-        ArchiveEncoding = archiveEncoding;
-    }
-
     internal bool IsDirectory
     {
         get
@@ -30,7 +26,7 @@ internal abstract class ZipFileEntry : ZipHeader
 
     internal Stream? PackedStream { get; set; }
 
-    internal IArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; } = archiveEncoding;
 
     internal string? Name { get; set; }
 
@@ -44,7 +40,7 @@ internal abstract class ZipFileEntry : ZipHeader
 
     internal long UncompressedSize { get; set; }
 
-    internal List<ExtraData> Extra { get; set; }
+    internal List<ExtraData> Extra { get; set; } = new();
 
     public string? Password { get; set; }
 
@@ -57,6 +53,24 @@ internal abstract class ZipFileEntry : ZipHeader
 
         var buffer = new byte[12];
         archiveStream.ReadFully(buffer);
+
+        var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
+
+        return encryptionData;
+    }
+
+    internal async ValueTask<PkwareTraditionalEncryptionData> ComposeEncryptionDataAsync(
+        Stream archiveStream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (archiveStream is null)
+        {
+            throw new ArgumentNullException(nameof(archiveStream));
+        }
+
+        var buffer = new byte[12];
+        await archiveStream.ReadFullyAsync(buffer, 0, 12, cancellationToken).ConfigureAwait(false);
 
         var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 

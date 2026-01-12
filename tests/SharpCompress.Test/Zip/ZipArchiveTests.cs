@@ -379,7 +379,6 @@ public class ZipArchiveTests : ArchiveTests
             archive.SaveTo(scratchPath, writerOptions);
         }
         CompareArchivesByPath(unmodified, scratchPath, Encoding.GetEncoding(866));
-        Directory.Delete(SCRATCH_FILES_PATH, true);
     }
 
     /// <summary>
@@ -449,7 +448,6 @@ public class ZipArchiveTests : ArchiveTests
                 )
             );
         }
-        Directory.Delete(SCRATCH_FILES_PATH, true);
     }
 
     [Fact]
