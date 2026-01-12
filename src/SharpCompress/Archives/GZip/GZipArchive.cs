@@ -14,184 +14,18 @@ using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Archives.GZip;
 
-public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
+public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
 {
-    /// <summary>
-    /// Constructor expects a filepath to an existing file.
-    /// </summary>
-    /// <param name="filePath"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(string filePath, ReaderOptions? readerOptions = null)
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
-    }
-
-    /// <summary>
-    /// Constructor with a FileInfo object to an existing file.
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        fileInfo.NotNull(nameof(fileInfo));
-        return new GZipArchive(
-            new SourceStream(
-                fileInfo,
-                i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Constructor with all file parts passed in
-    /// </summary>
-    /// <param name="fileInfos"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(
-        IEnumerable<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
-    )
-    {
-        fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
-        return new GZipArchive(
-            new SourceStream(
-                files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Constructor with all stream parts passed in
-    /// </summary>
-    /// <param name="streams"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
-    {
-        streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
-        return new GZipArchive(
-            new SourceStream(
-                strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Takes a seekable Stream as a source
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="readerOptions"></param>
-    public static IWritableArchive Open(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
-
-        return new GZipArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
-        );
-    }
-
-    /// <summary>
-    /// Opens a GZipArchive asynchronously from a stream.
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IWritableAsyncArchive OpenAsync(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(stream, readerOptions);
-    }
-
-    /// <summary>
-    /// Opens a GZipArchive asynchronously from a FileInfo.
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IWritableAsyncArchive OpenAsync(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(fileInfo, readerOptions);
-    }
-
-    /// <summary>
-    /// Opens a GZipArchive asynchronously from multiple streams.
-    /// </summary>
-    /// <param name="streams"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IWritableAsyncArchive OpenAsync(
-        IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(streams, readerOptions);
-    }
-
-    /// <summary>
-    /// Opens a GZipArchive asynchronously from multiple FileInfo objects.
-    /// </summary>
-    /// <param name="fileInfos"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IWritableAsyncArchive OpenAsync(
-        IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(fileInfos, readerOptions);
-    }
-
-    public static GZipArchive Create() => new();
-
-    /// <summary>
-    /// Constructor with a SourceStream able to handle FileInfo and Streams.
-    /// </summary>
-    /// <param name="sourceStream"></param>
     private GZipArchive(SourceStream sourceStream)
         : base(ArchiveType.GZip, sourceStream) { }
+
+    internal GZipArchive()
+        : base(ArchiveType.GZip) { }
 
     protected override IEnumerable<GZipVolume> LoadVolumes(SourceStream sourceStream)
     {
         sourceStream.LoadAllParts();
         return sourceStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, 0));
-    }
-
-    public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));
-
-    public static bool IsGZipFile(FileInfo fileInfo)
-    {
-        if (!fileInfo.Exists)
-        {
-            return false;
-        }
-
-        using Stream stream = fileInfo.OpenRead();
-        return IsGZipFile(stream);
     }
 
     public void SaveTo(string filePath) => SaveTo(new FileInfo(filePath));
@@ -214,50 +48,6 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
         await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken)
             .ConfigureAwait(false);
     }
-
-    public static bool IsGZipFile(Stream stream)
-    {
-        // read the header on the first read
-        Span<byte> header = stackalloc byte[10];
-
-        // workitem 8501: handle edge case (decompress empty stream)
-        if (!stream.ReadFully(header))
-        {
-            return false;
-        }
-
-        if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    public static async ValueTask<bool> IsGZipFileAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        // read the header on the first read
-        byte[] header = new byte[10];
-
-        // workitem 8501: handle edge case (decompress empty stream)
-        if (!await stream.ReadFullyAsync(header, cancellationToken).ConfigureAwait(false))
-        {
-            return false;
-        }
-
-        if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    internal GZipArchive()
-        : base(ArchiveType.GZip) { }
 
     protected override GZipArchiveEntry CreateEntryInternal(
         string filePath,

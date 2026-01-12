@@ -12,187 +12,21 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.SevenZip;
 
-public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
+public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
 {
     private ArchiveDatabase? _database;
 
-    /// <summary>
-    /// Constructor expects a filepath to an existing file.
-    /// </summary>
-    /// <param name="filePath"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(string filePath, ReaderOptions? readerOptions = null)
-    {
-        filePath.NotNullOrEmpty("filePath");
-        return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
-    }
-
-    /// <summary>
-    /// Constructor with a FileInfo object to an existing file.
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        fileInfo.NotNull("fileInfo");
-        return new SevenZipArchive(
-            new SourceStream(
-                fileInfo,
-                i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Constructor with all file parts passed in
-    /// </summary>
-    /// <param name="fileInfos"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(
-        IEnumerable<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
-    )
-    {
-        fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
-        return new SevenZipArchive(
-            new SourceStream(
-                files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Constructor with all stream parts passed in
-    /// </summary>
-    /// <param name="streams"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
-    {
-        streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
-        return new SevenZipArchive(
-            new SourceStream(
-                strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Takes a seekable Stream as a source
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="readerOptions"></param>
-    public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        stream.NotNull("stream");
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
-
-        return new SevenZipArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
-        );
-    }
-
-    /// <summary>
-    /// Opens a SevenZipArchive asynchronously from a stream.
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(stream, readerOptions);
-    }
-
-    /// <summary>
-    /// Opens a SevenZipArchive asynchronously from a FileInfo.
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfo, readerOptions);
-    }
-
-    /// <summary>
-    /// Opens a SevenZipArchive asynchronously from multiple streams.
-    /// </summary>
-    /// <param name="streams"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
-        IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(streams, readerOptions);
-    }
-
-    /// <summary>
-    /// Opens a SevenZipArchive asynchronously from multiple FileInfo objects.
-    /// </summary>
-    /// <param name="fileInfos"></param>
-    /// <param name="readerOptions"></param>
-    /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
-        IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfos, readerOptions);
-    }
-
-    /// <summary>
-    /// Constructor with a SourceStream able to handle FileInfo and Streams.
-    /// </summary>
-    /// <param name="sourceStream"></param>
     private SevenZipArchive(SourceStream sourceStream)
         : base(ArchiveType.SevenZip, sourceStream) { }
 
-    protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream sourceStream)
-    {
-        sourceStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
-        return new SevenZipVolume(sourceStream, ReaderOptions, 0).AsEnumerable(); //simple single volume or split, multivolume not supported
-    }
-
-    public static bool IsSevenZipFile(string filePath) => IsSevenZipFile(new FileInfo(filePath));
-
-    public static bool IsSevenZipFile(FileInfo fileInfo)
-    {
-        if (!fileInfo.Exists)
-        {
-            return false;
-        }
-        using Stream stream = fileInfo.OpenRead();
-        return IsSevenZipFile(stream);
-    }
-
     internal SevenZipArchive()
         : base(ArchiveType.SevenZip) { }
+
+    protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream sourceStream)
+    {
+        sourceStream.NotNull("SourceStream is null").LoadAllParts();
+        return new SevenZipVolume(sourceStream, ReaderOptions, 0).AsEnumerable();
+    }
 
     protected override IEnumerable<SevenZipArchiveEntry> LoadEntries(
         IEnumerable<SevenZipVolume> volumes
@@ -219,7 +53,7 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             foreach (var entry in group)
             {
                 entry.IsSolid = isSolid;
-                isSolid = true; //mark others in this group as solid - same as rar behaviour.
+                isSolid = true;
             }
         }
 
@@ -235,28 +69,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             reader.Open(stream, lookForHeader: ReaderOptions.LookForHeader);
             _database = reader.ReadDatabase(new PasswordProvider(ReaderOptions.Password));
         }
-    }
-
-    public static bool IsSevenZipFile(Stream stream)
-    {
-        try
-        {
-            return SignatureMatch(stream);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static ReadOnlySpan<byte> Signature =>
-        new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
-
-    private static bool SignatureMatch(Stream stream)
-    {
-        var reader = new BinaryReader(stream);
-        ReadOnlySpan<byte> signatureBytes = reader.ReadBytes(6);
-        return signatureBytes.SequenceEqual(Signature);
     }
 
     protected override IReader CreateReaderForSolidExtraction() =>
@@ -295,9 +107,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
                 _currentEntry = dir;
                 yield return dir;
             }
-            // For non-directory entries, yield them without creating shared streams
-            // Each call to GetEntryStream() will create a fresh decompression stream
-            // to avoid state corruption issues with async operations
             foreach (var entry in entries.Where(x => !x.IsDirectory))
             {
                 _currentEntry = entry;
@@ -307,13 +116,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
         protected override EntryStream GetEntryStream()
         {
-            // Create a fresh decompression stream for each file (no state sharing).
-            // However, the LZMA decoder has bugs in its async implementation that cause
-            // state corruption even on fresh streams. The SyncOnlyStream wrapper
-            // works around these bugs by forcing async operations to use sync equivalents.
-            //
-            // TODO: Fix the LZMA decoder async bugs (in LzmaStream, Decoder, OutWindow)
-            // so this wrapper is no longer necessary.
             var entry = _currentEntry.NotNull("currentEntry is not null");
             if (entry.IsDirectory)
             {
@@ -323,15 +125,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         }
     }
 
-    /// <summary>
-    /// WORKAROUND: Forces async operations to use synchronous equivalents.
-    /// This is necessary because the LZMA decoder has bugs in its async implementation
-    /// that cause state corruption (IndexOutOfRangeException, DataErrorException).
-    ///
-    /// The proper fix would be to repair the LZMA decoder's async methods
-    /// (LzmaStream.ReadAsync, Decoder.CodeAsync, OutWindow async operations),
-    /// but that requires deep changes to the decoder state machine.
-    /// </summary>
     private sealed class SyncOnlyStream : Stream
     {
         private readonly Stream _baseStream;
@@ -361,7 +154,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         public override void Write(byte[] buffer, int offset, int count) =>
             _baseStream.Write(buffer, offset, count);
 
-        // Force async operations to use sync equivalents to avoid LZMA decoder bugs
         public override Task<int> ReadAsync(
             byte[] buffer,
             int offset,

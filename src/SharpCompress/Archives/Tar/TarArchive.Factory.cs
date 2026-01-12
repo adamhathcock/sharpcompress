@@ -1,0 +1,162 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.Common;
+using SharpCompress.Common.Tar;
+using SharpCompress.Common.Tar.Headers;
+using SharpCompress.IO;
+using SharpCompress.Readers;
+using SharpCompress.Writers;
+using SharpCompress.Writers.Tar;
+
+namespace SharpCompress.Archives.Tar;
+
+public partial class TarArchive
+{
+    public static IWritableArchive Open(string filePath, ReaderOptions? readerOptions = null)
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+    }
+
+    public static IWritableArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    {
+        fileInfo.NotNull(nameof(fileInfo));
+        return new TarArchive(
+            new SourceStream(
+                fileInfo,
+                i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+                readerOptions ?? new ReaderOptions()
+            )
+        );
+    }
+
+    public static IWritableArchive Open(
+        IEnumerable<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        fileInfos.NotNull(nameof(fileInfos));
+        var files = fileInfos.ToArray();
+        return new TarArchive(
+            new SourceStream(
+                files[0],
+                i => i < files.Length ? files[i] : null,
+                readerOptions ?? new ReaderOptions()
+            )
+        );
+    }
+
+    public static IWritableArchive Open(
+        IEnumerable<Stream> streams,
+        ReaderOptions? readerOptions = null
+    )
+    {
+        streams.NotNull(nameof(streams));
+        var strms = streams.ToArray();
+        return new TarArchive(
+            new SourceStream(
+                strms[0],
+                i => i < strms.Length ? strms[i] : null,
+                readerOptions ?? new ReaderOptions()
+            )
+        );
+    }
+
+    public static IWritableArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    {
+        stream.NotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
+        return new TarArchive(
+            new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+        );
+    }
+
+    public static IWritableAsyncArchive OpenAsync(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive)Open(stream, readerOptions);
+    }
+
+    public static IWritableAsyncArchive OpenAsync(
+        string file,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive)Open(new FileInfo(file), readerOptions);
+    }
+
+    public static IWritableAsyncArchive OpenAsync(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive)Open(fileInfo, readerOptions);
+    }
+
+    public static IWritableAsyncArchive OpenAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive)Open(streams, readerOptions);
+    }
+
+    public static IWritableAsyncArchive OpenAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive)Open(fileInfos, readerOptions);
+    }
+
+    public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
+
+    public static bool IsTarFile(FileInfo fileInfo)
+    {
+        if (!fileInfo.Exists)
+        {
+            return false;
+        }
+        using Stream stream = fileInfo.OpenRead();
+        return IsTarFile(stream);
+    }
+
+    public static bool IsTarFile(Stream stream)
+    {
+        try
+        {
+            var tarHeader = new TarHeader(new ArchiveEncoding());
+            var readSucceeded = tarHeader.Read(new BinaryReader(stream));
+            var isEmptyArchive =
+                tarHeader.Name?.Length == 0
+                && tarHeader.Size == 0
+                && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
+            return readSucceeded || isEmptyArchive;
+        }
+        catch { }
+        return false;
+    }
+
+    public static TarArchive Create() => new();
+}
