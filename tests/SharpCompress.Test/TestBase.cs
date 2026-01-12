@@ -55,7 +55,7 @@ public class TestBase : IAsyncDisposable
         Directory.CreateDirectory(SCRATCH2_FILES_PATH);
     }
 
-    //akways use async dispose since we have I/O and sync Dispose doesn't wait when using xunit
+    //always use async dispose since we have I/O and sync Dispose doesn't wait when using xunit
     public async ValueTask DisposeAsync()
     {
         await Task.CompletedTask;
