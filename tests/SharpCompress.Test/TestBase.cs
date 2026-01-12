@@ -4,12 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 using Xunit;
 
 namespace SharpCompress.Test;
 
-public class TestBase : IDisposable
+public class TestBase : IAsyncDisposable
 {
     private static readonly string SOLUTION_BASE_PATH;
     public static readonly string TEST_ARCHIVES_PATH;
@@ -54,8 +55,10 @@ public class TestBase : IDisposable
         Directory.CreateDirectory(SCRATCH2_FILES_PATH);
     }
 
-    public void Dispose()
+    //akways use async dispose since we have I/O and sync Dispose doesn't wait when using xunit
+    public async ValueTask DisposeAsync()
     {
+        await Task.CompletedTask;
         Directory.Delete(SCRATCH_FILES_PATH, true);
         Directory.Delete(SCRATCH2_FILES_PATH, true);
     }
