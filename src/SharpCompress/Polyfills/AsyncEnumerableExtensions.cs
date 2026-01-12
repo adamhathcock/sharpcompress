@@ -116,6 +116,24 @@ public static class AsyncEnumerableExtensions
         }
     }
 
+    public static async ValueTask<T> SingleAsync<T>(
+        this IAsyncEnumerable<T> source,
+        Func<T, bool> predicate
+    )
+    {
+        var enumerator = source.WhereAsync(predicate).GetAsyncEnumerator();
+        if (!await enumerator.MoveNextAsync())
+        {
+            throw new InvalidOperationException("The source sequence is empty.");
+        }
+        var value =   enumerator.Current;
+        if (await enumerator.MoveNextAsync())
+        {
+            throw new InvalidOperationException("The source sequence contains more than one element.");
+        }
+        return value;
+    }
+
     public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T> source)
     {
         await foreach (var item in source)

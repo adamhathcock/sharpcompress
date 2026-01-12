@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SharpCompress;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;

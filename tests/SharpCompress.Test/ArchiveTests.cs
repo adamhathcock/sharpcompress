@@ -601,7 +601,7 @@ public class ArchiveTests : ReaderTests
                 )
             )
             await using (
-                var archive = await archiveFactory.OpenAsync(
+                var archive = archiveFactory.OpenAsync(
                     new AsyncOnlyStream(stream),
                     readerOptions
                 )

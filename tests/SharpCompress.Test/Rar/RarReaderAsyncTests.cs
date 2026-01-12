@@ -36,59 +36,61 @@ public class RarReaderAsyncTests : ReaderTests
             "Rar5.multi.part06.rar",
         ]);
 
-    private async ValueTask DoRar_Multi_Reader_Async(string[] archives)
-    {
-        using (
-            var reader = RarReader.Open(
-                archives
-                    .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                    .Select(p => File.OpenRead(p))
-            )
-        )
-        {
-            while (await reader.MoveToNextEntryAsync())
-            {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
-            }
-        }
-        VerifyFiles();
-    }
+     private async ValueTask DoRar_Multi_Reader_Async(string[] archives)
+     {
+         using (
+             IReader baseReader = RarReader.Open(
+                 archives
+                     .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                     .Select(p => File.OpenRead(p))
+             )
+         )
+         {
+             IAsyncReader reader = (IAsyncReader)baseReader;
+             while (await reader.MoveToNextEntryAsync())
+             {
+                 await reader.WriteEntryToDirectoryAsync(
+                     SCRATCH_FILES_PATH,
+                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                 );
+             }
+         }
+         VerifyFiles();
+     }
 
-    [Fact]
-    public async ValueTask Rar_Multi_Reader_Encrypted_Async() =>
-        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
-        {
-            string[] archives =
-            [
-                "Rar.EncryptedParts.part01.rar",
-                "Rar.EncryptedParts.part02.rar",
-                "Rar.EncryptedParts.part03.rar",
-                "Rar.EncryptedParts.part04.rar",
-                "Rar.EncryptedParts.part05.rar",
-                "Rar.EncryptedParts.part06.rar",
-            ];
-            using (
-                var reader = RarReader.Open(
-                    archives
-                        .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                        .Select(p => File.OpenRead(p)),
-                    new ReaderOptions { Password = "test" }
-                )
-            )
-            {
-                while (await reader.MoveToNextEntryAsync())
-                {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
-                }
-            }
-            VerifyFiles();
-        });
+     [Fact]
+     public async ValueTask Rar_Multi_Reader_Encrypted_Async() =>
+         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+         {
+             string[] archives =
+             [
+                 "Rar.EncryptedParts.part01.rar",
+                 "Rar.EncryptedParts.part02.rar",
+                 "Rar.EncryptedParts.part03.rar",
+                 "Rar.EncryptedParts.part04.rar",
+                 "Rar.EncryptedParts.part05.rar",
+                 "Rar.EncryptedParts.part06.rar",
+             ];
+             using (
+                 IReader baseReader = RarReader.Open(
+                     archives
+                         .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                         .Select(p => File.OpenRead(p)),
+                     new ReaderOptions { Password = "test" }
+                 )
+             )
+             {
+                 IAsyncReader reader = (IAsyncReader)baseReader;
+                 while (await reader.MoveToNextEntryAsync())
+                 {
+                     await reader.WriteEntryToDirectoryAsync(
+                         SCRATCH_FILES_PATH,
+                         new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                     );
+                 }
+             }
+             VerifyFiles();
+         });
 
     [Fact]
     public async ValueTask Rar_Multi_Reader_Delete_Files_Async() =>
@@ -121,30 +123,31 @@ public class RarReaderAsyncTests : ReaderTests
                 Path.Combine(SCRATCH2_FILES_PATH, file)
             );
         }
-        var streams = archives
-            .Select(s => Path.Combine(SCRATCH2_FILES_PATH, s))
-            .Select(File.OpenRead)
-            .ToList();
-        using (var reader = RarReader.Open(streams))
-        {
-            while (await reader.MoveToNextEntryAsync())
-            {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
-            }
-        }
-        foreach (var stream in streams)
-        {
-            stream.Dispose();
-        }
-        VerifyFiles();
+         var streams = archives
+             .Select(s => Path.Combine(SCRATCH2_FILES_PATH, s))
+             .Select(File.OpenRead)
+             .ToList();
+         using (IReader baseReader = RarReader.Open(streams))
+         {
+             IAsyncReader reader = (IAsyncReader)baseReader;
+             while (await reader.MoveToNextEntryAsync())
+             {
+                 await reader.WriteEntryToDirectoryAsync(
+                     SCRATCH_FILES_PATH,
+                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                 );
+             }
+         }
+         foreach (var stream in streams)
+         {
+             stream.Dispose();
+         }
+         VerifyFiles();
 
-        foreach (var file in archives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)))
-        {
-            File.Delete(file);
-        }
+         foreach (var file in archives.Select(s => Path.Combine(SCRATCH2_FILES_PATH, s)))
+         {
+             File.Delete(file);
+         }
     }
 
     [Fact]
@@ -271,23 +274,24 @@ public class RarReaderAsyncTests : ReaderTests
         );
     }
 
-    [Fact]
-    public async ValueTask Rar_Jpg_Reader_Async()
-    {
-        using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
-        using (var reader = RarReader.Open(stream, new ReaderOptions { LookForHeader = true }))
-        {
-            while (await reader.MoveToNextEntryAsync())
-            {
-                Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
-            }
-        }
-        VerifyFiles();
-    }
+     [Fact]
+     public async ValueTask Rar_Jpg_Reader_Async()
+     {
+         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
+         using (IReader baseReader = RarReader.Open(stream, new ReaderOptions { LookForHeader = true }))
+         {
+             IAsyncReader reader = (IAsyncReader)baseReader;
+             while (await reader.MoveToNextEntryAsync())
+             {
+                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
+                 await reader.WriteEntryToDirectoryAsync(
+                     SCRATCH_FILES_PATH,
+                     new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                 );
+             }
+         }
+         VerifyFiles();
+     }
 
     [Fact]
     public async ValueTask Rar_Solid_Reader_Async() =>

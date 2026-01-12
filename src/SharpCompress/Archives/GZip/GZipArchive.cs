@@ -88,7 +88,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
-    public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
 
@@ -108,14 +108,14 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(stream, readerOptions);
+        return (IWritableAsyncArchive)Open(stream, readerOptions);
     }
 
     /// <summary>
@@ -124,14 +124,14 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfo, readerOptions);
+        return (IWritableAsyncArchive)Open(fileInfo, readerOptions);
     }
 
     /// <summary>
@@ -140,14 +140,14 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(streams, readerOptions);
+        return (IWritableAsyncArchive)Open(streams, readerOptions);
     }
 
     /// <summary>
@@ -156,14 +156,14 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfos, readerOptions);
+        return (IWritableAsyncArchive)Open(fileInfos, readerOptions);
     }
 
     public static GZipArchive Create() => new();

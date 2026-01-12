@@ -126,10 +126,9 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
 
-        using (IArchive baseArchive = ZipArchive.Open(unmodified))
+        await using (var archive = ZipArchive.OpenAsync(unmodified))
         {
-            IWritableArchive archive = (IWritableArchive)baseArchive;
-            var entry = archive.Entries.Single(x =>
+            var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             archive.RemoveEntry(entry);
@@ -150,9 +149,8 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        using (IArchive baseArchive = ZipArchive.Open(unmodified))
+        await using (var archive = ZipArchive.OpenAsync(unmodified))
         {
-            IWritableArchive archive = (IWritableArchive)baseArchive;
             archive.AddEntry("jpg\\test.jpg", jpg);
 
             WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);

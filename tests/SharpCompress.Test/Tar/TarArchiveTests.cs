@@ -49,7 +49,7 @@ public class TarArchiveTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         using (var archive2 = TarArchive.Open(unmodified))
         {
-            Assert.Equal(1, archive2.Entries.Count);
+            Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)
@@ -67,7 +67,7 @@ public class TarArchiveTests : ArchiveTests
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
         using var archive = TarArchive.Open(unmodified);
-        Assert.Equal(5, archive.Entries.Count);
+        Assert.Equal(5, archive.Entries.Count());
         Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
             "very long filename/very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename very long filename.jpg",
@@ -109,7 +109,7 @@ public class TarArchiveTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         using (var archive2 = TarArchive.Open(unmodified))
         {
-            Assert.Equal(1, archive2.Entries.Count);
+            Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)
@@ -127,7 +127,7 @@ public class TarArchiveTests : ArchiveTests
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
         using var archive = TarArchive.Open(unmodified);
-        Assert.Equal(6, archive.Entries.Count);
+        Assert.Equal(6, archive.Entries.Count());
         Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
             "Directory/Some file with veeeeeeeeeery loooooooooong name",

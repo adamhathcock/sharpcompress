@@ -47,7 +47,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         using (var archive2 = TarArchive.Open(unmodified))
         {
-            Assert.Equal(1, archive2.Entries.Count);
+            Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)
@@ -91,7 +91,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         using (var archive2 = TarArchive.Open(unmodified))
         {
-            Assert.Equal(1, archive2.Entries.Count);
+            Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)
@@ -128,7 +128,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.Open(unmodified))
+        await using (var archive = TarArchive.OpenAsync(unmodified))
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
             await archive.SaveToAsync(scratchPath, new WriterOptions(CompressionType.None));
@@ -143,9 +143,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.Open(unmodified))
+        await using (var archive = TarArchive.OpenAsync(unmodified))
         {
-            var entry = archive.Entries.Single(x =>
+            var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             archive.RemoveEntry(entry);

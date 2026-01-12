@@ -22,7 +22,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="filePath"></param>
     /// <param name="readerOptions"></param>
-    public static IArchive Open(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
@@ -33,7 +33,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
-    public static IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return new TarArchive(
@@ -50,7 +50,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
-    public static IArchive Open(
+    public static IWritableArchive Open(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -71,7 +71,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
@@ -89,7 +89,7 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
-    public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
 
@@ -109,14 +109,24 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(stream, readerOptions);
+        return (IWritableAsyncArchive)Open(stream, readerOptions);
+    }
+
+    public static IWritableAsyncArchive OpenAsync(
+        string file,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive)Open(new FileInfo(file), readerOptions);
     }
 
     /// <summary>
@@ -125,14 +135,14 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfo, readerOptions);
+        return (IWritableAsyncArchive)Open(fileInfo, readerOptions);
     }
 
     /// <summary>
@@ -141,14 +151,14 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(streams, readerOptions);
+        return (IWritableAsyncArchive)Open(streams, readerOptions);
     }
 
     /// <summary>
@@ -157,14 +167,14 @@ public class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static IAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfos, readerOptions);
+        return (IWritableAsyncArchive)Open(fileInfos, readerOptions);
     }
 
     public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
