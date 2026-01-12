@@ -31,7 +31,7 @@ public static class WriterFactory
     /// <param name="writerOptions">Writer options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that returns an IWriter.</returns>
-    public static async ValueTask<IWriter> OpenAsync(
+    public static IWriter OpenAsync(
         Stream stream,
         ArchiveType archiveType,
         WriterOptions writerOptions,
@@ -44,9 +44,7 @@ public static class WriterFactory
 
         if (factory != null)
         {
-            return await factory
-                .OpenAsync(stream, writerOptions, cancellationToken)
-                .ConfigureAwait(false);
+            return factory.OpenAsync(stream, writerOptions, cancellationToken);
         }
 
         throw new NotSupportedException("Archive Type does not have a Writer: " + archiveType);

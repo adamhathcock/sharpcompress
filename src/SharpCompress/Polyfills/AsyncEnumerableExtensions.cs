@@ -84,7 +84,6 @@ public static class AsyncEnumerableExtensions
             throw new InvalidOperationException("The source sequence is empty."); // Throws if the stream is empty
         }
 
-
         public async ValueTask<T?> FirstOrDefaultAsync()
         {
             await foreach (var item in source)

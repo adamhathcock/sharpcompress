@@ -195,14 +195,14 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncArchive)Open(stream, readerOptions));
+        return (IAsyncArchive)Open(stream, readerOptions);
     }
 
     /// <summary>
@@ -211,14 +211,14 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncArchive)Open(fileInfo, readerOptions));
+        return (IAsyncArchive)Open(fileInfo, readerOptions);
     }
 
     /// <summary>
@@ -227,14 +227,14 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncArchive)Open(streams, readerOptions));
+        return (IAsyncArchive)Open(streams, readerOptions);
     }
 
     /// <summary>
@@ -243,14 +243,14 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncArchive)Open(fileInfos, readerOptions));
+        return (IAsyncArchive)Open(fileInfos, readerOptions);
     }
 
     public static bool IsRarFile(string filePath) => IsRarFile(new FileInfo(filePath));

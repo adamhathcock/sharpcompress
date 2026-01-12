@@ -34,18 +34,22 @@ internal class AutoArchiveFactory : IArchiveFactory
     public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(stream, readerOptions);
 
-    public async ValueTask<IAsyncArchive> OpenAsync(
+    public IAsyncArchive OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => await ArchiveFactory.OpenAsync(stream, readerOptions, cancellationToken);
+    ) => (IAsyncArchive)Open(stream, readerOptions);
 
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(fileInfo, readerOptions);
 
-    public async ValueTask<IAsyncArchive> OpenAsync(
+    public IAsyncArchive OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => await ArchiveFactory.OpenAsync(fileInfo, readerOptions, cancellationToken);
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IAsyncArchive)Open(fileInfo, readerOptions);
+    }
 }

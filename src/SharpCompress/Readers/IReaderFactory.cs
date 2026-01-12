@@ -1,6 +1,5 @@
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace SharpCompress.Readers;
 
@@ -13,7 +12,7 @@ public interface IReaderFactory : Factories.IFactory
     /// <param name="options"></param>
     /// <returns></returns>
     IReader OpenReader(Stream stream, ReaderOptions? options);
-    ValueTask<IAsyncReader> OpenReaderAsync(
+    IAsyncReader OpenReaderAsync(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken

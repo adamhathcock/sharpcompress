@@ -103,7 +103,13 @@ public class AsyncTests : TestBase
 #else
         await using (var stream = File.Create(outputPath))
 #endif
-        await using (var writer = await WriterFactory.OpenAsync(stream, ArchiveType.Zip, CompressionType.Deflate))
+        await using (
+            var writer = await WriterFactory.OpenAsync(
+                stream,
+                ArchiveType.Zip,
+                CompressionType.Deflate
+            )
+        )
         {
             var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
 

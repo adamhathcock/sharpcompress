@@ -33,7 +33,7 @@ public static class ArchiveFactory
     /// <param name="readerOptions"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -41,11 +41,8 @@ public static class ArchiveFactory
     {
         readerOptions ??= new ReaderOptions();
         stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
-        var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken)
-            .ConfigureAwait(false);
-        return await factory
-            .OpenAsync(stream, readerOptions, cancellationToken)
-            .ConfigureAwait(false);
+        var factory = FindFactory<IArchiveFactory>(stream);
+        return factory.OpenAsync(stream, readerOptions, cancellationToken);
     }
 
     public static IWritableArchive Create(ArchiveType type)
@@ -79,7 +76,7 @@ public static class ArchiveFactory
     /// <param name="filePath"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -107,7 +104,7 @@ public static class ArchiveFactory
     /// <param name="fileInfo"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -115,9 +112,8 @@ public static class ArchiveFactory
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-        var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken)
-            .ConfigureAwait(false);
-        return await factory.OpenAsync(fileInfo, options, cancellationToken).ConfigureAwait(false);
+        var factory = FindFactory<IArchiveFactory>(fileInfo);
+        return factory.OpenAsync(fileInfo, options, cancellationToken);
     }
 
     /// <summary>
@@ -152,7 +148,7 @@ public static class ArchiveFactory
     /// <param name="fileInfos"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -168,16 +164,14 @@ public static class ArchiveFactory
         var fileInfo = filesArray[0];
         if (filesArray.Length == 1)
         {
-            return await OpenAsync(fileInfo, options, cancellationToken).ConfigureAwait(false);
+            return OpenAsync(fileInfo, options, cancellationToken);
         }
 
         fileInfo.NotNull(nameof(fileInfo));
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
         var factory = FindFactory<IMultiArchiveFactory>(fileInfo);
-        return await factory
-            .OpenAsync(filesArray, options, cancellationToken)
-            .ConfigureAwait(false);
+        return factory.OpenAsync(filesArray, options, cancellationToken);
     }
 
     /// <summary>
@@ -212,7 +206,7 @@ public static class ArchiveFactory
     /// <param name="streams"></param>
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static IAsyncArchive OpenAsync(
         IEnumerable<Stream> streams,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -229,16 +223,14 @@ public static class ArchiveFactory
         var firstStream = streamsArray[0];
         if (streamsArray.Length == 1)
         {
-            return await OpenAsync(firstStream, options, cancellationToken).ConfigureAwait(false);
+            return OpenAsync(firstStream, options, cancellationToken);
         }
 
         firstStream.NotNull(nameof(firstStream));
         options ??= new ReaderOptions();
 
         var factory = FindFactory<IMultiArchiveFactory>(firstStream);
-        return await factory
-            .OpenAsync(streamsArray, options, cancellationToken)
-            .ConfigureAwait(false);
+        return factory.OpenAsync(streamsArray, options, cancellationToken);
     }
 
     /// <summary>

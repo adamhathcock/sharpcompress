@@ -75,7 +75,9 @@ public class GZipArchiveAsyncTests : ArchiveTests
         await using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
 #endif
         await using var archive = await GZipArchive.OpenAsync(stream);
-        await Assert.ThrowsAsync<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
+        await Assert.ThrowsAsync<InvalidFormatException>(() =>
+            archive.AddEntry("jpg\\test.jpg", jpg)
+        );
         await archive.SaveToAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
     }
 

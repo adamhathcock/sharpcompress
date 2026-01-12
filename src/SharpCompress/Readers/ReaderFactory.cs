@@ -24,7 +24,7 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static ValueTask<IAsyncReader> OpenAsync(
+    public static IAsyncReader OpenAsync(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -47,7 +47,7 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static ValueTask<IAsyncReader> OpenAsync(
+    public static IAsyncReader OpenAsync(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -110,7 +110,7 @@ public static class ReaderFactory
         );
     }
 
-    public static async ValueTask<IAsyncReader> OpenAsync(
+    public static IAsyncReader OpenAsync(
         Stream stream,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -136,19 +136,10 @@ public static class ReaderFactory
             if (testedFactory is IReaderFactory readerFactory)
             {
                 ((IStreamStack)bStream).StackSeek(pos);
-                if (
-                    await testedFactory.IsArchiveAsync(
-                        bStream,
-                        options.Password,
-                        options.BufferSize,
-                        cancellationToken
-                    )
-                )
+                if (testedFactory.IsArchive(bStream))
                 {
                     ((IStreamStack)bStream).StackSeek(pos);
-                    return await readerFactory
-                        .OpenReaderAsync(bStream, options, cancellationToken)
-                        .ConfigureAwait(false);
+                    return readerFactory.OpenReaderAsync(bStream, options, cancellationToken);
                 }
             }
             ((IStreamStack)bStream).StackSeek(pos);
@@ -161,20 +152,10 @@ public static class ReaderFactory
                 continue; // Already tested above
             }
             ((IStreamStack)bStream).StackSeek(pos);
-            if (
-                factory is IReaderFactory readerFactory
-                && await factory.IsArchiveAsync(
-                    bStream,
-                    options.Password,
-                    options.BufferSize,
-                    cancellationToken
-                )
-            )
+            if (factory is IReaderFactory readerFactory && factory.IsArchive(bStream))
             {
                 ((IStreamStack)bStream).StackSeek(pos);
-                return await readerFactory
-                    .OpenReaderAsync(bStream, options, cancellationToken)
-                    .ConfigureAwait(false);
+                return readerFactory.OpenReaderAsync(bStream, options, cancellationToken);
             }
         }
 
