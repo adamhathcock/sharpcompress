@@ -39,7 +39,9 @@ public static class AsyncEnumerableExtensions
         return list;
     }
 
-    public static async IAsyncEnumerable<TResult> CastAsync<TResult>(this IAsyncEnumerable<object?> source)
+    public static async IAsyncEnumerable<TResult> CastAsync<TResult>(
+        this IAsyncEnumerable<object?> source
+    )
         where TResult : class
     {
         await foreach (var item in source)
@@ -62,49 +64,74 @@ public static class AsyncEnumerableExtensions
         return result;
     }
 
-    extension<T>(IAsyncEnumerable<T> source)
+    public static async ValueTask<bool> AllAsync<T>(
+        this IAsyncEnumerable<T> source,
+        Func<T, bool> predicate
+    )
     {
-        public async ValueTask<bool> AllAsync(Func<T, bool> predicate)
+        await foreach (var item in source)
         {
-            await foreach (var item in source)
+            if (!predicate(item))
             {
-                if (!predicate(item))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public async IAsyncEnumerable<T> WhereAsync(Func<T, bool> predicate)
-        {
-            await foreach (var item in source)
-            {
-                if (predicate(item))
-                {
-                    yield return item;
-                }
+                return false;
             }
         }
 
-        public async ValueTask<T> FirstAsync()
+        return true;
+    }
+
+    public static IAsyncEnumerable<T> Where<T>(
+        this IAsyncEnumerable<T> source,
+        Func<T, bool> predicate
+    )
+    {
+        return WhereIterator(source, predicate);
+    }
+
+    private static async IAsyncEnumerable<T> WhereIterator<T>(
+        IAsyncEnumerable<T> source,
+        Func<T, bool> predicate
+    )
+    {
+        await foreach (var item in source)
         {
-            await foreach (var item in source)
+            if (predicate(item))
             {
-                return item;
+                yield return item;
             }
-            throw new InvalidOperationException("The source sequence is empty.");
+        }
+    }
+
+    public static async IAsyncEnumerable<T> WhereAsync<T>(
+        this IAsyncEnumerable<T> source,
+        Func<T, bool> predicate
+    )
+    {
+        await foreach (var item in source)
+        {
+            if (predicate(item))
+            {
+                yield return item;
+            }
+        }
+    }
+
+    public static async ValueTask<T> FirstAsync<T>(this IAsyncEnumerable<T> source)
+    {
+        await foreach (var item in source)
+        {
+            return item;
+        }
+        throw new InvalidOperationException("The source sequence is empty.");
+    }
+
+    public static async ValueTask<T?> FirstOrDefaultAsync<T>(this IAsyncEnumerable<T> source)
+    {
+        await foreach (var item in source)
+        {
+            return item;
         }
 
-        public async ValueTask<T?> FirstOrDefaultAsync()
-        {
-            await foreach (var item in source)
-            {
-                return item;
-            }
-
-            return default;
-        }
+        return default;
     }
 }

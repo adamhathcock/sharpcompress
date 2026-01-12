@@ -26,7 +26,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
 
         await reader.WriteAllToDirectoryAsync(
             SCRATCH_FILES_PATH,
@@ -51,7 +51,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
 
         while (await reader.MoveToNextEntryAsync())
         {
@@ -103,12 +103,8 @@ public class AsyncTests : TestBase
 #else
         await using (var stream = File.Create(outputPath))
 #endif
-        await using (
-            var writer = await WriterFactory.OpenAsync(
-                stream,
-                ArchiveType.Zip,
-                CompressionType.Deflate
-            )
+        using (
+            var writer = WriterFactory.OpenAsync(stream, ArchiveType.Zip, CompressionType.Deflate)
         )
         {
             var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
@@ -123,7 +119,7 @@ public class AsyncTests : TestBase
 
         // Verify the archive was created and contains the entry
         Assert.True(File.Exists(outputPath));
-        await using var archive = await ZipArchive.OpenAsync(outputPath);
+        await using var archive = ZipArchive.OpenAsync(outputPath);
         Assert.Single(await archive.EntriesAsync.WhereAsync(e => !e.IsDirectory).ToListAsync());
     }
 
@@ -139,7 +135,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(
+        await using var reader = ReaderFactory.OpenAsync(
             new AsyncOnlyStream(stream),
             cancellationToken: cts.Token
         );
@@ -193,7 +189,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
 
         while (await reader.MoveToNextEntryAsync())
         {

@@ -32,10 +32,7 @@ public interface IArchiveFactory : IFactory
     /// </summary>
     /// <param name="stream">An open, readable and seekable stream.</param>
     /// <param name="readerOptions">reading options.</param>
-    IAsyncArchive OpenAsync(
-        Stream stream,
-        ReaderOptions? readerOptions = null
-    );
+    IAsyncArchive OpenAsync(Stream stream, ReaderOptions? readerOptions = null);
 
     /// <summary>
     /// Constructor with a FileInfo object to an existing file.

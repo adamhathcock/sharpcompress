@@ -92,7 +92,7 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            await using var reader = await ReaderFactory.OpenAsync(
+            await using var reader = ReaderFactory.OpenAsync(
                 new AsyncOnlyStream(SharpCompressStream.Create(stream, leaveOpen: true)),
                 readerOptions,
                 cancellationToken

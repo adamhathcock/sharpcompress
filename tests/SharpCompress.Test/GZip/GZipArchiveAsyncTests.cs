@@ -47,17 +47,24 @@ public class GZipArchiveAsyncTests : ArchiveTests
 #else
         await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
 #endif
-        await using (var archive = await GZipArchive.OpenAsync(stream))
         {
-            var entry = await archive.EntriesAsync.FirstAsync();
-            await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
+            IAsyncArchive archive = await GZipArchive.OpenAsync(stream);
+            try
+            {
+                var entry = await archive.EntriesAsync.FirstAsync();
+                await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
 
-            var size = entry.Size;
-            var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
-            var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+                var size = entry.Size;
+                var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"));
+                var test = new FileInfo(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
 
-            Assert.Equal(size, scratch.Length);
-            Assert.Equal(size, test.Length);
+                Assert.Equal(size, scratch.Length);
+                Assert.Equal(size, test.Length);
+            }
+            finally
+            {
+                archive.DisposeAsync().AsTask().Wait();
+            }
         }
         CompareArchivesByPath(
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar"),
@@ -74,11 +81,18 @@ public class GZipArchiveAsyncTests : ArchiveTests
 #else
         await using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
 #endif
-        await using var archive = await GZipArchive.OpenAsync(stream);
-        await Assert.ThrowsAsync<InvalidFormatException>(() =>
-            archive.AddEntry("jpg\\test.jpg", jpg)
-        );
-        await archive.SaveToAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
+        IAsyncArchive archive = await GZipArchive.OpenAsync(stream);
+        try
+        {
+            await Assert.ThrowsAsync<InvalidFormatException>(() =>
+                archive.AddEntry("jpg\\test.jpg", jpg)
+            );
+            await archive.SaveToAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
+        }
+        finally
+        {
+            await archive.DisposeAsync();
+        }
     }
 
     [Fact]
@@ -95,7 +109,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
             inputStream.Position = 0;
         }
 
-        await using var archive = GZipArchive.Open(inputStream);
+        using var archive = GZipArchive.Open(inputStream);
         var archiveEntry = archive.Entries.First();
 
         MemoryStream tarStream;

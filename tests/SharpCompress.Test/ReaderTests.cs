@@ -146,7 +146,7 @@ public abstract class ReaderTests : TestBase
         );
         using var testStream = new TestStream(protectedStream);
         await using (
-            var reader = await ReaderFactory.OpenAsync(
+            var reader = ReaderFactory.OpenAsync(
                 new AsyncOnlyStream(testStream),
                 options,
                 cancellationToken

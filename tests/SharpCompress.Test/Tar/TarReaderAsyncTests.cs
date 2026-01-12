@@ -23,7 +23,7 @@ public class TarReaderAsyncTests : ReaderTests
         using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
         );
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var x = 0;
         while (await reader.MoveToNextEntryAsync())
         {
@@ -73,7 +73,7 @@ public class TarReaderAsyncTests : ReaderTests
     public async ValueTask Tar_BZip2_Entry_Stream_Async()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
-        using (var reader = TarReader.Open(stream))
+        await using (var reader = ReaderFactory.OpenAsync(stream))
         {
             while (await reader.MoveToNextEntryAsync())
             {
@@ -184,7 +184,7 @@ public class TarReaderAsyncTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var memoryStream = new MemoryStream();
 
         Assert.True(await reader.MoveToNextEntryAsync());
@@ -201,7 +201,7 @@ public class TarReaderAsyncTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "TarCorrupted.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
         var memoryStream = new MemoryStream();
 
         Assert.True(await reader.MoveToNextEntryAsync());
@@ -220,7 +220,7 @@ public class TarReaderAsyncTests : ReaderTests
         using Stream stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
         );
-        await using var reader = await ReaderFactory.OpenAsync(
+        await using var reader = ReaderFactory.OpenAsync(
             new AsyncOnlyStream(stream),
             new ReaderOptions { LookForHeader = true }
         );
