@@ -33,11 +33,9 @@ public interface IMultiArchiveFactory : IFactory
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions">reading options.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     IAsyncArchive OpenAsync(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 
     /// <summary>

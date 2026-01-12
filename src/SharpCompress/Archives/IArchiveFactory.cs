@@ -32,11 +32,9 @@ public interface IArchiveFactory : IFactory
     /// </summary>
     /// <param name="stream">An open, readable and seekable stream.</param>
     /// <param name="readerOptions">reading options.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     IAsyncArchive OpenAsync(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 
     /// <summary>

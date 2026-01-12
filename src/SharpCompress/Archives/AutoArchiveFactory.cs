@@ -34,11 +34,8 @@ internal class AutoArchiveFactory : IArchiveFactory
     public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(stream, readerOptions);
 
-    public IAsyncArchive OpenAsync(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => (IAsyncArchive)Open(stream, readerOptions);
+    public IAsyncArchive OpenAsync(Stream stream, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)Open(stream, readerOptions);
 
     public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.Open(fileInfo, readerOptions);

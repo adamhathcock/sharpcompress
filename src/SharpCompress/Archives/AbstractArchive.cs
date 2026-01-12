@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SharpCompress;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -187,10 +188,26 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     }
 
     public virtual IAsyncEnumerable<TEntry> EntriesAsync => _lazyEntriesAsync;
-    IAsyncEnumerable<IArchiveEntry> IAsyncArchive.EntriesAsync =>
-        EntriesAsync.Cast<TEntry, IArchiveEntry>();
 
-    public IAsyncEnumerable<IVolume> VolumesAsync => _lazyVolumesAsync.Cast<TVolume, IVolume>();
+    private async IAsyncEnumerable<IArchiveEntry> EntriesAsyncCast()
+    {
+        await foreach (var entry in EntriesAsync)
+        {
+            yield return entry;
+        }
+    }
+
+    IAsyncEnumerable<IArchiveEntry> IAsyncArchive.EntriesAsync => EntriesAsyncCast();
+
+    private async IAsyncEnumerable<IVolume> VolumesAsyncCast()
+    {
+        await foreach (var volume in VolumesAsync)
+        {
+            yield return volume;
+        }
+    }
+
+    public IAsyncEnumerable<IVolume> VolumesAsync => VolumesAsyncCast();
 
     public async ValueTask<IAsyncReader> ExtractAllEntriesAsync()
     {
@@ -209,14 +226,14 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     public async ValueTask<bool> IsCompleteAsync()
     {
         await EnsureEntriesLoadedAsync();
-        return await EntriesAsync.All(x => x.IsComplete);
+        return await EntriesAsync.AllAsync(x => x.IsComplete);
     }
 
     public async ValueTask<long> TotalSizeAsync() =>
-        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
+        await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.CompressedSize);
 
     public async ValueTask<long> TotalUncompressSizeAsync() =>
-        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.Size);
+        await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.Size);
 
     #endregion
 }

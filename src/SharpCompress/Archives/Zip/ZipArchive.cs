@@ -311,7 +311,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
 
             var header = await headerFactory
                 .ReadStreamHeaderAsync(stream)
-                .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
+                .WhereAsync(x => x.ZipHeaderType != ZipHeaderType.Split)
                 .FirstOrDefaultAsync();
             if (header is null)
             {
