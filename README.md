@@ -4,7 +4,7 @@ SharpCompress is a compression library in pure C# for .NET Framework 4.8, .NET 8
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream).
 
-**NEW:** All I/O operations now support async/await for improved performance and scalability. See the [USAGE.md](USAGE.md#async-examples) for examples.
+**NEW:** All I/O operations now support async/await for improved performance and scalability. See the [USAGE.md](docs/USAGE.md#async-examples) for examples.
 
 GitHub Actions Build -
 [![SharpCompress](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml/badge.svg)](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml)
@@ -14,7 +14,7 @@ GitHub Actions Build -
 
 Post Issues on Github!
 
-Check the [Supported Formats](FORMATS.md) and [Basic Usage.](USAGE.md)
+Check the [Supported Formats](docs/FORMATS.md) and [Basic Usage.](docs/USAGE.md)
 
 ## Recommended Formats
 

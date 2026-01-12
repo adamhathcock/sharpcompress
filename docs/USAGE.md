@@ -1,6 +1,6 @@
 # SharpCompress Usage
 
-## Async/Await Support
+## Async/Await Support (Beta)
 
 SharpCompress now provides full async/await support for all I/O operations. All `Read`, `Write`, and extraction operations have async equivalents ending in `Async` that accept an optional `CancellationToken`. This enables better performance and scalability for I/O-bound operations.
 
@@ -13,7 +13,7 @@ SharpCompress now provides full async/await support for all I/O operations. All 
 
 See [Async Examples](#async-examples) section below for usage patterns.
 
-## Stream Rules (changed with 0.21)
+## Stream Rules
 
 When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it. 
 

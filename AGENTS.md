@@ -14,6 +14,7 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 - Follow the existing code style and patterns in the codebase.
 
 ## General Instructions
+- **Agents should NEVER commit to git** - Agents should stage files and leave committing to the user. Only create commits when the user explicitly requests them.
 - Make only high confidence suggestions when reviewing code changes.
 - Write code with good maintainability practices, including comments on why certain design decisions were made.
 - Handle edge cases and write clear exception handling.
@@ -110,7 +111,7 @@ SharpCompress supports multiple archive and compression formats:
 - **Archive Formats**: Zip, Tar, 7Zip, Rar (read-only)
 - **Compression**: DEFLATE, BZip2, LZMA/LZMA2, PPMd, ZStandard (decompress only), Deflate64 (decompress only)
 - **Combined Formats**: Tar.GZip, Tar.BZip2, Tar.LZip, Tar.XZ, Tar.ZStandard
-- See FORMATS.md for complete format support matrix
+- See [docs/FORMATS.md](docs/FORMATS.md) for complete format support matrix
 
 ### Stream Handling Rules
 - **Disposal**: As of version 0.21, SharpCompress closes wrapped streams by default
