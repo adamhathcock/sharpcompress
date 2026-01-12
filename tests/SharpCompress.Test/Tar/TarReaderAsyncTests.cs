@@ -92,7 +92,7 @@ public class TarReaderAsyncTests : ReaderTests
                     }
                     var destinationFileName = Path.Combine(destdir, file.NotNull());
 
-                    using var fs = File.Create(destinationFileName);
+                    using var fs = File.OpenWrite(destinationFileName);
                     await entryStream.CopyToAsync(fs);
                 }
             }
