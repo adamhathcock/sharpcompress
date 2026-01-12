@@ -119,7 +119,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async ValueTask Zip_Random_Write_Remove_Sync()
+    public async ValueTask Zip_Random_Write_Remove_Async()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
@@ -141,7 +141,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async ValueTask Zip_Random_Write_Add_Sync()
+    public async ValueTask Zip_Random_Write_Add_Async()
     {
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.mod.zip");
