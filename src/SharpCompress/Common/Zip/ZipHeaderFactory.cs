@@ -157,8 +157,8 @@ internal class ZipHeaderFactory
 
                     var salt = new byte[WinzipAesEncryptionData.KeyLengthInBytes(keySize) / 2];
                     var passwordVerifyValue = new byte[2];
-                    stream.Read(salt, 0, salt.Length);
-                    stream.Read(passwordVerifyValue, 0, 2);
+                    stream.ReadFully(salt);
+                    stream.ReadFully(passwordVerifyValue);
                     entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(
                         keySize,
                         salt,
