@@ -53,7 +53,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     /// <param name="stream"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static TarReader Open(Stream stream, ReaderOptions? options = null)
+    public static IReader Open(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
         options = options ?? new ReaderOptions();

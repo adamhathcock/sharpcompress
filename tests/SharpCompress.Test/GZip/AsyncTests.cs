@@ -103,7 +103,7 @@ public class AsyncTests : TestBase
 #else
         await using (var stream = File.Create(outputPath))
 #endif
-        using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+        await using (var writer = await WriterFactory.OpenAsync(stream, ArchiveType.Zip, CompressionType.Deflate))
         {
             var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
 
@@ -117,8 +117,8 @@ public class AsyncTests : TestBase
 
         // Verify the archive was created and contains the entry
         Assert.True(File.Exists(outputPath));
-        await using var archive = ZipArchive.Open(outputPath);
-        Assert.Single(archive.Entries.Where(e => !e.IsDirectory));
+        await using var archive = await ZipArchive.OpenAsync(outputPath);
+        Assert.Single(await archive.EntriesAsync.WhereAsync(e => !e.IsDirectory).ToListAsync());
     }
 
     [Fact]

@@ -115,7 +115,7 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(RarReader.Open(stream, options));
+        return new((IAsyncReader)RarReader.Open(stream, options));
     }
 
     #endregion

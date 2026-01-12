@@ -21,7 +21,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="filePath"></param>
     /// <param name="readerOptions"></param>
-    public static GZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
+    public static IArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
@@ -32,7 +32,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
-    public static GZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return new GZipArchive(
@@ -49,7 +49,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
-    public static GZipArchive Open(
+    public static IArchive Open(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -70,7 +70,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static GZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
@@ -88,7 +88,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
-    public static GZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
 
@@ -115,7 +115,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(stream, readerOptions));
+        return new((IAsyncArchive)Open(stream, readerOptions));
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(fileInfo, readerOptions));
+        return new((IAsyncArchive)Open(fileInfo, readerOptions));
     }
 
     /// <summary>
@@ -147,7 +147,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(streams, readerOptions));
+        return new((IAsyncArchive)Open(streams, readerOptions));
     }
 
     /// <summary>
@@ -163,7 +163,7 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(fileInfos, readerOptions));
+        return new((IAsyncArchive)Open(fileInfos, readerOptions));
     }
 
     public static GZipArchive Create() => new();
@@ -344,6 +344,6 @@ public class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new(GZipReader.Open(stream));
+        return new((IAsyncReader)GZipReader.Open(stream));
     }
 }

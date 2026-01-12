@@ -43,7 +43,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="filePath"></param>
     /// <param name="readerOptions"></param>
-    public static ZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
+    public static IArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
@@ -54,7 +54,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="fileInfo"></param>
     /// <param name="readerOptions"></param>
-    public static ZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return new ZipArchive(
@@ -71,7 +71,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
-    public static ZipArchive Open(
+    public static IArchive Open(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -92,7 +92,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static ZipArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
@@ -110,7 +110,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
-    public static ZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
 
@@ -122,6 +122,16 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         return new ZipArchive(
             new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
         );
+    }
+
+    public static ValueTask<IAsyncArchive> OpenAsync(
+        string path,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)Open(path, readerOptions));
     }
 
     /// <summary>
@@ -137,7 +147,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(stream, readerOptions));
+        return new((IAsyncArchive)Open(stream, readerOptions));
     }
 
     /// <summary>
@@ -153,7 +163,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(fileInfo, readerOptions));
+        return new((IAsyncArchive)Open(fileInfo, readerOptions));
     }
 
     /// <summary>
@@ -169,7 +179,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(streams, readerOptions));
+        return new((IAsyncArchive)Open(streams, readerOptions));
     }
 
     /// <summary>
@@ -185,7 +195,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(fileInfos, readerOptions));
+        return new((IAsyncArchive)Open(fileInfos, readerOptions));
     }
 
     public static bool IsZipFile(
@@ -597,6 +607,6 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new(ZipReader.Open(stream));
+        return new((IAsyncReader)ZipReader.Open(stream));
     }
 }

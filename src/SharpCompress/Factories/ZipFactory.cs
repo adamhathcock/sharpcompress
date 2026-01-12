@@ -202,7 +202,7 @@ public class ZipFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(ZipReader.Open(stream, options));
+        return new((IAsyncReader)ZipReader.Open(stream, options));
     }
 
     #endregion

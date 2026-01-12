@@ -48,7 +48,7 @@ namespace SharpCompress.Factories
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default
-        ) => new(ArcReader.Open(stream, options));
+        ) => new((IAsyncReader)ArcReader.Open(stream, options));
 
         public override ValueTask<bool> IsArchiveAsync(
             Stream stream,

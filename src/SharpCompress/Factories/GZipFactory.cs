@@ -160,7 +160,7 @@ public class GZipFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(GZipReader.Open(stream, options));
+        return new((IAsyncReader)GZipReader.Open(stream, options));
     }
 
     #endregion

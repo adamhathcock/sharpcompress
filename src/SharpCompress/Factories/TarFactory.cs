@@ -278,7 +278,7 @@ public class TarFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(TarReader.Open(stream, options));
+        return new((IAsyncReader)TarReader.Open(stream, options));
     }
 
     #endregion

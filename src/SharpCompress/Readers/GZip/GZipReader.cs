@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
@@ -20,7 +20,7 @@ public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
     /// <param name="stream"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static GZipReader Open(Stream stream, ReaderOptions? options = null)
+    public static IReader Open(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
         return new GZipReader(stream, options ?? new ReaderOptions());

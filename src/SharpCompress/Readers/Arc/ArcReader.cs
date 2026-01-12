@@ -22,7 +22,7 @@ namespace SharpCompress.Readers.Arc
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ArcReader Open(Stream stream, ReaderOptions? options = null)
+        public static IReader Open(Stream stream, ReaderOptions? options = null)
         {
             stream.NotNull(nameof(stream));
             return new ArcReader(stream, options ?? new ReaderOptions());

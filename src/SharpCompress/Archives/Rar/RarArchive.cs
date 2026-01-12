@@ -82,12 +82,12 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
                 volume.Stream.Position = 0;
                 return volume.Stream;
             });
-            return RarReader.Open(streams, ReaderOptions);
+            return (RarReader)RarReader.Open(streams, ReaderOptions);
         }
 
         var stream = Volumes.First().Stream;
         stream.Position = 0;
-        return RarReader.Open(stream, ReaderOptions);
+        return (RarReader)RarReader.Open(stream, ReaderOptions);
     }
 
     public override bool IsSolid => Volumes.First().IsSolidArchive;
@@ -103,7 +103,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// </summary>
     /// <param name="filePath"></param>
     /// <param name="options"></param>
-    public static RarArchive Open(string filePath, ReaderOptions? options = null)
+    public static IArchive Open(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         var fileInfo = new FileInfo(filePath);
@@ -121,7 +121,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// </summary>
     /// <param name="fileInfo"></param>
     /// <param name="options"></param>
-    public static RarArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
+    public static IArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return new RarArchive(
@@ -138,7 +138,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// </summary>
     /// <param name="stream"></param>
     /// <param name="options"></param>
-    public static RarArchive Open(Stream stream, ReaderOptions? options = null)
+    public static IArchive Open(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
 
@@ -155,7 +155,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions"></param>
-    public static RarArchive Open(
+    public static IArchive Open(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -176,7 +176,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions"></param>
-    public static RarArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
     {
         streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
@@ -202,7 +202,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(stream, readerOptions));
+        return new((IAsyncArchive)Open(stream, readerOptions));
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(fileInfo, readerOptions));
+        return new((IAsyncArchive)Open(fileInfo, readerOptions));
     }
 
     /// <summary>
@@ -234,7 +234,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(streams, readerOptions));
+        return new((IAsyncArchive)Open(streams, readerOptions));
     }
 
     /// <summary>
@@ -250,7 +250,7 @@ public class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(fileInfos, readerOptions));
+        return new((IAsyncArchive)Open(fileInfos, readerOptions));
     }
 
     public static bool IsRarFile(string filePath) => IsRarFile(new FileInfo(filePath));

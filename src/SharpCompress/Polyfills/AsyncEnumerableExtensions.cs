@@ -42,7 +42,7 @@ public static class AsyncEnumerableExtensions
             return list;
         }
 
-        public async IAsyncEnumerable<TResult> Cast<TResult>()
+        public async IAsyncEnumerable<TResult> CastAsync<TResult>()
             where TResult : class
         {
             await foreach (var item in source)
@@ -51,7 +51,7 @@ public static class AsyncEnumerableExtensions
             }
         }
 
-        public async ValueTask<bool> All(Func<T, bool> predicate)
+        public async ValueTask<bool> AllAsync(Func<T, bool> predicate)
         {
             await foreach (var item in source)
             {
@@ -64,7 +64,7 @@ public static class AsyncEnumerableExtensions
             return true;
         }
 
-        public async IAsyncEnumerable<T> Where(Func<T, bool> predicate)
+        public async IAsyncEnumerable<T> WhereAsync(Func<T, bool> predicate)
         {
             await foreach (var item in source)
             {
@@ -74,6 +74,16 @@ public static class AsyncEnumerableExtensions
                 }
             }
         }
+
+        public async ValueTask<T> FirstAsync()
+        {
+            await foreach (var item in source)
+            {
+                return item; // Returns the very first item found
+            }
+            throw new InvalidOperationException("The source sequence is empty."); // Throws if the stream is empty
+        }
+
 
         public async ValueTask<T?> FirstOrDefaultAsync()
         {
