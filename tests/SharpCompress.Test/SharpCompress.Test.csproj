@@ -24,7 +24,4 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="xunit" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' != 'NETFRAMEWORK' ">
-    <PackageReference Include="Mono.Posix.NETStandard" />
-  </ItemGroup>
 </Project>
