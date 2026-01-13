@@ -8,6 +8,7 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -45,12 +46,12 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.Open(unmodified))
+        await using (var archive2 = TarArchive.OpenAsync(new AsyncOnlyStream(File.OpenRead(unmodified))))
         {
-            Assert.Equal(1, archive2.Entries.Count());
-            Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
+            Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
+            Assert.Contains(filename, await archive2.EntriesAsync.Select(entry => entry.Key).ToListAsync());
 
-            foreach (var entry in archive2.Entries)
+            await foreach (var entry in archive2.EntriesAsync)
             {
                 Assert.Equal(
                     "dummy filecontent",
@@ -89,12 +90,12 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.Open(unmodified))
+        await using (var archive2 = TarArchive.OpenAsync(new AsyncOnlyStream(File.OpenRead(unmodified))))
         {
-            Assert.Equal(1, archive2.Entries.Count());
-            Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
+            Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
+            Assert.Contains(longFilename, await archive2.EntriesAsync.Select(entry => entry.Key).ToListAsync());
 
-            foreach (var entry in archive2.Entries)
+            await foreach (var entry in archive2.EntriesAsync)
             {
                 Assert.Equal(
                     "dummy filecontent",
@@ -172,9 +173,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
-            using (var tr = TarReader.Open(inputMemory, tropt))
+            await using (var tr = ReaderFactory.OpenAsync(inputMemory, tropt))
             {
-                while (tr.MoveToNextEntry())
+                while (await tr.MoveToNextEntryAsync())
                 {
                     Assert.Equal(fname, tr.Entry.Key);
                 }
@@ -205,9 +206,9 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         var numberOfEntries = 0;
 
-        using (var archiveFactory = TarArchive.Open(memoryStream))
+await         using (var archiveFactory = TarArchive.OpenAsync(new AsyncOnlyStream(memoryStream)))
         {
-            foreach (var entry in archiveFactory.Entries)
+   await         foreach (var entry in archiveFactory.EntriesAsync)
             {
                 ++numberOfEntries;
 

@@ -31,6 +31,30 @@ public static class EnumerableExtensions
 
 public static class AsyncEnumerableExtensions
 {
+    public static async IAsyncEnumerable<TResult> Select<T, TResult>(
+        this IAsyncEnumerable<T> source,
+        Func<T, TResult> selector)
+    {
+            await foreach (var element in source)
+            {
+                yield return selector(element);
+            }
+    }
+    public static async ValueTask<int> CountAsync<T>(
+        this IAsyncEnumerable<T> source,
+        CancellationToken cancellationToken = default)
+    {
+        await using var e = source.GetAsyncEnumerator(cancellationToken);
+
+        var count = 0;
+        while (await e.MoveNextAsync())
+        {
+            checked { count++; }
+        }
+
+        return count;
+    }
+
     public static async IAsyncEnumerable<T> TakeAsync<T>(
         this IAsyncEnumerable<T> source,
         int count)
