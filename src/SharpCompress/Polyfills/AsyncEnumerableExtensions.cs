@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress;
@@ -29,6 +31,21 @@ public static class EnumerableExtensions
 
 public static class AsyncEnumerableExtensions
 {
+    public static async IAsyncEnumerable<T> TakeAsync<T>(
+        this IAsyncEnumerable<T> source,
+        int count)
+    {
+        await foreach (var element in source)
+        {
+            yield return element;
+
+            if (--count == 0)
+            {
+                break;
+            }
+        }
+    }
+
     public static async ValueTask<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source)
     {
         var list = new List<T>();
@@ -118,10 +135,19 @@ public static class AsyncEnumerableExtensions
 
     public static async ValueTask<T> SingleAsync<T>(
         this IAsyncEnumerable<T> source,
-        Func<T, bool> predicate
+        Func<T, bool>? predicate = null
     )
     {
-        var enumerator = source.WhereAsync(predicate).GetAsyncEnumerator();
+        IAsyncEnumerator<T> enumerator;
+        if (predicate is null)
+        {
+            enumerator = source.GetAsyncEnumerator();
+        }
+        else
+        {
+            enumerator = source.WhereAsync(predicate).GetAsyncEnumerator();
+        }
+
         if (!await enumerator.MoveNextAsync())
         {
             throw new InvalidOperationException("The source sequence is empty.");

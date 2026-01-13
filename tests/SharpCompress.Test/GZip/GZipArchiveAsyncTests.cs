@@ -145,21 +145,21 @@ public class GZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public void TestGzCrcWithMostSignificantBitNotNegative_Async()
+    public async Task TestGzCrcWithMostSignificantBitNotNegative_Async()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(new AsyncOnlyStream(stream));
-        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        await using var archive = GZipArchive.OpenAsync(new AsyncOnlyStream(stream));
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
             Assert.InRange(entry.Crc, 0L, 0xFFFFFFFFL);
         }
     }
 
     [Fact]
-    public void TestGzArchiveTypeGzip_Async()
+    public async Task  TestGzArchiveTypeGzip_Async()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(new AsyncOnlyStream(stream));
+        await using var archive = GZipArchive.OpenAsync(new AsyncOnlyStream(stream));
         Assert.Equal(archive.Type, ArchiveType.GZip);
     }
 }

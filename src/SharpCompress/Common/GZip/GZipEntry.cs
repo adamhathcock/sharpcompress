@@ -40,6 +40,6 @@ public class GZipEntry : Entry
 
     internal static IEnumerable<GZipEntry> GetEntries(Stream stream, OptionsBase options)
     {
-        yield return new GZipEntry(new GZipFilePart(stream, options.ArchiveEncoding));
+        yield return new GZipEntry(GZipFilePart.Create(stream, options.ArchiveEncoding));
     }
 }

@@ -119,7 +119,18 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         var stream = volumes.Single().Stream;
         yield return new GZipArchiveEntry(
             this,
-            new GZipFilePart(stream, ReaderOptions.ArchiveEncoding)
+             GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding)
+        );
+    }
+
+    protected override async IAsyncEnumerable<GZipArchiveEntry> LoadEntriesAsync(
+        IAsyncEnumerable<GZipVolume> volumes
+    )
+    {
+        var stream = (await volumes.SingleAsync()).Stream;
+        yield return new GZipArchiveEntry(
+            this,
+            await GZipFilePart.CreateAsync(stream, ReaderOptions.ArchiveEncoding)
         );
     }
 
