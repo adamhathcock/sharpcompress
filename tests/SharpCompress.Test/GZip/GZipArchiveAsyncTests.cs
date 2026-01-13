@@ -5,6 +5,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -21,7 +22,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
 #else
         await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
 #endif
-        using (var archive = ArchiveFactory.Open(stream))
+        using (var archive = ArchiveFactory.Open(new AsyncOnlyStream(stream)))
         {
             var entry = archive.Entries.First();
             await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
@@ -48,7 +49,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
         await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
 #endif
         {
-            await using (var archive = GZipArchive.OpenAsync(stream))
+            await using (var archive = GZipArchive.OpenAsync(new AsyncOnlyStream(stream)))
             {
                 var entry = await archive.EntriesAsync.FirstAsync();
                 await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
@@ -76,7 +77,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
 #else
         await using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
 #endif
-        await using (var archive = GZipArchive.OpenAsync(stream))
+        await using (var archive = GZipArchive.OpenAsync(new AsyncOnlyStream(stream)))
         {
             Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
             await archive.SaveToAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
@@ -97,7 +98,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
             inputStream.Position = 0;
         }
 
-        using var archive = GZipArchive.Open(inputStream);
+        using var archive = GZipArchive.Open(new AsyncOnlyStream(inputStream));
         var archiveEntry = archive.Entries.First();
 
         MemoryStream tarStream;
@@ -147,7 +148,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     public void TestGzCrcWithMostSignificantBitNotNegative_Async()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(stream);
+        using var archive = GZipArchive.Open(new AsyncOnlyStream(stream));
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             Assert.InRange(entry.Crc, 0L, 0xFFFFFFFFL);
@@ -158,7 +159,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     public void TestGzArchiveTypeGzip_Async()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(stream);
+        using var archive = GZipArchive.Open(new AsyncOnlyStream(stream));
         Assert.Equal(archive.Type, ArchiveType.GZip);
     }
 }
