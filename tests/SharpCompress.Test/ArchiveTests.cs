@@ -391,7 +391,7 @@ public class ArchiveTests : ReaderTests
         {
             writerOptions.CompressionLevel = compressionLevel.Value;
         }
-        return WriterFactory.OpenAsync(stream, ArchiveType.Zip, writerOptions);
+        return WriterFactory.OpenAsync(new AsyncOnlyStream(stream), ArchiveType.Zip, writerOptions);
     }
 
     /// <summary>

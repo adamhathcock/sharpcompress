@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
 using Xunit;
@@ -22,7 +23,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = WriterFactory.OpenAsync(stream, ArchiveType.GZip, CompressionType.GZip))
+        using (var writer = WriterFactory.OpenAsync(new AsyncOnlyStream(stream), ArchiveType.GZip, CompressionType.GZip))
         {
             await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
@@ -42,7 +43,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = new GZipWriter(stream))
+        using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
         {
             await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
@@ -57,7 +58,7 @@ public class GZipWriterAsyncTests : WriterTests
         Assert.Throws<InvalidFormatException>(() =>
         {
             using Stream stream = File.OpenWrite(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
-            using var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.BZip2);
+            using var writer = WriterFactory.Open(new AsyncOnlyStream(stream), ArchiveType.GZip, CompressionType.BZip2);
         });
 
     [Fact]
@@ -70,7 +71,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = new GZipWriter(stream))
+        using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
         {
             var path = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
             await writer.WriteAsync(path, path);
