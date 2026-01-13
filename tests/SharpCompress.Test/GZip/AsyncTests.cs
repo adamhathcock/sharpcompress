@@ -74,9 +74,13 @@ public class AsyncTests : TestBase
     public async ValueTask Archive_Entry_Async_Open_Stream()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
-        await using var archive = await ArchiveFactory.OpenAsync(new AsyncOnlyStream(File.OpenRead(testArchive)));
+        await using var archive = await ArchiveFactory.OpenAsync(
+            new AsyncOnlyStream(File.OpenRead(testArchive))
+        );
 
-        await foreach (var entry in archive.EntriesAsync.WhereAsync(e => !e.IsDirectory).TakeAsync(1))
+        await foreach (
+            var entry in archive.EntriesAsync.WhereAsync(e => !e.IsDirectory).TakeAsync(1)
+        )
         {
 #if NETFRAMEWORK
             using var entryStream = await entry.OpenEntryStreamAsync();
@@ -104,7 +108,11 @@ public class AsyncTests : TestBase
         await using (var stream = File.Create(outputPath))
 #endif
         using (
-            var writer = WriterFactory.OpenAsync(new AsyncOnlyStream(stream), ArchiveType.Zip, CompressionType.Deflate)
+            var writer = WriterFactory.OpenAsync(
+                new AsyncOnlyStream(stream),
+                ArchiveType.Zip,
+                CompressionType.Deflate
+            )
         )
         {
             var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");

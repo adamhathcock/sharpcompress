@@ -119,7 +119,7 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         var stream = volumes.Single().Stream;
         yield return new GZipArchiveEntry(
             this,
-             GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding)
+            GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding)
         );
     }
 

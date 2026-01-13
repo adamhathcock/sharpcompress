@@ -652,7 +652,9 @@ public class ArchiveTests : ReaderTests
         // Open with a pre-wrapped stream
         using (var fileStream = File.OpenRead(testArchive))
         using (var wrappedStream = SharpCompressStream.Create(fileStream, bufferSize: 32768))
-        await using (var archive = await ArchiveFactory.OpenAsync(new AsyncOnlyStream(wrappedStream)))
+        await using (
+            var archive = await ArchiveFactory.OpenAsync(new AsyncOnlyStream(wrappedStream))
+        )
         {
             Assert.Equal(ArchiveType.Zip, archive.Type);
             Assert.Equal(3, await archive.EntriesAsync.CountAsync());

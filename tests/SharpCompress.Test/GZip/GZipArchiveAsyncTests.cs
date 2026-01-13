@@ -156,7 +156,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async Task  TestGzArchiveTypeGzip_Async()
+    public async Task TestGzArchiveTypeGzip_Async()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         await using var archive = GZipArchive.OpenAsync(new AsyncOnlyStream(stream));

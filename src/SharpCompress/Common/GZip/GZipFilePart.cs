@@ -37,7 +37,11 @@ internal sealed class GZipFilePart : FilePart
         return part;
     }
 
-    internal static async ValueTask<GZipFilePart> CreateAsync(Stream stream, IArchiveEncoding archiveEncoding, CancellationToken cancellationToken = default)
+    internal static async ValueTask<GZipFilePart> CreateAsync(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CancellationToken cancellationToken = default
+    )
     {
         var part = new GZipFilePart(stream, archiveEncoding);
 
@@ -59,10 +63,8 @@ internal sealed class GZipFilePart : FilePart
         return part;
     }
 
-
     private GZipFilePart(Stream stream, IArchiveEncoding archiveEncoding)
-        : base(archiveEncoding) =>
-        _stream = stream;
+        : base(archiveEncoding) => _stream = stream;
 
     internal long EntryStartPosition { get; private set; }
 
@@ -149,7 +151,9 @@ internal sealed class GZipFilePart : FilePart
         }
     }
 
-    private async ValueTask ReadAndValidateGzipHeaderAsync(CancellationToken cancellationToken = default)
+    private async ValueTask ReadAndValidateGzipHeaderAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         // read the header on the first read
         var header = new byte[10];
@@ -228,7 +232,10 @@ internal sealed class GZipFilePart : FilePart
         return ArchiveEncoding.Decode(buffer);
     }
 
-    private async ValueTask<string> ReadZeroTerminatedStringAsync(Stream stream, CancellationToken cancellationToken = default)
+    private async ValueTask<string> ReadZeroTerminatedStringAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
     {
         var buf1 = new byte[1];
         var list = new List<byte>();
@@ -253,5 +260,4 @@ internal sealed class GZipFilePart : FilePart
         var buffer = list.ToArray();
         return ArchiveEncoding.Decode(buffer);
     }
-
 }
