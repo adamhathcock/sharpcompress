@@ -23,9 +23,7 @@ public class GZipArchiveEntry : GZipEntry, IArchiveEntry
         return Parts.Single().GetCompressedStream().NotNull();
     }
 
-    public ValueTask<Stream> OpenEntryStreamAsync(
-        CancellationToken cancellationToken = default
-    )
+    public ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
     {
         // GZip synchronous implementation is fast enough, just wrap it
         return new(OpenEntryStream());

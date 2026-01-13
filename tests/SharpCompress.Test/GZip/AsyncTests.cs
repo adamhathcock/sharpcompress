@@ -78,9 +78,7 @@ public class AsyncTests : TestBase
             new AsyncOnlyStream(File.OpenRead(testArchive))
         );
 
-        await foreach (
-            var entry in archive.EntriesAsync.WhereAsync(e => !e.IsDirectory).TakeAsync(1)
-        )
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory).Take(1))
         {
 #if NETFRAMEWORK
             using var entryStream = await entry.OpenEntryStreamAsync();
@@ -128,7 +126,7 @@ public class AsyncTests : TestBase
         // Verify the archive was created and contains the entry
         Assert.True(File.Exists(outputPath));
         await using var archive = ZipArchive.OpenAsync(outputPath);
-        Assert.Single(await archive.EntriesAsync.WhereAsync(e => !e.IsDirectory).ToListAsync());
+        Assert.Single(await archive.EntriesAsync.Where(e => !e.IsDirectory).ToListAsync());
     }
 
     [Fact]

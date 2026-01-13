@@ -27,7 +27,11 @@ public static class StreamExtensions
         public Task SkipAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+#if NET8_0_OR_GREATER
+            return stream.CopyToAsync(Stream.Null, cancellationToken);
+#else
             return stream.CopyToAsync(Stream.Null);
+#endif
         }
 
         internal int Read(Span<byte> buffer)
