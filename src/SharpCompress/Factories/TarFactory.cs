@@ -294,14 +294,14 @@ public class TarFactory
         new TarWriter(stream, new TarWriterOptions(writerOptions));
 
     /// <inheritdoc/>
-    public IWriter OpenAsync(
+    public IAsyncWriter OpenAsync(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Open(stream, writerOptions);
+        return (IAsyncWriter)Open(stream, writerOptions);
     }
 
     #endregion

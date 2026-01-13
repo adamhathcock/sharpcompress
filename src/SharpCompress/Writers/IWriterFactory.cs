@@ -8,7 +8,7 @@ public interface IWriterFactory : IFactory
 {
     IWriter Open(Stream stream, WriterOptions writerOptions);
 
-    IWriter OpenAsync(
+    IAsyncWriter OpenAsync(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default

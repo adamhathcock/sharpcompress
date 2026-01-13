@@ -182,7 +182,7 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public IWriter OpenAsync(
+    public IAsyncWriter OpenAsync(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default
@@ -193,7 +193,7 @@ public class GZipFactory
         {
             throw new InvalidFormatException("GZip archives only support GZip compression type.");
         }
-        return Open(stream, writerOptions);
+        return (IAsyncWriter)Open(stream, writerOptions);
     }
 
     #endregion

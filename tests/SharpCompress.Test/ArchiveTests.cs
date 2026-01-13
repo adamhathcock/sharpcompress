@@ -380,6 +380,20 @@ public class ArchiveTests : ReaderTests
         return WriterFactory.Open(stream, ArchiveType.Zip, writerOptions);
     }
 
+    protected static IAsyncWriter CreateWriterWithLevelAsync(
+        Stream stream,
+        CompressionType compressionType,
+        int? compressionLevel = null
+    )
+    {
+        var writerOptions = new ZipWriterOptions(compressionType);
+        if (compressionLevel.HasValue)
+        {
+            writerOptions.CompressionLevel = compressionLevel.Value;
+        }
+        return WriterFactory.OpenAsync(stream, ArchiveType.Zip, writerOptions);
+    }
+
     /// <summary>
     /// Verifies archive content against expected files with CRC32 validation
     /// </summary>

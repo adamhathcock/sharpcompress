@@ -22,7 +22,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = WriterFactory.Open(stream, ArchiveType.GZip, CompressionType.GZip))
+        using (var writer = WriterFactory.OpenAsync(stream, ArchiveType.GZip, CompressionType.GZip))
         {
             await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }

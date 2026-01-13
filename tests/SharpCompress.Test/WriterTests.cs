@@ -73,7 +73,7 @@ public class WriterTests : TestBase
 
             writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var writer = WriterFactory.Open(stream, _type, writerOptions);
+            using var writer = WriterFactory.OpenAsync(stream, _type, writerOptions);
             await writer.WriteAllAsync(
                 ORIGINAL_FILES_PATH,
                 "*",
