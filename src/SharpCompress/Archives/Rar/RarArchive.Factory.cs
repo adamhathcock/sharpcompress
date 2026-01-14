@@ -14,7 +14,22 @@ using SharpCompress.Readers.Rar;
 namespace SharpCompress.Archives.Rar;
 
 public partial class RarArchive
+#if NET8_0_OR_GREATER
+    : IArchiveOpenable<IRarArchive, IRarAsyncArchive>,
+        IMultiArchiveOpenable<IRarArchive, IRarAsyncArchive>
+#endif
 {
+    public static IRarAsyncArchive OpenAsync(
+        string path,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        path.NotNullOrEmpty(nameof(path));
+        return (IRarAsyncArchive)Open(new FileInfo(path), readerOptions);
+    }
+
     public static IRarArchive Open(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));

@@ -15,6 +15,10 @@ using SharpCompress.Writers.Tar;
 namespace SharpCompress.Archives.Tar;
 
 public partial class TarArchive
+#if NET8_0_OR_GREATER
+    : IArchiveOpenable<IWritableArchive, IWritableAsyncArchive>,
+        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+#endif
 {
     public static IWritableArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
@@ -91,13 +95,13 @@ public partial class TarArchive
     }
 
     public static IWritableAsyncArchive OpenAsync(
-        string file,
+        string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(new FileInfo(file), readerOptions);
+        return (IWritableAsyncArchive)Open(new FileInfo(path), readerOptions);
     }
 
     public static IWritableAsyncArchive OpenAsync(

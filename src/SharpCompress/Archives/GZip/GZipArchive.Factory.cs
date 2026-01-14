@@ -15,14 +15,32 @@ using SharpCompress.Writers.GZip;
 namespace SharpCompress.Archives.GZip;
 
 public partial class GZipArchive
+#if NET8_0_OR_GREATER
+    : IArchiveOpenable<IWritableArchive, IWritableAsyncArchive>,
+        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+#endif
 {
-    public static IArchive Open(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableAsyncArchive OpenAsync(
+        string path,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        path.NotNullOrEmpty(nameof(path));
+        return (IWritableAsyncArchive)Open(
+            new FileInfo(path),
+            readerOptions ?? new ReaderOptions()
+        );
+    }
+
+    public static IWritableArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
     }
 
-    public static IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return new GZipArchive(
@@ -34,7 +52,7 @@ public partial class GZipArchive
         );
     }
 
-    public static IArchive Open(
+    public static IWritableArchive Open(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -50,7 +68,10 @@ public partial class GZipArchive
         );
     }
 
-    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? readerOptions = null)
+    public static IWritableArchive Open(
+        IEnumerable<Stream> streams,
+        ReaderOptions? readerOptions = null
+    )
     {
         streams.NotNull(nameof(streams));
         var strms = streams.ToArray();

@@ -13,7 +13,22 @@ using SharpCompress.Readers;
 namespace SharpCompress.Archives.SevenZip;
 
 public partial class SevenZipArchive
+#if NET8_0_OR_GREATER
+    : IArchiveOpenable<IArchive, IAsyncArchive>,
+        IMultiArchiveOpenable<IArchive, IAsyncArchive>
+#endif
 {
+    public static IAsyncArchive OpenAsync(
+        string path,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        path.NotNullOrEmpty("path");
+        return (IAsyncArchive)Open(new FileInfo(path), readerOptions ?? new ReaderOptions());
+    }
+
     public static IArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty("filePath");

@@ -9,12 +9,14 @@ using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
-using SharpCompress.Writers;
-using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Archives.Zip;
 
 public partial class ZipArchive
+#if NET8_0_OR_GREATER
+    : IArchiveOpenable<IWritableArchive, IWritableAsyncArchive>,
+        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+#endif
 {
     public static IWritableArchive Open(string filePath, ReaderOptions? readerOptions = null)
     {
