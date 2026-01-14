@@ -7,7 +7,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Writers.GZip;
 
-public sealed class GZipWriter : AbstractWriter
+public sealed partial class GZipWriter : AbstractWriter
 {
     private bool _wroteToStream;
 

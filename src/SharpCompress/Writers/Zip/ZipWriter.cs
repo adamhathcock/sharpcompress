@@ -18,7 +18,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Zip;
 
-public class ZipWriter : AbstractWriter
+public partial class ZipWriter : AbstractWriter
 {
     private readonly CompressionType compressionType;
     private readonly int compressionLevel;
