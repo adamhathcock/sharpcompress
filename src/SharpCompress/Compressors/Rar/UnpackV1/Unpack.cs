@@ -126,16 +126,12 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private FileHeader fileHeader;
 
-    private void Init(byte[] window)
+
+    private void Init()
     {
-        if (this.window is null && window is null)
+        if (this.window is null)
         {
             this.window = ArrayPool<byte>.Shared.Rent(PackDef.MAXWINSIZE);
-        }
-        else if (window is not null)
-        {
-            this.window = window;
-            externalWindow = true;
         }
         inAddr = 0;
         UnpInitData(false);
@@ -149,7 +145,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         this.writeStream = writeStream;
         if (!fileHeader.IsSolid)
         {
-            Init(null);
+            Init();
         }
         suspended = false;
         DoUnpack();
@@ -168,7 +164,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         this.writeStream = writeStream;
         if (!fileHeader.IsSolid)
         {
-            Init(null);
+            Init();
         }
         suspended = false;
         await DoUnpackAsync(cancellationToken).ConfigureAwait(false);

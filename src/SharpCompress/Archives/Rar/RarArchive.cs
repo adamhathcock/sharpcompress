@@ -48,6 +48,20 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
         }
     }
 
+    public override async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
+            {
+                unpackV1.Dispose();
+            }
+
+            _disposed = true;
+            await base.DisposeAsync();
+        }
+    }
+
     protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
         RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
 
