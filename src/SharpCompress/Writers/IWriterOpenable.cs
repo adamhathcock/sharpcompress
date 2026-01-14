@@ -10,7 +10,7 @@ public interface IWriterOpenable<TWriterOptions>
     public static abstract IWriter Open(string filePath, TWriterOptions writerOptions);
 
     public static abstract IWriter Open(FileInfo fileInfo, TWriterOptions writerOptions);
-    public static abstract IWriter Open(Stream stream,  TWriterOptions writerOptions);
+    public static abstract IWriter Open(Stream stream, TWriterOptions writerOptions);
 
     /// <summary>
     /// Opens a Writer asynchronously.
@@ -20,16 +20,22 @@ public interface IWriterOpenable<TWriterOptions>
     /// <param name="writerOptions">Writer options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that returns an IWriter.</returns>
-    public static abstract  IAsyncWriter OpenAsync(
+    public static abstract IAsyncWriter OpenAsync(
         Stream stream,
         TWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     );
 
-    public static abstract IAsyncWriter OpenAsync(string filePath, TWriterOptions writerOptions,
-                                                  CancellationToken cancellationToken = default);
+    public static abstract IAsyncWriter OpenAsync(
+        string filePath,
+        TWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    );
 
-    public static abstract IAsyncWriter OpenAsync(FileInfo fileInfo, TWriterOptions writerOptions,
-                                                  CancellationToken cancellationToken = default);
+    public static abstract IAsyncWriter OpenAsync(
+        FileInfo fileInfo,
+        TWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    );
 }
 #endif
