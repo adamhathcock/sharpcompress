@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -127,6 +127,4 @@ public static class IWriterExtensions
             CancellationToken cancellationToken = default
         ) => writer.WriteDirectoryAsync(directoryName, null, cancellationToken);
     }
-
-    // Async extensions
 }

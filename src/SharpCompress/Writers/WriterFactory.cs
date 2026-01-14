@@ -8,6 +8,53 @@ namespace SharpCompress.Writers;
 
 public static class WriterFactory
 {
+    public static IWriter Open(
+        string filePath,
+        ArchiveType archiveType,
+        WriterOptions writerOptions
+    )
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return Open(new FileInfo(filePath), archiveType, writerOptions);
+    }
+
+    public static IWriter Open(
+        FileInfo fileInfo,
+        ArchiveType archiveType,
+        WriterOptions writerOptions
+    )
+    {
+        fileInfo.NotNull(nameof(fileInfo));
+        return Open(fileInfo.OpenWrite(), archiveType, writerOptions);
+    }
+
+    public static IAsyncWriter OpenAsync(
+        string filePath,
+        ArchiveType archiveType,
+        WriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return OpenAsync(new FileInfo(filePath), archiveType, writerOptions, cancellationToken);
+    }
+
+    public static IAsyncWriter OpenAsync(
+        FileInfo fileInfo,
+        ArchiveType archiveType,
+        WriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
+    {
+        fileInfo.NotNull(nameof(fileInfo));
+        return OpenAsync(
+            fileInfo.Open(FileMode.Create, FileAccess.Write),
+            archiveType,
+            writerOptions,
+            cancellationToken
+        );
+    }
+
     public static IWriter Open(Stream stream, ArchiveType archiveType, WriterOptions writerOptions)
     {
         var factory = Factories

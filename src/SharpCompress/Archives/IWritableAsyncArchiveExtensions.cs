@@ -8,28 +8,29 @@ namespace SharpCompress.Archives;
 
 public static class IWritableAsyncArchiveExtensions
 {
-    public static ValueTask SaveToAsync(
-        this IWritableAsyncArchive writableArchive,
-        string filePath,
-        WriterOptions? options = null,
-        CancellationToken cancellationToken = default
-    ) =>
-        writableArchive.SaveToAsync(
-            new FileInfo(filePath),
-            options ?? new(CompressionType.Deflate),
-            cancellationToken
-        );
-
-    public static async ValueTask SaveToAsync(
-        this IWritableAsyncArchive writableArchive,
-        FileInfo fileInfo,
-        WriterOptions? options = null,
-        CancellationToken cancellationToken = default
-    )
+    extension(IWritableAsyncArchive writableArchive)
     {
-        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        await writableArchive
-            .SaveToAsync(stream, options ?? new(CompressionType.Deflate), cancellationToken)
-            .ConfigureAwait(false);
+        public ValueTask SaveToAsync(
+            string filePath,
+            WriterOptions? options = null,
+            CancellationToken cancellationToken = default
+        ) =>
+            writableArchive.SaveToAsync(
+                new FileInfo(filePath),
+                options ?? new(CompressionType.Deflate),
+                cancellationToken
+            );
+
+        public async ValueTask SaveToAsync(
+            FileInfo fileInfo,
+            WriterOptions? options = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+            await writableArchive
+                .SaveToAsync(stream, options ?? new(CompressionType.Deflate), cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

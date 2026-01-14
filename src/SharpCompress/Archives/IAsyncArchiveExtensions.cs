@@ -10,84 +10,83 @@ namespace SharpCompress.Archives;
 
 public static class IAsyncArchiveExtensions
 {
-    /// <summary>
-    /// Extract to specific directory asynchronously with progress reporting and cancellation support
-    /// </summary>
-    /// <param name="archive">The archive to extract.</param>
-    /// <param name="destinationDirectory">The folder to extract into.</param>
-    /// <param name="options">Extraction options.</param>
-    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
-    /// <param name="cancellationToken">Optional cancellation token.</param>
-    public static async Task WriteToDirectoryAsync(
-        this IAsyncArchive archive,
-        string destinationDirectory,
-        ExtractionOptions? options = null,
-        IProgress<ProgressReport>? progress = null,
-        CancellationToken cancellationToken = default
-    )
+    extension(IAsyncArchive archive)
     {
-        // For solid archives (Rar, 7Zip), use the optimized reader-based approach
-        if (await archive.IsSolidAsync() || archive.Type == ArchiveType.SevenZip)
+        /// <summary>
+        /// Extract to specific directory asynchronously with progress reporting and cancellation support
+        /// </summary>
+        /// <param name="archive">The archive to extract.</param>
+        /// <param name="destinationDirectory">The folder to extract into.</param>
+        /// <param name="options">Extraction options.</param>
+        /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        public async Task WriteToDirectoryAsync(
+            string destinationDirectory,
+            ExtractionOptions? options = null,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
         {
-            await using var reader = await archive.ExtractAllEntriesAsync();
-            await reader.WriteAllToDirectoryAsync(destinationDirectory, options, cancellationToken);
-        }
-        else
-        {
-            // For non-solid archives, extract entries directly
-            await archive.WriteToDirectoryAsyncInternal(
-                destinationDirectory,
-                options,
-                progress,
-                cancellationToken
-            );
-        }
-    }
-
-    private static async Task WriteToDirectoryAsyncInternal(
-        this IAsyncArchive archive,
-        string destinationDirectory,
-        ExtractionOptions? options,
-        IProgress<ProgressReport>? progress,
-        CancellationToken cancellationToken
-    )
-    {
-        // Prepare for progress reporting
-        var totalBytes = await archive.TotalUncompressedSizeAsync();
-        var bytesRead = 0L;
-
-        // Tracking for created directories.
-        var seenDirectories = new HashSet<string>();
-
-        // Extract
-        await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (entry.IsDirectory)
+            if (await archive.IsSolidAsync() || archive.Type == ArchiveType.SevenZip)
             {
-                var dirPath = Path.Combine(
+                await using var reader = await archive.ExtractAllEntriesAsync();
+                await reader.WriteAllToDirectoryAsync(
                     destinationDirectory,
-                    entry.Key.NotNull("Entry Key is null")
+                    options,
+                    cancellationToken
                 );
-                if (
-                    Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
-                    && seenDirectories.Add(dirPath)
-                )
-                {
-                    Directory.CreateDirectory(parentDirectory);
-                }
-                continue;
             }
+            else
+            {
+                await archive.WriteToDirectoryAsyncInternal(
+                    destinationDirectory,
+                    options,
+                    progress,
+                    cancellationToken
+                );
+            }
+        }
 
-            // Use the entry's WriteToDirectoryAsync method which respects ExtractionOptions
-            await entry
-                .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
-                .ConfigureAwait(false);
+        private async Task WriteToDirectoryAsyncInternal(
+            string destinationDirectory,
+            ExtractionOptions? options,
+            IProgress<ProgressReport>? progress,
+            CancellationToken cancellationToken
+        )
+        {
+            var totalBytes = await archive.TotalUncompressedSizeAsync();
+            var bytesRead = 0L;
+            var seenDirectories = new HashSet<string>();
 
-            // Update progress
-            bytesRead += entry.Size;
-            progress?.Report(new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes));
+            await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (entry.IsDirectory)
+                {
+                    var dirPath = Path.Combine(
+                        destinationDirectory,
+                        entry.Key.NotNull("Entry Key is null")
+                    );
+                    if (
+                        Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
+                        && seenDirectories.Add(dirPath)
+                    )
+                    {
+                        Directory.CreateDirectory(parentDirectory);
+                    }
+                    continue;
+                }
+
+                await entry
+                    .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                    .ConfigureAwait(false);
+
+                bytesRead += entry.Size;
+                progress?.Report(
+                    new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes)
+                );
+            }
         }
     }
 }
