@@ -33,7 +33,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenAsync(stream, ArchiveType.Tar, CompressionType.None))
+        using (var writer = WriterFactory.OpenAsync(new AsyncOnlyStream(stream), ArchiveType.Tar, CompressionType.None))
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -82,7 +82,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenAsync(stream, ArchiveType.Tar, CompressionType.None))
+        using (var writer = WriterFactory.OpenAsync(new AsyncOnlyStream(stream), ArchiveType.Tar, CompressionType.None))
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -183,7 +183,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
-            await using (var tr = ReaderFactory.OpenAsync(inputMemory, tropt))
+            await using (var tr = ReaderFactory.OpenAsync(new AsyncOnlyStream(inputMemory), tropt))
             {
                 while (await tr.MoveToNextEntryAsync())
                 {
