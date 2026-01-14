@@ -6,6 +6,7 @@ using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Rar;
@@ -649,7 +650,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var stream = File.OpenRead(testArchive);
-        await using var archive = await ArchiveFactory.OpenAsync(stream);
+        await using var archive = await ArchiveFactory.OpenAsync(new AsyncOnlyStream(stream));
         Assert.True(await archive.IsSolidAsync());
         await using (var reader = await archive.ExtractAllEntriesAsync())
         {
