@@ -8,7 +8,7 @@ using SharpCompress.Readers.Rar;
 
 namespace SharpCompress.Readers.Arj
 {
-    public abstract class ArjReader : AbstractReader<ArjEntry, ArjVolume>
+    public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
     {
         internal ArjReader(ReaderOptions options)
             : base(options, ArchiveType.Arj) { }

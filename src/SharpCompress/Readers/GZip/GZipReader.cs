@@ -5,7 +5,7 @@ using SharpCompress.Common.GZip;
 
 namespace SharpCompress.Readers.GZip;
 
-public class GZipReader : AbstractReader<GZipEntry, GZipVolume>
+public partial class GZipReader : AbstractReader<GZipEntry, GZipVolume>
 {
     private GZipReader(Stream stream, ReaderOptions options)
         : base(options, ArchiveType.GZip) => Volume = new GZipVolume(stream, options, 0);

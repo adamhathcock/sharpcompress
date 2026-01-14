@@ -9,7 +9,7 @@ using SharpCompress.Common.Zip.Headers;
 
 namespace SharpCompress.Readers.Zip;
 
-public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
+public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
 {
     private readonly StreamingZipHeaderFactory _headerFactory;
 
