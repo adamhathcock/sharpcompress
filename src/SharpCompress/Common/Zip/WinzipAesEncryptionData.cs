@@ -20,7 +20,7 @@ internal class WinzipAesEncryptionData
     {
         _keySize = keySize;
 
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if LEGACY_DOTNET
         var rfc2898 = new Rfc2898DeriveBytes(password, salt, RFC2898_ITERATIONS);
         KeyBytes = rfc2898.GetBytes(KeySizeInBytes);
         IvBytes = rfc2898.GetBytes(KeySizeInBytes);

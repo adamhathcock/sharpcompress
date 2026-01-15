@@ -74,7 +74,7 @@ public class CompressionStream : Stream
 
     ~CompressionStream() => Dispose(false);
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -145,7 +145,7 @@ public class CompressionStream : Stream
     public override void Write(byte[] buffer, int offset, int count) =>
         Write(new ReadOnlySpan<byte>(buffer, offset, count));
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#if !LEGACY_DOTNET
     public override void Write(ReadOnlySpan<byte> buffer) =>
         WriteInternal(buffer, ZSTD_EndDirective.ZSTD_e_continue);
 #else
@@ -176,7 +176,7 @@ public class CompressionStream : Stream
         );
     }
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#if !LEGACY_DOTNET
     private async ValueTask WriteInternalAsync(
         ReadOnlyMemory<byte>? buffer,
         ZSTD_EndDirective directive,
@@ -218,7 +218,7 @@ public class CompressionStream : Stream
         );
     }
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#if !LEGACY_DOTNET
 
     public override Task WriteAsync(
         byte[] buffer,

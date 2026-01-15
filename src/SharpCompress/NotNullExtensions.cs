@@ -21,7 +21,7 @@ internal static class NotNullExtensions
         return source.AsEnumerable();
     }
 
-#if NETFRAMEWORK || NETSTANDARD
+#if LEGACY_DOTNET
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T NotNull<T>(this T? obj, string? message = null)
         where T : class

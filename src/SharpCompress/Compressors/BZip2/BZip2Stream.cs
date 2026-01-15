@@ -98,7 +98,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
 
     public override void SetLength(long value) => stream.SetLength(value);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
 
     public override int Read(Span<byte> buffer) => stream.Read(buffer);
 

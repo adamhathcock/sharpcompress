@@ -552,7 +552,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         }
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (isDisposed)
@@ -1171,7 +1171,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         return rc;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default

@@ -184,7 +184,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             return Task.CompletedTask;
         }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
         public override ValueTask<int> ReadAsync(
             Memory<byte> buffer,
             CancellationToken cancellationToken = default

@@ -345,7 +345,7 @@ public class GZipStream : Stream, IStreamStack
         return n;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
@@ -454,7 +454,7 @@ public class GZipStream : Stream, IStreamStack
         await BaseStream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
