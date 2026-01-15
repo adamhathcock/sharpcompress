@@ -139,26 +139,26 @@ public class ZipFactory
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
-        ZipArchive.Open(stream, readerOptions);
+    public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        ZipArchive.OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(Stream stream, ReaderOptions? readerOptions = null) =>
-        (IAsyncArchive)Open(stream, readerOptions);
+    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        ZipArchive.Open(fileInfo, readerOptions);
+    public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        ZipArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(
+    public IAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfo, readerOptions);
+        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
     }
 
     #endregion
@@ -166,28 +166,32 @@ public class ZipFactory
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
-        ZipArchive.Open(streams, readerOptions);
-
-    /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(
+    public IArchive OpenArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
-    ) => (IAsyncArchive)Open(streams, readerOptions);
+    ) => ZipArchive.OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
-        ZipArchive.Open(fileInfos, readerOptions);
+    public IAsyncArchive OpenAsyncArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null
+    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(
+    public IArchive OpenArchive(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null
+    ) => ZipArchive.OpenArchive(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfos, readerOptions);
+        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
     #endregion
@@ -214,18 +218,18 @@ public class ZipFactory
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter Open(Stream stream, WriterOptions writerOptions) =>
+    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions) =>
         new ZipWriter(stream, new ZipWriterOptions(writerOptions));
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsync(
+    public IAsyncWriter OpenAsyncWriter(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncWriter)Open(stream, writerOptions);
+        return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
     #endregion
@@ -233,7 +237,7 @@ public class ZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateWriteableArchive() => ZipArchive.Create();
+    public IWritableArchive CreateArchive() => ZipArchive.CreateArchive();
 
     #endregion
 }

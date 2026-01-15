@@ -23,7 +23,7 @@ public class ExtractAllTests : TestBase
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
         var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };
 
-        await using var archive = await ArchiveFactory.OpenAsync(testArchive);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(testArchive);
         await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, options);
     }
 
@@ -40,7 +40,7 @@ public class ExtractAllTests : TestBase
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
         var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };
 
-        using var archive = ArchiveFactory.Open(testArchive);
+        using var archive = ArchiveFactory.OpenArchive(testArchive);
         archive.WriteToDirectory(SCRATCH_FILES_PATH, options);
     }
 }

@@ -61,12 +61,12 @@ public class GZipFactory
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
-        GZipArchive.Open(stream, readerOptions);
+    public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        GZipArchive.OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(Stream stream, ReaderOptions? readerOptions = null) =>
-        (IAsyncArchive)Open(stream, readerOptions);
+    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(stream, readerOptions);
 
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
@@ -75,14 +75,14 @@ public class GZipFactory
     ) => new(IsArchive(stream, password, bufferSize));
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(
+    public IAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfo, readerOptions);
+        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
     }
 
     #endregion
@@ -90,28 +90,32 @@ public class GZipFactory
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
-        GZipArchive.Open(streams, readerOptions);
-
-    /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(
+    public IArchive OpenArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
-    ) => (IAsyncArchive)Open(streams, readerOptions);
+    ) => GZipArchive.OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
-        GZipArchive.Open(fileInfos, readerOptions);
+    public IAsyncArchive OpenAsyncArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null
+    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsync(
+    public IArchive OpenArchive(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null
+    ) => GZipArchive.OpenArchive(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)Open(fileInfos, readerOptions);
+        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
     #endregion
@@ -164,15 +168,15 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        GZipArchive.Open(fileInfo, readerOptions);
+    public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        GZipArchive.OpenArchive(fileInfo, readerOptions);
 
     #endregion
 
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter Open(Stream stream, WriterOptions writerOptions)
+    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions)
     {
         if (writerOptions.CompressionType != CompressionType.GZip)
         {
@@ -182,7 +186,7 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsync(
+    public IAsyncWriter OpenAsyncWriter(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default
@@ -193,7 +197,7 @@ public class GZipFactory
         {
             throw new InvalidFormatException("GZip archives only support GZip compression type.");
         }
-        return (IAsyncWriter)Open(stream, writerOptions);
+        return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
     #endregion
@@ -201,7 +205,7 @@ public class GZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateWriteableArchive() => GZipArchive.Create();
+    public IWritableArchive CreateArchive() => GZipArchive.CreateArchive();
 
     #endregion
 }

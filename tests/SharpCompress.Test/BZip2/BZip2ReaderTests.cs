@@ -16,6 +16,6 @@ public class BZip2ReaderTests : ReaderTests
         Stream stream = new MemoryStream(
             new byte[] { 0x42, 0x5a, 0x68, 0x34, 0x31, 0x41, 0x59, 0x26, 0x53, 0x59, 0x35 }
         );
-        Assert.Throws(typeof(InvalidOperationException), () => ReaderFactory.Open(stream));
+        Assert.Throws(typeof(InvalidOperationException), () => ReaderFactory.OpenReader(stream));
     }
 }

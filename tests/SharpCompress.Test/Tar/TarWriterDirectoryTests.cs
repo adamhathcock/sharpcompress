@@ -25,7 +25,7 @@ public class TarWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = TarArchive.Open(memoryStream);
+        using var archive = TarArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.ToList();
 
         Assert.Single(entries);
@@ -48,7 +48,7 @@ public class TarWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = TarArchive.Open(memoryStream);
+        using var archive = TarArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.ToList();
 
         Assert.Single(entries);
@@ -71,7 +71,7 @@ public class TarWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = TarArchive.Open(memoryStream);
+        using var archive = TarArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.ToList();
 
         Assert.Single(entries);
@@ -94,7 +94,7 @@ public class TarWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = TarArchive.Open(memoryStream);
+        using var archive = TarArchive.OpenArchive(memoryStream);
 
         Assert.Empty(archive.Entries);
     }
@@ -116,7 +116,7 @@ public class TarWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = TarArchive.Open(memoryStream);
+        using var archive = TarArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.OrderBy(e => e.Key).ToList();
 
         Assert.Equal(3, entries.Count);
@@ -150,7 +150,7 @@ public class TarWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = TarArchive.Open(memoryStream);
+        using var archive = TarArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.OrderBy(e => e.Key).ToList();
 
         Assert.Equal(3, entries.Count);

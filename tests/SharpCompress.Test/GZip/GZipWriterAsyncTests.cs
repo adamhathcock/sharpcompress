@@ -24,7 +24,7 @@ public class GZipWriterAsyncTests : WriterTests
             )
         )
         using (
-            var writer = WriterFactory.OpenAsync(
+            var writer = WriterFactory.OpenAsyncArchive(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
                 CompressionType.GZip
@@ -64,7 +64,7 @@ public class GZipWriterAsyncTests : WriterTests
         Assert.Throws<InvalidFormatException>(() =>
         {
             using Stream stream = File.OpenWrite(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
-            using var writer = WriterFactory.Open(
+            using var writer = WriterFactory.OpenWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
                 CompressionType.BZip2

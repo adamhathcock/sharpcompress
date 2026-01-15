@@ -13,14 +13,14 @@ namespace SharpCompress.Archives;
 
 public static class ArchiveFactory
 {
-    public static IArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
         readerOptions ??= new ReaderOptions();
         stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
-        return FindFactory<IArchiveFactory>(stream).Open(stream, readerOptions);
+        return FindFactory<IArchiveFactory>(stream).OpenArchive(stream, readerOptions);
     }
 
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -29,10 +29,10 @@ public static class ArchiveFactory
         readerOptions ??= new ReaderOptions();
         stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
         var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken);
-        return factory.OpenAsync(stream, readerOptions);
+        return factory.OpenAsyncArchive(stream, readerOptions);
     }
 
-    public static IWritableArchive Create(ArchiveType type)
+    public static IWritableArchive CreateArchive(ArchiveType type)
     {
         var factory = Factory
             .Factories.OfType<IWriteableArchiveFactory>()
@@ -40,36 +40,36 @@ public static class ArchiveFactory
 
         if (factory != null)
         {
-            return factory.CreateWriteableArchive();
+            return factory.CreateArchive();
         }
 
         throw new NotSupportedException("Cannot create Archives of type: " + type);
     }
 
-    public static IArchive Open(string filePath, ReaderOptions? options = null)
+    public static IArchive OpenArchive(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return Open(new FileInfo(filePath), options);
+        return OpenArchive(new FileInfo(filePath), options);
     }
 
-    public static ValueTask<IAsyncArchive> OpenAsync(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsync(new FileInfo(filePath), options, cancellationToken);
+        return OpenAsyncArchive(new FileInfo(filePath), options, cancellationToken);
     }
 
-    public static IArchive Open(FileInfo fileInfo, ReaderOptions? options = null)
+    public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? options = null)
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-        return FindFactory<IArchiveFactory>(fileInfo).Open(fileInfo, options);
+        return FindFactory<IArchiveFactory>(fileInfo).OpenArchive(fileInfo, options);
     }
 
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -78,10 +78,10 @@ public static class ArchiveFactory
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
         var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken);
-        return factory.OpenAsync(fileInfo, options, cancellationToken);
+        return factory.OpenAsyncArchive(fileInfo, options, cancellationToken);
     }
 
-    public static IArchive Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
+    public static IArchive OpenArchive(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
     {
         fileInfos.NotNull(nameof(fileInfos));
         var filesArray = fileInfos.ToArray();
@@ -93,16 +93,16 @@ public static class ArchiveFactory
         var fileInfo = filesArray[0];
         if (filesArray.Length == 1)
         {
-            return Open(fileInfo, options);
+            return OpenArchive(fileInfo, options);
         }
 
         fileInfo.NotNull(nameof(fileInfo));
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
-        return FindFactory<IMultiArchiveFactory>(fileInfo).Open(filesArray, options);
+        return FindFactory<IMultiArchiveFactory>(fileInfo).OpenArchive(filesArray, options);
     }
 
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -118,17 +118,17 @@ public static class ArchiveFactory
         var fileInfo = filesArray[0];
         if (filesArray.Length == 1)
         {
-            return await OpenAsync(fileInfo, options, cancellationToken);
+            return await OpenAsyncArchive(fileInfo, options, cancellationToken);
         }
 
         fileInfo.NotNull(nameof(fileInfo));
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken);
-        return factory.OpenAsync(filesArray, options, cancellationToken);
+        return factory.OpenAsyncArchive(filesArray, options, cancellationToken);
     }
 
-    public static IArchive Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
+    public static IArchive OpenArchive(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
         streams.NotNull(nameof(streams));
         var streamsArray = streams.ToArray();
@@ -140,16 +140,16 @@ public static class ArchiveFactory
         var firstStream = streamsArray[0];
         if (streamsArray.Length == 1)
         {
-            return Open(firstStream, options);
+            return OpenArchive(firstStream, options);
         }
 
         firstStream.NotNull(nameof(firstStream));
         options ??= new ReaderOptions();
 
-        return FindFactory<IMultiArchiveFactory>(firstStream).Open(streamsArray, options);
+        return FindFactory<IMultiArchiveFactory>(firstStream).OpenArchive(streamsArray, options);
     }
 
-    public static async ValueTask<IAsyncArchive> OpenAsync(
+    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IEnumerable<Stream> streams,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -166,14 +166,14 @@ public static class ArchiveFactory
         var firstStream = streamsArray[0];
         if (streamsArray.Length == 1)
         {
-            return await OpenAsync(firstStream, options, cancellationToken);
+            return await OpenAsyncArchive(firstStream, options, cancellationToken);
         }
 
         firstStream.NotNull(nameof(firstStream));
         options ??= new ReaderOptions();
 
         var factory = FindFactory<IMultiArchiveFactory>(firstStream);
-        return factory.OpenAsync(streamsArray, options);
+        return factory.OpenAsyncArchive(streamsArray, options);
     }
 
     public static void WriteToDirectory(
@@ -182,7 +182,7 @@ public static class ArchiveFactory
         ExtractionOptions? options = null
     )
     {
-        using var archive = Open(sourceArchive);
+        using var archive = OpenArchive(sourceArchive);
         archive.WriteToDirectory(destinationDirectory, options);
     }
 

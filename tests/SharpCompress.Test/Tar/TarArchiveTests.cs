@@ -34,7 +34,7 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.None))
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -47,7 +47,7 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.Open(unmodified))
+        using (var archive2 = TarArchive.OpenArchive(unmodified))
         {
             Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
@@ -66,7 +66,7 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
-        using var archive = TarArchive.Open(unmodified);
+        using var archive = TarArchive.OpenArchive(unmodified);
         Assert.Equal(5, archive.Entries.Count());
         Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
@@ -94,7 +94,7 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.None))
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -107,7 +107,7 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.Open(unmodified))
+        using (var archive2 = TarArchive.OpenArchive(unmodified))
         {
             Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
@@ -126,7 +126,7 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_UstarArchivePathReadLongName()
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
-        using var archive = TarArchive.Open(unmodified);
+        using var archive = TarArchive.OpenArchive(unmodified);
         Assert.Equal(6, archive.Entries.Count());
         Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
@@ -159,7 +159,7 @@ public class TarArchiveTests : ArchiveTests
 
         // var aropt = new Ar
 
-        using (var archive = TarArchive.Create())
+        using (var archive = TarArchive.CreateArchive())
         {
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
             var twopt = new TarWriterOptions(CompressionType.None, true);
@@ -177,7 +177,7 @@ public class TarArchiveTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.Open(unmodified))
+        using (var archive = TarArchive.OpenArchive(unmodified))
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
             archive.SaveTo(scratchPath, CompressionType.None);
@@ -192,7 +192,7 @@ public class TarArchiveTests : ArchiveTests
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.Open(unmodified))
+        using (var archive = TarArchive.OpenArchive(unmodified))
         {
             var entry = archive.Entries.Single(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
@@ -208,7 +208,7 @@ public class TarArchiveTests : ArchiveTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
         Assert.True(archive.Type == ArchiveType.Tar);
     }
 
@@ -217,7 +217,7 @@ public class TarArchiveTests : ArchiveTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.Empty.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
         Assert.True(archive.Type == ArchiveType.Tar);
     }
 
@@ -239,7 +239,7 @@ public class TarArchiveTests : ArchiveTests
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
-            using (var tr = TarReader.Open(inputMemory, tropt))
+            using (var tr = TarReader.OpenReader(inputMemory, tropt))
             {
                 while (tr.MoveToNextEntry())
                 {
@@ -272,7 +272,7 @@ public class TarArchiveTests : ArchiveTests
 
         var numberOfEntries = 0;
 
-        using (var archiveFactory = TarArchive.Open(memoryStream))
+        using (var archiveFactory = TarArchive.OpenArchive(memoryStream))
         {
             foreach (var entry in archiveFactory.Entries)
             {

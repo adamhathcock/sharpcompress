@@ -18,13 +18,16 @@ public partial class ZipArchive
         IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
 #endif
 {
-    public static IWritableArchive Open(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
     }
 
-    public static IWritableArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static IWritableArchive OpenArchive(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null
+    )
     {
         fileInfo.NotNull(nameof(fileInfo));
         return new ZipArchive(
@@ -36,7 +39,7 @@ public partial class ZipArchive
         );
     }
 
-    public static IWritableArchive Open(
+    public static IWritableArchive OpenArchive(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -52,7 +55,7 @@ public partial class ZipArchive
         );
     }
 
-    public static IWritableArchive Open(
+    public static IWritableArchive OpenArchive(
         IEnumerable<Stream> streams,
         ReaderOptions? readerOptions = null
     )
@@ -68,7 +71,7 @@ public partial class ZipArchive
         );
     }
 
-    public static IWritableArchive Open(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
 
@@ -82,54 +85,54 @@ public partial class ZipArchive
         );
     }
 
-    public static IWritableAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsyncArchive(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(path, readerOptions);
+        return (IWritableAsyncArchive)OpenArchive(path, readerOptions);
     }
 
-    public static IWritableAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(stream, readerOptions);
+        return (IWritableAsyncArchive)OpenArchive(stream, readerOptions);
     }
 
-    public static IWritableAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(fileInfo, readerOptions);
+        return (IWritableAsyncArchive)OpenArchive(fileInfo, readerOptions);
     }
 
-    public static IWritableAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(streams, readerOptions);
+        return (IWritableAsyncArchive)OpenArchive(streams, readerOptions);
     }
 
-    public static IWritableAsyncArchive OpenAsync(
+    public static IWritableAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)Open(fileInfos, readerOptions);
+        return (IWritableAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
     public static bool IsZipFile(
@@ -263,7 +266,7 @@ public partial class ZipArchive
         }
     }
 
-    public static ZipArchive Create() => new();
+    public static ZipArchive CreateArchive() => new();
 
     public static async ValueTask<bool> IsZipMultiAsync(
         Stream stream,

@@ -25,21 +25,21 @@ public interface IArchiveFactory : IFactory
     /// </summary>
     /// <param name="stream">An open, readable and seekable stream.</param>
     /// <param name="readerOptions">reading options.</param>
-    IArchive Open(Stream stream, ReaderOptions? readerOptions = null);
+    IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null);
 
     /// <summary>
     /// Opens an Archive for random access asynchronously.
     /// </summary>
     /// <param name="stream">An open, readable and seekable stream.</param>
     /// <param name="readerOptions">reading options.</param>
-    IAsyncArchive OpenAsync(Stream stream, ReaderOptions? readerOptions = null);
+    IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null);
 
     /// <summary>
     /// Constructor with a FileInfo object to an existing file.
     /// </summary>
     /// <param name="fileInfo">the file to open.</param>
     /// <param name="readerOptions">reading options.</param>
-    IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null);
+    IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null);
 
     /// <summary>
     /// Opens an Archive from a FileInfo object asynchronously.
@@ -47,7 +47,7 @@ public interface IArchiveFactory : IFactory
     /// <param name="fileInfo">the file to open.</param>
     /// <param name="readerOptions">reading options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    IAsyncArchive OpenAsync(
+    IAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

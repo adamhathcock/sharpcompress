@@ -86,7 +86,7 @@ public class ZLibBaseStreamAsyncTests
     private async ValueTask CompressAsync(Stream input, Stream output, int compressionLevel)
     {
         using var zlibStream = new ZlibStream(
-            SharpCompressStream.Create(output, leaveOpen: true),
+            SharpCompressStream.CreateArchive(output, leaveOpen: true),
             CompressionMode.Compress,
             (CompressionLevel)compressionLevel
         );
@@ -97,7 +97,7 @@ public class ZLibBaseStreamAsyncTests
     private async ValueTask DecompressAsync(Stream input, Stream output)
     {
         using var zlibStream = new ZlibStream(
-            SharpCompressStream.Create(input, leaveOpen: true),
+            SharpCompressStream.CreateArchive(input, leaveOpen: true),
             CompressionMode.Decompress
         );
         await zlibStream.CopyToAsync(output).ConfigureAwait(false);

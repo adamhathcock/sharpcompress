@@ -6,9 +6,9 @@ namespace SharpCompress.Writers;
 
 public interface IWriterFactory : IFactory
 {
-    IWriter Open(Stream stream, WriterOptions writerOptions);
+    IWriter OpenWriter(Stream stream, WriterOptions writerOptions);
 
-    IAsyncWriter OpenAsync(
+    IAsyncWriter OpenAsyncWriter(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default

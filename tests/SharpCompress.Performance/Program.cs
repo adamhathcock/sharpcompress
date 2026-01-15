@@ -30,14 +30,14 @@ using (var __ = JetbrainsProfiler.Cpu($"/Users/adam/temp/"))
 
     for (int i = 0; i < 50; i++)
     {
-        using var found = ArchiveFactory.Open(arcs[0]);
+        using var found = ArchiveFactory.OpenArchive(arcs[0]);
         foreach (var entry in found.Entries.Where(entry => !entry.IsDirectory))
         {
             Console.WriteLine($"Extracting {entry.Key}");
             using var entryStream = entry.OpenEntryStream();
             entryStream.CopyTo(Stream.Null);
         }
-        /*using var found = ReaderFactory.Open(arcs[0]);
+        /*using var found = ReaderFactory.OpenReader(arcs[0]);
         while (found.MoveToNextEntry())
         {
             var entry = found.Entry;

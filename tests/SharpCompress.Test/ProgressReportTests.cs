@@ -110,7 +110,7 @@ public class ProgressReportTests : TestBase
         archiveStream.Position = 0;
         var readerOptions = new ReaderOptions { Progress = progress };
 
-        using (var reader = ReaderFactory.Open(archiveStream, readerOptions))
+        using (var reader = ReaderFactory.OpenReader(archiveStream, readerOptions))
         {
             while (reader.MoveToNextEntry())
             {
@@ -148,7 +148,7 @@ public class ProgressReportTests : TestBase
         // Now open as archive and extract entry with progress as parameter
         archiveStream.Position = 0;
 
-        using var archive = ZipArchive.Open(archiveStream);
+        using var archive = ZipArchive.OpenArchive(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
@@ -184,7 +184,7 @@ public class ProgressReportTests : TestBase
         // Now open as archive and extract entry async with progress as parameter
         archiveStream.Position = 0;
 
-        using var archive = ZipArchive.Open(archiveStream);
+        using var archive = ZipArchive.OpenArchive(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
@@ -237,7 +237,7 @@ public class ProgressReportTests : TestBase
         var readerOptions = new ReaderOptions();
         Assert.Null(readerOptions.Progress);
 
-        using (var reader = ReaderFactory.Open(archiveStream, readerOptions))
+        using (var reader = ReaderFactory.OpenReader(archiveStream, readerOptions))
         {
             while (reader.MoveToNextEntry())
             {
@@ -267,7 +267,7 @@ public class ProgressReportTests : TestBase
         // Open archive and extract without progress
         archiveStream.Position = 0;
 
-        using var archive = ZipArchive.Open(archiveStream);
+        using var archive = ZipArchive.OpenArchive(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
@@ -326,7 +326,7 @@ public class ProgressReportTests : TestBase
         archiveStream.Position = 0;
         var readerOptions = new ReaderOptions { Progress = progress };
 
-        using (var reader = ReaderFactory.Open(archiveStream, readerOptions))
+        using (var reader = ReaderFactory.OpenReader(archiveStream, readerOptions))
         {
             while (reader.MoveToNextEntry())
             {
@@ -367,7 +367,7 @@ public class ProgressReportTests : TestBase
         // Now open as archive and extract entry with progress as parameter
         archiveStream.Position = 0;
 
-        using var archive = SharpCompress.Archives.Tar.TarArchive.Open(archiveStream);
+        using var archive = SharpCompress.Archives.Tar.TarArchive.OpenArchive(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
@@ -406,7 +406,7 @@ public class ProgressReportTests : TestBase
         // Now open as archive and extract entry async with progress as parameter
         archiveStream.Position = 0;
 
-        using var archive = SharpCompress.Archives.Tar.TarArchive.Open(archiveStream);
+        using var archive = SharpCompress.Archives.Tar.TarArchive.OpenArchive(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
@@ -447,7 +447,7 @@ public class ProgressReportTests : TestBase
         archiveStream.Position = 0;
         var readerOptions = new ReaderOptions { Progress = progress };
 
-        using (var reader = ReaderFactory.Open(archiveStream, readerOptions))
+        using (var reader = ReaderFactory.OpenReader(archiveStream, readerOptions))
         {
             while (reader.MoveToNextEntry())
             {
@@ -496,7 +496,7 @@ public class ProgressReportTests : TestBase
         // Now open as archive and extract entries with progress as parameter
         archiveStream.Position = 0;
 
-        using var archive = ZipArchive.Open(archiveStream);
+        using var archive = ZipArchive.OpenArchive(archiveStream);
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
@@ -541,7 +541,7 @@ public class ProgressReportTests : TestBase
         var readerOptions = new ReaderOptions { Progress = progress };
 
         await using (
-            var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(archiveStream), readerOptions)
+            var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(archiveStream), readerOptions)
         )
         {
             while (await reader.MoveToNextEntryAsync())

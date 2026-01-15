@@ -16,5 +16,5 @@ public interface IWriteableArchiveFactory : Factories.IFactory
     /// Creates a new, empty archive, ready to be written.
     /// </summary>
     /// <returns></returns>
-    IWritableArchive CreateWriteableArchive();
+    IWritableArchive CreateArchive();
 }

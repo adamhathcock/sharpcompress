@@ -9,25 +9,28 @@ public interface IArchiveOpenable<TSync, TASync>
     where TSync : IArchive
     where TASync : IAsyncArchive
 {
-    public static abstract TSync Open(string filePath, ReaderOptions? readerOptions = null);
+    public static abstract TSync OpenArchive(string filePath, ReaderOptions? readerOptions = null);
 
-    public static abstract TSync Open(FileInfo fileInfo, ReaderOptions? readerOptions = null);
+    public static abstract TSync OpenArchive(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null
+    );
 
-    public static abstract TSync Open(Stream stream, ReaderOptions? readerOptions = null);
+    public static abstract TSync OpenArchive(Stream stream, ReaderOptions? readerOptions = null);
 
-    public static abstract TASync OpenAsync(
+    public static abstract TASync OpenAsyncArchive(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     );
 
-    public static abstract TASync OpenAsync(
+    public static abstract TASync OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     );
 
-    public static abstract TASync OpenAsync(
+    public static abstract TASync OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
