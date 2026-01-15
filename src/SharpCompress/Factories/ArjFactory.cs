@@ -27,8 +27,7 @@ namespace SharpCompress.Factories
             Stream stream,
             string? password = null,
             int bufferSize = ReaderOptions.DefaultBufferSize
-        ) =>
-            ArjHeader.IsArchive(stream);
+        ) => ArjHeader.IsArchive(stream);
 
         public override ValueTask<bool> IsArchiveAsync(
             Stream stream,
