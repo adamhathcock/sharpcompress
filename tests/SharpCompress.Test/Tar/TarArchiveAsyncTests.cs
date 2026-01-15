@@ -137,7 +137,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.CreateArchive())
+        using (var archive = TarArchive.CreateAsyncArchive())
         {
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
             var twopt = new TarWriterOptions(CompressionType.None, true);

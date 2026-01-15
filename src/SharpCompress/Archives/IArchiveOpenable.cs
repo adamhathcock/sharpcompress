@@ -36,4 +36,5 @@ public interface IArchiveOpenable<TSync, TASync>
         CancellationToken cancellationToken = default
     );
 }
+
 #endif

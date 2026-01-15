@@ -16,8 +16,8 @@ namespace SharpCompress.Archives.Tar;
 
 public partial class TarArchive
 #if NET8_0_OR_GREATER
-    : IArchiveOpenable<IWritableArchive, IWritableAsyncArchive>,
-        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+    : IWritableArchiveOpenable,
+      IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
 #endif
 {
     public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
@@ -165,5 +165,7 @@ public partial class TarArchive
         return false;
     }
 
-    public static TarArchive CreateArchive() => new();
+    public static IWritableArchive CreateArchive() => new TarArchive();
+
+    public static IWritableAsyncArchive CreateAsyncArchive() => new TarArchive();
 }
