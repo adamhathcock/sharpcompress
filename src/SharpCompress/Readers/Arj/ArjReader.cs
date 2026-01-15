@@ -27,7 +27,7 @@ namespace SharpCompress.Readers.Arj
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IReader Open(Stream stream, ReaderOptions? options = null)
+        public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
         {
             stream.NotNull(nameof(stream));
             return new SingleVolumeArjReader(stream, options ?? new ReaderOptions());
@@ -39,7 +39,7 @@ namespace SharpCompress.Readers.Arj
         /// <param name="streams"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static IReader Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
+        public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
         {
             streams.NotNull(nameof(streams));
             return new MultiVolumeArjReader(streams, options ?? new ReaderOptions());

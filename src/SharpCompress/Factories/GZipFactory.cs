@@ -154,7 +154,7 @@ public class GZipFactory
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
-        GZipReader.Open(stream, options);
+        GZipReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
     public IAsyncReader OpenReaderAsync(
@@ -164,7 +164,7 @@ public class GZipFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)GZipReader.Open(stream, options);
+        return (IAsyncReader)GZipReader.OpenReader(stream, options);
     }
 
     /// <inheritdoc/>

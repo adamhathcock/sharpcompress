@@ -180,13 +180,13 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return TarReader.Open(stream);
+        return TarReader.OpenReader(stream);
     }
 
     protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)TarReader.Open(stream));
+        return new((IAsyncReader)TarReader.OpenReader(stream));
     }
 }

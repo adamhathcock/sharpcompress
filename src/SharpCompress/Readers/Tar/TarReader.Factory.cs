@@ -7,7 +7,7 @@ namespace SharpCompress.Readers.Tar;
 
 public partial class TarReader : IReaderOpenable
 {
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -15,39 +15,39 @@ public partial class TarReader : IReaderOpenable
     {
         cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return (IAsyncReader)Open(new FileInfo(path), readerOptions);
+        return (IAsyncReader)OpenReader(new FileInfo(path), readerOptions);
     }
 
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)Open(stream, readerOptions);
+        return (IAsyncReader)OpenReader(stream, readerOptions);
     }
 
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)Open(fileInfo, readerOptions);
+        return (IAsyncReader)OpenReader(fileInfo, readerOptions);
     }
 
-    public static IReader Open(string filePath, ReaderOptions? readerOptions = null)
+    public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return Open(new FileInfo(filePath), readerOptions);
+        return OpenReader(new FileInfo(filePath), readerOptions);
     }
 
-    public static IReader Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
-        return Open(fileInfo.OpenRead(), readerOptions);
+        return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 }
 #endif

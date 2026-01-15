@@ -200,7 +200,7 @@ public class ZipFactory
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
-        ZipReader.Open(stream, options);
+        ZipReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
     public IAsyncReader OpenReaderAsync(
@@ -210,7 +210,7 @@ public class ZipFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)ZipReader.Open(stream, options);
+        return (IAsyncReader)ZipReader.OpenReader(stream, options);
     }
 
     #endregion

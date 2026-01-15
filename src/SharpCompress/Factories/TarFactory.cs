@@ -276,7 +276,7 @@ public class TarFactory
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
-        TarReader.Open(stream, options);
+        TarReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
     public IAsyncReader OpenReaderAsync(
@@ -286,7 +286,7 @@ public class TarFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)TarReader.Open(stream, options);
+        return (IAsyncReader)TarReader.OpenReader(stream, options);
     }
 
     #endregion

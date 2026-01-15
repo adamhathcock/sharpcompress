@@ -29,7 +29,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
             }
 
             using var sourceStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-            await using var targetStream = File.CreateArchive(targetPath);
+            await using var targetStream = File.Create(targetPath);
             await sourceStream.CopyToAsync(targetStream, CancellationToken.None);
         }
 
@@ -54,7 +54,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
             }
 
             using var sourceStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-            await using var targetStream = File.CreateArchive(targetPath);
+            await using var targetStream = File.Create(targetPath);
             await sourceStream.CopyToAsync(targetStream, CancellationToken.None);
         }
 
@@ -79,7 +79,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
             }
 
             using var sourceStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-            await using var targetStream = File.CreateArchive(targetPath);
+            await using var targetStream = File.Create(targetPath);
             await sourceStream.CopyToAsync(targetStream, CancellationToken.None);
         }
 
@@ -104,7 +104,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
             }
 
             using var sourceStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-            await using var targetStream = File.CreateArchive(targetPath);
+            await using var targetStream = File.Create(targetPath);
             await sourceStream.CopyToAsync(targetStream, CancellationToken.None);
         }
 
@@ -129,7 +129,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
             }
 
             using var sourceStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-            await using var targetStream = File.CreateArchive(targetPath);
+            await using var targetStream = File.Create(targetPath);
             await sourceStream.CopyToAsync(targetStream, CancellationToken.None);
         }
 

@@ -43,7 +43,7 @@ public class ArchiveTests : ReaderTests
         foreach (var path in testArchives)
         {
             using (
-                var stream = SharpCompressStream.CreateArchive(
+                var stream = SharpCompressStream.Create(
                     File.OpenRead(path),
                     leaveOpen: true,
                     throwOnDispose: true
@@ -123,7 +123,7 @@ public class ArchiveTests : ReaderTests
         foreach (var path in testArchives)
         {
             using (
-                var stream = SharpCompressStream.CreateArchive(
+                var stream = SharpCompressStream.Create(
                     File.OpenRead(path),
                     leaveOpen: true,
                     throwOnDispose: true
@@ -380,7 +380,7 @@ public class ArchiveTests : ReaderTests
         {
             writerOptions.CompressionLevel = compressionLevel.Value;
         }
-        return WriterFactory.OpenArchive(stream, ArchiveType.Zip, writerOptions);
+        return WriterFactory.OpenWriter(stream, ArchiveType.Zip, writerOptions);
     }
 
     protected static IAsyncWriter CreateWriterWithLevelAsync(
@@ -394,7 +394,7 @@ public class ArchiveTests : ReaderTests
         {
             writerOptions.CompressionLevel = compressionLevel.Value;
         }
-        return WriterFactory.OpenAsyncArchive(
+        return WriterFactory.OpenAsyncWriter(
             new AsyncOnlyStream(stream),
             ArchiveType.Zip,
             writerOptions
@@ -615,7 +615,7 @@ public class ArchiveTests : ReaderTests
         foreach (var path in testArchives)
         {
             using (
-                var stream = SharpCompressStream.CreateArchive(
+                var stream = SharpCompressStream.Create(
                     File.OpenRead(path),
                     leaveOpen: true,
                     throwOnDispose: true
@@ -661,7 +661,7 @@ public class ArchiveTests : ReaderTests
 
         // Open with a pre-wrapped stream
         using (var fileStream = File.OpenRead(testArchive))
-        using (var wrappedStream = SharpCompressStream.CreateArchive(fileStream, bufferSize: 32768))
+        using (var wrappedStream = SharpCompressStream.Create(fileStream, bufferSize: 32768))
         await using (
             var archive = await ArchiveFactory.OpenAsyncArchive(new AsyncOnlyStream(wrappedStream))
         )
