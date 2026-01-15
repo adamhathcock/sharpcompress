@@ -34,6 +34,13 @@ public static class IWritableArchiveCommonExtensions
         public IArchiveEntry AddEntry(string key, string file) =>
             writableArchive.AddEntry(key, new FileInfo(file));
 
+        public IArchiveEntry AddEntry(
+            string key,
+            Stream source,
+            long size = 0,
+            DateTime? modified = null
+        ) => writableArchive.AddEntry(key, source, false, size, modified);
+
         public IArchiveEntry AddEntry(string key, FileInfo fileInfo)
         {
             if (!fileInfo.Exists)

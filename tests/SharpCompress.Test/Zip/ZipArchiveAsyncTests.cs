@@ -167,7 +167,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.noEmptyDirs.zip");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        using (var archive = ZipArchive.CreateAsyncArchive())
+        await using (var archive = (ZipArchive)ZipArchive.CreateAsyncArchive())
         {
             archive.DeflateCompressionLevel = CompressionLevel.BestSpeed;
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);

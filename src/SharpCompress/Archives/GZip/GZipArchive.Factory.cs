@@ -17,7 +17,7 @@ namespace SharpCompress.Archives.GZip;
 public partial class GZipArchive
 #if NET8_0_OR_GREATER
     : IWritableArchiveOpenable,
-      IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
 #endif
 {
     public static IWritableAsyncArchive OpenAsyncArchive(

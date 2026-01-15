@@ -15,7 +15,7 @@ namespace SharpCompress.Archives.Zip;
 public partial class ZipArchive
 #if NET8_0_OR_GREATER
     : IWritableArchiveOpenable,
-      IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
 #endif
 {
     public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
