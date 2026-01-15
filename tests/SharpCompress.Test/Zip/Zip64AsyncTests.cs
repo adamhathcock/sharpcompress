@@ -177,7 +177,7 @@ public class Zip64AsyncTests : WriterTests
 
         using var zip = File.OpenWrite(filename);
         using var st = forwardOnly ? (Stream)new ForwardOnlyStream(zip) : zip;
-        using var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts);
+        using var zipWriter = (ZipWriter)WriterFactory.OpenWriter(st, ArchiveType.Zip, opts);
         for (var i = 0; i < files; i++)
         {
             using var str = zipWriter.WriteToStream(i.ToString(), eo);
@@ -198,28 +198,31 @@ public class Zip64AsyncTests : WriterTests
         long size = 0;
         ZipEntry? prev = null;
         using (var fs = File.OpenRead(filename))
-        using (var rd = ZipReader.Open(fs, new ReaderOptions { LookForHeader = false }))
         {
-            while (await rd.MoveToNextEntryAsync())
+            var rd = ReaderFactory.OpenAsyncReader(fs, new ReaderOptions { LookForHeader = false });
+            await using (rd)
             {
+                while (await rd.MoveToNextEntryAsync())
+                {
 #if NETFRAMEWORK || NETSTANDARD2_0
-                using (var entryStream = await rd.OpenEntryStreamAsync())
-                {
-                    await entryStream.SkipEntryAsync();
-                }
+                    using (var entryStream = await rd.OpenEntryStreamAsync())
+                    {
+                        await entryStream.SkipEntryAsync();
+                    }
 #else
-                await using (var entryStream = await rd.OpenEntryStreamAsync())
-                {
-                    await entryStream.SkipEntryAsync();
-                }
+                    await using (var entryStream = await rd.OpenEntryStreamAsync())
+                    {
+                        await entryStream.SkipEntryAsync();
+                    }
 #endif
-                count++;
-                if (prev != null)
-                {
-                    size += prev.Size;
-                }
+                    count++;
+                    if (prev != null)
+                    {
+                        size += prev.Size;
+                    }
 
-                prev = rd.Entry;
+                    prev = (ZipEntry)rd.Entry;
+                }
             }
         }
 
@@ -233,7 +236,7 @@ public class Zip64AsyncTests : WriterTests
 
     public Tuple<long, long> ReadArchive(string filename)
     {
-        using var archive = ArchiveFactory.Open(filename);
+        using var archive = ArchiveFactory.OpenArchive(filename);
         return new Tuple<long, long>(
             archive.Entries.Count(),
             archive.Entries.Select(x => x.Size).Sum()

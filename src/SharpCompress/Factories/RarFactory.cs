@@ -46,26 +46,27 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
-        RarArchive.Open(stream, readerOptions);
+    public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        RarArchive.OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => RarArchive.OpenAsync(stream, readerOptions, cancellationToken);
+    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        RarArchive.Open(fileInfo, readerOptions);
+    public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        RarArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
+    public IAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => RarArchive.OpenAsync(fileInfo, readerOptions, cancellationToken);
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
+    }
 
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
@@ -78,26 +79,33 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
-        RarArchive.Open(streams, readerOptions);
-
-    /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
+    public IArchive OpenArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => RarArchive.OpenAsync(streams, readerOptions, cancellationToken);
+        ReaderOptions? readerOptions = null
+    ) => RarArchive.OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
-        RarArchive.Open(fileInfos, readerOptions);
+    public IAsyncArchive OpenAsyncArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null
+    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
+    public IArchive OpenArchive(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null
+    ) => RarArchive.OpenArchive(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => RarArchive.OpenAsync(fileInfos, readerOptions, cancellationToken);
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
+    }
 
     #endregion
 
@@ -105,17 +113,17 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
-        RarReader.Open(stream, options);
+        RarReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncReader> OpenReaderAsync(
+    public IAsyncReader OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(RarReader.Open(stream, options));
+        return (IAsyncReader)RarReader.OpenReader(stream, options);
     }
 
     #endregion

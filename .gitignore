@@ -4,8 +4,8 @@ _ReSharper.SharpCompress/
 bin/
 *.suo
 *.user
-TestArchives/Scratch/
-TestArchives/Scratch2/
+tests/TestArchives/Scratch/
+tests/TestArchives/Scratch2/
 TestResults/
 *.nupkg
 packages/*/

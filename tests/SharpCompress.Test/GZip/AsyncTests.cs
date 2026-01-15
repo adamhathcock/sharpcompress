@@ -26,7 +26,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
 
         await reader.WriteAllToDirectoryAsync(
             SCRATCH_FILES_PATH,
@@ -51,7 +51,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
 
         while (await reader.MoveToNextEntryAsync())
         {
@@ -74,9 +74,11 @@ public class AsyncTests : TestBase
     public async ValueTask Archive_Entry_Async_Open_Stream()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
-        using var archive = ArchiveFactory.Open(testArchive);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(File.OpenRead(testArchive))
+        );
 
-        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory).Take(1))
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory).Take(1))
         {
 #if NETFRAMEWORK
             using var entryStream = await entry.OpenEntryStreamAsync();
@@ -103,7 +105,13 @@ public class AsyncTests : TestBase
 #else
         await using (var stream = File.Create(outputPath))
 #endif
-        using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+        using (
+            var writer = WriterFactory.OpenAsyncWriter(
+                new AsyncOnlyStream(stream),
+                ArchiveType.Zip,
+                CompressionType.Deflate
+            )
+        )
         {
             var testFile = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
 
@@ -117,8 +125,8 @@ public class AsyncTests : TestBase
 
         // Verify the archive was created and contains the entry
         Assert.True(File.Exists(outputPath));
-        await using var archive = ZipArchive.Open(outputPath);
-        Assert.Single(archive.Entries.Where(e => !e.IsDirectory));
+        await using var archive = ZipArchive.OpenAsyncArchive(outputPath);
+        Assert.Single(await archive.EntriesAsync.Where(e => !e.IsDirectory).ToListAsync());
     }
 
     [Fact]
@@ -133,7 +141,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(
+        await using var reader = ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
             cancellationToken: cts.Token
         );
@@ -187,7 +195,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
 
         while (await reader.MoveToNextEntryAsync())
         {

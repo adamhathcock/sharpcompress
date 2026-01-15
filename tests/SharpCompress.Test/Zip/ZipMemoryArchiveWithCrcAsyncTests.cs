@@ -60,7 +60,9 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Create zip archive in memory
         using var zipStream = new MemoryStream();
-        using (var writer = CreateWriterWithLevel(zipStream, compressionType, compressionLevel))
+        using (
+            var writer = CreateWriterWithLevelAsync(zipStream, compressionType, compressionLevel)
+        )
         {
             await writer.WriteAsync($"file1_{sizeMb}MiB.txt", new MemoryStream(file1Data));
             await writer.WriteAsync($"data/file2_{sizeMb * 2}MiB.txt", new MemoryStream(file2Data));
@@ -129,7 +131,9 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
             CompressionLevel = compressionLevel,
         };
 
-        using (var writer = WriterFactory.Open(zipStream, ArchiveType.Zip, writerOptions))
+        using (
+            var writer = WriterFactory.OpenAsyncWriter(zipStream, ArchiveType.Zip, writerOptions)
+        )
         {
             await writer.WriteAsync(
                 $"{compressionType}_level_{compressionLevel}_{sizeMb}MiB.txt",
@@ -150,7 +154,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Verify the archive
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
         using var entryStream = await entry.OpenEntryStreamAsync();
@@ -191,7 +195,9 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Create archive with specified compression and level
         using var zipStream = new MemoryStream();
-        using (var writer = CreateWriterWithLevel(zipStream, compressionType, compressionLevel))
+        using (
+            var writer = CreateWriterWithLevelAsync(zipStream, compressionType, compressionLevel)
+        )
         {
             await writer.WriteAsync(
                 $"{compressionType}_{compressionLevel}_{sizeMb}MiB.txt",
@@ -205,7 +211,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Verify the archive
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
         using var entryStream = await entry.OpenEntryStreamAsync();
@@ -244,7 +250,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
     )
     {
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
         {

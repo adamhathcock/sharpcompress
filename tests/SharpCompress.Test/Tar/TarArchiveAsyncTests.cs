@@ -8,6 +8,7 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -32,7 +33,13 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenAsyncWriter(
+                stream,
+                ArchiveType.Tar,
+                CompressionType.None
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -45,12 +52,19 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.Open(unmodified))
+        await using (
+            var archive2 = TarArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(File.OpenRead(unmodified))
+            )
+        )
         {
-            Assert.Equal(1, archive2.Entries.Count);
-            Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
+            Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
+            Assert.Contains(
+                filename,
+                await archive2.EntriesAsync.Select(entry => entry.Key).ToListAsync()
+            );
 
-            foreach (var entry in archive2.Entries)
+            await foreach (var entry in archive2.EntriesAsync)
             {
                 Assert.Equal(
                     "dummy filecontent",
@@ -76,7 +90,13 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenAsyncWriter(
+                stream,
+                ArchiveType.Tar,
+                CompressionType.None
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -89,12 +109,19 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.Open(unmodified))
+        await using (
+            var archive2 = TarArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(File.OpenRead(unmodified))
+            )
+        )
         {
-            Assert.Equal(1, archive2.Entries.Count);
-            Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
+            Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
+            Assert.Contains(
+                longFilename,
+                await archive2.EntriesAsync.Select(entry => entry.Key).ToListAsync()
+            );
 
-            foreach (var entry in archive2.Entries)
+            await foreach (var entry in archive2.EntriesAsync)
             {
                 Assert.Equal(
                     "dummy filecontent",
@@ -110,7 +137,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.Create())
+        await using (var archive = TarArchive.CreateAsyncArchive())
         {
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
             var twopt = new TarWriterOptions(CompressionType.None, true);
@@ -128,7 +155,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.Open(unmodified))
+        await using (var archive = TarArchive.OpenAsyncArchive(unmodified))
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
             await archive.SaveToAsync(scratchPath, new WriterOptions(CompressionType.None));
@@ -143,9 +170,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        using (var archive = TarArchive.Open(unmodified))
+        await using (var archive = TarArchive.OpenAsyncArchive(unmodified))
         {
-            var entry = archive.Entries.Single(x =>
+            var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             archive.RemoveEntry(entry);
@@ -172,9 +199,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
-            using (var tr = TarReader.Open(inputMemory, tropt))
+            await using (var tr = ReaderFactory.OpenAsyncReader(inputMemory, tropt))
             {
-                while (tr.MoveToNextEntry())
+                while (await tr.MoveToNextEntryAsync())
                 {
                     Assert.Equal(fname, tr.Entry.Key);
                 }
@@ -205,9 +232,11 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         var numberOfEntries = 0;
 
-        using (var archiveFactory = TarArchive.Open(memoryStream))
+        await using (
+            var archiveFactory = TarArchive.OpenAsyncArchive(new AsyncOnlyStream(memoryStream))
+        )
         {
-            foreach (var entry in archiveFactory.Entries)
+            await foreach (var entry in archiveFactory.EntriesAsync)
             {
                 ++numberOfEntries;
 

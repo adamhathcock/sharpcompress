@@ -5,6 +5,7 @@ using System.Text;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Common.Zip;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
@@ -234,7 +235,7 @@ public class ZipArchiveTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
 
-        using (var archive = ZipArchive.Open(unmodified))
+        using (var archive = ZipArchive.OpenArchive(unmodified))
         {
             var entry = archive.Entries.Single(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
@@ -257,7 +258,7 @@ public class ZipArchiveTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod2.zip");
 
-        using (var archive = ZipArchive.Open(unmodified))
+        using (var archive = ZipArchive.OpenArchive(unmodified))
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
 
@@ -275,7 +276,7 @@ public class ZipArchiveTests : ArchiveTests
         var scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
         var scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, "b.zip");
 
-        using (var arc = ZipArchive.Create())
+        using (var arc = ZipArchive.CreateArchive())
         {
             var str = "test.txt";
             var source = new MemoryStream(Encoding.UTF8.GetBytes(str));
@@ -292,7 +293,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var scratchPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        using var vfs = (ZipArchive)ArchiveFactory.Open(scratchPath);
+        using var vfs = (ZipArchive)ArchiveFactory.OpenArchive(scratchPath);
         var e = vfs.Entries.First(v =>
             v.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
         );
@@ -312,7 +313,7 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_Create_NoDups()
     {
-        using var arc = ZipArchive.Create();
+        using var arc = ZipArchive.CreateArchive();
         arc.AddEntry("1.txt", new MemoryStream());
         Assert.Throws<ArchiveException>(() => arc.AddEntry("\\1.txt", new MemoryStream()));
     }
@@ -323,7 +324,7 @@ public class ZipArchiveTests : ArchiveTests
         var scratchPath1 = Path.Combine(SCRATCH_FILES_PATH, "a.zip");
         var scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, "b.zip");
 
-        using (var arc = ZipArchive.Create())
+        using (var arc = ZipArchive.CreateArchive())
         {
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes("qwert")))
             {
@@ -369,7 +370,7 @@ public class ZipArchiveTests : ArchiveTests
         var scratchPath = Path.Combine(SCRATCH2_FILES_PATH, "Zip.deflate.noEmptyDirs.zip");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        using (var archive = ZipArchive.Create())
+        using (var archive = ZipArchive.CreateArchive())
         {
             archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
 
@@ -388,7 +389,7 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_Create_Empty_And_Read()
     {
-        var archive = ZipArchive.Create();
+        var archive = ZipArchive.CreateArchive();
 
         var archiveStream = new MemoryStream();
 
@@ -396,7 +397,7 @@ public class ZipArchiveTests : ArchiveTests
 
         archiveStream.Position = 0;
 
-        var readArchive = ArchiveFactory.Open(archiveStream);
+        var readArchive = ArchiveFactory.OpenArchive(archiveStream);
 
         var count = readArchive.Entries.Count();
 
@@ -434,7 +435,7 @@ public class ZipArchiveTests : ArchiveTests
         }
         var scratchPath = Path.Combine(SCRATCH2_FILES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        using (var archive = ZipArchive.Create())
+        using (var archive = ZipArchive.CreateArchive())
         {
             archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
             archive.RemoveEntry(
@@ -454,7 +455,7 @@ public class ZipArchiveTests : ArchiveTests
     public void Zip_Deflate_WinzipAES_Read()
     {
         using (
-            var reader = ZipArchive.Open(
+            var reader = ZipArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"),
                 new ReaderOptions { Password = "test" }
             )
@@ -474,7 +475,7 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_Deflate_WinzipAES_MultiOpenEntryStream()
     {
-        using var reader = ZipArchive.Open(
+        using var reader = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES2.zip"),
             new ReaderOptions { Password = "test" }
         );
@@ -490,23 +491,23 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_Read_Volume_Comment()
     {
-        using var reader = ZipArchive.Open(
+        using var reader = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.zip"),
             new ReaderOptions { Password = "test" }
         );
         var isComplete = reader.IsComplete;
-        Assert.Equal(1, reader.Volumes.Count);
+        Assert.Equal(1, reader.Volumes.Count());
 
         var expectedComment =
             "Encoding:utf-8 || Compression:Deflate levelDefault || Encrypt:None || ZIP64:Always\r\nCreated at 2017-Jan-23 14:10:43 || DotNetZip Tool v1.9.1.8\r\nTest zip64 archive";
-        Assert.Equal(expectedComment, reader.Volumes.First().Comment);
+        Assert.Equal(expectedComment, ((ZipVolume)reader.Volumes.First()).Comment);
     }
 
     [Fact]
     public void Zip_BZip2_Pkware_Read()
     {
         using (
-            var reader = ZipArchive.Open(
+            var reader = ZipArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"),
                 new ReaderOptions { Password = "test" }
             )
@@ -528,7 +529,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        var a = ZipArchive.Open(unmodified);
+        var a = ZipArchive.OpenArchive(unmodified);
         var count = 0;
         foreach (var e in a.Entries)
         {
@@ -539,7 +540,7 @@ public class ZipArchiveTests : ArchiveTests
         Assert.Equal(3, count);
         a.Dispose();
 
-        a = ZipArchive.Open(unmodified);
+        a = ZipArchive.OpenArchive(unmodified);
         var count2 = 0;
 
         foreach (var e in a.Entries)
@@ -571,7 +572,7 @@ public class ZipArchiveTests : ArchiveTests
         var zipFile = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.pkware.zip");
 
         using var fileStream = File.OpenRead(zipFile);
-        using var archive = ArchiveFactory.Open(
+        using var archive = ArchiveFactory.OpenArchive(
             fileStream,
             new ReaderOptions { Password = "12345678" }
         );
@@ -595,7 +596,7 @@ public class ZipArchiveTests : ArchiveTests
 
         Assert.ThrowsAny<Exception>(() =>
         {
-            using var archive = ZipArchive.Open(zipFile);
+            using var archive = ZipArchive.OpenArchive(zipFile);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
                 entry.WriteToDirectory(
@@ -617,7 +618,13 @@ public class ZipArchiveTests : ArchiveTests
     {
         MemoryStream stream = new NonSeekableMemoryStream();
 
-        using (var zipWriter = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+        using (
+            var zipWriter = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.Zip,
+                CompressionType.Deflate
+            )
+        )
         {
             zipWriter.Write("foo.txt", new MemoryStream(Array.Empty<byte>()));
             zipWriter.Write("foo2.txt", new MemoryStream(new byte[10]));
@@ -626,7 +633,7 @@ public class ZipArchiveTests : ArchiveTests
         stream = new MemoryStream(stream.ToArray());
         File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), stream.ToArray());
 
-        using (var zipArchive = ZipArchive.Open(stream))
+        using (var zipArchive = ZipArchive.OpenArchive(stream))
         {
             foreach (var entry in zipArchive.Entries)
             {
@@ -648,7 +655,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.badlocalextra.zip");
 
-        using var za = ZipArchive.Open(zipPath);
+        using var za = ZipArchive.OpenArchive(zipPath);
         var ex = Record.Exception(() =>
         {
             var firstEntry = za.Entries.First(x => x.Key == "first.txt");
@@ -668,7 +675,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.datadescriptors.zip");
 
-        using var za = ZipArchive.Open(zipPath);
+        using var za = ZipArchive.OpenArchive(zipPath);
         var firstEntry = za.Entries.First(x => x.Key == "first.txt");
         var buffer = new byte[4096];
 
@@ -707,8 +714,8 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.LongComment.zip");
 
-        using var za = ZipArchive.Open(zipPath);
-        var count = za.Entries.Count;
+        using var za = ZipArchive.OpenArchive(zipPath);
+        var count = za.Entries.Count();
         Assert.Equal(1, count);
     }
 
@@ -717,7 +724,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.compressedonly.zip");
 
-        using var za = ZipArchive.Open(zipPath);
+        using var za = ZipArchive.OpenArchive(zipPath);
         var firstEntry = za.Entries.First(x => x.Key == "test/test.txt");
 
         using var memoryStream = new MemoryStream();
@@ -731,7 +738,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
         using var stream = File.OpenRead(zipPath);
-        var reader = ReaderFactory.Open(stream);
+        var reader = ReaderFactory.OpenReader(stream);
         var entries = 0;
         while (reader.MoveToNextEntry())
         {
@@ -759,7 +766,7 @@ public class ZipArchiveTests : ArchiveTests
         };
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.uncompressed.zip");
         using var stream = File.OpenRead(zipPath);
-        var reader = ReaderFactory.Open(stream);
+        var reader = ReaderFactory.OpenReader(stream);
         var x = 0;
         while (reader.MoveToNextEntry())
         {
@@ -776,7 +783,7 @@ public class ZipArchiveTests : ArchiveTests
         var zipPath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.UnicodePathExtra.zip");
         using (var stream = File.OpenRead(zipPath))
         {
-            var reader = ReaderFactory.Open(
+            var reader = ReaderFactory.OpenReader(
                 stream,
                 new ReaderOptions
                 {
@@ -791,7 +798,7 @@ public class ZipArchiveTests : ArchiveTests
         }
         using (var stream = File.OpenRead(zipPath))
         {
-            var reader = ReaderFactory.Open(
+            var reader = ReaderFactory.OpenReader(
                 stream,
                 new ReaderOptions
                 {
@@ -809,7 +816,7 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void TestDataDescriptorRead()
     {
-        using var archive = ArchiveFactory.Open(
+        using var archive = ArchiveFactory.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.datadescriptors.zip")
         );
         var firstEntry = archive.Entries.First();
@@ -821,10 +828,10 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_EntryCommentAfterEntryRead()
     {
-        using var archive = ZipArchive.Open(
+        using var archive = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.EntryComment.zip")
         );
-        var firstEntry = archive.Entries.First();
+        var firstEntry = (ZipArchiveEntry)archive.Entries.First();
         Assert.Equal(29, firstEntry.Comment!.Length);
         using var _ = firstEntry.OpenEntryStream();
         Assert.Equal(29, firstEntry.Comment.Length);
@@ -833,7 +840,9 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_FilePermissions()
     {
-        using var archive = ArchiveFactory.Open(Path.Combine(TEST_ARCHIVES_PATH, "Zip.644.zip"));
+        using var archive = ArchiveFactory.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.644.zip")
+        );
 
         var firstEntry = archive.Entries.First();
         const int S_IFREG = 0x8000;

@@ -9,7 +9,7 @@ using SharpCompress.Common.Zip.Headers;
 
 namespace SharpCompress.Readers.Zip;
 
-public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
+public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
 {
     private readonly StreamingZipHeaderFactory _headerFactory;
 
@@ -45,13 +45,13 @@ public class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     /// <param name="stream"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static ZipReader Open(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
         return new ZipReader(stream, options ?? new ReaderOptions());
     }
 
-    public static ZipReader Open(
+    public static IReader OpenReader(
         Stream stream,
         ReaderOptions? options,
         IEnumerable<ZipEntry> entries

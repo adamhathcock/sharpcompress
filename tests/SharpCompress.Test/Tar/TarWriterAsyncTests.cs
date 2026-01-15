@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers.Tar;
 using Xunit;
 
@@ -66,7 +67,7 @@ public class TarWriterAsyncTests : WriterTests
         using Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg"));
         using (
             var writer = new TarWriter(
-                stream,
+                new AsyncOnlyStream(stream),
                 new TarWriterOptions(CompressionType.None, finalizeArchive)
             )
         )

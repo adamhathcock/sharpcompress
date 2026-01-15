@@ -16,7 +16,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
 
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
@@ -41,7 +41,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
 
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
@@ -66,7 +66,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
 
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
@@ -91,7 +91,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.BZip2.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
 
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
@@ -116,7 +116,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.PPMd.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
 
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {

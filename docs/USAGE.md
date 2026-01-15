@@ -48,7 +48,7 @@ Also, look over the tests for more thorough [examples](https://github.com/adamha
 
 ### Create Zip Archive from multiple files
 ```C#
-using(var archive = ZipArchive.Create())
+using(var archive = ZipArchive.CreateArchive())
 {
     archive.AddEntry("file01.txt", "C:\\file01.txt");
     archive.AddEntry("file02.txt", "C:\\file02.txt");
@@ -61,7 +61,7 @@ using(var archive = ZipArchive.Create())
 ### Create Zip Archive from all files in a directory to a file
 
 ```C#
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.AddAllFromDirectory("D:\\temp");
     archive.SaveTo("C:\\temp.zip", CompressionType.Deflate);
@@ -72,7 +72,7 @@ using (var archive = ZipArchive.Create())
 
 ```C#
 var memoryStream = new MemoryStream();
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.AddAllFromDirectory("D:\\temp");
     archive.SaveTo(memoryStream, new WriterOptions(CompressionType.Deflate)
@@ -90,7 +90,7 @@ Note: Extracting a solid rar or 7z file needs to be done in sequential order to 
 `ExtractAllEntries` is primarily intended for solid archives (like solid Rar) or 7Zip archives, where sequential extraction provides the best performance. For general/simple extraction with any supported archive type, use `archive.WriteToDirectory()` instead.
 
 ```C#
-using (var archive = RarArchive.Open("Test.rar"))
+using (var archive = RarArchive.OpenArchive("Test.rar"))
 {
     // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
     archive.WriteToDirectory(@"D:\temp", new ExtractionOptions()
@@ -104,7 +104,7 @@ using (var archive = RarArchive.Open("Test.rar"))
 ### Iterate over all files from a Rar file using RarArchive
 
 ```C#
-using (var archive = RarArchive.Open("Test.rar"))
+using (var archive = RarArchive.OpenArchive("Test.rar"))
 {
     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
     {
@@ -126,7 +126,7 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-using (var archive = RarArchive.Open("archive.rar", new ReaderOptions { Progress = progress })) // Must be solid Rar or 7Zip
+using (var archive = RarArchive.OpenArchive("archive.rar", new ReaderOptions { Progress = progress })) // Must be solid Rar or 7Zip
 {
     archive.WriteToDirectory(@"D:\output", new ExtractionOptions()
     {
@@ -140,7 +140,7 @@ using (var archive = RarArchive.Open("archive.rar", new ReaderOptions { Progress
 
 ```C#
 using (Stream stream = File.OpenRead("Tar.tar.bz2"))
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     while (reader.MoveToNextEntry())
     {
@@ -161,7 +161,7 @@ using (var reader = ReaderFactory.Open(stream))
 
 ```C#
 using (Stream stream = File.OpenRead("Tar.tar.bz2"))
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     while (reader.MoveToNextEntry())
     {
@@ -180,7 +180,7 @@ using (var reader = ReaderFactory.Open(stream))
 
 ```C#
 using (Stream stream = File.OpenWrite("C:\\temp.tgz"))
-using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)
+using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)
                                                 {
                                                     LeaveOpenStream = true
                                                 }))
@@ -199,7 +199,7 @@ opts.ArchiveEncoding.CustomDecoder = (data, x, y) =>
 {
     return encoding.GetString(data);
 };
-var tr = SharpCompress.Archives.Zip.ZipArchive.Open("test.zip", opts);
+var tr = SharpCompress.Archives.Zip.ZipArchive.OpenArchive("test.zip", opts);
 foreach(var entry in tr.Entries)
 {
     Console.WriteLine($"{entry.Key}");
@@ -213,7 +213,7 @@ foreach(var entry in tr.Entries)
 **Extract single entry asynchronously:**
 ```C#
 using (Stream stream = File.OpenRead("archive.zip"))
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     while (reader.MoveToNextEntry())
     {
@@ -234,7 +234,7 @@ using (var reader = ReaderFactory.Open(stream))
 **Extract all entries asynchronously:**
 ```C#
 using (Stream stream = File.OpenRead("archive.tar.gz"))
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     await reader.WriteAllToDirectoryAsync(
         @"D:\temp",
@@ -250,7 +250,7 @@ using (var reader = ReaderFactory.Open(stream))
 
 **Open and process entry stream asynchronously:**
 ```C#
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
     {
@@ -268,7 +268,7 @@ using (var archive = ZipArchive.Open("archive.zip"))
 **Write single file asynchronously:**
 ```C#
 using (Stream archiveStream = File.OpenWrite("output.zip"))
-using (var writer = WriterFactory.Open(archiveStream, ArchiveType.Zip, CompressionType.Deflate))
+using (var writer = WriterFactory.OpenWriter(archiveStream, ArchiveType.Zip, CompressionType.Deflate))
 {
     using (Stream fileStream = File.OpenRead("input.txt"))
     {
@@ -280,7 +280,7 @@ using (var writer = WriterFactory.Open(archiveStream, ArchiveType.Zip, Compressi
 **Write entire directory asynchronously:**
 ```C#
 using (Stream stream = File.OpenWrite("backup.tar.gz"))
-using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)))
+using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)))
 {
     await writer.WriteAllAsync(
         @"D:\files",
@@ -299,7 +299,7 @@ var cts = new CancellationTokenSource();
 cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 using (Stream stream = File.OpenWrite("archive.zip"))
-using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate))
 {
     try
     {
@@ -316,7 +316,7 @@ using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.
 
 **Extract from archive asynchronously:**
 ```C#
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     // Simple async extraction - works for all archive types
     await archive.WriteToDirectoryAsync(

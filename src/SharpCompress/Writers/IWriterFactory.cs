@@ -1,15 +1,14 @@
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Factories;
 
 namespace SharpCompress.Writers;
 
 public interface IWriterFactory : IFactory
 {
-    IWriter Open(Stream stream, WriterOptions writerOptions);
+    IWriter OpenWriter(Stream stream, WriterOptions writerOptions);
 
-    ValueTask<IWriter> OpenAsync(
+    IAsyncWriter OpenAsyncWriter(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default

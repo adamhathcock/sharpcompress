@@ -178,5 +178,4 @@ SharpCompress supports multiple archive and compression formats:
 2. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
 3. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
 4. **Tar + non-seekable stream** - Must provide file size or it will throw
-5. **Multi-framework differences** - Some features differ between .NET Framework and modern .NET (e.g., Mono.Posix)
 6. **Format detection** - Use `ReaderFactory.Open()` for auto-detection, test with actual archive files

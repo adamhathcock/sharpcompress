@@ -11,7 +11,7 @@ namespace SharpCompress.Readers.Rar;
 /// <summary>
 /// This class faciliates Reading a Rar Archive in a non-seekable forward-only manner
 /// </summary>
-public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
+public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 {
     private bool _disposed;
     private RarVolume? volume;
@@ -40,27 +40,27 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
 
     public override RarVolume? Volume => volume;
 
-    public static RarReader Open(string filePath, ReaderOptions? options = null)
+    public static IReader OpenReader(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return Open(new FileInfo(filePath), options);
+        return OpenReader(new FileInfo(filePath), options);
     }
 
-    public static RarReader Open(FileInfo fileInfo, ReaderOptions? options = null)
+    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
-        return Open(fileInfo.OpenRead(), options);
+        return OpenReader(fileInfo.OpenRead(), options);
     }
 
-    public static RarReader Open(IEnumerable<string> filePaths, ReaderOptions? options = null)
+    public static IReader OpenReader(IEnumerable<string> filePaths, ReaderOptions? options = null)
     {
-        return Open(filePaths.Select(x => new FileInfo(x)), options);
+        return OpenReader(filePaths.Select(x => new FileInfo(x)), options);
     }
 
-    public static RarReader Open(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
+    public static IReader OpenReader(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
-        return Open(fileInfos.Select(x => x.OpenRead()), options);
+        return OpenReader(fileInfos.Select(x => x.OpenRead()), options);
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     /// <param name="stream"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static RarReader Open(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
         return new SingleVolumeRarReader(stream, options ?? new ReaderOptions());
@@ -81,7 +81,7 @@ public abstract class RarReader : AbstractReader<RarReaderEntry, RarVolume>
     /// <param name="streams"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static RarReader Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
+    public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
         streams.NotNull(nameof(streams));
         return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());

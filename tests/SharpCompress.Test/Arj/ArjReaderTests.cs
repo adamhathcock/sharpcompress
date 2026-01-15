@@ -54,7 +54,7 @@ namespace SharpCompress.Test.Arj
                         "Arj.store.split.a04",
                         "Arj.store.split.a05",
                     ],
-                    streams => ArjReader.Open(streams)
+                    streams => ArjReader.OpenReader(streams)
                 )
             );
         }

@@ -5,6 +5,7 @@
     <PackageVersion Include="Glob" Version="1.1.9" />
     <PackageVersion Include="JetBrains.Profiler.SelfApi" Version="2.5.15" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.NET.ILLink.Task" Version="10.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="Mono.Posix.NETStandard" Version="1.0.0" />
     <PackageVersion Include="SimpleExec" Version="13.0.0" />

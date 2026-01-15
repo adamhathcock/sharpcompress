@@ -22,7 +22,7 @@ public class TarReaderTests : ReaderTests
         using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
         );
-        using var reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.OpenReader(stream);
         var x = 0;
         while (reader.MoveToNextEntry())
         {
@@ -65,7 +65,7 @@ public class TarReaderTests : ReaderTests
     public void Tar_BZip2_Entry_Stream()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
-        using (var reader = TarReader.Open(stream))
+        using (var reader = TarReader.OpenReader(stream))
         {
             while (reader.MoveToNextEntry())
             {
@@ -102,7 +102,7 @@ public class TarReaderTests : ReaderTests
                 Path.Combine(TEST_ARCHIVES_PATH, "Tar.LongPathsWithLongNameExtension.tar")
             )
         )
-        using (var reader = TarReader.Open(stream))
+        using (var reader = TarReader.OpenReader(stream))
         {
             while (reader.MoveToNextEntry())
             {
@@ -129,7 +129,7 @@ public class TarReaderTests : ReaderTests
     public void Tar_BZip2_Skip_Entry_Stream()
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
-        using var reader = TarReader.Open(stream);
+        using var reader = TarReader.OpenReader(stream);
         var names = new List<string>();
         while (reader.MoveToNextEntry())
         {
@@ -149,7 +149,7 @@ public class TarReaderTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.OpenReader(stream);
         Assert.True(reader.ArchiveType == ArchiveType.Tar);
     }
 
@@ -158,7 +158,7 @@ public class TarReaderTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsTarGz.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.OpenReader(stream);
         Assert.True(reader.MoveToNextEntry());
         Assert.Equal("inner.tar.gz", reader.Entry.Key);
 
@@ -166,7 +166,7 @@ public class TarReaderTests : ReaderTests
         using var flushingStream = new FlushOnDisposeStream(entryStream);
 
         // Extract inner.tar.gz
-        using var innerReader = ReaderFactory.Open(flushingStream);
+        using var innerReader = ReaderFactory.OpenReader(flushingStream);
         Assert.True(innerReader.MoveToNextEntry());
         Assert.Equal("test", innerReader.Entry.Key);
     }
@@ -176,7 +176,7 @@ public class TarReaderTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.OpenReader(stream);
         var memoryStream = new MemoryStream();
 
         Assert.True(reader.MoveToNextEntry());
@@ -191,7 +191,7 @@ public class TarReaderTests : ReaderTests
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "TarCorrupted.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.Open(stream);
+        using var reader = ReaderFactory.OpenReader(stream);
         var memoryStream = new MemoryStream();
 
         Assert.True(reader.MoveToNextEntry());
@@ -208,7 +208,7 @@ public class TarReaderTests : ReaderTests
         using Stream stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
         );
-        using var reader = TarReader.Open(stream);
+        using var reader = TarReader.OpenReader(stream);
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.IsDirectory)
@@ -304,7 +304,7 @@ public class TarReaderTests : ReaderTests
         // The important thing is it doesn't cause OutOfMemoryException
         Assert.Throws<IncompleteArchiveException>(() =>
         {
-            using var reader = TarReader.Open(stream);
+            using var reader = TarReader.OpenReader(stream);
             reader.MoveToNextEntry();
         });
     }

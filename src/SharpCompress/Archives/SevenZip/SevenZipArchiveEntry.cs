@@ -12,9 +12,8 @@ public class SevenZipArchiveEntry : SevenZipEntry, IArchiveEntry
 
     public Stream OpenEntryStream() => FilePart.GetCompressedStream();
 
-    public async ValueTask<Stream> OpenEntryStreamAsync(
-        CancellationToken cancellationToken = default
-    ) => OpenEntryStream();
+    public ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default) =>
+        new(OpenEntryStream());
 
     public IArchive Archive { get; }
 

@@ -132,7 +132,7 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_Copy_CompressionType()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Copy.7z")))
-        using (var archive = SevenZipArchive.Open(stream))
+        using (var archive = SevenZipArchive.OpenArchive(stream))
         {
             foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
             {
@@ -205,7 +205,7 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_Tar_PathRead()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar.7z")))
-        using (var archive = SevenZipArchive.Open(stream))
+        using (var archive = SevenZipArchive.OpenArchive(stream))
         {
             var entry = archive.Entries.First();
             entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
@@ -227,7 +227,7 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_TestEncryptedDetection()
     {
-        using var passwordProtectedFilesArchive = SevenZipArchive.Open(
+        using var passwordProtectedFilesArchive = SevenZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "7Zip.encryptedFiles.7z")
         );
         Assert.True(passwordProtectedFilesArchive.IsEncrypted);
@@ -236,17 +236,17 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_TestSolidDetection()
     {
-        using var oneBlockSolidArchive = SevenZipArchive.Open(
+        using var oneBlockSolidArchive = SevenZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.1block.7z")
         );
         Assert.True(oneBlockSolidArchive.IsSolid);
 
-        using var solidArchive = SevenZipArchive.Open(
+        using var solidArchive = SevenZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z")
         );
         Assert.True(solidArchive.IsSolid);
 
-        using var nonSolidArchive = SevenZipArchive.Open(
+        using var nonSolidArchive = SevenZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "7Zip.nonsolid.7z")
         );
         Assert.False(nonSolidArchive.IsSolid);

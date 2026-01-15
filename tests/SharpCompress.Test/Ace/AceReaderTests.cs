@@ -53,7 +53,7 @@ namespace SharpCompress.Test.Ace
             var exception = Assert.Throws<MultiVolumeExtractionException>(() =>
                 DoMultiReader(
                     ["Ace.store.split.ace", "Ace.store.split.c01"],
-                    streams => AceReader.Open(streams)
+                    streams => AceReader.OpenReader(streams)
                 )
             );
         }

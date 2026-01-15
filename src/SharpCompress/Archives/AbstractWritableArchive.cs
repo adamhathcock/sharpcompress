@@ -12,7 +12,8 @@ namespace SharpCompress.Archives;
 
 public abstract class AbstractWritableArchive<TEntry, TVolume>
     : AbstractArchive<TEntry, TVolume>,
-        IWritableArchive
+        IWritableArchive,
+        IWritableAsyncArchive
     where TEntry : IArchiveEntry
     where TVolume : IVolume
 {
@@ -83,12 +84,12 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    void IWritableArchive.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
+    void IWritableArchiveCommon.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
 
     public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
         AddEntry(key, source, false, size, modified);
 
-    IArchiveEntry IWritableArchive.AddEntry(
+    IArchiveEntry IWritableArchiveCommon.AddEntry(
         string key,
         Stream source,
         bool closeStream,
@@ -96,7 +97,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         DateTime? modified
     ) => AddEntry(key, source, closeStream, size, modified);
 
-    IArchiveEntry IWritableArchive.AddDirectoryEntry(string key, DateTime? modified) =>
+    IArchiveEntry IWritableArchiveCommon.AddDirectoryEntry(string key, DateTime? modified) =>
         AddDirectoryEntry(key, modified);
 
     public TEntry AddEntry(

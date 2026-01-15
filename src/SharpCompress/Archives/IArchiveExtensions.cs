@@ -8,7 +8,6 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveExtensions
 {
-    /// <param name="archive">The archive to extract.</param>
     extension(IArchive archive)
     {
         /// <summary>
@@ -23,7 +22,6 @@ public static class IArchiveExtensions
             IProgress<ProgressReport>? progress = null
         )
         {
-            // For solid archives (Rar, 7Zip), use the optimized reader-based approach
             if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
             {
                 using var reader = archive.ExtractAllEntries();
@@ -31,7 +29,6 @@ public static class IArchiveExtensions
             }
             else
             {
-                // For non-solid archives, extract entries directly
                 archive.WriteToDirectoryInternal(destinationDirectory, options, progress);
             }
         }
@@ -42,14 +39,10 @@ public static class IArchiveExtensions
             IProgress<ProgressReport>? progress
         )
         {
-            // Prepare for progress reporting
-            var totalBytes = archive.TotalUncompressSize;
+            var totalBytes = archive.TotalUncompressedSize;
             var bytesRead = 0L;
-
-            // Tracking for created directories.
             var seenDirectories = new HashSet<string>();
 
-            // Extract
             foreach (var entry in archive.Entries)
             {
                 if (entry.IsDirectory)
@@ -68,10 +61,8 @@ public static class IArchiveExtensions
                     continue;
                 }
 
-                // Use the entry's WriteToDirectory method which respects ExtractionOptions
                 entry.WriteToDirectory(destinationDirectory, options);
 
-                // Update progress
                 bytesRead += entry.Size;
                 progress?.Report(
                     new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes)

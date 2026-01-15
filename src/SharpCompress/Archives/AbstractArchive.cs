@@ -68,7 +68,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     /// <summary>
     /// The total size of the files as uncompressed in the archive.
     /// </summary>
-    public virtual long TotalUncompressSize =>
+    public virtual long TotalUncompressedSize =>
         Entries.Aggregate(0L, (total, cf) => total + cf.Size);
 
     protected abstract IEnumerable<TVolume> LoadVolumes(SourceStream sourceStream);
@@ -187,10 +187,26 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     }
 
     public virtual IAsyncEnumerable<TEntry> EntriesAsync => _lazyEntriesAsync;
-    IAsyncEnumerable<IArchiveEntry> IAsyncArchive.EntriesAsync =>
-        EntriesAsync.Cast<TEntry, IArchiveEntry>();
 
-    public IAsyncEnumerable<IVolume> VolumesAsync => _lazyVolumesAsync.Cast<TVolume, IVolume>();
+    private async IAsyncEnumerable<IArchiveEntry> EntriesAsyncCast()
+    {
+        await foreach (var entry in EntriesAsync)
+        {
+            yield return entry;
+        }
+    }
+
+    IAsyncEnumerable<IArchiveEntry> IAsyncArchive.EntriesAsync => EntriesAsyncCast();
+
+    private async IAsyncEnumerable<IVolume> VolumesAsyncCast()
+    {
+        await foreach (var volume in VolumesAsync)
+        {
+            yield return volume;
+        }
+    }
+
+    public IAsyncEnumerable<IVolume> VolumesAsync => VolumesAsyncCast();
 
     public async ValueTask<IAsyncReader> ExtractAllEntriesAsync()
     {
@@ -209,14 +225,16 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     public async ValueTask<bool> IsCompleteAsync()
     {
         await EnsureEntriesLoadedAsync();
-        return await EntriesAsync.All(x => x.IsComplete);
+        return await EntriesAsync.AllAsync(x => x.IsComplete);
     }
 
     public async ValueTask<long> TotalSizeAsync() =>
-        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.CompressedSize);
+        await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.CompressedSize);
 
-    public async ValueTask<long> TotalUncompressSizeAsync() =>
-        await EntriesAsync.Aggregate(0L, (total, cf) => total + cf.Size);
+    public async ValueTask<long> TotalUncompressedSizeAsync() =>
+        await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.Size);
+
+    public ValueTask<bool> IsEncryptedAsync() => new(IsEncrypted);
 
     #endregion
 }

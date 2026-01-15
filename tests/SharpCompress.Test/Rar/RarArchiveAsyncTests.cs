@@ -68,7 +68,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
         using (
-            var archive = RarArchive.Open(
+            var archive = RarArchive.OpenArchive(
                 stream,
                 new ReaderOptions { Password = password, LeaveStreamOpen = true }
             )
@@ -98,7 +98,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     protected async Task ArchiveFileReadPasswordAsync(string archiveName, string password)
     {
         using (
-            var archive = RarArchive.Open(
+            var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, archiveName),
                 new ReaderOptions { Password = password, LeaveStreamOpen = true }
             )
@@ -137,7 +137,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     private async ValueTask DoRar_test_invalid_exttime_ArchiveStreamReadAsync(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(
@@ -151,7 +151,9 @@ public class RarArchiveAsyncTests : ArchiveTests
     public async ValueTask Rar_Jpg_ArchiveStreamRead_Async()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
-        using (var archive = RarArchive.Open(stream, new ReaderOptions { LookForHeader = true }))
+        using (
+            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+        )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
@@ -176,7 +178,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
         {
-            using var archive = RarArchive.Open(stream);
+            using var archive = RarArchive.OpenArchive(stream);
             Assert.False(archive.IsSolid);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
@@ -196,7 +198,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     private async ValueTask DoRar_IsSolidEntryStreamCheckAsync(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var archive = RarArchive.Open(stream);
+        using var archive = RarArchive.OpenArchive(stream);
         Assert.True(archive.IsSolid);
         IArchiveEntry[] entries = archive.Entries.Where(a => !a.IsDirectory).ToArray();
         Assert.NotInRange(entries.Length, 0, 1);
@@ -264,7 +266,7 @@ public class RarArchiveAsyncTests : ArchiveTests
 
     private async ValueTask DoRar_Multi_ArchiveStreamReadAsync(string[] archives, bool isSolid)
     {
-        using var archive = RarArchive.Open(
+        using var archive = RarArchive.OpenArchive(
             archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
         );
         Assert.Equal(archive.IsSolid, isSolid);
@@ -316,7 +318,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     private Task DoRar_ArchiveFileRead_HasDirectoriesAsync(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var archive = RarArchive.Open(stream);
+        using var archive = RarArchive.OpenArchive(stream);
         Assert.False(archive.IsSolid);
         Assert.Contains(true, archive.Entries.Select(entry => entry.IsDirectory));
         return Task.CompletedTask;
@@ -326,7 +328,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     public async ValueTask Rar_Jpg_ArchiveFileRead_Async()
     {
         using (
-            var archive = RarArchive.Open(
+            var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
                 new ReaderOptions { LookForHeader = true }
             )
@@ -386,7 +388,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar15.rar");
 
-        using var archive = RarArchive.Open(testArchive);
+        using var archive = RarArchive.OpenArchive(testArchive);
         Assert.Equal(1, archive.MinVersion);
         Assert.Equal(1, archive.MaxVersion);
     }
@@ -396,7 +398,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar2.rar");
 
-        using var archive = RarArchive.Open(testArchive);
+        using var archive = RarArchive.OpenArchive(testArchive);
         Assert.Equal(2, archive.MinVersion);
         Assert.Equal(2, archive.MaxVersion);
     }
@@ -406,7 +408,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar4.multi.part01.rar");
 
-        using var archive = RarArchive.Open(testArchive);
+        using var archive = RarArchive.OpenArchive(testArchive);
         Assert.Equal(3, archive.MinVersion);
         Assert.Equal(4, archive.MaxVersion);
     }
@@ -416,7 +418,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Rar5.solid.rar");
 
-        using var archive = RarArchive.Open(testArchive);
+        using var archive = RarArchive.OpenArchive(testArchive);
         Assert.Equal(5, archive.MinVersion);
         Assert.Equal(6, archive.MaxVersion);
     }
@@ -573,7 +575,7 @@ public class RarArchiveAsyncTests : ArchiveTests
 
     private void DoRar_IsFirstVolume_True(string firstFilename)
     {
-        using var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, firstFilename));
+        using var archive = RarArchive.OpenArchive(Path.Combine(TEST_ARCHIVES_PATH, firstFilename));
         Assert.True(archive.IsMultipartVolume());
         Assert.True(archive.IsFirstVolume());
     }
@@ -588,7 +590,9 @@ public class RarArchiveAsyncTests : ArchiveTests
 
     private void DoRar_IsFirstVolume_False(string notFirstFilename)
     {
-        using var archive = RarArchive.Open(Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename));
+        using var archive = RarArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename)
+        );
         Assert.True(archive.IsMultipartVolume());
         Assert.False(archive.IsFirstVolume());
     }
@@ -631,7 +635,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.Open(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(
@@ -649,7 +653,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var stream = File.OpenRead(testArchive);
-        await using var archive = await ArchiveFactory.OpenAsync(stream);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
         Assert.True(await archive.IsSolidAsync());
         await using (var reader = await archive.ExtractAllEntriesAsync())
         {
@@ -680,7 +684,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     private async ValueTask ArchiveFileReadAsync(string testArchive)
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        using var archive = ArchiveFactory.Open(testArchive);
+        using var archive = ArchiveFactory.OpenArchive(testArchive);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(
@@ -697,7 +701,10 @@ public class RarArchiveAsyncTests : ArchiveTests
     )
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
-        using var archive = ArchiveFactory.Open(paths.Select(a => new FileInfo(a)), readerOptions);
+        using var archive = ArchiveFactory.OpenArchive(
+            paths.Select(a => new FileInfo(a)),
+            readerOptions
+        );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(
@@ -714,7 +721,10 @@ public class RarArchiveAsyncTests : ArchiveTests
     )
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
-        using var archive = ArchiveFactory.Open(paths.Select(f => new FileInfo(f)), readerOptions);
+        using var archive = ArchiveFactory.OpenArchive(
+            paths.Select(f => new FileInfo(f)),
+            readerOptions
+        );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(

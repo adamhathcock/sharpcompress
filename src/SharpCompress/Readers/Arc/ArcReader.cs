@@ -9,7 +9,7 @@ using SharpCompress.Common.Arc;
 
 namespace SharpCompress.Readers.Arc
 {
-    public class ArcReader : AbstractReader<ArcEntry, ArcVolume>
+    public partial class ArcReader : AbstractReader<ArcEntry, ArcVolume>
     {
         private ArcReader(Stream stream, ReaderOptions options)
             : base(options, ArchiveType.Arc) => Volume = new ArcVolume(stream, options, 0);
@@ -22,7 +22,7 @@ namespace SharpCompress.Readers.Arc
         /// <param name="stream"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static ArcReader Open(Stream stream, ReaderOptions? options = null)
+        public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
         {
             stream.NotNull(nameof(stream));
             return new ArcReader(stream, options ?? new ReaderOptions());

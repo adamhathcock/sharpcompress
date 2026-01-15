@@ -133,10 +133,7 @@ public abstract class Factory : IFactory
             )
             {
                 ((IStreamStack)stream).StackSeek(pos);
-                return (
-                    true,
-                    await readerFactory.OpenReaderAsync(stream, options, cancellationToken)
-                );
+                return (true, readerFactory.OpenAsyncReader(stream, options, cancellationToken));
             }
         }
 

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress;
@@ -29,9 +31,46 @@ public static class EnumerableExtensions
 
 public static class AsyncEnumerableExtensions
 {
+#if !NET10_0_OR_GREATER
     extension<T>(IAsyncEnumerable<T> source)
-        where T : notnull
     {
+        public async IAsyncEnumerable<TResult> Select<TResult>(Func<T, TResult> selector)
+        {
+            await foreach (var element in source)
+            {
+                yield return selector(element);
+            }
+        }
+
+        public async ValueTask<int> CountAsync(CancellationToken cancellationToken = default)
+        {
+            await using var e = source.GetAsyncEnumerator(cancellationToken);
+
+            var count = 0;
+            while (await e.MoveNextAsync())
+            {
+                checked
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        public async IAsyncEnumerable<T> Take(int count)
+        {
+            await foreach (var element in source)
+            {
+                yield return element;
+
+                if (--count == 0)
+                {
+                    break;
+                }
+            }
+        }
+
         public async ValueTask<List<T>> ToListAsync()
         {
             var list = new List<T>();
@@ -42,16 +81,7 @@ public static class AsyncEnumerableExtensions
             return list;
         }
 
-        public async IAsyncEnumerable<TResult> Cast<TResult>()
-            where TResult : class
-        {
-            await foreach (var item in source)
-            {
-                yield return (item as TResult).NotNull();
-            }
-        }
-
-        public async ValueTask<bool> All(Func<T, bool> predicate)
+        public async ValueTask<bool> AllAsync(Func<T, bool> predicate)
         {
             await foreach (var item in source)
             {
@@ -75,27 +105,77 @@ public static class AsyncEnumerableExtensions
             }
         }
 
-        public async ValueTask<T?> FirstOrDefaultAsync()
+        public async ValueTask<T> SingleAsync(Func<T, bool>? predicate = null)
+        {
+            IAsyncEnumerator<T> enumerator;
+            if (predicate is null)
+            {
+                enumerator = source.GetAsyncEnumerator();
+            }
+            else
+            {
+                enumerator = source.Where(predicate).GetAsyncEnumerator();
+            }
+
+            if (!await enumerator.MoveNextAsync())
+            {
+                throw new InvalidOperationException("The source sequence is empty.");
+            }
+            var value = enumerator.Current;
+            if (await enumerator.MoveNextAsync())
+            {
+                throw new InvalidOperationException(
+                    "The source sequence contains more than one element."
+                );
+            }
+            return value;
+        }
+
+        public async ValueTask<T> FirstAsync()
         {
             await foreach (var item in source)
             {
-                return item; // Returns the very first item found
+                return item;
             }
-
-            return default; // Returns null/default if the stream is empty
+            throw new InvalidOperationException("The source sequence is empty.");
         }
 
-        public async ValueTask<TAccumulate> Aggregate<TAccumulate>(
-            TAccumulate seed,
-            Func<TAccumulate, T, TAccumulate> func
+        public async ValueTask<T?> FirstOrDefaultAsync(
+            CancellationToken cancellationToken = default
         )
         {
-            TAccumulate result = seed;
-            await foreach (var element in source)
+            await foreach (var item in source.WithCancellation(cancellationToken))
             {
-                result = func(result, element);
+                return item;
             }
-            return result;
+
+            return default;
         }
+    }
+#endif
+
+    public static async IAsyncEnumerable<TResult> CastAsync<TResult>(
+        this IAsyncEnumerable<object?> source
+    )
+        where TResult : class
+    {
+        await foreach (var item in source)
+        {
+            yield return (item as TResult).NotNull();
+        }
+    }
+
+    public static async ValueTask<TAccumulate> AggregateAsync<TAccumulate, T>(
+        this IAsyncEnumerable<T> source,
+        TAccumulate seed,
+        Func<TAccumulate, T, TAccumulate> func
+    )
+    {
+        var result = seed;
+        await foreach (var element in source)
+        {
+            result = func(result, element);
+        }
+        return result;
     }
 }

@@ -22,7 +22,7 @@ public class GZipReaderAsyncTests : ReaderTests
     {
         //read only as GZip item
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        await using var reader = await ReaderFactory.OpenAsync(new AsyncOnlyStream(stream));
+        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
         while (await reader.MoveToNextEntryAsync())
         {
             Assert.NotEqual(0, reader.Entry.Size);
@@ -70,7 +70,7 @@ public class GZipReaderAsyncTests : ReaderTests
             bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
-        await using (var reader = await ReaderFactory.OpenAsync(testStream, options, default))
+        await using (var reader = ReaderFactory.OpenAsyncReader(testStream, options, default))
         {
             await UseReaderAsync(reader, expectedCompression);
             protectedStream.ThrowOnDispose = false;

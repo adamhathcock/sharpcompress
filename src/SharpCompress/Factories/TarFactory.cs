@@ -72,52 +72,60 @@ public class TarFactory
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
-        TarArchive.Open(stream, readerOptions);
+    public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        TarArchive.OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => TarArchive.OpenAsync(stream, readerOptions, cancellationToken);
+    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        TarArchive.Open(fileInfo, readerOptions);
+    public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        TarArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
+    public IAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => TarArchive.OpenAsync(fileInfo, readerOptions, cancellationToken);
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
+    }
 
     #endregion
 
     #region IMultiArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null) =>
-        TarArchive.Open(streams, readerOptions);
-
-    /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
+    public IArchive OpenArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => TarArchive.OpenAsync(streams, readerOptions, cancellationToken);
+        ReaderOptions? readerOptions = null
+    ) => TarArchive.OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null) =>
-        TarArchive.Open(fileInfos, readerOptions);
+    public IAsyncArchive OpenAsyncArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null
+    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncArchive> OpenAsync(
+    public IArchive OpenArchive(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null
+    ) => TarArchive.OpenArchive(fileInfos, readerOptions);
+
+    /// <inheritdoc/>
+    public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => TarArchive.OpenAsync(fileInfos, readerOptions, cancellationToken);
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
+    }
 
     #endregion
 
@@ -268,17 +276,17 @@ public class TarFactory
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
-        TarReader.Open(stream, options);
+        TarReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncReader> OpenReaderAsync(
+    public IAsyncReader OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(TarReader.Open(stream, options));
+        return (IAsyncReader)TarReader.OpenReader(stream, options);
     }
 
     #endregion
@@ -286,18 +294,18 @@ public class TarFactory
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter Open(Stream stream, WriterOptions writerOptions) =>
+    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions) =>
         new TarWriter(stream, new TarWriterOptions(writerOptions));
 
     /// <inheritdoc/>
-    public ValueTask<IWriter> OpenAsync(
+    public IAsyncWriter OpenAsyncWriter(
         Stream stream,
         WriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(Open(stream, writerOptions));
+        return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
     #endregion
@@ -305,7 +313,7 @@ public class TarFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateWriteableArchive() => TarArchive.Create();
+    public IWritableArchive CreateArchive() => TarArchive.CreateArchive();
 
     #endregion
 }

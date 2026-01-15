@@ -31,21 +31,22 @@ internal class AutoArchiveFactory : IArchiveFactory
 
     public FileInfo? GetFilePart(int index, FileInfo part1) => throw new NotSupportedException();
 
-    public IArchive Open(Stream stream, ReaderOptions? readerOptions = null) =>
-        ArchiveFactory.Open(stream, readerOptions);
+    public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        ArchiveFactory.OpenArchive(stream, readerOptions);
 
-    public async ValueTask<IAsyncArchive> OpenAsync(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => await ArchiveFactory.OpenAsync(stream, readerOptions, cancellationToken);
+    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(stream, readerOptions);
 
-    public IArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        ArchiveFactory.Open(fileInfo, readerOptions);
+    public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        ArchiveFactory.OpenArchive(fileInfo, readerOptions);
 
-    public async ValueTask<IAsyncArchive> OpenAsync(
+    public IAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => await ArchiveFactory.OpenAsync(fileInfo, readerOptions, cancellationToken);
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
+    }
 }

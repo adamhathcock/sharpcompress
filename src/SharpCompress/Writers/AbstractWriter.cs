@@ -8,7 +8,9 @@ using SharpCompress.IO;
 namespace SharpCompress.Writers;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptions) : IWriter
+public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptions)
+    : IWriter,
+        IAsyncWriter
 {
     private bool _isDisposed;
 

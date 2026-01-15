@@ -65,5 +65,33 @@ public static class IAsyncReaderExtensions
                     .ConfigureAwait(false);
             }
         }
+
+        public async ValueTask WriteEntryToAsync(
+            string destinationFileName,
+            ExtractionOptions? options = null,
+            CancellationToken cancellationToken = default
+        ) =>
+            await ExtractionMethods
+                .WriteEntryToFileAsync(
+                    reader.Entry,
+                    destinationFileName,
+                    options,
+                    async (x, fm, ct) =>
+                    {
+                        using var fs = File.Open(destinationFileName, fm);
+                        await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
+                    },
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+
+        public async ValueTask WriteEntryToAsync(
+            FileInfo destinationFileInfo,
+            ExtractionOptions? options = null,
+            CancellationToken cancellationToken = default
+        ) =>
+            await reader
+                .WriteEntryToAsync(destinationFileInfo.FullName, options, cancellationToken)
+                .ConfigureAwait(false);
     }
 }

@@ -10,23 +10,23 @@ namespace SharpCompress;
 internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
     : IAsyncEnumerable<T>
 {
-    private readonly List<T> backing = new();
-    private readonly IAsyncEnumerator<T> source = source.GetAsyncEnumerator();
-    private bool fullyLoaded;
+    private readonly List<T> _backing = new();
+    private readonly IAsyncEnumerator<T> _source = source.GetAsyncEnumerator();
+    private bool _fullyLoaded;
 
     private class LazyLoader(
         LazyAsyncReadOnlyCollection<T> lazyReadOnlyCollection,
         CancellationToken cancellationToken
     ) : IAsyncEnumerator<T>
     {
-        private bool disposed;
-        private int index = -1;
+        private bool _disposed;
+        private int _index = -1;
 
         public ValueTask DisposeAsync()
         {
-            if (!disposed)
+            if (!_disposed)
             {
-                disposed = true;
+                _disposed = true;
             }
             return default;
         }
@@ -34,27 +34,27 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
         public async ValueTask<bool> MoveNextAsync()
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (index + 1 < lazyReadOnlyCollection.backing.Count)
+            if (_index + 1 < lazyReadOnlyCollection._backing.Count)
             {
-                index++;
+                _index++;
                 return true;
             }
             if (
-                !lazyReadOnlyCollection.fullyLoaded
-                && await lazyReadOnlyCollection.source.MoveNextAsync()
+                !lazyReadOnlyCollection._fullyLoaded
+                && await lazyReadOnlyCollection._source.MoveNextAsync()
             )
             {
-                lazyReadOnlyCollection.backing.Add(lazyReadOnlyCollection.source.Current);
-                index++;
+                lazyReadOnlyCollection._backing.Add(lazyReadOnlyCollection._source.Current);
+                _index++;
                 return true;
             }
-            lazyReadOnlyCollection.fullyLoaded = true;
+            lazyReadOnlyCollection._fullyLoaded = true;
             return false;
         }
 
         #region IEnumerator<T> Members
 
-        public T Current => lazyReadOnlyCollection.backing[index];
+        public T Current => lazyReadOnlyCollection._backing[_index];
 
         #endregion
 
@@ -62,9 +62,9 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
 
         public void Dispose()
         {
-            if (!disposed)
+            if (!_disposed)
             {
-                disposed = true;
+                _disposed = true;
             }
         }
 
@@ -73,18 +73,18 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
 
     internal async ValueTask EnsureFullyLoaded()
     {
-        if (!fullyLoaded)
+        if (!_fullyLoaded)
         {
             var loader = new LazyLoader(this, CancellationToken.None);
             while (await loader.MoveNextAsync())
             {
                 // Intentionally empty
             }
-            fullyLoaded = true;
+            _fullyLoaded = true;
         }
     }
 
-    internal IEnumerable<T> GetLoaded() => backing;
+    internal IEnumerable<T> GetLoaded() => _backing;
 
     #region ICollection<T> Members
 

@@ -23,7 +23,7 @@ namespace SharpCompress.Readers.Ace
     /// - Recovery record support
     /// - Additional header flags
     /// </remarks>
-    public abstract class AceReader : AbstractReader<AceEntry, AceVolume>
+    public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
     {
         private readonly IArchiveEncoding _archiveEncoding;
 
@@ -50,7 +50,7 @@ namespace SharpCompress.Readers.Ace
         /// <param name="stream">The stream containing the ACE archive.</param>
         /// <param name="options">Reader options.</param>
         /// <returns>An AceReader instance.</returns>
-        public static AceReader Open(Stream stream, ReaderOptions? options = null)
+        public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
         {
             stream.NotNull(nameof(stream));
             return new SingleVolumeAceReader(stream, options ?? new ReaderOptions());
@@ -62,7 +62,7 @@ namespace SharpCompress.Readers.Ace
         /// <param name="streams"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static AceReader Open(IEnumerable<Stream> streams, ReaderOptions? options = null)
+        public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
         {
             streams.NotNull(nameof(streams));
             return new MultiVolumeAceReader(streams, options ?? new ReaderOptions());

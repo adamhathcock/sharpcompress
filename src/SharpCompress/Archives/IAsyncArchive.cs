@@ -39,5 +39,10 @@ public interface IAsyncArchive : IAsyncDisposable
     /// <summary>
     /// The total size of the files as uncompressed in the archive.
     /// </summary>
-    ValueTask<long> TotalUncompressSizeAsync();
+    ValueTask<long> TotalUncompressedSizeAsync();
+
+    /// <summary>
+    /// Returns whether the archive is encrypted.
+    /// </summary>
+    ValueTask<bool> IsEncryptedAsync();
 }

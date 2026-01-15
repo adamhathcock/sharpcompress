@@ -16,7 +16,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Readers.Tar;
 
-public class TarReader : AbstractReader<TarEntry, TarVolume>
+public partial class TarReader : AbstractReader<TarEntry, TarVolume>
 {
     private readonly CompressionType compressionType;
 
@@ -45,7 +45,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         };
     }
 
-    #region Open
+    #region OpenReader
 
     /// <summary>
     /// Opens a TarReader for Non-seeking usage with a single volume
@@ -53,7 +53,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
     /// <param name="stream"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static TarReader Open(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
         options = options ?? new ReaderOptions();
@@ -115,7 +115,7 @@ public class TarReader : AbstractReader<TarEntry, TarVolume>
         return new TarReader(rewindableStream, options, CompressionType.None);
     }
 
-    #endregion Open
+    #endregion OpenReader
 
     protected override IEnumerable<TarEntry> GetEntries(Stream stream) =>
         TarEntry.GetEntries(

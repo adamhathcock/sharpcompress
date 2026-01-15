@@ -12,7 +12,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Tar;
 
-public class TarWriter : AbstractWriter
+public partial class TarWriter : AbstractWriter
 {
     private readonly bool finalizeArchiveOnClose;
     private TarHeaderWriteFormat headerFormat;
