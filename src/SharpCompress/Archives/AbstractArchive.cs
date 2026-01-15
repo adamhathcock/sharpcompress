@@ -23,8 +23,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
         Type = type;
         ReaderOptions = sourceStream.ReaderOptions;
         _sourceStream = sourceStream;
-        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(LoadVolumes(_sourceStream));
-        _lazyEntries = new LazyReadOnlyCollection<TEntry>(LoadEntries(Volumes));
+        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(() => LoadVolumes(_sourceStream));
+        _lazyEntries = new LazyReadOnlyCollection<TEntry>(() => LoadEntries(Volumes));
         _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(
             LoadVolumesAsync(_sourceStream)
         );
@@ -37,8 +37,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     {
         Type = type;
         ReaderOptions = new();
-        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
-        _lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
+        _lazyVolumes = new LazyReadOnlyCollection<TVolume>(() => Enumerable.Empty<TVolume>());
+        _lazyEntries = new LazyReadOnlyCollection<TEntry>(() => Enumerable.Empty<TEntry>());
         _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(
             AsyncEnumerableEx.Empty<TVolume>()
         );

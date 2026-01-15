@@ -1,4 +1,4 @@
-﻿#nullable disable
+﻿
 
 using System;
 using System.Collections;
@@ -9,10 +9,14 @@ namespace SharpCompress;
 internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
 {
     private readonly List<T> _backing = new();
-    private readonly IEnumerator<T> _source;
+    private readonly Func<IEnumerable<T>> _factory;
+    private IEnumerator<T>? _source;
     private bool _fullyLoaded;
 
-    public LazyReadOnlyCollection(IEnumerable<T> source) => _source = source.GetEnumerator();
+
+    public LazyReadOnlyCollection(IEnumerable<T> factory) => _factory = () => factory;
+
+    public LazyReadOnlyCollection(Func<IEnumerable<T>> factory) => _factory = factory;
 
     private class LazyLoader : IEnumerator<T>
     {
@@ -43,7 +47,7 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
 
         #region IEnumerator Members
 
-        object IEnumerator.Current => Current;
+        object IEnumerator.Current => Current!;
 
         public bool MoveNext()
         {
@@ -51,6 +55,10 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
             {
                 _index++;
                 return true;
+            }
+            if (_lazyReadOnlyCollection._source == null)
+            {
+                _lazyReadOnlyCollection._source = _lazyReadOnlyCollection._factory().GetEnumerator();
             }
             if (!_lazyReadOnlyCollection._fullyLoaded && _lazyReadOnlyCollection._source.MoveNext())
             {

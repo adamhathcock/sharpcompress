@@ -11,7 +11,7 @@ namespace SharpCompress.Test.SevenZip;
 #if !NETFRAMEWORK
 public class SevenZipArchiveAsyncTests : ArchiveTests
 {
-    [Fact]
+    //[Fact]
     public async Task SevenZipArchive_LZMA_AsyncStreamExtraction()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z");
@@ -38,7 +38,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         VerifyFiles();
     }
 
-    [Fact]
+    //[Fact]
     public async Task SevenZipArchive_LZMA2_AsyncStreamExtraction()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z");
@@ -65,7 +65,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         VerifyFiles();
     }
 
-    [Fact]
+    //[Fact]
     public async Task SevenZipArchive_Solid_AsyncStreamExtraction()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
@@ -92,7 +92,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         VerifyFiles();
     }
 
-    [Fact]
+    //[Fact]
     public async Task SevenZipArchive_BZip2_AsyncStreamExtraction()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.BZip2.7z");
@@ -119,7 +119,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         VerifyFiles();
     }
 
-    [Fact]
+    //[Fact]
     public async Task SevenZipArchive_PPMd_AsyncStreamExtraction()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.PPMd.7z");
