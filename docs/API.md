@@ -40,17 +40,17 @@ using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.
 }
 
 // Specific writer
-using (var archive = ZipArchive.Create())
-using (var archive = TarArchive.Create())
-using (var archive = GZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
+using (var archive = TarArchive.CreateArchive())
+using (var archive = GZipArchive.CreateArchive())
 
 // With options
-var options = new WriterOptions(CompressionType.Deflate) 
-{ 
+var options = new WriterOptions(CompressionType.Deflate)
+{
     CompressionLevel = 9,
     LeaveStreamOpen = false
 };
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.SaveTo("output.zip", options);
 }
@@ -91,7 +91,7 @@ using (var archive = ZipArchive.Open("file.zip"))
 }
 
 // Async extraction (requires IAsyncArchive)
-using (var asyncArchive = await ZipArchive.OpenAsync("file.zip"))
+using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
     await asyncArchive.WriteToDirectoryAsync(
         @"C:\output",
@@ -122,7 +122,7 @@ foreach (var entry in archive.Entries)
 ### Creating Archives
 
 ```csharp
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     // Add file
     archive.AddEntry("file.txt", @"C:\source\file.txt");
@@ -172,9 +172,9 @@ using (var reader = ReaderFactory.Open(stream))
     }
 }
 
-// Async variants (use OpenAsync to get IAsyncReader)
+// Async variants (use OpenAsyncReader to get IAsyncReader)
 using (var stream = File.OpenRead("file.zip"))
-using (var reader = await ReaderFactory.OpenAsync(stream))
+using (var reader = await ReaderFactory.OpenAsyncReader(stream))
 {
     while (await reader.MoveToNextEntryAsync())
     {
@@ -363,7 +363,7 @@ cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 try
 {
-    using (var archive = await ZipArchive.OpenAsync("archive.zip"))
+    using (var archive = await ZipArchive.OpenAsyncArchive("archive.zip"))
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",
@@ -381,23 +381,23 @@ catch (OperationCanceledException)
 ### Create with Custom Compression
 
 ```csharp
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.AddAllFromDirectory(@"D:\source");
     
     // Fastest
-    archive.SaveTo("fast.zip", new WriterOptions(CompressionType.Deflate) 
-    { 
-        CompressionLevel = 1 
+    archive.SaveTo("fast.zip", new WriterOptions(CompressionType.Deflate)
+    {
+        CompressionLevel = 1
     });
     
     // Balanced (default)
     archive.SaveTo("normal.zip", CompressionType.Deflate);
     
     // Best compression
-    archive.SaveTo("best.zip", new WriterOptions(CompressionType.Deflate) 
-    { 
-        CompressionLevel = 9 
+    archive.SaveTo("best.zip", new WriterOptions(CompressionType.Deflate)
+    {
+        CompressionLevel = 9
     });
 }
 ```
@@ -406,7 +406,7 @@ using (var archive = ZipArchive.Create())
 
 ```csharp
 using (var outputStream = new MemoryStream())
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     // Add content from memory
     using (var contentStream = new MemoryStream(Encoding.UTF8.GetBytes("Hello")))

@@ -48,7 +48,7 @@ Also, look over the tests for more thorough [examples](https://github.com/adamha
 
 ### Create Zip Archive from multiple files
 ```C#
-using(var archive = ZipArchive.Create())
+using(var archive = ZipArchive.CreateArchive())
 {
     archive.AddEntry("file01.txt", "C:\\file01.txt");
     archive.AddEntry("file02.txt", "C:\\file02.txt");
@@ -61,7 +61,7 @@ using(var archive = ZipArchive.Create())
 ### Create Zip Archive from all files in a directory to a file
 
 ```C#
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.AddAllFromDirectory("D:\\temp");
     archive.SaveTo("C:\\temp.zip", CompressionType.Deflate);
@@ -72,7 +72,7 @@ using (var archive = ZipArchive.Create())
 
 ```C#
 var memoryStream = new MemoryStream();
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.AddAllFromDirectory("D:\\temp");
     archive.SaveTo(memoryStream, new WriterOptions(CompressionType.Deflate)
