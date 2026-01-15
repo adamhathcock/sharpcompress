@@ -9,6 +9,7 @@ using SharpCompress.Common;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Crypto;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -132,7 +133,11 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         };
 
         using (
-            var writer = WriterFactory.OpenAsyncWriter(zipStream, ArchiveType.Zip, writerOptions)
+            var writer = WriterFactory.OpenAsyncWriter(
+                new AsyncOnlyStream(zipStream),
+                ArchiveType.Zip,
+                writerOptions
+            )
         )
         {
             await writer.WriteAsync(

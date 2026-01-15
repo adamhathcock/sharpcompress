@@ -79,7 +79,7 @@ internal class ZipHeaderFactory
                 }
                 else
                 {
-                    await reader.ReadBytesAsync(zip64 ? 20 : 12);
+                    await reader.SkipAsync(zip64 ? 20 : 12);
                 }
                 return null;
             }
