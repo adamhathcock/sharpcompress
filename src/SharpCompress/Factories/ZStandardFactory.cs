@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Compressors.ZStandard;
@@ -29,6 +30,7 @@ internal class ZStandardFactory : Factory
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
     ) => new(IsArchive(stream, password, bufferSize));
 }

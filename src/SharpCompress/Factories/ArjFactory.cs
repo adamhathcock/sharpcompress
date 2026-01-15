@@ -27,10 +27,15 @@ namespace SharpCompress.Factories
             Stream stream,
             string? password = null,
             int bufferSize = ReaderOptions.DefaultBufferSize
-        )
-        {
-            return ArjHeader.IsArchive(stream);
-        }
+        ) =>
+            ArjHeader.IsArchive(stream);
+
+        public override ValueTask<bool> IsArchiveAsync(
+            Stream stream,
+            string? password = null,
+            int bufferSize = ReaderOptions.DefaultBufferSize,
+            CancellationToken cancellationToken = default
+        ) => ArjHeader.IsArchiveAsync(stream, cancellationToken);
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             ArjReader.OpenReader(stream, options);
@@ -44,11 +49,5 @@ namespace SharpCompress.Factories
             cancellationToken.ThrowIfCancellationRequested();
             return (IAsyncReader)ArjReader.OpenReader(stream, options);
         }
-
-        public override ValueTask<bool> IsArchiveAsync(
-            Stream stream,
-            string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        ) => new(IsArchive(stream, password, bufferSize));
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 
@@ -72,6 +74,45 @@ namespace SharpCompress.Compressors.Lzw
                 byte[] hdr = new byte[LzwConstants.HDR_SIZE];
 
                 int result = stream.Read(hdr, 0, hdr.Length);
+
+                // Check the magic marker
+                if (result < 0)
+                    throw new IncompleteArchiveException("Failed to read LZW header");
+
+                if (hdr[0] != (LzwConstants.MAGIC >> 8) || hdr[1] != (LzwConstants.MAGIC & 0xff))
+                {
+                    throw new IncompleteArchiveException(
+                        String.Format(
+                            "Wrong LZW header. Magic bytes don't match. 0x{0:x2} 0x{1:x2}",
+                            hdr[0],
+                            hdr[1]
+                        )
+                    );
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Asynchronously checks if the stream is an LZW stream
+        /// </summary>
+        /// <param name="stream">The stream to read from</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the stream is an LZW stream, false otherwise</returns>
+        public static async ValueTask<bool> IsLzwStreamAsync(
+            Stream stream,
+            CancellationToken cancellationToken = default
+        )
+        {
+            try
+            {
+                byte[] hdr = new byte[LzwConstants.HDR_SIZE];
+
+                int result = await stream.ReadAsync(hdr, 0, hdr.Length, cancellationToken);
 
                 // Check the magic marker
                 if (result < 0)

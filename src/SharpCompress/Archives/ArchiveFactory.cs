@@ -78,7 +78,7 @@ public static class ArchiveFactory
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
         var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken);
-        return factory.OpenAsyncArchive(fileInfo, options, cancellationToken);
+        return factory.OpenAsyncArchive(fileInfo, options);
     }
 
     public static IArchive OpenArchive(

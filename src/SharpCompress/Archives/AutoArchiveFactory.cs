@@ -40,13 +40,6 @@ internal class AutoArchiveFactory : IArchiveFactory
     public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ArchiveFactory.OpenArchive(fileInfo, readerOptions);
 
-    public IAsyncArchive OpenAsyncArchive(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
-    }
+    public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
 }

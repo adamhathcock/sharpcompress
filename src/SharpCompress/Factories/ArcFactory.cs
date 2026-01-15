@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,9 +37,16 @@ namespace SharpCompress.Factories
             //Hyper - archive, check the next two bytes for "HP" or "ST"(or look below for
             //"HYP").Also the ZOO archiver also does put a 01Ah at the start of the file,
             //see the ZOO entry below.
-            var bytes = new byte[2];
-            stream.Read(bytes, 0, 2);
-            return bytes[0] == 0x1A && bytes[1] < 10; //rather thin, but this is all we have
+            var buffer = ArrayPool<byte>.Shared.Rent(2);
+            try
+            {
+                stream.ReadExact(buffer, 0, 2);
+                return buffer[0] == 0x1A && buffer[1] < 10; //rather thin, but this is all we have
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
@@ -54,10 +62,29 @@ namespace SharpCompress.Factories
             return (IAsyncReader)ArcReader.OpenReader(stream, options);
         }
 
-        public override ValueTask<bool> IsArchiveAsync(
+        public override async ValueTask<bool> IsArchiveAsync(
             Stream stream,
             string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        ) => new(IsArchive(stream, password, bufferSize));
+            int bufferSize = ReaderOptions.DefaultBufferSize,
+            CancellationToken cancellationToken = default
+        )
+        {
+            //You may have to use some(paranoid) checks to ensure that you actually are
+            //processing an ARC file, since other archivers also adopted the idea of putting
+            //a 01Ah byte at offset 0, namely the Hyper archiver. To check if you have a
+            //Hyper - archive, check the next two bytes for "HP" or "ST"(or look below for
+            //"HYP").Also the ZOO archiver also does put a 01Ah at the start of the file,
+            //see the ZOO entry below.
+            var buffer = ArrayPool<byte>.Shared.Rent(2);
+            try
+            {
+                await stream.ReadExactAsync(buffer, 0, 2, cancellationToken);
+                return buffer[0] == 0x1A && buffer[1] < 10; //rather thin, but this is all we have
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
     }
 }

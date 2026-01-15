@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Arj.Headers;
 using SharpCompress.Crypto;
 
@@ -102,6 +104,26 @@ namespace SharpCompress.Common.Ace.Headers
             }
 
             // Check for "**ACE**" at offset 7
+            return CheckMagicBytes(bytes, 7);
+        }
+
+        /// <summary>
+        /// Asynchronously checks if the stream is an ACE archive
+        /// </summary>
+        /// <param name="stream">The stream to read from</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the stream is an ACE archive, false otherwise</returns>
+        public static async ValueTask<bool> IsArchiveAsync(
+            Stream stream,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var bytes = new byte[14];
+            if (await stream.ReadAsync(bytes, 0, 14, cancellationToken) != 14)
+            {
+                return false;
+            }
+
             return CheckMagicBytes(bytes, 7);
         }
 
