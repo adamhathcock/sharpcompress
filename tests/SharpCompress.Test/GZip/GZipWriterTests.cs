@@ -21,7 +21,9 @@ public class GZipWriterTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.GZip, CompressionType.GZip))
+        using (
+            var writer = WriterFactory.OpenWriter(stream, ArchiveType.GZip, CompressionType.GZip)
+        )
         {
             writer.Write("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
@@ -56,7 +58,11 @@ public class GZipWriterTests : WriterTests
         Assert.Throws<InvalidFormatException>(() =>
         {
             using Stream stream = File.OpenWrite(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
-            using var writer = WriterFactory.OpenWriter(stream, ArchiveType.GZip, CompressionType.BZip2);
+            using var writer = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.GZip,
+                CompressionType.BZip2
+            );
         });
 
     [Fact]

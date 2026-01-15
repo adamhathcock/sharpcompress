@@ -32,7 +32,7 @@ namespace SharpCompress.Factories
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             AceReader.OpenReader(stream, options);
 
-        public IAsyncReader OpenReaderAsync(
+        public IAsyncReader OpenAsyncReader(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default

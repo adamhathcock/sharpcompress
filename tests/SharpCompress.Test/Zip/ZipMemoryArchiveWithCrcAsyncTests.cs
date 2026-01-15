@@ -131,7 +131,9 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
             CompressionLevel = compressionLevel,
         };
 
-        using (var writer = WriterFactory.OpenAsyncWriter(zipStream, ArchiveType.Zip, writerOptions))
+        using (
+            var writer = WriterFactory.OpenAsyncWriter(zipStream, ArchiveType.Zip, writerOptions)
+        )
         {
             await writer.WriteAsync(
                 $"{compressionType}_level_{compressionLevel}_{sizeMb}MiB.txt",

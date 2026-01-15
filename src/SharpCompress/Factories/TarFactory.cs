@@ -279,7 +279,7 @@ public class TarFactory
         TarReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public IAsyncReader OpenReaderAsync(
+    public IAsyncReader OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default

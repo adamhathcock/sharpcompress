@@ -148,7 +148,9 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_Jpg_ArchiveStreamRead()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
-        using (var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true }))
+        using (
+            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+        )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
@@ -598,7 +600,9 @@ public class RarArchiveTests : ArchiveTests
 
     private void DoRar_IsFirstVolume_False(string notFirstFilename)
     {
-        using var archive = RarArchive.OpenArchive(Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename));
+        using var archive = RarArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename)
+        );
         Assert.True(archive.IsMultipartVolume());
         Assert.False(archive.IsFirstVolume());
     }

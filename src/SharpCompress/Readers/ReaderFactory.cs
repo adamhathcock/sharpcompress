@@ -139,7 +139,7 @@ public static class ReaderFactory
                 if (testedFactory.IsArchive(bStream))
                 {
                     ((IStreamStack)bStream).StackSeek(pos);
-                    return readerFactory.OpenReaderAsync(bStream, options, cancellationToken);
+                    return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
                 }
             }
             ((IStreamStack)bStream).StackSeek(pos);
@@ -155,7 +155,7 @@ public static class ReaderFactory
             if (factory is IReaderFactory readerFactory && factory.IsArchive(bStream))
             {
                 ((IStreamStack)bStream).StackSeek(pos);
-                return readerFactory.OpenReaderAsync(bStream, options, cancellationToken);
+                return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
             }
         }
 

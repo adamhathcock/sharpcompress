@@ -226,7 +226,12 @@ public class RarReaderTests : ReaderTests
         using (
             var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar"))
         )
-        using (var reader = ReaderFactory.OpenReader(stream, new ReaderOptions { LookForHeader = true }))
+        using (
+            var reader = ReaderFactory.OpenReader(
+                stream,
+                new ReaderOptions { LookForHeader = true }
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
@@ -247,7 +252,9 @@ public class RarReaderTests : ReaderTests
     public void Rar_Jpg_Reader()
     {
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
-        using (var reader = RarReader.OpenReader(stream, new ReaderOptions { LookForHeader = true }))
+        using (
+            var reader = RarReader.OpenReader(stream, new ReaderOptions { LookForHeader = true })
+        )
         {
             while (reader.MoveToNextEntry())
             {
@@ -282,7 +289,10 @@ public class RarReaderTests : ReaderTests
     private void DoRar_Solid_Skip_Reader(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var reader = ReaderFactory.OpenReader(stream, new ReaderOptions { LookForHeader = true });
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { LookForHeader = true }
+        );
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
@@ -305,7 +315,10 @@ public class RarReaderTests : ReaderTests
     private void DoRar_Reader_Skip(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        using var reader = ReaderFactory.OpenReader(stream, new ReaderOptions { LookForHeader = true });
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { LookForHeader = true }
+        );
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
@@ -325,7 +338,10 @@ public class RarReaderTests : ReaderTests
         using var stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "Rar.encrypted_filesOnly.rar")
         );
-        using var reader = ReaderFactory.OpenReader(stream, new ReaderOptions { LookForHeader = true });
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { LookForHeader = true }
+        );
         while (reader.MoveToNextEntry())
         {
             //

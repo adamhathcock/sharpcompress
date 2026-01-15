@@ -81,7 +81,10 @@ public static class ArchiveFactory
         return factory.OpenAsyncArchive(fileInfo, options, cancellationToken);
     }
 
-    public static IArchive OpenArchive(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
+    public static IArchive OpenArchive(
+        IEnumerable<FileInfo> fileInfos,
+        ReaderOptions? options = null
+    )
     {
         fileInfos.NotNull(nameof(fileInfos));
         var filesArray = fileInfos.ToArray();

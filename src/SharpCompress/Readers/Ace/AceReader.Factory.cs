@@ -49,7 +49,5 @@ public partial class AceReader : IReaderOpenable
         fileInfo.NotNull(nameof(fileInfo));
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
-
-
 }
 #endif

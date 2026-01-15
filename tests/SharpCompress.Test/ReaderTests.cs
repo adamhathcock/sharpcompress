@@ -190,7 +190,10 @@ public abstract class ReaderTests : TestBase
     protected void ReadForBufferBoundaryCheck(string fileName, CompressionType compressionType)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
-        using var reader = ReaderFactory.OpenReader(stream, new ReaderOptions { LookForHeader = true });
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { LookForHeader = true }
+        );
 
         while (reader.MoveToNextEntry())
         {

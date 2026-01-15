@@ -618,7 +618,13 @@ public class ZipArchiveTests : ArchiveTests
     {
         MemoryStream stream = new NonSeekableMemoryStream();
 
-        using (var zipWriter = WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate))
+        using (
+            var zipWriter = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.Zip,
+                CompressionType.Deflate
+            )
+        )
         {
             zipWriter.Write("foo.txt", new MemoryStream(Array.Empty<byte>()));
             zipWriter.Write("foo2.txt", new MemoryStream(new byte[10]));
@@ -834,7 +840,9 @@ public class ZipArchiveTests : ArchiveTests
     [Fact]
     public void Zip_FilePermissions()
     {
-        using var archive = ArchiveFactory.OpenArchive(Path.Combine(TEST_ARCHIVES_PATH, "Zip.644.zip"));
+        using var archive = ArchiveFactory.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.644.zip")
+        );
 
         var firstEntry = archive.Entries.First();
         const int S_IFREG = 0x8000;

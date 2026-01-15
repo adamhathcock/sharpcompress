@@ -279,7 +279,10 @@ public class RarReaderAsyncTests : ReaderTests
     {
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
         using (
-            IReader baseReader = RarReader.OpenReader(stream, new ReaderOptions { LookForHeader = true })
+            IReader baseReader = RarReader.OpenReader(
+                stream,
+                new ReaderOptions { LookForHeader = true }
+            )
         )
         {
             IAsyncReader reader = (IAsyncReader)baseReader;

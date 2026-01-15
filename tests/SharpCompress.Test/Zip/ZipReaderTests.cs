@@ -179,7 +179,9 @@ public class ZipReaderTests : ReaderTests
                     Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip")
                 )
             )
-            using (var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+            using (
+                var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" })
+            )
             {
                 while (reader.MoveToNextEntry())
                 {
@@ -256,7 +258,13 @@ public class ZipReaderTests : ReaderTests
         using var memory = new MemoryStream();
         Stream stream = new TestStream(memory, read: true, write: true, seek: false);
 
-        using (var zipWriter = WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate))
+        using (
+            var zipWriter = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.Zip,
+                CompressionType.Deflate
+            )
+        )
         {
             zipWriter.Write(expected[0].Item1, new MemoryStream(expected[0].Item2));
             zipWriter.Write(expected[1].Item1, new MemoryStream(expected[1].Item2));

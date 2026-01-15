@@ -121,7 +121,12 @@ public class ZipReaderAsyncTests : ReaderTests
         using (
             Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"))
         )
-        using (IReader baseReader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            IReader baseReader = ZipReader.OpenReader(
+                stream,
+                new ReaderOptions { Password = "test" }
+            )
+        )
         {
             IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
@@ -193,7 +198,10 @@ public class ZipReaderAsyncTests : ReaderTests
                 )
             )
             using (
-                IReader baseReader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" })
+                IReader baseReader = ZipReader.OpenReader(
+                    stream,
+                    new ReaderOptions { Password = "test" }
+                )
             )
             {
                 IAsyncReader reader = (IAsyncReader)baseReader;
@@ -220,7 +228,12 @@ public class ZipReaderAsyncTests : ReaderTests
                 File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"))
             )
         )
-        using (IReader baseReader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            IReader baseReader = ZipReader.OpenReader(
+                stream,
+                new ReaderOptions { Password = "test" }
+            )
+        )
         {
             IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
@@ -247,7 +260,12 @@ public class ZipReaderAsyncTests : ReaderTests
                 File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip"))
             )
         )
-        using (IReader baseReader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            IReader baseReader = ZipReader.OpenReader(
+                stream,
+                new ReaderOptions { Password = "test" }
+            )
+        )
         {
             IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())

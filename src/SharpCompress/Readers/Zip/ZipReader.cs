@@ -51,7 +51,11 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
         return new ZipReader(stream, options ?? new ReaderOptions());
     }
 
-    public static IReader OpenReader(Stream stream, ReaderOptions? options, IEnumerable<ZipEntry> entries)
+    public static IReader OpenReader(
+        Stream stream,
+        ReaderOptions? options,
+        IEnumerable<ZipEntry> entries
+    )
     {
         stream.NotNull(nameof(stream));
         return new ZipReader(stream, options ?? new ReaderOptions(), entries);

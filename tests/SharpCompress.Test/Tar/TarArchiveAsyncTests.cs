@@ -33,7 +33,13 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenAsyncWriter(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenAsyncWriter(
+                stream,
+                ArchiveType.Tar,
+                CompressionType.None
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -47,7 +53,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
-            var archive2 = TarArchive.OpenAsyncArchive(new AsyncOnlyStream(File.OpenRead(unmodified)))
+            var archive2 = TarArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(File.OpenRead(unmodified))
+            )
         )
         {
             Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
@@ -82,7 +90,13 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenAsyncWriter(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenAsyncWriter(
+                stream,
+                ArchiveType.Tar,
+                CompressionType.None
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -96,7 +110,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
-            var archive2 = TarArchive.OpenAsyncArchive(new AsyncOnlyStream(File.OpenRead(unmodified)))
+            var archive2 = TarArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(File.OpenRead(unmodified))
+            )
         )
         {
             Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
@@ -216,7 +232,9 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         var numberOfEntries = 0;
 
-        await using (var archiveFactory = TarArchive.OpenAsyncArchive(new AsyncOnlyStream(memoryStream)))
+        await using (
+            var archiveFactory = TarArchive.OpenAsyncArchive(new AsyncOnlyStream(memoryStream))
+        )
         {
             await foreach (var entry in archiveFactory.EntriesAsync)
             {

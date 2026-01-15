@@ -36,7 +36,12 @@ public static class WriterFactory
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsyncWriter(new FileInfo(filePath), archiveType, writerOptions, cancellationToken);
+        return OpenAsyncWriter(
+            new FileInfo(filePath),
+            archiveType,
+            writerOptions,
+            cancellationToken
+        );
     }
 
     public static IAsyncWriter OpenAsyncWriter(
@@ -55,7 +60,11 @@ public static class WriterFactory
         );
     }
 
-    public static IWriter OpenWriter(Stream stream, ArchiveType archiveType, WriterOptions writerOptions)
+    public static IWriter OpenWriter(
+        Stream stream,
+        ArchiveType archiveType,
+        WriterOptions writerOptions
+    )
     {
         var factory = Factories
             .Factory.Factories.OfType<IWriterFactory>()

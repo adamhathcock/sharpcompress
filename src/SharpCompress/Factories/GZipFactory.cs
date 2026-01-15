@@ -157,7 +157,7 @@ public class GZipFactory
         GZipReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public IAsyncReader OpenReaderAsync(
+    public IAsyncReader OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default

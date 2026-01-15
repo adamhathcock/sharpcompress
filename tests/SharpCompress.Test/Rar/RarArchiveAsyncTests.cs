@@ -151,7 +151,9 @@ public class RarArchiveAsyncTests : ArchiveTests
     public async ValueTask Rar_Jpg_ArchiveStreamRead_Async()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
-        using (var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true }))
+        using (
+            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+        )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
@@ -588,7 +590,9 @@ public class RarArchiveAsyncTests : ArchiveTests
 
     private void DoRar_IsFirstVolume_False(string notFirstFilename)
     {
-        using var archive = RarArchive.OpenArchive(Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename));
+        using var archive = RarArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, notFirstFilename)
+        );
         Assert.True(archive.IsMultipartVolume());
         Assert.False(archive.IsFirstVolume());
     }
@@ -697,7 +701,10 @@ public class RarArchiveAsyncTests : ArchiveTests
     )
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
-        using var archive = ArchiveFactory.OpenArchive(paths.Select(a => new FileInfo(a)), readerOptions);
+        using var archive = ArchiveFactory.OpenArchive(
+            paths.Select(a => new FileInfo(a)),
+            readerOptions
+        );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(
@@ -714,7 +721,10 @@ public class RarArchiveAsyncTests : ArchiveTests
     )
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
-        using var archive = ArchiveFactory.OpenArchive(paths.Select(f => new FileInfo(f)), readerOptions);
+        using var archive = ArchiveFactory.OpenArchive(
+            paths.Select(f => new FileInfo(f)),
+            readerOptions
+        );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
             await entry.WriteToDirectoryAsync(
