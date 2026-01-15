@@ -29,7 +29,8 @@ internal class DirectoryEndHeader : ZipHeader
         DirectorySize = await reader.ReadUInt32Async();
         DirectoryStartOffsetRelativeToDisk = await reader.ReadUInt32Async();
         CommentLength = await reader.ReadUInt16Async();
-        Comment = await reader.ReadBytesAsync(CommentLength);
+        Comment = new byte[CommentLength];
+        await reader.ReadBytesAsync(Comment, 0, CommentLength);
     }
 
     public ushort VolumeNumber { get; private set; }

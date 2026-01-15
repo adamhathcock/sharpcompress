@@ -87,10 +87,10 @@ internal class RarStream : Stream, IStreamStack
 #endif
                 ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
+                readStream.Dispose();
             }
             isDisposed = true;
             base.Dispose(disposing);
-            readStream.Dispose();
         }
     }
 

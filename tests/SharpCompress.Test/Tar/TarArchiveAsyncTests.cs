@@ -35,7 +35,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         using (
             var writer = WriterFactory.OpenAsyncWriter(
-                stream,
+                new AsyncOnlyStream(stream),
                 ArchiveType.Tar,
                 CompressionType.None
             )
@@ -92,7 +92,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         using (
             var writer = WriterFactory.OpenAsyncWriter(
-                stream,
+                new AsyncOnlyStream(stream),
                 ArchiveType.Tar,
                 CompressionType.None
             )
@@ -199,7 +199,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
-            await using (var tr = ReaderFactory.OpenAsyncReader(inputMemory, tropt))
+            await using (
+                var tr = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(inputMemory), tropt)
+            )
             {
                 while (await tr.MoveToNextEntryAsync())
                 {

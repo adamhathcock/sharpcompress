@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.SevenZip;
@@ -16,9 +17,11 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.OpenArchive(stream);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(stream)
+        );
 
-        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
             var targetPath = Path.Combine(SCRATCH_FILES_PATH, entry.Key!);
             var targetDir = Path.GetDirectoryName(targetPath);
@@ -41,9 +44,11 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA2.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.OpenArchive(stream);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(stream)
+        );
 
-        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
             var targetPath = Path.Combine(SCRATCH_FILES_PATH, entry.Key!);
             var targetDir = Path.GetDirectoryName(targetPath);
@@ -66,9 +71,11 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.OpenArchive(stream);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(stream)
+        );
 
-        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
             var targetPath = Path.Combine(SCRATCH_FILES_PATH, entry.Key!);
             var targetDir = Path.GetDirectoryName(targetPath);
@@ -91,9 +98,11 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.BZip2.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.OpenArchive(stream);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(stream)
+        );
 
-        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
             var targetPath = Path.Combine(SCRATCH_FILES_PATH, entry.Key!);
             var targetDir = Path.GetDirectoryName(targetPath);
@@ -116,9 +125,11 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.PPMd.7z");
         using var stream = File.OpenRead(testArchive);
-        using var archive = ArchiveFactory.OpenArchive(stream);
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(stream)
+        );
 
-        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
             var targetPath = Path.Combine(SCRATCH_FILES_PATH, entry.Key!);
             var targetDir = Path.GetDirectoryName(targetPath);

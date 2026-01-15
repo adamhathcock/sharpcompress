@@ -199,7 +199,10 @@ public class Zip64AsyncTests : WriterTests
         ZipEntry? prev = null;
         using (var fs = File.OpenRead(filename))
         {
-            var rd = ReaderFactory.OpenAsyncReader(fs, new ReaderOptions { LookForHeader = false });
+            var rd = ReaderFactory.OpenAsyncReader(
+                new AsyncOnlyStream(fs),
+                new ReaderOptions { LookForHeader = false }
+            );
             await using (rd)
             {
                 while (await rd.MoveToNextEntryAsync())

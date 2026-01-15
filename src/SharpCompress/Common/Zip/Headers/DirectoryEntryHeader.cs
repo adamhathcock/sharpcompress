@@ -53,10 +53,12 @@ internal class DirectoryEntryHeader : ZipFileEntry
         InternalFileAttributes = await reader.ReadUInt16Async();
         ExternalFileAttributes = await reader.ReadUInt32Async();
         RelativeOffsetOfEntryHeader = await reader.ReadUInt32Async();
-
-        var name = await reader.ReadBytesAsync(nameLength);
-        var extra = await reader.ReadBytesAsync(extraLength);
-        var comment = await reader.ReadBytesAsync(commentLength);
+        var name = new byte[nameLength];
+        var extra = new byte[extraLength];
+        var comment = new byte[commentLength];
+        await reader.ReadBytesAsync(name, 0, nameLength);
+        await reader.ReadBytesAsync(extra, 0, extraLength);
+        await reader.ReadBytesAsync(comment, 0, commentLength);
 
         ProcessReadData(name, extra, comment);
     }
