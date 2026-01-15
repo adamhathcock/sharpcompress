@@ -776,11 +776,16 @@ internal sealed class InflateBlocks
             // update check information
             if (checkfn != null)
             {
-                _codec._adler32 = check = Adler32.Calculate(check, window.Memory.Span.Slice(readAt, nBytes));
+                _codec._adler32 = check = Adler32.Calculate(
+                    check,
+                    window.Memory.Span.Slice(readAt, nBytes)
+                );
             }
 
             // copy as far as end of window
-            window.Memory.Span.Slice(readAt, nBytes).CopyTo(_codec.OutputBuffer.AsSpan(_codec.NextOut));
+            window
+                .Memory.Span.Slice(readAt, nBytes)
+                .CopyTo(_codec.OutputBuffer.AsSpan(_codec.NextOut));
             _codec.NextOut += nBytes;
             readAt += nBytes;
 
@@ -1469,7 +1474,8 @@ internal sealed class InflateCodes
                                 }
                                 else
                                 {
-                                    s.window.Memory.Span.Slice(r, 2).CopyTo(s.window.Memory.Span.Slice(q));
+                                    s.window.Memory.Span.Slice(r, 2)
+                                        .CopyTo(s.window.Memory.Span.Slice(q));
                                     q += 2;
                                     r += 2;
                                     c -= 2;
@@ -1497,7 +1503,8 @@ internal sealed class InflateCodes
                                     }
                                     else
                                     {
-                                        s.window.Memory.Span.Slice(r, e).CopyTo(s.window.Memory.Span.Slice(q));
+                                        s.window.Memory.Span.Slice(r, e)
+                                            .CopyTo(s.window.Memory.Span.Slice(q));
                                         q += e;
                                         r += e;
                                         e = 0;
@@ -1516,7 +1523,8 @@ internal sealed class InflateCodes
                             }
                             else
                             {
-                                s.window.Memory.Span.Slice(r, c).CopyTo(s.window.Memory.Span.Slice(q));
+                                s.window.Memory.Span.Slice(r, c)
+                                    .CopyTo(s.window.Memory.Span.Slice(q));
                                 q += c;
                                 r += c;
                                 c = 0;

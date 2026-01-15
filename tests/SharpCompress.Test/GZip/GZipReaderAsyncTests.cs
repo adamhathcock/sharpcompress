@@ -70,7 +70,13 @@ public class GZipReaderAsyncTests : ReaderTests
             bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
-        await using (var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(testStream), options, default))
+        await using (
+            var reader = ReaderFactory.OpenAsyncReader(
+                new AsyncOnlyStream(testStream),
+                options,
+                default
+            )
+        )
         {
             await UseReaderAsync(reader, expectedCompression);
             protectedStream.ThrowOnDispose = false;

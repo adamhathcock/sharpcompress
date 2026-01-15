@@ -38,7 +38,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     private int _cacheOffset;
     private int _cacheLength;
-    private readonly byte[] _cache =  ArrayPool<byte>.Shared.Rent(32 << 10);
+    private readonly byte[] _cache = ArrayPool<byte>.Shared.Rent(32 << 10);
     private long origin;
 
     private long BytesLeftToRead { get; set; }

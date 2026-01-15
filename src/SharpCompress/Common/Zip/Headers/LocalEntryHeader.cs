@@ -39,8 +39,8 @@ internal class LocalEntryHeader(IArchiveEncoding archiveEncoding)
         var extraLength = await reader.ReadUInt16Async();
         var name = new byte[nameLength];
         var extra = new byte[extraLength];
-            await reader.ReadBytesAsync(name,0 ,nameLength);
-    await reader.ReadBytesAsync(extra, 0, extraLength);
+        await reader.ReadBytesAsync(name, 0, nameLength);
+        await reader.ReadBytesAsync(extra, 0, extraLength);
 
         ProcessReadData(name, extra);
     }

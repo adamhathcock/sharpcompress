@@ -126,7 +126,6 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private FileHeader fileHeader;
 
-
     private void Init()
     {
         if (this.window is null)

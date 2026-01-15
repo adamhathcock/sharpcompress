@@ -22,7 +22,8 @@ namespace SharpCompress.Test.Arj
         }
 
         [Fact]
-        public async ValueTask Arj_Uncompressed_Read_Async() => await ReadAsync("Arj.store.arj", CompressionType.None);
+        public async ValueTask Arj_Uncompressed_Read_Async() =>
+            await ReadAsync("Arj.store.arj", CompressionType.None);
 
         [Fact]
         public async ValueTask Arj_Method1_Read_Async() => await ReadAsync("Arj.method1.arj");
@@ -39,7 +40,9 @@ namespace SharpCompress.Test.Arj
         [Fact]
         public async ValueTask Arj_Encrypted_Read_Async()
         {
-            var exception = await Assert.ThrowsAsync<CryptographicException>(() => ReadAsync("Arj.encrypted.arj"));
+            var exception = await Assert.ThrowsAsync<CryptographicException>(() =>
+                ReadAsync("Arj.encrypted.arj")
+            );
         }
 
         [Fact]
@@ -55,7 +58,7 @@ namespace SharpCompress.Test.Arj
                         "Arj.store.split.a04",
                         "Arj.store.split.a05",
                     ],
-                    streams => ReaderFactory.OpenAsync(new AsyncOnlyStream(streams.First()))
+                    streams => ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(streams.First()))
                 )
             );
         }
@@ -64,7 +67,10 @@ namespace SharpCompress.Test.Arj
         [InlineData("Arj.method1.largefile.arj", CompressionType.ArjLZ77)]
         [InlineData("Arj.method2.largefile.arj", CompressionType.ArjLZ77)]
         [InlineData("Arj.method3.largefile.arj", CompressionType.ArjLZ77)]
-        public async ValueTask Arj_LargeFile_ShouldThrow_Async(string fileName, CompressionType compressionType)
+        public async ValueTask Arj_LargeFile_ShouldThrow_Async(
+            string fileName,
+            CompressionType compressionType
+        )
         {
             var exception = await Assert.ThrowsAsync<NotSupportedException>(() =>
                 ReadForBufferBoundaryCheckAsync(fileName, compressionType)
@@ -74,16 +80,22 @@ namespace SharpCompress.Test.Arj
         [Theory]
         [InlineData("Arj.store.largefile.arj", CompressionType.None)]
         [InlineData("Arj.method4.largefile.arj", CompressionType.ArjLZ77)]
-        public async ValueTask Arj_LargeFileTest_Read_Async(string fileName, CompressionType compressionType)
+        public async ValueTask Arj_LargeFileTest_Read_Async(
+            string fileName,
+            CompressionType compressionType
+        )
         {
             await ReadForBufferBoundaryCheckAsync(fileName, compressionType);
         }
 
-        private async Task ReadAsync(string testArchive, CompressionType? expectedCompression = null)
+        private async Task ReadAsync(
+            string testArchive,
+            CompressionType? expectedCompression = null
+        )
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsync(
+            await using var reader = ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions()
             );
@@ -104,11 +116,14 @@ namespace SharpCompress.Test.Arj
             VerifyFiles();
         }
 
-        private async Task ReadForBufferBoundaryCheckAsync(string testArchive, CompressionType expectedCompression)
+        private async Task ReadForBufferBoundaryCheckAsync(
+            string testArchive,
+            CompressionType expectedCompression
+        )
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsync(
+            await using var reader = ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions() { LookForHeader = false }
             );
@@ -126,9 +141,14 @@ namespace SharpCompress.Test.Arj
             VerifyFiles();
         }
 
-        private async Task DoMultiReaderAsync(string[] archiveNames, Func<IEnumerable<Stream>, IAsyncReader> openReader)
+        private async Task DoMultiReaderAsync(
+            string[] archiveNames,
+            Func<IEnumerable<Stream>, IAsyncReader> openReader
+        )
         {
-            var testArchives = archiveNames.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).ToList();
+            var testArchives = archiveNames
+                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .ToList();
             var streams = testArchives.Select(File.OpenRead).ToList();
             try
             {

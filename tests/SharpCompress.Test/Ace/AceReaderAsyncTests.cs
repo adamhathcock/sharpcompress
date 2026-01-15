@@ -36,7 +36,10 @@ namespace SharpCompress.Test.Ace
         [InlineData("Ace.method1-solid.ace", CompressionType.AceLZ77)]
         [InlineData("Ace.method2.ace", CompressionType.AceLZ77)]
         [InlineData("Ace.method2-solid.ace", CompressionType.AceLZ77)]
-        public async ValueTask Ace_Unsupported_ShouldThrow_Async(string fileName, CompressionType compressionType)
+        public async ValueTask Ace_Unsupported_ShouldThrow_Async(
+            string fileName,
+            CompressionType compressionType
+        )
         {
             var exception = await Assert.ThrowsAsync<NotSupportedException>(() =>
                 ReadAsync(fileName, compressionType)
@@ -45,7 +48,10 @@ namespace SharpCompress.Test.Ace
 
         [Theory]
         [InlineData("Ace.store.largefile.ace", CompressionType.None)]
-        public async ValueTask Ace_LargeFileTest_Read_Async(string fileName, CompressionType compressionType)
+        public async ValueTask Ace_LargeFileTest_Read_Async(
+            string fileName,
+            CompressionType compressionType
+        )
         {
             await ReadForBufferBoundaryCheckAsync(fileName, compressionType);
         }
@@ -62,7 +68,7 @@ namespace SharpCompress.Test.Ace
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsync(
+            await using var reader = ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions()
             );
@@ -80,11 +86,14 @@ namespace SharpCompress.Test.Ace
             VerifyFiles();
         }
 
-        private async Task ReadForBufferBoundaryCheckAsync(string testArchive, CompressionType expectedCompression)
+        private async Task ReadForBufferBoundaryCheckAsync(
+            string testArchive,
+            CompressionType expectedCompression
+        )
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsync(
+            await using var reader = ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions() { LookForHeader = false }
             );
@@ -104,11 +113,15 @@ namespace SharpCompress.Test.Ace
 
         private async Task DoMultiReaderAsync(string[] archiveNames)
         {
-            var testArchives = archiveNames.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).ToList();
+            var testArchives = archiveNames
+                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .ToList();
             var streams = testArchives.Select(File.OpenRead).ToList();
             try
             {
-                await using var reader = ReaderFactory.OpenAsync(new AsyncOnlyStream(streams.First()));
+                await using var reader = ReaderFactory.OpenAsyncReader(
+                    new AsyncOnlyStream(streams.First())
+                );
                 while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)

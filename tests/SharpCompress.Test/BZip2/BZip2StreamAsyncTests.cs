@@ -33,7 +33,7 @@ public class BZip2StreamAsyncTests
         {
             using (
                 var bzip2Stream = new BZip2Stream(
-                  new AsyncOnlyStream(memoryStream),
+                    new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Compress,
                     false
                 )

@@ -156,7 +156,6 @@ internal sealed class SeekableZipHeaderFactory : ZipHeaderFactory
         }
     }
 
-
     private static bool IsMatch(Span<byte> haystack, int position, byte[] needle)
     {
         for (var i = 0; i < needle.Length; i++)

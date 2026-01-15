@@ -56,7 +56,7 @@ internal class DirectoryEntryHeader : ZipFileEntry
         var name = new byte[nameLength];
         var extra = new byte[extraLength];
         var comment = new byte[commentLength];
-        await reader.ReadBytesAsync(name,0 ,nameLength);
+        await reader.ReadBytesAsync(name, 0, nameLength);
         await reader.ReadBytesAsync(extra, 0, extraLength);
         await reader.ReadBytesAsync(comment, 0, commentLength);
 

@@ -51,14 +51,19 @@ namespace SharpCompress.Common
             return BinaryPrimitives.ReadUInt64LittleEndian(_buffer);
         }
 
-        public async ValueTask ReadBytesAsync(byte[] bytes, int offset, int count, CancellationToken ct = default)
+        public async ValueTask ReadBytesAsync(
+            byte[] bytes,
+            int offset,
+            int count,
+            CancellationToken ct = default
+        )
         {
             await _stream.ReadExactAsync(bytes, offset, count, ct).ConfigureAwait(false);
         }
 
         public async ValueTask SkipAsync(int count, CancellationToken ct = default)
         {
-            await _stream.SkipAsync( count, ct).ConfigureAwait(false);
+            await _stream.SkipAsync(count, ct).ConfigureAwait(false);
         }
 
         public void Dispose()

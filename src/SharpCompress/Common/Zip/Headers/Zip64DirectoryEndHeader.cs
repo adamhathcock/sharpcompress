@@ -39,11 +39,10 @@ internal class Zip64DirectoryEndHeader : ZipHeader
         DirectorySize = (long)await reader.ReadUInt64Async();
         DirectoryStartOffsetRelativeToDisk = (long)await reader.ReadUInt64Async();
         var size = (int)(
-            SizeOfDirectoryEndRecord
-            - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
+            SizeOfDirectoryEndRecord - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
         );
         DataSector = new byte[size];
-            await reader.ReadBytesAsync(DataSector, 0, size);
+        await reader.ReadBytesAsync(DataSector, 0, size);
     }
 
     private const int SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS = 44;
