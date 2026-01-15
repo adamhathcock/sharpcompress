@@ -24,7 +24,7 @@ Choose the right API based on your use case:
 // - You need random access to entries
 // - Stream is seekable (file, MemoryStream)
 
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     // Random access - all entries available
     var specific = archive.Entries.FirstOrDefault(e => e.Key == "file.txt");
@@ -51,7 +51,7 @@ using (var archive = ZipArchive.Open("archive.zip"))
 // - Forward-only processing is acceptable
 
 using (var stream = File.OpenRead("large.zip"))
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     while (reader.MoveToNextEntry())
     {
@@ -129,7 +129,7 @@ For processing archives from downloads or pipes:
 ```csharp
 // Download stream (non-seekable)
 using (var httpStream = await httpClient.GetStreamAsync(url))
-using (var reader = ReaderFactory.Open(httpStream))
+using (var reader = ReaderFactory.OpenReader(httpStream))
 {
     // Process entries as they arrive
     while (reader.MoveToNextEntry())
@@ -159,14 +159,14 @@ Choose based on your constraints:
 ```csharp
 // Download then extract (requires disk space)
 var archivePath = await DownloadFile(url, @"C:\temp\archive.zip");
-using (var archive = ZipArchive.Open(archivePath))
+using (var archive = ZipArchive.OpenArchive(archivePath))
 {
     archive.WriteToDirectory(@"C:\output");
 }
 
 // Stream during download (on-the-fly extraction)
 using (var httpStream = await httpClient.GetStreamAsync(url))
-using (var reader = ReaderFactory.Open(httpStream))
+using (var reader = ReaderFactory.OpenReader(httpStream))
 {
     while (reader.MoveToNextEntry())
     {
@@ -198,7 +198,7 @@ Extracting File3 requires decompressing File1 and File2 first.
 
 **Random Extraction (Slow):**
 ```csharp
-using (var archive = RarArchive.Open("solid.rar"))
+using (var archive = RarArchive.OpenArchive("solid.rar"))
 {
     foreach (var entry in archive.Entries)
     {
@@ -210,7 +210,7 @@ using (var archive = RarArchive.Open("solid.rar"))
 
 **Sequential Extraction (Fast):**
 ```csharp
-using (var archive = RarArchive.Open("solid.rar"))
+using (var archive = RarArchive.OpenArchive("solid.rar"))
 {
     // Method 1: Use WriteToDirectory (recommended)
     archive.WriteToDirectory(@"C:\output", new ExtractionOptions
@@ -256,7 +256,7 @@ using (var archive = RarArchive.Open("solid.rar"))
 // Level 9 = Slowest, best compression
 
 // Write with different compression levels
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.AddAllFromDirectory(@"D:\data");
     
@@ -293,7 +293,7 @@ using (var archive = ZipArchive.Create())
 // Smaller block size = lower memory, faster
 // Larger block size = better compression, slower
 
-using (var archive = TarArchive.Create())
+using (var archive = TarArchive.CreateArchive())
 {
     archive.AddAllFromDirectory(@"D:\data");
     
@@ -313,7 +313,7 @@ LZMA compression is very powerful but memory-intensive:
 // - Better compression: larger dictionary
 
 // Preset via CompressionType
-using (var archive = TarArchive.Create())
+using (var archive = TarArchive.CreateArchive())
 {
     archive.AddAllFromDirectory(@"D:\data");
     archive.SaveTo("archive.tar.xz", CompressionType.LZMA);  // Default settings
@@ -333,7 +333,7 @@ Async is beneficial when:
 
 ```csharp
 // Async extraction (non-blocking)
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     await archive.WriteToDirectoryAsync(
         @"C:\output",
@@ -353,7 +353,7 @@ Async doesn't improve performance for:
 
 ```csharp
 // Sync extraction (simpler, same performance on fast I/O)
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     archive.WriteToDirectory(
         @"C:\output",
@@ -373,7 +373,7 @@ cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 try
 {
-    using (var archive = ZipArchive.Open("archive.zip"))
+    using (var archive = ZipArchive.OpenArchive("archive.zip"))
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",
@@ -408,14 +408,14 @@ catch (OperationCanceledException)
 // ✗ Slow - opens each archive separately
 foreach (var file in files)
 {
-    using (var archive = ZipArchive.Open("archive.zip"))
+    using (var archive = ZipArchive.OpenArchive("archive.zip"))
     {
         archive.WriteToDirectory(@"C:\output");
     }
 }
 
 // ✓ Better - process multiple entries at once
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -425,7 +425,7 @@ using (var archive = ZipArchive.Open("archive.zip"))
 
 ```csharp
 var sw = Stopwatch.StartNew();
-using (var archive = ZipArchive.Open("large.zip"))
+using (var archive = ZipArchive.OpenArchive("large.zip"))
 {
     archive.WriteToDirectory(@"C:\output");
 }

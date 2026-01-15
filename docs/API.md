@@ -8,17 +8,17 @@ Quick reference for commonly used SharpCompress APIs.
 
 ```csharp
 // Auto-detect format
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     // Works with Zip, Tar, GZip, Rar, 7Zip, etc.
 }
 
 // Specific format - Archive API
-using (var archive = ZipArchive.Open("file.zip"))
-using (var archive = TarArchive.Open("file.tar"))
-using (var archive = RarArchive.Open("file.rar"))
-using (var archive = SevenZipArchive.Open("file.7z"))
-using (var archive = GZipArchive.Open("file.gz"))
+using (var archive = ZipArchive.OpenArchive("file.zip"))
+using (var archive = TarArchive.OpenArchive("file.tar"))
+using (var archive = RarArchive.OpenArchive("file.rar"))
+using (var archive = SevenZipArchive.OpenArchive("file.7z"))
+using (var archive = GZipArchive.OpenArchive("file.gz"))
 
 // With options
 var options = new ReaderOptions
@@ -27,14 +27,14 @@ var options = new ReaderOptions
     LeaveStreamOpen = true,
     ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
 };
-using (var archive = ZipArchive.Open("encrypted.zip", options))
+using (var archive = ZipArchive.OpenArchive("encrypted.zip", options))
 ```
 
 ### Creating Archives
 
 ```csharp
 // Writer Factory
-using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate))
 {
     // Write entries
 }
@@ -63,7 +63,7 @@ using (var archive = ZipArchive.CreateArchive())
 ### Reading/Extracting
 
 ```csharp
-using (var archive = ZipArchive.Open("file.zip"))
+using (var archive = ZipArchive.OpenArchive("file.zip"))
 {
     // Get all entries
     IEnumerable<IArchiveEntry> entries = archive.Entries;
@@ -151,7 +151,7 @@ using (var archive = ZipArchive.CreateArchive())
 
 ```csharp
 using (var stream = File.OpenRead("file.zip"))
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     while (reader.MoveToNextEntry())
     {
@@ -201,7 +201,7 @@ using (var reader = await ReaderFactory.OpenAsyncReader(stream))
 
 ```csharp
 using (var stream = File.Create("output.zip"))
-using (var writer = WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate))
+using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate))
 {
     // Write single file
     using (var fileStream = File.OpenRead("source.txt"))
@@ -239,7 +239,7 @@ var options = new ReaderOptions
         Default = Encoding.GetEncoding(932)
     }
 };
-using (var archive = ZipArchive.Open("file.zip", options))
+using (var archive = ZipArchive.OpenArchive("file.zip", options))
 {
     // ...
 }
@@ -290,8 +290,8 @@ ArchiveType.Ace
 
 // For Tar archives with compression
 // Use WriterFactory to create compressed tar archives
-using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.GZip))  // Tar.GZip
-using (var writer = WriterFactory.Open(stream, ArchiveType.Tar, CompressionType.BZip2)) // Tar.BZip2
+using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.GZip))  // Tar.GZip
+using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.BZip2)) // Tar.BZip2
 ```
 
 ### Archive Types
@@ -349,7 +349,7 @@ var progress = new Progress<ProgressReport>(report =>
 });
 
 var options = new ReaderOptions { Progress = progress };
-using (var archive = ZipArchive.Open("archive.zip", options))
+using (var archive = ZipArchive.OpenArchive("archive.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -425,7 +425,7 @@ using (var archive = ZipArchive.CreateArchive())
 ### Extract Specific Files
 
 ```csharp
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     var filesToExtract = new[] { "file1.txt", "file2.txt" };
     
@@ -439,7 +439,7 @@ using (var archive = ZipArchive.Open("archive.zip"))
 ### List Archive Contents
 
 ```csharp
-using (var archive = ZipArchive.Open("archive.zip"))
+using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     foreach (var entry in archive.Entries)
     {
@@ -459,7 +459,7 @@ using (var archive = ZipArchive.Open("archive.zip"))
 
 ```csharp
 var stream = File.OpenRead("archive.zip");
-var archive = ZipArchive.Open(stream);
+var archive = ZipArchive.OpenArchive(stream);
 archive.WriteToDirectory(@"C:\output");
 // stream not disposed - leaked resource
 ```
@@ -468,7 +468,7 @@ archive.WriteToDirectory(@"C:\output");
 
 ```csharp
 using (var stream = File.OpenRead("archive.zip"))
-using (var archive = ZipArchive.Open(stream))
+using (var archive = ZipArchive.OpenArchive(stream))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -479,7 +479,7 @@ using (var archive = ZipArchive.Open(stream))
 
 ```csharp
 // Loading entire archive then iterating
-using (var archive = ZipArchive.Open("large.zip"))
+using (var archive = ZipArchive.OpenArchive("large.zip"))
 {
     var entries = archive.Entries.ToList();  // Loads all in memory
     foreach (var e in entries)
@@ -494,7 +494,7 @@ using (var archive = ZipArchive.Open("large.zip"))
 ```csharp
 // Streaming iteration
 using (var stream = File.OpenRead("large.zip"))
-using (var reader = ReaderFactory.Open(stream))
+using (var reader = ReaderFactory.OpenReader(stream))
 {
     while (reader.MoveToNextEntry())
     {
