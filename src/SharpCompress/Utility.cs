@@ -189,7 +189,7 @@ internal static class Utility
             }
         }
 
-#if NET60_OR_GREATER
+#if NET6_0_OR_GREATER
         public bool ReadFully(byte[] buffer)
         {
             try
