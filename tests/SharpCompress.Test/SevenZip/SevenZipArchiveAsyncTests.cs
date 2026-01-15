@@ -11,7 +11,7 @@ namespace SharpCompress.Test.SevenZip;
 #if !NETFRAMEWORK
 public class SevenZipArchiveAsyncTests : ArchiveTests
 {
-    //[Fact]
+    [Fact]
     public async Task SevenZipArchive_LZMA_AsyncStreamExtraction()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z");
