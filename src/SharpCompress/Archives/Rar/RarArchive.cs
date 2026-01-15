@@ -101,12 +101,12 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
                 volume.Stream.Position = 0;
                 return volume.Stream;
             });
-            return (RarReader)RarReader.Open(streams, ReaderOptions);
+            return (RarReader)RarReader.OpenReader(streams, ReaderOptions);
         }
 
         var stream = Volumes.First().Stream;
         stream.Position = 0;
-        return (RarReader)RarReader.Open(stream, ReaderOptions);
+        return (RarReader)RarReader.OpenReader(stream, ReaderOptions);
     }
 
     public override bool IsSolid => Volumes.First().IsSolidArchive;

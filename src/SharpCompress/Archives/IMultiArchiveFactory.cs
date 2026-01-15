@@ -26,21 +26,24 @@ public interface IMultiArchiveFactory : IFactory
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions">reading options.</param>
-    IArchive Open(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
+    IArchive OpenArchive(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
 
     /// <summary>
     /// Opens a multi-part archive from streams asynchronously.
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions">reading options.</param>
-    IAsyncArchive OpenAsync(IReadOnlyList<Stream> streams, ReaderOptions? readerOptions = null);
+    IAsyncArchive OpenAsyncArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null
+    );
 
     /// <summary>
     /// Constructor with IEnumerable Stream objects, multi and split support.
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions">reading options.</param>
-    IArchive Open(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null);
+    IArchive OpenArchive(IReadOnlyList<FileInfo> fileInfos, ReaderOptions? readerOptions = null);
 
     /// <summary>
     /// Opens a multi-part archive from files asynchronously.
@@ -48,7 +51,7 @@ public interface IMultiArchiveFactory : IFactory
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions">reading options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    IAsyncArchive OpenAsync(
+    IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

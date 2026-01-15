@@ -10,23 +10,23 @@ public interface IMultiArchiveOpenable<TSync, TASync>
     where TSync : IArchive
     where TASync : IAsyncArchive
 {
-    public static abstract TSync Open(
+    public static abstract TSync OpenArchive(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     );
 
-    public static abstract TSync Open(
+    public static abstract TSync OpenArchive(
         IEnumerable<Stream> streams,
         ReaderOptions? readerOptions = null
     );
 
-    public static abstract TASync OpenAsync(
+    public static abstract TASync OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     );
 
-    public static abstract TASync OpenAsync(
+    public static abstract TASync OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

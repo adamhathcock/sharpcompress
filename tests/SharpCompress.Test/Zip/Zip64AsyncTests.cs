@@ -177,7 +177,7 @@ public class Zip64AsyncTests : WriterTests
 
         using var zip = File.OpenWrite(filename);
         using var st = forwardOnly ? (Stream)new ForwardOnlyStream(zip) : zip;
-        using var zipWriter = (ZipWriter)WriterFactory.Open(st, ArchiveType.Zip, opts);
+        using var zipWriter = (ZipWriter)WriterFactory.OpenWriter(st, ArchiveType.Zip, opts);
         for (var i = 0; i < files; i++)
         {
             using var str = zipWriter.WriteToStream(i.ToString(), eo);
@@ -236,7 +236,7 @@ public class Zip64AsyncTests : WriterTests
 
     public Tuple<long, long> ReadArchive(string filename)
     {
-        using var archive = ArchiveFactory.Open(filename);
+        using var archive = ArchiveFactory.OpenArchive(filename);
         return new Tuple<long, long>(
             archive.Entries.Count(),
             archive.Entries.Select(x => x.Size).Sum()

@@ -21,7 +21,7 @@ public class ZipWriterTests : WriterTests
             ArchiveEncoding = new ArchiveEncoding { Default = new UTF8Encoding(false) },
         };
 
-        using (var writer = WriterFactory.Open(memoryStream, ArchiveType.Zip, options))
+        using (var writer = WriterFactory.OpenWriter(memoryStream, ArchiveType.Zip, options))
         {
             writer.Write("test-folder/zero-byte-file.txt", Stream.Null);
         }
@@ -39,7 +39,7 @@ public class ZipWriterTests : WriterTests
             ArchiveEncoding = new ArchiveEncoding { Default = new UTF8Encoding(false) },
         };
 
-        using (var writer = WriterFactory.Open(memoryStream, ArchiveType.Zip, options))
+        using (var writer = WriterFactory.OpenWriter(memoryStream, ArchiveType.Zip, options))
         {
             writer.Write("test-empty-folder/", Stream.Null);
         }

@@ -17,7 +17,7 @@ public class GZipArchiveTests : ArchiveTests
     public void GZip_Archive_Generic()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-        using (var archive = ArchiveFactory.Open(stream))
+        using (var archive = ArchiveFactory.OpenArchive(stream))
         {
             var entry = archive.Entries.First();
             entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
@@ -39,7 +39,7 @@ public class GZipArchiveTests : ArchiveTests
     public void GZip_Archive()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-        using (var archive = GZipArchive.Open(stream))
+        using (var archive = GZipArchive.OpenArchive(stream))
         {
             var entry = archive.Entries.First();
             entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
@@ -62,7 +62,7 @@ public class GZipArchiveTests : ArchiveTests
     {
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(stream);
+        using var archive = GZipArchive.OpenArchive(stream);
         Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
         archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
     }
@@ -76,7 +76,7 @@ public class GZipArchiveTests : ArchiveTests
             fileStream.CopyTo(inputStream);
             inputStream.Position = 0;
         }
-        using var archive = GZipArchive.Open(inputStream);
+        using var archive = GZipArchive.OpenArchive(inputStream);
         var archiveEntry = archive.Entries.First();
 
         MemoryStream tarStream;
@@ -110,7 +110,7 @@ public class GZipArchiveTests : ArchiveTests
     public void TestGzCrcWithMostSignificantBitNotNegative()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(stream);
+        using var archive = GZipArchive.OpenArchive(stream);
         //process all entries in solid archive until the one we want to test
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
@@ -122,7 +122,7 @@ public class GZipArchiveTests : ArchiveTests
     public void TestGzArchiveTypeGzip()
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = GZipArchive.Open(stream);
+        using var archive = GZipArchive.OpenArchive(stream);
         Assert.Equal(archive.Type, ArchiveType.GZip);
     }
 
@@ -137,7 +137,7 @@ public class GZipArchiveTests : ArchiveTests
 
         // Create a non-seekable wrapper around the MemoryStream
         using var nonSeekableStream = new NonSeekableStream(buffer);
-        using var reader = SharpCompress.Readers.GZip.GZipReader.Open(nonSeekableStream);
+        using var reader = SharpCompress.Readers.GZip.GZipReader.OpenReader(nonSeekableStream);
 
         // Verify we can move to the first entry and read it without exceptions
         Assert.True(reader.MoveToNextEntry());

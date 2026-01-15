@@ -70,7 +70,7 @@ public abstract class ReaderTests : TestBase
             bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
-        using (var reader = ReaderFactory.Open(testStream, options))
+        using (var reader = ReaderFactory.OpenReader(testStream, options))
         {
             useReader(reader);
             protectedStream.ThrowOnDispose = false;
@@ -146,7 +146,7 @@ public abstract class ReaderTests : TestBase
         );
         using var testStream = new TestStream(protectedStream);
         await using (
-            var reader = ReaderFactory.OpenAsync(
+            var reader = ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(testStream),
                 options,
                 cancellationToken
@@ -190,7 +190,10 @@ public abstract class ReaderTests : TestBase
     protected void ReadForBufferBoundaryCheck(string fileName, CompressionType compressionType)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
-        using var reader = ReaderFactory.Open(stream, new ReaderOptions { LookForHeader = true });
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { LookForHeader = true }
+        );
 
         while (reader.MoveToNextEntry())
         {
@@ -224,7 +227,7 @@ public abstract class ReaderTests : TestBase
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var file = File.OpenRead(testArchive);
         using var forward = new ForwardOnlyStream(file);
-        using var reader = ReaderFactory.Open(forward, options);
+        using var reader = ReaderFactory.OpenReader(forward, options);
         while (reader.MoveToNextEntry())
         {
             Assert.Equal(expectedCompression, reader.Entry.CompressionType);

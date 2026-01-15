@@ -125,7 +125,7 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
             CompressionLevel = compressionLevel,
         };
 
-        using (var writer = WriterFactory.Open(zipStream, ArchiveType.Zip, writerOptions))
+        using (var writer = WriterFactory.OpenWriter(zipStream, ArchiveType.Zip, writerOptions))
         {
             writer.Write(
                 $"{compressionType}_level_{compressionLevel}_{sizeMb}MiB.txt",
@@ -146,7 +146,7 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
 
         // Verify the archive
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
         using var entryStream = entry.OpenEntryStream();
@@ -201,7 +201,7 @@ public class ZipTypesLevelsWithCrcRatioTests : ArchiveTests
 
         // Verify the archive
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
         using var entryStream = entry.OpenEntryStream();

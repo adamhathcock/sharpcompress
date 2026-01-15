@@ -138,13 +138,13 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return GZipReader.Open(stream);
+        return GZipReader.OpenReader(stream);
     }
 
     protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)GZipReader.Open(stream));
+        return new((IAsyncReader)GZipReader.OpenReader(stream));
     }
 }

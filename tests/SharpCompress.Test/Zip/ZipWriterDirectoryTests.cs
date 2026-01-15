@@ -22,7 +22,7 @@ public class ZipWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = ZipArchive.Open(memoryStream);
+        using var archive = ZipArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.ToList();
 
         Assert.Single(entries);
@@ -42,7 +42,7 @@ public class ZipWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = ZipArchive.Open(memoryStream);
+        using var archive = ZipArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.ToList();
 
         Assert.Single(entries);
@@ -62,7 +62,7 @@ public class ZipWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = ZipArchive.Open(memoryStream);
+        using var archive = ZipArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.ToList();
 
         Assert.Single(entries);
@@ -82,7 +82,7 @@ public class ZipWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = ZipArchive.Open(memoryStream);
+        using var archive = ZipArchive.OpenArchive(memoryStream);
 
         Assert.Empty(archive.Entries);
     }
@@ -101,7 +101,7 @@ public class ZipWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = ZipArchive.Open(memoryStream);
+        using var archive = ZipArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.OrderBy(e => e.Key).ToList();
 
         Assert.Equal(3, entries.Count);
@@ -132,7 +132,7 @@ public class ZipWriterDirectoryTests : TestBase
         }
 
         memoryStream.Position = 0;
-        using var archive = ZipArchive.Open(memoryStream);
+        using var archive = ZipArchive.OpenArchive(memoryStream);
         var entries = archive.Entries.OrderBy(e => e.Key).ToList();
 
         Assert.Equal(3, entries.Count);

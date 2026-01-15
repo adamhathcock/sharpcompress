@@ -29,7 +29,7 @@ public class WriterTests : TestBase
 
             writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var writer = WriterFactory.Open(stream, _type, writerOptions);
+            using var writer = WriterFactory.OpenWriter(stream, _type, writerOptions);
             writer.WriteAll(ORIGINAL_FILES_PATH, "*", SearchOption.AllDirectories);
         }
         CompareArchivesByPath(
@@ -43,7 +43,7 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var reader = ReaderFactory.Open(
+            using var reader = ReaderFactory.OpenReader(
                 SharpCompressStream.Create(stream, leaveOpen: true),
                 readerOptions
             );
@@ -73,7 +73,7 @@ public class WriterTests : TestBase
 
             writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var writer = WriterFactory.OpenAsync(stream, _type, writerOptions);
+            using var writer = WriterFactory.OpenAsyncWriter(stream, _type, writerOptions);
             await writer.WriteAllAsync(
                 ORIGINAL_FILES_PATH,
                 "*",
@@ -92,7 +92,7 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            await using var reader = ReaderFactory.OpenAsync(
+            await using var reader = ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(SharpCompressStream.Create(stream, leaveOpen: true)),
                 readerOptions,
                 cancellationToken

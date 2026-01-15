@@ -244,13 +244,13 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
     {
         var stream = Volumes.Single().Stream;
         ((IStreamStack)stream).StackSeek(0);
-        return ZipReader.Open(stream, ReaderOptions, Entries);
+        return ZipReader.OpenReader(stream, ReaderOptions, Entries);
     }
 
     protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)ZipReader.Open(stream));
+        return new((IAsyncReader)ZipReader.OpenReader(stream));
     }
 }

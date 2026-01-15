@@ -27,7 +27,7 @@ var options = new ReaderOptions
     }
 };
 
-using (var archive = ZipArchive.Open("japanese.zip", options))
+using (var archive = ZipArchive.OpenArchive("japanese.zip", options))
 {
     foreach (var entry in archive.Entries)
     {
@@ -51,7 +51,7 @@ var options = new ReaderOptions
 {
     ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
 };
-using (var archive = ZipArchive.Open("file.zip", options))
+using (var archive = ZipArchive.OpenArchive("file.zip", options))
 {
     // Use archive with correct encoding
 }
@@ -64,7 +64,7 @@ var options = new ReaderOptions
     ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
 };
 using (var stream = File.OpenRead("file.zip"))
-using (var reader = ReaderFactory.Open(stream, options))
+using (var reader = ReaderFactory.OpenReader(stream, options))
 {
     while (reader.MoveToNextEntry())
     {
@@ -89,7 +89,7 @@ var options = new ReaderOptions
         Default = Encoding.GetEncoding(932)
     }
 };
-using (var archive = ZipArchive.Open("japanese.zip", options))
+using (var archive = ZipArchive.OpenArchive("japanese.zip", options))
 {
     // Correctly decodes Japanese filenames
 }
@@ -266,7 +266,7 @@ SharpCompress attempts to auto-detect encoding, but this isn't always reliable:
 
 ```csharp
 // Auto-detection (default)
-using (var archive = ZipArchive.Open("file.zip"))  // Uses UTF8 by default
+using (var archive = ZipArchive.OpenArchive("file.zip"))  // Uses UTF8 by default
 {
     // May show corrupted characters if archive uses different encoding
 }
@@ -276,7 +276,7 @@ var options = new ReaderOptions
 {
     ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
 };
-using (var archive = ZipArchive.Open("file.zip", options))
+using (var archive = ZipArchive.OpenArchive("file.zip", options))
 {
     // Correct characters displayed
 }
@@ -324,7 +324,7 @@ var options = new ReaderOptions
     }
 };
 
-using (var archive = ZipArchive.Open("mixed.zip", options))
+using (var archive = ZipArchive.OpenArchive("mixed.zip", options))
 {
     foreach (var entry in archive.Entries)
     {
@@ -388,7 +388,7 @@ var options = new ReaderOptions
     }
 };
 
-using (var archive = ZipArchive.Open("japanese_files.zip", options))
+using (var archive = ZipArchive.OpenArchive("japanese_files.zip", options))
 {
     archive.WriteToDirectory(@"C:\output", new ExtractionOptions
     {
@@ -410,7 +410,7 @@ var options = new ReaderOptions
     }
 };
 
-using (var archive = ZipArchive.Open("french_files.zip", options))
+using (var archive = ZipArchive.OpenArchive("french_files.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -428,7 +428,7 @@ var options = new ReaderOptions
     }
 };
 
-using (var archive = ZipArchive.Open("chinese_files.zip", options))
+using (var archive = ZipArchive.OpenArchive("chinese_files.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -445,7 +445,7 @@ var options = new ReaderOptions
     }
 };
 
-using (var archive = ZipArchive.Open("russian_files.zip", options))
+using (var archive = ZipArchive.OpenArchive("russian_files.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -463,7 +463,7 @@ var options = new ReaderOptions
 };
 
 using (var stream = File.OpenRead("japanese.zip"))
-using (var reader = ReaderFactory.Open(stream, options))
+using (var reader = ReaderFactory.OpenReader(stream, options))
 {
     while (reader.MoveToNextEntry())
     {
@@ -484,7 +484,7 @@ When creating archives, SharpCompress uses UTF8 by default (recommended):
 
 ```csharp
 // Create with UTF8 (default, recommended)
-using (var archive = ZipArchive.Create())
+using (var archive = ZipArchive.CreateArchive())
 {
     archive.AddAllFromDirectory(@"D:\my_files");
     archive.SaveTo("output.zip", CompressionType.Deflate);

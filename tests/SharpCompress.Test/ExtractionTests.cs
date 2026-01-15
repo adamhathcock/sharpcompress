@@ -27,7 +27,7 @@ public class ExtractionTests : TestBase
         using (var stream = File.Create(testArchive))
         {
             using var writer = (ZipWriter)
-                WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate);
+                WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate);
 
             // Create a test file to add to the archive
             var testFilePath = Path.Combine(SCRATCH2_FILES_PATH, "testfile.txt");
@@ -39,7 +39,7 @@ public class ExtractionTests : TestBase
         // Extract the archive - this should succeed regardless of path casing
         using (var stream = File.OpenRead(testArchive))
         {
-            using var reader = ReaderFactory.Open(stream);
+            using var reader = ReaderFactory.OpenReader(stream);
 
             // This should not throw an exception even if Path.GetFullPath returns
             // a path with different casing than the actual directory
@@ -72,7 +72,7 @@ public class ExtractionTests : TestBase
         using (var stream = File.Create(testArchive))
         {
             using var writer = (ZipWriter)
-                WriterFactory.Open(stream, ArchiveType.Zip, CompressionType.Deflate);
+                WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate);
 
             var testFilePath = Path.Combine(SCRATCH2_FILES_PATH, "testfile2.txt");
             File.WriteAllText(testFilePath, "Test content");
@@ -84,7 +84,7 @@ public class ExtractionTests : TestBase
         // Extract the archive - this should throw an exception for path traversal
         using (var stream = File.OpenRead(testArchive))
         {
-            using var reader = ReaderFactory.Open(stream);
+            using var reader = ReaderFactory.OpenReader(stream);
 
             var exception = Assert.Throws<ExtractionException>(() =>
                 reader.WriteAllToDirectory(

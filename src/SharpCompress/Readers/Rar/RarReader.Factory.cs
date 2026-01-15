@@ -7,7 +7,7 @@ namespace SharpCompress.Readers.Rar;
 
 public partial class RarReader : IReaderOpenable
 {
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -15,27 +15,27 @@ public partial class RarReader : IReaderOpenable
     {
         cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return (IAsyncReader)Open(new FileInfo(path), readerOptions);
+        return (IAsyncReader)OpenReader(new FileInfo(path), readerOptions);
     }
 
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)Open(stream, readerOptions);
+        return (IAsyncReader)OpenReader(stream, readerOptions);
     }
 
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)Open(fileInfo, readerOptions);
+        return (IAsyncReader)OpenReader(fileInfo, readerOptions);
     }
 }
 #endif

@@ -228,8 +228,8 @@ public class TestBase : IAsyncDisposable
         //don't compare the order.  OS X reads files from the file system in a different order therefore makes the archive ordering different
         var archive1Entries = new List<string>();
         var archive2Entries = new List<string>();
-        using (var archive1 = ReaderFactory.Open(File.OpenRead(file1), readerOptions))
-        using (var archive2 = ReaderFactory.Open(File.OpenRead(file2), readerOptions))
+        using (var archive1 = ReaderFactory.OpenReader(File.OpenRead(file1), readerOptions))
+        using (var archive2 = ReaderFactory.OpenReader(File.OpenRead(file2), readerOptions))
         {
             while (archive1.MoveToNextEntry())
             {

@@ -12,7 +12,7 @@ public class ZipArchiveDirectoryTests : TestBase
     [Fact]
     public void ZipArchive_AddDirectoryEntry_CreatesDirectoryEntry()
     {
-        using var archive = ZipArchive.Create();
+        using var archive = ZipArchive.CreateArchive();
 
         archive.AddDirectoryEntry("test-dir", DateTime.Now);
 
@@ -25,7 +25,7 @@ public class ZipArchiveDirectoryTests : TestBase
     [Fact]
     public void ZipArchive_AddDirectoryEntry_MultipleDirectories()
     {
-        using var archive = ZipArchive.Create();
+        using var archive = ZipArchive.CreateArchive();
 
         archive.AddDirectoryEntry("dir1", DateTime.Now);
         archive.AddDirectoryEntry("dir2", DateTime.Now);
@@ -39,7 +39,7 @@ public class ZipArchiveDirectoryTests : TestBase
     [Fact]
     public void ZipArchive_AddDirectoryEntry_MixedWithFiles()
     {
-        using var archive = ZipArchive.Create();
+        using var archive = ZipArchive.CreateArchive();
 
         archive.AddDirectoryEntry("dir1", DateTime.Now);
 
@@ -62,7 +62,7 @@ public class ZipArchiveDirectoryTests : TestBase
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "zip-directory-test.zip");
 
-        using (var archive = ZipArchive.Create())
+        using (var archive = ZipArchive.CreateArchive())
         {
             archive.AddDirectoryEntry("dir1", DateTime.Now);
             archive.AddDirectoryEntry("dir2", DateTime.Now);
@@ -84,7 +84,7 @@ public class ZipArchiveDirectoryTests : TestBase
             }
         }
 
-        using (var archive = ZipArchive.Open(scratchPath))
+        using (var archive = ZipArchive.OpenArchive(scratchPath))
         {
             var entries = archive.Entries.OrderBy(e => e.Key).ToList();
             Assert.Equal(3, entries.Count);
@@ -103,7 +103,7 @@ public class ZipArchiveDirectoryTests : TestBase
     [Fact]
     public void ZipArchive_AddDirectoryEntry_DuplicateKey_ThrowsException()
     {
-        using var archive = ZipArchive.Create();
+        using var archive = ZipArchive.CreateArchive();
 
         archive.AddDirectoryEntry("test-dir", DateTime.Now);
 

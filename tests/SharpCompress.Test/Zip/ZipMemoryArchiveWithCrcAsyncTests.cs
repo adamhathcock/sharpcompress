@@ -153,7 +153,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Verify the archive
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
         using var entryStream = await entry.OpenEntryStreamAsync();
@@ -210,7 +210,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Verify the archive
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         var entry = archive.Entries.Single(e => !e.IsDirectory);
         using var entryStream = await entry.OpenEntryStreamAsync();
@@ -249,7 +249,7 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
     )
     {
         zipStream.Position = 0;
-        using var archive = ZipArchive.Open(zipStream);
+        using var archive = ZipArchive.OpenArchive(zipStream);
 
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
         {

@@ -76,7 +76,7 @@ Factory classes for auto-detecting archive format and creating appropriate reade
 - Format-specific: `ZipFactory.cs`, `TarFactory.cs`, `RarFactory.cs`, etc.
 
 **How It Works:**
-1. `ReaderFactory.Open(stream)` probes stream signatures
+1. `ReaderFactory.OpenReader(stream)` probes stream signatures
 2. Identifies format by magic bytes
 3. Creates appropriate reader instance
 4. Returns generic `IReader` interface
@@ -142,7 +142,7 @@ Stream wrappers and utilities.
 **Example:**
 ```csharp
 // User calls factory
-using (var reader = ReaderFactory.Open(stream))  // Returns IReader
+using (var reader = ReaderFactory.OpenReader(stream))  // Returns IReader
 {
     while (reader.MoveToNextEntry())
     {
@@ -175,7 +175,7 @@ CompressionType.LZMA        // LZMA
 CompressionType.PPMd        // PPMd
 
 // Writer uses strategy pattern
-var archive = ZipArchive.Create();
+var archive = ZipArchive.CreateArchive();
 archive.SaveTo("output.zip", CompressionType.Deflate);   // Use Deflate
 archive.SaveTo("output.bz2", CompressionType.BZip2);    // Use BZip2
 ```
@@ -248,7 +248,7 @@ foreach (var entry in entries)
 }
 
 // Reader API - provides iterator
-IReader reader = ReaderFactory.Open(stream);
+IReader reader = ReaderFactory.OpenReader(stream);
 while (reader.MoveToNextEntry())
 {
     // Forward-only iteration - one entry at a time
@@ -381,7 +381,7 @@ public class NewFormatArchive : AbstractArchive
     private NewFormatHeader _header;
     private List<NewFormatEntry> _entries;
     
-    public static NewFormatArchive Open(Stream stream)
+    public static NewFormatArchive OpenArchive(Stream stream)
     {
         var archive = new NewFormatArchive();
         archive._header = NewFormatHeader.Read(stream);
@@ -442,8 +442,8 @@ public class NewFormatFactory : Factory, IArchiveFactory, IReaderFactory
     
     public static NewFormatFactory Instance { get; } = new();
     
-    public IArchive CreateArchive(Stream stream) 
-        => NewFormatArchive.Open(stream);
+    public IArchive CreateArchive(Stream stream)
+        => NewFormatArchive.OpenArchive(stream);
     
     public IReader CreateReader(Stream stream, ReaderOptions options)
         => new NewFormatReader(stream) { Options = options };
@@ -481,7 +481,7 @@ public class NewFormatTests : TestBase
     public void NewFormat_Extracts_Successfully()
     {
         var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "archive.newformat");
-        using (var archive = NewFormatArchive.Open(archivePath))
+        using (var archive = NewFormatArchive.OpenArchive(archivePath))
         {
             archive.WriteToDirectory(SCRATCH_FILES_PATH);
             // Assert extraction
@@ -561,7 +561,7 @@ public class CustomStream : Stream
 ```csharp
 // Correct: Nested using blocks
 using (var fileStream = File.OpenRead("archive.zip"))
-using (var archive = ZipArchive.Open(fileStream))
+using (var archive = ZipArchive.OpenArchive(fileStream))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -570,7 +570,7 @@ using (var archive = ZipArchive.Open(fileStream))
 // Correct: Using with options
 var options = new ReaderOptions { LeaveStreamOpen = true };
 var stream = File.OpenRead("archive.zip");
-using (var archive = ZipArchive.Open(stream, options))
+using (var archive = ZipArchive.OpenArchive(stream, options))
 {
     archive.WriteToDirectory(@"C:\output");
 }
@@ -641,7 +641,7 @@ public void Archive_Extraction_Works()
     var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "test.zip");
     
     // Act
-    using (var archive = ZipArchive.Open(testArchive))
+    using (var archive = ZipArchive.OpenArchive(testArchive))
     {
         archive.WriteToDirectory(SCRATCH_FILES_PATH);
     }

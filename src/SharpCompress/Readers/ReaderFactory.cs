@@ -11,10 +11,10 @@ namespace SharpCompress.Readers;
 
 public static class ReaderFactory
 {
-    public static IReader Open(string filePath, ReaderOptions? options = null)
+    public static IReader OpenReader(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return Open(new FileInfo(filePath), options);
+        return OpenReader(new FileInfo(filePath), options);
     }
 
     /// <summary>
@@ -24,20 +24,20 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsync(new FileInfo(filePath), options, cancellationToken);
+        return OpenAsyncReader(new FileInfo(filePath), options, cancellationToken);
     }
 
-    public static IReader Open(FileInfo fileInfo, ReaderOptions? options = null)
+    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
-        return Open(fileInfo.OpenRead(), options);
+        return OpenReader(fileInfo.OpenRead(), options);
     }
 
     /// <summary>
@@ -47,14 +47,14 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
-        return OpenAsync(fileInfo.OpenRead(), options, cancellationToken);
+        return OpenAsyncReader(fileInfo.OpenRead(), options, cancellationToken);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public static class ReaderFactory
     /// <param name="stream"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static IReader Open(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
@@ -110,7 +110,7 @@ public static class ReaderFactory
         );
     }
 
-    public static IAsyncReader OpenAsync(
+    public static IAsyncReader OpenAsyncReader(
         Stream stream,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -139,7 +139,7 @@ public static class ReaderFactory
                 if (testedFactory.IsArchive(bStream))
                 {
                     ((IStreamStack)bStream).StackSeek(pos);
-                    return readerFactory.OpenReaderAsync(bStream, options, cancellationToken);
+                    return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
                 }
             }
             ((IStreamStack)bStream).StackSeek(pos);
@@ -155,7 +155,7 @@ public static class ReaderFactory
             if (factory is IReaderFactory readerFactory && factory.IsArchive(bStream))
             {
                 ((IStreamStack)bStream).StackSeek(pos);
-                return readerFactory.OpenReaderAsync(bStream, options, cancellationToken);
+                return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
             }
         }
 
