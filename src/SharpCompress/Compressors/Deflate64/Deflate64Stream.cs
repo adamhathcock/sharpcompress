@@ -200,7 +200,7 @@ public sealed class Deflate64Stream : Stream, IStreamStack
         return count - remainingCount;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default

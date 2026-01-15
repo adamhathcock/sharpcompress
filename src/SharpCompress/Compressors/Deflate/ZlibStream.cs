@@ -277,7 +277,7 @@ public class ZlibStream : Stream, IStreamStack
         await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -347,7 +347,7 @@ public class ZlibStream : Stream, IStreamStack
             .ConfigureAwait(false);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
@@ -431,7 +431,7 @@ public class ZlibStream : Stream, IStreamStack
             .ConfigureAwait(false);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default

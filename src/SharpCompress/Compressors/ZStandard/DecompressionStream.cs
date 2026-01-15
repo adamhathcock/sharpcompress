@@ -105,7 +105,7 @@ public class DecompressionStream : Stream
     public override int Read(byte[] buffer, int offset, int count) =>
         Read(new Span<byte>(buffer, offset, count));
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#if !LEGACY_DOTNET
     public override int Read(Span<byte> buffer)
 #else
     public int Read(Span<byte> buffer)
@@ -158,7 +158,7 @@ public class DecompressionStream : Stream
         }
     }
 
-#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#if !LEGACY_DOTNET
     public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -276,7 +276,7 @@ public class DecompressionStream : Stream
             throw new ObjectDisposedException(nameof(DecompressionStream));
     }
 
-#if NETSTANDARD2_0 || NETFRAMEWORK
+#if LEGACY_DOTNET
     public virtual Task DisposeAsync()
     {
         try

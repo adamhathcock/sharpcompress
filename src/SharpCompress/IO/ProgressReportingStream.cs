@@ -64,7 +64,7 @@ internal sealed class ProgressReportingStream : Stream
         return bytesRead;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override int Read(Span<byte> buffer)
     {
         var bytesRead = _baseStream.Read(buffer);
@@ -95,7 +95,7 @@ internal sealed class ProgressReportingStream : Stream
         return bytesRead;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
@@ -147,7 +147,7 @@ internal sealed class ProgressReportingStream : Stream
         base.Dispose(disposing);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (!_leaveOpen)

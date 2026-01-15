@@ -154,7 +154,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
         return count;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default

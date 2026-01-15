@@ -384,7 +384,7 @@ public class SharpCompressStream : Stream, IStreamStack
         await Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
 
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,

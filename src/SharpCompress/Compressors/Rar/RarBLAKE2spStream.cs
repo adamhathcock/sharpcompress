@@ -385,7 +385,7 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
         return result;
     }
 
-#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#if !LEGACY_DOTNET
     public override async System.Threading.Tasks.ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         System.Threading.CancellationToken cancellationToken = default

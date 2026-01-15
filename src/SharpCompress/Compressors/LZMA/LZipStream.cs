@@ -163,7 +163,7 @@ public sealed class LZipStream : Stream, IStreamStack
 
     public override void SetLength(long value) => throw new NotImplementedException();
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
 
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
