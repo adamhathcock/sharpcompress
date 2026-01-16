@@ -35,7 +35,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         using (
             var writer = WriterFactory.OpenAsyncWriter(
-                new AsyncOnlyStream(stream),
+                stream,
                 ArchiveType.Tar,
                 CompressionType.None
             )
@@ -54,7 +54,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
             var archive2 = TarArchive.OpenAsyncArchive(
-                new AsyncOnlyStream(File.OpenRead(unmodified))
+                File.OpenRead(unmodified)
             )
         )
         {
@@ -92,7 +92,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         using (
             var writer = WriterFactory.OpenAsyncWriter(
-                new AsyncOnlyStream(stream),
+                stream,
                 ArchiveType.Tar,
                 CompressionType.None
             )
@@ -111,7 +111,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
             var archive2 = TarArchive.OpenAsyncArchive(
-                new AsyncOnlyStream(File.OpenRead(unmodified))
+                File.OpenRead(unmodified)
             )
         )
         {
@@ -200,7 +200,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
             await using (
-                var tr = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(inputMemory), tropt)
+                var tr = await ReaderFactory.OpenAsyncReader(inputMemory, tropt)
             )
             {
                 while (await tr.MoveToNextEntryAsync())
@@ -235,7 +235,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var numberOfEntries = 0;
 
         await using (
-            var archiveFactory = TarArchive.OpenAsyncArchive(new AsyncOnlyStream(memoryStream))
+            var archiveFactory = TarArchive.OpenAsyncArchive(memoryStream)
         )
         {
             await foreach (var entry in archiveFactory.EntriesAsync)

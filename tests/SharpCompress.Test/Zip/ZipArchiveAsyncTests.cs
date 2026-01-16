@@ -185,7 +185,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
         {
-            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
+            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(stream);
             try
             {
                 await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
@@ -209,7 +209,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
         {
-            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
+            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(stream);
             try
             {
                 await archive.WriteToDirectoryAsync(
@@ -233,7 +233,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
 
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
         {
-            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
+            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(stream);
             try
             {
                 await archive.WriteToDirectoryAsync(

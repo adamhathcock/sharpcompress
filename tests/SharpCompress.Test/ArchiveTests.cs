@@ -623,7 +623,7 @@ public class ArchiveTests : ReaderTests
             )
             await using (
                 var archive = archiveFactory.OpenAsyncArchive(
-                    new AsyncOnlyStream(stream),
+                    stream,
                     readerOptions
                 )
             )
