@@ -8,26 +8,23 @@ namespace SharpCompress.Test.Mocks;
 
 public class AsyncOnlyStream : SharpCompressStream
 {
-    private readonly Stream _stream;
-
     public AsyncOnlyStream(Stream stream)
         : base(stream)
     {
-        _stream = stream;
         // Console.WriteLine("AsyncOnlyStream created");
     }
 
-    public override bool CanRead => _stream.CanRead;
-    public override bool CanSeek => _stream.CanSeek;
-    public override bool CanWrite => _stream.CanWrite;
-    public override long Length => _stream.Length;
+    public override bool CanRead => Stream.CanRead;
+    public override bool CanSeek => Stream.CanSeek;
+    public override bool CanWrite => Stream.CanWrite;
+    public override long Length => Stream.Length;
     public override long Position
     {
-        get => _stream.Position;
-        set => _stream.Position = value;
+        get => Stream.Position;
+        set => Stream.Position = value;
     }
 
-    public override void Flush() => _stream.Flush();
+    public override void Flush() => Stream.Flush();
 
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException("Synchronous Read is not supported");
@@ -37,18 +34,18 @@ public class AsyncOnlyStream : SharpCompressStream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => _stream.ReadAsync(buffer, offset, count, cancellationToken);
+    ) => Stream.ReadAsync(buffer, offset, count, cancellationToken);
 
 #if NET8_0_OR_GREATER
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => _stream.ReadAsync(buffer, cancellationToken);
+    ) => Stream.ReadAsync(buffer, cancellationToken);
 #endif
 
-    public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
+    public override long Seek(long offset, SeekOrigin origin) => Stream.Seek(offset, origin);
 
-    public override void SetLength(long value) => _stream.SetLength(value);
+    public override void SetLength(long value) => Stream.SetLength(value);
 
     public override Task WriteAsync(
         byte[] buffer,
@@ -61,18 +58,14 @@ public class AsyncOnlyStream : SharpCompressStream
     public override ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => _stream.WriteAsync(buffer, cancellationToken);
+    ) => Stream.WriteAsync(buffer, cancellationToken);
 #endif
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        _stream.Write(buffer, offset, count);
+        Stream.Write(buffer, offset, count);
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            _stream.Dispose();
-        }
         base.Dispose(disposing);
     }
 }
