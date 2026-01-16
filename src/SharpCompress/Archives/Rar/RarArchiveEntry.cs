@@ -102,7 +102,9 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
             stream = new RarStream(
                 archive.UnpackV1.Value,
                 FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>())
+                await MultiVolumeReadOnlyAsyncStream.Create(
+                    Parts.ToAsyncEnumerable().CastAsync<RarFilePart>()
+                )
             );
         }
         else
@@ -110,7 +112,9 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
             stream = new RarStream(
                 archive.UnpackV2017.Value,
                 FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>())
+                await MultiVolumeReadOnlyAsyncStream.Create(
+                    Parts.ToAsyncEnumerable().CastAsync<RarFilePart>()
+                )
             );
         }
 

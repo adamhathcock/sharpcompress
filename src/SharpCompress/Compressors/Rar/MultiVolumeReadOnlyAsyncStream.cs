@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal sealed class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStreamBase, IStreamStack
+internal sealed class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOnlyStreamBase, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -33,33 +34,43 @@ internal sealed class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStreamBase,
     private long currentPosition;
     private long maxPosition;
 
-    private IEnumerator<RarFilePart> filePartEnumerator;
+    private IAsyncEnumerator<RarFilePart> filePartEnumerator;
     private Stream? currentStream;
 
-    internal MultiVolumeReadOnlyStream(IEnumerable<RarFilePart> parts)
+    private MultiVolumeReadOnlyAsyncStream(IAsyncEnumerable<RarFilePart> parts)
     {
-        filePartEnumerator = parts.GetEnumerator();
-        filePartEnumerator.MoveNext();
-        InitializeNextFilePart();
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(MultiVolumeReadOnlyStream));
-#endif
+        filePartEnumerator = parts.GetAsyncEnumerator();
     }
 
+    internal static async ValueTask<MultiVolumeReadOnlyAsyncStream> Create(
+        IAsyncEnumerable<RarFilePart> parts
+    )
+    {
+        var stream = new MultiVolumeReadOnlyAsyncStream(parts);
+        await stream.filePartEnumerator.MoveNextAsync();
+        stream.InitializeNextFilePart();
+        return stream;
+    }
+
+#if NET8_0_OR_GREATER
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        if (filePartEnumerator != null)
+        {
+            await filePartEnumerator.DisposeAsync();
+        }
+        currentStream = null;
+    }
+#else
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        if (disposing)
-        {
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(MultiVolumeReadOnlyStream));
-#endif
+        filePartEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
-            filePartEnumerator.Dispose();
-
-            currentStream = null;
-        }
+        currentStream = null;
     }
+#endif
 
     private void InitializeNextFilePart()
     {
@@ -70,60 +81,10 @@ internal sealed class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStreamBase,
         CurrentCrc = filePartEnumerator.Current.FileHeader.FileCrc;
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var totalRead = 0;
-        var currentOffset = offset;
-        var currentCount = count;
-        while (currentCount > 0)
-        {
-            var readSize = currentCount;
-            if (currentCount > maxPosition - currentPosition)
-            {
-                readSize = (int)(maxPosition - currentPosition);
-            }
-
-            var read = currentStream.NotNull().Read(buffer, currentOffset, readSize);
-            if (read < 0)
-            {
-                throw new EndOfStreamException();
-            }
-
-            currentPosition += read;
-            currentOffset += read;
-            currentCount -= read;
-            totalRead += read;
-            if (
-                ((maxPosition - currentPosition) == 0)
-                && filePartEnumerator.Current.FileHeader.IsSplitAfter
-            )
-            {
-                if (filePartEnumerator.Current.FileHeader.R4Salt != null)
-                {
-                    throw new InvalidFormatException(
-                        "Sharpcompress currently does not support multi-volume decryption."
-                    );
-                }
-
-                var fileName = filePartEnumerator.Current.FileHeader.FileName;
-                if (!filePartEnumerator.MoveNext())
-                {
-                    throw new InvalidFormatException(
-                        "Multi-part rar file is incomplete.  Entry expects a new volume: "
-                            + fileName
-                    );
-                }
-
-                InitializeNextFilePart();
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return totalRead;
-    }
+    public override int Read(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException(
+            "Synchronous read is not supported in MultiVolumeReadOnlyAsyncStream."
+        );
 
     public override async System.Threading.Tasks.Task<int> ReadAsync(
         byte[] buffer,
@@ -169,7 +130,7 @@ internal sealed class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStreamBase,
                 }
 
                 var fileName = filePartEnumerator.Current.FileHeader.FileName;
-                if (!filePartEnumerator.MoveNext())
+                if (!await filePartEnumerator.MoveNextAsync())
                 {
                     throw new InvalidFormatException(
                         "Multi-part rar file is incomplete.  Entry expects a new volume: "
@@ -230,7 +191,7 @@ internal sealed class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStreamBase,
                     );
                 }
                 var fileName = filePartEnumerator.Current.FileHeader.FileName;
-                if (!filePartEnumerator.MoveNext())
+                if (!await filePartEnumerator.MoveNextAsync())
                 {
                     throw new InvalidFormatException(
                         "Multi-part rar file is incomplete.  Entry expects a new volume: "

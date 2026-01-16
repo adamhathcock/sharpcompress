@@ -30,7 +30,7 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    private readonly MultiVolumeReadOnlyStream readStream;
+    private readonly MultiVolumeReadOnlyStreamBase readStream;
     private readonly bool disableCRCCheck;
 
     const uint BLAKE2S_NUM_ROUNDS = 10;
@@ -108,7 +108,7 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
     private RarBLAKE2spStream(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream
+        MultiVolumeReadOnlyStreamBase readStream
     )
         : base(unpack, fileHeader, readStream)
     {
@@ -137,7 +137,7 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
     public static async Task<RarBLAKE2spStream> CreateAsync(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream,
+        MultiVolumeReadOnlyAsyncStream readStream,
         CancellationToken cancellationToken = default
     )
     {

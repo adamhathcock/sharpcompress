@@ -29,14 +29,14 @@ internal class RarCrcStream : RarStream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    private readonly MultiVolumeReadOnlyStream readStream;
+    private readonly MultiVolumeReadOnlyStreamBase readStream;
     private uint currentCrc;
     private readonly bool disableCRC;
 
     private RarCrcStream(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream
+        MultiVolumeReadOnlyStreamBase readStream
     )
         : base(unpack, fileHeader, readStream)
     {
@@ -62,7 +62,7 @@ internal class RarCrcStream : RarStream, IStreamStack
     public static async Task<RarCrcStream> CreateAsync(
         IRarUnpack unpack,
         FileHeader fileHeader,
-        MultiVolumeReadOnlyStream readStream,
+        MultiVolumeReadOnlyStreamBase readStream,
         CancellationToken cancellationToken = default
     )
     {
@@ -92,7 +92,7 @@ internal class RarCrcStream : RarStream, IStreamStack
         }
         else if (
             !disableCRC
-            && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
+            && GetCrc() != BitConverter.ToUInt32(readStream.NotNull().CurrentCrc.NotNull(), 0)
             && count != 0
         )
         {
@@ -118,7 +118,7 @@ internal class RarCrcStream : RarStream, IStreamStack
         }
         else if (
             !disableCRC
-            && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
+            && GetCrc() != BitConverter.ToUInt32(readStream.NotNull().CurrentCrc.NotNull(), 0)
             && count != 0
         )
         {
@@ -143,7 +143,7 @@ internal class RarCrcStream : RarStream, IStreamStack
         }
         else if (
             !disableCRC
-            && GetCrc() != BitConverter.ToUInt32(readStream.CurrentCrc, 0)
+            && GetCrc() != BitConverter.ToUInt32(readStream.NotNull().CurrentCrc.NotNull(), 0)
             && buffer.Length != 0
         )
         {

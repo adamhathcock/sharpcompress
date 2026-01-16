@@ -100,6 +100,9 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
         Entry.Parts;
 
+    protected virtual IAsyncEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntryAsync() =>
+        Entry.Parts.ToAsyncEnumerable();
+
     protected override EntryStream GetEntryStream()
     {
         if (Entry.IsRedir)
@@ -134,8 +137,8 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
             throw new InvalidOperationException("no stream for redirect entry");
         }
 
-        var stream = new MultiVolumeReadOnlyStream(
-            CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>()
+        var stream = await MultiVolumeReadOnlyAsyncStream.Create(
+            CreateFilePartEnumerableForCurrentEntryAsync().CastAsync<RarFilePart>()
         );
         if (Entry.IsRarV3)
         {
