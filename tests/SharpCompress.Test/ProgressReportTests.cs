@@ -541,7 +541,7 @@ public class ProgressReportTests : TestBase
         var readerOptions = new ReaderOptions { Progress = progress };
 
         await using (
-            var reader = ReaderFactory.OpenAsyncReader(
+            var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(archiveStream),
                 readerOptions
             )
