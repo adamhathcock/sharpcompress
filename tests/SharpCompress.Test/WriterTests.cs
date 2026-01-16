@@ -92,13 +92,15 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var reader = ReaderFactory.OpenReader(
-                SharpCompressStream.Create(stream, leaveOpen: true),
-                readerOptions
+            await using var reader = await ReaderFactory.OpenAsyncReader(
+                new AsyncOnlyStream(SharpCompressStream.Create(stream, leaveOpen: true)),
+                readerOptions,
+                cancellationToken
             );
-            reader.WriteAllToDirectory(
+            await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true }
+                new ExtractionOptions { ExtractFullPath = true },
+                cancellationToken
             );
         }
         VerifyFiles();

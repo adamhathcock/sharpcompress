@@ -621,7 +621,12 @@ public class ArchiveTests : ReaderTests
                     throwOnDispose: true
                 )
             )
-            await using (var archive = archiveFactory.OpenAsyncArchive(stream, readerOptions))
+            await using (
+                var archive = archiveFactory.OpenAsyncArchive(
+                    new AsyncOnlyStream(stream),
+                    readerOptions
+                )
+            )
             {
                 try
                 {
