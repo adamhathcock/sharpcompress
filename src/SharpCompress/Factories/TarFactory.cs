@@ -8,7 +8,8 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.BZip2MT;
+using SharpCompress.Compressors.BZip2MT.InputStream;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Lzw;
@@ -164,8 +165,8 @@ public class TarFactory
         new(CompressionType.None, (stream) => true, (stream) => stream, ["tar"], false), // We always do a test for IsTarFile later
         new(
             CompressionType.BZip2,
-            BZip2Stream.IsBZip2,
-            (stream) => new BZip2Stream(stream, CompressionMode.Decompress, false),
+            Compressors.BZip2.BZip2Stream.IsBZip2,
+            (stream) => new BZip2ParallelInputStream(stream),
             ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"]
         ),
         new(

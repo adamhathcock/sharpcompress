@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.BZip2MT.InputStream;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.Explode;
@@ -124,7 +124,7 @@ internal abstract class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.BZip2:
             {
-                return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                return new BZip2ParallelInputStream(stream);
             }
             case ZipCompressionMethod.LZMA:
             {
