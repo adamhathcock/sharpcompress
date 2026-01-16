@@ -237,18 +237,16 @@ public abstract class ReaderTests : TestBase
 
     protected void DoMultiReader(
         string[] archives,
-        Func<IEnumerable<Stream>, IDisposable> readerFactory
+        Func<IEnumerable<Stream>, IReader> readerFactory
     )
     {
         using var reader = readerFactory(
             archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
         );
 
-        dynamic dynReader = reader;
-
-        while (dynReader.MoveToNextEntry())
+        while (reader.MoveToNextEntry())
         {
-            dynReader.WriteEntryToDirectory(
+            reader.WriteEntryToDirectory(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
             );
