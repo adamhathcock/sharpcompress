@@ -189,7 +189,15 @@ public static class ArchiveFactory
         archive.WriteToDirectory(destinationDirectory, options);
     }
 
-    private static T FindFactory<T>(FileInfo finfo)
+    public static T FindFactory<T>(string path)
+        where T : IFactory
+    {
+        path.NotNullOrEmpty(nameof(path));
+        using Stream stream = File.OpenRead(path);
+        return FindFactory<T>(stream);
+    }
+
+    public static T FindFactory<T>(FileInfo finfo)
         where T : IFactory
     {
         finfo.NotNull(nameof(finfo));
@@ -197,7 +205,7 @@ public static class ArchiveFactory
         return FindFactory<T>(stream);
     }
 
-    private static T FindFactory<T>(Stream stream)
+    public static T FindFactory<T>(Stream stream)
         where T : IFactory
     {
         stream.NotNull(nameof(stream));
@@ -345,6 +353,4 @@ public static class ArchiveFactory
             }
         }
     }
-
-    public static IArchiveFactory AutoFactory { get; } = new AutoArchiveFactory();
 }
