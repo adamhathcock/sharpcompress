@@ -208,7 +208,7 @@ public class RarReaderAsyncTests : ReaderTests
     private async ValueTask DoRar_Entry_Stream_Async(string filename)
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-        await using (var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream)))
+        await using (var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream)))
         {
             while (await reader.MoveToNextEntryAsync())
             {
@@ -253,7 +253,7 @@ public class RarReaderAsyncTests : ReaderTests
             var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar"))
         )
         await using (
-            var reader = ReaderFactory.OpenAsyncReader(
+            var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions { LookForHeader = true }
             )
@@ -325,7 +325,7 @@ public class RarReaderAsyncTests : ReaderTests
     private async ValueTask DoRar_Solid_Skip_Reader_Async(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        await using var reader = ReaderFactory.OpenAsyncReader(
+        await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
             new ReaderOptions { LookForHeader = true }
         );
@@ -351,7 +351,7 @@ public class RarReaderAsyncTests : ReaderTests
     private async ValueTask DoRar_Reader_Skip_Async(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        await using var reader = ReaderFactory.OpenAsyncReader(
+        await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
             new ReaderOptions { LookForHeader = true }
         );
@@ -376,7 +376,7 @@ public class RarReaderAsyncTests : ReaderTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using Stream stream = File.OpenRead(testArchive);
-        await using var reader = ReaderFactory.OpenAsyncReader(
+        await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
             readerOptions ?? new ReaderOptions()
         );
