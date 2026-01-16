@@ -54,7 +54,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
 
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.OpenAsyncArchive(stream, readerOptions);
+        SevenZipArchive.OpenAsyncArchive(stream, readerOptions, CancellationToken.None);
 
     /// <inheritdoc/>
     public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
@@ -62,7 +62,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
 
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.OpenAsyncArchive(fileInfo, readerOptions);
+        SevenZipArchive.OpenAsyncArchive(fileInfo, readerOptions, CancellationToken.None);
 
     #endregion
 
@@ -78,7 +78,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
-    ) => SevenZipArchive.OpenAsyncArchive(streams, readerOptions);
+    ) => SevenZipArchive.OpenAsyncArchive(streams, readerOptions, CancellationToken.None);
 
     /// <inheritdoc/>
     public IArchive OpenArchive(
