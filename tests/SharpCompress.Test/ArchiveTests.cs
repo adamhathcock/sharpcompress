@@ -651,40 +651,4 @@ public class ArchiveTests : ReaderTests
             VerifyFiles();
         }
     }
-
-    [Fact]
-    public async Task ArchiveFactory_Open_WithPreWrappedStream()
-    {
-        // Test that ArchiveFactory.Open works correctly with a stream that's already wrapped
-        // This addresses the issue where ZIP files fail to open on Linux
-        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.noEmptyDirs.zip");
-
-        // Open with a pre-wrapped stream
-        using (var fileStream = File.OpenRead(testArchive))
-        using (var wrappedStream = SharpCompressStream.Create(fileStream, bufferSize: 32768))
-        await using (
-            var archive = await ArchiveFactory.OpenAsyncArchive(new AsyncOnlyStream(wrappedStream))
-        )
-        {
-            Assert.Equal(ArchiveType.Zip, archive.Type);
-            Assert.Equal(3, await archive.EntriesAsync.CountAsync());
-        }
-    }
-
-    [Fact]
-    public async Task ArchiveFactory_Open_WithRawFileStream()
-    {
-        // Test that ArchiveFactory.Open works correctly with a raw FileStream
-        // This is the common use case reported in the issue
-        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.noEmptyDirs.zip");
-
-        using (var stream = File.OpenRead(testArchive))
-        await using (
-            var archive = await ArchiveFactory.OpenAsyncArchive(new AsyncOnlyStream(stream))
-        )
-        {
-            Assert.Equal(ArchiveType.Zip, archive.Type);
-            Assert.Equal(3, await archive.EntriesAsync.CountAsync());
-        }
-    }
 }

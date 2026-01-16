@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Crypto;
@@ -142,6 +143,26 @@ namespace SharpCompress.Common.Arj.Headers
         {
             var bytes = new byte[2];
             if (stream.Read(bytes, 0, 2) != 2)
+            {
+                return false;
+            }
+
+            return CheckMagicBytes(bytes);
+        }
+
+        /// <summary>
+        /// Asynchronously checks if the stream is an ARJ archive
+        /// </summary>
+        /// <param name="stream">The stream to read from</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if the stream is an ARJ archive, false otherwise</returns>
+        public static async ValueTask<bool> IsArchiveAsync(
+            Stream stream,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var bytes = new byte[2];
+            if (await stream.ReadAsync(bytes, 0, 2, cancellationToken) != 2)
             {
                 return false;
             }

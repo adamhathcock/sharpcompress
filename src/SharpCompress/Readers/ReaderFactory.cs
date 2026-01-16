@@ -24,7 +24,7 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static IAsyncReader OpenAsyncReader(
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -47,7 +47,7 @@ public static class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static IAsyncReader OpenAsyncReader(
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -110,7 +110,7 @@ public static class ReaderFactory
         );
     }
 
-    public static IAsyncReader OpenAsyncReader(
+    public static async ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -136,7 +136,12 @@ public static class ReaderFactory
             if (testedFactory is IReaderFactory readerFactory)
             {
                 ((IStreamStack)bStream).StackSeek(pos);
-                if (testedFactory.IsArchive(bStream))
+                if (
+                    await testedFactory.IsArchiveAsync(
+                        bStream,
+                        cancellationToken: cancellationToken
+                    )
+                )
                 {
                     ((IStreamStack)bStream).StackSeek(pos);
                     return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
@@ -152,7 +157,10 @@ public static class ReaderFactory
                 continue; // Already tested above
             }
             ((IStreamStack)bStream).StackSeek(pos);
-            if (factory is IReaderFactory readerFactory && factory.IsArchive(bStream))
+            if (
+                factory is IReaderFactory readerFactory
+                && await factory.IsArchiveAsync(bStream, cancellationToken: cancellationToken)
+            )
             {
                 ((IStreamStack)bStream).StackSeek(pos);
                 return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);

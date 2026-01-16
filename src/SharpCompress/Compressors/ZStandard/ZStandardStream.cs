@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.IO;
 
@@ -36,6 +37,27 @@ internal class ZStandardStream : DecompressionStream, IStreamStack
     {
         var br = new BinaryReader(stream);
         var magic = br.ReadUInt32();
+        if (ZstandardConstants.MAGIC != magic)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    internal static async ValueTask<bool> IsZStandardAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var buffer = new byte[4];
+        var bytesRead = await stream.ReadAsync(buffer, 0, 4, cancellationToken);
+        if (bytesRead < 4)
+        {
+            return false;
+        }
+
+        var magic = BitConverter.ToUInt32(buffer, 0);
         if (ZstandardConstants.MAGIC != magic)
         {
             return false;

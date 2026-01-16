@@ -26,7 +26,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
 
         await reader.WriteAllToDirectoryAsync(
             SCRATCH_FILES_PATH,
@@ -51,7 +51,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
 
         while (await reader.MoveToNextEntryAsync())
         {
@@ -141,7 +141,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = ReaderFactory.OpenAsyncReader(
+        await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
             cancellationToken: cts.Token
         );
@@ -195,7 +195,7 @@ public class AsyncTests : TestBase
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
 
         while (await reader.MoveToNextEntryAsync())
         {

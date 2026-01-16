@@ -32,11 +32,56 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         IEnumerable<SevenZipVolume> volumes
     )
     {
-        var stream = volumes.Single().Stream;
-        LoadFactory(stream);
+        foreach (var volume in volumes)
+        {
+            LoadFactory(volume.Stream);
+            if (_database is null)
+            {
+                yield break;
+            }
+            var entries = new SevenZipArchiveEntry[_database._files.Count];
+            for (var i = 0; i < _database._files.Count; i++)
+            {
+                var file = _database._files[i];
+                entries[i] = new SevenZipArchiveEntry(
+                    this,
+                    new SevenZipFilePart(
+                        volume.Stream,
+                        _database,
+                        i,
+                        file,
+                        ReaderOptions.ArchiveEncoding
+                    )
+                );
+            }
+            foreach (
+                var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder)
+            )
+            {
+                var isSolid = false;
+                foreach (var entry in group)
+                {
+                    entry.IsSolid = isSolid;
+                    isSolid = true;
+                }
+            }
+
+            foreach (var entry in entries)
+            {
+                yield return entry;
+            }
+        }
+    }
+
+    protected override async IAsyncEnumerable<SevenZipArchiveEntry> LoadEntriesAsync(
+        IAsyncEnumerable<SevenZipVolume> volumes
+    )
+    {
+        var stream = (await volumes.SingleAsync()).Stream;
+        await LoadFactoryAsync(stream);
         if (_database is null)
         {
-            return Enumerable.Empty<SevenZipArchiveEntry>();
+            yield break;
         }
         var entries = new SevenZipArchiveEntry[_database._files.Count];
         for (var i = 0; i < _database._files.Count; i++)
@@ -57,7 +102,10 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             }
         }
 
-        return entries;
+        foreach (var entry in entries)
+        {
+            yield return entry;
+        }
     }
 
     private void LoadFactory(Stream stream)
@@ -68,6 +116,27 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             var reader = new ArchiveReader();
             reader.Open(stream, lookForHeader: ReaderOptions.LookForHeader);
             _database = reader.ReadDatabase(new PasswordProvider(ReaderOptions.Password));
+        }
+    }
+
+    private async Task LoadFactoryAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_database is null)
+        {
+            stream.Position = 0;
+            var reader = new ArchiveReader();
+            await reader.OpenAsync(
+                stream,
+                lookForHeader: ReaderOptions.LookForHeader,
+                cancellationToken
+            );
+            _database = await reader.ReadDatabaseAsync(
+                new PasswordProvider(ReaderOptions.Password),
+                cancellationToken
+            );
         }
     }
 

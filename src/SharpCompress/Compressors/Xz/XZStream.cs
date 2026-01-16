@@ -60,6 +60,22 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
         }
     }
 
+    public static async ValueTask<bool> IsXZStreamAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            return null != await XZHeader.FromStreamAsync(stream, cancellationToken);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     private void AssertBlockCheckTypeIsSupported()
     {
         switch (Header.BlockCheckType)

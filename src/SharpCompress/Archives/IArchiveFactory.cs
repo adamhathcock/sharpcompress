@@ -47,9 +47,5 @@ public interface IArchiveFactory : IFactory
     /// <param name="fileInfo">the file to open.</param>
     /// <param name="readerOptions">reading options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    IAsyncArchive OpenAsyncArchive(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    );
+    IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null);
 }

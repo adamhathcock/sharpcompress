@@ -161,8 +161,37 @@ public partial class TarArchive
                 && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
             return readSucceeded || isEmptyArchive;
         }
-        catch { }
-        return false;
+        catch (Exception)
+        {
+            // Catch all exceptions during tar header reading to determine if this is a valid tar file
+            // Invalid tar files or corrupted streams will throw various exceptions
+            return false;
+        }
+    }
+
+    public static async ValueTask<bool> IsTarFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            var tarHeader = new TarHeader(new ArchiveEncoding());
+            var reader = new BinaryReader(stream);
+            var readSucceeded = tarHeader.Read(reader);
+            var isEmptyArchive =
+                tarHeader.Name?.Length == 0
+                && tarHeader.Size == 0
+                && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
+            return readSucceeded || isEmptyArchive;
+        }
+        catch (Exception)
+        {
+            // Catch all exceptions during tar header reading to determine if this is a valid tar file
+            // Invalid tar files or corrupted streams will throw various exceptions
+            return false;
+        }
     }
 
     public static IWritableArchive CreateArchive() => new TarArchive();

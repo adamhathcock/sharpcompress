@@ -149,4 +149,25 @@ public sealed class BZip2Stream : Stream, IStreamStack
         }
         return true;
     }
+
+    /// <summary>
+    /// Asynchronously consumes two bytes to test if there is a BZip2 header
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public static async ValueTask<bool> IsBZip2Async(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var buffer = new byte[2];
+        var bytesRead = await stream.ReadAsync(buffer, 0, 2, cancellationToken);
+        if (bytesRead < 2 || buffer[0] != 'B' || buffer[1] != 'Z')
+        {
+            return false;
+        }
+        return true;
+    }
 }

@@ -38,6 +38,14 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     ) => RarArchive.IsRarFile(stream);
 
     /// <inheritdoc/>
+    public override ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        int bufferSize = ReaderOptions.DefaultBufferSize,
+        CancellationToken cancellationToken = default
+    ) => RarArchive.IsRarFileAsync(stream, cancellationToken: cancellationToken);
+
+    /// <inheritdoc/>
     public override FileInfo? GetFilePart(int index, FileInfo part1) =>
         RarArchiveVolumeFactory.GetFilePart(index, part1);
 
@@ -58,21 +66,8 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
-    }
-
-    public override ValueTask<bool> IsArchiveAsync(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => new(IsArchive(stream, password, bufferSize));
+    public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
 
     #endregion
 

@@ -68,22 +68,9 @@ public class GZipFactory
     public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
         (IAsyncArchive)OpenArchive(stream, readerOptions);
 
-    public override ValueTask<bool> IsArchiveAsync(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => new(IsArchive(stream, password, bufferSize));
-
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
-    }
+    public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
 
     #endregion
 
