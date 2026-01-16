@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Crypto;
 
@@ -42,6 +44,16 @@ namespace SharpCompress.Common.Arj.Headers
         {
             var body = ReadHeader(stream);
             ReadExtendedHeaders(stream);
+            return LoadFrom(body);
+        }
+
+        public override async ValueTask<ArjHeader?> ReadAsync(
+            Stream stream,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var body = await ReadHeaderAsync(stream, cancellationToken);
+            await ReadExtendedHeadersAsync(stream, cancellationToken);
             return LoadFrom(body);
         }
 

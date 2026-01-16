@@ -60,8 +60,10 @@ namespace SharpCompress.Test.Ace
         public async ValueTask Ace_Multi_Reader_Async()
         {
             var exception = await Assert.ThrowsAsync<MultiVolumeExtractionException>(() =>
-                DoMultiReaderAsync(new[] { "Ace.store.split.ace", "Ace.store.split.c01" },
-                    streams => AceReader.OpenAsyncReader(streams, null))
+                DoMultiReaderAsync(
+                    new[] { "Ace.store.split.ace", "Ace.store.split.c01" },
+                    streams => AceReader.OpenAsyncReader(streams, null)
+                )
             );
         }
 
@@ -115,23 +117,25 @@ namespace SharpCompress.Test.Ace
             );
         }
 
-        private async Task DoMultiReaderAsync(string[] archives,
-                                              Func<IEnumerable<Stream>, IAsyncReader> readerFactory)
+        private async Task DoMultiReaderAsync(
+            string[] archives,
+            Func<IEnumerable<Stream>, IAsyncReader> readerFactory
+        )
         {
             await using var reader = readerFactory(
                 archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
             );
 
-                while (await reader.MoveToNextEntryAsync())
+            while (await reader.MoveToNextEntryAsync())
+            {
+                if (!reader.Entry.IsDirectory)
                 {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        await reader.WriteEntryToDirectoryAsync(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
-                    }
+                    await reader.WriteEntryToDirectoryAsync(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                    );
                 }
+            }
         }
     }
 }

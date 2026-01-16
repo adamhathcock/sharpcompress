@@ -125,7 +125,7 @@ namespace SharpCompress.Test.Arj
             using Stream stream = File.OpenRead(testArchive);
             await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
-                new ReaderOptions() { LookForHeader = false }
+                new ReaderOptions() { LookForHeader = true }
             );
             while (await reader.MoveToNextEntryAsync())
             {
@@ -138,7 +138,10 @@ namespace SharpCompress.Test.Arj
                     );
                 }
             }
-            VerifyFiles();
+            CompareFilesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "alice29.txt"),
+                Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt")
+            );
         }
 
         private async Task DoMultiReaderAsync(

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Arj.Headers
@@ -48,6 +49,22 @@ namespace SharpCompress.Common.Arj.Headers
             if (body.Length > 0)
             {
                 ReadExtendedHeaders(stream);
+                var header = LoadFrom(body);
+                header.DataStartPosition = stream.Position;
+                return header;
+            }
+            return null;
+        }
+
+        public override async ValueTask<ArjHeader?> ReadAsync(
+            Stream stream,
+            CancellationToken cancellationToken = default
+        )
+        {
+            var body = await ReadHeaderAsync(stream, cancellationToken);
+            if (body.Length > 0)
+            {
+                await ReadExtendedHeadersAsync(stream, cancellationToken);
                 var header = LoadFrom(body);
                 header.DataStartPosition = stream.Position;
                 return header;

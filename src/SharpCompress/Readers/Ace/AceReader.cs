@@ -52,9 +52,7 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
 
         if (mainHeader?.IsMultiVolume == true)
         {
-            throw new MultiVolumeExtractionException(
-                "Multi volumes are currently not supported"
-            );
+            throw new MultiVolumeExtractionException("Multi volumes are currently not supported");
         }
 
         if (_volume == null)
@@ -91,9 +89,7 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
 
         if (mainHeader?.IsMultiVolume == true)
         {
-            throw new MultiVolumeExtractionException(
-                "Multi volumes are currently not supported"
-            );
+            throw new MultiVolumeExtractionException("Multi volumes are currently not supported");
         }
 
         if (_volume == null)

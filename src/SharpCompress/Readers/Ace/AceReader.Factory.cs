@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -11,7 +10,6 @@ public partial class AceReader
     : IReaderOpenable
 #endif
 {
-
     /// <summary>
     /// Opens an AceReader for non-seeking usage with a single volume.
     /// </summary>
@@ -57,7 +55,10 @@ public partial class AceReader
         return (IAsyncReader)OpenReader(stream, readerOptions);
     }
 
-    public static IAsyncReader OpenAsyncReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
+    public static IAsyncReader OpenAsyncReader(
+        IEnumerable<Stream> streams,
+        ReaderOptions? options = null
+    )
     {
         streams.NotNull(nameof(streams));
         return new MultiVolumeAceReader(streams, options ?? new ReaderOptions());
