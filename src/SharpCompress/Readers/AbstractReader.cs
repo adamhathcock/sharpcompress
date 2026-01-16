@@ -31,6 +31,8 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
 
     public ArchiveType ArchiveType { get; }
 
+    protected bool IsAsync => _entriesForCurrentReadStreamAsync is not null;
+
     /// <summary>
     /// Current volume that the current entry resides in
     /// </summary>

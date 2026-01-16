@@ -88,7 +88,11 @@ public class ArchiveTests : ReaderTests
     protected void ArchiveStreamRead(string testArchive, ReaderOptions? readerOptions = null)
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        ArchiveStreamRead(ArchiveFactory.FindFactory<IArchiveFactory>(testArchive),readerOptions,  testArchive);
+        ArchiveStreamRead(
+            ArchiveFactory.FindFactory<IArchiveFactory>(testArchive),
+            readerOptions,
+            testArchive
+        );
     }
 
     protected void ArchiveStreamRead(
@@ -104,7 +108,12 @@ public class ArchiveTests : ReaderTests
     protected void ArchiveStreamRead(
         ReaderOptions? readerOptions = null,
         params string[] testArchives
-    ) => ArchiveStreamRead(ArchiveFactory.FindFactory<IArchiveFactory>(testArchives[0]), readerOptions, testArchives);
+    ) =>
+        ArchiveStreamRead(
+            ArchiveFactory.FindFactory<IArchiveFactory>(testArchives[0]),
+            readerOptions,
+            testArchives
+        );
 
     protected void ArchiveStreamRead(
         IArchiveFactory archiveFactory,
@@ -276,12 +285,11 @@ public class ArchiveTests : ReaderTests
     protected void ArchiveFileRead(
         string testArchive,
         ReaderOptions? readerOptions = null,
-        IArchiveFactory ? archiveFactory = null
-
+        IArchiveFactory? archiveFactory = null
     )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-         archiveFactory ??= ArchiveFactory.FindFactory<IArchiveFactory>(testArchive);
+        archiveFactory ??= ArchiveFactory.FindFactory<IArchiveFactory>(testArchive);
         using (var archive = archiveFactory.OpenArchive(new FileInfo(testArchive), readerOptions))
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))

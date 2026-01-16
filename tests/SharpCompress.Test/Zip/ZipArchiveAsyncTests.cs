@@ -231,19 +231,22 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var progressReports = new System.Collections.Generic.List<ProgressReport>();
         var progress = new Progress<ProgressReport>(report => progressReports.Add(report));
 
-        #if NETFRAMEWORK
+#if NETFRAMEWORK
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
-        #else
-        await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
-        #endif
+#else
+        await using (
+            Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip"))
+        )
+#endif
         {
-            await using IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
-                await archive.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-                    progress
-                );
-
+            await using IAsyncArchive archive = ZipArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(stream)
+            );
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
+                progress
+            );
         }
 
         VerifyFiles();
