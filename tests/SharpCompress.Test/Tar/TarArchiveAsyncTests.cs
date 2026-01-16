@@ -52,11 +52,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        await using (
-            var archive2 = TarArchive.OpenAsyncArchive(
-                File.OpenRead(unmodified)
-            )
-        )
+        await using (var archive2 = TarArchive.OpenAsyncArchive(File.OpenRead(unmodified)))
         {
             Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
             Assert.Contains(
@@ -109,11 +105,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        await using (
-            var archive2 = TarArchive.OpenAsyncArchive(
-                File.OpenRead(unmodified)
-            )
-        )
+        await using (var archive2 = TarArchive.OpenAsyncArchive(File.OpenRead(unmodified)))
         {
             Assert.Equal(1, await archive2.EntriesAsync.CountAsync());
             Assert.Contains(
@@ -199,9 +191,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
-            await using (
-                var tr = await ReaderFactory.OpenAsyncReader(inputMemory, tropt)
-            )
+            await using (var tr = await ReaderFactory.OpenAsyncReader(inputMemory, tropt))
             {
                 while (await tr.MoveToNextEntryAsync())
                 {
@@ -234,9 +224,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         var numberOfEntries = 0;
 
-        await using (
-            var archiveFactory = TarArchive.OpenAsyncArchive(memoryStream)
-        )
+        await using (var archiveFactory = TarArchive.OpenAsyncArchive(memoryStream))
         {
             await foreach (var entry in archiveFactory.EntriesAsync)
             {

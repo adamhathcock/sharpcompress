@@ -654,9 +654,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var stream = File.OpenRead(testArchive);
-        await using var archive = await ArchiveFactory.OpenAsyncArchive(
-            stream
-        );
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
         Assert.True(await archive.IsSolidAsync());
         await using (var reader = await archive.ExtractAllEntriesAsync())
         {

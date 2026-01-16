@@ -19,9 +19,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var archive = await ArchiveFactory.OpenAsyncArchive(
-            stream
-        );
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
 
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
@@ -62,9 +60,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var archive = await ArchiveFactory.OpenAsyncArchive(
-            stream
-        );
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
 
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
@@ -105,9 +101,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var archive = await ArchiveFactory.OpenAsyncArchive(
-            stream
-        );
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
 
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
@@ -148,9 +142,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var archive = await ArchiveFactory.OpenAsyncArchive(
-            stream
-        );
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
 
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
@@ -191,9 +183,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var archive = await ArchiveFactory.OpenAsyncArchive(
-            stream
-        );
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
 
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {

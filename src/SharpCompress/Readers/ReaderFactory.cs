@@ -136,7 +136,12 @@ public static class ReaderFactory
             if (testedFactory is IReaderFactory readerFactory)
             {
                 ((IStreamStack)bStream).StackSeek(pos);
-                if (await testedFactory.IsArchiveAsync(bStream, cancellationToken: cancellationToken))
+                if (
+                    await testedFactory.IsArchiveAsync(
+                        bStream,
+                        cancellationToken: cancellationToken
+                    )
+                )
                 {
                     ((IStreamStack)bStream).StackSeek(pos);
                     return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
@@ -152,7 +157,10 @@ public static class ReaderFactory
                 continue; // Already tested above
             }
             ((IStreamStack)bStream).StackSeek(pos);
-            if (factory is IReaderFactory readerFactory && await factory.IsArchiveAsync(bStream, cancellationToken: cancellationToken))
+            if (
+                factory is IReaderFactory readerFactory
+                && await factory.IsArchiveAsync(bStream, cancellationToken: cancellationToken)
+            )
             {
                 ((IStreamStack)bStream).StackSeek(pos);
                 return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
