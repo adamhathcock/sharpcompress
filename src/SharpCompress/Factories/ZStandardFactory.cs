@@ -32,5 +32,5 @@ internal class ZStandardFactory : Factory
         string? password = null,
         int bufferSize = ReaderOptions.DefaultBufferSize,
         CancellationToken cancellationToken = default
-    ) => new(IsArchive(stream, password, bufferSize));
+    ) => ZStandardStream.IsZStandardAsync(stream, cancellationToken);
 }
