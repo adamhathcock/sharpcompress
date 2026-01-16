@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Tar.Headers;
 
@@ -495,6 +496,90 @@ internal sealed class TarHeader
         return true;
     }
 
+    internal async Task<bool> ReadAsync(Stream stream)
+    {
+        string? longName = null;
+        string? longLinkName = null;
+        var hasLongValue = true;
+        byte[] buffer;
+        EntryType entryType;
+
+        do
+        {
+            buffer = await ReadBlockAsync(stream);
+
+            if (buffer.Length == 0)
+            {
+                return false;
+            }
+
+            entryType = ReadEntryType(buffer);
+
+            // LongName and LongLink headers can follow each other and need
+            // to apply to the header that follows them.
+            if (entryType == EntryType.LongName)
+            {
+                longName = await ReadLongNameAsync(stream, buffer);
+                continue;
+            }
+            else if (entryType == EntryType.LongLink)
+            {
+                longLinkName = await ReadLongNameAsync(stream, buffer);
+                continue;
+            }
+
+            hasLongValue = false;
+        } while (hasLongValue);
+
+        // Check header checksum
+        if (!checkChecksum(buffer))
+        {
+            return false;
+        }
+
+        Name = longName ?? ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+        EntryType = entryType;
+        Size = ReadSize(buffer);
+
+        // for symlinks, additionally read the linkname
+        if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
+        {
+            LinkName = longLinkName ?? ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+        }
+
+        Mode = ReadAsciiInt64Base8(buffer, 100, 7);
+
+        if (entryType == EntryType.Directory)
+        {
+            Mode |= 0b1_000_000_000;
+        }
+
+        UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
+        GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
+
+        var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
+
+        LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
+        Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
+
+        if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
+        {
+            var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
+
+            if (!string.IsNullOrEmpty(namePrefix))
+            {
+                Name = namePrefix + "/" + Name;
+            }
+        }
+
+        if (entryType != EntryType.LongName && Name.Length == 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     internal static int RecalculateChecksum(byte[] buf)
     {
         // Set default value for checksum. That is 8 spaces.
@@ -530,4 +615,76 @@ internal sealed class TarHeader
     public long? DataStartPosition { get; set; }
 
     public string? Magic { get; set; }
+
+    private static async Task<byte[]> ReadBlockAsync(Stream stream)
+    {
+        var buffer = new byte[BLOCK_SIZE];
+        int bytesRead = 0;
+        int totalBytesRead = 0;
+
+        while (totalBytesRead < BLOCK_SIZE)
+        {
+            bytesRead = await stream.ReadAsync(buffer, totalBytesRead, BLOCK_SIZE - totalBytesRead);
+            if (bytesRead == 0)
+            {
+                break;
+            }
+            totalBytesRead += bytesRead;
+        }
+
+        if (totalBytesRead == 0)
+        {
+            return Array.Empty<byte>();
+        }
+
+        if (totalBytesRead < BLOCK_SIZE)
+        {
+            throw new InvalidFormatException("Buffer is invalid size");
+        }
+
+        return buffer;
+    }
+
+    private async Task<string> ReadLongNameAsync(Stream stream, byte[] buffer)
+    {
+        var size = ReadSize(buffer);
+
+        // Validate size to prevent memory exhaustion from malformed headers
+        if (size < 0 || size > MAX_LONG_NAME_SIZE)
+        {
+            throw new InvalidFormatException(
+                $"Long name size {size} is invalid or exceeds maximum allowed size of {MAX_LONG_NAME_SIZE} bytes"
+            );
+        }
+
+        var nameLength = (int)size;
+        var nameBytes = new byte[nameLength];
+        int bytesRead = 0;
+        int totalBytesRead = 0;
+
+        while (totalBytesRead < nameLength)
+        {
+            bytesRead = await stream.ReadAsync(
+                nameBytes,
+                totalBytesRead,
+                nameLength - totalBytesRead
+            );
+            if (bytesRead == 0)
+            {
+                break;
+            }
+            totalBytesRead += bytesRead;
+        }
+
+        var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
+
+        // Read the rest of the block and discard the data
+        if (remainingBytesToRead < BLOCK_SIZE)
+        {
+            var paddingBuffer = new byte[remainingBytesToRead];
+            await stream.ReadAsync(paddingBuffer, 0, remainingBytesToRead);
+        }
+
+        return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
+    }
 }

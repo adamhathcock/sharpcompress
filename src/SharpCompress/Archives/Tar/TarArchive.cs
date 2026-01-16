@@ -32,6 +32,10 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
     protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
     {
         var stream = volumes.Single().Stream;
+        if (stream.CanSeek)
+        {
+            stream.Position = 0;
+        }
         TarHeader? previousHeader = null;
         foreach (
             var header in TarHeaderFactory.ReadHeader(
@@ -83,6 +87,77 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
             else
             {
                 throw new IncompleteArchiveException("Failed to read TAR header");
+            }
+        }
+    }
+
+    protected override async IAsyncEnumerable<TarArchiveEntry> LoadEntriesAsync(
+        IAsyncEnumerable<TarVolume> volumes
+    )
+    {
+        var stream = (await volumes.SingleAsync()).Stream;
+        if (stream.CanSeek)
+        {
+            stream.Position = 0;
+        }
+
+        // Always use async header reading in LoadEntriesAsync for consistency
+        {
+            // Use async header reading for async-only streams
+            TarHeader? previousHeader = null;
+            await foreach (
+                var header in TarHeaderFactory.ReadHeaderAsync(
+                    StreamingMode.Seekable,
+                    stream,
+                    ReaderOptions.ArchiveEncoding
+                )
+            )
+            {
+                if (header != null)
+                {
+                    if (header.EntryType == EntryType.LongName)
+                    {
+                        previousHeader = header;
+                    }
+                    else
+                    {
+                        if (previousHeader != null)
+                        {
+                            var entry = new TarArchiveEntry(
+                                this,
+                                new TarFilePart(previousHeader, stream),
+                                CompressionType.None
+                            );
+
+                            var oldStreamPos = stream.Position;
+
+                            using (var entryStream = entry.OpenEntryStream())
+                            {
+                                using var memoryStream = new MemoryStream();
+                                await entryStream.CopyToAsync(memoryStream);
+                                memoryStream.Position = 0;
+                                var bytes = memoryStream.ToArray();
+
+                                header.Name = ReaderOptions
+                                    .ArchiveEncoding.Decode(bytes)
+                                    .TrimNulls();
+                            }
+
+                            stream.Position = oldStreamPos;
+
+                            previousHeader = null;
+                        }
+                        yield return new TarArchiveEntry(
+                            this,
+                            new TarFilePart(header, stream),
+                            CompressionType.None
+                        );
+                    }
+                }
+                else
+                {
+                    throw new IncompleteArchiveException("Failed to read TAR header");
+                }
             }
         }
     }

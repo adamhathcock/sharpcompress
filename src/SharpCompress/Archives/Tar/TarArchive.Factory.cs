@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -154,7 +155,8 @@ public partial class TarArchive
         try
         {
             var tarHeader = new TarHeader(new ArchiveEncoding());
-            var readSucceeded = tarHeader.Read(new BinaryReader(stream));
+            var reader = new BinaryReader(stream, Encoding.UTF8, false);
+            var readSucceeded = tarHeader.Read(reader);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0
@@ -178,8 +180,7 @@ public partial class TarArchive
         try
         {
             var tarHeader = new TarHeader(new ArchiveEncoding());
-            var reader = new BinaryReader(stream);
-            var readSucceeded = tarHeader.Read(reader);
+            var readSucceeded = await tarHeader.ReadAsync(stream);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0

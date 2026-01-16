@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
@@ -45,6 +46,11 @@ public class TarReaderAsyncTests : ReaderTests
     public async ValueTask Tar_Z_Reader_Async() =>
         await ReadAsync("Tar.tar.Z", CompressionType.Lzw);
 
+
+    [Fact]
+    public async ValueTask Tar_BZip2_Reader_Async_Assert() =>
+        await AssertArchiveAsync<TarFactory>("Tar.tar.bz2", default);
+
     [Fact]
     public async ValueTask Tar_BZip2_Reader_Async() =>
         await ReadAsync("Tar.tar.bz2", CompressionType.BZip2);
@@ -72,29 +78,26 @@ public class TarReaderAsyncTests : ReaderTests
     [Fact]
     public async ValueTask Tar_BZip2_Entry_Stream_Async()
     {
-        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2")))
-        await using (var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream)))
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
+        await using var reader = TarReader.OpenAsyncReader(stream);
+        while (await reader.MoveToNextEntryAsync())
         {
-            while (await reader.MoveToNextEntryAsync())
+            if (!reader.Entry.IsDirectory)
             {
-                if (!reader.Entry.IsDirectory)
+                Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
+                using var entryStream = await reader.OpenEntryStreamAsync();
+                var file = Path.GetFileName(reader.Entry.Key);
+                var folder =
+                    Path.GetDirectoryName(reader.Entry.Key) ?? throw new ArgumentNullException();
+                var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
+                if (!Directory.Exists(destdir))
                 {
-                    Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    using var entryStream = await reader.OpenEntryStreamAsync();
-                    var file = Path.GetFileName(reader.Entry.Key);
-                    var folder =
-                        Path.GetDirectoryName(reader.Entry.Key)
-                        ?? throw new ArgumentNullException();
-                    var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
-                    if (!Directory.Exists(destdir))
-                    {
-                        Directory.CreateDirectory(destdir);
-                    }
-                    var destinationFileName = Path.Combine(destdir, file.NotNull());
-
-                    using var fs = File.OpenWrite(destinationFileName);
-                    await entryStream.CopyToAsync(fs);
+                    Directory.CreateDirectory(destdir);
                 }
+                var destinationFileName = Path.Combine(destdir, file.NotNull());
+
+                using var fs = File.OpenWrite(destinationFileName);
+                await entryStream.CopyToAsync(fs);
             }
         }
         VerifyFiles();
@@ -134,18 +137,18 @@ public class TarReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public void Tar_BZip2_Skip_Entry_Stream_Async()
+    public async ValueTask Tar_BZip2_Skip_Entry_Stream_Async()
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
-        using var reader = TarReader.OpenReader(stream);
+        await using var reader = TarReader.OpenAsyncReader(stream);
         var names = new List<string>();
-        while (reader.MoveToNextEntry())
+        while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {
                 Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                using var entryStream = reader.OpenEntryStream();
-                entryStream.SkipEntry();
+                using var entryStream = await reader.OpenEntryStreamAsync();
+                await entryStream.SkipEntryAsync();
                 names.Add(reader.Entry.Key.NotNull());
             }
         }

@@ -197,6 +197,16 @@ public static class ArchiveFactory
         return FindFactory<T>(stream);
     }
 
+    public static ValueTask<T> FindFactoryAsync<T>(
+        string path,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory
+    {
+        path.NotNullOrEmpty(nameof(path));
+        return FindFactoryAsync<T>(new FileInfo(path), cancellationToken);
+    }
+
     public static T FindFactory<T>(FileInfo finfo)
         where T : IFactory
     {

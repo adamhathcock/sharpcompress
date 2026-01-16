@@ -4,7 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AwesomeAssertions;
+using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
@@ -109,6 +112,17 @@ public abstract class ReaderTests : TestBase
                 );
             }
         }
+    }
+
+    protected async Task AssertArchiveAsync<T>(
+        string testArchive,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        var factory = await ArchiveFactory.FindFactoryAsync<T>(testArchive, cancellationToken);
+        (await factory.IsArchiveAsync(new FileInfo(testArchive).OpenRead(), cancellationToken: cancellationToken)).Should().BeTrue();
     }
 
     protected async Task ReadAsync(
