@@ -62,7 +62,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
 
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.OpenAsyncArchive(fileInfo, readerOptions);
+        SevenZipArchive.LoadFactoryAsync(fileInfo, readerOptions);
 
     #endregion
 
