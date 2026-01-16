@@ -200,7 +200,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         {
             var tropt = new ReaderOptions { ArchiveEncoding = enc };
             await using (
-                var tr = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(inputMemory), tropt)
+                var tr = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(inputMemory), tropt)
             )
             {
                 while (await tr.MoveToNextEntryAsync())

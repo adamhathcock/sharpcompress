@@ -68,7 +68,7 @@ namespace SharpCompress.Test.Ace
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsyncReader(
+            await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions()
             );
@@ -93,7 +93,7 @@ namespace SharpCompress.Test.Ace
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsyncReader(
+            await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions() { LookForHeader = false }
             );
@@ -119,7 +119,7 @@ namespace SharpCompress.Test.Ace
             var streams = testArchives.Select(File.OpenRead).ToList();
             try
             {
-                await using var reader = ReaderFactory.OpenAsyncReader(
+                await using var reader = await ReaderFactory.OpenAsyncReader(
                     new AsyncOnlyStream(streams.First())
                 );
                 while (await reader.MoveToNextEntryAsync())
