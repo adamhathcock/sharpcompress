@@ -174,7 +174,9 @@ public partial class RarArchive
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            MarkHeader.Read(stream, true, false);
+            await MarkHeader
+                .ReadAsync(stream, true, false, cancellationToken)
+                .ConfigureAwait(false);
             return true;
         }
         catch
