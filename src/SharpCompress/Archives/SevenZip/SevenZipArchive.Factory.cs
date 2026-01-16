@@ -195,7 +195,7 @@ public partial class SevenZipArchive
         var buffer = ArrayPool<byte>.Shared.Rent(6);
         try
         {
-            if (!await stream.ReadFullyAsync(buffer, cancellationToken).ConfigureAwait(false))
+            if (!await stream.ReadFullyAsync(buffer, 0, 6, cancellationToken).ConfigureAwait(false))
             {
                 return false;
             }
