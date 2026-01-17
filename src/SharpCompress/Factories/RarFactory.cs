@@ -111,14 +111,14 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
         RarReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public IAsyncReader OpenAsyncReader(
+    public ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)RarReader.OpenReader(stream, options);
+        return new((IAsyncReader)RarReader.OpenReader(stream, options));
     }
 
     #endregion

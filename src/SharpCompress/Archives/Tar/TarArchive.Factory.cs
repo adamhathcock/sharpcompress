@@ -6,12 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
-using SharpCompress.Writers;
-using SharpCompress.Writers.Tar;
 
 namespace SharpCompress.Archives.Tar;
 
@@ -176,11 +173,11 @@ public partial class TarArchive
         CancellationToken cancellationToken = default
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var tarHeader = new TarHeader(new ArchiveEncoding());
-            var readSucceeded = await tarHeader.ReadAsync(stream);
+            var reader = new AsyncBinaryReader(stream, false);
+            var readSucceeded = await tarHeader.ReadAsync(reader);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0

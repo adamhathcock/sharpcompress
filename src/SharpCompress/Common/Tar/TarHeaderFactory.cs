@@ -54,7 +54,6 @@ internal static class TarHeaderFactory
         }
     }
 
-
     internal static async IAsyncEnumerable<TarHeader?> ReadHeaderAsync(
         StreamingMode mode,
         Stream stream,
@@ -66,26 +65,26 @@ internal static class TarHeaderFactory
             TarHeader? header = null;
             try
             {
+                var reader = new AsyncBinaryReader(stream, false);
                 header = new TarHeader(archiveEncoding);
-
-                if (!await header.ReadAsync(stream))
+                if (!await header.ReadAsync(reader))
                 {
                     yield break;
                 }
                 switch (mode)
                 {
                     case StreamingMode.Seekable:
-                    {
-                        header.DataStartPosition = stream.Position;
+                        {
+                            header.DataStartPosition = stream.Position;
 
-                        //skip to nearest 512
-                        stream.Position += PadTo512(header.Size);
-                    }
+                            //skip to nearest 512
+                            stream.Position += PadTo512(header.Size);
+                        }
                         break;
                     case StreamingMode.Streaming:
-                    {
-                        header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
-                    }
+                        {
+                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                        }
                         break;
                     default:
                     {

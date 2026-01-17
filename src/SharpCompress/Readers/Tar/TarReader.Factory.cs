@@ -1,4 +1,3 @@
-
 using System.IO;
 using System.Threading;
 using SharpCompress.Common;
@@ -7,7 +6,7 @@ namespace SharpCompress.Readers.Tar;
 
 public partial class TarReader
 #if NET8_0_OR_GREATER
-: IReaderOpenable
+    : IReaderOpenable
 #endif
 {
     public static IAsyncReader OpenAsyncReader(

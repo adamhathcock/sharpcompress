@@ -144,14 +144,14 @@ public class GZipFactory
         GZipReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public IAsyncReader OpenAsyncReader(
+    public ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)GZipReader.OpenReader(stream, options);
+        return new((IAsyncReader)GZipReader.OpenReader(stream, options));
     }
 
     /// <inheritdoc/>

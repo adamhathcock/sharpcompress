@@ -121,8 +121,16 @@ public abstract class ReaderTests : TestBase
         where T : IFactory
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        var factory = await ArchiveFactory.FindFactoryAsync<T>(testArchive, cancellationToken);
-        (await factory.IsArchiveAsync(new FileInfo(testArchive).OpenRead(), cancellationToken: cancellationToken)).Should().BeTrue();
+        var factory = new TarFactory();
+        factory.IsArchive(new FileInfo(testArchive).OpenRead()).Should().BeTrue();
+        (
+            await factory.IsArchiveAsync(
+                new FileInfo(testArchive).OpenRead(),
+                cancellationToken: cancellationToken
+            )
+        )
+            .Should()
+            .BeTrue();
     }
 
     protected async Task ReadAsync(

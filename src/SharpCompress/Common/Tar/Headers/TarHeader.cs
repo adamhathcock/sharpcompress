@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -496,7 +497,7 @@ internal sealed class TarHeader
         return true;
     }
 
-    internal async Task<bool> ReadAsync(Stream stream)
+    internal async Task<bool> ReadAsync(AsyncBinaryReader reader)
     {
         string? longName = null;
         string? longLinkName = null;
@@ -506,7 +507,7 @@ internal sealed class TarHeader
 
         do
         {
-            buffer = await ReadBlockAsync(stream);
+            buffer = await ReadBlockAsync(reader);
 
             if (buffer.Length == 0)
             {
@@ -519,12 +520,12 @@ internal sealed class TarHeader
             // to apply to the header that follows them.
             if (entryType == EntryType.LongName)
             {
-                longName = await ReadLongNameAsync(stream, buffer);
+                longName = await ReadLongNameAsync(reader, buffer);
                 continue;
             }
             else if (entryType == EntryType.LongLink)
             {
-                longLinkName = await ReadLongNameAsync(stream, buffer);
+                longLinkName = await ReadLongNameAsync(reader, buffer);
                 continue;
             }
 
@@ -616,36 +617,27 @@ internal sealed class TarHeader
 
     public string? Magic { get; set; }
 
-    private static async Task<byte[]> ReadBlockAsync(Stream stream)
+    private static async ValueTask<byte[]> ReadBlockAsync(AsyncBinaryReader reader)
     {
-        var buffer = new byte[BLOCK_SIZE];
-        int bytesRead = 0;
-        int totalBytesRead = 0;
-
-        while (totalBytesRead < BLOCK_SIZE)
+        var buffer = ArrayPool<byte>.Shared.Rent(BLOCK_SIZE);
+        try
         {
-            bytesRead = await stream.ReadAsync(buffer, totalBytesRead, BLOCK_SIZE - totalBytesRead);
-            if (bytesRead == 0)
+            await reader.ReadBytesAsync(buffer, 0, BLOCK_SIZE);
+
+            if (buffer.Length != 0 && buffer.Length < BLOCK_SIZE)
             {
-                break;
+                throw new InvalidFormatException("Buffer is invalid size");
             }
-            totalBytesRead += bytesRead;
-        }
 
-        if (totalBytesRead == 0)
+            return buffer;
+        }
+        finally
         {
-            return Array.Empty<byte>();
+            ArrayPool<byte>.Shared.Return(buffer);
         }
-
-        if (totalBytesRead < BLOCK_SIZE)
-        {
-            throw new InvalidFormatException("Buffer is invalid size");
-        }
-
-        return buffer;
     }
 
-    private async Task<string> ReadLongNameAsync(Stream stream, byte[] buffer)
+    private async Task<string> ReadLongNameAsync(AsyncBinaryReader reader, byte[] buffer)
     {
         var size = ReadSize(buffer);
 
@@ -658,33 +650,31 @@ internal sealed class TarHeader
         }
 
         var nameLength = (int)size;
-        var nameBytes = new byte[nameLength];
-        int bytesRead = 0;
-        int totalBytesRead = 0;
-
-        while (totalBytesRead < nameLength)
+        var nameBytes = ArrayPool<byte>.Shared.Rent(nameLength);
+        try
         {
-            bytesRead = await stream.ReadAsync(
-                nameBytes,
-                totalBytesRead,
-                nameLength - totalBytesRead
-            );
-            if (bytesRead == 0)
+            await reader.ReadBytesAsync(buffer, 0, nameLength);
+            var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
+
+            // Read the rest of the block and discard the data
+            if (remainingBytesToRead < BLOCK_SIZE)
             {
-                break;
+                var remainingBytes = ArrayPool<byte>.Shared.Rent(remainingBytesToRead);
+                try
+                {
+                    await reader.ReadBytesAsync(remainingBytes, 0, remainingBytesToRead);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(nameBytes);
+                }
             }
-            totalBytesRead += bytesRead;
+
+            return ArchiveEncoding.Decode(nameBytes, 0, nameLength).TrimNulls();
         }
-
-        var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
-
-        // Read the rest of the block and discard the data
-        if (remainingBytesToRead < BLOCK_SIZE)
+        finally
         {
-            var paddingBuffer = new byte[remainingBytesToRead];
-            await stream.ReadAsync(paddingBuffer, 0, remainingBytesToRead);
+            ArrayPool<byte>.Shared.Return(nameBytes);
         }
-
-        return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
     }
 }

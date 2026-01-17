@@ -70,7 +70,7 @@ public static class ReaderFactory
 
         var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
 
-        long pos = ((IStreamStack)bStream).GetPosition();
+        long pos = bStream.GetPosition();
 
         var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
 
@@ -89,7 +89,7 @@ public static class ReaderFactory
             {
                 return reader;
             }
-            ((IStreamStack)bStream).StackSeek(pos);
+            bStream.StackSeek(pos);
         }
 
         foreach (var factory in factories)
@@ -98,7 +98,7 @@ public static class ReaderFactory
             {
                 continue; // Already tested above
             }
-            ((IStreamStack)bStream).StackSeek(pos);
+            bStream.StackSeek(pos);
             if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
                 return reader;
@@ -120,13 +120,11 @@ public static class ReaderFactory
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
         var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
+        long pos = bStream.GetPosition();
 
-        long pos = ((IStreamStack)bStream).GetPosition();
-
-        var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
+        var factories = Factory.Factories.OfType<Factory>();
 
         Factory? testedFactory = null;
-
         if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
         {
             testedFactory = factories.FirstOrDefault(a =>
@@ -135,7 +133,7 @@ public static class ReaderFactory
             );
             if (testedFactory is IReaderFactory readerFactory)
             {
-                ((IStreamStack)bStream).StackSeek(pos);
+                bStream.StackSeek(pos);
                 if (
                     await testedFactory.IsArchiveAsync(
                         bStream,
@@ -143,11 +141,11 @@ public static class ReaderFactory
                     )
                 )
                 {
-                    ((IStreamStack)bStream).StackSeek(pos);
-                    return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
+                    bStream.StackSeek(pos);
+                    return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
                 }
             }
-            ((IStreamStack)bStream).StackSeek(pos);
+            bStream.StackSeek(pos);
         }
 
         foreach (var factory in factories)
@@ -156,14 +154,14 @@ public static class ReaderFactory
             {
                 continue; // Already tested above
             }
-            ((IStreamStack)bStream).StackSeek(pos);
+            bStream.StackSeek(pos);
             if (
                 factory is IReaderFactory readerFactory
                 && await factory.IsArchiveAsync(bStream, cancellationToken: cancellationToken)
             )
             {
-                ((IStreamStack)bStream).StackSeek(pos);
-                return readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
+                bStream.StackSeek(pos);
+                return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
             }
         }
 

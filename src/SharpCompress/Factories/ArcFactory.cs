@@ -52,14 +52,14 @@ namespace SharpCompress.Factories
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             ArcReader.OpenReader(stream, options);
 
-        public IAsyncReader OpenAsyncReader(
+        public ValueTask<IAsyncReader> OpenAsyncReader(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return (IAsyncReader)ArcReader.OpenReader(stream, options);
+            return new((IAsyncReader)ArcReader.OpenReader(stream, options));
         }
 
         public override async ValueTask<bool> IsArchiveAsync(

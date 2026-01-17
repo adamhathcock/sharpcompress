@@ -58,9 +58,7 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
         stream.NotNull(nameof(stream));
         options = options ?? new ReaderOptions();
         var rewindableStream = new SharpCompressStream(stream);
-
         long pos = ((IStreamStack)rewindableStream).GetPosition();
-
         if (GZipArchive.IsGZipFile(rewindableStream))
         {
             ((IStreamStack)rewindableStream).StackSeek(pos);
@@ -72,7 +70,6 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-
         ((IStreamStack)rewindableStream).StackSeek(pos);
         if (BZip2Stream.IsBZip2(rewindableStream))
         {
@@ -85,7 +82,6 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-
         ((IStreamStack)rewindableStream).StackSeek(pos);
         if (ZStandardStream.IsZStandard(rewindableStream))
         {
@@ -110,7 +106,6 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-
         ((IStreamStack)rewindableStream).StackSeek(pos);
         return new TarReader(rewindableStream, options, CompressionType.None);
     }

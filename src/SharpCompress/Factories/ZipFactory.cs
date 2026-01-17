@@ -190,14 +190,14 @@ public class ZipFactory
         ZipReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public IAsyncReader OpenAsyncReader(
+    public ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)ZipReader.OpenReader(stream, options);
+        return new((IAsyncReader)ZipReader.OpenReader(stream, options));
     }
 
     #endregion

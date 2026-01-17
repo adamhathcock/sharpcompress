@@ -39,14 +39,14 @@ namespace SharpCompress.Factories
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             ArjReader.OpenReader(stream, options);
 
-        public IAsyncReader OpenAsyncReader(
+        public ValueTask<IAsyncReader> OpenAsyncReader(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return (IAsyncReader)ArjReader.OpenReader(stream, options);
+            return new((IAsyncReader)ArjReader.OpenReader(stream, options));
         }
     }
 }
