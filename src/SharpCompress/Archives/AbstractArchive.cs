@@ -200,7 +200,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
 
     private async IAsyncEnumerable<IVolume> VolumesAsyncCast()
     {
-        await foreach (var volume in VolumesAsync)
+        await foreach (var volume in _lazyVolumesAsync)
         {
             yield return volume;
         }

@@ -175,7 +175,7 @@ public static class ArchiveFactory
         firstStream.NotNull(nameof(firstStream));
         options ??= new ReaderOptions();
 
-        var factory = FindFactory<IMultiArchiveFactory>(firstStream);
+        var factory = await FindFactoryAsync<IMultiArchiveFactory>(firstStream, cancellationToken);
         return factory.OpenAsyncArchive(streamsArray, options);
     }
 
