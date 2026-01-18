@@ -61,11 +61,15 @@ internal class SeekableZipFilePart : ZipFilePart
 
     private void LoadLocalHeader()
     {
-        // Use an independent stream for loading the header if possible
+        // Use an independent stream for loading the header if multi-threading is enabled
         Stream streamToUse = BaseStream;
         bool disposeStream = false;
 
-        if (BaseStream is SourceStream sourceStream && sourceStream.IsFileMode)
+        if (
+            BaseStream is SourceStream sourceStream
+            && sourceStream.IsFileMode
+            && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
+        )
         {
             var independentStream = sourceStream.CreateIndependentStream(0);
             if (independentStream is not null)
@@ -110,11 +114,15 @@ internal class SeekableZipFilePart : ZipFilePart
 
     private async ValueTask LoadLocalHeaderAsync(CancellationToken cancellationToken = default)
     {
-        // Use an independent stream for loading the header if possible
+        // Use an independent stream for loading the header if multi-threading is enabled
         Stream streamToUse = BaseStream;
         bool disposeStream = false;
 
-        if (BaseStream is SourceStream sourceStream && sourceStream.IsFileMode)
+        if (
+            BaseStream is SourceStream sourceStream
+            && sourceStream.IsFileMode
+            && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
+        )
         {
             var independentStream = sourceStream.CreateIndependentStream(0);
             if (independentStream is not null)
@@ -162,9 +170,13 @@ internal class SeekableZipFilePart : ZipFilePart
 
     protected override Stream CreateBaseStream()
     {
-        // If BaseStream is a SourceStream in file mode, create an independent stream
-        // to support concurrent multi-threaded extraction
-        if (BaseStream is SourceStream sourceStream && sourceStream.IsFileMode)
+        // If BaseStream is a SourceStream in file mode with multi-threading enabled,
+        // create an independent stream to support concurrent extraction
+        if (
+            BaseStream is SourceStream sourceStream
+            && sourceStream.IsFileMode
+            && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
+        )
         {
             // Create a new independent stream for this entry
             var independentStream = sourceStream.CreateIndependentStream(0);

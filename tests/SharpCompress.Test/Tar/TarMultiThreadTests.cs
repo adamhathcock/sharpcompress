@@ -18,7 +18,16 @@ public class TarMultiThreadTests : TestBase
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         var fileInfo = new FileInfo(testArchive);
 
-        using var archive = TarArchive.OpenArchive(fileInfo);
+        var options = new SharpCompress.Readers.ReaderOptions
+        {
+            EnableMultiThreadedExtraction = true,
+        };
+
+        using var archive = TarArchive.OpenArchive(fileInfo, options);
+
+        // Verify multi-threading is supported
+        Assert.True(archive.SupportsMultiThreadedExtraction);
+
         var entries = archive.Entries.Where(e => !e.IsDirectory).Take(5).ToList();
 
         // Extract multiple entries concurrently
@@ -62,7 +71,12 @@ public class TarMultiThreadTests : TestBase
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
         var fileInfo = new FileInfo(testArchive);
 
-        using var archive = TarArchive.OpenArchive(fileInfo);
+        var options = new SharpCompress.Readers.ReaderOptions
+        {
+            EnableMultiThreadedExtraction = true,
+        };
+
+        using var archive = TarArchive.OpenArchive(fileInfo, options);
         var entries = archive.Entries.Where(e => !e.IsDirectory).Take(5).ToList();
 
         // Extract multiple entries concurrently

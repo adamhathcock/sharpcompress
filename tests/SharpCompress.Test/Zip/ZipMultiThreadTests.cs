@@ -12,13 +12,51 @@ namespace SharpCompress.Test.Zip;
 public class ZipMultiThreadTests : TestBase
 {
     [Fact]
+    public void Zip_Archive_Without_MultiThreading_Enabled()
+    {
+        // Test that extraction still works when multi-threading is NOT enabled
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.zip");
+        var fileInfo = new FileInfo(testArchive);
+
+        // Default options - multi-threading disabled
+        using var archive = ZipArchive.OpenArchive(fileInfo);
+
+        // Verify multi-threading is NOT supported
+        Assert.False(archive.SupportsMultiThreadedExtraction);
+
+        var entry = archive.Entries.First(e => !e.IsDirectory);
+        var outputFile = Path.Combine(SCRATCH_FILES_PATH, entry.Key!);
+
+        var dir = Path.GetDirectoryName(outputFile);
+        if (dir != null)
+        {
+            Directory.CreateDirectory(dir);
+        }
+
+        using var entryStream = entry.OpenEntryStream();
+        using var fileStream = File.Create(outputFile);
+        entryStream.CopyTo(fileStream);
+
+        Assert.True(File.Exists(outputFile));
+    }
+
+    [Fact]
     public void Zip_Archive_Concurrent_Extraction_From_FileInfo()
     {
         // Test concurrent extraction of multiple entries from a Zip archive opened from FileInfo
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.zip");
         var fileInfo = new FileInfo(testArchive);
 
-        using var archive = ZipArchive.OpenArchive(fileInfo);
+        var options = new SharpCompress.Readers.ReaderOptions
+        {
+            EnableMultiThreadedExtraction = true,
+        };
+
+        using var archive = ZipArchive.OpenArchive(fileInfo, options);
+
+        // Verify multi-threading is supported
+        Assert.True(archive.SupportsMultiThreadedExtraction);
+
         var entries = archive.Entries.Where(e => !e.IsDirectory).Take(5).ToList();
 
         // Extract multiple entries concurrently
@@ -62,7 +100,12 @@ public class ZipMultiThreadTests : TestBase
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.zip");
         var fileInfo = new FileInfo(testArchive);
 
-        using var archive = ZipArchive.OpenArchive(fileInfo);
+        var options = new SharpCompress.Readers.ReaderOptions
+        {
+            EnableMultiThreadedExtraction = true,
+        };
+
+        using var archive = ZipArchive.OpenArchive(fileInfo, options);
         var entries = archive.Entries.Where(e => !e.IsDirectory).Take(5).ToList();
 
         // Extract multiple entries concurrently
@@ -105,7 +148,12 @@ public class ZipMultiThreadTests : TestBase
         // Test concurrent extraction when opening from path (should use FileInfo internally)
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.zip");
 
-        using var archive = ZipArchive.OpenArchive(testArchive);
+        var options = new SharpCompress.Readers.ReaderOptions
+        {
+            EnableMultiThreadedExtraction = true,
+        };
+
+        using var archive = ZipArchive.OpenArchive(testArchive, options);
         var entries = archive.Entries.Where(e => !e.IsDirectory).Take(5).ToList();
 
         // Extract multiple entries concurrently

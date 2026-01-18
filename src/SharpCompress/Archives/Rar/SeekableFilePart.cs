@@ -27,9 +27,13 @@ internal class SeekableFilePart : RarFilePart
     {
         Stream streamToUse;
 
-        // If the stream is a SourceStream in file mode, create an independent stream
-        // to support concurrent multi-threaded extraction
-        if (_stream is SourceStream sourceStream && sourceStream.IsFileMode)
+        // If the stream is a SourceStream in file mode with multi-threading enabled,
+        // create an independent stream to support concurrent extraction
+        if (
+            _stream is SourceStream sourceStream
+            && sourceStream.IsFileMode
+            && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
+        )
         {
             var independentStream = sourceStream.CreateIndependentStream(0);
             if (independentStream is not null)

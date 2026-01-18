@@ -23,9 +23,13 @@ internal sealed class TarFilePart : FilePart
     {
         if (_seekableStream is not null)
         {
-            // If the seekable stream is a SourceStream in file mode, create an independent stream
-            // to support concurrent multi-threaded extraction
-            if (_seekableStream is SourceStream sourceStream && sourceStream.IsFileMode)
+            // If the seekable stream is a SourceStream in file mode with multi-threading enabled,
+            // create an independent stream to support concurrent extraction
+            if (
+                _seekableStream is SourceStream sourceStream
+                && sourceStream.IsFileMode
+                && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
+            )
             {
                 var independentStream = sourceStream.CreateIndependentStream(0);
                 if (independentStream is not null)
