@@ -89,7 +89,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
         AddEntry(key, source, false, size, modified);
 
-    IArchiveEntry IWritableArchiveCommon.AddEntry(
+    IArchiveEntry IWritableArchive.AddEntry(
         string key,
         Stream source,
         bool closeStream,
@@ -97,7 +97,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         DateTime? modified
     ) => AddEntry(key, source, closeStream, size, modified);
 
-    IArchiveEntry IWritableArchiveCommon.AddDirectoryEntry(string key, DateTime? modified) =>
+    IArchiveEntry IWritableArchive.AddDirectoryEntry(string key, DateTime? modified) =>
         AddDirectoryEntry(key, modified);
 
     public TEntry AddEntry(
@@ -140,6 +140,65 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         return false;
     }
 
+    private async ValueTask<bool> DoesKeyMatchExistingAsync(
+        string key,
+        CancellationToken cancellationToken
+    )
+    {
+        await foreach (
+            var entry in EntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
+        {
+            var path = entry.Key;
+            if (path is null)
+            {
+                continue;
+            }
+            var p = path.Replace('/', '\\');
+            if (p.Length > 0 && p[0] == '\\')
+            {
+                p = p.Substring(1);
+            }
+            return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
+        }
+        return false;
+    }
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddEntryAsync(
+        string key,
+        Stream source,
+        bool closeStream,
+        long size,
+        DateTime? modified,
+    CancellationToken cancellationToken
+    ) => await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
+
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(string key, DateTime? modified,
+                                                                                CancellationToken cancellationToken) =>
+        await AddDirectoryEntryAsync(key, modified, cancellationToken);
+
+    public async ValueTask<TEntry> AddEntryAsync(
+        string key,
+        Stream source,
+        bool closeStream,
+        long size = 0,
+        DateTime? modified = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (key.Length > 0 && key[0] is '/' or '\\')
+        {
+            key = key.Substring(1);
+        }
+        if (await DoesKeyMatchExistingAsync(key, cancellationToken).ConfigureAwait(false))
+        {
+            throw new ArchiveException("Cannot add entry with duplicate key: " + key);
+        }
+        var entry = CreateEntry(key, source, size, modified, closeStream);
+        newEntries.Add(entry);
+        RebuildModifiedCollection();
+        return entry;
+    }
+
     public TEntry AddDirectoryEntry(string key, DateTime? modified = null)
     {
         if (key.Length > 0 && key[0] is '/' or '\\')
@@ -147,6 +206,26 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
             key = key.Substring(1);
         }
         if (DoesKeyMatchExisting(key))
+        {
+            throw new ArchiveException("Cannot add entry with duplicate key: " + key);
+        }
+        var entry = CreateDirectoryEntry(key, modified);
+        newEntries.Add(entry);
+        RebuildModifiedCollection();
+        return entry;
+    }
+
+    public async ValueTask<TEntry> AddDirectoryEntryAsync(
+        string key,
+        DateTime? modified = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (key.Length > 0 && key[0] is '/' or '\\')
+        {
+            key = key.Substring(1);
+        }
+        if (await DoesKeyMatchExistingAsync(key, cancellationToken).ConfigureAwait(false))
         {
             throw new ArchiveException("Cannot add entry with duplicate key: " + key);
         }

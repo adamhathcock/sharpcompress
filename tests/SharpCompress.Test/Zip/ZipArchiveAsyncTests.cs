@@ -151,7 +151,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
 
         await using (var archive = ZipArchive.OpenAsyncArchive(unmodified))
         {
-            archive.AddEntry("jpg\\test.jpg", jpg);
+            await archive.AddEntryAsync("jpg\\test.jpg", jpg);
 
             WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
             writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);

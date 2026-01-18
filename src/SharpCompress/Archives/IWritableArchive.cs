@@ -18,6 +18,10 @@ public interface IWritableArchiveCommon
     /// Removes the specified entry from the archive.
     /// </summary>
     void RemoveEntry(IArchiveEntry entry);
+}
+
+public interface IWritableArchive : IArchive, IWritableArchiveCommon
+{
 
     IArchiveEntry AddEntry(
         string key,
@@ -28,10 +32,7 @@ public interface IWritableArchiveCommon
     );
 
     IArchiveEntry AddDirectoryEntry(string key, DateTime? modified = null);
-}
 
-public interface IWritableArchive : IArchive, IWritableArchiveCommon
-{
     /// <summary>
     /// Saves the archive to the specified stream using the given writer options.
     /// </summary>
@@ -46,6 +47,27 @@ public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
     ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Asynchronously adds an entry to the archive with the specified key, source stream, and options.
+    /// </summary>
+    ValueTask<IArchiveEntry> AddEntryAsync(
+        string key,
+        Stream source,
+        bool closeStream,
+        long size = 0,
+        DateTime? modified = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Asynchronously adds a directory entry to the archive with the specified key and modification time.
+    /// </summary>
+    ValueTask<IArchiveEntry> AddDirectoryEntryAsync(
+        string key,
+        DateTime? modified = null,
         CancellationToken cancellationToken = default
     );
 }

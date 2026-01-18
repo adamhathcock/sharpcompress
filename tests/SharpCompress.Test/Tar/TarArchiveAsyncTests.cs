@@ -139,7 +139,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         await using (var archive = TarArchive.CreateAsyncArchive())
         {
-            archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
+            await archive.AddAllFromDirectoryAsync(ORIGINAL_FILES_PATH);
             var twopt = new TarWriterOptions(CompressionType.None, true);
             twopt.ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) };
             await archive.SaveToAsync(scratchPath, twopt);
@@ -157,7 +157,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         await using (var archive = TarArchive.OpenAsyncArchive(unmodified))
         {
-            archive.AddEntry("jpg\\test.jpg", jpg);
+            await archive.AddEntryAsync("jpg\\test.jpg", jpg);
             await archive.SaveToAsync(scratchPath, new WriterOptions(CompressionType.None));
         }
         CompareArchivesByPath(modified, scratchPath);
