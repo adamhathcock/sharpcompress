@@ -98,6 +98,30 @@ public class SourceStream : Stream, IStreamStack
 
     private Stream Current => _streams[_stream];
 
+    /// <summary>
+    /// Creates an independent stream for the specified volume index.
+    /// This allows multiple threads to read from different positions concurrently.
+    /// Only works when IsFileMode is true.
+    /// </summary>
+    /// <param name="volumeIndex">The volume index to create a stream for</param>
+    /// <returns>A new independent FileStream, or null if not in file mode or volume doesn't exist</returns>
+    public Stream? CreateIndependentStream(int volumeIndex)
+    {
+        if (!IsFileMode)
+        {
+            return null;
+        }
+
+        // Ensure the volume is loaded
+        if (!LoadStream(volumeIndex))
+        {
+            return null;
+        }
+
+        // Create a new independent stream from the FileInfo
+        return _files[volumeIndex].OpenRead();
+    }
+
     public bool LoadStream(int index) //ensure all parts to id are loaded
     {
         while (_streams.Count <= index)
