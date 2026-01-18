@@ -73,7 +73,25 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         modifiedEntries.AddRange(OldEntries.Concat(newEntries));
     }
 
+    private async ValueTask RebuildModifiedCollectionAsync()
+    {
+        if (pauseRebuilding)
+        {
+            return;
+        }
+        hasModifications = true;
+        newEntries.RemoveAll(v => removedEntries.Contains(v));
+        modifiedEntries.Clear();
+        await foreach (var entry in OldEntriesAsync)
+        {
+            modifiedEntries.Add(entry);
+        }
+        modifiedEntries.AddRange(newEntries);
+    }
+
     private IEnumerable<TEntry> OldEntries => base.Entries.Where(x => !removedEntries.Contains(x));
+    private IAsyncEnumerable<TEntry> OldEntriesAsync =>
+        base.EntriesAsync.Where(x => !removedEntries.Contains(x));
 
     public void RemoveEntry(TEntry entry)
     {
@@ -84,7 +102,19 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    void IWritableArchiveCommon.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
+    public async ValueTask RemoveEntryAsync(TEntry entry)
+    {
+        if (!removedEntries.Contains(entry))
+        {
+            removedEntries.Add(entry);
+            await RebuildModifiedCollectionAsync();
+        }
+    }
+
+    void IWritableArchive.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
+
+    ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
+        RemoveEntryAsync((TEntry)entry);
 
     public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
         AddEntry(key, source, false, size, modified);
@@ -163,18 +193,21 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
         return false;
     }
+
     async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddEntryAsync(
         string key,
         Stream source,
         bool closeStream,
         long size,
         DateTime? modified,
-    CancellationToken cancellationToken
+        CancellationToken cancellationToken
     ) => await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
 
-    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(string key, DateTime? modified,
-                                                                                CancellationToken cancellationToken) =>
-        await AddDirectoryEntryAsync(key, modified, cancellationToken);
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(
+        string key,
+        DateTime? modified,
+        CancellationToken cancellationToken
+    ) => await AddDirectoryEntryAsync(key, modified, cancellationToken);
 
     public async ValueTask<TEntry> AddEntryAsync(
         string key,
@@ -195,7 +228,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
         var entry = CreateEntry(key, source, size, modified, closeStream);
         newEntries.Add(entry);
-        RebuildModifiedCollection();
+        await RebuildModifiedCollectionAsync();
         return entry;
     }
 
@@ -231,7 +264,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
         var entry = CreateDirectoryEntry(key, modified);
         newEntries.Add(entry);
-        RebuildModifiedCollection();
+        await RebuildModifiedCollectionAsync();
         return entry;
     }
 
@@ -250,7 +283,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     {
         //reset streams of new entries
         newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-        await SaveToAsync(stream, options, OldEntries, newEntries, cancellationToken)
+        await SaveToAsync(stream, options, OldEntriesAsync, newEntries, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -291,7 +324,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     protected abstract ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
-        IEnumerable<TEntry> oldEntries,
+        IAsyncEnumerable<TEntry> oldEntries,
         IEnumerable<TEntry> newEntries,
         CancellationToken cancellationToken = default
     );

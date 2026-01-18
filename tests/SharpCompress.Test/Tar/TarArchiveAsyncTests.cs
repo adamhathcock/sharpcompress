@@ -175,7 +175,7 @@ public class TarArchiveAsyncTests : ArchiveTests
             var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
-            archive.RemoveEntry(entry);
+            await archive.RemoveEntryAsync(entry);
             await archive.SaveToAsync(scratchPath, new WriterOptions(CompressionType.None));
         }
         CompareArchivesByPath(modified, scratchPath);

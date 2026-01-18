@@ -13,16 +13,10 @@ public interface IWritableArchiveCommon
     /// </summary>
     /// <returns>IDisposeable to resume entry rebuilding</returns>
     IDisposable PauseEntryRebuilding();
-
-    /// <summary>
-    /// Removes the specified entry from the archive.
-    /// </summary>
-    void RemoveEntry(IArchiveEntry entry);
 }
 
 public interface IWritableArchive : IArchive, IWritableArchiveCommon
 {
-
     IArchiveEntry AddEntry(
         string key,
         Stream source,
@@ -37,6 +31,11 @@ public interface IWritableArchive : IArchive, IWritableArchiveCommon
     /// Saves the archive to the specified stream using the given writer options.
     /// </summary>
     void SaveTo(Stream stream, WriterOptions options);
+
+    /// <summary>
+    /// Removes the specified entry from the archive.
+    /// </summary>
+    void RemoveEntry(IArchiveEntry entry);
 }
 
 public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
@@ -70,4 +69,9 @@ public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
         DateTime? modified = null,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// Removes the specified entry from the archive.
+    /// </summary>
+    ValueTask RemoveEntryAsync(IArchiveEntry entry);
 }

@@ -95,7 +95,7 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
     protected override async ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
-        IEnumerable<GZipArchiveEntry> oldEntries,
+        IAsyncEnumerable<GZipArchiveEntry> oldEntries,
         IEnumerable<GZipArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
     )
@@ -105,7 +105,23 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
         using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
+        await foreach (
+            var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
+        {
+            if (!entry.IsDirectory)
+            {
+                using var entryStream = entry.OpenEntryStream();
+                await writer
+                    .WriteAsync(
+                        entry.Key.NotNull("Entry Key is null"),
+                        entryStream,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
+        }
+        foreach (var entry in newEntries.Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
             await writer

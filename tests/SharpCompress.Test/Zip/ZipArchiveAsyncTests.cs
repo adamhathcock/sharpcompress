@@ -131,7 +131,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
             var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
-            archive.RemoveEntry(entry);
+            await archive.RemoveEntryAsync(entry);
 
             WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
             writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);

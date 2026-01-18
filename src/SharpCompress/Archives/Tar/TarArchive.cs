@@ -217,13 +217,41 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
     protected override async ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
-        IEnumerable<TarArchiveEntry> oldEntries,
+        IAsyncEnumerable<TarArchiveEntry> oldEntries,
         IEnumerable<TarArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
     )
     {
         using var writer = new TarWriter(stream, new TarWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries))
+        await foreach (
+            var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
+        {
+            if (entry.IsDirectory)
+            {
+                await writer
+                    .WriteDirectoryAsync(
+                        entry.Key.NotNull("Entry Key is null"),
+                        entry.LastModifiedTime,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                using var entryStream = entry.OpenEntryStream();
+                await writer
+                    .WriteAsync(
+                        entry.Key.NotNull("Entry Key is null"),
+                        entryStream,
+                        entry.LastModifiedTime,
+                        entry.Size,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
+        }
+        foreach (var entry in newEntries)
         {
             if (entry.IsDirectory)
             {

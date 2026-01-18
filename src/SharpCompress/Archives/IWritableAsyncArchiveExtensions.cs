@@ -9,7 +9,6 @@ namespace SharpCompress.Archives;
 
 public static class IWritableAsyncArchiveExtensions
 {
-
     extension(IWritableAsyncArchive writableArchive)
     {
         public async ValueTask AddAllFromDirectoryAsync(
@@ -60,7 +59,6 @@ public static class IWritableAsyncArchiveExtensions
                 fileInfo.LastWriteTime
             );
         }
-    
 
         public ValueTask SaveToAsync(
             string filePath,
