@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 #if !Rar2017_64bit
 using size_t = System.UInt32;
@@ -29,6 +31,33 @@ internal class FileHeader : RarHeader
         else
         {
             ReadFromReaderV4(reader);
+        }
+    }
+
+    public static new async ValueTask<FileHeader> CreateAsync(
+        RarHeader header,
+        AsyncRarCrcBinaryReader reader,
+        HeaderType headerType,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fh = new FileHeader(header, reader, headerType);
+        await fh.ReadFinishAsync(reader, cancellationToken).ConfigureAwait(false);
+        return fh;
+    }
+
+    protected override async ValueTask ReadFinishAsync(
+        AsyncMarkingBinaryReader reader,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (IsRar5)
+        {
+            await ReadFromReaderV5Async(reader, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await ReadFromReaderV4Async(reader, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -205,6 +234,162 @@ internal class FileHeader : RarHeader
         }
     }
 
+    private async Task ReadFromReaderV5Async(
+        AsyncMarkingBinaryReader reader,
+        CancellationToken cancellationToken = default
+    )
+    {
+        Flags = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+
+        var lvalue = checked((long)await reader.ReadRarVIntAsync().ConfigureAwait(false));
+
+        UncompressedSize = HasFlag(FileFlagsV5.UNPACKED_SIZE_UNKNOWN) ? long.MaxValue : lvalue;
+
+        FileAttributes = await reader.ReadRarVIntUInt32Async().ConfigureAwait(false);
+
+        if (HasFlag(FileFlagsV5.HAS_MOD_TIME))
+        {
+            var value = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+            FileLastModifiedTime = Utility.UnixTimeToDateTime(value);
+        }
+
+        if (HasFlag(FileFlagsV5.HAS_CRC32))
+        {
+            FileCrc = await reader.ReadBytesAsync(4, cancellationToken).ConfigureAwait(false);
+        }
+
+        var compressionInfo = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+
+        CompressionAlgorithm = (byte)((compressionInfo & 0x3f) + 50);
+        IsSolid = (compressionInfo & 0x40) == 0x40;
+        CompressionMethod = (byte)((compressionInfo >> 7) & 0x7);
+        WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo >> 10) & 0xf);
+
+        HostOs = await reader.ReadRarVIntByteAsync().ConfigureAwait(false);
+
+        var nameSize = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+
+        var b = await reader.ReadBytesAsync(nameSize, cancellationToken).ConfigureAwait(false);
+        FileName = ConvertPathV5(Encoding.UTF8.GetString(b, 0, b.Length));
+
+        if (ExtraSize != RemainingHeaderBytes(reader))
+        {
+            throw new InvalidFormatException("rar5 header size / extra size inconsistency");
+        }
+
+        const ushort FHEXTRA_CRYPT = 0x01;
+        const ushort FHEXTRA_HASH = 0x02;
+        const ushort FHEXTRA_HTIME = 0x03;
+        const ushort FHEXTRA_REDIR = 0x05;
+
+        while (RemainingHeaderBytes(reader) > 0)
+        {
+            var size = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+            var n = RemainingHeaderBytes(reader);
+            var type = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+            switch (type)
+            {
+                case FHEXTRA_CRYPT:
+                    {
+                        Rar5CryptoInfo = new Rar5CryptoInfo(reader, true);
+                        if (Rar5CryptoInfo.PswCheck.All(singleByte => singleByte == 0))
+                        {
+                            Rar5CryptoInfo = null;
+                        }
+                    }
+                    break;
+                case FHEXTRA_HASH:
+                    {
+                        const uint FHEXTRA_HASH_BLAKE2 = 0x0;
+                        const int BLAKE2_DIGEST_SIZE = 0x20;
+                        if (
+                            (uint)await reader.ReadRarVIntAsync().ConfigureAwait(false)
+                            == FHEXTRA_HASH_BLAKE2
+                        )
+                        {
+                            _hash = await reader
+                                .ReadBytesAsync(BLAKE2_DIGEST_SIZE, cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                    }
+                    break;
+                case FHEXTRA_HTIME:
+                    {
+                        var flags = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+                        var isWindowsTime = (flags & 1) == 0;
+                        if ((flags & 0x2) == 0x2)
+                        {
+                            FileLastModifiedTime = await ReadExtendedTimeV5Async(
+                                reader,
+                                isWindowsTime,
+                                cancellationToken
+                            );
+                        }
+                        if ((flags & 0x4) == 0x4)
+                        {
+                            FileCreatedTime = await ReadExtendedTimeV5Async(
+                                reader,
+                                isWindowsTime,
+                                cancellationToken
+                            );
+                        }
+                        if ((flags & 0x8) == 0x8)
+                        {
+                            FileLastAccessedTime = await ReadExtendedTimeV5Async(
+                                reader,
+                                isWindowsTime,
+                                cancellationToken
+                            );
+                        }
+                    }
+                    break;
+                case FHEXTRA_REDIR:
+                    {
+                        RedirType = await reader.ReadRarVIntByteAsync().ConfigureAwait(false);
+                        RedirFlags = await reader.ReadRarVIntByteAsync().ConfigureAwait(false);
+                        var nn = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+                        var bb = await reader
+                            .ReadBytesAsync(nn, cancellationToken)
+                            .ConfigureAwait(false);
+                        RedirTargetName = ConvertPathV5(Encoding.UTF8.GetString(bb, 0, bb.Length));
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            var did = n - RemainingHeaderBytes(reader);
+            var drain = size - did;
+            if (drain > 0)
+            {
+                await reader.ReadBytesAsync(drain, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        if (AdditionalDataSize != 0)
+        {
+            CompressedSize = AdditionalDataSize;
+        }
+    }
+
+    private static async ValueTask<DateTime> ReadExtendedTimeV5Async(
+        AsyncMarkingBinaryReader reader,
+        bool isWindowsTime,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (isWindowsTime)
+        {
+            var value = await reader.ReadInt64Async(cancellationToken).ConfigureAwait(false);
+            return DateTime.FromFileTime(value);
+        }
+        else
+        {
+            var value = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+            return Utility.UnixTimeToDateTime(value);
+        }
+    }
+
     private static DateTime ReadExtendedTimeV5(MarkingBinaryReader reader, bool isWindowsTime)
     {
         if (isWindowsTime)
@@ -214,6 +399,169 @@ internal class FileHeader : RarHeader
         else
         {
             return Utility.UnixTimeToDateTime(reader.ReadUInt32());
+        }
+    }
+
+    private async Task ReadFromReaderV4Async(
+        AsyncMarkingBinaryReader reader,
+        CancellationToken cancellationToken = default
+    )
+    {
+        Flags = HeaderFlags;
+        IsSolid = HasFlag(FileFlagsV4.SOLID);
+        WindowSize = IsDirectory
+            ? 0U
+            : ((size_t)0x10000) << ((Flags & FileFlagsV4.WINDOW_MASK) >> 5);
+
+        var lowUncompressedSize = await reader
+            .ReadUInt32Async(cancellationToken)
+            .ConfigureAwait(false);
+
+        HostOs = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+
+        FileCrc = await reader.ReadBytesAsync(4, cancellationToken).ConfigureAwait(false);
+
+        var value = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+        FileLastModifiedTime = Utility.DosDateToDateTime(value);
+
+        CompressionAlgorithm = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+        var value1 = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+        CompressionMethod = (byte)(value1 - 0x30);
+
+        var nameSize = await reader.ReadInt16Async(cancellationToken).ConfigureAwait(false);
+
+        FileAttributes = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+
+        uint highCompressedSize = 0;
+        uint highUncompressedkSize = 0;
+        if (HasFlag(FileFlagsV4.LARGE))
+        {
+            highCompressedSize = await reader
+                .ReadUInt32Async(cancellationToken)
+                .ConfigureAwait(false);
+            highUncompressedkSize = await reader
+                .ReadUInt32Async(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            if (lowUncompressedSize == 0xffffffff)
+            {
+                lowUncompressedSize = 0xffffffff;
+                highUncompressedkSize = int.MaxValue;
+            }
+        }
+        CompressedSize = UInt32To64(highCompressedSize, checked((uint)AdditionalDataSize));
+        UncompressedSize = UInt32To64(highUncompressedkSize, lowUncompressedSize);
+
+        nameSize = nameSize > 4 * 1024 ? (short)(4 * 1024) : nameSize;
+
+        var fileNameBytes = await reader
+            .ReadBytesAsync(nameSize, cancellationToken)
+            .ConfigureAwait(false);
+
+        const int newLhdSize = 32;
+
+        switch (HeaderCode)
+        {
+            case HeaderCodeV.RAR4_FILE_HEADER:
+                {
+                    if (HasFlag(FileFlagsV4.UNICODE))
+                    {
+                        var length = 0;
+                        while (length < fileNameBytes.Length && fileNameBytes[length] != 0)
+                        {
+                            length++;
+                        }
+                        if (length != nameSize)
+                        {
+                            length++;
+                        }
+                        FileName = FileNameDecoder.Decode(fileNameBytes, length);
+                    }
+                    else
+                    {
+                        FileName = ArchiveEncoding.Decode(fileNameBytes);
+                    }
+                    FileName = ConvertPathV4(FileName);
+                }
+                break;
+            case HeaderCodeV.RAR4_NEW_SUB_HEADER:
+                {
+                    var datasize = HeaderSize - newLhdSize - nameSize;
+                    if (HasFlag(FileFlagsV4.SALT))
+                    {
+                        datasize -= EncryptionConstV5.SIZE_SALT30;
+                    }
+                    if (datasize > 0)
+                    {
+                        SubData = await reader
+                            .ReadBytesAsync(datasize, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+
+                    if (NewSubHeaderType.SUBHEAD_TYPE_RR.Equals(fileNameBytes))
+                    {
+                        if (SubData is null)
+                        {
+                            throw new InvalidFormatException();
+                        }
+                        RecoverySectors =
+                            SubData[8]
+                            + (SubData[9] << 8)
+                            + (SubData[10] << 16)
+                            + (SubData[11] << 24);
+                    }
+                }
+                break;
+        }
+
+        if (HasFlag(FileFlagsV4.SALT))
+        {
+            R4Salt = await reader
+                .ReadBytesAsync(EncryptionConstV5.SIZE_SALT30, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        if (HasFlag(FileFlagsV4.EXT_TIME))
+        {
+            if (RemainingHeaderBytes(reader) >= 2)
+            {
+                var extendedFlags = await reader
+                    .ReadUInt16Async(cancellationToken)
+                    .ConfigureAwait(false);
+                if (FileLastModifiedTime is null)
+                {
+                    FileLastModifiedTime = await ProcessExtendedTimeV4Async(
+                        extendedFlags,
+                        FileLastModifiedTime,
+                        reader,
+                        0,
+                        cancellationToken
+                    );
+                }
+
+                FileCreatedTime = await ProcessExtendedTimeV4Async(
+                    extendedFlags,
+                    null,
+                    reader,
+                    1,
+                    cancellationToken
+                );
+                FileLastAccessedTime = await ProcessExtendedTimeV4Async(
+                    extendedFlags,
+                    null,
+                    reader,
+                    2,
+                    cancellationToken
+                );
+                FileArchivedTime = await ProcessExtendedTimeV4Async(
+                    extendedFlags,
+                    null,
+                    reader,
+                    3,
+                    cancellationToken
+                );
+            }
         }
     }
 
@@ -363,6 +711,43 @@ internal class FileHeader : RarHeader
         long l = x;
         l <<= 32;
         return l + y;
+    }
+
+    private static async ValueTask<DateTime?> ProcessExtendedTimeV4Async(
+        ushort extendedFlags,
+        DateTime? time,
+        AsyncMarkingBinaryReader reader,
+        int i,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var rmode = (uint)extendedFlags >> ((3 - i) * 4);
+        if ((rmode & 8) == 0)
+        {
+            return null;
+        }
+        if (i != 0)
+        {
+            var dosTime = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+            time = Utility.DosDateToDateTime(dosTime);
+        }
+        if ((rmode & 4) == 0 && time is not null)
+        {
+            time = time.Value.AddSeconds(1);
+        }
+        uint nanosecondHundreds = 0;
+        var count = (int)rmode & 3;
+        for (var j = 0; j < count; j++)
+        {
+            var b = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+            nanosecondHundreds |= (((uint)b) << ((j + 3 - count) * 8));
+        }
+
+        if (time is not null)
+        {
+            return time.Value.AddMilliseconds(nanosecondHundreds * Math.Pow(10, -4));
+        }
+        return null;
     }
 
     private static DateTime? ProcessExtendedTimeV4(

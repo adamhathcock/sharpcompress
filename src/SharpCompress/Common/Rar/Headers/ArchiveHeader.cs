@@ -1,3 +1,6 @@
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.Common.Rar;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers;
@@ -29,6 +32,37 @@ internal sealed class ArchiveHeader : RarHeader
             if (HasFlag(ArchiveFlagsV4.ENCRYPT_VER))
             {
                 EncryptionVersion = reader.ReadByte();
+            }
+        }
+    }
+
+    protected override async ValueTask ReadFinishAsync(
+        AsyncMarkingBinaryReader reader,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (IsRar5)
+        {
+            Flags = await reader.ReadRarVIntUInt16Async().ConfigureAwait(false);
+            if (HasFlag(ArchiveFlagsV5.HAS_VOLUME_NUMBER))
+            {
+                VolumeNumber = (int)await reader.ReadRarVIntUInt32Async().ConfigureAwait(false);
+            }
+            // later: we may have a locator record if we need it
+            //if (ExtraSize != 0) {
+            //    ReadLocator(reader);
+            //}
+        }
+        else
+        {
+            Flags = HeaderFlags;
+            HighPosAv = await reader.ReadInt16Async(cancellationToken).ConfigureAwait(false);
+            PosAv = await reader.ReadInt32Async(cancellationToken).ConfigureAwait(false);
+            if (HasFlag(ArchiveFlagsV4.ENCRYPT_VER))
+            {
+                EncryptionVersion = await reader
+                    .ReadByteAsync(cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
     }
