@@ -35,6 +35,7 @@ public class LzmaStream : Stream, IStreamStack
     private readonly Stream _inputStream;
     private readonly long _inputSize;
     private readonly long _outputSize;
+    private readonly bool _leaveOpen;
 
     private readonly int _dictionarySize;
     private readonly OutWindow _outWindow = new();
@@ -56,14 +57,28 @@ public class LzmaStream : Stream, IStreamStack
     private readonly Encoder _encoder;
     private bool _isDisposed;
 
-    public LzmaStream(byte[] properties, Stream inputStream)
-        : this(properties, inputStream, -1, -1, null, properties.Length < 5) { }
+    public LzmaStream(byte[] properties, Stream inputStream, bool leaveOpen = false)
+        : this(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen) { }
 
-    public LzmaStream(byte[] properties, Stream inputStream, long inputSize)
-        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5) { }
+    public LzmaStream(byte[] properties, Stream inputStream, long inputSize, bool leaveOpen = false)
+        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5, leaveOpen) { }
 
-    public LzmaStream(byte[] properties, Stream inputStream, long inputSize, long outputSize)
-        : this(properties, inputStream, inputSize, outputSize, null, properties.Length < 5) { }
+    public LzmaStream(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        bool leaveOpen = false
+    )
+        : this(
+            properties,
+            inputStream,
+            inputSize,
+            outputSize,
+            null,
+            properties.Length < 5,
+            leaveOpen
+        ) { }
 
     public LzmaStream(
         byte[] properties,
@@ -71,13 +86,15 @@ public class LzmaStream : Stream, IStreamStack
         long inputSize,
         long outputSize,
         Stream presetDictionary,
-        bool isLzma2
+        bool isLzma2,
+        bool leaveOpen = false
     )
     {
         _inputStream = inputStream;
         _inputSize = inputSize;
         _outputSize = outputSize;
         _isLzma2 = isLzma2;
+        _leaveOpen = leaveOpen;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(LzmaStream));
@@ -179,7 +196,10 @@ public class LzmaStream : Stream, IStreamStack
             {
                 _position = _encoder.Code(null, true);
             }
-            _inputStream?.Dispose();
+            if (!_leaveOpen)
+            {
+                _inputStream?.Dispose();
+            }
             _outWindow.Dispose();
         }
         base.Dispose(disposing);

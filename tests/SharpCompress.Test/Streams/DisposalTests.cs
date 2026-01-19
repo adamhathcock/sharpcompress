@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
+using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Lzw;
@@ -152,9 +153,21 @@ public class DisposalTests
     [Fact]
     public void LZipStream_Disposal()
     {
-        // LZipStream always disposes inner stream
+        // LZipStream now supports leaveOpen parameter
         // Use Compress mode to avoid need for valid input header
-        VerifyAlwaysDispose(stream => new LZipStream(stream, CompressionMode.Compress));
+        VerifyStreamDisposal(
+            (stream, leaveOpen) => new LZipStream(stream, CompressionMode.Compress, leaveOpen)
+        );
+    }
+
+    [Fact]
+    public void BZip2Stream_Disposal()
+    {
+        // BZip2Stream now supports leaveOpen parameter
+        VerifyStreamDisposal(
+            (stream, leaveOpen) =>
+                new BZip2Stream(stream, CompressionMode.Compress, false, leaveOpen)
+        );
     }
 
     [Fact]
