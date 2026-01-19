@@ -30,6 +30,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
 
     private readonly Stream stream;
     private bool isDisposed;
+    private readonly bool leaveOpen;
 
     /// <summary>
     /// Create a BZip2Stream
@@ -37,19 +38,30 @@ public sealed class BZip2Stream : Stream, IStreamStack
     /// <param name="stream">The stream to read from</param>
     /// <param name="compressionMode">Compression Mode</param>
     /// <param name="decompressConcatenated">Decompress Concatenated</param>
-    public BZip2Stream(Stream stream, CompressionMode compressionMode, bool decompressConcatenated)
+    /// <param name="leaveOpen">Leave the stream open after disposing</param>
+    public BZip2Stream(
+        Stream stream,
+        CompressionMode compressionMode,
+        bool decompressConcatenated,
+        bool leaveOpen = false
+    )
     {
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(BZip2Stream));
 #endif
+        this.leaveOpen = leaveOpen;
         Mode = compressionMode;
         if (Mode == CompressionMode.Compress)
         {
-            this.stream = new CBZip2OutputStream(stream);
+            this.stream = new CBZip2OutputStream(stream, 9, leaveOpen);
         }
         else
         {
-            this.stream = new CBZip2InputStream(stream, decompressConcatenated);
+            this.stream = new CBZip2InputStream(
+                stream,
+                decompressConcatenated,
+                leaveOpen: leaveOpen
+            );
         }
     }
 

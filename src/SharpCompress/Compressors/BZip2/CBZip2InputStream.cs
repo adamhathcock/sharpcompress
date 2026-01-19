@@ -168,6 +168,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
     private int computedBlockCRC,
         computedCombinedCRC;
     private readonly bool decompressConcatenated;
+    private readonly bool leaveOpen;
 
     private int i2,
         count,
@@ -181,9 +182,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
     private char z;
     private bool isDisposed;
 
-    public CBZip2InputStream(Stream zStream, bool decompressConcatenated)
+    public CBZip2InputStream(Stream zStream, bool decompressConcatenated, bool leaveOpen = false)
     {
         this.decompressConcatenated = decompressConcatenated;
+        this.leaveOpen = leaveOpen;
         ll8 = null;
         tt = null;
         BsSetStream(zStream);
@@ -207,7 +209,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
         this.DebugDispose(typeof(CBZip2InputStream));
 #endif
         base.Dispose(disposing);
-        bsStream?.Dispose();
+        if (!leaveOpen)
+        {
+            bsStream?.Dispose();
+        }
     }
 
     internal static int[][] InitIntArray(int n1, int n2)
@@ -398,7 +403,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
 
     private void BsFinishedWithStream()
     {
-        bsStream?.Dispose();
+        if (!leaveOpen)
+        {
+            bsStream?.Dispose();
+        }
         bsStream = null;
     }
 
