@@ -403,7 +403,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
 
     private void BsFinishedWithStream()
     {
-        bsStream?.Dispose();
+        if (!leaveOpen)
+        {
+            bsStream?.Dispose();
+        }
         bsStream = null;
     }
 
