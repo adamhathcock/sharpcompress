@@ -112,7 +112,7 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
     public override bool IsSolid => Volumes.First().IsSolidArchive;
 
     public override async ValueTask<bool> IsSolidAsync() =>
-        (await VolumesAsync.CastAsync<RarVolume>().FirstAsync()).IsSolidArchive;
+        await (await VolumesAsync.CastAsync<RarVolume>().FirstAsync()).IsSolidArchiveAsync();
 
     public override bool IsEncrypted => Entries.First(x => !x.IsDirectory).IsEncrypted;
 

@@ -210,7 +210,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
 
     public async ValueTask<IAsyncReader> ExtractAllEntriesAsync()
     {
-        if (!IsSolid && Type != ArchiveType.SevenZip)
+        if (!await IsSolidAsync() && Type != ArchiveType.SevenZip)
         {
             throw new SharpCompressException(
                 "ExtractAllEntries can only be used on solid archives or 7Zip archives (which require random access)."

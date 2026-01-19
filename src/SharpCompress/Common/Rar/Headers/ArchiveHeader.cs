@@ -57,6 +57,10 @@ internal sealed class ArchiveHeader : RarHeader
                 VolumeNumber = (int)
                     await reader.ReadRarVIntUInt32Async(cancellationToken).ConfigureAwait(false);
             }
+            // later: we may have a locator record if we need it
+            //if (ExtraSize != 0) {
+            //    ReadLocator(reader);
+            //}
         }
         else
         {

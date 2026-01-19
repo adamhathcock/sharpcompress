@@ -41,27 +41,25 @@ internal class AsyncMarkingBinaryReader
     {
         CurrentReadByteCount += count;
         var bytes = new byte[count];
-        await _reader.ReadBytesAsync(bytes, 0, count, cancellationToken).ConfigureAwait(false);
+        await _reader.ReadBytesAsync(bytes, 0, count,  cancellationToken).ConfigureAwait(false);
         return bytes;
     }
 
-    public virtual async ValueTask<ushort> ReadUInt16Async(
+    public async ValueTask<ushort> ReadUInt16Async(
         CancellationToken cancellationToken = default
     )
     {
         CurrentReadByteCount += 2;
-        var bytes = new byte[2];
-        await _reader.ReadBytesAsync(bytes, 0, 2, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync( 2, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadUInt16LittleEndian(bytes);
     }
 
-    public virtual async ValueTask<uint> ReadUInt32Async(
+    public async ValueTask<uint> ReadUInt32Async(
         CancellationToken cancellationToken = default
     )
     {
         CurrentReadByteCount += 4;
-        var bytes = new byte[4];
-        await _reader.ReadBytesAsync(bytes, 0, 4, cancellationToken).ConfigureAwait(false);
+        var bytes =  await ReadBytesAsync( 4, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadUInt32LittleEndian(bytes);
     }
 
@@ -70,8 +68,7 @@ internal class AsyncMarkingBinaryReader
     )
     {
         CurrentReadByteCount += 8;
-        var bytes = new byte[8];
-        await _reader.ReadBytesAsync(bytes, 0, 8, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync( 8, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadUInt64LittleEndian(bytes);
     }
 
@@ -80,8 +77,7 @@ internal class AsyncMarkingBinaryReader
     )
     {
         CurrentReadByteCount += 2;
-        var bytes = new byte[2];
-        await _reader.ReadBytesAsync(bytes, 0, 2, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync(2, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadInt16LittleEndian(bytes);
     }
 
@@ -90,8 +86,7 @@ internal class AsyncMarkingBinaryReader
     )
     {
         CurrentReadByteCount += 4;
-        var bytes = new byte[4];
-        await _reader.ReadBytesAsync(bytes, 0, 4, cancellationToken).ConfigureAwait(false);
+        var bytes =  await ReadBytesAsync( 4, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }
 
@@ -100,8 +95,7 @@ internal class AsyncMarkingBinaryReader
     )
     {
         CurrentReadByteCount += 8;
-        var bytes = new byte[8];
-        await _reader.ReadBytesAsync(bytes, 0, 8, cancellationToken).ConfigureAwait(false);
+        var bytes =  await ReadBytesAsync(8, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadInt64LittleEndian(bytes);
     }
 

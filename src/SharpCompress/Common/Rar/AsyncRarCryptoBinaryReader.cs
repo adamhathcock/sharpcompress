@@ -10,22 +10,27 @@ namespace SharpCompress.Common.Rar;
 
 internal sealed class AsyncRarCryptoBinaryReader : AsyncRarCrcBinaryReader
 {
-    private BlockTransformer _rijndael;
+    private BlockTransformer _rijndael = default!;
     private readonly Queue<byte> _data = new();
     private long _readCount;
 
-    public AsyncRarCryptoBinaryReader(Stream stream, ICryptKey cryptKey)
+    private AsyncRarCryptoBinaryReader(Stream stream)
         : base(stream)
     {
-        var salt = base.ReadBytesNoCrcAsync(EncryptionConstV5.SIZE_SALT30, CancellationToken.None)
-            .GetAwaiter()
-            .GetResult();
-        _readCount += EncryptionConstV5.SIZE_SALT30;
-        _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
     }
 
-    public AsyncRarCryptoBinaryReader(Stream stream, ICryptKey cryptKey, byte[] salt)
-        : base(stream) => _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
+    public static async ValueTask<AsyncRarCryptoBinaryReader> Create(Stream stream, ICryptKey cryptKey, byte[]? salt = null)
+    {
+        var binary = new AsyncRarCryptoBinaryReader(stream);
+        if (salt == null)
+        {
+            salt = await binary.ReadBytesAsync(EncryptionConstV5.SIZE_SALT30);
+            binary._readCount += EncryptionConstV5.SIZE_SALT30;
+        }
+        binary._rijndael = new BlockTransformer(cryptKey.Transformer(salt));
+        return binary;
+    }
+
 
     public override long CurrentReadByteCount
     {

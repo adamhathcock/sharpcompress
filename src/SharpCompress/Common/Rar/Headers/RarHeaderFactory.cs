@@ -97,12 +97,12 @@ public class RarHeaderFactory
                 _cryptInfo.ReadInitV(new MarkingBinaryReader(stream));
                 var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
 
-                reader = new RarCryptoBinaryReader(stream, _headerKey, _cryptInfo.Salt);
+                reader = RarCryptoBinaryReader.Create(stream, _headerKey, _cryptInfo.Salt);
             }
             else
             {
                 var key = new CryptKey3(Options.Password);
-                reader = new RarCryptoBinaryReader(stream, key);
+                reader =  RarCryptoBinaryReader.Create(stream, key);
             }
         }
 
@@ -258,12 +258,12 @@ public class RarHeaderFactory
                 _cryptInfo.ReadInitV(new AsyncMarkingBinaryReader(stream));
                 var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
 
-                reader = new AsyncRarCryptoBinaryReader(stream, _headerKey, _cryptInfo.Salt);
+                reader = await AsyncRarCryptoBinaryReader.Create(stream, _headerKey, _cryptInfo.Salt);
             }
             else
             {
                 var key = new CryptKey3(Options.Password);
-                reader = new AsyncRarCryptoBinaryReader(stream, key);
+                reader = await AsyncRarCryptoBinaryReader.Create(stream, key);
             }
         }
 

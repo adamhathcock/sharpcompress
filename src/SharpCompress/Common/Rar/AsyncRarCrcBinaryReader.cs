@@ -6,12 +6,9 @@ using SharpCompress.Compressors.Rar;
 
 namespace SharpCompress.Common.Rar;
 
-internal class AsyncRarCrcBinaryReader : AsyncMarkingBinaryReader
+internal class AsyncRarCrcBinaryReader(Stream stream) : AsyncMarkingBinaryReader(stream)
 {
     private uint _currentCrc;
-
-    public AsyncRarCrcBinaryReader(Stream stream)
-        : base(stream) { }
 
     public uint GetCrc32() => ~_currentCrc;
 

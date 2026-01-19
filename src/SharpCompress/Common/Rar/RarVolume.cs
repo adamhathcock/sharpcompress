@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -75,10 +76,10 @@ public abstract class RarVolume : Volume
         }
     }
 
-    internal async IAsyncEnumerable<RarFilePart> GetVolumeFilePartsAsync()
+    internal async IAsyncEnumerable<RarFilePart> GetVolumeFilePartsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         MarkHeader? lastMarkHeader = null;
-        await foreach (var header in _headerFactory.ReadHeadersAsync(Stream))
+        await foreach (var header in _headerFactory.ReadHeadersAsync(Stream).WithCancellation(cancellationToken))
         {
             switch (header.HeaderType)
             {
@@ -123,11 +124,11 @@ public abstract class RarVolume : Volume
         if (ArchiveHeader is null)
         {
             if (Mode == StreamingMode.Streaming)
-            {
-                throw new InvalidOperationException(
+        {
+            throw new InvalidOperationException(
                     "ArchiveHeader should never been null in a streaming read."
-                );
-            }
+            );
+        }
 
             // we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
             GetVolumeFileParts().First();
@@ -171,6 +172,12 @@ public abstract class RarVolume : Volume
             EnsureArchiveHeaderLoaded();
             return ArchiveHeader?.IsSolid ?? false;
         }
+    }
+
+    public async ValueTask<bool> IsSolidArchiveAsync(CancellationToken cancellationToken = default)
+    {
+        await EnsureArchiveHeaderLoadedAsync(cancellationToken);
+        return ArchiveHeader?.IsSolid ?? false;
     }
 
     public int MinVersion
@@ -218,6 +225,69 @@ public abstract class RarVolume : Volume
             {
                 return 1;
             }
+        }
+    }
+
+    private async ValueTask EnsureArchiveHeaderLoadedAsync(CancellationToken cancellationToken)
+    {
+        if (ArchiveHeader is null)
+        {
+            if (Mode == StreamingMode.Streaming)
+            {
+                throw new InvalidOperationException(
+                    "ArchiveHeader should never been null in a streaming read."
+                );
+            }
+
+            // we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
+            await GetVolumeFilePartsAsync(cancellationToken).FirstAsync();
+            Stream.Position = 0;
+        }
+    }
+
+    public virtual async ValueTask<int> MinVersionAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        await EnsureArchiveHeaderLoadedAsync(cancellationToken).ConfigureAwait(false);
+        if (_maxCompressionAlgorithm >= 50)
+        {
+            return 5; //5-6
+        }
+        else if (_maxCompressionAlgorithm >= 29)
+        {
+            return 3; //3-4
+        }
+        else if (_maxCompressionAlgorithm >= 20)
+        {
+            return 2; //2
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+    public virtual async ValueTask<int> MaxVersionAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        await EnsureArchiveHeaderLoadedAsync(cancellationToken).ConfigureAwait(false);
+        if (_maxCompressionAlgorithm >= 50)
+        {
+            return 6; //5-6
+        }
+        else if (_maxCompressionAlgorithm >= 29)
+        {
+            return 4; //3-4
+        }
+        else if (_maxCompressionAlgorithm >= 20)
+        {
+            return 2; //2
+        }
+        else
+        {
+            return 1;
         }
     }
 
