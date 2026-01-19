@@ -4,8 +4,8 @@ namespace SharpCompress.Common.Rar.Headers;
 
 internal class EndArchiveHeader : RarHeader
 {
-    public EndArchiveHeader(RarHeader header, RarCrcBinaryReader reader)
-        : base(header, reader, HeaderType.EndArchive) { }
+    public static EndArchiveHeader Create(RarHeader header, RarCrcBinaryReader reader) =>
+        CreateChild<EndArchiveHeader>(header, reader, HeaderType.EndArchive);
 
     protected override void ReadFinish(MarkingBinaryReader reader)
     {

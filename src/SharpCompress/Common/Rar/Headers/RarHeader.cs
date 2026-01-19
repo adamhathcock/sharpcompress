@@ -7,8 +7,13 @@ namespace SharpCompress.Common.Rar.Headers;
 // https://www.rarlab.com/technote.htm
 internal class RarHeader : IRarHeader
 {
-    private readonly HeaderType _headerType;
-    private readonly bool _isRar5;
+    private HeaderType _headerType;
+    private bool _isRar5;
+
+    protected RarHeader()
+    {
+        ArchiveEncoding = new ArchiveEncoding();
+    }
 
     internal static RarHeader? TryReadBase(
         RarCrcBinaryReader reader,
@@ -18,7 +23,9 @@ internal class RarHeader : IRarHeader
     {
         try
         {
-            return new RarHeader(reader, isRar5, archiveEncoding);
+            var header = new RarHeader();
+            header.Initialize(reader, isRar5, archiveEncoding);
+            return header;
         }
         catch (InvalidFormatException)
         {
@@ -26,7 +33,7 @@ internal class RarHeader : IRarHeader
         }
     }
 
-    private RarHeader(RarCrcBinaryReader reader, bool isRar5, IArchiveEncoding archiveEncoding)
+    private void Initialize(RarCrcBinaryReader reader, bool isRar5, IArchiveEncoding archiveEncoding)
     {
         _headerType = HeaderType.Null;
         _isRar5 = isRar5;
@@ -64,26 +71,31 @@ internal class RarHeader : IRarHeader
         }
     }
 
-    protected RarHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
+    internal static T CreateChild<T>(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
+        where T : RarHeader, new()
     {
-        _headerType = headerType;
-        _isRar5 = header.IsRar5;
-        HeaderCrc = header.HeaderCrc;
-        HeaderCode = header.HeaderCode;
-        HeaderFlags = header.HeaderFlags;
-        HeaderSize = header.HeaderSize;
-        ExtraSize = header.ExtraSize;
-        AdditionalDataSize = header.AdditionalDataSize;
-        ArchiveEncoding = header.ArchiveEncoding;
-        ReadFinish(reader);
+        var child = new T()
+        {
+            ArchiveEncoding = header.ArchiveEncoding
+        };
+        child. _headerType = headerType;
+        child. _isRar5 = header.IsRar5;
+        child. HeaderCrc = header.HeaderCrc;
+        child. HeaderCode = header.HeaderCode;
+        child. HeaderFlags = header.HeaderFlags;
+        child.HeaderSize = header.HeaderSize;
+        child.ExtraSize = header.ExtraSize;
+        child. AdditionalDataSize = header.AdditionalDataSize;
+        child.ReadFinish(reader);
 
-        var n = RemainingHeaderBytes(reader);
+        var n =  child.RemainingHeaderBytes(reader);
         if (n > 0)
         {
             reader.ReadBytes(n);
         }
 
-        VerifyHeaderCrc(reader.GetCrc32());
+        child. VerifyHeaderCrc(reader.GetCrc32());
+        return child;
     }
 
     protected int RemainingHeaderBytes(MarkingBinaryReader reader) =>
@@ -103,27 +115,27 @@ internal class RarHeader : IRarHeader
 
     public HeaderType HeaderType => _headerType;
 
-    protected bool IsRar5 => _isRar5;
+    internal bool IsRar5 => _isRar5;
 
-    protected uint HeaderCrc { get; }
+    protected uint HeaderCrc { get;private set; }
 
-    internal byte HeaderCode { get; }
+    internal byte HeaderCode { get;private set; }
 
-    protected ushort HeaderFlags { get; }
+    protected ushort HeaderFlags { get;private set; }
 
     protected bool HasHeaderFlag(ushort flag) => (HeaderFlags & flag) == flag;
 
-    protected int HeaderSize { get; }
+    protected int HeaderSize { get;private set; }
 
-    internal IArchiveEncoding ArchiveEncoding { get; }
+    internal IArchiveEncoding ArchiveEncoding { get; private set; }
 
     /// <summary>
     /// Extra header size.
     /// </summary>
-    protected uint ExtraSize { get; }
+    protected uint ExtraSize { get;private set; }
 
     /// <summary>
     /// Size of additional data (eg file contents)
     /// </summary>
-    protected long AdditionalDataSize { get; }
+    protected long AdditionalDataSize { get;private set; }
 }

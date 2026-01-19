@@ -80,7 +80,7 @@ public class RarHeaderFactory
             case HeaderCodeV.RAR5_ARCHIVE_HEADER:
             case HeaderCodeV.RAR4_ARCHIVE_HEADER:
             {
-                var ah = new ArchiveHeader(header, reader);
+                var ah = ArchiveHeader.Create(header, reader);
                 if (ah.IsEncrypted == true)
                 {
                     //!!! rar5 we don't know yet
@@ -91,7 +91,7 @@ public class RarHeaderFactory
 
             case HeaderCodeV.RAR4_PROTECT_HEADER:
             {
-                var ph = new ProtectHeader(header, reader);
+                var ph =  ProtectHeader.Create(header, reader);
                 // skip the recovery record data, we do not use it.
                 switch (StreamingMode)
                 {
@@ -116,7 +116,7 @@ public class RarHeaderFactory
 
             case HeaderCodeV.RAR5_SERVICE_HEADER:
             {
-                var fh = new FileHeader(header, reader, HeaderType.Service);
+                var fh = FileHeader.Create(header, reader, HeaderType.Service);
                 if (fh.FileName == "CMT")
                 {
                     fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
@@ -130,7 +130,7 @@ public class RarHeaderFactory
 
             case HeaderCodeV.RAR4_NEW_SUB_HEADER:
             {
-                var fh = new FileHeader(header, reader, HeaderType.NewSub);
+                var fh = FileHeader.Create(header, reader, HeaderType.NewSub);
                 SkipData(fh, reader);
                 return fh;
             }
@@ -138,7 +138,7 @@ public class RarHeaderFactory
             case HeaderCodeV.RAR5_FILE_HEADER:
             case HeaderCodeV.RAR4_FILE_HEADER:
             {
-                var fh = new FileHeader(header, reader, HeaderType.File);
+                var fh = FileHeader.Create(header, reader, HeaderType.File);
                 switch (StreamingMode)
                 {
                     case StreamingMode.Seekable:
@@ -181,11 +181,11 @@ public class RarHeaderFactory
             case HeaderCodeV.RAR5_END_ARCHIVE_HEADER:
             case HeaderCodeV.RAR4_END_ARCHIVE_HEADER:
             {
-                return new EndArchiveHeader(header, reader);
+                return EndArchiveHeader.Create(header, reader);
             }
             case HeaderCodeV.RAR5_ARCHIVE_ENCRYPTION_HEADER:
             {
-                var cryptoHeader = new ArchiveCryptHeader(header, reader);
+                var cryptoHeader =  ArchiveCryptHeader.Create(header, reader);
                 IsEncrypted = true;
                 _cryptInfo = cryptoHeader.CryptInfo;
 

@@ -17,8 +17,8 @@ internal class FileHeader : RarHeader
 {
     private byte[]? _hash;
 
-    public FileHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
-        : base(header, reader, headerType) { }
+    public static FileHeader Create(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType) =>
+        CreateChild<FileHeader>(header, reader, headerType);
 
     protected override void ReadFinish(MarkingBinaryReader reader)
     {

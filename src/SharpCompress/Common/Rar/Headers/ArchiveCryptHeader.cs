@@ -6,8 +6,8 @@ namespace SharpCompress.Common.Rar.Headers;
 
 internal class ArchiveCryptHeader : RarHeader
 {
-    public ArchiveCryptHeader(RarHeader header, RarCrcBinaryReader reader)
-        : base(header, reader, HeaderType.Crypt) { }
+    public static ArchiveCryptHeader Create(RarHeader header, RarCrcBinaryReader reader) =>
+        CreateChild<ArchiveCryptHeader>(header, reader, HeaderType.Crypt);
 
     public Rar5CryptoInfo CryptInfo = new();
 
