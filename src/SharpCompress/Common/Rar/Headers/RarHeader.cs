@@ -21,7 +21,9 @@ internal class RarHeader : IRarHeader
     {
         try
         {
-            return new RarHeader(reader, isRar5, archiveEncoding);
+            var header = new RarHeader(isRar5, archiveEncoding);
+            header.Initialize(reader);
+            return header;
         }
         catch (InvalidFormatException)
         {
@@ -104,11 +106,16 @@ internal class RarHeader : IRarHeader
         return header;
     }
 
-    private RarHeader(RarCrcBinaryReader reader, bool isRar5, IArchiveEncoding archiveEncoding)
+    private RarHeader( bool isRar5, IArchiveEncoding archiveEncoding)
     {
         _headerType = HeaderType.Null;
         _isRar5 = isRar5;
         ArchiveEncoding = archiveEncoding;
+    }
+
+    private void Initialize(RarCrcBinaryReader reader)
+    {
+
         if (IsRar5)
         {
             HeaderCrc = reader.ReadUInt32();
@@ -141,6 +148,7 @@ internal class RarHeader : IRarHeader
             }
         }
     }
+
 
     private RarHeader(HeaderType headerType, bool isRar5)
     {
