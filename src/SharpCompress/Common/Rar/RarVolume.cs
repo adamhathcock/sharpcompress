@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -26,12 +28,57 @@ public abstract class RarVolume : Volume
 
     internal abstract IEnumerable<RarFilePart> ReadFileParts();
 
+    internal abstract IAsyncEnumerable<RarFilePart> ReadFilePartsAsync();
+
     internal abstract RarFilePart CreateFilePart(MarkHeader markHeader, FileHeader fileHeader);
 
     internal IEnumerable<RarFilePart> GetVolumeFileParts()
     {
         MarkHeader? lastMarkHeader = null;
         foreach (var header in _headerFactory.ReadHeaders(Stream))
+        {
+            switch (header.HeaderType)
+            {
+                case HeaderType.Mark:
+                    {
+                        lastMarkHeader = (MarkHeader)header;
+                    }
+                    break;
+                case HeaderType.Archive:
+                    {
+                        ArchiveHeader = (ArchiveHeader)header;
+                    }
+                    break;
+                case HeaderType.File:
+                    {
+                        var fh = (FileHeader)header;
+                        if (_maxCompressionAlgorithm < fh.CompressionAlgorithm)
+                        {
+                            _maxCompressionAlgorithm = fh.CompressionAlgorithm;
+                        }
+
+                        yield return CreateFilePart(lastMarkHeader!, fh);
+                    }
+                    break;
+                case HeaderType.Service:
+                    {
+                        var fh = (FileHeader)header;
+                        if (fh.FileName == "CMT")
+                        {
+                            var buffer = new byte[fh.CompressedSize];
+                            fh.PackedStream.NotNull().ReadFully(buffer);
+                            Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+
+    internal async IAsyncEnumerable<RarFilePart> GetVolumeFilePartsAsync()
+    {
+        MarkHeader? lastMarkHeader = null;
+        await foreach (var header in _headerFactory.ReadHeadersAsync(Stream))
         {
             switch (header.HeaderType)
             {

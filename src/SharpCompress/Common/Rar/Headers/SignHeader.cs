@@ -7,10 +7,10 @@ internal class SignHeader : RarHeader
     public static SignHeader Create(RarHeader header, RarCrcBinaryReader reader)
     {
         var c = CreateChild<SignHeader>(header, reader, HeaderType.Sign);
-            if (c.IsRar5)
-            {
-                throw new InvalidFormatException("unexpected rar5 record");
-            }
+        if (c.IsRar5)
+        {
+            throw new InvalidFormatException("unexpected rar5 record");
+        }
         return c;
     }
 

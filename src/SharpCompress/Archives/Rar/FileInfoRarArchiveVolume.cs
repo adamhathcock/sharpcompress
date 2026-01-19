@@ -36,4 +36,7 @@ internal class FileInfoRarArchiveVolume : RarVolume
         new FileInfoRarFilePart(this, ReaderOptions.Password, markHeader, fileHeader, FileInfo);
 
     internal override IEnumerable<RarFilePart> ReadFileParts() => FileParts;
+
+    internal override IAsyncEnumerable<RarFilePart> ReadFilePartsAsync() =>
+        FileParts.ToAsyncEnumerable();
 }

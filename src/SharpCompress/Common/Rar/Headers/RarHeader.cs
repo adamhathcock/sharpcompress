@@ -1,4 +1,7 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.Common.Rar;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar.Headers;
@@ -33,7 +36,32 @@ internal class RarHeader : IRarHeader
         }
     }
 
-    private void Initialize(RarCrcBinaryReader reader, bool isRar5, IArchiveEncoding archiveEncoding)
+    internal static async ValueTask<RarHeader?> TryReadBaseAsync(
+        AsyncRarCrcBinaryReader reader,
+        bool isRar5,
+        IArchiveEncoding archiveEncoding,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var header = new RarHeader();
+            await header
+                .InitializeAsync(reader, isRar5, archiveEncoding, cancellationToken)
+                .ConfigureAwait(false);
+            return header;
+        }
+        catch (InvalidFormatException)
+        {
+            return null;
+        }
+    }
+
+    private void Initialize(
+        RarCrcBinaryReader reader,
+        bool isRar5,
+        IArchiveEncoding archiveEncoding
+    )
     {
         _headerType = HeaderType.Null;
         _isRar5 = isRar5;
@@ -71,38 +99,127 @@ internal class RarHeader : IRarHeader
         }
     }
 
-    internal static T CreateChild<T>(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
+    private async ValueTask InitializeAsync(
+        AsyncRarCrcBinaryReader reader,
+        bool isRar5,
+        IArchiveEncoding archiveEncoding,
+        CancellationToken cancellationToken
+    )
+    {
+        _headerType = HeaderType.Null;
+        _isRar5 = isRar5;
+        ArchiveEncoding = archiveEncoding;
+        if (IsRar5)
+        {
+            HeaderCrc = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
+            reader.ResetCrc();
+            HeaderSize = (int)
+                await reader.ReadRarVIntUInt32Async(cancellationToken, 3).ConfigureAwait(false);
+            reader.Mark();
+            HeaderCode = await reader.ReadRarVIntByteAsync(cancellationToken).ConfigureAwait(false);
+            HeaderFlags = await reader
+                .ReadRarVIntUInt16Async(cancellationToken, 2)
+                .ConfigureAwait(false);
+
+            if (HasHeaderFlag(HeaderFlagsV5.HAS_EXTRA))
+            {
+                ExtraSize = await reader
+                    .ReadRarVIntUInt32Async(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            if (HasHeaderFlag(HeaderFlagsV5.HAS_DATA))
+            {
+                AdditionalDataSize = (long)
+                    await reader.ReadRarVIntAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        else
+        {
+            reader.Mark();
+            HeaderCrc = await reader.ReadUInt16Async(cancellationToken).ConfigureAwait(false);
+            reader.ResetCrc();
+            HeaderCode = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+            HeaderFlags = await reader.ReadUInt16Async(cancellationToken).ConfigureAwait(false);
+            HeaderSize = await reader.ReadInt16Async(cancellationToken).ConfigureAwait(false);
+            if (HasHeaderFlag(HeaderFlagsV4.HAS_DATA))
+            {
+                AdditionalDataSize = await reader
+                    .ReadUInt32Async(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+    }
+
+    internal static T CreateChild<T>(
+        RarHeader header,
+        RarCrcBinaryReader reader,
+        HeaderType headerType
+    )
         where T : RarHeader, new()
     {
-        var child = new T()
-        {
-            ArchiveEncoding = header.ArchiveEncoding
-        };
-        child. _headerType = headerType;
-        child. _isRar5 = header.IsRar5;
-        child. HeaderCrc = header.HeaderCrc;
-        child. HeaderCode = header.HeaderCode;
-        child. HeaderFlags = header.HeaderFlags;
+        var child = new T() { ArchiveEncoding = header.ArchiveEncoding };
+        child._headerType = headerType;
+        child._isRar5 = header.IsRar5;
+        child.HeaderCrc = header.HeaderCrc;
+        child.HeaderCode = header.HeaderCode;
+        child.HeaderFlags = header.HeaderFlags;
         child.HeaderSize = header.HeaderSize;
         child.ExtraSize = header.ExtraSize;
-        child. AdditionalDataSize = header.AdditionalDataSize;
+        child.AdditionalDataSize = header.AdditionalDataSize;
         child.ReadFinish(reader);
 
-        var n =  child.RemainingHeaderBytes(reader);
+        var n = child.RemainingHeaderBytes(reader);
         if (n > 0)
         {
             reader.ReadBytes(n);
         }
 
-        child. VerifyHeaderCrc(reader.GetCrc32());
+        child.VerifyHeaderCrc(reader.GetCrc32());
+        return child;
+    }
+
+    internal static async ValueTask<T> CreateChildAsync<T>(
+        RarHeader header,
+        AsyncRarCrcBinaryReader reader,
+        HeaderType headerType,
+        CancellationToken cancellationToken = default
+    )
+        where T : RarHeader, new()
+    {
+        var child = new T() { ArchiveEncoding = header.ArchiveEncoding };
+        child._headerType = headerType;
+        child._isRar5 = header.IsRar5;
+        child.HeaderCrc = header.HeaderCrc;
+        child.HeaderCode = header.HeaderCode;
+        child.HeaderFlags = header.HeaderFlags;
+        child.HeaderSize = header.HeaderSize;
+        child.ExtraSize = header.ExtraSize;
+        child.AdditionalDataSize = header.AdditionalDataSize;
+        await child.ReadFinishAsync(reader, cancellationToken).ConfigureAwait(false);
+
+        var n = child.RemainingHeaderBytesAsync(reader);
+        if (n > 0)
+        {
+            await reader.ReadBytesAsync(n, cancellationToken).ConfigureAwait(false);
+        }
+
+        child.VerifyHeaderCrc(reader.GetCrc32());
         return child;
     }
 
     protected int RemainingHeaderBytes(MarkingBinaryReader reader) =>
         checked(HeaderSize - (int)reader.CurrentReadByteCount);
 
+    protected int RemainingHeaderBytesAsync(AsyncMarkingBinaryReader reader) =>
+        checked(HeaderSize - (int)reader.CurrentReadByteCount);
+
     protected virtual void ReadFinish(MarkingBinaryReader reader) =>
         throw new NotImplementedException();
+
+    protected virtual ValueTask ReadFinishAsync(
+        AsyncMarkingBinaryReader reader,
+        CancellationToken cancellationToken = default
+    ) => throw new NotImplementedException();
 
     private void VerifyHeaderCrc(uint crc32)
     {
@@ -117,25 +234,25 @@ internal class RarHeader : IRarHeader
 
     internal bool IsRar5 => _isRar5;
 
-    protected uint HeaderCrc { get;private set; }
+    protected uint HeaderCrc { get; private set; }
 
-    internal byte HeaderCode { get;private set; }
+    internal byte HeaderCode { get; private set; }
 
-    protected ushort HeaderFlags { get;private set; }
+    protected ushort HeaderFlags { get; private set; }
 
     protected bool HasHeaderFlag(ushort flag) => (HeaderFlags & flag) == flag;
 
-    protected int HeaderSize { get;private set; }
+    protected int HeaderSize { get; private set; }
 
     internal IArchiveEncoding ArchiveEncoding { get; private set; }
 
     /// <summary>
     /// Extra header size.
     /// </summary>
-    protected uint ExtraSize { get;private set; }
+    protected uint ExtraSize { get; private set; }
 
     /// <summary>
     /// Size of additional data (eg file contents)
     /// </summary>
-    protected long AdditionalDataSize { get;private set; }
+    protected long AdditionalDataSize { get; private set; }
 }
