@@ -246,12 +246,12 @@ public class AsyncTests : TestBase
         Assert.True(File.Exists(compressedPath));
         Assert.True(new FileInfo(compressedPath).Length > 0);
 #if NETFRAMEWORK
-        using (var fileStream = File.Create(compressedPath))
-        using (var gzipStream = new GZipStream(fileStream, CompressionMode.Compress))
+        using (var fileStream = File.OpenRead(compressedPath))
+        using (var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress))
 #else
         // Test async read with GZipStream
-        await using (var fileStream = File.Create(compressedPath))
-        await using (var gzipStream = new GZipStream(fileStream, CompressionMode.Compress))
+        await using (var fileStream = File.OpenRead(compressedPath))
+        await using (var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress))
 #endif
         {
             var decompressed = new byte[testData.Length];
