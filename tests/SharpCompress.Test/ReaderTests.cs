@@ -160,13 +160,25 @@ public abstract class ReaderTests : TestBase
     )
     {
         using var file = File.OpenRead(testArchive);
-        using var protectedStream = SharpCompressStream.Create(
+
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+        await using var protectedStream = SharpCompressStream.Create(
             new ForwardOnlyStream(file, options.BufferSize),
             leaveOpen: true,
             throwOnDispose: true,
             bufferSize: options.BufferSize
         );
-        using var testStream = new TestStream(protectedStream);
+        await using var testStream = new TestStream(protectedStream);
+#else
+
+         using var protectedStream = SharpCompressStream.Create(
+            new ForwardOnlyStream(file, options.BufferSize),
+            leaveOpen: true,
+            throwOnDispose: true,
+            bufferSize: options.BufferSize
+        );
+         using var testStream = new TestStream(protectedStream);
+        #endif
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(testStream),

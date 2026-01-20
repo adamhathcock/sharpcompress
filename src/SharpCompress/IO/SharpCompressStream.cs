@@ -141,23 +141,23 @@ public class SharpCompressStream : Stream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(SharpCompressStream));
 #endif
-        if (_isDisposed)
-        {
-            return;
-        }
-        _isDisposed = true;
-        base.Dispose(disposing);
-
         if (this.LeaveOpen)
         {
             return;
         }
+
         if (ThrowOnDispose)
         {
             throw new InvalidOperationException(
                 $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
             );
         }
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
+        base.Dispose(disposing);
         if (disposing)
         {
             Stream.Dispose();
@@ -448,6 +448,37 @@ public class SharpCompressStream : Stream, IStreamStack
     {
         await Stream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
         _internalPosition += buffer.Length;
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(SharpCompressStream));
+#endif
+        if (this.LeaveOpen)
+        {
+            return;
+        }
+        if (ThrowOnDispose)
+        {
+            throw new InvalidOperationException(
+                $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
+            );
+        }
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
+        await base.DisposeAsync();
+
+
+        await Stream.DisposeAsync();
+        if (_buffer != null)
+        {
+            ArrayPool<byte>.Shared.Return(_buffer);
+            _buffer = null;
+        }
     }
 
 #endif

@@ -50,6 +50,14 @@ public class TestStream(Stream stream, bool read, bool write, bool seek) : Strea
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
     ) => stream.ReadAsync(buffer, cancellationToken);
+
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        await stream.DisposeAsync();
+        IsDisposed = true;
+    }
 #endif
 
     public override long Seek(long offset, SeekOrigin origin) => stream.Seek(offset, origin);

@@ -63,9 +63,4 @@ public class AsyncOnlyStream : SharpCompressStream
 
     public override void Write(byte[] buffer, int offset, int count) =>
         Stream.Write(buffer, offset, count);
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-    }
 }

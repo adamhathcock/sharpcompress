@@ -163,20 +163,25 @@ public class TarReaderAsyncTests : ReaderTests
     }
 
     [Fact]
-    public void Tar_With_TarGz_With_Flushed_EntryStream_Async()
+    public async ValueTask Tar_With_TarGz_With_Flushed_EntryStream_Async()
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsTarGz.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
-        using var reader = ReaderFactory.OpenReader(stream);
-        Assert.True(reader.MoveToNextEntry());
+        await using var reader = await ReaderFactory.OpenAsyncReader(stream);
+        Assert.True(await reader.MoveToNextEntryAsync());
         Assert.Equal("inner.tar.gz", reader.Entry.Key);
 
-        using var entryStream = reader.OpenEntryStream();
-        using var flushingStream = new FlushOnDisposeStream(entryStream);
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+        await using var entryStream = await reader.OpenEntryStreamAsync();
+        await using var flushingStream = new FlushOnDisposeStream(entryStream);
+#else
+         using var entryStream = reader.OpenEntryStream();
+         using var flushingStream = new FlushOnDisposeStream(entryStream);
+        #endif
 
         // Extract inner.tar.gz
-        using var innerReader = ReaderFactory.OpenReader(flushingStream);
-        Assert.True(innerReader.MoveToNextEntry());
+        await using var innerReader = await ReaderFactory.OpenAsyncReader(flushingStream);
+        Assert.True(await innerReader.MoveToNextEntryAsync());
         Assert.Equal("test", innerReader.Entry.Key);
     }
 
