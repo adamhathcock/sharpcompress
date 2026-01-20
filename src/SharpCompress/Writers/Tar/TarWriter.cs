@@ -37,7 +37,7 @@ public partial class TarWriter : AbstractWriter
                 break;
             case CompressionType.BZip2:
                 {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                    destination = BZip2Stream.Create(destination, CompressionMode.Compress, false);
                 }
                 break;
             case CompressionType.GZip:

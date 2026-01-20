@@ -167,7 +167,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
         storedCombinedCRC;
     private int computedBlockCRC,
         computedCombinedCRC;
-    private readonly bool decompressConcatenated;
+    private bool decompressConcatenated;
 
     private int i2,
         count,
@@ -181,19 +181,23 @@ internal class CBZip2InputStream : Stream, IStreamStack
     private char z;
     private bool isDisposed;
 
-    public CBZip2InputStream(Stream zStream, bool decompressConcatenated)
+    private CBZip2InputStream() { }
+
+    public static CBZip2InputStream Create(Stream zStream, bool decompressConcatenated)
     {
-        this.decompressConcatenated = decompressConcatenated;
-        ll8 = null;
-        tt = null;
-        BsSetStream(zStream);
+        var cbZip2InputStream = new CBZip2InputStream();
+        cbZip2InputStream.decompressConcatenated = decompressConcatenated;
+        cbZip2InputStream.ll8 = null;
+        cbZip2InputStream. tt = null;
+        cbZip2InputStream.BsSetStream(zStream);
 #if DEBUG_STREAMS
-        this.DebugConstruct(typeof(CBZip2InputStream));
+        cbZip2InputStream.DebugConstruct(typeof(CBZip2InputStream));
 #endif
 
-        Initialize(true);
-        InitBlock();
-        SetupBlock();
+        cbZip2InputStream. Initialize(true);
+        cbZip2InputStream. InitBlock();
+        cbZip2InputStream.SetupBlock();
+        return cbZip2InputStream;
     }
 
     protected override void Dispose(bool disposing)

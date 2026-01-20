@@ -48,7 +48,7 @@ public class TarWrapper(
             CompressionType.BZip2,
             BZip2Stream.IsBZip2,
             BZip2Stream.IsBZip2Async,
-            (stream) => new BZip2Stream(stream, CompressionMode.Decompress, false),
+            (stream) => BZip2Stream.Create(stream, CompressionMode.Decompress, false),
             ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"]
         ),
         new(

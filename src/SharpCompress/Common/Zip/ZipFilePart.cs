@@ -124,7 +124,7 @@ internal abstract class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.BZip2:
             {
-                return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                return BZip2Stream.Create(stream, CompressionMode.Decompress, false);
             }
             case ZipCompressionMethod.LZMA:
             {
@@ -424,7 +424,7 @@ internal abstract class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.BZip2:
             {
-                return new BZip2Stream(stream, CompressionMode.Decompress, false);
+                return  BZip2Stream.Create(stream, CompressionMode.Decompress, false);
             }
             case ZipCompressionMethod.LZMA:
             {

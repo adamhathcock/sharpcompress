@@ -32,7 +32,7 @@ public class BZip2StreamAsyncTests
         using (var memoryStream = new MemoryStream())
         {
             using (
-                var bzip2Stream = new BZip2Stream(
+                var bzip2Stream =  BZip2Stream.Create(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Compress,
                     false
@@ -54,7 +54,7 @@ public class BZip2StreamAsyncTests
         using (var memoryStream = new MemoryStream(compressed))
         {
             using (
-                var bzip2Stream = new BZip2Stream(
+                var bzip2Stream =  BZip2Stream.Create(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Decompress,
                     false
@@ -93,7 +93,7 @@ public class BZip2StreamAsyncTests
         using (var memoryStream = new MemoryStream())
         {
             using (
-                var bzip2Stream = new BZip2Stream(
+                var bzip2Stream = BZip2Stream.Create(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Compress,
                     false
@@ -110,7 +110,7 @@ public class BZip2StreamAsyncTests
         using (var memoryStream = new MemoryStream(compressed))
         {
             using (
-                var bzip2Stream = new BZip2Stream(
+                var bzip2Stream = BZip2Stream.Create(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Decompress,
                     false
@@ -133,7 +133,7 @@ public class BZip2StreamAsyncTests
         using (var memoryStream = new MemoryStream())
         {
             using (
-                var bzip2Stream = new BZip2Stream(
+                var bzip2Stream = BZip2Stream.Create(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Compress,
                     false
@@ -158,7 +158,7 @@ public class BZip2StreamAsyncTests
             using (var readStream = new MemoryStream(compressed))
             {
                 using (
-                    var bzip2Stream = new BZip2Stream(
+                    var bzip2Stream = BZip2Stream.Create(
                         new AsyncOnlyStream(memoryStream),
                         SharpCompress.Compressors.CompressionMode.Decompress,
                         false
@@ -189,7 +189,7 @@ public class BZip2StreamAsyncTests
         using (var memoryStream = new MemoryStream())
         {
             using (
-                var bzip2Stream = new BZip2Stream(
+                var bzip2Stream = BZip2Stream.Create(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Compress,
                     false
@@ -207,7 +207,7 @@ public class BZip2StreamAsyncTests
         using (var memoryStream = new MemoryStream(compressed))
         {
             using (
-                var bzip2Stream = new BZip2Stream(
+                var bzip2Stream = BZip2Stream.Create(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Decompress,
                     false

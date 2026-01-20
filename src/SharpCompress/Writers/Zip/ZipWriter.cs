@@ -443,7 +443,7 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return new BZip2Stream(counting, CompressionMode.Compress, false);
+                    return BZip2Stream.Create(counting, CompressionMode.Compress, false);
                 }
                 case ZipCompressionMethod.LZMA:
                 {

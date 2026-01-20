@@ -34,7 +34,7 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
         var stream = base.RequestInitialStream();
         return compressionType switch
         {
-            CompressionType.BZip2 => new BZip2Stream(stream, CompressionMode.Decompress, false),
+            CompressionType.BZip2 =>  BZip2Stream.Create(stream, CompressionMode.Decompress, false),
             CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
             CompressionType.ZStandard => new ZStandardStream(stream),
             CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
@@ -74,7 +74,7 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
         if (BZip2Stream.IsBZip2(rewindableStream))
         {
             ((IStreamStack)rewindableStream).StackSeek(pos);
-            var testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
+            var testStream =  BZip2Stream.Create(rewindableStream, CompressionMode.Decompress, false);
             if (TarArchive.IsTarFile(testStream))
             {
                 ((IStreamStack)rewindableStream).StackSeek(pos);
