@@ -199,9 +199,8 @@ internal class CBZip2InputStream : Stream, IStreamStack
         {
             cbZip2InputStream.Initialize(true);
         }
-        catch (Exception ex) when (
-            ex is NotSupportedException || ex.InnerException is NotSupportedException
-        )
+        catch (Exception ex)
+            when (ex is NotSupportedException || ex.InnerException is NotSupportedException)
         {
             if (zStream.CanSeek)
             {
@@ -1495,7 +1494,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
-  private async ValueTask SetupBlockAsync(CancellationToken cancellationToken)
+    private async ValueTask SetupBlockAsync(CancellationToken cancellationToken)
     {
         Span<int> cftab = stackalloc int[257];
         char ch;
@@ -1534,6 +1533,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
             SetupNoRandPartA();
         }
     }
+
     private void SetupBlock()
     {
         Span<int> cftab = stackalloc int[257];
@@ -1605,6 +1605,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
             await SetupBlockAsync(cancellationToken).ConfigureAwait(false);
         }
     }
+
     private void SetupRandPartA()
     {
         if (i2 <= last)
@@ -1658,7 +1659,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
-  private async ValueTask SetupNoRandPartAAsync(CancellationToken cancellationToken)
+    private async ValueTask SetupNoRandPartAAsync(CancellationToken cancellationToken)
     {
         if (i2 <= last)
         {
@@ -1816,7 +1817,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
-       private async ValueTask SetupNoRandPartBAsync(CancellationToken cancellationToken)
+    private async ValueTask SetupNoRandPartBAsync(CancellationToken cancellationToken)
     {
         if (ch2 != chPrev)
         {
@@ -1859,7 +1860,6 @@ internal class CBZip2InputStream : Stream, IStreamStack
             SetupNoRandPartA();
         }
     }
-
 
     private async ValueTask SetupNoRandPartCAsync(CancellationToken cancellationToken)
     {
@@ -2004,7 +2004,6 @@ internal class CBZip2InputStream : Stream, IStreamStack
 
     private async ValueTask<char> BsGetUCharAsync(CancellationToken cancellationToken) =>
         (char)await BsRAsync(8, cancellationToken);
-
 
     public static async ValueTask<CBZip2InputStream> CreateAsync(
         Stream zStream,

@@ -53,7 +53,7 @@ public class BZip2StreamAsyncTests
         byte[] decompressed;
         using (var memoryStream = new MemoryStream(compressed))
         {
-             using (
+            using (
                 var bzip2Stream = await BZip2Stream.CreateAsync(
                     new AsyncOnlyStream(memoryStream),
                     SharpCompress.Compressors.CompressionMode.Decompress,
@@ -156,9 +156,9 @@ public class BZip2StreamAsyncTests
 
             // Decompress and verify
 #if NETFRAMEWORK || NETSTANDARD2_0
-             using (var readStream = new MemoryStream(compressed))
+            using (var readStream = new MemoryStream(compressed))
             {
-                 using (
+                using (
                     var bzip2Stream = await BZip2Stream.CreateAsync(
                         new AsyncOnlyStream(readStream),
                         SharpCompress.Compressors.CompressionMode.Decompress,
