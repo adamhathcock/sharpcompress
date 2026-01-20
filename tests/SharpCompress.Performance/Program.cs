@@ -8,7 +8,6 @@ using SharpCompress.Performance;
 using SharpCompress.Readers;
 using SharpCompress.Test;
 
-
 var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
     "SharpCompress.Performance",
     StringComparison.OrdinalIgnoreCase
@@ -18,10 +17,10 @@ var SOLUTION_BASE_PATH = Path.GetDirectoryName(path) ?? throw new ArgumentNullEx
 
 var TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
 
-//using var _ = JetbrainsProfiler.Memory($"C:\\Users\\adh\\git\\temp");
-using (var __ = JetbrainsProfiler.Cpu($"C:\\Users\\adh\\git\\temp"))
+//using var _ = JetbrainsProfiler.Memory($"/Users/adam/git/temp");
+using (var __ = JetbrainsProfiler.Cpu($"/Users/adam/git/temp"))
 {
-    string filename = @"C:\Users\adh\Downloads\7Zip Samples-20260119T114757Z-3-001\7Zip Samples\original.7z";
+    string filename = $"/Users/adam/Downloads/original.7z";
     for (int i = 0; i < 10; i++)
     {
         await Extractor.GetFiles(filename);

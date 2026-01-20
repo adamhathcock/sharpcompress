@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
 internal struct BitEncoder
@@ -24,6 +26,7 @@ internal struct BitEncoder
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Encode(Encoder encoder, uint symbol)
     {
         // encoder.EncodeBit(Prob, kNumBitModelTotalBits, symbol);
@@ -100,20 +103,48 @@ internal struct BitDecoder
 
     public void Init() => _prob = K_BIT_MODEL_TOTAL >> 1;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint Decode(Decoder rangeDecoder)
     {
-        var newBound = (rangeDecoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
-        if (rangeDecoder._code < newBound)
+        // Cache fields locally to avoid repeated memory access
+        var range = rangeDecoder._range;
+        var code = rangeDecoder._code;
+        var prob = _prob;
+
+        var newBound = (range >> K_NUM_BIT_MODEL_TOTAL_BITS) * prob;
+
+        if (code < newBound)
         {
-            rangeDecoder._range = newBound;
-            _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;
-            rangeDecoder.Normalize2();
+            range = newBound;
+            _prob = prob + ((K_BIT_MODEL_TOTAL - prob) >> K_NUM_MOVE_BITS);
+
+            // Inline normalize check for the common path
+            if (range < Decoder.K_TOP_VALUE)
+            {
+                code = (code << 8) | (byte)rangeDecoder._stream.ReadByte();
+                range <<= 8;
+                rangeDecoder._total++;
+            }
+
+            rangeDecoder._range = range;
+            rangeDecoder._code = code;
             return 0;
         }
-        rangeDecoder._range -= newBound;
-        rangeDecoder._code -= newBound;
-        _prob -= (_prob) >> K_NUM_MOVE_BITS;
-        rangeDecoder.Normalize2();
+
+        range -= newBound;
+        code -= newBound;
+        _prob = prob - (prob >> K_NUM_MOVE_BITS);
+
+        // Inline normalize check for the common path
+        if (range < Decoder.K_TOP_VALUE)
+        {
+            code = (code << 8) | (byte)rangeDecoder._stream.ReadByte();
+            range <<= 8;
+            rangeDecoder._total++;
+        }
+
+        rangeDecoder._range = range;
+        rangeDecoder._code = code;
         return 1;
     }
 }
