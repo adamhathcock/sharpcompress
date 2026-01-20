@@ -295,18 +295,18 @@ internal class CBZip2InputStream : Stream, IStreamStack
             case RAND_PART_A_STATE:
                 break;
             case RAND_PART_B_STATE:
-                SetupRandPartB();
+                await SetupRandPartBAsync(cancellationToken).ConfigureAwait(false);
                 break;
             case RAND_PART_C_STATE:
-                SetupRandPartC();
+                await SetupRandPartCAsync(cancellationToken).ConfigureAwait(false);
                 break;
             case NO_RAND_PART_A_STATE:
                 break;
             case NO_RAND_PART_B_STATE:
-                SetupNoRandPartB();
+                await SetupNoRandPartBAsync(cancellationToken).ConfigureAwait(false);
                 break;
             case NO_RAND_PART_C_STATE:
-                SetupNoRandPartC();
+                await SetupNoRandPartCAsync(cancellationToken).ConfigureAwait(false);
                 break;
             default:
                 break;
@@ -1495,6 +1495,45 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
+  private async ValueTask SetupBlockAsync(CancellationToken cancellationToken)
+    {
+        Span<int> cftab = stackalloc int[257];
+        char ch;
+
+        cftab[0] = 0;
+        for (i = 1; i <= 256; i++)
+        {
+            cftab[i] = unzftab[i - 1];
+        }
+        for (i = 1; i <= 256; i++)
+        {
+            cftab[i] += cftab[i - 1];
+        }
+
+        for (i = 0; i <= last; i++)
+        {
+            ch = ll8[i];
+            tt[cftab[ch]] = i;
+            cftab[ch]++;
+        }
+
+        tPos = tt[origPtr];
+
+        count = 0;
+        i2 = 0;
+        ch2 = 256; /* not a char and not EOF */
+
+        if (blockRandomised)
+        {
+            rNToGo = 0;
+            rTPos = 0;
+            await SetupRandPartAAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            SetupNoRandPartA();
+        }
+    }
     private void SetupBlock()
     {
         Span<int> cftab = stackalloc int[257];
@@ -1535,6 +1574,37 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
+    private async ValueTask SetupRandPartAAsync(CancellationToken cancellationToken)
+    {
+        if (i2 <= last)
+        {
+            chPrev = ch2;
+            ch2 = ll8[tPos];
+            tPos = tt[tPos];
+            if (rNToGo == 0)
+            {
+                rNToGo = BZip2Constants.rNums[rTPos];
+                rTPos++;
+                if (rTPos == 512)
+                {
+                    rTPos = 0;
+                }
+            }
+            rNToGo--;
+            ch2 ^= (rNToGo == 1) ? (char)1 : (char)0;
+            i2++;
+
+            currentChar = ch2;
+            currentState = RAND_PART_B_STATE;
+            mCrc.UpdateCRC(ch2);
+        }
+        else
+        {
+            EndBlock();
+            await InitBlockAsync(cancellationToken).ConfigureAwait(false);
+            await SetupBlockAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
     private void SetupRandPartA()
     {
         if (i2 <= last)
@@ -1588,6 +1658,27 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
+  private async ValueTask SetupNoRandPartAAsync(CancellationToken cancellationToken)
+    {
+        if (i2 <= last)
+        {
+            chPrev = ch2;
+            ch2 = ll8[tPos];
+            tPos = tt[tPos];
+            i2++;
+
+            currentChar = ch2;
+            currentState = NO_RAND_PART_B_STATE;
+            mCrc.UpdateCRC(ch2);
+        }
+        else
+        {
+            EndBlock();
+            await InitBlockAsync(cancellationToken).ConfigureAwait(false);
+            await SetupBlockAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     private void SetupRandPartB()
     {
         if (ch2 != chPrev)
@@ -1626,6 +1717,44 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
+    private async ValueTask SetupRandPartBAsync(CancellationToken cancellationToken)
+    {
+        if (ch2 != chPrev)
+        {
+            currentState = RAND_PART_A_STATE;
+            count = 1;
+            await SetupRandPartAAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            count++;
+            if (count >= 4)
+            {
+                z = ll8[tPos];
+                tPos = tt[tPos];
+                if (rNToGo == 0)
+                {
+                    rNToGo = BZip2Constants.rNums[rTPos];
+                    rTPos++;
+                    if (rTPos == 512)
+                    {
+                        rTPos = 0;
+                    }
+                }
+                rNToGo--;
+                z ^= (char)((rNToGo == 1) ? 1 : 0);
+                j2 = 0;
+                currentState = RAND_PART_C_STATE;
+                SetupRandPartC();
+            }
+            else
+            {
+                currentState = RAND_PART_A_STATE;
+                await SetupRandPartAAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
     private void SetupRandPartC()
     {
         if (j2 < z)
@@ -1640,6 +1769,23 @@ internal class CBZip2InputStream : Stream, IStreamStack
             i2++;
             count = 0;
             SetupRandPartA();
+        }
+    }
+
+    private async ValueTask SetupRandPartCAsync(CancellationToken cancellationToken)
+    {
+        if (j2 < z)
+        {
+            currentChar = ch2;
+            mCrc.UpdateCRC(ch2);
+            j2++;
+        }
+        else
+        {
+            currentState = RAND_PART_A_STATE;
+            i2++;
+            count = 0;
+            await SetupRandPartAAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -1670,6 +1816,33 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
     }
 
+       private async ValueTask SetupNoRandPartBAsync(CancellationToken cancellationToken)
+    {
+        if (ch2 != chPrev)
+        {
+            currentState = NO_RAND_PART_A_STATE;
+            count = 1;
+            await SetupNoRandPartAAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            count++;
+            if (count >= 4)
+            {
+                z = ll8[tPos];
+                tPos = tt[tPos];
+                currentState = NO_RAND_PART_C_STATE;
+                j2 = 0;
+                await SetupNoRandPartCAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                currentState = NO_RAND_PART_A_STATE;
+                await SetupNoRandPartAAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
     private void SetupNoRandPartC()
     {
         if (j2 < z)
@@ -1684,6 +1857,24 @@ internal class CBZip2InputStream : Stream, IStreamStack
             i2++;
             count = 0;
             SetupNoRandPartA();
+        }
+    }
+
+
+    private async ValueTask SetupNoRandPartCAsync(CancellationToken cancellationToken)
+    {
+        if (j2 < z)
+        {
+            currentChar = ch2;
+            mCrc.UpdateCRC(ch2);
+            j2++;
+        }
+        else
+        {
+            currentState = NO_RAND_PART_A_STATE;
+            i2++;
+            count = 0;
+            await SetupNoRandPartAAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
