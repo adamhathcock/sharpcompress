@@ -23,7 +23,7 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
         var binary = new RarCryptoBinaryReader(stream);
         if (salt == null)
         {
-            salt = binary.ReadBytes(EncryptionConstV5.SIZE_SALT30);
+            salt = binary.ReadBytesBase(EncryptionConstV5.SIZE_SALT30);
             binary._readCount += EncryptionConstV5.SIZE_SALT30;
         }
         binary._rijndael = new BlockTransformer(cryptKey.Transformer(salt));
@@ -45,6 +45,8 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
     public override byte ReadByte() => ReadAndDecryptBytes(1)[0];
 
     public override byte[] ReadBytes(int count) => ReadAndDecryptBytes(count);
+
+    private byte[] ReadBytesBase(int count) => base.ReadBytes(count);
 
     private byte[] ReadAndDecryptBytes(int count)
     {
