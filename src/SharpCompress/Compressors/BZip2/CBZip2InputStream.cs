@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -194,7 +195,20 @@ internal class CBZip2InputStream : Stream, IStreamStack
         cbZip2InputStream.DebugConstruct(typeof(CBZip2InputStream));
 #endif
 
-        cbZip2InputStream.Initialize(true);
+        try
+        {
+            cbZip2InputStream.Initialize(true);
+        }
+        catch (Exception ex) when (
+            ex is NotSupportedException || ex.InnerException is NotSupportedException
+        )
+        {
+            if (zStream.CanSeek)
+            {
+                zStream.Seek(0, SeekOrigin.Begin);
+            }
+            return CreateAsync(zStream, decompressConcatenated).GetAwaiter().GetResult();
+        }
         cbZip2InputStream.InitBlock();
         cbZip2InputStream.SetupBlock();
         return cbZip2InputStream;
@@ -1175,5 +1189,630 @@ internal class CBZip2InputStream : Stream, IStreamStack
     {
         get => 0;
         set { }
+    }
+
+    private async Task BsSetStreamAsync(Stream f, CancellationToken cancellationToken)
+    {
+        bsStream = f;
+        bsLive = 0;
+        bsBuff = 0;
+        await Task.CompletedTask;
+    }
+
+    private async ValueTask<int> BsRAsync(int n, CancellationToken cancellationToken)
+    {
+        int v;
+        while (bsLive < n)
+        {
+            int zzi;
+            int thech = '\0';
+            var b = ArrayPool<byte>.Shared.Rent(1);
+            try
+            {
+                await bsStream.ReadExactAsync(b, 0, 1, cancellationToken);
+                thech = (char)b[0];
+            }
+            catch (IOException)
+            {
+                CompressedStreamEOF();
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(b);
+            }
+            if (thech == '\uffff')
+            {
+                CompressedStreamEOF();
+            }
+            zzi = thech;
+            bsBuff = (bsBuff << 8) | (zzi & 0xff);
+            bsLive += 8;
+        }
+
+        v = (bsBuff >> (bsLive - n)) & ((1 << n) - 1);
+        bsLive -= n;
+        return v;
+    }
+
+    private async Task<char> BsGetUCharAsync(CancellationToken cancellationToken) =>
+        (char)await BsRAsync(8, cancellationToken);
+
+    private async Task<int> BsGetintAsync(CancellationToken cancellationToken)
+    {
+        var u = 0;
+        u = (u << 8) | await BsRAsync(8, cancellationToken);
+        u = (u << 8) | await BsRAsync(8, cancellationToken);
+        u = (u << 8) | await BsRAsync(8, cancellationToken);
+        u = (u << 8) | await BsRAsync(8, cancellationToken);
+        return u;
+    }
+
+    private async Task<int> BsGetIntVSAsync(int numBits, CancellationToken cancellationToken) =>
+        await BsRAsync(numBits, cancellationToken);
+
+    private async Task<int> BsGetInt32Async(CancellationToken cancellationToken) =>
+        await BsGetintAsync(cancellationToken);
+
+    private async Task<bool> InitializeAsync(bool isFirstStream, CancellationToken cancellationToken)
+    {
+        if (bsStream.CanSeek)
+        {
+            bsStream.Seek(0, SeekOrigin.Begin);
+        }
+
+        var buffer = new byte[4];
+        int bytesRead = await bsStream.ReadAsync(buffer, 0, 4, cancellationToken);
+        if (bytesRead == 0 && !isFirstStream)
+        {
+            return false;
+        }
+        if (bytesRead < 3)
+        {
+            throw new IOException("Not a BZIP2 marked stream");
+        }
+        if (buffer[0] != 'B' || buffer[1] != 'Z' || buffer[2] != 'h')
+        {
+            throw new IOException("Not a BZIP2 marked stream");
+        }
+        if (bytesRead < 4)
+        {
+            var singleByteBuffer = new byte[1];
+            int extraRead = await bsStream.ReadAsync(singleByteBuffer, 0, 1, cancellationToken);
+            if (extraRead == 0)
+            {
+                BsFinishedWithStream();
+                streamEnd = true;
+                return false;
+            }
+            buffer[3] = singleByteBuffer[0];
+            bytesRead = 4;
+        }
+        if (buffer[3] < '1' || buffer[3] > '9')
+        {
+            BsFinishedWithStream();
+            streamEnd = true;
+            return false;
+        }
+
+        SetDecompressStructureSizes(buffer[3] - '0');
+        bsBuff = (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
+        bsLive = bytesRead * 8;
+        computedCombinedCRC = 0;
+        return true;
+    }
+
+    private async Task InitBlockAsync(CancellationToken cancellationToken)
+    {
+        char magic1,
+            magic2,
+            magic3,
+            magic4;
+        char magic5,
+            magic6;
+
+        while (true)
+        {
+            magic1 = await BsGetUCharAsync(cancellationToken);
+            magic2 = await BsGetUCharAsync(cancellationToken);
+            magic3 = await BsGetUCharAsync(cancellationToken);
+            magic4 = await BsGetUCharAsync(cancellationToken);
+            magic5 = await BsGetUCharAsync(cancellationToken);
+            magic6 = await BsGetUCharAsync(cancellationToken);
+            if (
+                magic1 != 0x17
+                || magic2 != 0x72
+                || magic3 != 0x45
+                || magic4 != 0x38
+                || magic5 != 0x50
+                || magic6 != 0x90
+            )
+            {
+                break;
+            }
+
+            if (await CompleteAsync(cancellationToken))
+            {
+                return;
+            }
+        }
+
+        if (
+            magic1 != 0x31
+            || magic2 != 0x41
+            || magic3 != 0x59
+            || magic4 != 0x26
+            || magic5 != 0x53
+            || magic6 != 0x59
+        )
+        {
+            BadBlockHeader();
+            streamEnd = true;
+            return;
+        }
+
+        storedBlockCRC = await BsGetInt32Async(cancellationToken);
+
+        if (await BsRAsync(1, cancellationToken) == 1)
+        {
+            blockRandomised = true;
+        }
+        else
+        {
+            blockRandomised = false;
+        }
+
+        await GetAndMoveToFrontDecodeAsync(cancellationToken);
+
+        mCrc.InitialiseCRC();
+        currentState = START_BLOCK_STATE;
+    }
+
+    private async Task<bool> CompleteAsync(CancellationToken cancellationToken)
+    {
+        storedCombinedCRC = await BsGetInt32Async(cancellationToken);
+        if (storedCombinedCRC != computedCombinedCRC)
+        {
+            CrcError();
+        }
+
+        var complete = !decompressConcatenated || !(await InitializeAsync(false, cancellationToken));
+        if (complete)
+        {
+            BsFinishedWithStream();
+            streamEnd = true;
+        }
+
+        return complete;
+    }
+
+    private async Task RecvDecodingTablesAsync(CancellationToken cancellationToken)
+    {
+        var len = InitCharArray(BZip2Constants.N_GROUPS, BZip2Constants.MAX_ALPHA_SIZE);
+        int i,
+            j,
+            t,
+            nGroups,
+            nSelectors,
+            alphaSize;
+        int minLen,
+            maxLen;
+        var inUse16 = new bool[16];
+
+        for (i = 0; i < 16; i++)
+        {
+            if (await BsRAsync(1, cancellationToken) == 1)
+            {
+                inUse16[i] = true;
+            }
+            else
+            {
+                inUse16[i] = false;
+            }
+        }
+
+        for (i = 0; i < 256; i++)
+        {
+            inUse[i] = false;
+        }
+
+        for (i = 0; i < 16; i++)
+        {
+            if (inUse16[i])
+            {
+                for (j = 0; j < 16; j++)
+                {
+                    if (await BsRAsync(1, cancellationToken) == 1)
+                    {
+                        inUse[(i * 16) + j] = true;
+                    }
+                }
+            }
+        }
+
+        MakeMaps();
+        alphaSize = nInUse + 2;
+
+        nGroups = await BsRAsync(3, cancellationToken);
+        nSelectors = await BsRAsync(15, cancellationToken);
+        for (i = 0; i < nSelectors; i++)
+        {
+            j = 0;
+            while (await BsRAsync(1, cancellationToken) == 1)
+            {
+                j++;
+            }
+            if (i < BZip2Constants.MAX_SELECTORS)
+            {
+                selectorMtf[i] = (char)j;
+            }
+        }
+
+        nSelectors = Math.Min(nSelectors, BZip2Constants.MAX_SELECTORS);
+
+        {
+            var pos = new char[BZip2Constants.N_GROUPS];
+            char tmp,
+                v;
+            for (v = '\0'; v < nGroups; v++)
+            {
+                pos[v] = v;
+            }
+
+            for (i = 0; i < nSelectors; i++)
+            {
+                v = selectorMtf[i];
+                tmp = pos[v];
+                while (v > 0)
+                {
+                    pos[v] = pos[v - 1];
+                    v--;
+                }
+                pos[0] = tmp;
+                selector[i] = tmp;
+            }
+        }
+
+        for (t = 0; t < nGroups; t++)
+        {
+            var curr = await BsRAsync(5, cancellationToken);
+            for (i = 0; i < alphaSize; i++)
+            {
+                while (await BsRAsync(1, cancellationToken) == 1)
+                {
+                    if (await BsRAsync(1, cancellationToken) == 0)
+                    {
+                        curr++;
+                    }
+                    else
+                    {
+                        curr--;
+                    }
+                }
+                len[t][i] = (char)curr;
+            }
+        }
+
+        for (t = 0; t < nGroups; t++)
+        {
+            minLen = 32;
+            maxLen = 0;
+            for (i = 0; i < alphaSize; i++)
+            {
+                if (len[t][i] > maxLen)
+                {
+                    maxLen = len[t][i];
+                }
+                if (len[t][i] < minLen)
+                {
+                    minLen = len[t][i];
+                }
+            }
+            HbCreateDecodeTables(limit[t], basev[t], perm[t], len[t], minLen, maxLen, alphaSize);
+            minLens[t] = minLen;
+        }
+    }
+
+    private async Task GetAndMoveToFrontDecodeAsync(CancellationToken cancellationToken)
+    {
+        var yy = new char[256];
+        int i,
+            j,
+            nextSym,
+            limitLast;
+        int EOB,
+            groupNo,
+            groupPos;
+
+        limitLast = BZip2Constants.baseBlockSize * blockSize100k;
+        origPtr = await BsGetIntVSAsync(24, cancellationToken);
+
+        await RecvDecodingTablesAsync(cancellationToken);
+        EOB = nInUse + 1;
+        groupNo = -1;
+        groupPos = 0;
+
+        /*
+        Setting up the unzftab entries here is not strictly
+        necessary, but it does save having to do it later
+        in a separate pass, and so saves a block's worth of
+        cache misses.
+        */
+        for (i = 0; i <= 255; i++)
+        {
+            unzftab[i] = 0;
+        }
+
+        for (i = 0; i <= 255; i++)
+        {
+            yy[i] = (char)i;
+        }
+
+        last = -1;
+
+        {
+            int zt,
+                zn,
+                zvec,
+                zj;
+            if (groupPos == 0)
+            {
+                groupNo++;
+                groupPos = BZip2Constants.G_SIZE;
+            }
+            groupPos--;
+            zt = selector[groupNo];
+            zn = minLens[zt];
+            zvec = await BsRAsync(zn, cancellationToken);
+            while (zvec > limit[zt][zn])
+            {
+                zn++;
+                {
+                    {
+                        while (bsLive < 1)
+                        {
+                            int zzi;
+                            var thech = '\0';
+                            var b = ArrayPool<byte>.Shared.Rent(1);
+                            try
+                            {
+                                await bsStream.ReadExactAsync(b, 0, 1, cancellationToken);
+                                thech = (char)b[0];
+                            }
+                            catch (IOException)
+                            {
+                                CompressedStreamEOF();
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(b);
+                            }
+                            if (thech == '\uffff')
+                            {
+                                CompressedStreamEOF();
+                            }
+                            zzi = thech;
+                            bsBuff = (bsBuff << 8) | (zzi & 0xff);
+                            bsLive += 8;
+                        }
+                    }
+                    zj = (bsBuff >> (bsLive - 1)) & 1;
+                    bsLive--;
+                }
+                zvec = (zvec << 1) | zj;
+            }
+            nextSym = perm[zt][zvec - basev[zt][zn]];
+        }
+
+        while (true)
+        {
+            if (nextSym == EOB)
+            {
+                break;
+            }
+
+            if (nextSym == BZip2Constants.RUNA || nextSym == BZip2Constants.RUNB)
+            {
+                char ch;
+                var s = -1;
+                var N = 1;
+                do
+                {
+                    if (nextSym == BZip2Constants.RUNA)
+                    {
+                        s += (0 + 1) * N;
+                    }
+                    else if (nextSym == BZip2Constants.RUNB)
+                    {
+                        s += (1 + 1) * N;
+                    }
+                    N *= 2;
+                    {
+                        int zt,
+                            zn,
+                            zvec,
+                            zj;
+                        if (groupPos == 0)
+                        {
+                            groupNo++;
+                            groupPos = BZip2Constants.G_SIZE;
+                        }
+                        groupPos--;
+                        zt = selector[groupNo];
+                        zn = minLens[zt];
+                        zvec = await BsRAsync(zn, cancellationToken);
+                        while (zvec > limit[zt][zn])
+                        {
+                            zn++;
+                            {
+                                {
+                                    while (bsLive < 1)
+                                    {
+                                        int zzi;
+                                        var thech = '\0';
+                                        var b = ArrayPool<byte>.Shared.Rent(1);
+                                        try
+                                        {
+                                            await bsStream.ReadExactAsync(b, 0, 1, cancellationToken);
+                                            thech = (char)b[0];
+                                        }
+                                        catch (IOException)
+                                        {
+                                            CompressedStreamEOF();
+                                        }
+                                        finally
+                                        {
+                                            ArrayPool<byte>.Shared.Return(b);
+                                        }
+                                        if (thech == '\uffff')
+                                        {
+                                            CompressedStreamEOF();
+                                        }
+                                        zzi = thech;
+                                        bsBuff = (bsBuff << 8) | (zzi & 0xff);
+                                        bsLive += 8;
+                                    }
+                                }
+                                zj = (bsBuff >> (bsLive - 1)) & 1;
+                                bsLive--;
+                            }
+                            zvec = (zvec << 1) | zj;
+                        }
+                        nextSym = perm[zt][zvec - basev[zt][zn]];
+                    }
+                } while (nextSym == BZip2Constants.RUNA || nextSym == BZip2Constants.RUNB);
+
+                s++;
+                ch = seqToUnseq[yy[0]];
+                unzftab[ch] += s;
+
+                while (s > 0)
+                {
+                    last++;
+                    ll8[last] = ch;
+                    s--;
+                }
+
+                if (last >= limitLast)
+                {
+                    BlockOverrun();
+                }
+            }
+            else
+            {
+                char tmp;
+                last++;
+                if (last >= limitLast)
+                {
+                    BlockOverrun();
+                }
+
+                tmp = yy[nextSym - 1];
+                unzftab[seqToUnseq[tmp]]++;
+                ll8[last] = seqToUnseq[tmp];
+
+                /*
+                This loop is hammered during decompression,
+                hence the unrolling.
+
+                for (j = nextSym-1; j > 0; j--) yy[j] = yy[j-1];
+                */
+
+                j = nextSym - 1;
+                for (; j > 3; j -= 4)
+                {
+                    yy[j] = yy[j - 1];
+                    yy[j - 1] = yy[j - 2];
+                    yy[j - 2] = yy[j - 3];
+                    yy[j - 3] = yy[j - 4];
+                }
+                for (; j > 0; j--)
+                {
+                    yy[j] = yy[j - 1];
+                }
+
+                yy[0] = tmp;
+                {
+                    int zt,
+                        zn,
+                        zvec,
+                        zj;
+                    if (groupPos == 0)
+                    {
+                        groupNo++;
+                        groupPos = BZip2Constants.G_SIZE;
+                    }
+                    groupPos--;
+                    zt = selector[groupNo];
+                    zn = minLens[zt];
+                    zvec = BsR(zn);
+                    while (zvec > limit[zt][zn])
+                    {
+                        zn++;
+                        {
+                            {
+                                while (bsLive < 1)
+                                {
+                                    int zzi;
+                                    var thech = '\0';
+                                    var b = ArrayPool<byte>.Shared.Rent(1);
+                                    try
+                                    {
+                                        await bsStream.ReadExactAsync(b, 0, 1, cancellationToken);
+                                        thech = (char)b[0];
+                                    }
+                                    catch (IOException)
+                                    {
+                                        CompressedStreamEOF();
+                                    }
+                                    finally
+                                    {
+                                        ArrayPool<byte>.Shared.Return(b);
+                                    }
+                                    zzi = thech;
+                                    bsBuff = (bsBuff << 8) | (zzi & 0xff);
+                                    bsLive += 8;
+                                }
+                            }
+                            zj = (bsBuff >> (bsLive - 1)) & 1;
+                            bsLive--;
+                        }
+                        zvec = (zvec << 1) | zj;
+                    }
+                    nextSym = perm[zt][zvec - basev[zt][zn]];
+                }
+            }
+        }
+    }
+
+    public static Task<CBZip2InputStream> CreateAsync(
+        Stream zStream,
+        bool decompressConcatenated,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return CreateAsyncInternal(zStream, decompressConcatenated, cancellationToken);
+    }
+
+    private static async Task<CBZip2InputStream> CreateAsyncInternal(
+        Stream zStream,
+        bool decompressConcatenated,
+        CancellationToken cancellationToken
+    )
+    {
+        var cbZip2InputStream = new CBZip2InputStream();
+        cbZip2InputStream.decompressConcatenated = decompressConcatenated;
+        cbZip2InputStream.ll8 = null;
+        cbZip2InputStream.tt = null;
+        await cbZip2InputStream.BsSetStreamAsync(zStream, cancellationToken);
+
+        if (zStream.CanSeek)
+        {
+            zStream.Seek(0, SeekOrigin.Begin);
+        }
+
+        await cbZip2InputStream.InitializeAsync(true, cancellationToken);
+        await cbZip2InputStream.InitBlockAsync(cancellationToken);
+        cbZip2InputStream.SetupBlock();
+        return cbZip2InputStream;
     }
 }

@@ -62,6 +62,41 @@ public sealed class BZip2Stream : Stream, IStreamStack
         return bZip2Stream;
     }
 
+    /// <summary>
+    /// Create a BZip2Stream asynchronously
+    /// </summary>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="compressionMode">Compression Mode</param>
+    /// <param name="decompressConcatenated">Decompress Concatenated</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    public static async Task<BZip2Stream> CreateAsync(
+        Stream stream,
+        CompressionMode compressionMode,
+        bool decompressConcatenated,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var bZip2Stream = new BZip2Stream();
+#if DEBUG_STREAMS
+        bZip2Stream.DebugConstruct(typeof(BZip2Stream));
+#endif
+        bZip2Stream.Mode = compressionMode;
+        if (bZip2Stream.Mode == CompressionMode.Compress)
+        {
+            bZip2Stream.stream = new CBZip2OutputStream(stream);
+        }
+        else
+        {
+            bZip2Stream.stream = await CBZip2InputStream.CreateAsync(
+                stream,
+                decompressConcatenated,
+                cancellationToken
+            );
+        }
+
+        return bZip2Stream;
+    }
+
     public void Finish() => (stream as CBZip2OutputStream)?.Finish();
 
     protected override void Dispose(bool disposing)
