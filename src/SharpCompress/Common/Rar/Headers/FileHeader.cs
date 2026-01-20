@@ -490,7 +490,7 @@ internal class FileHeader : RarHeader
         var b = await reader.ReadBytesAsync(nameSize, cancellationToken).ConfigureAwait(false);
         FileName = ConvertPathV5(Encoding.UTF8.GetString(b, 0, b.Length));
 
-        if (ExtraSize != (uint)reader.CurrentReadByteCount)
+        if (ExtraSize != (uint)RemainingHeaderBytesAsync(reader))
         {
             throw new InvalidFormatException("rar5 header size / extra size inconsistency");
         }
