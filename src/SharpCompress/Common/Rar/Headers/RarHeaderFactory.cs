@@ -255,7 +255,7 @@ public class RarHeaderFactory
 
             if (_isRar5 && _cryptInfo != null)
             {
-                _cryptInfo.ReadInitV(new AsyncMarkingBinaryReader(stream));
+                await _cryptInfo.ReadInitVAsync(new AsyncMarkingBinaryReader(stream));
                 var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
 
                 reader = await AsyncRarCryptoBinaryReader.Create(stream, _headerKey, _cryptInfo.Salt);

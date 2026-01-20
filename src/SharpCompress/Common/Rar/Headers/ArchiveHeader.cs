@@ -51,11 +51,11 @@ internal sealed class ArchiveHeader : RarHeader
     {
         if (IsRar5)
         {
-            Flags = await reader.ReadRarVIntUInt16Async(cancellationToken).ConfigureAwait(false);
+            Flags = await reader.ReadRarVIntUInt16Async(cancellationToken: cancellationToken).ConfigureAwait(false);
             if (HasFlag(ArchiveFlagsV5.HAS_VOLUME_NUMBER))
             {
                 VolumeNumber = (int)
-                    await reader.ReadRarVIntUInt32Async(cancellationToken).ConfigureAwait(false);
+                    await reader.ReadRarVIntUInt32Async(cancellationToken: cancellationToken).ConfigureAwait(false);
             }
             // later: we may have a locator record if we need it
             //if (ExtraSize != 0) {

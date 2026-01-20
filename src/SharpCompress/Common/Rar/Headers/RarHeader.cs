@@ -114,23 +114,23 @@ internal class RarHeader : IRarHeader
             HeaderCrc = await reader.ReadUInt32Async(cancellationToken).ConfigureAwait(false);
             reader.ResetCrc();
             HeaderSize = (int)
-                await reader.ReadRarVIntUInt32Async(cancellationToken, 3).ConfigureAwait(false);
+                await reader.ReadRarVIntUInt32Async( 3, cancellationToken).ConfigureAwait(false);
             reader.Mark();
-            HeaderCode = await reader.ReadRarVIntByteAsync(cancellationToken).ConfigureAwait(false);
+            HeaderCode = await reader.ReadRarVIntByteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
             HeaderFlags = await reader
-                .ReadRarVIntUInt16Async(cancellationToken, 2)
+                .ReadRarVIntUInt16Async(2,cancellationToken)
                 .ConfigureAwait(false);
 
             if (HasHeaderFlag(HeaderFlagsV5.HAS_EXTRA))
             {
                 ExtraSize = await reader
-                    .ReadRarVIntUInt32Async(cancellationToken)
+                    .ReadRarVIntUInt32Async(cancellationToken: cancellationToken)
                     .ConfigureAwait(false);
             }
             if (HasHeaderFlag(HeaderFlagsV5.HAS_DATA))
             {
                 AdditionalDataSize = (long)
-                    await reader.ReadRarVIntAsync(cancellationToken).ConfigureAwait(false);
+                    await reader.ReadRarVIntAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
             }
         }
         else

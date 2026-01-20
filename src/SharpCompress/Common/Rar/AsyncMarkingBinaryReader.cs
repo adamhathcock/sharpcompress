@@ -113,58 +113,65 @@ internal class AsyncMarkingBinaryReader
         ulong result = 0;
         do
         {
-            var b = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
-            result |= (ulong)(b & 0x7f) << shift;
+            var b0 = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
+            var b1 = ((uint)b0) & 0x7f;
+            ulong n = b1;
+            var shifted = n << shift;
+            if (n != shifted >> shift)
+            {
+                // overflow
+                break;
+            }
+            result |= shifted;
+            if (b0 == b1)
+            {
+                return result;
+            }
             shift += 7;
-        } while (
-            shift <= maxShift
-            && (await ReadByteAsync(cancellationToken).ConfigureAwait(false) & 0x80) != 0
-        );
+        } while (shift <= maxShift);
 
-        return result;
+        throw new FormatException("malformed vint");
     }
+    public async ValueTask<uint> ReadRarVIntUInt32Async(int maxBytes = 5, CancellationToken cancellationToken = default) =>
+        // hopefully this gets inlined
+        await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false);
 
-    public async ValueTask<byte> ReadRarVIntByteAsync(CancellationToken cancellationToken = default)
-    {
-        var b = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
-        var flag = (b & 0x80) != 0;
-        var result = (byte)(b & 0x7f);
-        if (flag)
-        {
-            var b2 = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
-            result += (byte)(b2 << 7);
-        }
-        return result;
-    }
-
-    public async ValueTask<ushort> ReadRarVIntUInt16Async(
-        CancellationToken cancellationToken = default,
-        int maxBytes = 2
-    )
-    {
-        var b = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
-        var flag = (b & 0x80) != 0;
-        var result = (ushort)(b & 0x7f);
-        if (flag)
-        {
-            var b2 = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
-            result += (ushort)(b2 << 7);
-        }
-        return result;
-    }
-
-    public async ValueTask<uint> ReadRarVIntUInt32Async(
-        CancellationToken cancellationToken = default,
-        int maxBytes = 4
-    )
-    {
-        var result = await ReadRarVIntAsync(cancellationToken, maxBytes).ConfigureAwait(false);
-        return (uint)result;
-    }
+    public async ValueTask<ushort> ReadRarVIntUInt16Async(int maxBytes = 3, CancellationToken cancellationToken = default) =>
+        // hopefully this gets inlined
+        checked((ushort)await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false));
+    public async ValueTask<byte> ReadRarVIntByteAsync(int maxBytes = 2, CancellationToken cancellationToken = default) =>
+        // hopefully this gets inlined
+        checked((byte)await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false));
 
     public async ValueTask SkipAsync(int count, CancellationToken cancellationToken = default)
     {
         CurrentReadByteCount += count;
         await _reader.SkipAsync(count, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async ValueTask<uint> DoReadRarVIntUInt32Async(int maxShift, CancellationToken cancellationToken = default)
+    {
+        var shift = 0;
+        uint result = 0;
+        do
+        {
+            var b0 = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
+            var b1 = ((uint)b0) & 0x7f;
+            var n = b1;
+            var shifted = n << shift;
+            if (n != shifted >> shift)
+            {
+                // overflow
+                break;
+            }
+            result |= shifted;
+            if (b0 == b1)
+            {
+                return result;
+            }
+            shift += 7;
+        } while (shift <= maxShift);
+
+        throw new FormatException("malformed vint");
     }
 }

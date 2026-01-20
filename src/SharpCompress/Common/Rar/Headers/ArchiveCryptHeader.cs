@@ -25,16 +25,16 @@ internal class ArchiveCryptHeader : RarHeader
             )
             .ConfigureAwait(false);
 
-    public Rar5CryptoInfo CryptInfo = new();
+    public Rar5CryptoInfo CryptInfo = default!;
 
     protected override void ReadFinish(MarkingBinaryReader reader) =>
-        CryptInfo = new Rar5CryptoInfo(reader, false);
+        CryptInfo = Rar5CryptoInfo.Create(reader, false);
 
     protected override async ValueTask ReadFinishAsync(
         AsyncMarkingBinaryReader reader,
         CancellationToken cancellationToken
     )
     {
-        CryptInfo = new Rar5CryptoInfo(reader, false);
+        CryptInfo = await Rar5CryptoInfo.CreateAsync(reader, false);
     }
 }
