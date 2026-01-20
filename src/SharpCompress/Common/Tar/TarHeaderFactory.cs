@@ -29,10 +29,10 @@ internal static class TarHeaderFactory
                 {
                     case StreamingMode.Seekable:
                         {
-                            header.DataStartPosition = reader.BaseStream.Position;
+                            header.DataStartPosition = stream.Position;
 
                             //skip to nearest 512
-                            reader.BaseStream.Position += PadTo512(header.Size);
+                            stream.Position += PadTo512(header.Size);
                         }
                         break;
                     case StreamingMode.Streaming:

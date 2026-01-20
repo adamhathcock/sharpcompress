@@ -175,7 +175,7 @@ public class TarReaderAsyncTests : ReaderTests
         await using var entryStream = await reader.OpenEntryStreamAsync();
         await using var flushingStream = new FlushOnDisposeStream(entryStream);
 #else
-         using var entryStream = reader.OpenEntryStream();
+         using var entryStream = await reader.OpenEntryStreamAsync();
          using var flushingStream = new FlushOnDisposeStream(entryStream);
         #endif
 

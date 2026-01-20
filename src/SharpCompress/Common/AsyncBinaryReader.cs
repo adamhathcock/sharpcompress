@@ -16,6 +16,11 @@ namespace SharpCompress.Common
 
         public AsyncBinaryReader(Stream stream, bool leaveOpen = false, int bufferSize = 4096)
         {
+            if (!stream.CanRead)
+            {
+                throw new ArgumentException("Stream must be readable.");
+            }
+
             _originalStream = stream ?? throw new ArgumentNullException(nameof(stream));
             _leaveOpen = leaveOpen;
 
