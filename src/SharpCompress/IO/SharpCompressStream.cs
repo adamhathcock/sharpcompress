@@ -472,7 +472,6 @@ public class SharpCompressStream : Stream, IStreamStack
         _isDisposed = true;
         await base.DisposeAsync();
 
-
         await Stream.DisposeAsync();
         if (_buffer != null)
         {

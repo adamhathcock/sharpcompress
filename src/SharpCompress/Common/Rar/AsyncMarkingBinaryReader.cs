@@ -41,25 +41,21 @@ internal class AsyncMarkingBinaryReader
     {
         CurrentReadByteCount += count;
         var bytes = new byte[count];
-        await _reader.ReadBytesAsync(bytes, 0, count,  cancellationToken).ConfigureAwait(false);
+        await _reader.ReadBytesAsync(bytes, 0, count, cancellationToken).ConfigureAwait(false);
         return bytes;
     }
 
-    public async ValueTask<ushort> ReadUInt16Async(
-        CancellationToken cancellationToken = default
-    )
+    public async ValueTask<ushort> ReadUInt16Async(CancellationToken cancellationToken = default)
     {
         CurrentReadByteCount += 2;
-        var bytes = await ReadBytesAsync( 2, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync(2, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadUInt16LittleEndian(bytes);
     }
 
-    public async ValueTask<uint> ReadUInt32Async(
-        CancellationToken cancellationToken = default
-    )
+    public async ValueTask<uint> ReadUInt32Async(CancellationToken cancellationToken = default)
     {
         CurrentReadByteCount += 4;
-        var bytes =  await ReadBytesAsync( 4, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync(4, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadUInt32LittleEndian(bytes);
     }
 
@@ -68,7 +64,7 @@ internal class AsyncMarkingBinaryReader
     )
     {
         CurrentReadByteCount += 8;
-        var bytes = await ReadBytesAsync( 8, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync(8, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadUInt64LittleEndian(bytes);
     }
 
@@ -86,7 +82,7 @@ internal class AsyncMarkingBinaryReader
     )
     {
         CurrentReadByteCount += 4;
-        var bytes =  await ReadBytesAsync( 4, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync(4, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }
 
@@ -95,7 +91,7 @@ internal class AsyncMarkingBinaryReader
     )
     {
         CurrentReadByteCount += 8;
-        var bytes =  await ReadBytesAsync(8, cancellationToken).ConfigureAwait(false);
+        var bytes = await ReadBytesAsync(8, cancellationToken).ConfigureAwait(false);
         return BinaryPrimitives.ReadInt64LittleEndian(bytes);
     }
 
@@ -132,16 +128,35 @@ internal class AsyncMarkingBinaryReader
 
         throw new FormatException("malformed vint");
     }
-    public async ValueTask<uint> ReadRarVIntUInt32Async(int maxBytes = 5, CancellationToken cancellationToken = default) =>
+
+    public async ValueTask<uint> ReadRarVIntUInt32Async(
+        int maxBytes = 5,
+        CancellationToken cancellationToken = default
+    ) =>
         // hopefully this gets inlined
         await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false);
 
-    public async ValueTask<ushort> ReadRarVIntUInt16Async(int maxBytes = 3, CancellationToken cancellationToken = default) =>
+    public async ValueTask<ushort> ReadRarVIntUInt16Async(
+        int maxBytes = 3,
+        CancellationToken cancellationToken = default
+    ) =>
         // hopefully this gets inlined
-        checked((ushort)await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false));
-    public async ValueTask<byte> ReadRarVIntByteAsync(int maxBytes = 2, CancellationToken cancellationToken = default) =>
+        checked(
+            (ushort)
+                await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken)
+                    .ConfigureAwait(false)
+        );
+
+    public async ValueTask<byte> ReadRarVIntByteAsync(
+        int maxBytes = 2,
+        CancellationToken cancellationToken = default
+    ) =>
         // hopefully this gets inlined
-        checked((byte)await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false));
+        checked(
+            (byte)
+                await DoReadRarVIntUInt32Async((maxBytes - 1) * 7, cancellationToken)
+                    .ConfigureAwait(false)
+        );
 
     public async ValueTask SkipAsync(int count, CancellationToken cancellationToken = default)
     {
@@ -149,7 +164,10 @@ internal class AsyncMarkingBinaryReader
         await _reader.SkipAsync(count, cancellationToken).ConfigureAwait(false);
     }
 
-    private async ValueTask<uint> DoReadRarVIntUInt32Async(int maxShift, CancellationToken cancellationToken = default)
+    private async ValueTask<uint> DoReadRarVIntUInt32Async(
+        int maxShift,
+        CancellationToken cancellationToken = default
+    )
     {
         var shift = 0;
         uint result = 0;

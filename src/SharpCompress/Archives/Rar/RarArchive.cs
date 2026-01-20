@@ -24,7 +24,10 @@ public interface IRarArchive : IArchive, IRarArchiveCommon { }
 
 public interface IRarAsyncArchive : IAsyncArchive, IRarArchiveCommon { }
 
-public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, IRarArchive, IRarAsyncArchive
+public partial class RarArchive
+    : AbstractArchive<RarArchiveEntry, RarVolume>,
+        IRarArchive,
+        IRarAsyncArchive
 {
     private bool _disposed;
     internal Lazy<IRarUnpack> UnpackV2017 { get; } =
@@ -64,8 +67,10 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
 
     protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
         RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
-    protected override IAsyncEnumerable<RarArchiveEntry> LoadEntriesAsync(IAsyncEnumerable<RarVolume> volumes) =>
-        RarArchiveEntryFactory.GetEntriesAsync(this, volumes, ReaderOptions);
+
+    protected override IAsyncEnumerable<RarArchiveEntry> LoadEntriesAsync(
+        IAsyncEnumerable<RarVolume> volumes
+    ) => RarArchiveEntryFactory.GetEntriesAsync(this, volumes, ReaderOptions);
 
     protected override IEnumerable<RarVolume> LoadVolumes(SourceStream sourceStream)
     {
@@ -88,16 +93,17 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
         return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
     }
 
-
     protected override async ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
     {
         if (await this.IsMultipartVolumeAsync())
         {
-            var streams = await VolumesAsync.Select(volume =>
-            {
-                volume.Stream.Position = 0;
-                return volume.Stream;
-            }).ToListAsync();
+            var streams = await VolumesAsync
+                .Select(volume =>
+                {
+                    volume.Stream.Position = 0;
+                    return volume.Stream;
+                })
+                .ToListAsync();
             return (RarReader)RarReader.OpenReader(streams, ReaderOptions);
         }
 

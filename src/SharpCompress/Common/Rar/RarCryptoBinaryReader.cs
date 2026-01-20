@@ -1,5 +1,3 @@
-
-
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
@@ -14,11 +12,13 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
     private long _readCount;
 
     private RarCryptoBinaryReader(Stream stream)
-        : base(stream)
-    {
-    }
+        : base(stream) { }
 
-    public static RarCryptoBinaryReader Create(Stream stream, ICryptKey cryptKey, byte[]? salt = null)
+    public static RarCryptoBinaryReader Create(
+        Stream stream,
+        ICryptKey cryptKey,
+        byte[]? salt = null
+    )
     {
         var binary = new RarCryptoBinaryReader(stream);
         if (salt == null)

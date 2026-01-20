@@ -149,7 +149,7 @@ internal class FileHeader : RarHeader
             {
                 case FHEXTRA_CRYPT: // file encryption
                     {
-                        Rar5CryptoInfo =  Rar5CryptoInfo.Create(reader, true);
+                        Rar5CryptoInfo = Rar5CryptoInfo.Create(reader, true);
 
                         if (Rar5CryptoInfo.PswCheck.All(singleByte => singleByte == 0))
                         {
@@ -450,10 +450,15 @@ internal class FileHeader : RarHeader
         CancellationToken cancellationToken
     )
     {
-        Flags = await reader.ReadRarVIntUInt16Async(cancellationToken: cancellationToken).ConfigureAwait(false);
+        Flags = await reader
+            .ReadRarVIntUInt16Async(cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
         var lvalue = checked(
-            (long)await reader.ReadRarVIntAsync(cancellationToken: cancellationToken).ConfigureAwait(false)
+            (long)
+                await reader
+                    .ReadRarVIntAsync(cancellationToken: cancellationToken)
+                    .ConfigureAwait(false)
         );
 
         UncompressedSize = HasFlag(FileFlagsV5.UNPACKED_SIZE_UNKNOWN) ? long.MaxValue : lvalue;
@@ -483,9 +488,13 @@ internal class FileHeader : RarHeader
         CompressionMethod = (byte)((compressionInfo >> 7) & 0x7);
         WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo >> 10) & 0xf);
 
-        HostOs = await reader.ReadRarVIntByteAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        HostOs = await reader
+            .ReadRarVIntByteAsync(cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
-        var nameSize = await reader.ReadRarVIntUInt16Async(cancellationToken: cancellationToken).ConfigureAwait(false);
+        var nameSize = await reader
+            .ReadRarVIntUInt16Async(cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 
         var b = await reader.ReadBytesAsync(nameSize, cancellationToken).ConfigureAwait(false);
         FileName = ConvertPathV5(Encoding.UTF8.GetString(b, 0, b.Length));
@@ -502,9 +511,13 @@ internal class FileHeader : RarHeader
 
         while (reader.CurrentReadByteCount < HeaderSize)
         {
-            var size = await reader.ReadRarVIntUInt16Async(cancellationToken: cancellationToken).ConfigureAwait(false);
+            var size = await reader
+                .ReadRarVIntUInt16Async(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
             var n = HeaderSize - reader.CurrentReadByteCount;
-            var type = await reader.ReadRarVIntUInt16Async(cancellationToken: cancellationToken).ConfigureAwait(false);
+            var type = await reader
+                .ReadRarVIntUInt16Async(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
             switch (type)
             {
                 case FHEXTRA_CRYPT:
@@ -521,10 +534,9 @@ internal class FileHeader : RarHeader
                         const uint FHEXTRA_HASH_BLAKE2 = 0x0;
                         const int BLAKE2_DIGEST_SIZE = 0x20;
                         if (
-
-                                await reader
-                                    .ReadRarVIntUInt32Async(cancellationToken: cancellationToken)
-                                    .ConfigureAwait(false) == FHEXTRA_HASH_BLAKE2
+                            await reader
+                                .ReadRarVIntUInt32Async(cancellationToken: cancellationToken)
+                                .ConfigureAwait(false) == FHEXTRA_HASH_BLAKE2
                         )
                         {
                             _hash = await reader

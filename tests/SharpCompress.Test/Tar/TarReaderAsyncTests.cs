@@ -175,9 +175,9 @@ public class TarReaderAsyncTests : ReaderTests
         await using var entryStream = await reader.OpenEntryStreamAsync();
         await using var flushingStream = new FlushOnDisposeStream(entryStream);
 #else
-         using var entryStream = await reader.OpenEntryStreamAsync();
-         using var flushingStream = new FlushOnDisposeStream(entryStream);
-        #endif
+        using var entryStream = await reader.OpenEntryStreamAsync();
+        using var flushingStream = new FlushOnDisposeStream(entryStream);
+#endif
 
         // Extract inner.tar.gz
         await using var innerReader = await ReaderFactory.OpenAsyncReader(flushingStream);

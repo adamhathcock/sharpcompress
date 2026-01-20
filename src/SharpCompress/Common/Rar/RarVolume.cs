@@ -76,10 +76,16 @@ public abstract class RarVolume : Volume
         }
     }
 
-    internal async IAsyncEnumerable<RarFilePart> GetVolumeFilePartsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    internal async IAsyncEnumerable<RarFilePart> GetVolumeFilePartsAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         MarkHeader? lastMarkHeader = null;
-        await foreach (var header in _headerFactory.ReadHeadersAsync(Stream).WithCancellation(cancellationToken))
+        await foreach (
+            var header in _headerFactory
+                .ReadHeadersAsync(Stream)
+                .WithCancellation(cancellationToken)
+        )
         {
             switch (header.HeaderType)
             {
@@ -124,11 +130,11 @@ public abstract class RarVolume : Volume
         if (ArchiveHeader is null)
         {
             if (Mode == StreamingMode.Streaming)
-        {
-            throw new InvalidOperationException(
+            {
+                throw new InvalidOperationException(
                     "ArchiveHeader should never been null in a streaming read."
-            );
-        }
+                );
+            }
 
             // we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
             GetVolumeFileParts().First();

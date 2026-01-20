@@ -17,7 +17,9 @@ internal static class RarArchiveEntryFactory
         }
     }
 
-    private static async IAsyncEnumerable<RarFilePart> GetFilePartsAsync(IAsyncEnumerable<RarVolume> parts)
+    private static async IAsyncEnumerable<RarFilePart> GetFilePartsAsync(
+        IAsyncEnumerable<RarVolume> parts
+    )
     {
         await foreach (var rarPart in parts)
         {

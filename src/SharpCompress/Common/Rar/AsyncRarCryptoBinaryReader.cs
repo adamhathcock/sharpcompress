@@ -15,11 +15,13 @@ internal sealed class AsyncRarCryptoBinaryReader : AsyncRarCrcBinaryReader
     private long _readCount;
 
     private AsyncRarCryptoBinaryReader(Stream stream)
-        : base(stream)
-    {
-    }
+        : base(stream) { }
 
-    public static async ValueTask<AsyncRarCryptoBinaryReader> Create(Stream stream, ICryptKey cryptKey, byte[]? salt = null)
+    public static async ValueTask<AsyncRarCryptoBinaryReader> Create(
+        Stream stream,
+        ICryptKey cryptKey,
+        byte[]? salt = null
+    )
     {
         var binary = new AsyncRarCryptoBinaryReader(stream);
         if (salt == null)
@@ -30,7 +32,6 @@ internal sealed class AsyncRarCryptoBinaryReader : AsyncRarCrcBinaryReader
         binary._rijndael = new BlockTransformer(cryptKey.Transformer(salt));
         return binary;
     }
-
 
     public override long CurrentReadByteCount
     {

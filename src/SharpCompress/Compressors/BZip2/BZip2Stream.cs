@@ -28,7 +28,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    private  Stream stream = default!;
+    private Stream stream = default!;
     private bool isDisposed;
 
     private BZip2Stream() { }
@@ -39,7 +39,11 @@ public sealed class BZip2Stream : Stream, IStreamStack
     /// <param name="stream">The stream to read from</param>
     /// <param name="compressionMode">Compression Mode</param>
     /// <param name="decompressConcatenated">Decompress Concatenated</param>
-    public static BZip2Stream Create(Stream stream, CompressionMode compressionMode, bool decompressConcatenated)
+    public static BZip2Stream Create(
+        Stream stream,
+        CompressionMode compressionMode,
+        bool decompressConcatenated
+    )
     {
         var bZip2Stream = new BZip2Stream();
 #if DEBUG_STREAMS

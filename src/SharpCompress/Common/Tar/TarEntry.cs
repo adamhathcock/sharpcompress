@@ -76,6 +76,7 @@ public class TarEntry : Entry
             }
         }
     }
+
     internal static async IAsyncEnumerable<TarEntry> GetEntriesAsync(
         StreamingMode mode,
         Stream stream,
@@ -83,7 +84,9 @@ public class TarEntry : Entry
         IArchiveEncoding archiveEncoding
     )
     {
-        await foreach (var header in TarHeaderFactory.ReadHeaderAsync(mode, stream, archiveEncoding))
+        await foreach (
+            var header in TarHeaderFactory.ReadHeaderAsync(mode, stream, archiveEncoding)
+        )
         {
             if (header != null)
             {

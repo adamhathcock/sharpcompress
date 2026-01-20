@@ -51,7 +51,6 @@ public class TestStream(Stream stream, bool read, bool write, bool seek) : Strea
         CancellationToken cancellationToken = default
     ) => stream.ReadAsync(buffer, cancellationToken);
 
-
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();

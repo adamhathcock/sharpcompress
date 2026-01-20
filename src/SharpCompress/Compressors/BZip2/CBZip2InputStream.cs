@@ -188,14 +188,14 @@ internal class CBZip2InputStream : Stream, IStreamStack
         var cbZip2InputStream = new CBZip2InputStream();
         cbZip2InputStream.decompressConcatenated = decompressConcatenated;
         cbZip2InputStream.ll8 = null;
-        cbZip2InputStream. tt = null;
+        cbZip2InputStream.tt = null;
         cbZip2InputStream.BsSetStream(zStream);
 #if DEBUG_STREAMS
         cbZip2InputStream.DebugConstruct(typeof(CBZip2InputStream));
 #endif
 
-        cbZip2InputStream. Initialize(true);
-        cbZip2InputStream. InitBlock();
+        cbZip2InputStream.Initialize(true);
+        cbZip2InputStream.InitBlock();
         cbZip2InputStream.SetupBlock();
         return cbZip2InputStream;
     }

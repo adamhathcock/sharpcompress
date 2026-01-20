@@ -50,7 +50,9 @@ internal class EndArchiveHeader : RarHeader
     {
         if (IsRar5)
         {
-            Flags = await reader.ReadRarVIntUInt16Async(cancellationToken: cancellationToken).ConfigureAwait(false);
+            Flags = await reader
+                .ReadRarVIntUInt16Async(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
         else
         {

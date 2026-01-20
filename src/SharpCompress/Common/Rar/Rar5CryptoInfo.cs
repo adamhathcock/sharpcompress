@@ -20,7 +20,10 @@ internal class Rar5CryptoInfo
             throw new CryptographicException($"Unsupported crypto version of {cryptVersion}");
         }
         var encryptionFlags = reader.ReadRarVIntUInt32();
-        cryptoInfo.UsePswCheck = FlagUtility.HasFlag(encryptionFlags, EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
+        cryptoInfo.UsePswCheck = FlagUtility.HasFlag(
+            encryptionFlags,
+            EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK
+        );
         cryptoInfo.LG2Count = reader.ReadRarVIntByte(1);
 
         if (cryptoInfo.LG2Count > EncryptionConstV5.CRYPT5_KDF_LG2_COUNT_MAX)
@@ -41,23 +44,33 @@ internal class Rar5CryptoInfo
             var _pswCheckCsm = reader.ReadBytes(EncryptionConstV5.SIZE_PSWCHECK_CSUM);
 
             var sha = SHA256.Create();
-            cryptoInfo.UsePswCheck = sha.ComputeHash(cryptoInfo.PswCheck).AsSpan().StartsWith(_pswCheckCsm.AsSpan());
+            cryptoInfo.UsePswCheck = sha.ComputeHash(cryptoInfo.PswCheck)
+                .AsSpan()
+                .StartsWith(_pswCheckCsm.AsSpan());
         }
         return cryptoInfo;
     }
 
-    public static async ValueTask<Rar5CryptoInfo> CreateAsync(AsyncMarkingBinaryReader reader, bool readInitV)
+    public static async ValueTask<Rar5CryptoInfo> CreateAsync(
+        AsyncMarkingBinaryReader reader,
+        bool readInitV
+    )
     {
         var cryptoInfo = new Rar5CryptoInfo();
-        var cryptVersion =
-            await reader.ReadRarVIntUInt32Async(cancellationToken: CancellationToken.None);
+        var cryptVersion = await reader.ReadRarVIntUInt32Async(
+            cancellationToken: CancellationToken.None
+        );
         if (cryptVersion > EncryptionConstV5.VERSION)
         {
             throw new CryptographicException($"Unsupported crypto version of {cryptVersion}");
         }
-        var encryptionFlags =
-            await reader.ReadRarVIntUInt32Async(cancellationToken: CancellationToken.None);
-        cryptoInfo.UsePswCheck = FlagUtility.HasFlag(encryptionFlags, EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK);
+        var encryptionFlags = await reader.ReadRarVIntUInt32Async(
+            cancellationToken: CancellationToken.None
+        );
+        cryptoInfo.UsePswCheck = FlagUtility.HasFlag(
+            encryptionFlags,
+            EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK
+        );
         cryptoInfo.LG2Count = (int)
             await reader.ReadRarVIntUInt32Async(cancellationToken: CancellationToken.None);
         if (cryptoInfo.LG2Count > EncryptionConstV5.CRYPT5_KDF_LG2_COUNT_MAX)
@@ -65,8 +78,10 @@ internal class Rar5CryptoInfo
             throw new CryptographicException($"Unsupported LG2 count of {cryptoInfo.LG2Count}.");
         }
 
-        cryptoInfo.Salt = await reader
-            .ReadBytesAsync(EncryptionConstV5.SIZE_SALT50, CancellationToken.None);
+        cryptoInfo.Salt = await reader.ReadBytesAsync(
+            EncryptionConstV5.SIZE_SALT50,
+            CancellationToken.None
+        );
 
         if (readInitV)
         {
@@ -75,13 +90,19 @@ internal class Rar5CryptoInfo
 
         if (cryptoInfo.UsePswCheck)
         {
-            cryptoInfo.PswCheck = await reader
-                .ReadBytesAsync(EncryptionConstV5.SIZE_PSWCHECK, CancellationToken.None);
-            var _pswCheckCsm = await reader
-                .ReadBytesAsync(EncryptionConstV5.SIZE_PSWCHECK_CSUM, CancellationToken.None);
+            cryptoInfo.PswCheck = await reader.ReadBytesAsync(
+                EncryptionConstV5.SIZE_PSWCHECK,
+                CancellationToken.None
+            );
+            var _pswCheckCsm = await reader.ReadBytesAsync(
+                EncryptionConstV5.SIZE_PSWCHECK_CSUM,
+                CancellationToken.None
+            );
 
             var sha = SHA256.Create();
-            cryptoInfo.UsePswCheck = sha.ComputeHash(cryptoInfo.PswCheck).AsSpan().StartsWith(_pswCheckCsm.AsSpan());
+            cryptoInfo.UsePswCheck = sha.ComputeHash(cryptoInfo.PswCheck)
+                .AsSpan()
+                .StartsWith(_pswCheckCsm.AsSpan());
         }
         return cryptoInfo;
     }
@@ -90,8 +111,7 @@ internal class Rar5CryptoInfo
         InitV = reader.ReadBytes(EncryptionConstV5.SIZE_INITV);
 
     public async ValueTask ReadInitVAsync(AsyncMarkingBinaryReader reader) =>
-        InitV = await reader
-            .ReadBytesAsync(EncryptionConstV5.SIZE_INITV, CancellationToken.None);
+        InitV = await reader.ReadBytesAsync(EncryptionConstV5.SIZE_INITV, CancellationToken.None);
 
     public bool UsePswCheck = false;
 

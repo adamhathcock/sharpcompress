@@ -278,19 +278,18 @@ public class DeflateStream : Stream, IStreamStack
         }
     }
 
-
 #if !NETFRAMEWORK && !NETSTANDARD2_0
     public override async ValueTask DisposeAsync()
     {
-            if (!_disposed)
-            {
+        if (!_disposed)
+        {
 #if DEBUG_STREAMS
-                this.DebugDispose(typeof(DeflateStream));
+            this.DebugDispose(typeof(DeflateStream));
 #endif
-                await _baseStream.DisposeAsync().ConfigureAwait(false);
-                _disposed = true;
-            }
-            await base.DisposeAsync().ConfigureAwait(false);
+            await _baseStream.DisposeAsync().ConfigureAwait(false);
+            _disposed = true;
+        }
+        await base.DisposeAsync().ConfigureAwait(false);
     }
 #endif
 
@@ -314,7 +313,6 @@ public class DeflateStream : Stream, IStreamStack
         }
         await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
-
 
     /// <summary>
     /// Read data from the stream.
