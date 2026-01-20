@@ -7,7 +7,7 @@ using SharpCompress.Archives;
 using SharpCompress.Performance;
 using SharpCompress.Readers;
 using SharpCompress.Test;
-
+/*
 var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
     "SharpCompress.Performance",
     StringComparison.OrdinalIgnoreCase
@@ -23,12 +23,12 @@ using (var __ = JetbrainsProfiler.Cpu($"/Users/adam/git/temp"))
     string filename = $"/Users/adam/Downloads/original.7z";
     for (int i = 0; i < 10; i++)
     {
-        await Extractor.GetFiles(filename);
+         Extractor.GetFiles(filename);
         Console.WriteLine(i);
     }
 
     Console.WriteLine("Still running...");
 }
-await Task.Delay(500);
+await Task.Delay(500);*/
 
-//BenchmarkRunner.Run<Benchmarks>();
+BenchmarkRunner.Run<Benchmarks>();

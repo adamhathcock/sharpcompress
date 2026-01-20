@@ -7,8 +7,8 @@ public class Benchmarks
     string filename = $"/Users/adam/Downloads/original.7z";
 
     [Benchmark]
-    public async Task SharpCompress_0_44_Original()
+    public void SharpCompress_0_44_Original()
     {
-        await Extractor.GetFiles(filename);
+         Extractor.GetFiles(filename);
     }
 }

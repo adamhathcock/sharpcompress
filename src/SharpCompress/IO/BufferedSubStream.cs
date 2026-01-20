@@ -1,47 +1,18 @@
 using System;
 using System.Buffers;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-internal class BufferedSubStream : SharpCompressStream, IStreamStack
+internal class BufferedSubStream(Stream stream, long origin, long bytesToRead)
+    : SharpCompressStream(stream, throwOnDispose: false)
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
-    Stream IStreamStack.BaseStream() => base.Stream;
-
-    public BufferedSubStream(Stream stream, long origin, long bytesToRead)
-        : base(stream, leaveOpen: true, throwOnDispose: false)
-    {
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(BufferedSubStream));
-#endif
-        this.origin = origin;
-        this.BytesLeftToRead = bytesToRead;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(BufferedSubStream));
-#endif
-        if (disposing)
-        {
-            ArrayPool<byte>.Shared.Return(_cache);
-        }
-        base.Dispose(disposing);
-    }
-
     private int _cacheOffset;
     private int _cacheLength;
-    private readonly byte[] _cache = ArrayPool<byte>.Shared.Rent(32 << 10);
-    private long origin;
 
-    private long BytesLeftToRead { get; set; }
+    private readonly byte[] _cache = ArrayPool<byte>.Shared.Rent(32 << 10);
+
+    private long BytesLeftToRead { get; set; } = bytesToRead;
 
     public override bool CanRead => true;
 
@@ -51,7 +22,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     public override void Flush() { }
 
-    public override long Length => BytesLeftToRead + _cacheLength - _cacheOffset;
+    public override long Length => BytesLeftToRead;
 
     public override long Position
     {
@@ -59,55 +30,32 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
         set => throw new NotSupportedException();
     }
 
-    private void RefillCache()
-    {
-        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
-        _cacheOffset = 0;
-        if (count == 0)
-        {
-            _cacheLength = 0;
-            return;
-        }
-        Stream.Position = origin;
-        _cacheLength = Stream.Read(_cache, 0, count);
-        origin += _cacheLength;
-        BytesLeftToRead -= _cacheLength;
-    }
-
-    private async ValueTask RefillCacheAsync(CancellationToken cancellationToken)
-    {
-        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
-        _cacheOffset = 0;
-        if (count == 0)
-        {
-            _cacheLength = 0;
-            return;
-        }
-        Stream.Position = origin;
-        _cacheLength = await Stream
-            .ReadAsync(_cache, 0, count, cancellationToken)
-            .ConfigureAwait(false);
-        origin += _cacheLength;
-        BytesLeftToRead -= _cacheLength;
-    }
-
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (count > Length)
+        if (count > BytesLeftToRead)
         {
-            count = (int)Length;
+            count = (int)BytesLeftToRead;
         }
 
         if (count > 0)
         {
-            if (_cacheOffset == _cacheLength)
+            if (_cacheLength == 0)
             {
-                RefillCache();
+                _cacheOffset = 0;
+                Stream.Position = origin;
+                _cacheLength = Stream.Read(_cache, 0, _cache.Length);
+                origin += _cacheLength;
             }
 
-            count = Math.Min(count, _cacheLength - _cacheOffset);
+            if (count > _cacheLength)
+            {
+                count = _cacheLength;
+            }
+
             Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
             _cacheOffset += count;
+            _cacheLength -= count;
+            BytesLeftToRead -= count;
         }
 
         return count;
@@ -115,72 +63,27 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     public override int ReadByte()
     {
-        if (_cacheOffset == _cacheLength)
+        if (BytesLeftToRead == 0)
         {
-            RefillCache();
-            if (_cacheLength == 0)
-            {
-                return -1;
-            }
+            return -1;
         }
 
-        return _cache[_cacheOffset++];
+        if (_cacheLength == 0)
+        {
+            _cacheOffset = 0;
+            Stream.Position = origin;
+            _cacheLength = Stream.Read(_cache, 0, _cache.Length);
+            origin += _cacheLength;
+        }
+
+        int value = _cache[_cacheOffset];
+
+        _cacheOffset++;
+        _cacheLength--;
+        BytesLeftToRead--;
+
+        return value;
     }
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (count > Length)
-        {
-            count = (int)Length;
-        }
-
-        if (count > 0)
-        {
-            if (_cacheOffset == _cacheLength)
-            {
-                await RefillCacheAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            count = Math.Min(count, _cacheLength - _cacheOffset);
-            Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
-            _cacheOffset += count;
-        }
-
-        return count;
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var count = buffer.Length;
-        if (count > Length)
-        {
-            count = (int)Length;
-        }
-
-        if (count > 0)
-        {
-            if (_cacheOffset == _cacheLength)
-            {
-                await RefillCacheAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            count = Math.Min(count, _cacheLength - _cacheOffset);
-            _cache.AsSpan(_cacheOffset, count).CopyTo(buffer.Span);
-            _cacheOffset += count;
-        }
-
-        return count;
-    }
-#endif
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
@@ -188,4 +91,13 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
+
+     protected   override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            ArrayPool<byte>.Shared.Return(_cache);
+        }
+        base.Dispose(disposing);
+    }
 }

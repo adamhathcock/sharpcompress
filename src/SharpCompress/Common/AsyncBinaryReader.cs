@@ -18,10 +18,6 @@ namespace SharpCompress.Common
         {
             _originalStream = stream ?? throw new ArgumentNullException(nameof(stream));
             _leaveOpen = leaveOpen;
-
-            // Use the stream directly without wrapping in BufferedStream
-            // BufferedStream uses synchronous Read internally which doesn't work with async-only streams
-            // SharpCompress uses SharpCompressStream for buffering which supports true async reads
             _stream = stream;
         }
 
