@@ -198,6 +198,8 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
 
     IAsyncEnumerable<IArchiveEntry> IAsyncArchive.EntriesAsync => EntriesAsyncCast();
 
+    IAsyncEnumerable<IVolume> IAsyncArchive.VolumesAsync => VolumesAsyncCast();
+
     private async IAsyncEnumerable<IVolume> VolumesAsyncCast()
     {
         await foreach (var volume in _lazyVolumesAsync)
@@ -206,7 +208,7 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
         }
     }
 
-    public IAsyncEnumerable<IVolume> VolumesAsync => VolumesAsyncCast();
+    public IAsyncEnumerable<TVolume> VolumesAsync => _lazyVolumesAsync;
 
     public async ValueTask<IAsyncReader> ExtractAllEntriesAsync()
     {

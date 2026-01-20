@@ -12,7 +12,7 @@ namespace SharpCompress.Readers;
 /// <summary>
 /// A generic push reader that reads unseekable comrpessed streams.
 /// </summary>
-public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
+public abstract class  AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
     where TEntry : Entry
     where TVolume : Volume
 {

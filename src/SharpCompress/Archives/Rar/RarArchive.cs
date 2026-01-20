@@ -88,13 +88,25 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
         return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
     }
 
-    protected override IReader CreateReaderForSolidExtraction() =>
-        CreateReaderForSolidExtractionInternal();
 
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
-        new(CreateReaderForSolidExtractionInternal());
+    protected override async ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
+    {
+        if (await this.IsMultipartVolumeAsync())
+        {
+            var streams = await VolumesAsync.Select(volume =>
+            {
+                volume.Stream.Position = 0;
+                return volume.Stream;
+            }).ToListAsync();
+            return (RarReader)RarReader.OpenReader(streams, ReaderOptions);
+        }
 
-    private RarReader CreateReaderForSolidExtractionInternal()
+        var stream = (await VolumesAsync.FirstAsync()).Stream;
+        stream.Position = 0;
+        return (RarReader)RarReader.OpenReader(stream, ReaderOptions);
+    }
+
+    protected override IReader CreateReaderForSolidExtraction()
     {
         if (this.IsMultipartVolume())
         {
