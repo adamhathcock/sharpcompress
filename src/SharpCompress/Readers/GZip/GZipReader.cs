@@ -25,9 +25,17 @@ public partial class GZipReader : AbstractReader<GZipEntry, GZipVolume>
         stream.NotNull(nameof(stream));
         return new GZipReader(stream, options ?? new ReaderOptions());
     }
+       public static IAsyncReader OpenAsyncReader(Stream stream, ReaderOptions? options = null)
+    {
+        stream.NotNull(nameof(stream));
+        return new GZipReader(stream, options ?? new ReaderOptions());
+    }
 
     #endregion OpenReader
 
     protected override IEnumerable<GZipEntry> GetEntries(Stream stream) =>
         GZipEntry.GetEntries(stream, Options);
+    protected override IAsyncEnumerable<GZipEntry> GetEntriesAsync(Stream stream) {
+        return GZipEntry.GetEntriesAsync(stream, Options);
+    }
 }

@@ -16,12 +16,12 @@ public abstract class Factory : IFactory
     {
         RegisterFactory(new ZipFactory());
         RegisterFactory(new RarFactory());
-        RegisterFactory(new SevenZipFactory());
+        RegisterFactory(new TarFactory());//put tar before most
         RegisterFactory(new GZipFactory());
-        RegisterFactory(new TarFactory());
         RegisterFactory(new ArcFactory());
         RegisterFactory(new ArjFactory());
         RegisterFactory(new AceFactory());
+        RegisterFactory(new SevenZipFactory());
     }
 
     private static readonly HashSet<Factory> _factories = new();

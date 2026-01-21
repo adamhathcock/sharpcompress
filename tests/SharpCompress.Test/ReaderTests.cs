@@ -10,6 +10,7 @@ using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Readers.GZip;
 using SharpCompress.Test.Mocks;
 using Xunit;
 
@@ -149,6 +150,7 @@ public abstract class ReaderTests : TestBase
 
         options.LeaveStreamOpen = false;
         await ReadImplAsync(testArchive, expectedCompression, options, cancellationToken);
+
         VerifyFiles();
     }
 

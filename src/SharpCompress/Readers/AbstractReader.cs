@@ -67,7 +67,16 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
         {
             await _entriesForCurrentReadStreamAsync.DisposeAsync();
         }
-        Volume?.Dispose();
+
+        // If Volume implements IAsyncDisposable, use async disposal
+        if (Volume is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync();
+        }
+        else
+        {
+            Volume?.Dispose();
+        }
     }
 
     #endregion

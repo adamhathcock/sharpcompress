@@ -17,7 +17,7 @@ public class GZipArchiveTests : ArchiveTests
     public void GZip_Archive_Generic()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-        using (var archive = ArchiveFactory.OpenArchive(stream))
+        using (var archive = GZipArchive.OpenArchive(stream))
         {
             var entry = archive.Entries.First();
             entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));

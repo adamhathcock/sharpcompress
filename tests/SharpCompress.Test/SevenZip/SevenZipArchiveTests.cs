@@ -85,6 +85,7 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_BZip2_Split() =>
         Assert.Throws<InvalidOperationException>(() =>
             ArchiveStreamRead(
+                ".7z",
                 null,
                 "Original.7z.001",
                 "Original.7z.002",
@@ -151,6 +152,7 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_ZSTD_Split() =>
         Assert.Throws<InvalidOperationException>(() =>
             ArchiveStreamRead(
+                ".7z",
                 null,
                 "7Zip.ZSTD.Split.7z.001",
                 "7Zip.ZSTD.Split.7z.002",

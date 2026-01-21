@@ -1,11 +1,12 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public abstract class Volume : IVolume
+public abstract class Volume : IVolume, IAsyncDisposable
 {
     private readonly Stream _baseStream;
     private readonly Stream _actualStream;
@@ -56,6 +57,16 @@ public abstract class Volume : IVolume
     public void Dispose()
     {
         Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    public virtual async ValueTask DisposeAsync()
+    {
+#if NETFRAMEWORK || NETSTANDARD2_0
+        await Task.Run(() => _actualStream.Dispose()).ConfigureAwait(false);
+#else
+        await _actualStream.DisposeAsync().ConfigureAwait(false);
+#endif
         GC.SuppressFinalize(this);
     }
 }

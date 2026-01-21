@@ -63,6 +63,20 @@ public class TestBase : IAsyncDisposable
         Directory.Delete(SCRATCH2_FILES_PATH, true);
     }
 
+    public void CleanScratch()
+    {
+        if (Directory.Exists(SCRATCH_FILES_PATH))
+        {
+            Directory.Delete(SCRATCH_FILES_PATH, true);
+        }
+        Directory.CreateDirectory(SCRATCH_FILES_PATH);
+        if (Directory.Exists(SCRATCH2_FILES_PATH))
+        {
+            Directory.Delete(SCRATCH2_FILES_PATH, true);
+        }
+        Directory.CreateDirectory(SCRATCH2_FILES_PATH);
+    }
+
     public void VerifyFiles()
     {
         if (UseExtensionInsteadOfNameToVerify)

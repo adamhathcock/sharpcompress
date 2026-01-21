@@ -42,4 +42,9 @@ public class GZipEntry : Entry
     {
         yield return new GZipEntry(GZipFilePart.Create(stream, options.ArchiveEncoding));
     }
+
+      internal static async IAsyncEnumerable<GZipEntry> GetEntriesAsync(Stream stream, OptionsBase options)
+    {
+        yield return new GZipEntry(await GZipFilePart.CreateAsync(stream, options.ArchiveEncoding));
+    }
 }

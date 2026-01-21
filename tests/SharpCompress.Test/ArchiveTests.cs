@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AwesomeAssertions;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
@@ -90,6 +91,7 @@ public class ArchiveTests : ReaderTests
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         ArchiveStreamRead(
             ArchiveFactory.FindFactory<IArchiveFactory>(testArchive),
+            Path.GetExtension(testArchive).Substring(1),
             readerOptions,
             testArchive
         );
@@ -102,36 +104,43 @@ public class ArchiveTests : ReaderTests
     )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        ArchiveStreamRead(archiveFactory, readerOptions, testArchive);
+        ArchiveStreamRead(archiveFactory, Path.GetExtension(testArchive), readerOptions, testArchive);
     }
 
     protected void ArchiveStreamRead(
+        string extension,
         ReaderOptions? readerOptions = null,
         params string[] testArchives
     ) =>
         ArchiveStreamRead(
             ArchiveFactory.FindFactory<IArchiveFactory>(testArchives[0]),
+            extension,
             readerOptions,
             testArchives
         );
 
     protected void ArchiveStreamRead(
         IArchiveFactory archiveFactory,
+        string extension,
         ReaderOptions? readerOptions = null,
         params string[] testArchives
     ) =>
         ArchiveStreamRead(
             archiveFactory,
             readerOptions,
-            testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x))
+            testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x)),
+            extension
         );
 
     protected void ArchiveStreamRead(
         IArchiveFactory archiveFactory,
         ReaderOptions? readerOptions,
-        IEnumerable<string> testArchives
+        IEnumerable<string> testArchives,
+        string extension
     )
     {
+      extension.Should().BeOneOf(archiveFactory.GetSupportedExtensions());
+
         foreach (var path in testArchives)
         {
             using (
@@ -290,6 +299,11 @@ public class ArchiveTests : ReaderTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         archiveFactory ??= ArchiveFactory.FindFactory<IArchiveFactory>(testArchive);
+        string extension = Path.GetExtension(testArchive).Substring(1);
+        if (!int.TryParse(extension, out _) && "exe" != extension) //exclude parts
+        {
+           extension.Should().BeOneOf(archiveFactory.GetSupportedExtensions());
+        }
         using (var archive = archiveFactory.OpenArchive(new FileInfo(testArchive), readerOptions))
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))

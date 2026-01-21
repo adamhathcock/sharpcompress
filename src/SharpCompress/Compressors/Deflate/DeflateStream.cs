@@ -57,6 +57,7 @@ public class DeflateStream : Stream, IStreamStack
 
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;
+    private readonly bool _leaveOpen;
 
     public DeflateStream(
         Stream stream,
@@ -64,12 +65,23 @@ public class DeflateStream : Stream, IStreamStack
         CompressionLevel level = CompressionLevel.Default,
         Encoding? forceEncoding = null
     )
+        : this(stream, mode, level, leaveOpen: false, forceEncoding) { }
+
+    public DeflateStream(
+        Stream stream,
+        CompressionMode mode,
+        CompressionLevel level,
+        bool leaveOpen,
+        Encoding? forceEncoding = null
+    )
     {
+        _leaveOpen = leaveOpen;
         _baseStream = new ZlibBaseStream(
             stream,
             mode,
             level,
             ZlibStreamFlavor.DEFLATE,
+            leaveOpen,
             forceEncoding
         );
 
@@ -265,7 +277,7 @@ public class DeflateStream : Stream, IStreamStack
 #if DEBUG_STREAMS
                 this.DebugDispose(typeof(DeflateStream));
 #endif
-                if (disposing)
+                if (disposing && !_leaveOpen)
                 {
                     _baseStream?.Dispose();
                 }
@@ -286,7 +298,10 @@ public class DeflateStream : Stream, IStreamStack
 #if DEBUG_STREAMS
             this.DebugDispose(typeof(DeflateStream));
 #endif
-            await _baseStream.DisposeAsync().ConfigureAwait(false);
+            if (!_leaveOpen)
+            {
+                await _baseStream.DisposeAsync().ConfigureAwait(false);
+            }
             _disposed = true;
         }
         await base.DisposeAsync().ConfigureAwait(false);
