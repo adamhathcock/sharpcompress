@@ -141,7 +141,7 @@ public class SharpCompressStream : Stream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(SharpCompressStream));
 #endif
-        if (this.LeaveOpen)
+        if (_isDisposed || this.LeaveOpen)
         {
             return;
         }
@@ -151,10 +151,6 @@ public class SharpCompressStream : Stream, IStreamStack
             throw new InvalidOperationException(
                 $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
             );
-        }
-        if (_isDisposed)
-        {
-            return;
         }
         _isDisposed = true;
         base.Dispose(disposing);
@@ -455,7 +451,7 @@ public class SharpCompressStream : Stream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(SharpCompressStream));
 #endif
-        if (this.LeaveOpen)
+        if (_isDisposed || LeaveOpen)
         {
             return;
         }
@@ -464,10 +460,6 @@ public class SharpCompressStream : Stream, IStreamStack
             throw new InvalidOperationException(
                 $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
             );
-        }
-        if (_isDisposed)
-        {
-            return;
         }
         _isDisposed = true;
         await base.DisposeAsync();

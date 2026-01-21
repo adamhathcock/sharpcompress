@@ -59,7 +59,11 @@ public sealed class BZip2Stream : Stream, IStreamStack
         }
         else
         {
-            bZip2Stream.stream = CBZip2InputStream.Create(stream, decompressConcatenated, leaveOpen);
+            bZip2Stream.stream = CBZip2InputStream.Create(
+                stream,
+                decompressConcatenated,
+                leaveOpen
+            );
         }
 
         return bZip2Stream;

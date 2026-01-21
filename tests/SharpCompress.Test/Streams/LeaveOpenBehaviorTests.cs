@@ -18,14 +18,7 @@ public class LeaveOpenBehaviorTests
     public void BZip2Stream_Compress_LeaveOpen_False()
     {
         using var innerStream = new TestStream(new MemoryStream());
-        using (
-            var bzip2 = BZip2Stream.Create(
-                innerStream,
-                CompressionMode.Compress,
-                false,
-                 false
-            )
-        )
+        using (var bzip2 = BZip2Stream.Create(innerStream, CompressionMode.Compress, false, false))
         {
             bzip2.Write(CreateTestData(), 0, CreateTestData().Length);
             bzip2.Finish();

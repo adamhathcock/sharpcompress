@@ -249,6 +249,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
             );
         }
 
+        await Task.Delay(1000);
         VerifyFiles();
         Assert.True(progressReports.Count > 0, "Progress reports should be generated");
     }
