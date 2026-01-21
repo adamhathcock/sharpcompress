@@ -66,7 +66,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         base.Dispose(disposing);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async System.Threading.Tasks.ValueTask DisposeAsync()
     {
         if (_isDisposed)
@@ -170,7 +170,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         return read;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async System.Threading.Tasks.ValueTask<int> ReadAsync(
         System.Memory<byte> buffer,
         System.Threading.CancellationToken cancellationToken = default

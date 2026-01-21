@@ -70,7 +70,7 @@ public sealed class Crc32Stream : Stream, IStreamStack
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
 
     public override void Write(ReadOnlySpan<byte> buffer)
     {

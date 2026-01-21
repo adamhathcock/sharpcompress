@@ -279,7 +279,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
             }
         }
         //don't know the size so we have to try to decompress to skip
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if LEGACY_DOTNET
         using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         await s.SkipEntryAsync(cancellationToken).ConfigureAwait(false);
 #else
@@ -346,7 +346,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
 
     internal async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if LEGACY_DOTNET
         using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);

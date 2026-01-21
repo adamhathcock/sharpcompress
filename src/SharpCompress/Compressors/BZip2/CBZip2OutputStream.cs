@@ -341,12 +341,14 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
 
     private int currentChar = -1;
     private int runLength;
+    private readonly bool leaveOpen;
 
-    public CBZip2OutputStream(Stream inStream)
-        : this(inStream, 9) { }
+    public CBZip2OutputStream(Stream inStream, bool leaveOpen = false)
+        : this(inStream, 9, leaveOpen) { }
 
-    public CBZip2OutputStream(Stream inStream, int inBlockSize)
+    public CBZip2OutputStream(Stream inStream, int inBlockSize, bool leaveOpen = false)
     {
+        this.leaveOpen = leaveOpen;
         block = null;
         quadrant = null;
         zptr = null;
@@ -481,7 +483,10 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
             this.DebugDispose(typeof(CBZip2OutputStream));
 #endif
             Dispose();
-            bsStream?.Dispose();
+            if (!leaveOpen)
+            {
+                bsStream?.Dispose();
+            }
             bsStream = null;
         }
     }

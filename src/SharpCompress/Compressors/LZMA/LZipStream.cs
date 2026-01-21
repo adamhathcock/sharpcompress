@@ -46,11 +46,13 @@ public sealed class LZipStream : Stream, IStreamStack
 
     private long _writeCount;
     private readonly Stream? _originalStream;
+    private readonly bool _leaveOpen;
 
-    public LZipStream(Stream stream, CompressionMode mode)
+    public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
     {
         Mode = mode;
         _originalStream = stream;
+        _leaveOpen = leaveOpen;
 
         if (mode == CompressionMode.Decompress)
         {
@@ -60,7 +62,7 @@ public sealed class LZipStream : Stream, IStreamStack
                 throw new InvalidFormatException("Not an LZip stream");
             }
             var properties = GetProperties(dSize);
-            _stream = new LzmaStream(properties, stream);
+            _stream = new LzmaStream(properties, stream, leaveOpen: leaveOpen);
         }
         else
         {
@@ -127,7 +129,7 @@ public sealed class LZipStream : Stream, IStreamStack
         {
             Finish();
             _stream.Dispose();
-            if (Mode == CompressionMode.Compress)
+            if (Mode == CompressionMode.Compress && !_leaveOpen)
             {
                 _originalStream?.Dispose();
             }
@@ -163,7 +165,7 @@ public sealed class LZipStream : Stream, IStreamStack
 
     public override void SetLength(long value) => throw new NotImplementedException();
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
 
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,

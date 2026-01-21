@@ -1,4 +1,4 @@
-﻿#if NETFRAMEWORK || NETSTANDARD2_0
+﻿#if LEGACY_DOTNET
 
 namespace SharpCompress;
 

@@ -366,7 +366,7 @@ public class DeflateStream : Stream, IStreamStack
             .ConfigureAwait(false);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
@@ -457,7 +457,7 @@ public class DeflateStream : Stream, IStreamStack
             .ConfigureAwait(false);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default

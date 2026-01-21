@@ -81,7 +81,7 @@ internal class ReadOnlySubStream : SharpCompressStream, IStreamStack
         return value;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override int Read(Span<byte> buffer)
     {
         var sliceLen = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;
@@ -117,7 +117,7 @@ internal class ReadOnlySubStream : SharpCompressStream, IStreamStack
         return read;
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default

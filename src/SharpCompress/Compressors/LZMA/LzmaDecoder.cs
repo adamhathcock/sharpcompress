@@ -201,7 +201,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
         }
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     [MemberNotNull(nameof(_outWindow))]
 #endif
     private void CreateDictionary()

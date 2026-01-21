@@ -30,6 +30,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
 
     private Stream stream = default!;
     private bool isDisposed;
+    private bool leaveOpen;
 
     private BZip2Stream() { }
 
@@ -42,10 +43,12 @@ public sealed class BZip2Stream : Stream, IStreamStack
     public static BZip2Stream Create(
         Stream stream,
         CompressionMode compressionMode,
-        bool decompressConcatenated
+        bool decompressConcatenated,
+        bool leaveOpen = false
     )
     {
         var bZip2Stream = new BZip2Stream();
+        bZip2Stream.leaveOpen = leaveOpen;
 #if DEBUG_STREAMS
         bZip2Stream.DebugConstruct(typeof(BZip2Stream));
 #endif
@@ -73,10 +76,12 @@ public sealed class BZip2Stream : Stream, IStreamStack
         Stream stream,
         CompressionMode compressionMode,
         bool decompressConcatenated,
+        bool leaveOpen = false,
         CancellationToken cancellationToken = default
     )
     {
         var bZip2Stream = new BZip2Stream();
+        bZip2Stream.leaveOpen = leaveOpen;
 #if DEBUG_STREAMS
         bZip2Stream.DebugConstruct(typeof(BZip2Stream));
 #endif
@@ -101,7 +106,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
 
     protected override void Dispose(bool disposing)
     {
-        if (isDisposed)
+        if (isDisposed || leaveOpen)
         {
             return;
         }
@@ -142,7 +147,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
 
     public override void SetLength(long value) => stream.SetLength(value);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
 
     public override int Read(Span<byte> buffer) => stream.Read(buffer);
 
