@@ -19,11 +19,11 @@ public class LeaveOpenBehaviorTests
     {
         using var innerStream = new TestStream(new MemoryStream());
         using (
-            var bzip2 = new BZip2Stream(
+            var bzip2 = BZip2Stream.Create(
                 innerStream,
                 CompressionMode.Compress,
                 false,
-                leaveOpen: false
+                 false
             )
         )
         {
@@ -40,7 +40,7 @@ public class LeaveOpenBehaviorTests
         using var innerStream = new TestStream(new MemoryStream());
         byte[] compressed;
         using (
-            var bzip2 = new BZip2Stream(
+            var bzip2 = BZip2Stream.Create(
                 innerStream,
                 CompressionMode.Compress,
                 false,
@@ -69,7 +69,7 @@ public class LeaveOpenBehaviorTests
     {
         // First compress some data
         var memStream = new MemoryStream();
-        using (var bzip2 = new BZip2Stream(memStream, CompressionMode.Compress, false, true))
+        using (var bzip2 = BZip2Stream.Create(memStream, CompressionMode.Compress, false, true))
         {
             bzip2.Write(CreateTestData(), 0, CreateTestData().Length);
             bzip2.Finish();
@@ -80,7 +80,7 @@ public class LeaveOpenBehaviorTests
         var decompressed = new byte[CreateTestData().Length];
 
         using (
-            var bzip2 = new BZip2Stream(
+            var bzip2 = BZip2Stream.Create(
                 innerStream,
                 CompressionMode.Decompress,
                 false,
@@ -100,7 +100,7 @@ public class LeaveOpenBehaviorTests
     {
         // First compress some data
         var memStream = new MemoryStream();
-        using (var bzip2 = new BZip2Stream(memStream, CompressionMode.Compress, false, true))
+        using (var bzip2 = BZip2Stream.Create(memStream, CompressionMode.Compress, false, true))
         {
             bzip2.Write(CreateTestData(), 0, CreateTestData().Length);
             bzip2.Finish();
@@ -111,7 +111,7 @@ public class LeaveOpenBehaviorTests
         var decompressed = new byte[CreateTestData().Length];
 
         using (
-            var bzip2 = new BZip2Stream(
+            var bzip2 = BZip2Stream.Create(
                 innerStream,
                 CompressionMode.Decompress,
                 false,

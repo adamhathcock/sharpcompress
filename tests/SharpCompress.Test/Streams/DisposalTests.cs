@@ -166,7 +166,7 @@ public class DisposalTests
         // BZip2Stream now supports leaveOpen parameter
         VerifyStreamDisposal(
             (stream, leaveOpen) =>
-                new BZip2Stream(stream, CompressionMode.Compress, false, leaveOpen)
+                BZip2Stream.Create(stream, CompressionMode.Compress, false, leaveOpen)
         );
     }
 
