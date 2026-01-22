@@ -70,11 +70,25 @@ public partial class EntryStream : Stream, IStreamStack
         {
             if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
             {
-                deflateStream.Flush(); //Deflate over reads. Knock it back
+                try
+                {
+                    deflateStream.Flush(); //Deflate over reads. Knock it back
+                }
+                catch (NotSupportedException)
+                {
+                    // Ignore: underlying stream does not support required operations for Flush
+                }
             }
             else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
             {
-                lzmaStream.Flush(); //Lzma over reads. Knock it back
+                try
+                {
+                    lzmaStream.Flush(); //Lzma over reads. Knock it back
+                }
+                catch (NotSupportedException)
+                {
+                    // Ignore: underlying stream does not support required operations for Flush
+                }
             }
         }
 #if DEBUG_STREAMS

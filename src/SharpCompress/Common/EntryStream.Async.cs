@@ -35,11 +35,25 @@ public partial class EntryStream
         {
             if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
             {
-                await deflateStream.FlushAsync().ConfigureAwait(false);
+                try
+                {
+                    await deflateStream.FlushAsync().ConfigureAwait(false); //Deflate over reads. Knock it back
+                }
+                catch (NotSupportedException)
+                {
+                    // Ignore: underlying stream does not support required operations for Flush
+                }
             }
             else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
             {
-                await lzmaStream.FlushAsync().ConfigureAwait(false);
+                try
+                {
+                    await lzmaStream.FlushAsync().ConfigureAwait(false); //Lzma over reads. Knock it back
+                }
+                catch (NotSupportedException)
+                {
+                    // Ignore: underlying stream does not support required operations for Flush
+                }
             }
         }
 #if DEBUG_STREAMS
