@@ -154,7 +154,7 @@ public partial class SharpCompressStream
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(SharpCompressStream));
 #endif
-        if (_isDisposed || LeaveOpen)
+        if (_isDisposed)
         {
             return;
         }
@@ -166,6 +166,11 @@ public partial class SharpCompressStream
         }
         _isDisposed = true;
         await base.DisposeAsync();
+
+        if (LeaveOpen)
+        {
+            return;
+        }
 
         await Stream.DisposeAsync();
         if (_buffer != null)

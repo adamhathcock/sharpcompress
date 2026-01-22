@@ -141,7 +141,7 @@ public partial class SharpCompressStream : Stream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(SharpCompressStream));
 #endif
-        if (_isDisposed || this.LeaveOpen)
+        if (_isDisposed)
         {
             return;
         }
@@ -154,6 +154,12 @@ public partial class SharpCompressStream : Stream, IStreamStack
         }
         _isDisposed = true;
         base.Dispose(disposing);
+
+        if (this.LeaveOpen)
+        {
+            return;
+        }
+
         if (disposing)
         {
             Stream.Dispose();
