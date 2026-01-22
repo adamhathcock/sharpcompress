@@ -16,7 +16,7 @@ public abstract class Factory : IFactory
     {
         RegisterFactory(new ZipFactory());
         RegisterFactory(new RarFactory());
-        RegisterFactory(new TarFactory());//put tar before most
+        RegisterFactory(new TarFactory()); //put tar before most
         RegisterFactory(new GZipFactory());
         RegisterFactory(new ArcFactory());
         RegisterFactory(new ArjFactory());

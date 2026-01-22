@@ -23,9 +23,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
 #else
         await using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
 #endif
-        await using (
-            var archive = GZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream))
-        )
+        await using (var archive = GZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream)))
         {
             var entry = await archive.EntriesAsync.FirstAsync();
             await entry.WriteToFileAsync(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));

@@ -75,7 +75,7 @@ public class AsyncTests : TestBase
     public async ValueTask Archive_Entry_Async_Open_Stream()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
-        await using var archive =  GZipArchive.OpenAsyncArchive(
+        await using var archive = GZipArchive.OpenAsyncArchive(
             new AsyncOnlyStream(File.OpenRead(testArchive))
         );
 

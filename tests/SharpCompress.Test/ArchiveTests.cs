@@ -104,7 +104,12 @@ public class ArchiveTests : ReaderTests
     )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        ArchiveStreamRead(archiveFactory, Path.GetExtension(testArchive), readerOptions, testArchive);
+        ArchiveStreamRead(
+            archiveFactory,
+            Path.GetExtension(testArchive),
+            readerOptions,
+            testArchive
+        );
     }
 
     protected void ArchiveStreamRead(

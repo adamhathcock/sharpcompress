@@ -85,14 +85,14 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_BZip2_Split() =>
         ArchiveStreamMultiRead(
             null,
-                "Original.7z.001",
-                "Original.7z.002",
-                "Original.7z.003",
-                "Original.7z.004",
-                "Original.7z.005",
-                "Original.7z.006",
-                "Original.7z.007"
-            );
+            "Original.7z.001",
+            "Original.7z.002",
+            "Original.7z.003",
+            "Original.7z.004",
+            "Original.7z.005",
+            "Original.7z.006",
+            "Original.7z.007"
+        );
 
     //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
     [Fact]
