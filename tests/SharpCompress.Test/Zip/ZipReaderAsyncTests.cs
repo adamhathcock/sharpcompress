@@ -298,7 +298,11 @@ public class ZipReaderAsyncTests : ReaderTests
         {
             if (!reader.Entry.IsDirectory)
             {
+#if LEGACY_DOTNET
+                using var entryStream = await reader.OpenEntryStreamAsync();
+#else
                 await using var entryStream = await reader.OpenEntryStreamAsync();
+#endif
                 // Read some data
                 var buffer = new byte[1024];
                 await entryStream.ReadAsync(buffer, 0, buffer.Length);
@@ -321,7 +325,11 @@ public class ZipReaderAsyncTests : ReaderTests
         {
             if (!reader.Entry.IsDirectory)
             {
+#if LEGACY_DOTNET
+                using var entryStream = await reader.OpenEntryStreamAsync();
+#else
                 await using var entryStream = await reader.OpenEntryStreamAsync();
+#endif
                 // Read some data
                 var buffer = new byte[1024];
                 await entryStream.ReadAsync(buffer, 0, buffer.Length);
