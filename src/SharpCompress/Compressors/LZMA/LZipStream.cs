@@ -17,7 +17,7 @@ namespace SharpCompress.Compressors.LZMA;
 /// <summary>
 /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
 /// </summary>
-public sealed class LZipStream : Stream, IStreamStack
+public sealed partial class LZipStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -167,11 +167,6 @@ public sealed class LZipStream : Stream, IStreamStack
 
 #if !LEGACY_DOTNET
 
-    public override ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    ) => _stream.ReadAsync(buffer, cancellationToken);
-
     public override int Read(Span<byte> buffer) => _stream.Read(buffer);
 
     public override void Write(ReadOnlySpan<byte> buffer)
@@ -194,24 +189,7 @@ public sealed class LZipStream : Stream, IStreamStack
         ++_writeCount;
     }
 
-    public override Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    ) => _stream.ReadAsync(buffer, offset, count, cancellationToken);
-
-    public override async Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        await _stream.WriteAsync(buffer, offset, count, cancellationToken);
-        _writeCount += count;
-    }
+    // Async methods moved to LZipStream.Async.cs
 
     #endregion
 

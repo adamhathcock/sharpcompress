@@ -33,7 +33,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
-public class DeflateStream : Stream, IStreamStack
+public partial class DeflateStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -290,24 +290,6 @@ public class DeflateStream : Stream, IStreamStack
         }
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
-    public override async ValueTask DisposeAsync()
-    {
-        if (!_disposed)
-        {
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(DeflateStream));
-#endif
-            if (!_leaveOpen)
-            {
-                await _baseStream.DisposeAsync().ConfigureAwait(false);
-            }
-            _disposed = true;
-        }
-        await base.DisposeAsync().ConfigureAwait(false);
-    }
-#endif
-
     /// <summary>
     /// Flush the stream.
     /// </summary>
@@ -318,15 +300,6 @@ public class DeflateStream : Stream, IStreamStack
             throw new ObjectDisposedException("DeflateStream");
         }
         _baseStream.Flush();
-    }
-
-    public override async Task FlushAsync(CancellationToken cancellationToken)
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("DeflateStream");
-        }
-        await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -364,36 +337,6 @@ public class DeflateStream : Stream, IStreamStack
 
         return _baseStream.Read(buffer, offset, count);
     }
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("DeflateStream");
-        }
-        return await _baseStream
-            .ReadAsync(buffer, offset, count, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("DeflateStream");
-        }
-        return await _baseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-    }
-#endif
 
     public override int ReadByte()
     {
@@ -455,36 +398,6 @@ public class DeflateStream : Stream, IStreamStack
         }
         _baseStream.Write(buffer, offset, count);
     }
-
-    public override async Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("DeflateStream");
-        }
-        await _baseStream
-            .WriteAsync(buffer, offset, count, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("DeflateStream");
-        }
-        await _baseStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-    }
-#endif
 
     public override void WriteByte(byte value)
     {

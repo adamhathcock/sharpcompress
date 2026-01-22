@@ -10,7 +10,7 @@ using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
 
-public abstract class AbstractWritableArchive<TEntry, TVolume>
+public abstract partial class AbstractWritableArchive<TEntry, TVolume>
     : AbstractArchive<TEntry, TVolume>,
         IWritableArchive,
         IWritableAsyncArchive
@@ -73,25 +73,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         modifiedEntries.AddRange(OldEntries.Concat(newEntries));
     }
 
-    private async ValueTask RebuildModifiedCollectionAsync()
-    {
-        if (pauseRebuilding)
-        {
-            return;
-        }
-        hasModifications = true;
-        newEntries.RemoveAll(v => removedEntries.Contains(v));
-        modifiedEntries.Clear();
-        await foreach (var entry in OldEntriesAsync)
-        {
-            modifiedEntries.Add(entry);
-        }
-        modifiedEntries.AddRange(newEntries);
-    }
-
     private IEnumerable<TEntry> OldEntries => base.Entries.Where(x => !removedEntries.Contains(x));
-    private IAsyncEnumerable<TEntry> OldEntriesAsync =>
-        base.EntriesAsync.Where(x => !removedEntries.Contains(x));
 
     public void RemoveEntry(TEntry entry)
     {
@@ -102,19 +84,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    public async ValueTask RemoveEntryAsync(TEntry entry)
-    {
-        if (!removedEntries.Contains(entry))
-        {
-            removedEntries.Add(entry);
-            await RebuildModifiedCollectionAsync();
-        }
-    }
-
     void IWritableArchive.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
-
-    ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
-        RemoveEntryAsync((TEntry)entry);
 
     public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
         AddEntry(key, source, false, size, modified);
@@ -170,29 +140,8 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         return false;
     }
 
-    private async ValueTask<bool> DoesKeyMatchExistingAsync(
-        string key,
-        CancellationToken cancellationToken
-    )
-    {
-        await foreach (
-            var entry in EntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
-        )
-        {
-            var path = entry.Key;
-            if (path is null)
-            {
-                continue;
-            }
-            var p = path.Replace('/', '\\');
-            if (p.Length > 0 && p[0] == '\\')
-            {
-                p = p.Substring(1);
-            }
-            return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
-        }
-        return false;
-    }
+    ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
+        RemoveEntryAsync((TEntry)entry);
 
     async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddEntryAsync(
         string key,
@@ -208,29 +157,6 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         DateTime? modified,
         CancellationToken cancellationToken
     ) => await AddDirectoryEntryAsync(key, modified, cancellationToken);
-
-    public async ValueTask<TEntry> AddEntryAsync(
-        string key,
-        Stream source,
-        bool closeStream,
-        long size = 0,
-        DateTime? modified = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (key.Length > 0 && key[0] is '/' or '\\')
-        {
-            key = key.Substring(1);
-        }
-        if (await DoesKeyMatchExistingAsync(key, cancellationToken).ConfigureAwait(false))
-        {
-            throw new ArchiveException("Cannot add entry with duplicate key: " + key);
-        }
-        var entry = CreateEntry(key, source, size, modified, closeStream);
-        newEntries.Add(entry);
-        await RebuildModifiedCollectionAsync();
-        return entry;
-    }
 
     public TEntry AddDirectoryEntry(string key, DateTime? modified = null)
     {
@@ -248,43 +174,11 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         return entry;
     }
 
-    public async ValueTask<TEntry> AddDirectoryEntryAsync(
-        string key,
-        DateTime? modified = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (key.Length > 0 && key[0] is '/' or '\\')
-        {
-            key = key.Substring(1);
-        }
-        if (await DoesKeyMatchExistingAsync(key, cancellationToken).ConfigureAwait(false))
-        {
-            throw new ArchiveException("Cannot add entry with duplicate key: " + key);
-        }
-        var entry = CreateDirectoryEntry(key, modified);
-        newEntries.Add(entry);
-        await RebuildModifiedCollectionAsync();
-        return entry;
-    }
-
     public void SaveTo(Stream stream, WriterOptions options)
     {
         //reset streams of new entries
         newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
         SaveTo(stream, options, OldEntries, newEntries);
-    }
-
-    public async ValueTask SaveToAsync(
-        Stream stream,
-        WriterOptions options,
-        CancellationToken cancellationToken = default
-    )
-    {
-        //reset streams of new entries
-        newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-        await SaveToAsync(stream, options, OldEntriesAsync, newEntries, cancellationToken)
-            .ConfigureAwait(false);
     }
 
     protected TEntry CreateEntry(

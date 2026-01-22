@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Arj.Headers
 {
-    public class ArjLocalHeader : ArjHeader
+    public partial class ArjLocalHeader : ArjHeader
     {
         public ArchiveEncoding ArchiveEncoding { get; }
         public long DataStartPosition { get; protected set; }
@@ -56,21 +56,7 @@ namespace SharpCompress.Common.Arj.Headers
             return null;
         }
 
-        public override async ValueTask<ArjHeader?> ReadAsync(
-            Stream stream,
-            CancellationToken cancellationToken = default
-        )
-        {
-            var body = await ReadHeaderAsync(stream, cancellationToken);
-            if (body.Length > 0)
-            {
-                await ReadExtendedHeadersAsync(stream, cancellationToken);
-                var header = LoadFrom(body);
-                header.DataStartPosition = stream.Position;
-                return header;
-            }
-            return null;
-        }
+        // ReadAsync moved to ArjLocalHeader.Async.cs
 
         public ArjLocalHeader LoadFrom(byte[] headerBytes)
         {

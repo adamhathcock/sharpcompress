@@ -9,7 +9,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ZStandard;
 
-internal class ZStandardStream : DecompressionStream, IStreamStack
+internal partial class ZStandardStream : DecompressionStream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -37,27 +37,6 @@ internal class ZStandardStream : DecompressionStream, IStreamStack
     {
         var br = new BinaryReader(stream);
         var magic = br.ReadUInt32();
-        if (ZstandardConstants.MAGIC != magic)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    internal static async ValueTask<bool> IsZStandardAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var buffer = new byte[4];
-        var bytesRead = await stream.ReadAsync(buffer, 0, 4, cancellationToken);
-        if (bytesRead < 4)
-        {
-            return false;
-        }
-
-        var magic = BitConverter.ToUInt32(buffer, 0);
         if (ZstandardConstants.MAGIC != magic)
         {
             return false;

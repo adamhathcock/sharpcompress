@@ -124,11 +124,5 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             Options.ArchiveEncoding
         );
 
-    protected override IAsyncEnumerable<TarEntry> GetEntriesAsync(Stream stream) =>
-        TarEntry.GetEntriesAsync(
-            StreamingMode.Streaming,
-            stream,
-            compressionType,
-            Options.ArchiveEncoding
-        );
+    // GetEntriesAsync moved to TarReader.Async.cs
 }

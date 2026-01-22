@@ -9,7 +9,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal class RarBLAKE2spStream : RarStream, IStreamStack
+internal partial class RarBLAKE2spStream : RarStream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -358,59 +358,4 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
 
         return result;
     }
-
-    public override async System.Threading.Tasks.Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        System.Threading.CancellationToken cancellationToken
-    )
-    {
-        var result = await base.ReadAsync(buffer, offset, count, cancellationToken)
-            .ConfigureAwait(false);
-        if (result != 0)
-        {
-            Update(_blake2sp, new ReadOnlySpan<byte>(buffer, offset, result), result);
-        }
-        else
-        {
-            _hash = Final(_blake2sp);
-            if (!disableCRCCheck && !(GetCrc().SequenceEqual(readStream.CurrentCrc)) && count != 0)
-            {
-                // NOTE: we use the last FileHeader in a multipart volume to check CRC
-                throw new InvalidFormatException("file crc mismatch");
-            }
-        }
-
-        return result;
-    }
-
-#if !LEGACY_DOTNET
-    public override async System.Threading.Tasks.ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        System.Threading.CancellationToken cancellationToken = default
-    )
-    {
-        var result = await base.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        if (result != 0)
-        {
-            Update(_blake2sp, buffer.Span.Slice(0, result), result);
-        }
-        else
-        {
-            _hash = Final(_blake2sp);
-            if (
-                !disableCRCCheck
-                && !(GetCrc().SequenceEqual(readStream.CurrentCrc))
-                && buffer.Length != 0
-            )
-            {
-                // NOTE: we use the last FileHeader in a multipart volume to check CRC
-                throw new InvalidFormatException("file crc mismatch");
-            }
-        }
-
-        return result;
-    }
-#endif
 }

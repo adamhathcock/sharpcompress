@@ -91,6 +91,7 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
         }
     }
 
+    // Async iterator method - kept in original file (cannot be split with partial classes)
     protected override async IAsyncEnumerable<TarArchiveEntry> LoadEntriesAsync(
         IAsyncEnumerable<TarVolume> volumes
     )
@@ -214,82 +215,10 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
         }
     }
 
-    protected override async ValueTask SaveToAsync(
-        Stream stream,
-        WriterOptions options,
-        IAsyncEnumerable<TarArchiveEntry> oldEntries,
-        IEnumerable<TarArchiveEntry> newEntries,
-        CancellationToken cancellationToken = default
-    )
-    {
-        using var writer = new TarWriter(stream, new TarWriterOptions(options));
-        await foreach (
-            var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
-        )
-        {
-            if (entry.IsDirectory)
-            {
-                await writer
-                    .WriteDirectoryAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entry.LastModifiedTime,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                using var entryStream = entry.OpenEntryStream();
-                await writer
-                    .WriteAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entryStream,
-                        entry.LastModifiedTime,
-                        entry.Size,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-        }
-        foreach (var entry in newEntries)
-        {
-            if (entry.IsDirectory)
-            {
-                await writer
-                    .WriteDirectoryAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entry.LastModifiedTime,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                using var entryStream = entry.OpenEntryStream();
-                await writer
-                    .WriteAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entryStream,
-                        entry.LastModifiedTime,
-                        entry.Size,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-        }
-    }
-
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
         return TarReader.OpenReader(stream);
-    }
-
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
-    {
-        var stream = Volumes.Single().Stream;
-        stream.Position = 0;
-        return new((IAsyncReader)TarReader.OpenReader(stream));
     }
 }

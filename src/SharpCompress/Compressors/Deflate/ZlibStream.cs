@@ -34,7 +34,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
-public class ZlibStream : Stream, IStreamStack
+public partial class ZlibStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -268,34 +268,6 @@ public class ZlibStream : Stream, IStreamStack
         _baseStream.Flush();
     }
 
-    public override async Task FlushAsync(CancellationToken cancellationToken)
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-        _disposed = true;
-        if (_baseStream != null)
-        {
-            await _baseStream.DisposeAsync().ConfigureAwait(false);
-        }
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ZlibStream));
-#endif
-        await base.DisposeAsync().ConfigureAwait(false);
-    }
-#endif
-
     /// <summary>
     /// Read data from the stream.
     /// </summary>
@@ -330,36 +302,6 @@ public class ZlibStream : Stream, IStreamStack
         }
         return _baseStream.Read(buffer, offset, count);
     }
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        return await _baseStream
-            .ReadAsync(buffer, offset, count, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        return await _baseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-    }
-#endif
 
     public override int ReadByte()
     {
@@ -414,36 +356,6 @@ public class ZlibStream : Stream, IStreamStack
         }
         _baseStream.Write(buffer, offset, count);
     }
-
-    public override async Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        await _baseStream
-            .WriteAsync(buffer, offset, count, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        await _baseStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-    }
-#endif
 
     public override void WriteByte(byte value)
     {

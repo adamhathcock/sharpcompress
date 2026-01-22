@@ -73,6 +73,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         }
     }
 
+    // Async iterator method - kept in original file (cannot be split with partial classes)
     protected override async IAsyncEnumerable<SevenZipArchiveEntry> LoadEntriesAsync(
         IAsyncEnumerable<SevenZipVolume> volumes
     )
@@ -119,32 +120,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         }
     }
 
-    private async ValueTask LoadFactoryAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (_database is null)
-        {
-            stream.Position = 0;
-            var reader = new ArchiveReader();
-            await reader.OpenAsync(
-                stream,
-                lookForHeader: ReaderOptions.LookForHeader,
-                cancellationToken
-            );
-            _database = await reader.ReadDatabaseAsync(
-                new PasswordProvider(ReaderOptions.Password),
-                cancellationToken
-            );
-        }
-    }
-
     protected override IReader CreateReaderForSolidExtraction() =>
         new SevenZipReader(ReaderOptions, this);
-
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
-        new(new SevenZipReader(ReaderOptions, this));
 
     public override bool IsSolid =>
         Entries

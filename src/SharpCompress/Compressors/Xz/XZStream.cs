@@ -10,7 +10,7 @@ using SharpCompress.IO;
 namespace SharpCompress.Compressors.Xz;
 
 [CLSCompliant(false)]
-public sealed class XZStream : XZReadOnlyStream, IStreamStack
+public sealed partial class XZStream : XZReadOnlyStream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -53,22 +53,6 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
         try
         {
             return null != XZHeader.FromStream(stream);
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    public static async ValueTask<bool> IsXZStreamAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            return null != await XZHeader.FromStreamAsync(stream, cancellationToken);
         }
         catch (Exception)
         {
@@ -122,35 +106,6 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
         return bytesRead;
     }
 
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var bytesRead = 0;
-        if (_endOfStream)
-        {
-            return bytesRead;
-        }
-
-        if (!HeaderIsRead)
-        {
-            await ReadHeaderAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        bytesRead = await ReadBlocksAsync(buffer, offset, count, cancellationToken)
-            .ConfigureAwait(false);
-        if (bytesRead < count)
-        {
-            _endOfStream = true;
-            await ReadIndexAsync(cancellationToken).ConfigureAwait(false);
-            await ReadFooterAsync(cancellationToken).ConfigureAwait(false);
-        }
-        return bytesRead;
-    }
-
     private void ReadHeader()
     {
         Header = XZHeader.FromStream(BaseStream);
@@ -158,30 +113,12 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
         HeaderIsRead = true;
     }
 
-    private async ValueTask ReadHeaderAsync(CancellationToken cancellationToken = default)
-    {
-        Header = await XZHeader
-            .FromStreamAsync(BaseStream, cancellationToken)
-            .ConfigureAwait(false);
-        AssertBlockCheckTypeIsSupported();
-        HeaderIsRead = true;
-    }
-
     private void ReadIndex() => Index = XZIndex.FromStream(BaseStream, true);
-
-    private async ValueTask ReadIndexAsync(CancellationToken cancellationToken = default) =>
-        Index = await XZIndex
-            .FromStreamAsync(BaseStream, true, cancellationToken)
-            .ConfigureAwait(false);
 
     // TODO verify Index
     private void ReadFooter() => Footer = XZFooter.FromStream(BaseStream);
 
     // TODO verify footer
-    private async ValueTask ReadFooterAsync(CancellationToken cancellationToken = default) =>
-        Footer = await XZFooter
-            .FromStreamAsync(BaseStream, cancellationToken)
-            .ConfigureAwait(false);
 
     private int ReadBlocks(byte[] buffer, int offset, int count)
     {
@@ -203,48 +140,6 @@ public sealed class XZStream : XZReadOnlyStream, IStreamStack
                 var remaining = count - bytesRead;
                 var newOffset = offset + bytesRead;
                 var justRead = _currentBlock.Read(buffer, newOffset, remaining);
-                if (justRead < remaining)
-                {
-                    NextBlock();
-                }
-
-                bytesRead += justRead;
-            }
-            catch (XZIndexMarkerReachedException)
-            {
-                break;
-            }
-        }
-        return bytesRead;
-    }
-
-    private async ValueTask<int> ReadBlocksAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var bytesRead = 0;
-        if (_currentBlock is null)
-        {
-            NextBlock();
-        }
-
-        for (; ; )
-        {
-            try
-            {
-                if (bytesRead >= count)
-                {
-                    break;
-                }
-
-                var remaining = count - bytesRead;
-                var newOffset = offset + bytesRead;
-                var justRead = await _currentBlock
-                    .ReadAsync(buffer, newOffset, remaining, cancellationToken)
-                    .ConfigureAwait(false);
                 if (justRead < remaining)
                 {
                     NextBlock();

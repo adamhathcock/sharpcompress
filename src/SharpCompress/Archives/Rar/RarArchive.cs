@@ -51,23 +51,10 @@ public partial class RarArchive
         }
     }
 
-    public override async ValueTask DisposeAsync()
-    {
-        if (!_disposed)
-        {
-            if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
-            {
-                unpackV1.Dispose();
-            }
-
-            _disposed = true;
-            await base.DisposeAsync();
-        }
-    }
-
     protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
         RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
 
+    // Simple async property - kept in original file
     protected override IAsyncEnumerable<RarArchiveEntry> LoadEntriesAsync(
         IAsyncEnumerable<RarVolume> volumes
     ) => RarArchiveEntryFactory.GetEntriesAsync(this, volumes, ReaderOptions);
@@ -93,25 +80,6 @@ public partial class RarArchive
         return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
     }
 
-    protected override async ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
-    {
-        if (await this.IsMultipartVolumeAsync())
-        {
-            var streams = await VolumesAsync
-                .Select(volume =>
-                {
-                    volume.Stream.Position = 0;
-                    return volume.Stream;
-                })
-                .ToListAsync();
-            return (RarReader)RarReader.OpenReader(streams, ReaderOptions);
-        }
-
-        var stream = (await VolumesAsync.FirstAsync()).Stream;
-        stream.Position = 0;
-        return (RarReader)RarReader.OpenReader(stream, ReaderOptions);
-    }
-
     protected override IReader CreateReaderForSolidExtraction()
     {
         if (this.IsMultipartVolume())
@@ -130,9 +98,6 @@ public partial class RarArchive
     }
 
     public override bool IsSolid => Volumes.First().IsSolidArchive;
-
-    public override async ValueTask<bool> IsSolidAsync() =>
-        await (await VolumesAsync.CastAsync<RarVolume>().FirstAsync()).IsSolidArchiveAsync();
 
     public override bool IsEncrypted => Entries.First(x => !x.IsDirectory).IsEncrypted;
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace SharpCompress.Compressors.Xz;
 
 [CLSCompliant(false)]
-public static class BinaryUtils
+public static partial class BinaryUtils
 {
     public static int ReadLittleEndianInt32(this BinaryReader reader)
     {
@@ -31,28 +31,6 @@ public static class BinaryUtils
 
     internal static uint ReadLittleEndianUInt32(this Stream stream) =>
         unchecked((uint)ReadLittleEndianInt32(stream));
-
-    public static async ValueTask<int> ReadLittleEndianInt32Async(
-        this Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var bytes = new byte[4];
-        var read = await stream.ReadFullyAsync(bytes, cancellationToken).ConfigureAwait(false);
-        if (!read)
-        {
-            throw new EndOfStreamException();
-        }
-        return BinaryPrimitives.ReadInt32LittleEndian(bytes);
-    }
-
-    internal static async ValueTask<uint> ReadLittleEndianUInt32Async(
-        this Stream stream,
-        CancellationToken cancellationToken = default
-    ) =>
-        unchecked(
-            (uint)await ReadLittleEndianInt32Async(stream, cancellationToken).ConfigureAwait(false)
-        );
 
     internal static byte[] ToBigEndianBytes(this uint uint32)
     {

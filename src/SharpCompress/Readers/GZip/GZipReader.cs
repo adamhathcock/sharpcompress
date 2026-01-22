@@ -15,8 +15,5 @@ public partial class GZipReader : AbstractReader<GZipEntry, GZipVolume>
     protected override IEnumerable<GZipEntry> GetEntries(Stream stream) =>
         GZipEntry.GetEntries(stream, Options);
 
-    protected override IAsyncEnumerable<GZipEntry> GetEntriesAsync(Stream stream)
-    {
-        return GZipEntry.GetEntriesAsync(stream, Options);
-    }
+    // GetEntriesAsync moved to GZipReader.Async.cs
 }
