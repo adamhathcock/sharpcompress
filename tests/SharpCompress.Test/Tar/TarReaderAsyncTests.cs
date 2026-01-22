@@ -171,7 +171,7 @@ public class TarReaderAsyncTests : ReaderTests
         Assert.True(await reader.MoveToNextEntryAsync());
         Assert.Equal("inner.tar.gz", reader.Entry.Key);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
         await using var entryStream = await reader.OpenEntryStreamAsync();
         await using var flushingStream = new FlushOnDisposeStream(entryStream);
 #else

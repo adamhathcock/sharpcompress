@@ -25,7 +25,10 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' != 'NETFRAMEWORK' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <DefineConstants>$(DefineConstants);LEGACY_DOTNET</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))">
     <PackageReference Include="Mono.Posix.NETStandard" />
   </ItemGroup>
 </Project>

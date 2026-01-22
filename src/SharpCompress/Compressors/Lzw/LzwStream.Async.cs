@@ -254,7 +254,7 @@ namespace SharpCompress.Compressors.Lzw
             return offset - start;
         }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
         /// <summary>
         /// Reads decompressed data asynchronously into the provided buffer
         /// </summary>

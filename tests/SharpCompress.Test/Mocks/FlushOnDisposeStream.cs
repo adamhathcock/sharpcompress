@@ -48,7 +48,7 @@ public class FlushOnDisposeStream(Stream innerStream) : Stream
         base.Dispose(disposing);
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         await innerStream.FlushAsync();

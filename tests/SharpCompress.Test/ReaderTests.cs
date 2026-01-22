@@ -163,7 +163,7 @@ public abstract class ReaderTests : TestBase
     {
         using var file = File.OpenRead(testArchive);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
         await using var protectedStream = SharpCompressStream.Create(
             new ForwardOnlyStream(file, options.BufferSize),
             leaveOpen: true,

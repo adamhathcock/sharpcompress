@@ -155,7 +155,7 @@ public class BZip2StreamAsyncTests
             Assert.True(compressed.Length > 0);
 
             // Decompress and verify
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if LEGACY_DOTNET
             using (var readStream = new MemoryStream(compressed))
             {
                 using (

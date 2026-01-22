@@ -23,7 +23,7 @@ public class LzwStreamAsyncTests : TestBase
         Assert.True(bytesRead > 0, "Should read at least some data");
     }
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     [Fact]
     public async Task LzwStream_ReadAsync_Memory()
     {

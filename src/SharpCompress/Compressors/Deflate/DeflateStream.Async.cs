@@ -8,7 +8,7 @@ namespace SharpCompress.Compressors.Deflate;
 
 public partial class DeflateStream
 {
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (!_disposed)

@@ -207,7 +207,7 @@ public class Zip64AsyncTests : WriterTests
             {
                 while (await rd.MoveToNextEntryAsync())
                 {
-#if NETFRAMEWORK || NETSTANDARD2_0
+#if LEGACY_DOTNET
                     using (var entryStream = await rd.OpenEntryStreamAsync())
                     {
                         await entryStream.SkipEntryAsync();
