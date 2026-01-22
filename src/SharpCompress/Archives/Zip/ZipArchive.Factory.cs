@@ -34,10 +34,7 @@ public partial class ZipArchive
             new SourceStream(
                 fileInfo,
                 i => ZipArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
-                {
-                    LeaveStreamOpen = false
-                }
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
             )
         );
     }
@@ -53,10 +50,7 @@ public partial class ZipArchive
             new SourceStream(
                 files[0],
                 i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
-                {
-                    LeaveStreamOpen = false
-                }
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
             )
         );
     }
@@ -87,7 +81,7 @@ public partial class ZipArchive
         }
 
         return new ZipArchive(
-            new SourceStream(stream, i => null,  readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
         );
     }
 

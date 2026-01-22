@@ -110,7 +110,7 @@ public class AsyncTests : TestBase
             var writer = WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.Zip,
-        new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = false }
+                new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = false }
             )
         )
         {
