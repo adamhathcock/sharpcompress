@@ -289,7 +289,7 @@ internal abstract class ZipFilePart : FilePart
         return decompressionStream;
     }
 
-    protected async Task<Stream> GetCryptoStreamAsync(
+    protected async ValueTask<Stream> GetCryptoStreamAsync(
         Stream plainStream,
         CancellationToken cancellationToken = default
     )
@@ -362,7 +362,7 @@ internal abstract class ZipFilePart : FilePart
         return plainStream;
     }
 
-    protected async Task<Stream> CreateDecompressionStreamAsync(
+    protected async ValueTask<Stream> CreateDecompressionStreamAsync(
         Stream stream,
         ZipCompressionMethod method,
         CancellationToken cancellationToken = default

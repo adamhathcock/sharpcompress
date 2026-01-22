@@ -76,7 +76,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
     /// <param name="compressionMode">Compression Mode</param>
     /// <param name="decompressConcatenated">Decompress Concatenated</param>
     /// <param name="cancellationToken">Cancellation Token</param>
-    public static async Task<BZip2Stream> CreateAsync(
+    public static async ValueTask<BZip2Stream> CreateAsync(
         Stream stream,
         CompressionMode compressionMode,
         bool decompressConcatenated,

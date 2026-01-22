@@ -21,7 +21,7 @@ public class XZIndexRecord
         return record;
     }
 
-    public static async Task<XZIndexRecord> FromBinaryReaderAsync(
+    public static async ValueTask<XZIndexRecord> FromBinaryReaderAsync(
         BinaryReader br,
         CancellationToken cancellationToken = default
     )

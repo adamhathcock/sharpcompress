@@ -1272,7 +1272,7 @@ internal class ArchiveReader
         _stream = stream;
     }
 
-    public async Task OpenAsync(
+    public async ValueTask OpenAsync(
         Stream stream,
         bool lookForHeader,
         CancellationToken cancellationToken = default
@@ -1425,7 +1425,7 @@ internal class ArchiveReader
         return db;
     }
 
-    public async Task<ArchiveDatabase> ReadDatabaseAsync(
+    public async ValueTask<ArchiveDatabase> ReadDatabaseAsync(
         IPasswordProvider pass,
         CancellationToken cancellationToken = default
     )

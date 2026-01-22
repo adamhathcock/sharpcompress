@@ -671,7 +671,7 @@ namespace SharpCompress.Compressors.Lzw
             }
         }
 
-        private async Task FillAsync(CancellationToken cancellationToken)
+        private async ValueTask FillAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             got = await baseInputStream
@@ -744,7 +744,7 @@ namespace SharpCompress.Compressors.Lzw
                 tabSuffix[idx] = (byte)idx;
         }
 
-        private async Task ParseHeaderAsync(CancellationToken cancellationToken)
+        private async ValueTask ParseHeaderAsync(CancellationToken cancellationToken)
         {
             headerParsed = true;
 

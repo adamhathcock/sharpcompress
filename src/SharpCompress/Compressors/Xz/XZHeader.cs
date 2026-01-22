@@ -25,7 +25,7 @@ public class XZHeader
         return header;
     }
 
-    public static async Task<XZHeader> FromStreamAsync(
+    public static async ValueTask<XZHeader> FromStreamAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     )

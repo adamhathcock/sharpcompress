@@ -497,7 +497,7 @@ internal sealed class TarHeader
         return true;
     }
 
-    internal async Task<bool> ReadAsync(AsyncBinaryReader reader)
+    internal async ValueTask<bool> ReadAsync(AsyncBinaryReader reader)
     {
         string? longName = null;
         string? longLinkName = null;
@@ -637,7 +637,7 @@ internal sealed class TarHeader
         }
     }
 
-    private async Task<string> ReadLongNameAsync(AsyncBinaryReader reader, byte[] buffer)
+    private async ValueTask<string> ReadLongNameAsync(AsyncBinaryReader reader, byte[] buffer)
     {
         var size = ReadSize(buffer);
 

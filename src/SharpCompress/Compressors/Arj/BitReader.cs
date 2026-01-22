@@ -65,7 +65,7 @@ namespace SharpCompress.Compressors.Arj
         /// <summary>
         /// Asynchronously reads a single bit from the stream. Returns 0 or 1.
         /// </summary>
-        public async Task<int> ReadBitAsync(CancellationToken cancellationToken)
+        public async ValueTask<int> ReadBitAsync(CancellationToken cancellationToken)
         {
             if (_bitCount == 0)
             {
@@ -90,7 +90,7 @@ namespace SharpCompress.Compressors.Arj
         /// <summary>
         /// Asynchronously reads n bits (up to 32) from the stream.
         /// </summary>
-        public async Task<int> ReadBitsAsync(int count, CancellationToken cancellationToken)
+        public async ValueTask<int> ReadBitsAsync(int count, CancellationToken cancellationToken)
         {
             if (count < 0 || count > 32)
             {

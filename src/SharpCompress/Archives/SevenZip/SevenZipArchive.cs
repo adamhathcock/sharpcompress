@@ -119,7 +119,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         }
     }
 
-    private async Task LoadFactoryAsync(
+    private async ValueTask LoadFactoryAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     )

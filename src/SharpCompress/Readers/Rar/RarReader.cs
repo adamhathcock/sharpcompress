@@ -128,7 +128,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         return CreateEntryStream(RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream));
     }
 
-    protected override async System.Threading.Tasks.Task<EntryStream> GetEntryStreamAsync(
+    protected override async System.Threading.Tasks.ValueTask<EntryStream> GetEntryStreamAsync(
         System.Threading.CancellationToken cancellationToken = default
     )
     {

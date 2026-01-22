@@ -120,7 +120,7 @@ namespace SharpCompress.Compressors.Arj
         /// Asynchronously decodes a single element (literal or back-reference) and appends it to _buffer.
         /// Returns true if data was added, or false if all input has already been decoded.
         /// </summary>
-        private async Task<bool> DecodeNextAsync(CancellationToken cancellationToken)
+        private async ValueTask<bool> DecodeNextAsync(CancellationToken cancellationToken)
         {
             if (_buffer.Count >= _originalSize)
             {
@@ -176,7 +176,7 @@ namespace SharpCompress.Compressors.Arj
             return res + add;
         }
 
-        private async Task<int> DecodeValAsync(
+        private async ValueTask<int> DecodeValAsync(
             int from,
             int to,
             CancellationToken cancellationToken

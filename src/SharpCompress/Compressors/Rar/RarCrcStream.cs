@@ -59,7 +59,7 @@ internal class RarCrcStream : RarStream, IStreamStack
         return stream;
     }
 
-    public static async Task<RarCrcStream> CreateAsync(
+    public static async ValueTask<RarCrcStream> CreateAsync(
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStreamBase readStream,

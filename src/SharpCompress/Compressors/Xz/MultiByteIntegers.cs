@@ -42,7 +42,7 @@ internal static class MultiByteIntegers
         return Output;
     }
 
-    public static async Task<ulong> ReadXZIntegerAsync(
+    public static async ValueTask<ulong> ReadXZIntegerAsync(
         this BinaryReader reader,
         CancellationToken cancellationToken = default,
         int MaxBytes = 9

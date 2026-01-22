@@ -32,7 +32,7 @@ public static class BinaryUtils
     internal static uint ReadLittleEndianUInt32(this Stream stream) =>
         unchecked((uint)ReadLittleEndianInt32(stream));
 
-    public static async Task<int> ReadLittleEndianInt32Async(
+    public static async ValueTask<int> ReadLittleEndianInt32Async(
         this Stream stream,
         CancellationToken cancellationToken = default
     )
@@ -46,7 +46,7 @@ public static class BinaryUtils
         return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }
 
-    internal static async Task<uint> ReadLittleEndianUInt32Async(
+    internal static async ValueTask<uint> ReadLittleEndianUInt32Async(
         this Stream stream,
         CancellationToken cancellationToken = default
     ) =>

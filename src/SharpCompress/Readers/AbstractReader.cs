@@ -435,7 +435,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
     protected virtual EntryStream GetEntryStream() =>
         CreateEntryStream(Entry.Parts.First().GetCompressedStream());
 
-    protected virtual async Task<EntryStream> GetEntryStreamAsync(
+    protected virtual async ValueTask<EntryStream> GetEntryStreamAsync(
         CancellationToken cancellationToken = default
     )
     {

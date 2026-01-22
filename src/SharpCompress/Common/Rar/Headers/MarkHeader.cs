@@ -27,7 +27,10 @@ internal class MarkHeader : IRarHeader
         throw new EndOfStreamException();
     }
 
-    private static async Task<byte> GetByteAsync(Stream stream, CancellationToken cancellationToken)
+    private static async ValueTask<byte> GetByteAsync(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
     {
         var buffer = new byte[1];
         var bytesRead = await stream

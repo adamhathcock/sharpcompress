@@ -134,7 +134,7 @@ internal class RarBLAKE2spStream : RarStream, IStreamStack
         return stream;
     }
 
-    public static async Task<RarBLAKE2spStream> CreateAsync(
+    public static async ValueTask<RarBLAKE2spStream> CreateAsync(
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyAsyncStream readStream,

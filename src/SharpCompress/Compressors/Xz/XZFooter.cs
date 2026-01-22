@@ -29,7 +29,7 @@ public class XZFooter
         return footer;
     }
 
-    public static async Task<XZFooter> FromStreamAsync(
+    public static async ValueTask<XZFooter> FromStreamAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     )
