@@ -161,7 +161,7 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.Explode:
             {
-                return new ExplodeStream(
+                return ExplodeStream.Create(
                     stream,
                     Header.CompressedSize,
                     Header.UncompressedSize,
