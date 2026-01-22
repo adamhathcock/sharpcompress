@@ -91,7 +91,7 @@ public class ArchiveTests : ReaderTests
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         ArchiveStreamRead(
             ArchiveFactory.FindFactory<IArchiveFactory>(testArchive),
-            Path.GetExtension(testArchive).Substring(1),
+            Path.GetExtension(testArchive),
             readerOptions,
             testArchive
         );
@@ -139,8 +139,7 @@ public class ArchiveTests : ReaderTests
         string extension
     )
     {
-      extension.Should().BeOneOf(archiveFactory.GetSupportedExtensions());
-
+        ExtensionTest(extension, archiveFactory);
         foreach (var path in testArchives)
         {
             using (
@@ -299,11 +298,7 @@ public class ArchiveTests : ReaderTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         archiveFactory ??= ArchiveFactory.FindFactory<IArchiveFactory>(testArchive);
-        string extension = Path.GetExtension(testArchive).Substring(1);
-        if (!int.TryParse(extension, out _) && "exe" != extension) //exclude parts
-        {
-           extension.Should().BeOneOf(archiveFactory.GetSupportedExtensions());
-        }
+        ExtensionTest(testArchive, archiveFactory);
         using (var archive = archiveFactory.OpenArchive(new FileInfo(testArchive), readerOptions))
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -315,6 +310,15 @@ public class ArchiveTests : ReaderTests
             }
         }
         VerifyFiles();
+    }
+
+    private void ExtensionTest(string fullPath, IArchiveFactory archiveFactory)
+    {
+        var extension = Path.GetExtension(fullPath).Substring(1);
+        if (!int.TryParse(extension, out _) && "exe" != extension) //exclude parts
+        {
+            extension.Should().BeOneOf(archiveFactory.GetSupportedExtensions());
+        }
     }
 
     protected void ArchiveFileSkip(

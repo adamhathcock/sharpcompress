@@ -83,10 +83,8 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_BZip2_Split() =>
-        Assert.Throws<InvalidOperationException>(() =>
-            ArchiveStreamRead(
-                ".7z",
-                null,
+        ArchiveStreamMultiRead(
+            null,
                 "Original.7z.001",
                 "Original.7z.002",
                 "Original.7z.003",
@@ -94,8 +92,7 @@ public class SevenZipArchiveTests : ArchiveTests
                 "Original.7z.005",
                 "Original.7z.006",
                 "Original.7z.007"
-            )
-        );
+            );
 
     //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
     [Fact]
@@ -150,17 +147,14 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_ZSTD_Split() =>
-        Assert.Throws<InvalidOperationException>(() =>
-            ArchiveStreamRead(
-                ".7z",
-                null,
-                "7Zip.ZSTD.Split.7z.001",
-                "7Zip.ZSTD.Split.7z.002",
-                "7Zip.ZSTD.Split.7z.003",
-                "7Zip.ZSTD.Split.7z.004",
-                "7Zip.ZSTD.Split.7z.005",
-                "7Zip.ZSTD.Split.7z.006"
-            )
+        ArchiveStreamMultiRead(
+            null,
+            "7Zip.ZSTD.Split.7z.001",
+            "7Zip.ZSTD.Split.7z.002",
+            "7Zip.ZSTD.Split.7z.003",
+            "7Zip.ZSTD.Split.7z.004",
+            "7Zip.ZSTD.Split.7z.005",
+            "7Zip.ZSTD.Split.7z.006"
         );
 
     [Fact]
