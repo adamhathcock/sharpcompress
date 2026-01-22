@@ -41,9 +41,16 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
         var idx = 0;
         if (streams.Count() > 1)
         {
-            streams[1].Position += 4;
-            var isZip = IsZipFile(streams[1], ReaderOptions.Password, ReaderOptions.BufferSize);
-            streams[1].Position -= 4;
+            //check if second stream is zip header without changing position
+            var headerProbeStream = streams[1];
+            var startPosition = headerProbeStream.Position;
+            headerProbeStream.Position = startPosition + 4;
+            var isZip = IsZipFile(
+                headerProbeStream,
+                ReaderOptions.Password,
+                ReaderOptions.BufferSize
+            );
+            headerProbeStream.Position = startPosition;
             if (isZip)
             {
                 stream.IsVolumes = true;
