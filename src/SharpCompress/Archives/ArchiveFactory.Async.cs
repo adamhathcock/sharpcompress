@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 

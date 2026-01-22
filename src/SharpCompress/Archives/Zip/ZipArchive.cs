@@ -62,9 +62,7 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
     protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
     {
         var vols = volumes.ToArray();
-        foreach (
-            var h in headerFactory.NotNull().ReadSeekableHeader(vols.Last().Stream, useSync: true)
-        )
+        foreach (var h in headerFactory.NotNull().ReadSeekableHeader(vols.Last().Stream))
         {
             if (h != null)
             {

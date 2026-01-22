@@ -210,7 +210,7 @@ public partial class ZipArchive
                 if (stream.CanSeek)
                 {
                     var z = new SeekableZipHeaderFactory(password, new ArchiveEncoding());
-                    var x = z.ReadSeekableHeader(stream, useSync: true).FirstOrDefault();
+                    var x = z.ReadSeekableHeader(stream).FirstOrDefault();
                     return x?.ZipHeaderType == ZipHeaderType.DirectoryEntry;
                 }
                 else
