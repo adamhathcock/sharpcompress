@@ -436,4 +436,50 @@ public class ZipReaderTests : ReaderTests
             Assert.Equal(archiveKeys.OrderBy(k => k), readerKeys.OrderBy(k => k));
         }
     }
+
+    [Fact]
+    public void EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_Deflate()
+    {
+        // Since version 0.41.0: EntryStream.Dispose() should not throw NotSupportedException
+        // when Flush() fails on non-seekable streams (Deflate compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        // This should not throw, even if internal Flush() fails
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var entryStream = reader.OpenEntryStream();
+                // Read some data
+                var buffer = new byte[1024];
+                entryStream.Read(buffer, 0, buffer.Length);
+                // Dispose should not throw NotSupportedException
+            }
+        }
+    }
+
+    [Fact]
+    public void EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_LZMA()
+    {
+        // Since version 0.41.0: EntryStream.Dispose() should not throw NotSupportedException
+        // when Flush() fails on non-seekable streams (LZMA compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        // This should not throw, even if internal Flush() fails
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var entryStream = reader.OpenEntryStream();
+                // Read some data
+                var buffer = new byte[1024];
+                entryStream.Read(buffer, 0, buffer.Length);
+                // Dispose should not throw NotSupportedException
+            }
+        }
+    }
 }
