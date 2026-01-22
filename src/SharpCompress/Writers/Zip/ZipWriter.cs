@@ -443,7 +443,7 @@ public partial class ZipWriter : AbstractWriter
                     counting.WriteByte(5);
                     counting.WriteByte(0);
 
-                    var lzmaStream = new LzmaStream(
+                    var lzmaStream = LzmaStream.Create(
                         new LzmaEncoderProperties(!originalStream.CanSeek),
                         false,
                         counting

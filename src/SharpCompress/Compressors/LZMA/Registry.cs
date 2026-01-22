@@ -51,7 +51,7 @@ internal static class DecoderRegistry
                 return new DeltaFilter(false, inStreams.Single(), info);
             case K_LZMA:
             case K_LZMA2:
-                return new LzmaStream(info, inStreams.Single(), -1, limit);
+                return LzmaStream.Create(info, inStreams.Single(), -1, limit);
             case CMethodId.K_AES_ID:
                 return new AesDecoderStream(inStreams.Single(), info, pass, limit);
             case K_BCJ:

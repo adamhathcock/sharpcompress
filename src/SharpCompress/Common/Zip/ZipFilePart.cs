@@ -134,7 +134,7 @@ internal abstract partial class ZipFilePart : FilePart
                 reader.ReadUInt16(); //LZMA version
                 var props = new byte[reader.ReadUInt16()];
                 reader.Read(props, 0, props.Length);
-                return new LzmaStream(
+                return LzmaStream.Create(
                     props,
                     stream,
                     Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,

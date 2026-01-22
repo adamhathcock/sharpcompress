@@ -1,4 +1,3 @@
-#nullable disable
 
 using System;
 using System.Buffers.Binary;
@@ -17,7 +16,7 @@ public partial class LzmaStream : Stream, IStreamStack
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
 
-    Stream IStreamStack.BaseStream() => _inputStream;
+    Stream IStreamStack.BaseStream() => _inputStream!;
 
     int IStreamStack.BufferSize
     {
@@ -32,7 +31,7 @@ public partial class LzmaStream : Stream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    private readonly Stream _inputStream;
+    private readonly Stream? _inputStream;
     private readonly long _inputSize;
     private readonly long _outputSize;
     private readonly bool _leaveOpen;
@@ -40,7 +39,7 @@ public partial class LzmaStream : Stream, IStreamStack
     private readonly int _dictionarySize;
     private readonly OutWindow _outWindow = new();
     private readonly RangeCoder.Decoder _rangeDecoder = new();
-    private Decoder _decoder;
+    private Decoder? _decoder;
 
     private long _position;
     private bool _endReached;
@@ -54,38 +53,14 @@ public partial class LzmaStream : Stream, IStreamStack
     private bool _needDictReset = true;
     private bool _needProps = true;
 
-    private readonly Encoder _encoder;
+    private readonly Encoder? _encoder;
     private bool _isDisposed;
 
-    public LzmaStream(byte[] properties, Stream inputStream, bool leaveOpen = false)
-        : this(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen) { }
-
-    public LzmaStream(byte[] properties, Stream inputStream, long inputSize, bool leaveOpen = false)
-        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5, leaveOpen) { }
-
-    public LzmaStream(
+    private LzmaStream(
         byte[] properties,
         Stream inputStream,
         long inputSize,
         long outputSize,
-        bool leaveOpen = false
-    )
-        : this(
-            properties,
-            inputStream,
-            inputSize,
-            outputSize,
-            null,
-            properties.Length < 5,
-            leaveOpen
-        ) { }
-
-    public LzmaStream(
-        byte[] properties,
-        Stream inputStream,
-        long inputSize,
-        long outputSize,
-        Stream presetDictionary,
         bool isLzma2,
         bool leaveOpen = false
     )
@@ -95,21 +70,10 @@ public partial class LzmaStream : Stream, IStreamStack
         _outputSize = outputSize;
         _isLzma2 = isLzma2;
         _leaveOpen = leaveOpen;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(LzmaStream));
-#endif
-
         if (!isLzma2)
         {
             _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
             _outWindow.Create(_dictionarySize);
-            if (presetDictionary != null)
-            {
-                _outWindow.Train(presetDictionary);
-            }
-
-            _rangeDecoder.Init(inputStream);
 
             _decoder = new Decoder();
             _decoder.SetDecoderProperties(properties);
@@ -124,25 +88,72 @@ public partial class LzmaStream : Stream, IStreamStack
             _dictionarySize <<= (properties[0] >> 1) + 11;
 
             _outWindow.Create(_dictionarySize);
-            if (presetDictionary != null)
-            {
-                _outWindow.Train(presetDictionary);
-                _needDictReset = false;
-            }
 
             Properties = new byte[1];
             _availableBytes = 0;
         }
     }
 
-    public LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream outputStream)
-        : this(properties, isLzma2, null, outputStream) { }
 
-    public LzmaStream(
+
+    public static LzmaStream Create(byte[] properties, Stream inputStream, bool leaveOpen = false)
+        => Create(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen);
+
+
+    public static LzmaStream Create(byte[] properties, Stream inputStream, long inputSize, bool leaveOpen = false)
+        => Create(properties, inputStream, inputSize, -1, null, properties.Length < 5, leaveOpen);
+
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        bool leaveOpen = false
+    )
+        => Create(
+            properties,
+            inputStream,
+            inputSize,
+            outputSize,
+            null,
+            properties.Length < 5,
+            leaveOpen
+        );
+
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        Stream? presetDictionary,
+        bool isLzma2,
+        bool leaveOpen = false
+    )
+    {
+        var lzma = new LzmaStream(properties, inputStream, inputSize, outputSize, isLzma2, leaveOpen);
+        if (!isLzma2)
+        {
+            if (presetDictionary != null)
+            {
+                lzma._outWindow.Train(presetDictionary);
+            }
+
+            lzma._rangeDecoder.Init(inputStream);
+        }
+        else
+        {
+            if (presetDictionary != null)
+            {
+                lzma. _outWindow.Train(presetDictionary);
+                lzma. _needDictReset = false;
+            }
+        }
+        return lzma;
+    }
+    private LzmaStream(
         LzmaEncoderProperties properties,
         bool isLzma2,
-        Stream presetDictionary,
-        Stream outputStream
+        Stream? presetDictionary
     )
     {
         _isLzma2 = isLzma2;
@@ -160,16 +171,31 @@ public partial class LzmaStream : Stream, IStreamStack
         _encoder.WriteCoderProperties(prop);
         Properties = prop;
 
-        _encoder.SetStreams(null, outputStream, -1, -1);
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(LzmaStream));
-#endif
-
         if (presetDictionary != null)
         {
             _encoder.Train(presetDictionary);
         }
+    }
+    public static LzmaStream Create(LzmaEncoderProperties properties, bool isLzma2, Stream outputStream)
+        => Create(properties, isLzma2, null, outputStream);
+
+    public static LzmaStream Create(
+        LzmaEncoderProperties properties,
+        bool isLzma2,
+        Stream? presetDictionary,
+        Stream outputStream
+    )
+    {
+
+        var lzma = new LzmaStream(properties, isLzma2, presetDictionary);
+
+        lzma._encoder!.SetStreams(null, outputStream, -1, -1);
+
+        if (presetDictionary != null)
+        {
+            lzma._encoder.Train(presetDictionary);
+        }
+        return lzma;
     }
 
     public override bool CanRead => _encoder == null;
@@ -250,7 +276,7 @@ public partial class LzmaStream : Stream, IStreamStack
             {
                 _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
             }
-            else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
+            else if (_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
             {
                 _availableBytes = _outWindow.AvailableBytes;
             }
@@ -271,7 +297,7 @@ public partial class LzmaStream : Stream, IStreamStack
                 {
                     // Stream might have End Of Stream marker
                     _outWindow.SetLimit(toProcess + 1);
-                    if (!_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder))
+                    if (!_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder))
                     {
                         _rangeDecoder.ReleaseStream();
                         throw new DataErrorException();
@@ -341,7 +367,7 @@ public partial class LzmaStream : Stream, IStreamStack
         {
             _inputPosition += _outWindow.CopyStream(_inputStream, 1);
         }
-        else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
+        else if (_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
         {
             _availableBytes = _outWindow.AvailableBytes;
         }
@@ -360,7 +386,7 @@ public partial class LzmaStream : Stream, IStreamStack
             {
                 // Stream might have End Of Stream marker
                 _outWindow.SetLimit(2);
-                if (!_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder))
+                if (!_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder))
                 {
                     _rangeDecoder.ReleaseStream();
                     throw new DataErrorException();
@@ -381,7 +407,7 @@ public partial class LzmaStream : Stream, IStreamStack
 
     private void DecodeChunkHeader()
     {
-        var control = _inputStream.ReadByte();
+        var control = _inputStream!.ReadByte();
         _inputPosition++;
 
         if (control == 0x00)

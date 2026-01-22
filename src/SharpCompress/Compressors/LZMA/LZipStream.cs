@@ -62,7 +62,7 @@ public sealed partial class LZipStream : Stream, IStreamStack
                 throw new InvalidFormatException("Not an LZip stream");
             }
             var properties = GetProperties(dSize);
-            _stream = new LzmaStream(properties, stream, leaveOpen: leaveOpen);
+            _stream = LzmaStream.Create(properties, stream, leaveOpen: leaveOpen);
         }
         else
         {
@@ -72,9 +72,10 @@ public sealed partial class LZipStream : Stream, IStreamStack
 
             _countingWritableSubStream = new SharpCompressStream(stream, leaveOpen: true);
             _stream = new Crc32Stream(
-                new LzmaStream(
+                LzmaStream.Create(
                     new LzmaEncoderProperties(true, dSize),
                     false,
+                    null,
                     _countingWritableSubStream
                 )
             );
