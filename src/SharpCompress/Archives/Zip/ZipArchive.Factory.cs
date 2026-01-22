@@ -21,7 +21,7 @@ public partial class ZipArchive
     public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        return OpenArchive(new FileInfo(filePath), readerOptions);
     }
 
     public static IWritableArchive OpenArchive(
@@ -35,6 +35,9 @@ public partial class ZipArchive
                 fileInfo,
                 i => ZipArchiveVolumeFactory.GetFilePart(i, fileInfo),
                 readerOptions ?? new ReaderOptions()
+                {
+                    LeaveStreamOpen = false
+                }
             )
         );
     }
@@ -51,6 +54,9 @@ public partial class ZipArchive
                 files[0],
                 i => i < files.Length ? files[i] : null,
                 readerOptions ?? new ReaderOptions()
+                {
+                    LeaveStreamOpen = false
+                }
             )
         );
     }
@@ -81,7 +87,7 @@ public partial class ZipArchive
         }
 
         return new ZipArchive(
-            new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, i => null,  readerOptions ?? new ReaderOptions())
         );
     }
 

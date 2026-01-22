@@ -52,7 +52,7 @@ public partial class ZipWriter : AbstractWriter
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing && OutputStream is not null)
+        if (isDisposing)
         {
             ulong size = 0;
             foreach (var entry in entries)

@@ -429,6 +429,7 @@ public class ArchiveTests : ReaderTests
         if (compressionLevel.HasValue)
         {
             writerOptions.CompressionLevel = compressionLevel.Value;
+            writerOptions.LeaveStreamOpen = true;
         }
         return WriterFactory.OpenAsyncWriter(
             new AsyncOnlyStream(stream),

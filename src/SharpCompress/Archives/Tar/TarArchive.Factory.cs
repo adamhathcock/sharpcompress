@@ -34,7 +34,7 @@ public partial class TarArchive
             new SourceStream(
                 fileInfo,
                 i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false}
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
             )
         );
     }
@@ -50,7 +50,7 @@ public partial class TarArchive
             new SourceStream(
                 files[0],
                 i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false}
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
             )
         );
     }

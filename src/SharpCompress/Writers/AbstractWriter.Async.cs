@@ -33,7 +33,7 @@ public abstract partial class AbstractWriter
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    public  ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         if (!_isDisposed)
         {

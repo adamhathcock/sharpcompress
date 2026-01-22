@@ -179,7 +179,7 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.BZip2:
             {
-                return BZip2Stream.Create(stream, CompressionMode.Decompress, false);
+                return await BZip2Stream.CreateAsync(stream, CompressionMode.Decompress, false, cancellationToken: cancellationToken);
             }
             case ZipCompressionMethod.LZMA:
             {
