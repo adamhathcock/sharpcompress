@@ -154,12 +154,10 @@ public partial class SharpCompressStream : Stream, IStreamStack
         }
         _isDisposed = true;
         base.Dispose(disposing);
-
         if (this.LeaveOpen)
         {
             return;
         }
-
         if (disposing)
         {
             Stream.Dispose();

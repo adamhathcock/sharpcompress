@@ -166,12 +166,10 @@ public partial class SharpCompressStream
         }
         _isDisposed = true;
         await base.DisposeAsync();
-
-        if (LeaveOpen)
+        if (this.LeaveOpen)
         {
             return;
         }
-
         await Stream.DisposeAsync();
         if (_buffer != null)
         {
