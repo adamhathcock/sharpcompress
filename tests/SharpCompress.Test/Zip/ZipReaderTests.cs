@@ -448,7 +448,7 @@ public class ZipReaderTests : ReaderTests
     [Fact]
     public void EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_Deflate()
     {
-        // Test for issue: EntryStream.Dispose() should not throw NotSupportedException
+        // Since version 0.41.0: EntryStream.Dispose() should not throw NotSupportedException
         // when Flush() fails on non-seekable streams (Deflate compression)
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
@@ -471,7 +471,7 @@ public class ZipReaderTests : ReaderTests
     [Fact]
     public void EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_LZMA()
     {
-        // Test for issue: EntryStream.Dispose() should not throw NotSupportedException
+        // Since version 0.41.0: EntryStream.Dispose() should not throw NotSupportedException
         // when Flush() fails on non-seekable streams (LZMA compression)
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
