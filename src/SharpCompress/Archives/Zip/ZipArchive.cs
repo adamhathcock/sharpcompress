@@ -108,60 +108,6 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
         }
     }
 
-    // Async iterator method - kept in original file (cannot be split with partial classes)
-    protected override async IAsyncEnumerable<ZipArchiveEntry> LoadEntriesAsync(
-        IAsyncEnumerable<ZipVolume> volumes
-    )
-    {
-        var vols = await volumes.ToListAsync();
-        var volsArray = vols.ToArray();
-
-        await foreach (
-            var h in headerFactory.NotNull().ReadSeekableHeaderAsync(volsArray.Last().Stream)
-        )
-        {
-            if (h != null)
-            {
-                switch (h.ZipHeaderType)
-                {
-                    case ZipHeaderType.DirectoryEntry:
-                        {
-                            var deh = (DirectoryEntryHeader)h;
-                            Stream s;
-                            if (
-                                deh.RelativeOffsetOfEntryHeader + deh.CompressedSize
-                                > volsArray[deh.DiskNumberStart].Stream.Length
-                            )
-                            {
-                                var v = volsArray.Skip(deh.DiskNumberStart).ToArray();
-                                s = new SourceStream(
-                                    v[0].Stream,
-                                    i => i < v.Length ? v[i].Stream : null,
-                                    new ReaderOptions() { LeaveStreamOpen = true }
-                                );
-                            }
-                            else
-                            {
-                                s = volsArray[deh.DiskNumberStart].Stream;
-                            }
-
-                            yield return new ZipArchiveEntry(
-                                this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
-                            );
-                        }
-                        break;
-                    case ZipHeaderType.DirectoryEnd:
-                    {
-                        var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
-                        volsArray.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
-                        yield break;
-                    }
-                }
-            }
-        }
-    }
-
     public void SaveTo(Stream stream) => SaveTo(stream, new WriterOptions(CompressionType.Deflate));
 
     protected override void SaveTo(

@@ -17,6 +17,17 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     public IAsyncEnumerable<TVolume> VolumesAsync => _lazyVolumesAsync;
 
+
+    protected virtual async IAsyncEnumerable<TEntry> LoadEntriesAsync(
+        IAsyncEnumerable<TVolume> volumes
+    )
+    {
+        foreach (var item in LoadEntries(await volumes.ToListAsync()))
+        {
+            yield return item;
+        }
+    }
+
     public virtual async ValueTask DisposeAsync()
     {
         if (!_disposed)

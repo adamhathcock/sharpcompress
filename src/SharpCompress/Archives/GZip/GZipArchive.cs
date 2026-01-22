@@ -88,17 +88,6 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         );
     }
 
-    // Async iterator method - kept in original file (cannot be split with partial classes)
-    protected override async IAsyncEnumerable<GZipArchiveEntry> LoadEntriesAsync(
-        IAsyncEnumerable<GZipVolume> volumes
-    )
-    {
-        var stream = (await volumes.SingleAsync()).Stream;
-        yield return new GZipArchiveEntry(
-            this,
-            await GZipFilePart.CreateAsync(stream, ReaderOptions.ArchiveEncoding)
-        );
-    }
 
     protected override IReader CreateReaderForSolidExtraction()
     {

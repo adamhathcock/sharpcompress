@@ -73,41 +73,6 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         }
     }
 
-    // Async iterator method - kept in original file (cannot be split with partial classes)
-    protected override async IAsyncEnumerable<SevenZipArchiveEntry> LoadEntriesAsync(
-        IAsyncEnumerable<SevenZipVolume> volumes
-    )
-    {
-        var stream = (await volumes.SingleAsync()).Stream;
-        await LoadFactoryAsync(stream);
-        if (_database is null)
-        {
-            yield break;
-        }
-        var entries = new SevenZipArchiveEntry[_database._files.Count];
-        for (var i = 0; i < _database._files.Count; i++)
-        {
-            var file = _database._files[i];
-            entries[i] = new SevenZipArchiveEntry(
-                this,
-                new SevenZipFilePart(stream, _database, i, file, ReaderOptions.ArchiveEncoding)
-            );
-        }
-        foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
-        {
-            var isSolid = false;
-            foreach (var entry in group)
-            {
-                entry.IsSolid = isSolid;
-                isSolid = true;
-            }
-        }
-
-        foreach (var entry in entries)
-        {
-            yield return entry;
-        }
-    }
 
     private void LoadFactory(Stream stream)
     {

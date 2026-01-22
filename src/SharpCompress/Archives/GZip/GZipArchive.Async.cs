@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.GZip;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
@@ -70,5 +71,16 @@ public partial class GZipArchive
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
         return new((IAsyncReader)GZipReader.OpenReader(stream));
+    }
+
+    protected override async IAsyncEnumerable<GZipArchiveEntry> LoadEntriesAsync(
+        IAsyncEnumerable<GZipVolume> volumes
+    )
+    {
+        var stream = (await volumes.SingleAsync()).Stream;
+        yield return new GZipArchiveEntry(
+            this,
+            await GZipFilePart.CreateAsync(stream, ReaderOptions.ArchiveEncoding)
+        );
     }
 }
