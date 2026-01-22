@@ -653,7 +653,7 @@ internal sealed class TarHeader
         var nameBytes = ArrayPool<byte>.Shared.Rent(nameLength);
         try
         {
-            await reader.ReadBytesAsync(buffer, 0, nameLength);
+            await reader.ReadBytesAsync(nameBytes, 0, nameLength);
             var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
 
             // Read the rest of the block and discard the data
@@ -666,7 +666,7 @@ internal sealed class TarHeader
                 }
                 finally
                 {
-                    ArrayPool<byte>.Shared.Return(nameBytes);
+                    ArrayPool<byte>.Shared.Return(remainingBytes);
                 }
             }
 
