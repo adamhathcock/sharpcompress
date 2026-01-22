@@ -116,13 +116,16 @@ public class ArchiveTests : ReaderTests
         string extension,
         ReaderOptions? readerOptions = null,
         params string[] testArchives
-    ) =>
+    )
+    {
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchives[0]);
         ArchiveStreamRead(
-            ArchiveFactory.FindFactory<IArchiveFactory>(testArchives[0]),
+            ArchiveFactory.FindFactory<IArchiveFactory>(testArchive),
             extension,
             readerOptions,
             testArchives
         );
+    }
 
     protected void ArchiveStreamRead(
         IArchiveFactory archiveFactory,

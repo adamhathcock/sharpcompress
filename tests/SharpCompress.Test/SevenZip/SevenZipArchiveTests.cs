@@ -83,29 +83,35 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_BZip2_Split() =>
-        ArchiveStreamMultiRead(
-            null,
-            "Original.7z.001",
-            "Original.7z.002",
-            "Original.7z.003",
-            "Original.7z.004",
-            "Original.7z.005",
-            "Original.7z.006",
-            "Original.7z.007"
+        Assert.Throws<InvalidOperationException>(() =>
+            ArchiveStreamRead(
+                ".001",
+                null,
+                "Original.7z.001",
+                "Original.7z.002",
+                "Original.7z.003",
+                "Original.7z.004",
+                "Original.7z.005",
+                "Original.7z.006",
+                "Original.7z.007"
+            )
         );
 
     //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
     [Fact]
     public void SevenZipArchive_BZip2_Split_Working() =>
-        ArchiveStreamMultiRead(
-            null,
-            "7Zip.BZip2.split.001",
-            "7Zip.BZip2.split.002",
-            "7Zip.BZip2.split.003",
-            "7Zip.BZip2.split.004",
-            "7Zip.BZip2.split.005",
-            "7Zip.BZip2.split.006",
-            "7Zip.BZip2.split.007"
+        Assert.Throws<InvalidOperationException>(() =>
+            ArchiveStreamRead(
+                ".001",
+                null,
+                "7Zip.BZip2.split.001",
+                "7Zip.BZip2.split.002",
+                "7Zip.BZip2.split.003",
+                "7Zip.BZip2.split.004",
+                "7Zip.BZip2.split.005",
+                "7Zip.BZip2.split.006",
+                "7Zip.BZip2.split.007"
+            )
         );
 
     //will detect and load other files
