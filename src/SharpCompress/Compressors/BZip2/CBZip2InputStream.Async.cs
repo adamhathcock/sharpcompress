@@ -865,15 +865,9 @@ internal partial class CBZip2InputStream
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         await cbZip2InputStream.BsSetStreamAsync(zStream, cancellationToken);
-
-        if (zStream.CanSeek)
-        {
-            zStream.Seek(0, SeekOrigin.Begin);
-        }
-
         await cbZip2InputStream.InitializeAsync(true, cancellationToken);
         await cbZip2InputStream.InitBlockAsync(cancellationToken);
-        cbZip2InputStream.SetupBlock();
+        await cbZip2InputStream.SetupBlockAsync(cancellationToken);
         return cbZip2InputStream;
     }
 }

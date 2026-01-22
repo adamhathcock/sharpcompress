@@ -32,4 +32,16 @@ public abstract partial class AbstractWriter
         WriteDirectory(directoryName, modificationTime);
         await Task.CompletedTask.ConfigureAwait(false);
     }
+
+    public  ValueTask DisposeAsync()
+    {
+        if (!_isDisposed)
+        {
+            GC.SuppressFinalize(this);
+            Dispose(true);
+            _isDisposed = true;
+        }
+
+        return new();
+    }
 }

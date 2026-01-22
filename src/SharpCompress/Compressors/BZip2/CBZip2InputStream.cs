@@ -197,23 +197,7 @@ internal partial class CBZip2InputStream : Stream, IStreamStack
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         cbZip2InputStream.BsSetStream(zStream);
-#if DEBUG_STREAMS
-        cbZip2InputStream.DebugConstruct(typeof(CBZip2InputStream));
-#endif
-
-        try
-        {
-            cbZip2InputStream.Initialize(true);
-        }
-        catch (Exception ex)
-            when (ex is NotSupportedException || ex.InnerException is NotSupportedException)
-        {
-            if (zStream.CanSeek)
-            {
-                zStream.Seek(0, SeekOrigin.Begin);
-            }
-            return CreateAsync(zStream, decompressConcatenated).GetAwaiter().GetResult();
-        }
+        cbZip2InputStream.Initialize(true);
         cbZip2InputStream.InitBlock();
         cbZip2InputStream.SetupBlock();
         return cbZip2InputStream;

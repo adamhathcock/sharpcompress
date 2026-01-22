@@ -33,28 +33,31 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (
-            var writer = WriterFactory.OpenAsyncWriter(
-                new AsyncOnlyStream(stream),
-                ArchiveType.Tar,
-                CompressionType.None
-            )
-        )
-        using (Stream inputStream = new MemoryStream())
         {
-            var sw = new StreamWriter(inputStream);
-            await sw.WriteAsync("dummy filecontent");
-            await sw.FlushAsync();
+            using (
+                var writer = WriterFactory.OpenAsyncWriter(
+                    new AsyncOnlyStream(stream),
+                    ArchiveType.Tar,
+                    new WriterOptions(CompressionType.None) { LeaveStreamOpen = false }
+                )
+            )
+            using (Stream inputStream = new MemoryStream())
+            {
+                var sw = new StreamWriter(inputStream);
+                await sw.WriteAsync("dummy filecontent");
+                await sw.FlushAsync();
 
-            inputStream.Position = 0;
-            await writer.WriteAsync(filename, inputStream, null);
+                inputStream.Position = 0;
+                await writer.WriteAsync(filename, inputStream, null);
+            }
         }
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
             var archive2 = TarArchive.OpenAsyncArchive(
-                new AsyncOnlyStream(File.OpenRead(unmodified))
+                new AsyncOnlyStream(File.OpenRead(unmodified)),
+                new ReaderOptions() { LeaveStreamOpen = false }
             )
         )
         {
@@ -94,7 +97,7 @@ public class TarArchiveAsyncTests : ArchiveTests
             var writer = WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.Tar,
-                CompressionType.None
+                new WriterOptions(CompressionType.None) { LeaveStreamOpen = false }
             )
         )
         using (Stream inputStream = new MemoryStream())
@@ -111,7 +114,8 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
             var archive2 = TarArchive.OpenAsyncArchive(
-                new AsyncOnlyStream(File.OpenRead(unmodified))
+                new AsyncOnlyStream(File.OpenRead(unmodified)),
+                new ReaderOptions() { LeaveStreamOpen = false }
             )
         )
         {
@@ -129,6 +133,10 @@ public class TarArchiveAsyncTests : ArchiveTests
                 );
             }
         }
+#if LEGACY_DOTNET
+        //add a delay because old .net sucks on DisposeAsync
+        await Task.Delay(TimeSpan.FromSeconds(1));
+#endif
     }
 
     [Fact]

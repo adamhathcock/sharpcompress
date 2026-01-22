@@ -13,7 +13,7 @@ public interface IWriter : IDisposable
     void WriteDirectory(string directoryName, DateTime? modificationTime);
 }
 
-public interface IAsyncWriter : IDisposable
+public interface IAsyncWriter : IDisposable, IAsyncDisposable
 {
     ArchiveType WriterType { get; }
     ValueTask WriteAsync(

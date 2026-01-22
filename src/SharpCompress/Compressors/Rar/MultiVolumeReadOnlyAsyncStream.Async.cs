@@ -37,6 +37,7 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
+        //acceptable for now?
         filePartEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
         currentStream = null;

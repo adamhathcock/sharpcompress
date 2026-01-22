@@ -24,5 +24,10 @@ public class TarWriterOptions : WriterOptions
     }
 
     internal TarWriterOptions(WriterOptions options)
-        : this(options.CompressionType, true) => ArchiveEncoding = options.ArchiveEncoding;
+        : this(options.CompressionType, true)
+    {
+        LeaveStreamOpen = options.LeaveStreamOpen;
+        CompressionLevel = options.CompressionLevel;
+        ArchiveEncoding = options.ArchiveEncoding;
+    }
 }

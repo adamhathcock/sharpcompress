@@ -21,7 +21,7 @@ public partial class TarArchive
     public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        return OpenArchive(new FileInfo(filePath), readerOptions);
     }
 
     public static IWritableArchive OpenArchive(
@@ -34,7 +34,7 @@ public partial class TarArchive
             new SourceStream(
                 fileInfo,
                 i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false}
             )
         );
     }
@@ -50,7 +50,7 @@ public partial class TarArchive
             new SourceStream(
                 files[0],
                 i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false}
             )
         );
     }

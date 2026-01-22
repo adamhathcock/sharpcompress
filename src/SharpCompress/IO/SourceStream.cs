@@ -240,12 +240,9 @@ public partial class SourceStream : Stream, IStreamStack
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotImplementedException();
 
-#if !LEGACY_DOTNET
-#endif
-
     public override void Close()
     {
-        if (IsFileMode || !ReaderOptions.LeaveStreamOpen) //close if file mode or options specify it
+        if (!ReaderOptions.LeaveStreamOpen) //close if file mode or options specify it
         {
             foreach (var stream in _streams)
             {

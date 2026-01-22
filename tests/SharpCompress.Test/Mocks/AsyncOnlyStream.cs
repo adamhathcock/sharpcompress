@@ -52,7 +52,7 @@ public class AsyncOnlyStream : SharpCompressStream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => throw new NotSupportedException("Synchronous Read is not supported");
+    ) => Stream.WriteAsync(buffer, offset, count, cancellationToken);
 
 #if NET8_0_OR_GREATER
     public override ValueTask WriteAsync(
