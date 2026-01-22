@@ -6,7 +6,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
-public class TarEntry : Entry
+public partial class TarEntry : Entry
 {
     private readonly TarFilePart? _filePart;
 
@@ -77,32 +77,5 @@ public class TarEntry : Entry
         }
     }
 
-    internal static async IAsyncEnumerable<TarEntry> GetEntriesAsync(
-        StreamingMode mode,
-        Stream stream,
-        CompressionType compressionType,
-        IArchiveEncoding archiveEncoding
-    )
-    {
-        await foreach (
-            var header in TarHeaderFactory.ReadHeaderAsync(mode, stream, archiveEncoding)
-        )
-        {
-            if (header != null)
-            {
-                if (mode == StreamingMode.Seekable)
-                {
-                    yield return new TarEntry(new TarFilePart(header, stream), compressionType);
-                }
-                else
-                {
-                    yield return new TarEntry(new TarFilePart(header, null), compressionType);
-                }
-            }
-            else
-            {
-                throw new IncompleteArchiveException("Unexpected EOF reading tar file");
-            }
-        }
-    }
+    // Async methods moved to TarEntry.Async.cs
 }

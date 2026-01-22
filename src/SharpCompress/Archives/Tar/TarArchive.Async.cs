@@ -88,7 +88,6 @@ public partial class TarArchive
         return new((IAsyncReader)TarReader.OpenReader(stream));
     }
 
-
     protected override async IAsyncEnumerable<TarArchiveEntry> LoadEntriesAsync(
         IAsyncEnumerable<TarVolume> volumes
     )

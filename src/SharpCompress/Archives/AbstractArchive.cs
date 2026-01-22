@@ -81,7 +81,6 @@ public abstract partial class AbstractArchive<TEntry, TVolume> : IArchive, IAsyn
     protected virtual IAsyncEnumerable<TVolume> LoadVolumesAsync(SourceStream sourceStream) =>
         LoadVolumes(sourceStream).ToAsyncEnumerable();
 
-
     IEnumerable<IArchiveEntry> IArchive.Entries => Entries.Cast<IArchiveEntry>();
 
     IEnumerable<IVolume> IArchive.Volumes => _lazyVolumes.Cast<IVolume>();

@@ -22,7 +22,6 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
     internal SeekableZipHeaderFactory(string? password, IArchiveEncoding archiveEncoding)
         : base(StreamingMode.Seekable, password, archiveEncoding) { }
 
-
     internal IEnumerable<ZipHeader> ReadSeekableHeader(Stream stream)
     {
         var reader = new BinaryReader(stream);

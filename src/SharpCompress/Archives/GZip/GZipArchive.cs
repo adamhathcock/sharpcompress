@@ -88,7 +88,6 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         );
     }
 
-
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;

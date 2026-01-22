@@ -91,7 +91,6 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
         }
     }
 
-
     protected override TarArchiveEntry CreateEntryInternal(
         string filePath,
         Stream source,

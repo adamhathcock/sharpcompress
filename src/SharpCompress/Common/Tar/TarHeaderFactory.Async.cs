@@ -1,13 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Common.Tar.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
 internal static partial class TarHeaderFactory
 {
-    internal static IEnumerable<TarHeader?> ReadHeader(
+    internal static async IAsyncEnumerable<TarHeader?> ReadHeaderAsync(
         StreamingMode mode,
         Stream stream,
         IArchiveEncoding archiveEncoding
@@ -18,10 +16,9 @@ internal static partial class TarHeaderFactory
             TarHeader? header = null;
             try
             {
-                var reader = new BinaryReader(stream, archiveEncoding.Default, leaveOpen: false);
+                var reader = new AsyncBinaryReader(stream, false);
                 header = new TarHeader(archiveEncoding);
-
-                if (!header.Read(reader))
+                if (!await header.ReadAsync(reader))
                 {
                     yield break;
                 }
@@ -52,17 +49,5 @@ internal static partial class TarHeaderFactory
             }
             yield return header;
         }
-    }
-
-    // Async methods moved to TarHeaderFactory.Async.cs
-
-    private static long PadTo512(long size)
-    {
-        var zeros = (int)(size % 512);
-        if (zeros == 0)
-        {
-            return size;
-        }
-        return 512 - zeros + size;
     }
 }

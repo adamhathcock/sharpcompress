@@ -9,7 +9,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
 
-public static class ReaderFactory
+public static partial class ReaderFactory
 {
     public static IReader OpenReader(string filePath, ReaderOptions? options = null)
     {
@@ -17,44 +17,10 @@ public static class ReaderFactory
         return OpenReader(new FileInfo(filePath), options);
     }
 
-    /// <summary>
-    /// Opens a Reader from a filepath asynchronously
-    /// </summary>
-    /// <param name="filePath"></param>
-    /// <param name="options"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
-        string filePath,
-        ReaderOptions? options = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsyncReader(new FileInfo(filePath), options, cancellationToken);
-    }
-
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
     {
         options ??= new ReaderOptions { LeaveStreamOpen = false };
         return OpenReader(fileInfo.OpenRead(), options);
-    }
-
-    /// <summary>
-    /// Opens a Reader from a FileInfo asynchronously
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <param name="options"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
-        FileInfo fileInfo,
-        ReaderOptions? options = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
-        return OpenAsyncReader(fileInfo.OpenRead(), options, cancellationToken);
     }
 
     /// <summary>
@@ -110,63 +76,5 @@ public static class ReaderFactory
         );
     }
 
-    public static async ValueTask<IAsyncReader> OpenAsyncReader(
-        Stream stream,
-        ReaderOptions? options = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        stream.NotNull(nameof(stream));
-        options ??= new ReaderOptions() { LeaveStreamOpen = false };
-
-        var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
-        long pos = bStream.GetPosition();
-
-        var factories = Factory.Factories.OfType<Factory>();
-
-        Factory? testedFactory = null;
-        if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
-        {
-            testedFactory = factories.FirstOrDefault(a =>
-                a.GetSupportedExtensions()
-                    .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
-            );
-            if (testedFactory is IReaderFactory readerFactory)
-            {
-                bStream.StackSeek(pos);
-                if (
-                    await testedFactory.IsArchiveAsync(
-                        bStream,
-                        cancellationToken: cancellationToken
-                    )
-                )
-                {
-                    bStream.StackSeek(pos);
-                    return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
-                }
-            }
-            bStream.StackSeek(pos);
-        }
-
-        foreach (var factory in factories)
-        {
-            if (testedFactory == factory)
-            {
-                continue; // Already tested above
-            }
-            bStream.StackSeek(pos);
-            if (
-                factory is IReaderFactory readerFactory
-                && await factory.IsArchiveAsync(bStream, cancellationToken: cancellationToken)
-            )
-            {
-                bStream.StackSeek(pos);
-                return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
-            }
-        }
-
-        throw new InvalidFormatException(
-            "Cannot determine compressed stream type.  Supported Reader Formats: Arc, Arj, Zip, GZip, BZip2, Tar, Rar, LZip, XZ, ZStandard"
-        );
-    }
+    // Async methods moved to ReaderFactory.Async.cs
 }

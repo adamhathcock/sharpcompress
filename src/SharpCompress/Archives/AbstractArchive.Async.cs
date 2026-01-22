@@ -17,7 +17,6 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     public IAsyncEnumerable<TVolume> VolumesAsync => _lazyVolumesAsync;
 
-
     protected virtual async IAsyncEnumerable<TEntry> LoadEntriesAsync(
         IAsyncEnumerable<TVolume> volumes
     )

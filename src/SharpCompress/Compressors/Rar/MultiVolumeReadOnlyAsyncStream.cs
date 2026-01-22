@@ -44,15 +44,7 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream
         filePartEnumerator = parts.GetAsyncEnumerator();
     }
 
-    internal static async ValueTask<MultiVolumeReadOnlyAsyncStream> Create(
-        IAsyncEnumerable<RarFilePart> parts
-    )
-    {
-        var stream = new MultiVolumeReadOnlyAsyncStream(parts);
-        await stream.filePartEnumerator.MoveNextAsync();
-        stream.InitializeNextFilePart();
-        return stream;
-    }
+    // Async methods moved to MultiVolumeReadOnlyAsyncStream.Async.cs
 
     private void InitializeNextFilePart()
     {

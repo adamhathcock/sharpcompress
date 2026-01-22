@@ -73,7 +73,6 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         }
     }
 
-
     private void LoadFactory(Stream stream)
     {
         if (_database is null)

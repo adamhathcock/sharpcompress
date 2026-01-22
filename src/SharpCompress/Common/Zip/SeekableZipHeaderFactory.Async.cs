@@ -75,6 +75,7 @@ internal sealed partial class SeekableZipHeaderFactory
             }
         }
     }
+
     private static async ValueTask SeekBackToHeaderAsync(Stream stream, AsyncBinaryReader reader)
     {
         // Minimum EOCD length

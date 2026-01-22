@@ -59,17 +59,7 @@ internal partial class RarCrcStream : RarStream, IStreamStack
         return stream;
     }
 
-    public static async ValueTask<RarCrcStream> CreateAsync(
-        IRarUnpack unpack,
-        FileHeader fileHeader,
-        MultiVolumeReadOnlyStreamBase readStream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var stream = new RarCrcStream(unpack, fileHeader, readStream);
-        await stream.InitializeAsync(cancellationToken);
-        return stream;
-    }
+    // Async methods moved to RarCrcStream.Async.cs
 
     protected override void Dispose(bool disposing)
     {

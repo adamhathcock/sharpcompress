@@ -16,7 +16,6 @@ namespace SharpCompress.Archives.Zip;
 
 public partial class ZipArchive
 {
-
     protected override async IAsyncEnumerable<ZipArchiveEntry> LoadEntriesAsync(
         IAsyncEnumerable<ZipVolume> volumes
     )
@@ -69,7 +68,6 @@ public partial class ZipArchive
             }
         }
     }
-
 
     protected override async ValueTask SaveToAsync(
         Stream stream,

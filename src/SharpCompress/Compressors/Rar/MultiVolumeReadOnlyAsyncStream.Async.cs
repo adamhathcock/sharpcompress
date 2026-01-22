@@ -13,6 +13,16 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream
     : MultiVolumeReadOnlyStreamBase,
         IStreamStack
 {
+    internal static async ValueTask<MultiVolumeReadOnlyAsyncStream> Create(
+        IAsyncEnumerable<RarFilePart> parts
+    )
+    {
+        var stream = new MultiVolumeReadOnlyAsyncStream(parts);
+        await stream.filePartEnumerator.MoveNextAsync();
+        stream.InitializeNextFilePart();
+        return stream;
+    }
+
 #if NET8_0_OR_GREATER
     public override async ValueTask DisposeAsync()
     {
