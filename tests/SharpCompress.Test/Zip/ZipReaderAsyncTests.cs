@@ -259,7 +259,7 @@ public class ZipReaderAsyncTests : ReaderTests
         // when FlushAsync() fails on non-seekable streams (Deflate compression)
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        using var reader = ReaderFactory.Open(stream);
 
         // This should not throw, even if internal FlushAsync() fails
         while (await reader.MoveToNextEntryAsync())
@@ -286,7 +286,7 @@ public class ZipReaderAsyncTests : ReaderTests
         // when FlushAsync() fails on non-seekable streams (LZMA compression)
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        using var reader = ReaderFactory.Open(stream);
 
         // This should not throw, even if internal FlushAsync() fails
         while (await reader.MoveToNextEntryAsync())

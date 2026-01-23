@@ -444,7 +444,7 @@ public class ZipReaderTests : ReaderTests
         // when Flush() fails on non-seekable streams (Deflate compression)
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
-        using var reader = ReaderFactory.OpenReader(stream);
+        using var reader = ReaderFactory.Open(stream);
 
         // This should not throw, even if internal Flush() fails
         while (reader.MoveToNextEntry())
@@ -467,7 +467,7 @@ public class ZipReaderTests : ReaderTests
         // when Flush() fails on non-seekable streams (LZMA compression)
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
-        using var reader = ReaderFactory.OpenReader(stream);
+        using var reader = ReaderFactory.Open(stream);
 
         // This should not throw, even if internal Flush() fails
         while (reader.MoveToNextEntry())
