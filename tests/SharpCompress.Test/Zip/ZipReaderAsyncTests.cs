@@ -251,4 +251,58 @@ public class ZipReaderAsyncTests : ReaderTests
         }
         Assert.Equal(8, count);
     }
+
+    [Fact]
+    public async ValueTask EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_Deflate_Async()
+    {
+        // Since version 0.41.0: EntryStream.DisposeAsync() should not throw NotSupportedException
+        // when FlushAsync() fails on non-seekable streams (Deflate compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var reader = ReaderFactory.Open(stream);
+
+        // This should not throw, even if internal FlushAsync() fails
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+#if LEGACY_DOTNET
+                using var entryStream = await reader.OpenEntryStreamAsync();
+#else
+                await using var entryStream = await reader.OpenEntryStreamAsync();
+#endif
+                // Read some data
+                var buffer = new byte[1024];
+                await entryStream.ReadAsync(buffer, 0, buffer.Length);
+                // DisposeAsync should not throw NotSupportedException
+            }
+        }
+    }
+
+    [Fact]
+    public async ValueTask EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_LZMA_Async()
+    {
+        // Since version 0.41.0: EntryStream.DisposeAsync() should not throw NotSupportedException
+        // when FlushAsync() fails on non-seekable streams (LZMA compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var reader = ReaderFactory.Open(stream);
+
+        // This should not throw, even if internal FlushAsync() fails
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+#if LEGACY_DOTNET
+                using var entryStream = await reader.OpenEntryStreamAsync();
+#else
+                await using var entryStream = await reader.OpenEntryStreamAsync();
+#endif
+                // Read some data
+                var buffer = new byte[1024];
+                await entryStream.ReadAsync(buffer, 0, buffer.Length);
+                // DisposeAsync should not throw NotSupportedException
+            }
+        }
+    }
 }
