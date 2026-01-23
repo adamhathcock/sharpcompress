@@ -58,10 +58,11 @@ public class ExplodeStream : Stream, IStreamStack
     private int distance;
     private int length;
 
-    private ExplodeStream(Stream inStr,
-                          long compressedSize,
-                          long uncompressedSize,
-                          HeaderFlags generalPurposeBitFlag
+    private ExplodeStream(
+        Stream inStr,
+        long compressedSize,
+        long uncompressedSize,
+        HeaderFlags generalPurposeBitFlag
     )
     {
         inStream = inStr;
@@ -74,13 +75,17 @@ public class ExplodeStream : Stream, IStreamStack
         windowsBuffer = new byte[WSIZE];
     }
 
-    internal static ExplodeStream Create(Stream inStr, long compressedSize, long uncompressedSize, HeaderFlags generalPurposeBitFlag)
+    internal static ExplodeStream Create(
+        Stream inStr,
+        long compressedSize,
+        long uncompressedSize,
+        HeaderFlags generalPurposeBitFlag
+    )
     {
         var ex = new ExplodeStream(inStr, compressedSize, uncompressedSize, generalPurposeBitFlag);
         ex.explode_SetTables();
-ex.
-        explode_var_init();
-return ex;
+        ex.explode_var_init();
+        return ex;
     }
 
     protected override void Dispose(bool disposing)

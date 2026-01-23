@@ -99,11 +99,7 @@ public class SharpCompressStreamDisposalTests
         // Arrange
         var data = new byte[0x10000];
         var innerStream = new MemoryStream(data);
-        var sharpStream = new SharpCompressStream(
-            innerStream,
-            leaveOpen: true,
-            bufferSize: 0x1000
-        );
+        var sharpStream = new SharpCompressStream(innerStream, leaveOpen: true, bufferSize: 0x1000);
 
         // Get initial pool stats
         var initialRented = ArrayPool<byte>.Shared.ToString();
@@ -177,11 +173,7 @@ public class SharpCompressStreamDisposalTests
         // Arrange
         var data = new byte[0x10000];
         var innerStream = new TestStream(new MemoryStream(data));
-        var sharpStream = new SharpCompressStream(
-            innerStream,
-            leaveOpen: true,
-            bufferSize: 0x2000
-        );
+        var sharpStream = new SharpCompressStream(innerStream, leaveOpen: true, bufferSize: 0x2000);
 
         // Act - read some data to fill buffer
         var buffer = new byte[100];
@@ -261,8 +253,8 @@ public class SharpCompressStreamDisposalTests
         );
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sharpStream.DisposeAsync().AsTask()
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            sharpStream.DisposeAsync().AsTask()
         );
         Assert.Contains("ThrowOnDispose", ex.Message);
     }
@@ -289,11 +281,7 @@ public class SharpCompressStreamDisposalTests
         // Arrange
         var data = new byte[0x10000];
         var innerStream = new MemoryStream(data);
-        var sharpStream = new SharpCompressStream(
-            innerStream,
-            leaveOpen: true,
-            bufferSize: 0x1000
-        );
+        var sharpStream = new SharpCompressStream(innerStream, leaveOpen: true, bufferSize: 0x1000);
 
         // Act
         await sharpStream.DisposeAsync();
@@ -342,11 +330,7 @@ public class SharpCompressStreamDisposalTests
         // Arrange
         var data = new byte[0x10000];
         var innerStream = new TestStream(new MemoryStream(data));
-        var sharpStream = new SharpCompressStream(
-            innerStream,
-            leaveOpen: true,
-            bufferSize: 0x2000
-        );
+        var sharpStream = new SharpCompressStream(innerStream, leaveOpen: true, bufferSize: 0x2000);
 
         // Act - read some data to fill buffer
         var buffer = new byte[100];
@@ -402,10 +386,12 @@ public class SharpCompressStreamDisposalTests
     {
         // Arrange & Act
         TestStream innerStream;
-        using (var sharpStream = new SharpCompressStream(
-            innerStream = new TestStream(new MemoryStream()),
-            leaveOpen: false
-        ))
+        using (
+            var sharpStream = new SharpCompressStream(
+                innerStream = new TestStream(new MemoryStream()),
+                leaveOpen: false
+            )
+        )
         {
             // Use the stream
             var buffer = new byte[10];
@@ -423,10 +409,12 @@ public class SharpCompressStreamDisposalTests
     {
         // Arrange & Act
         TestStream innerStream;
-        await using (var sharpStream = new SharpCompressStream(
-            innerStream = new TestStream(new MemoryStream()),
-            leaveOpen: false
-        ))
+        await using (
+            var sharpStream = new SharpCompressStream(
+                innerStream = new TestStream(new MemoryStream()),
+                leaveOpen: false
+            )
+        )
         {
             // Use the stream
             var buffer = new byte[10];
@@ -436,7 +424,6 @@ public class SharpCompressStreamDisposalTests
         // Assert
         Assert.True(innerStream.IsDisposed);
     }
-
 #endif
 
     [Fact]

@@ -540,7 +540,11 @@ public class LzmaStreamAsyncTests
     {
         using var inputStream = new MemoryStream(LzmaResultData);
         using MemoryStream outputStream = new();
-        using var lzmaStream = LzmaStream.Create(LzmaEncoderProperties.Default, false, outputStream);
+        using var lzmaStream = LzmaStream.Create(
+            LzmaEncoderProperties.Default,
+            false,
+            outputStream
+        );
         await inputStream.CopyToAsync(lzmaStream).ConfigureAwait(false);
         lzmaStream.Close();
         Assert.NotEqual(0, outputStream.Length);
@@ -551,7 +555,11 @@ public class LzmaStreamAsyncTests
     {
         var input = new MemoryStream(LzmaResultData);
         var compressed = new MemoryStream();
-        var lzmaEncodingStream = LzmaStream.Create(LzmaEncoderProperties.Default, false, compressed);
+        var lzmaEncodingStream = LzmaStream.Create(
+            LzmaEncoderProperties.Default,
+            false,
+            compressed
+        );
         await input.CopyToAsync(lzmaEncodingStream).ConfigureAwait(false);
         lzmaEncodingStream.Close();
         compressed.Position = 0;

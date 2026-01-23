@@ -536,7 +536,11 @@ public class LzmaStreamTests
     {
         using var inputStream = new MemoryStream(LzmaResultData);
         using MemoryStream outputStream = new();
-        using var lzmaStream = LzmaStream.Create(LzmaEncoderProperties.Default, false, outputStream);
+        using var lzmaStream = LzmaStream.Create(
+            LzmaEncoderProperties.Default,
+            false,
+            outputStream
+        );
         inputStream.CopyTo(lzmaStream);
         lzmaStream.Close();
         Assert.NotEqual(0, outputStream.Length);
@@ -547,7 +551,11 @@ public class LzmaStreamTests
     {
         var input = new MemoryStream(LzmaResultData);
         var compressed = new MemoryStream();
-        var lzmaEncodingStream = LzmaStream.Create(LzmaEncoderProperties.Default, false, compressed);
+        var lzmaEncodingStream = LzmaStream.Create(
+            LzmaEncoderProperties.Default,
+            false,
+            compressed
+        );
         input.CopyTo(lzmaEncodingStream);
         lzmaEncodingStream.Close();
         compressed.Position = 0;

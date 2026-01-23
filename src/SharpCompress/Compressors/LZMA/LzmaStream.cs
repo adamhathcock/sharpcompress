@@ -1,4 +1,3 @@
-
 using System;
 using System.Buffers.Binary;
 using System.IO;
@@ -94,14 +93,18 @@ public partial class LzmaStream : Stream, IStreamStack
         }
     }
 
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        bool leaveOpen = false
+    ) => Create(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen);
 
-
-    public static LzmaStream Create(byte[] properties, Stream inputStream, bool leaveOpen = false)
-        => Create(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen);
-
-
-    public static LzmaStream Create(byte[] properties, Stream inputStream, long inputSize, bool leaveOpen = false)
-        => Create(properties, inputStream, inputSize, -1, null, properties.Length < 5, leaveOpen);
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        bool leaveOpen = false
+    ) => Create(properties, inputStream, inputSize, -1, null, properties.Length < 5, leaveOpen);
 
     public static LzmaStream Create(
         byte[] properties,
@@ -109,8 +112,8 @@ public partial class LzmaStream : Stream, IStreamStack
         long inputSize,
         long outputSize,
         bool leaveOpen = false
-    )
-        => Create(
+    ) =>
+        Create(
             properties,
             inputStream,
             inputSize,
@@ -130,7 +133,14 @@ public partial class LzmaStream : Stream, IStreamStack
         bool leaveOpen = false
     )
     {
-        var lzma = new LzmaStream(properties, inputStream, inputSize, outputSize, isLzma2, leaveOpen);
+        var lzma = new LzmaStream(
+            properties,
+            inputStream,
+            inputSize,
+            outputSize,
+            isLzma2,
+            leaveOpen
+        );
         if (!isLzma2)
         {
             if (presetDictionary != null)
@@ -144,17 +154,14 @@ public partial class LzmaStream : Stream, IStreamStack
         {
             if (presetDictionary != null)
             {
-                lzma. _outWindow.Train(presetDictionary);
-                lzma. _needDictReset = false;
+                lzma._outWindow.Train(presetDictionary);
+                lzma._needDictReset = false;
             }
         }
         return lzma;
     }
-    private LzmaStream(
-        LzmaEncoderProperties properties,
-        bool isLzma2,
-        Stream? presetDictionary
-    )
+
+    private LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream? presetDictionary)
     {
         _isLzma2 = isLzma2;
         _availableBytes = 0;
@@ -176,8 +183,12 @@ public partial class LzmaStream : Stream, IStreamStack
             _encoder.Train(presetDictionary);
         }
     }
-    public static LzmaStream Create(LzmaEncoderProperties properties, bool isLzma2, Stream outputStream)
-        => Create(properties, isLzma2, null, outputStream);
+
+    public static LzmaStream Create(
+        LzmaEncoderProperties properties,
+        bool isLzma2,
+        Stream outputStream
+    ) => Create(properties, isLzma2, null, outputStream);
 
     public static LzmaStream Create(
         LzmaEncoderProperties properties,
@@ -186,7 +197,6 @@ public partial class LzmaStream : Stream, IStreamStack
         Stream outputStream
     )
     {
-
         var lzma = new LzmaStream(properties, isLzma2, presetDictionary);
 
         lzma._encoder!.SetStreams(null, outputStream, -1, -1);
