@@ -14,6 +14,7 @@ internal static class ZipArchiveVolumeFactory
         //new style .zip, z01.. | .zipx, zx01 - if the numbers go beyond 99 then they use 100 ...1000 etc
         var m = Regex.Match(part1.Name, @"^(.*\.)(zipx?|zx?[0-9]+)$", RegexOptions.IgnoreCase);
         if (m.Success)
+        {
             item = new FileInfo(
                 Path.Combine(
                     part1.DirectoryName!,
@@ -24,11 +25,16 @@ internal static class ZipArchiveVolumeFactory
                     )
                 )
             );
+        }
         else //split - 001, 002 ...
+        {
             return ArchiveVolumeFactory.GetFilePart(index, part1);
+        }
 
         if (item != null && item.Exists)
+        {
             return item;
+        }
 
         return null; //no more items
     }

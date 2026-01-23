@@ -16,7 +16,9 @@ public partial class SharpCompressStream
     )
     {
         if (count == 0)
+        {
             return 0;
+        }
 
         if (_bufferingEnabled)
         {
@@ -44,7 +46,10 @@ public partial class SharpCompressStream
                 .ReadAsync(_buffer!, 0, _bufferSize, cancellationToken)
                 .ConfigureAwait(false);
             if (r == 0)
+            {
                 return 0;
+            }
+
             _bufferedLength = r;
             _bufferPosition = 0;
             if (_bufferedLength == 0)
@@ -91,7 +96,9 @@ public partial class SharpCompressStream
     )
     {
         if (buffer.Length == 0)
+        {
             return 0;
+        }
 
         if (_bufferingEnabled)
         {
@@ -119,7 +126,10 @@ public partial class SharpCompressStream
                 .ReadAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
                 .ConfigureAwait(false);
             if (r == 0)
+            {
                 return 0;
+            }
+
             _bufferedLength = r;
             _bufferPosition = 0;
             if (_bufferedLength == 0)

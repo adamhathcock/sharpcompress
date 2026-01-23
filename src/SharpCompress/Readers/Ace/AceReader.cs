@@ -72,7 +72,9 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
                 );
             }
             if (localHeader == null)
+            {
                 break;
+            }
 
             yield return new AceEntry(new AceFilePart((AceFileHeader)localHeader, stream));
         }
@@ -109,7 +111,9 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
                 );
             }
             if (localHeader == null)
+            {
                 break;
+            }
 
             yield return new AceEntry(new AceFilePart((AceFileHeader)localHeader, stream));
         }

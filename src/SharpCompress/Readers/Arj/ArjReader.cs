@@ -79,7 +79,9 @@ namespace SharpCompress.Readers.Arj
             {
                 var localHeader = localHeaderReader.Read(stream);
                 if (localHeader == null)
+                {
                     break;
+                }
 
                 yield return new ArjEntry(new ArjFilePart((ArjLocalHeader)localHeader, stream));
             }
@@ -115,7 +117,9 @@ namespace SharpCompress.Readers.Arj
             {
                 var localHeader = await localHeaderReader.ReadAsync(stream);
                 if (localHeader == null)
+                {
                     break;
+                }
 
                 yield return new ArjEntry(new ArjFilePart((ArjLocalHeader)localHeader, stream));
             }

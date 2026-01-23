@@ -38,13 +38,19 @@ public partial class DecompressionStream : Stream
     )
     {
         if (stream == null)
+        {
             throw new ArgumentNullException(nameof(stream));
+        }
 
         if (!stream.CanRead)
+        {
             throw new ArgumentException("Stream is not readable", nameof(stream));
+        }
 
         if (bufferSize < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
+        }
 
         innerStream = stream;
         this.decompressor = decompressor;
@@ -83,7 +89,9 @@ public partial class DecompressionStream : Stream
     protected override void Dispose(bool disposing)
     {
         if (decompressor == null)
+        {
             return;
+        }
 
         if (!preserveDecompressor)
         {
@@ -193,7 +201,9 @@ public partial class DecompressionStream : Stream
     private void EnsureNotDisposed()
     {
         if (decompressor == null)
+        {
             throw new ObjectDisposedException(nameof(DecompressionStream));
+        }
     }
 
 #if LEGACY_DOTNET

@@ -42,7 +42,9 @@ public static unsafe partial class Methods
                 }
 
                 if (dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast)
+                {
                     break;
+                }
             }
         }
     }
@@ -72,11 +74,19 @@ public static unsafe partial class Methods
                 nuint smHash = ZSTD_hashPtr(ip + i, hBitsS, mls);
                 nuint lgHash = ZSTD_hashPtr(ip + i, hBitsL, 8);
                 if (i == 0)
+                {
                     hashSmall[smHash] = curr + i;
+                }
+
                 if (i == 0 || hashLarge[lgHash] == 0)
+                {
                     hashLarge[lgHash] = curr + i;
+                }
+
                 if (dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast)
+                {
                     break;
+                }
             }
         }
     }
@@ -870,7 +880,10 @@ public static unsafe partial class Methods
         uint offset_1 = rep[0],
             offset_2 = rep[1];
         if (prefixStartIndex == dictStartIndex)
+        {
             return ZSTD_compressBlock_doubleFast(ms, seqStore, rep, src, srcSize);
+        }
+
         while (ip < ilimit)
         {
             nuint hSmall = ZSTD_hashPtr(ip, hBitsS, mls);

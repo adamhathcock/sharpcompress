@@ -177,7 +177,10 @@ public static unsafe partial class Methods
     private static void FASTCOVER_ctx_destroy(FASTCOVER_ctx_t* ctx)
     {
         if (ctx == null)
+        {
             return;
+        }
+
         free(ctx->freqs);
         ctx->freqs = null;
         free(ctx->offsets);

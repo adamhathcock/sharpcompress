@@ -57,7 +57,9 @@ public static unsafe partial class Methods
             for (p = 1; p < srcSize; p++)
             {
                 if (((byte*)src)[p] != b)
+                {
                     return 0;
+                }
             }
 
             return 1;
@@ -150,9 +152,15 @@ public static unsafe partial class Methods
         nuint cLitSize;
         memcpy(nextHuf, prevHuf, (uint)sizeof(ZSTD_hufCTables_t));
         if (disableLiteralCompression != 0)
+        {
             return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
+        }
+
         if (srcSize < ZSTD_minLiteralsToCompress(strategy, prevHuf->repeatMode))
+        {
             return ZSTD_noCompressLiterals(dst, dstCapacity, src, srcSize);
+        }
+
         if (dstCapacity < lhSize + 1)
         {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
@@ -180,7 +188,10 @@ public static unsafe partial class Methods
                 );
             void* huf_compress;
             if (repeat == HUF_repeat.HUF_repeat_valid && lhSize == 3)
+            {
                 singleStream = 1;
+            }
+
             huf_compress =
                 singleStream != 0
                     ? (delegate* managed<
@@ -270,7 +281,9 @@ public static unsafe partial class Methods
             case 3:
 #if DEBUG
                 if (singleStream == 0)
+                {
                     assert(srcSize >= 6);
+                }
 
 #endif
                 {

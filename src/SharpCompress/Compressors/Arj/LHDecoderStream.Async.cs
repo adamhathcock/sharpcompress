@@ -33,7 +33,9 @@ public sealed partial class LHDecoderStream
             int backPtr = await DecodeValAsync(9, 13, cancellationToken).ConfigureAwait(false);
 
             if (backPtr >= _buffer.Count)
+            {
                 throw new InvalidDataException("Invalid back_ptr in LH stream");
+            }
 
             int srcIndex = _buffer.Count - 1 - backPtr;
             for (int j = 0; j < repCount && _buffer.Count < _originalSize; j++)
@@ -86,14 +88,24 @@ public sealed partial class LHDecoderStream
     )
     {
         if (_disposed)
+        {
             throw new ObjectDisposedException(nameof(LHDecoderStream));
+        }
+
         if (buffer is null)
+        {
             throw new ArgumentNullException(nameof(buffer));
+        }
+
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
+        {
             throw new ArgumentOutOfRangeException("offset/count");
+        }
 
         if (_readPosition >= _originalSize)
+        {
             return 0; // EOF
+        }
 
         int totalRead = 0;
 
@@ -137,10 +149,14 @@ public sealed partial class LHDecoderStream
     )
     {
         if (_disposed)
+        {
             throw new ObjectDisposedException(nameof(LHDecoderStream));
+        }
 
         if (_readPosition >= _originalSize)
+        {
             return 0; // EOF
+        }
 
         int totalRead = 0;
 

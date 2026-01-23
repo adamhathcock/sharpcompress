@@ -10,7 +10,10 @@ public static unsafe partial class Methods
     private static void ZSTDMT_freeBufferPool(ZSTDMT_bufferPool_s* bufPool)
     {
         if (bufPool == null)
+        {
             return;
+        }
+
         if (bufPool->buffers != null)
         {
             uint u;
@@ -36,7 +39,10 @@ public static unsafe partial class Methods
             cMem
         );
         if (bufPool == null)
+        {
             return null;
+        }
+
         SynchronizationWrapper.Init(&bufPool->poolMutex);
         bufPool->buffers = (buffer_s*)ZSTD_customCalloc(
             maxNbBuffers * (uint)sizeof(buffer_s),
@@ -64,7 +70,10 @@ public static unsafe partial class Methods
         nuint totalBufferSize = 0;
         SynchronizationWrapper.Enter(&bufPool->poolMutex);
         for (u = 0; u < bufPool->totalBuffers; u++)
+        {
             totalBufferSize += bufPool->buffers[u].capacity;
+        }
+
         SynchronizationWrapper.Exit(&bufPool->poolMutex);
         return poolSize + arraySize + totalBufferSize;
     }
@@ -86,9 +95,15 @@ public static unsafe partial class Methods
     )
     {
         if (srcBufPool == null)
+        {
             return null;
+        }
+
         if (srcBufPool->totalBuffers >= maxNbBuffers)
+        {
             return srcBufPool;
+        }
+
         {
             ZSTD_customMem cMem = srcBufPool->cMem;
             /* forward parameters */
@@ -97,7 +112,10 @@ public static unsafe partial class Methods
             ZSTDMT_freeBufferPool(srcBufPool);
             newBufPool = ZSTDMT_createBufferPool(maxNbBuffers, cMem);
             if (newBufPool == null)
+            {
                 return newBufPool;
+            }
+
             ZSTDMT_setBufferSize(newBufPool, bSize);
             return newBufPool;
         }
@@ -139,7 +157,10 @@ public static unsafe partial class Methods
     private static void ZSTDMT_releaseBuffer(ZSTDMT_bufferPool_s* bufPool, buffer_s buf)
     {
         if (buf.start == null)
+        {
             return;
+        }
+
         SynchronizationWrapper.Enter(&bufPool->poolMutex);
         if (bufPool->nbBuffers < bufPool->totalBuffers)
         {
@@ -197,7 +218,10 @@ public static unsafe partial class Methods
     {
         ZSTDMT_bufferPool_s* seqPool = ZSTDMT_createBufferPool(nbWorkers, cMem);
         if (seqPool == null)
+        {
             return null;
+        }
+
         ZSTDMT_setNbSeq(seqPool, 0);
         return seqPool;
     }
@@ -219,13 +243,19 @@ public static unsafe partial class Methods
     private static void ZSTDMT_freeCCtxPool(ZSTDMT_CCtxPool* pool)
     {
         if (pool == null)
+        {
             return;
+        }
+
         SynchronizationWrapper.Free(&pool->poolMutex);
         if (pool->cctxs != null)
         {
             int cid;
             for (cid = 0; cid < pool->totalCCtx; cid++)
+            {
                 ZSTD_freeCCtx(pool->cctxs[cid]);
+            }
+
             ZSTD_customFree(pool->cctxs, pool->cMem);
         }
 
@@ -242,7 +272,10 @@ public static unsafe partial class Methods
         );
         assert(nbWorkers > 0);
         if (cctxPool == null)
+        {
             return null;
+        }
+
         SynchronizationWrapper.Init(&cctxPool->poolMutex);
         cctxPool->totalCCtx = nbWorkers;
         cctxPool->cctxs = (ZSTD_CCtx_s**)ZSTD_customCalloc(
@@ -270,9 +303,15 @@ public static unsafe partial class Methods
     private static ZSTDMT_CCtxPool* ZSTDMT_expandCCtxPool(ZSTDMT_CCtxPool* srcPool, int nbWorkers)
     {
         if (srcPool == null)
+        {
             return null;
+        }
+
         if (nbWorkers <= srcPool->totalCCtx)
+        {
             return srcPool;
+        }
+
         {
             ZSTD_customMem cMem = srcPool->cMem;
             ZSTDMT_freeCCtxPool(srcPool);
@@ -321,10 +360,15 @@ public static unsafe partial class Methods
     private static void ZSTDMT_releaseCCtx(ZSTDMT_CCtxPool* pool, ZSTD_CCtx_s* cctx)
     {
         if (cctx == null)
+        {
             return;
+        }
+
         SynchronizationWrapper.Enter(&pool->poolMutex);
         if (pool->availCCtx < pool->totalCCtx)
+        {
             pool->cctxs[pool->availCCtx++] = cctx;
+        }
         else
         {
             ZSTD_freeCCtx(cctx);
@@ -356,7 +400,10 @@ public static unsafe partial class Methods
 
         serialState->nextJobID = 0;
         if (@params.fParams.checksumFlag != 0)
+        {
             ZSTD_XXH64_reset(&serialState->xxhState, 0);
+        }
+
         if (@params.ldmParams.enableLdm == ZSTD_paramSwitch_e.ZSTD_ps_enable)
         {
             ZSTD_customMem cMem = @params.customMem;
@@ -388,7 +435,10 @@ public static unsafe partial class Methods
                 serialState->ldmState.hashTable == null
                 || serialState->ldmState.bucketOffsets == null
             )
+            {
                 return 1;
+            }
+
             memset(serialState->ldmState.hashTable, 0, (uint)hashSize);
             memset(serialState->ldmState.bucketOffsets, 0, (uint)numBuckets);
             serialState->ldmState.loadedDictEnd = 0;
@@ -482,7 +532,9 @@ public static unsafe partial class Methods
             }
 
             if (serialState->@params.fParams.checksumFlag != 0 && src.size > 0)
+            {
                 ZSTD_XXH64_update(&serialState->xxhState, src.start, src.size);
+            }
         }
 
         serialState->nextJobID++;
@@ -571,7 +623,10 @@ public static unsafe partial class Methods
         }
 
         if (job->jobID != 0)
+        {
             jobParams.fParams.checksumFlag = 0;
+        }
+
         jobParams.ldmParams.enableLdm = ZSTD_paramSwitch_e.ZSTD_ps_disable;
         jobParams.nbWorkers = 0;
         ZSTDMT_serialState_genSequences(job->serial, &rawSeqStore, job->src, job->jobID);
@@ -682,7 +737,9 @@ public static unsafe partial class Methods
             int chunkNb;
 #if DEBUG
             if (sizeof(nuint) > sizeof(int))
+            {
                 assert(job->src.size < unchecked(2147483647 * chunkSize));
+            }
 #endif
             assert(job->cSize == 0);
             for (chunkNb = 1; chunkNb < nbChunks; chunkNb++)
@@ -755,7 +812,10 @@ public static unsafe partial class Methods
         ZSTDMT_releaseCCtx(job->cctxPool, cctx);
         SynchronizationWrapper.Enter(&job->job_mutex);
         if (ERR_isError(job->cSize))
+        {
             assert(lastCBlockSize == 0);
+        }
+
         job->cSize += lastCBlockSize;
         job->consumed = job->src.size;
         SynchronizationWrapper.Pulse(&job->job_mutex);
@@ -776,7 +836,10 @@ public static unsafe partial class Methods
     {
         uint jobNb;
         if (jobTable == null)
+        {
             return;
+        }
+
         for (jobNb = 0; jobNb < nbJobs; jobNb++)
         {
             SynchronizationWrapper.Free(&jobTable[jobNb].job_mutex);
@@ -802,7 +865,10 @@ public static unsafe partial class Methods
         );
         int initError = 0;
         if (jobTable == null)
+        {
             return null;
+        }
+
         *nbJobsPtr = nbJobs;
         for (jobNb = 0; jobNb < nbJobs; jobNb++)
         {
@@ -829,7 +895,10 @@ public static unsafe partial class Methods
             mtctx->jobIDMask = 0;
             mtctx->jobs = ZSTDMT_createJobsTable(&nbJobs, mtctx->cMem);
             if (mtctx->jobs == null)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            }
+
             assert(nbJobs != 0 && (nbJobs & nbJobs - 1) == 0);
             mtctx->jobIDMask = nbJobs - 1;
         }
@@ -859,16 +928,25 @@ public static unsafe partial class Methods
         uint nbJobs = nbWorkers + 2;
         int initError;
         if (nbWorkers < 1)
+        {
             return null;
+        }
+
         nbWorkers =
             nbWorkers < (uint)(sizeof(void*) == 4 ? 64 : 256)
                 ? nbWorkers
                 : (uint)(sizeof(void*) == 4 ? 64 : 256);
         if (((cMem.customAlloc != null ? 1 : 0) ^ (cMem.customFree != null ? 1 : 0)) != 0)
+        {
             return null;
+        }
+
         mtctx = (ZSTDMT_CCtx_s*)ZSTD_customCalloc((nuint)sizeof(ZSTDMT_CCtx_s), cMem);
         if (mtctx == null)
+        {
             return null;
+        }
+
         ZSTDMT_CCtxParam_setNbWorkers(&mtctx->@params, nbWorkers);
         mtctx->cMem = cMem;
         mtctx->allJobsCompleted = 1;
@@ -961,9 +1039,15 @@ public static unsafe partial class Methods
     private static nuint ZSTDMT_freeCCtx(ZSTDMT_CCtx_s* mtctx)
     {
         if (mtctx == null)
+        {
             return 0;
+        }
+
         if (mtctx->providedFactory == 0)
+        {
             POOL_free(mtctx->factory);
+        }
+
         ZSTDMT_releaseAllJobResources(mtctx);
         ZSTDMT_freeJobsTable(mtctx->jobs, mtctx->jobIDMask + 1, mtctx->cMem);
         ZSTDMT_freeBufferPool(mtctx->bufPool);
@@ -972,7 +1056,10 @@ public static unsafe partial class Methods
         ZSTDMT_serialState_free(&mtctx->serial);
         ZSTD_freeCDict(mtctx->cdictLocal);
         if (mtctx->roundBuff.buffer != null)
+        {
             ZSTD_customFree(mtctx->roundBuff.buffer, mtctx->cMem);
+        }
+
         ZSTD_customFree(mtctx, mtctx->cMem);
         return 0;
     }
@@ -980,7 +1067,10 @@ public static unsafe partial class Methods
     private static nuint ZSTDMT_sizeof_CCtx(ZSTDMT_CCtx_s* mtctx)
     {
         if (mtctx == null)
+        {
             return 0;
+        }
+
         return (nuint)sizeof(ZSTDMT_CCtx_s)
             + POOL_sizeof(mtctx->factory)
             + ZSTDMT_sizeof_bufferPool(mtctx->bufPool)
@@ -996,7 +1086,10 @@ public static unsafe partial class Methods
     private static nuint ZSTDMT_resize(ZSTDMT_CCtx_s* mtctx, uint nbWorkers)
     {
         if (POOL_resize(mtctx->factory, nbWorkers) != 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+        }
+
         {
             nuint err_code = ZSTDMT_expandJobsTable(mtctx, nbWorkers);
             if (ERR_isError(err_code))
@@ -1007,13 +1100,22 @@ public static unsafe partial class Methods
 
         mtctx->bufPool = ZSTDMT_expandBufferPool(mtctx->bufPool, 2 * nbWorkers + 3);
         if (mtctx->bufPool == null)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+        }
+
         mtctx->cctxPool = ZSTDMT_expandCCtxPool(mtctx->cctxPool, (int)nbWorkers);
         if (mtctx->cctxPool == null)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+        }
+
         mtctx->seqPool = ZSTDMT_expandSeqPool(mtctx->seqPool, nbWorkers);
         if (mtctx->seqPool == null)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+        }
+
         ZSTDMT_CCtxParam_setNbWorkers(&mtctx->@params, nbWorkers);
         return 0;
     }
@@ -1094,7 +1196,10 @@ public static unsafe partial class Methods
         uint jobID = mtctx->doneJobID;
         assert(jobID <= mtctx->nextJobID);
         if (jobID == mtctx->nextJobID)
+        {
             return 0;
+        }
+
         {
             uint wJobID = jobID & mtctx->jobIDMask;
             ZSTDMT_jobDescription* jobPtr = &mtctx->jobs[wJobID];
@@ -1168,7 +1273,10 @@ public static unsafe partial class Methods
     {
         assert(0 <= ovlog && ovlog <= 9);
         if (ovlog == 0)
+        {
             return ZSTDMT_overlapLog_default(strat);
+        }
+
         return ovlog;
     }
 
@@ -1218,9 +1326,15 @@ public static unsafe partial class Methods
         }
 
         if (@params.jobSize != 0 && @params.jobSize < 512 * (1 << 10))
+        {
             @params.jobSize = 512 * (1 << 10);
+        }
+
         if (@params.jobSize > (nuint)(MEM_32bits ? 512 * (1 << 20) : 1024 * (1 << 20)))
+        {
             @params.jobSize = (nuint)(MEM_32bits ? 512 * (1 << 20) : 1024 * (1 << 20));
+        }
+
         if (mtctx->allJobsCompleted == 0)
         {
             ZSTDMT_waitForAllJobsCompleted(mtctx);
@@ -1243,7 +1357,9 @@ public static unsafe partial class Methods
             );
             mtctx->cdict = mtctx->cdictLocal;
             if (mtctx->cdictLocal == null)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            }
         }
         else
         {
@@ -1274,7 +1390,10 @@ public static unsafe partial class Methods
         }
 
         if (mtctx->targetSectionSize < mtctx->targetPrefixSize)
+        {
             mtctx->targetSectionSize = mtctx->targetPrefixSize;
+        }
+
         ZSTDMT_setBufferSize(mtctx->bufPool, ZSTD_compressBound(mtctx->targetSectionSize));
         {
             /* If ldm is enabled we need windowSize space. */
@@ -1297,7 +1416,10 @@ public static unsafe partial class Methods
             if (mtctx->roundBuff.capacity < capacity)
             {
                 if (mtctx->roundBuff.buffer != null)
+                {
                     ZSTD_customFree(mtctx->roundBuff.buffer, mtctx->cMem);
+                }
+
                 mtctx->roundBuff.buffer = (byte*)ZSTD_customMalloc(capacity, mtctx->cMem);
                 if (mtctx->roundBuff.buffer == null)
                 {
@@ -1341,7 +1463,9 @@ public static unsafe partial class Methods
                 );
                 mtctx->cdict = mtctx->cdictLocal;
                 if (mtctx->cdictLocal == null)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+                }
             }
         }
         else
@@ -1360,7 +1484,10 @@ public static unsafe partial class Methods
                 dictContentType
             ) != 0
         )
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+        }
+
         return 0;
     }
 
@@ -1566,20 +1693,37 @@ public static unsafe partial class Methods
             }
 
             if (cSize > mtctx->jobs[wJobID].dstFlushed)
+            {
                 return cSize - mtctx->jobs[wJobID].dstFlushed;
+            }
+
             if (srcSize > srcConsumed)
+            {
                 return 1;
+            }
         }
 
         if (mtctx->doneJobID < mtctx->nextJobID)
+        {
             return 1;
+        }
+
         if (mtctx->jobReady != 0)
+        {
             return 1;
+        }
+
         if (mtctx->inBuff.filled > 0)
+        {
             return 1;
+        }
+
         mtctx->allJobsCompleted = mtctx->frameEnded;
         if (end == ZSTD_EndDirective.ZSTD_e_end)
+        {
             return mtctx->frameEnded == 0 ? 1U : 0U;
+        }
+
         return 0;
     }
 
@@ -1597,7 +1741,10 @@ public static unsafe partial class Methods
         nuint roundBuffCapacity = mtctx->roundBuff.capacity;
         nuint nbJobs1stRoundMin = roundBuffCapacity / mtctx->targetSectionSize;
         if (lastJobID < nbJobs1stRoundMin)
+        {
             return kNullRange;
+        }
+
         for (jobID = firstJobID; jobID < lastJobID; ++jobID)
         {
             uint wJobID = jobID & mtctx->jobIDMask;
@@ -1629,12 +1776,18 @@ public static unsafe partial class Methods
         byte* bufferStart = (byte*)buffer.start;
         byte* rangeStart = (byte*)range.start;
         if (rangeStart == null || bufferStart == null)
+        {
             return 0;
+        }
+
         {
             byte* bufferEnd = bufferStart + buffer.capacity;
             byte* rangeEnd = rangeStart + range.size;
             if (bufferStart == bufferEnd || rangeStart == rangeEnd)
+            {
                 return 0;
+            }
+
             return bufferStart < rangeEnd && rangeStart < bufferEnd ? 1 : 0;
         }
     }
@@ -1736,11 +1889,20 @@ public static unsafe partial class Methods
                 : mtctx->targetSectionSize - mtctx->inBuff.filled;
         syncPoint.flush = 0;
         if (mtctx->@params.rsyncable == 0)
+        {
             return syncPoint;
+        }
+
         if (mtctx->inBuff.filled + input.size - input.pos < 1 << 17)
+        {
             return syncPoint;
+        }
+
         if (mtctx->inBuff.filled + syncPoint.toLoad < 32)
+        {
             return syncPoint;
+        }
+
         if (mtctx->inBuff.filled < 1 << 17)
         {
             pos = (1 << 17) - mtctx->inBuff.filled;
@@ -1796,7 +1958,10 @@ public static unsafe partial class Methods
     {
         nuint hintInSize = mtctx->targetSectionSize - mtctx->inBuff.filled;
         if (hintInSize == 0)
+        {
             hintInSize = mtctx->targetSectionSize;
+        }
+
         return hintInSize;
     }
 
@@ -1887,7 +2052,10 @@ public static unsafe partial class Methods
                 endOp
             );
             if (input->pos < input->size)
+            {
                 return remainingToFlush > 1 ? remainingToFlush : 1;
+            }
+
             return remainingToFlush;
         }
     }

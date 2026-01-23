@@ -22,7 +22,9 @@ public abstract partial class Volume : IVolume, IAsyncDisposable
         }
 
         if (stream is IStreamStack ss)
+        {
             ss.SetBuffer(ReaderOptions.BufferSize, true);
+        }
 
         _actualStream = stream;
     }

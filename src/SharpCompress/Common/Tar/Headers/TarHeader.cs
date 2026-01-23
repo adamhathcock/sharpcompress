@@ -112,14 +112,18 @@ internal sealed partial class TarHeader
             string name = fullName.Substring(splitIndex + 1);
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
+            {
                 throw new Exception(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
+            }
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
+            {
                 throw new Exception(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
+            }
 
             // write name prefix
             WriteStringBytes(ArchiveEncoding.Encode(namePrefix), buffer, 345, 100);

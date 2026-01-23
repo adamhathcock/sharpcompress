@@ -40,7 +40,10 @@ public static unsafe partial class Methods
                 * ((maxSymbolValue + 2 + (1UL << (int)tableLog)) / 2 + sizeof(ulong) / sizeof(uint))
             > wkspSize
         )
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         tableU16[-2] = (ushort)tableLog;
         tableU16[-1] = (ushort)maxSymbolValue;
         assert(tableLog < 16);
@@ -123,7 +126,9 @@ public static unsafe partial class Methods
                     tableSymbol[position] = (byte)symbol;
                     position = position + step & tableMask;
                     while (position > highThreshold)
+                    {
                         position = position + step & tableMask;
+                    }
                 }
             }
 
@@ -218,15 +223,24 @@ public static unsafe partial class Methods
             {
                 uint start = symbol;
                 while (symbol < alphabetSize && normalizedCounter[symbol] == 0)
+                {
                     symbol++;
+                }
+
                 if (symbol == alphabetSize)
+                {
                     break;
+                }
+
                 while (symbol >= start + 24)
                 {
                     start += 24;
                     bitStream += 0xFFFFU << bitCount;
                     if (writeIsSafe == 0 && @out > oend - 2)
+                    {
                         return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                    }
+
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
                     @out += 2;
@@ -245,7 +259,10 @@ public static unsafe partial class Methods
                 if (bitCount > 16)
                 {
                     if (writeIsSafe == 0 && @out > oend - 2)
+                    {
                         return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                    }
+
                     @out[0] = (byte)bitStream;
                     @out[1] = (byte)(bitStream >> 8);
                     @out += 2;
@@ -260,13 +277,19 @@ public static unsafe partial class Methods
                 remaining -= count < 0 ? -count : count;
                 count++;
                 if (count >= threshold)
+                {
                     count += max;
+                }
+
                 bitStream += (uint)count << bitCount;
                 bitCount += nbBits;
                 bitCount -= count < max ? 1 : 0;
                 previousIs0 = count == 1 ? 1 : 0;
                 if (remaining < 1)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                }
+
                 while (remaining < threshold)
                 {
                     nbBits--;
@@ -277,7 +300,10 @@ public static unsafe partial class Methods
             if (bitCount > 16)
             {
                 if (writeIsSafe == 0 && @out > oend - 2)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                }
+
                 @out[0] = (byte)bitStream;
                 @out[1] = (byte)(bitStream >> 8);
                 @out += 2;
@@ -287,10 +313,16 @@ public static unsafe partial class Methods
         }
 
         if (remaining != 1)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         assert(symbol <= alphabetSize);
         if (writeIsSafe == 0 && @out > oend - 2)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         @out[0] = (byte)bitStream;
         @out[1] = (byte)(bitStream >> 8);
         @out += (bitCount + 7) / 8;
@@ -311,10 +343,17 @@ public static unsafe partial class Methods
     )
     {
         if (tableLog > 14 - 2)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         if (tableLog < 5)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         if (bufferSize < FSE_NCountWriteBound(maxSymbolValue, tableLog))
+        {
             return FSE_writeNCount_generic(
                 buffer,
                 bufferSize,
@@ -323,6 +362,8 @@ public static unsafe partial class Methods
                 tableLog,
                 0
             );
+        }
+
         return FSE_writeNCount_generic(
             buffer,
             bufferSize,
@@ -358,15 +399,30 @@ public static unsafe partial class Methods
         uint minBits = FSE_minTableLog(srcSize, maxSymbolValue);
         assert(srcSize > 1);
         if (tableLog == 0)
+        {
             tableLog = 13 - 2;
+        }
+
         if (maxBitsSrc < tableLog)
+        {
             tableLog = maxBitsSrc;
+        }
+
         if (minBits > tableLog)
+        {
             tableLog = minBits;
+        }
+
         if (tableLog < 5)
+        {
             tableLog = 5;
+        }
+
         if (tableLog > 14 - 2)
+        {
             tableLog = 14 - 2;
+        }
+
         return tableLog;
     }
 
@@ -426,7 +482,10 @@ public static unsafe partial class Methods
 
         ToDistribute = (uint)(1 << (int)tableLog) - distributed;
         if (ToDistribute == 0)
+        {
             return 0;
+        }
+
         if (total / ToDistribute > lowOne)
         {
             lowOne = (uint)(total * 3 / (ToDistribute * 2));
@@ -452,11 +511,13 @@ public static unsafe partial class Methods
             uint maxV = 0,
                 maxC = 0;
             for (s = 0; s <= maxSymbolValue; s++)
+            {
                 if (count[s] > maxC)
                 {
                     maxV = s;
                     maxC = count[s];
                 }
+            }
 
             norm[maxV] += (short)ToDistribute;
             return 0;
@@ -465,11 +526,13 @@ public static unsafe partial class Methods
         if (total == 0)
         {
             for (s = 0; ToDistribute > 0; s = (s + 1) % (maxSymbolValue + 1))
+            {
                 if (norm[s] > 0)
                 {
                     ToDistribute--;
                     norm[s]++;
                 }
+            }
 
             return 0;
         }
@@ -489,7 +552,10 @@ public static unsafe partial class Methods
                     uint sEnd = (uint)(end >> (int)vStepLog);
                     uint weight = sEnd - sStart;
                     if (weight < 1)
+                    {
                         return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                    }
+
                     norm[s] = (short)weight;
                     tmpTotal = end;
                 }
@@ -534,13 +600,25 @@ public static unsafe partial class Methods
     )
     {
         if (tableLog == 0)
+        {
             tableLog = 13 - 2;
+        }
+
         if (tableLog < 5)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         if (tableLog > 14 - 2)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         if (tableLog < FSE_minTableLog(total, maxSymbolValue))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         {
             short lowProbCount = (short)(useLowProbCount != 0 ? -1 : 1);
             ulong scale = 62 - tableLog;
@@ -555,7 +633,10 @@ public static unsafe partial class Methods
             for (s = 0; s <= maxSymbolValue; s++)
             {
                 if (count[s] == total)
+                {
                     return 0;
+                }
+
                 if (count[s] == 0)
                 {
                     normalizedCounter[s] = 0;
@@ -601,10 +682,14 @@ public static unsafe partial class Methods
                     lowProbCount
                 );
                 if (ERR_isError(errorCode))
+                {
                     return errorCode;
+                }
             }
             else
+            {
                 normalizedCounter[largest] += (short)stillToDistribute;
+            }
         }
 
         return tableLog;
@@ -645,11 +730,16 @@ public static unsafe partial class Methods
         System.Runtime.CompilerServices.Unsafe.SkipInit(out CState1);
         System.Runtime.CompilerServices.Unsafe.SkipInit(out CState2);
         if (srcSize <= 2)
+        {
             return 0;
+        }
+
         {
             nuint initError = BIT_initCStream(ref bitC, dst, dstSize);
             if (ERR_isError(initError))
+            {
                 return 0;
+            }
         }
 
         nuint bitC_bitContainer = bitC.bitContainer;
@@ -662,14 +752,18 @@ public static unsafe partial class Methods
             FSE_initCState2(ref CState2, ct, *--ip);
             FSE_encodeSymbol(ref bitC_bitContainer, ref bitC_bitPos, ref CState1, *--ip);
             if (fast != 0)
+            {
                 BIT_flushBitsFast(
                     ref bitC_bitContainer,
                     ref bitC_bitPos,
                     ref bitC_ptr,
                     bitC_endPtr
                 );
+            }
             else
+            {
                 BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
+            }
         }
         else
         {
@@ -683,34 +777,45 @@ public static unsafe partial class Methods
             FSE_encodeSymbol(ref bitC_bitContainer, ref bitC_bitPos, ref CState2, *--ip);
             FSE_encodeSymbol(ref bitC_bitContainer, ref bitC_bitPos, ref CState1, *--ip);
             if (fast != 0)
+            {
                 BIT_flushBitsFast(
                     ref bitC_bitContainer,
                     ref bitC_bitPos,
                     ref bitC_ptr,
                     bitC_endPtr
                 );
+            }
             else
+            {
                 BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
+            }
         }
 
         while (ip > istart)
         {
             FSE_encodeSymbol(ref bitC_bitContainer, ref bitC_bitPos, ref CState2, *--ip);
             if (sizeof(nuint) * 8 < (14 - 2) * 2 + 7)
+            {
                 if (fast != 0)
+                {
                     BIT_flushBitsFast(
                         ref bitC_bitContainer,
                         ref bitC_bitPos,
                         ref bitC_ptr,
                         bitC_endPtr
                     );
+                }
                 else
+                {
                     BIT_flushBits(
                         ref bitC_bitContainer,
                         ref bitC_bitPos,
                         ref bitC_ptr,
                         bitC_endPtr
                     );
+                }
+            }
+
             FSE_encodeSymbol(ref bitC_bitContainer, ref bitC_bitPos, ref CState1, *--ip);
             if (sizeof(nuint) * 8 > (14 - 2) * 4 + 7)
             {
@@ -719,14 +824,18 @@ public static unsafe partial class Methods
             }
 
             if (fast != 0)
+            {
                 BIT_flushBitsFast(
                     ref bitC_bitContainer,
                     ref bitC_bitPos,
                     ref bitC_ptr,
                     bitC_endPtr
                 );
+            }
             else
+            {
                 BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
+            }
         }
 
         FSE_flushCState(
@@ -767,9 +876,13 @@ public static unsafe partial class Methods
     {
         uint fast = dstSize >= srcSize + (srcSize >> 7) + 4 + (nuint)sizeof(nuint) ? 1U : 0U;
         if (fast != 0)
+        {
             return FSE_compress_usingCTable_generic(dst, dstSize, src, srcSize, ct, 1);
+        }
         else
+        {
             return FSE_compress_usingCTable_generic(dst, dstSize, src, srcSize, ct, 0);
+        }
     }
 
     /*-*****************************************

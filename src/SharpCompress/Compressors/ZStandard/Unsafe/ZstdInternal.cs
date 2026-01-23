@@ -604,7 +604,10 @@ public static unsafe partial class Methods
             assert(diff >= 16 || diff <= -16);
             ZSTD_copy16(op, ip);
             if (16 >= length)
+            {
                 return;
+            }
+
             op += 16;
             ip += 16;
             do

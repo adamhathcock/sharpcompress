@@ -15,7 +15,9 @@ public partial class CompressionStream : Stream
 #endif
     {
         if (compressor == null)
+        {
             return;
+        }
 
         try
         {
@@ -70,9 +72,11 @@ public partial class CompressionStream : Stream
 
             var written = (int)output.pos;
             if (written > 0)
+            {
                 await innerStream
                     .WriteAsync(outputBuffer, 0, written, cancellationToken)
                     .ConfigureAwait(false);
+            }
         } while (
             directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0
         );

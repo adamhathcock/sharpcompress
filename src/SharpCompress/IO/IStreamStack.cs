@@ -105,7 +105,9 @@ namespace SharpCompress.IO
         internal static void SetBuffer(this IStreamStack stream, int bufferSize, bool force)
         {
             if (bufferSize == 0 || stream == null)
+            {
                 return;
+            }
 
             IStreamStack? current = stream;
             IStreamStack defaultBuffer = stream;
@@ -116,13 +118,22 @@ namespace SharpCompress.IO
             {
                 defaultBuffer = current;
                 if (buffer == null && ((current.BufferSize != 0 && bufferSize != 0) || force))
+                {
                     buffer = current;
+                }
+
                 if (defaultBuffer.DefaultBufferSize != 0)
+                {
                     break;
+                }
+
                 current = current.BaseStream() as IStreamStack;
             }
             if (defaultBuffer.DefaultBufferSize == 0)
+            {
                 defaultBuffer.DefaultBufferSize = bufferSize;
+            }
+
             (buffer ?? stream).BufferSize = bufferSize;
         }
 
@@ -244,7 +255,10 @@ namespace SharpCompress.IO
         private static string cleansePos(long pos)
         {
             if (pos < 0)
+            {
                 return "";
+            }
+
             return "Px" + pos.ToString("x");
         }
 
@@ -262,7 +276,10 @@ namespace SharpCompress.IO
         )
         {
             if (instanceId == 0) //will not be equal to 0 when inherited IStackStream types are being used
+            {
                 instanceId = System.Threading.Interlocked.Increment(ref _instanceCounter);
+            }
+
             return instanceId;
         }
 
@@ -281,9 +298,11 @@ namespace SharpCompress.IO
                     ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
                     : "Unknown";
             if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
+            {
                 Debug.WriteLine(
                     $"{GetStreamStackString(stream, true)} : Constructed by [{parentInfo}]"
                 );
+            }
         }
 
         /// <summary>
@@ -299,7 +318,11 @@ namespace SharpCompress.IO
                     ? $"{frame.GetMethod()?.DeclaringType?.Name}.{frame.GetMethod()?.Name}()"
                     : "Unknown";
             if (constructing.FullName == stream.GetType().FullName) //don't debug base IStackStream types
-                Debug.WriteLine($"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]");
+            {
+                Debug.WriteLine(
+                    $"{GetStreamStackString(stream, false)} : Disposed by [{parentInfo}]"
+                );
+            }
         }
 
         /// <summary>
@@ -333,7 +356,10 @@ namespace SharpCompress.IO
                     sStack != null ? "Dx" + sStack.DefaultBufferSize.ToString("x") : "";
 
                 if (sb.Length > 0)
+                {
                     sb.Insert(0, "/");
+                }
+
                 try
                 {
                     sb.Insert(
@@ -344,17 +370,25 @@ namespace SharpCompress.IO
                 catch
                 {
                     if (current is SharpCompressStream scs)
+                    {
                         sb.Insert(
                             0,
                             $"{current.GetType().Name}{id}[{cleansePos(scs.InternalPosition)}:{buffSize}:{defBuffSize}]"
                         );
+                    }
                     else
+                    {
                         sb.Insert(0, $"{current.GetType().Name}{id}[:{buffSize}]");
+                    }
                 }
                 if (sStack != null)
+                {
                     current = sStack.BaseStream(); //current may not be a IStreamStack, allow one more loop
+                }
                 else
+                {
                     break;
+                }
             }
             return sb.ToString();
         }

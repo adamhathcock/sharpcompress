@@ -22,9 +22,13 @@ namespace SharpCompress.Common.Ace
                 for (int j = 0; j < 8; j++)
                 {
                     if ((crc & 1) != 0)
+                    {
                         crc = (crc >> 1) ^ 0xEDB88320u;
+                    }
                     else
+                    {
                         crc >>= 1;
+                    }
                 }
 
                 table[i] = crc;

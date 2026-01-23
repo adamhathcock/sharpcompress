@@ -47,7 +47,10 @@ internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
         {
             var cctx = Unsafe.Methods.ZSTD_createCCtx();
             if (cctx == null)
+            {
                 throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
+            }
+
             safeHandle.SetHandle((IntPtr)cctx);
             success = true;
         }
@@ -97,7 +100,10 @@ internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
         {
             var dctx = Unsafe.Methods.ZSTD_createDCtx();
             if (dctx == null)
+            {
                 throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create dctx");
+            }
+
             safeHandle.SetHandle((IntPtr)dctx);
             success = true;
         }

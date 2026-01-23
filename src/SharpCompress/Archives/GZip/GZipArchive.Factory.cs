@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -180,18 +181,21 @@ public partial class GZipArchive
         CancellationToken cancellationToken = default
     )
     {
-        byte[] header = new byte[10];
-
-        if (!await stream.ReadFullyAsync(header, cancellationToken).ConfigureAwait(false))
+        var header = ArrayPool<byte>.Shared.Rent(10);
+        try
         {
-            return false;
-        }
+            await stream.ReadFullyAsync(header, 0, 10, cancellationToken).ConfigureAwait(false);
 
-        if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        finally
         {
-            return false;
+            ArrayPool<byte>.Shared.Return(header);
         }
-
-        return true;
     }
 }

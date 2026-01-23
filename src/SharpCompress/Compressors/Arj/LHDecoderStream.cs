@@ -45,10 +45,12 @@ namespace SharpCompress.Compressors.Arj
         {
             _stream = compressedStream ?? throw new ArgumentNullException(nameof(compressedStream));
             if (!compressedStream.CanRead)
+            {
                 throw new ArgumentException(
                     "compressedStream must be readable.",
                     nameof(compressedStream)
                 );
+            }
 
             _bitReader = new BitReader(compressedStream);
             _originalSize = originalSize;
@@ -94,7 +96,9 @@ namespace SharpCompress.Compressors.Arj
                 int backPtr = DecodeVal(9, 13);
 
                 if (backPtr >= _buffer.Count)
+                {
                     throw new InvalidDataException("Invalid back_ptr in LH stream");
+                }
 
                 int srcIndex = _buffer.Count - 1 - backPtr;
                 for (int j = 0; j < repCount && _buffer.Count < _originalSize; j++)
@@ -136,14 +140,24 @@ namespace SharpCompress.Compressors.Arj
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (_disposed)
+            {
                 throw new ObjectDisposedException(nameof(LHDecoderStream));
+            }
+
             if (buffer == null)
+            {
                 throw new ArgumentNullException(nameof(buffer));
+            }
+
             if (offset < 0 || count < 0 || offset + count > buffer.Length)
+            {
                 throw new ArgumentOutOfRangeException("offset/count");
+            }
 
             if (_readPosition >= _originalSize)
+            {
                 return 0; // EOF
+            }
 
             int totalRead = 0;
 

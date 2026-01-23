@@ -20,7 +20,10 @@ public class BitReader
         {
             int nextByte = _stream.ReadByte();
             if (nextByte == -1)
+            {
                 throw new EndOfStreamException();
+            }
+
             _bitBuffer = nextByte;
             _bitCount = 8;
         }

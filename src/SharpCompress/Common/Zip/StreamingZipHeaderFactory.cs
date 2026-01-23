@@ -100,7 +100,9 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
             else if (_lastEntryHeader != null && _lastEntryHeader.IsZip64)
             {
                 if (_lastEntryHeader.Part is null)
+                {
                     continue;
+                }
 
                 //reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
                 //    ref rewindableStream

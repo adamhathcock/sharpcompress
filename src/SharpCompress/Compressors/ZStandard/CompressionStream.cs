@@ -33,13 +33,19 @@ public partial class CompressionStream : Stream
     )
     {
         if (stream == null)
+        {
             throw new ArgumentNullException(nameof(stream));
+        }
 
         if (!stream.CanWrite)
+        {
             throw new ArgumentException("Stream is not writable", nameof(stream));
+        }
 
         if (bufferSize < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(bufferSize));
+        }
 
         innerStream = stream;
         this.compressor = compressor;
@@ -77,12 +83,16 @@ public partial class CompressionStream : Stream
     protected override void Dispose(bool disposing)
     {
         if (compressor == null)
+        {
             return;
+        }
 
         try
         {
             if (disposing)
+            {
                 FlushInternal(ZSTD_EndDirective.ZSTD_e_end);
+            }
         }
         finally
         {
@@ -141,7 +151,9 @@ public partial class CompressionStream : Stream
 
             var written = (int)output.pos;
             if (written > 0)
+            {
                 innerStream.Write(outputBuffer, 0, written);
+            }
         } while (
             directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0
         );
@@ -187,7 +199,9 @@ public partial class CompressionStream : Stream
     private void EnsureNotDisposed()
     {
         if (compressor == null)
+        {
             throw new ObjectDisposedException(nameof(CompressionStream));
+        }
     }
 
     public void SetPledgedSrcSize(ulong pledgedSrcSize)

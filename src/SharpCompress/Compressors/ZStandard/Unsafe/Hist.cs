@@ -56,13 +56,20 @@ public static unsafe partial class Methods
         }
 
         while (count[maxSymbolValue] == 0)
+        {
             maxSymbolValue--;
+        }
+
         *maxSymbolValuePtr = maxSymbolValue;
         {
             uint s;
             for (s = 0; s <= maxSymbolValue; s++)
+            {
                 if (count[s] > largestCount)
+                {
                     largestCount = count[s];
+                }
+            }
         }
 
         return largestCount;
@@ -141,23 +148,34 @@ public static unsafe partial class Methods
         }
 
         while (ip < iend)
+        {
             Counting1[*ip++]++;
+        }
+
         {
             uint s;
             for (s = 0; s < 256; s++)
             {
                 Counting1[s] += Counting2[s] + Counting3[s] + Counting4[s];
                 if (Counting1[s] > max)
+                {
                     max = Counting1[s];
+                }
             }
         }
 
         {
             uint maxSymbolValue = 255;
             while (Counting1[maxSymbolValue] == 0)
+            {
                 maxSymbolValue--;
+            }
+
             if (check != default && maxSymbolValue > *maxSymbolValuePtr)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
+            }
+
             *maxSymbolValuePtr = maxSymbolValue;
             memmove(count, Counting1, countSize);
         }
@@ -180,11 +198,20 @@ public static unsafe partial class Methods
     )
     {
         if (sourceSize < 1500)
+        {
             return HIST_count_simple(count, maxSymbolValuePtr, source, sourceSize);
+        }
+
         if (((nuint)workSpace & 3) != 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         if (workSpaceSize < 1024 * sizeof(uint))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+        }
+
         return HIST_count_parallel_wksp(
             count,
             maxSymbolValuePtr,
@@ -208,10 +235,17 @@ public static unsafe partial class Methods
     )
     {
         if (((nuint)workSpace & 3) != 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         if (workSpaceSize < 1024 * sizeof(uint))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+        }
+
         if (*maxSymbolValuePtr < 255)
+        {
             return HIST_count_parallel_wksp(
                 count,
                 maxSymbolValuePtr,
@@ -220,6 +254,8 @@ public static unsafe partial class Methods
                 HIST_checkInput_e.checkMaxSymbolValue,
                 (uint*)workSpace
             );
+        }
+
         *maxSymbolValuePtr = 255;
         return HIST_countFast_wksp(
             count,

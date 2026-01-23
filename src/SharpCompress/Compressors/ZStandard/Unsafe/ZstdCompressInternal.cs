@@ -486,11 +486,20 @@ public static unsafe partial class Methods
     {
         ZSTD_bounds bounds = ZSTD_cParam_getBounds(cParam);
         if (ERR_isError(bounds.error))
+        {
             return 0;
+        }
+
         if (value < bounds.lowerBound)
+        {
             return 0;
+        }
+
         if (value > bounds.upperBound)
+        {
             return 0;
+        }
+
         return 1;
     }
 
@@ -596,7 +605,9 @@ public static unsafe partial class Methods
         }
 
         while (ip < iend)
+        {
             *op++ = *ip++;
+        }
     }
 
     /*! ZSTD_storeSeqOnly() :
@@ -743,7 +754,9 @@ public static unsafe partial class Methods
             {
                 nuint diff = MEM_readST(pMatch) ^ MEM_readST(pIn);
                 if (diff != 0)
+                {
                     return ZSTD_NbCommonBytes(diff);
+                }
             }
 
             pIn += sizeof(nuint);
@@ -776,7 +789,10 @@ public static unsafe partial class Methods
         }
 
         if (pIn < pInLimit && *pMatch == *pIn)
+        {
             pIn++;
+        }
+
         return (nuint)(pIn - pStart);
     }
 
@@ -796,7 +812,10 @@ public static unsafe partial class Methods
         byte* vEnd = ip + (mEnd - match) < iEnd ? ip + (mEnd - match) : iEnd;
         nuint matchLength = ZSTD_count(ip, match, vEnd);
         if (match + matchLength != mEnd)
+        {
             return matchLength;
+        }
+
         return matchLength + ZSTD_count(ip + matchLength, iStart, iEnd);
     }
 
@@ -931,13 +950,25 @@ public static unsafe partial class Methods
     {
         assert(hBits <= 32);
         if (mls == 5)
+        {
             return ZSTD_hash5Ptr(p, hBits);
+        }
+
         if (mls == 6)
+        {
             return ZSTD_hash6Ptr(p, hBits);
+        }
+
         if (mls == 7)
+        {
             return ZSTD_hash7Ptr(p, hBits);
+        }
+
         if (mls == 8)
+        {
             return ZSTD_hash8Ptr(p, hBits);
+        }
+
         return ZSTD_hash4Ptr(p, hBits);
     }
 
@@ -946,13 +977,25 @@ public static unsafe partial class Methods
     {
         assert(hBits <= 32);
         if (mls == 5)
+        {
             return ZSTD_hash5PtrS(p, hBits, hashSalt);
+        }
+
         if (mls == 6)
+        {
             return ZSTD_hash6PtrS(p, hBits, hashSalt);
+        }
+
         if (mls == 7)
+        {
             return ZSTD_hash7PtrS(p, hBits, hashSalt);
+        }
+
         if (mls == 8)
+        {
             return ZSTD_hash8PtrS(p, hBits, hashSalt);
+        }
+
         return ZSTD_hash4PtrS(p, hBits, (uint)hashSalt);
     }
 
@@ -965,7 +1008,10 @@ public static unsafe partial class Methods
         while (exponent != 0)
         {
             if ((exponent & 1) != 0)
+            {
                 power *= @base;
+            }
+
             exponent >>= 1;
             @base *= @base;
         }
@@ -1250,16 +1296,24 @@ public static unsafe partial class Methods
         {
             uint newLowLimit = blockEndIdx - maxDist;
             if (window->lowLimit < newLowLimit)
+            {
                 window->lowLimit = newLowLimit;
+            }
+
             if (window->dictLimit < window->lowLimit)
             {
                 window->dictLimit = window->lowLimit;
             }
 
             if (loadedDictEndPtr != null)
+            {
                 *loadedDictEndPtr = 0;
+            }
+
             if (dictMatchStatePtr != null)
+            {
                 *dictMatchStatePtr = null;
+            }
         }
     }
 
@@ -1336,7 +1390,10 @@ public static unsafe partial class Methods
         byte* ip = (byte*)src;
         uint contiguous = 1;
         if (srcSize == 0)
+        {
             return contiguous;
+        }
+
         assert(window->@base != null);
         assert(window->dictBase != null);
         if (src != window->nextSrc || forceNonContiguous != 0)
@@ -1349,7 +1406,10 @@ public static unsafe partial class Methods
             window->dictBase = window->@base;
             window->@base = ip - distanceFromBase;
             if (window->dictLimit - window->lowLimit < 8)
+            {
                 window->lowLimit = window->dictLimit;
+            }
+
             contiguous = 0;
         }
 

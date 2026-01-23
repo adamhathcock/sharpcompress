@@ -28,7 +28,9 @@ namespace SharpCompress.Compressors.Lzw
 
                 // Check the magic marker
                 if (result < 0)
+                {
                     throw new IncompleteArchiveException("Failed to read LZW header");
+                }
 
                 if (hdr[0] != (LzwConstants.MAGIC >> 8) || hdr[1] != (LzwConstants.MAGIC & 0xff))
                 {
@@ -64,10 +66,14 @@ namespace SharpCompress.Compressors.Lzw
         )
         {
             if (!headerParsed)
+            {
                 await ParseHeaderAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             if (eof)
+            {
                 return 0;
+            }
 
             int start = offset;
 
@@ -156,9 +162,11 @@ namespace SharpCompress.Compressors.Lzw
                     if (lOldCode == -1)
                     {
                         if (code >= 256)
+                        {
                             throw new IncompleteArchiveException(
                                 "corrupt input: " + code + " > 255"
                             );
+                        }
 
                         lFinChar = (byte)(lOldCode = code);
                         buffer[offset++] = lFinChar;
@@ -309,7 +317,9 @@ namespace SharpCompress.Compressors.Lzw
                 .ConfigureAwait(false);
 
             if (result < 0)
+            {
                 throw new IncompleteArchiveException("Failed to read LZW header");
+            }
 
             if (hdr[0] != (LzwConstants.MAGIC >> 8) || hdr[1] != (LzwConstants.MAGIC & 0xff))
             {
@@ -355,7 +365,9 @@ namespace SharpCompress.Compressors.Lzw
             stackP = stack.Length;
 
             for (int idx = 255; idx >= 0; idx--)
+            {
                 tabSuffix[idx] = (byte)idx;
+            }
         }
     }
 }
