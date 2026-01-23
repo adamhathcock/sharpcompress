@@ -123,8 +123,8 @@ public partial class SharpCompressStream : Stream, IStreamStack
     )
     {
         Stream = stream;
-        this.LeaveOpen = leaveOpen;
-        this.ThrowOnDispose = throwOnDispose;
+        LeaveOpen = leaveOpen;
+        ThrowOnDispose = throwOnDispose;
         _readOnly = !Stream.CanSeek;
 
         ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
@@ -145,19 +145,18 @@ public partial class SharpCompressStream : Stream, IStreamStack
         {
             return;
         }
-
+        _isDisposed = true;
+        if (LeaveOpen)
+        {
+            return;
+        }
         if (ThrowOnDispose)
         {
             throw new InvalidOperationException(
                 $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
             );
         }
-        _isDisposed = true;
         base.Dispose(disposing);
-        if (this.LeaveOpen)
-        {
-            return;
-        }
         if (disposing)
         {
             Stream.Dispose();
@@ -267,7 +266,7 @@ public partial class SharpCompressStream : Stream, IStreamStack
                 targetPos = _internalPosition + offset;
                 break;
             case SeekOrigin.End:
-                targetPos = this.Length + offset;
+                targetPos = Length + offset;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(origin), origin, null);

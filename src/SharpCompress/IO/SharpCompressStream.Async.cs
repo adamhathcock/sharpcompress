@@ -158,18 +158,18 @@ public partial class SharpCompressStream
         {
             return;
         }
+        _isDisposed = true;
+        if (LeaveOpen)
+        {
+            return;
+        }
         if (ThrowOnDispose)
         {
             throw new InvalidOperationException(
                 $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
             );
         }
-        _isDisposed = true;
         await base.DisposeAsync();
-        if (this.LeaveOpen)
-        {
-            return;
-        }
         await Stream.DisposeAsync();
         if (_buffer != null)
         {
