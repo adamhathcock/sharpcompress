@@ -315,7 +315,7 @@ public class ZipReaderAsyncTests : ReaderTests
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
         using var fileStream = File.OpenRead(path);
         using Stream stream = new ThrowOnFlushStream(fileStream);
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        using var reader = ReaderFactory.Open(stream);
 
         var count = 0;
         while (await reader.MoveToNextEntryAsync())
@@ -339,7 +339,7 @@ public class ZipReaderAsyncTests : ReaderTests
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
         using var fileStream = File.OpenRead(path);
         using Stream stream = new ThrowOnFlushStream(fileStream);
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        using var reader = ReaderFactory.Open(stream);
 
         var count = 0;
         while (await reader.MoveToNextEntryAsync())

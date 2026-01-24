@@ -492,7 +492,7 @@ public class ZipReaderTests : ReaderTests
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
         using var fileStream = File.OpenRead(path);
         using Stream stream = new ThrowOnFlushStream(fileStream);
-        using var reader = ReaderFactory.OpenReader(stream);
+        using var reader = ReaderFactory.Open(stream);
 
         var count = 0;
         while (reader.MoveToNextEntry())
@@ -516,7 +516,7 @@ public class ZipReaderTests : ReaderTests
         var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
         using var fileStream = File.OpenRead(path);
         using Stream stream = new ThrowOnFlushStream(fileStream);
-        using var reader = ReaderFactory.OpenReader(stream);
+        using var reader = ReaderFactory.Open(stream);
 
         var count = 0;
         while (reader.MoveToNextEntry())
