@@ -79,25 +79,11 @@ public class EntryStream : Stream, IStreamStack
         {
             if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
             {
-                try
-                {
-                    deflateStream.Flush(); //Deflate over reads. Knock it back
-                }
-                catch (NotSupportedException)
-                {
-                    // Ignore: underlying stream does not support required operations for Flush
-                }
+                deflateStream.Flush(); //Deflate over reads. Knock it back
             }
             else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
             {
-                try
-                {
-                    lzmaStream.Flush(); //Lzma over reads. Knock it back
-                }
-                catch (NotSupportedException)
-                {
-                    // Ignore: underlying stream does not support required operations for Flush
-                }
+                lzmaStream.Flush(); //Lzma over reads. Knock it back
             }
         }
 #if DEBUG_STREAMS
@@ -125,25 +111,11 @@ public class EntryStream : Stream, IStreamStack
         {
             if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
             {
-                try
-                {
-                    await deflateStream.FlushAsync().ConfigureAwait(false);
-                }
-                catch (NotSupportedException)
-                {
-                    // Ignore: underlying stream does not support required operations for Flush
-                }
+                await deflateStream.FlushAsync().ConfigureAwait(false);
             }
             else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
             {
-                try
-                {
-                    await lzmaStream.FlushAsync().ConfigureAwait(false);
-                }
-                catch (NotSupportedException)
-                {
-                    // Ignore: underlying stream does not support required operations for Flush
-                }
+                await lzmaStream.FlushAsync().ConfigureAwait(false);
             }
         }
 #if DEBUG_STREAMS
