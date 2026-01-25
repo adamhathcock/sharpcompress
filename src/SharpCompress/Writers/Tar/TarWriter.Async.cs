@@ -11,7 +11,6 @@ public partial class TarWriter
 {
     /// <summary>
     /// Asynchronously writes a directory entry to the TAR archive.
-    /// Uses synchronous implementation for directory entries as they are lightweight.
     /// </summary>
     public override async ValueTask WriteDirectoryAsync(
         string directoryName,
@@ -19,9 +18,18 @@ public partial class TarWriter
         CancellationToken cancellationToken = default
     )
     {
-        // Synchronous implementation is sufficient for header-only write
-        WriteDirectory(directoryName, modificationTime);
-        await Task.CompletedTask.ConfigureAwait(false);
+        var normalizedName = NormalizeDirectoryName(directoryName);
+        if (string.IsNullOrEmpty(normalizedName))
+        {
+            return;
+        }
+
+        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
+        header.Name = normalizedName;
+        header.Size = 0;
+        header.EntryType = EntryType.Directory;
+        await header.WriteAsync(OutputStream, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -57,11 +65,22 @@ public partial class TarWriter
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
-        header.Write(OutputStream);
+        await header.WriteAsync(OutputStream, cancellationToken).ConfigureAwait(false);
         var progressStream = WrapWithProgress(source, filename);
         var written = await progressStream
             .TransferToAsync(OutputStream, realSize, cancellationToken)
             .ConfigureAwait(false);
-        PadTo512(written);
+        await PadTo512Async(written, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async ValueTask PadTo512Async(long size, CancellationToken cancellationToken = default)
+    {
+        var zeros = unchecked((int)(((size + 511L) & ~511L) - size));
+        if (zeros > 0)
+        {
+            await OutputStream
+                .WriteAsync(new byte[zeros], 0, zeros, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

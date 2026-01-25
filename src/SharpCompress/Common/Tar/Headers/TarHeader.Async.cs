@@ -1,12 +1,197 @@
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Tar.Headers;
 
 internal sealed partial class TarHeader
 {
+    internal async ValueTask WriteAsync(
+        Stream output,
+        CancellationToken cancellationToken = default
+    )
+    {
+        switch (WriteFormat)
+        {
+            case TarHeaderWriteFormat.GNU_TAR_LONG_LINK:
+                await WriteGnuTarLongLinkAsync(output, cancellationToken);
+                break;
+            case TarHeaderWriteFormat.USTAR:
+                await WriteUstarAsync(output, cancellationToken);
+                break;
+            default:
+                throw new Exception("This should be impossible...");
+        }
+    }
+
+    private async ValueTask WriteUstarAsync(Stream output, CancellationToken cancellationToken)
+    {
+        var buffer = new byte[BLOCK_SIZE];
+
+        WriteOctalBytes(511, buffer, 100, 8);
+        WriteOctalBytes(0, buffer, 108, 8);
+        WriteOctalBytes(0, buffer, 116, 8);
+
+        var nameByteCount = ArchiveEncoding
+            .GetEncoding()
+            .GetByteCount(Name.NotNull("Name is null"));
+
+        if (nameByteCount > 100)
+        {
+            string fullName = Name.NotNull("Name is null");
+
+            List<int> dirSeps = new List<int>();
+            for (int i = 0; i < fullName.Length; i++)
+            {
+                if (fullName[i] == Path.DirectorySeparatorChar)
+                {
+                    dirSeps.Add(i);
+                }
+            }
+
+            int splitIndex = -1;
+            for (int i = 0; i < dirSeps.Count; i++)
+            {
+                int count = ArchiveEncoding
+                    .GetEncoding()
+                    .GetByteCount(fullName.Substring(0, dirSeps[i]));
+                if (count < 155)
+                {
+                    splitIndex = dirSeps[i];
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (splitIndex == -1)
+            {
+                throw new Exception(
+                    $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Directory separator not found! Try using GNU Tar format instead!"
+                );
+            }
+
+            string namePrefix = fullName.Substring(0, splitIndex);
+            string name = fullName.Substring(splitIndex + 1);
+
+            if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
+            {
+                throw new Exception(
+                    $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
+                );
+            }
+
+            if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
+            {
+                throw new Exception(
+                    $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
+                );
+            }
+
+            WriteStringBytes(ArchiveEncoding.Encode(namePrefix), buffer, 345, 100);
+            WriteStringBytes(ArchiveEncoding.Encode(name), buffer, 100);
+        }
+        else
+        {
+            WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
+        }
+
+        WriteOctalBytes(Size, buffer, 124, 12);
+        var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
+        WriteOctalBytes(time, buffer, 136, 12);
+        buffer[156] = (byte)EntryType;
+
+        WriteStringBytes(Encoding.ASCII.GetBytes("ustar"), buffer, 257, 6);
+        buffer[263] = 0x30;
+        buffer[264] = 0x30;
+
+        var crc = RecalculateChecksum(buffer);
+        WriteOctalBytes(crc, buffer, 148, 8);
+
+        await output.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async ValueTask WriteGnuTarLongLinkAsync(
+        Stream output,
+        CancellationToken cancellationToken
+    )
+    {
+        var buffer = new byte[BLOCK_SIZE];
+
+        WriteOctalBytes(511, buffer, 100, 8);
+        WriteOctalBytes(0, buffer, 108, 8);
+        WriteOctalBytes(0, buffer, 116, 8);
+
+        var nameByteCount = ArchiveEncoding
+            .GetEncoding()
+            .GetByteCount(Name.NotNull("Name is null"));
+        if (nameByteCount > 100)
+        {
+            WriteStringBytes("././@LongLink", buffer, 0, 100);
+            buffer[156] = (byte)EntryType.LongName;
+            WriteOctalBytes(nameByteCount + 1, buffer, 124, 12);
+        }
+        else
+        {
+            WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
+            WriteOctalBytes(Size, buffer, 124, 12);
+            var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
+            WriteOctalBytes(time, buffer, 136, 12);
+            buffer[156] = (byte)EntryType;
+
+            if (Size >= 0x1FFFFFFFF)
+            {
+                Span<byte> bytes12 = stackalloc byte[12];
+                BinaryPrimitives.WriteInt64BigEndian(bytes12.Slice(4), Size);
+                bytes12[0] |= 0x80;
+                bytes12.CopyTo(buffer.AsSpan(124));
+            }
+        }
+
+        var crc = RecalculateChecksum(buffer);
+        WriteOctalBytes(crc, buffer, 148, 8);
+
+        await output.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+
+        if (nameByteCount > 100)
+        {
+            await WriteLongFilenameHeaderAsync(output, cancellationToken);
+            Name = ArchiveEncoding.Decode(
+                ArchiveEncoding.Encode(Name.NotNull("Name is null")),
+                0,
+                100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
+            );
+            await WriteGnuTarLongLinkAsync(output, cancellationToken);
+        }
+    }
+
+    private async ValueTask WriteLongFilenameHeaderAsync(
+        Stream output,
+        CancellationToken cancellationToken
+    )
+    {
+        var nameBytes = ArchiveEncoding.Encode(Name.NotNull("Name is null"));
+        await output
+            .WriteAsync(nameBytes, 0, nameBytes.Length, cancellationToken)
+            .ConfigureAwait(false);
+
+        var numPaddingBytes = BLOCK_SIZE - (nameBytes.Length % BLOCK_SIZE);
+        if (numPaddingBytes == 0)
+        {
+            numPaddingBytes = BLOCK_SIZE;
+        }
+
+        await output
+            .WriteAsync(new byte[numPaddingBytes], 0, numPaddingBytes, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     internal async ValueTask<bool> ReadAsync(AsyncBinaryReader reader)
     {
         string? longName = null;
