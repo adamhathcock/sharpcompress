@@ -482,4 +482,52 @@ public class ZipReaderTests : ReaderTests
             }
         }
     }
+
+    [Fact]
+    public void Archive_Iteration_DoesNotBreak_WhenFlushThrows_Deflate()
+    {
+        // Regression test: since 0.41.0, archive iteration would silently break
+        // when the input stream throws NotSupportedException in Flush().
+        // Only the first entry would be returned, then iteration would stop without exception.
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ThrowOnFlushStream(fileStream);
+        using var reader = ReaderFactory.Open(stream);
+
+        var count = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+            }
+        }
+
+        // Should iterate through all entries, not just the first one
+        Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
+    }
+
+    [Fact]
+    public void Archive_Iteration_DoesNotBreak_WhenFlushThrows_LZMA()
+    {
+        // Regression test: since 0.41.0, archive iteration would silently break
+        // when the input stream throws NotSupportedException in Flush().
+        // Only the first entry would be returned, then iteration would stop without exception.
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ThrowOnFlushStream(fileStream);
+        using var reader = ReaderFactory.Open(stream);
+
+        var count = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+            }
+        }
+
+        // Should iterate through all entries, not just the first one
+        Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
+    }
 }
