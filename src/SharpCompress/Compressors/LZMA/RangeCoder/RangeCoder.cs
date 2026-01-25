@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
-internal class Encoder
+internal partial class Encoder
 {
     public const uint K_TOP_VALUE = (1 << 24);
 
@@ -113,7 +113,7 @@ internal class Encoder
     // (long)Stream.GetProcessedSize();
 }
 
-internal class Decoder
+internal partial class Decoder
 {
     public const uint K_TOP_VALUE = (1 << 24);
     public uint _range;

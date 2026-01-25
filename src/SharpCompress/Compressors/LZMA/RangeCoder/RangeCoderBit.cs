@@ -1,6 +1,6 @@
 namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
-internal struct BitEncoder
+internal partial struct BitEncoder
 {
     public const int K_NUM_BIT_MODEL_TOTAL_BITS = 11;
     public const uint K_BIT_MODEL_TOTAL = (1 << K_NUM_BIT_MODEL_TOTAL_BITS);
@@ -78,7 +78,7 @@ internal struct BitEncoder
     public uint GetPrice1() => PROB_PRICES[(K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_REDUCING_BITS];
 }
 
-internal struct BitDecoder
+internal partial struct BitDecoder
 {
     public const int K_NUM_BIT_MODEL_TOTAL_BITS = 11;
     public const uint K_BIT_MODEL_TOTAL = (1 << K_NUM_BIT_MODEL_TOTAL_BITS);

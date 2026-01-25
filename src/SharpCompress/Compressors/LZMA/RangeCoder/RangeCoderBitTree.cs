@@ -1,6 +1,6 @@
 namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
-internal readonly struct BitTreeEncoder
+internal readonly partial struct BitTreeEncoder
 {
     private readonly BitEncoder[] _models;
     private readonly int _numBitLevels;
@@ -109,7 +109,7 @@ internal readonly struct BitTreeEncoder
     }
 }
 
-internal readonly struct BitTreeDecoder
+internal readonly partial struct BitTreeDecoder
 {
     private readonly BitDecoder[] _models;
     private readonly int _numBitLevels;
