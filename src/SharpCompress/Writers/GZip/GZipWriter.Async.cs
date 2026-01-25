@@ -8,7 +8,12 @@ namespace SharpCompress.Writers.GZip;
 
 public partial class GZipWriter
 {
-    public override async ValueTask WriteAsync(string filename, Stream source, DateTime? modificationTime, CancellationToken cancellationToken = default)
+    public override async ValueTask WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    )
     {
         if (_wroteToStream)
         {
@@ -20,12 +25,15 @@ public partial class GZipWriter
         var progressStream = WrapWithProgress(source, filename);
 #if LEGACY_DOTNET
         await progressStream.CopyToAsync(stream);
-        #else
+#else
         await progressStream.CopyToAsync(stream, cancellationToken);
 #endif
         _wroteToStream = true;
     }
 
-    public override ValueTask WriteDirectoryAsync(string directoryName, DateTime? modificationTime, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException("GZip archives do not support directory entries.");
+    public override ValueTask WriteDirectoryAsync(
+        string directoryName,
+        DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    ) => throw new NotSupportedException("GZip archives do not support directory entries.");
 }
