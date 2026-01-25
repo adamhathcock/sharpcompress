@@ -23,16 +23,12 @@ namespace SharpCompress.Factories
             yield return "ace";
         }
 
-        public override bool IsArchive(
-            Stream stream,
-            string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        ) => AceHeader.IsArchive(stream);
+        public override bool IsArchive(Stream stream, string? password = null) =>
+            AceHeader.IsArchive(stream);
 
         public override ValueTask<bool> IsArchiveAsync(
             Stream stream,
             string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize,
             CancellationToken cancellationToken = default
         ) => AceHeader.IsArchiveAsync(stream, cancellationToken);
 

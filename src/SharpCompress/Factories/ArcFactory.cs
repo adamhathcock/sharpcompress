@@ -25,11 +25,7 @@ namespace SharpCompress.Factories
             yield return "arc";
         }
 
-        public override bool IsArchive(
-            Stream stream,
-            string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        )
+        public override bool IsArchive(Stream stream, string? password = null)
         {
             //You may have to use some(paranoid) checks to ensure that you actually are
             //processing an ARC file, since other archivers also adopted the idea of putting
@@ -65,7 +61,6 @@ namespace SharpCompress.Factories
         public override async ValueTask<bool> IsArchiveAsync(
             Stream stream,
             string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize,
             CancellationToken cancellationToken = default
         )
         {

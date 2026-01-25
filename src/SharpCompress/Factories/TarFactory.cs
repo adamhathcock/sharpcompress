@@ -45,11 +45,7 @@ public class TarFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public override bool IsArchive(Stream stream, string? password = null)
     {
         var rewindableStream = new SharpCompressStream(stream);
         long pos = rewindableStream.GetPosition();
@@ -75,7 +71,6 @@ public class TarFactory
     public override async ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
         CancellationToken cancellationToken = default
     )
     {

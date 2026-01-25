@@ -23,16 +23,12 @@ namespace SharpCompress.Factories
             yield return "arj";
         }
 
-        public override bool IsArchive(
-            Stream stream,
-            string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        ) => ArjHeader.IsArchive(stream);
+        public override bool IsArchive(Stream stream, string? password = null) =>
+            ArjHeader.IsArchive(stream);
 
         public override ValueTask<bool> IsArchiveAsync(
             Stream stream,
             string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize,
             CancellationToken cancellationToken = default
         ) => ArjHeader.IsArchiveAsync(stream, cancellationToken);
 

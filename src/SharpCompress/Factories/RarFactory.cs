@@ -31,17 +31,13 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => RarArchive.IsRarFile(stream);
+    public override bool IsArchive(Stream stream, string? password = null) =>
+        RarArchive.IsRarFile(stream);
 
     /// <inheritdoc/>
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
         CancellationToken cancellationToken = default
     ) => RarArchive.IsRarFileAsync(stream, cancellationToken: cancellationToken);
 
