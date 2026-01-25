@@ -11,7 +11,7 @@ namespace SharpCompress.Compressors.LZMA;
 
 public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
 {
-    private class LenDecoder
+    private partial class LenDecoder
     {
         private BitDecoder _choice = new();
         private BitDecoder _choice2 = new();
@@ -62,9 +62,9 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
         }
     }
 
-    private class LiteralDecoder
+    private partial class LiteralDecoder
     {
-        private struct Decoder2
+        private partial struct Decoder2
         {
             private BitDecoder[] _decoders;
 

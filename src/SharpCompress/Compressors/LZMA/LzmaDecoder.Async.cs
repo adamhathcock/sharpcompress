@@ -11,6 +11,119 @@ namespace SharpCompress.Compressors.LZMA;
 
 public partial class Decoder : ICoder, ISetDecoderProperties
 {
+    partial class LenDecoder
+    {
+        public async ValueTask<uint> DecodeAsync(
+            RangeCoder.Decoder rangeDecoder,
+            uint posState,
+            CancellationToken cancellationToken = default
+        )
+        {
+            if (
+                await _choice.DecodeAsync(rangeDecoder, cancellationToken).ConfigureAwait(false)
+                == 0
+            )
+            {
+                return await _lowCoder[posState]
+                    .DecodeAsync(rangeDecoder, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            var symbol = Base.K_NUM_LOW_LEN_SYMBOLS;
+            if (
+                await _choice2.DecodeAsync(rangeDecoder, cancellationToken).ConfigureAwait(false)
+                == 0
+            )
+            {
+                symbol += await _midCoder[posState]
+                    .DecodeAsync(rangeDecoder, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                symbol += Base.K_NUM_MID_LEN_SYMBOLS;
+                symbol += await _highCoder
+                    .DecodeAsync(rangeDecoder, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            return symbol;
+        }
+    }
+
+    partial class LiteralDecoder
+    {
+        partial struct Decoder2
+        {
+            public async ValueTask<byte> DecodeNormalAsync(
+                RangeCoder.Decoder rangeDecoder,
+                CancellationToken cancellationToken = default
+            )
+            {
+                uint symbol = 1;
+                do
+                {
+                    symbol =
+                        (symbol << 1)
+                        | await _decoders[symbol]
+                            .DecodeAsync(rangeDecoder, cancellationToken)
+                            .ConfigureAwait(false);
+                } while (symbol < 0x100);
+                return (byte)symbol;
+            }
+
+            public async ValueTask<byte> DecodeWithMatchByteAsync(
+                RangeCoder.Decoder rangeDecoder,
+                byte matchByte,
+                CancellationToken cancellationToken = default
+            )
+            {
+                uint symbol = 1;
+                do
+                {
+                    var matchBit = (uint)(matchByte >> 7) & 1;
+                    matchByte <<= 1;
+                    var bit = await _decoders[((1 + matchBit) << 8) + symbol]
+                        .DecodeAsync(rangeDecoder, cancellationToken)
+                        .ConfigureAwait(false);
+                    symbol = (symbol << 1) | bit;
+                    if (matchBit != bit)
+                    {
+                        while (symbol < 0x100)
+                        {
+                            symbol =
+                                (symbol << 1)
+                                | await _decoders[symbol]
+                                    .DecodeAsync(rangeDecoder, cancellationToken)
+                                    .ConfigureAwait(false);
+                        }
+                        break;
+                    }
+                } while (symbol < 0x100);
+                return (byte)symbol;
+            }
+        }
+
+        public async ValueTask<byte> DecodeNormalAsync(
+            RangeCoder.Decoder rangeDecoder,
+            uint pos,
+            byte prevByte,
+            CancellationToken cancellationToken = default
+        ) =>
+            await _coders[GetState(pos, prevByte)]
+                .DecodeNormalAsync(rangeDecoder, cancellationToken)
+                .ConfigureAwait(false);
+
+        public async ValueTask<byte> DecodeWithMatchByteAsync(
+            RangeCoder.Decoder rangeDecoder,
+            uint pos,
+            byte prevByte,
+            byte matchByte,
+            CancellationToken cancellationToken = default
+        ) =>
+            await _coders[GetState(pos, prevByte)]
+                .DecodeWithMatchByteAsync(rangeDecoder, matchByte, cancellationToken)
+                .ConfigureAwait(false);
+    }
+
     public async Task CodeAsync(
         Stream inStream,
         Stream outStream,
@@ -35,7 +148,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
         }
 
         var rangeDecoder = new RangeCoder.Decoder();
-        rangeDecoder.Init(inStream);
+        await rangeDecoder.InitAsync(inStream, cancellationToken).ConfigureAwait(false);
 
         await CodeAsync(_dictionarySize, _outWindow, rangeDecoder, cancellationToken)
             .ConfigureAwait(false);
@@ -64,24 +177,30 @@ public partial class Decoder : ICoder, ISetDecoderProperties
 
             var posState = (uint)outWindow.Total & _posStateMask;
             if (
-                _isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState]
-                    .Decode(rangeDecoder) == 0
+                await _isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState]
+                    .DecodeAsync(rangeDecoder, cancellationToken) == 0
             )
             {
                 byte b;
                 var prevByte = outWindow.GetByte(0);
                 if (!_state.IsCharState())
                 {
-                    b = _literalDecoder.DecodeWithMatchByte(
+                    b = await _literalDecoder.DecodeWithMatchByteAsync(
                         rangeDecoder,
                         (uint)outWindow.Total,
                         prevByte,
-                        outWindow.GetByte((int)_rep0)
+                        outWindow.GetByte((int)_rep0),
+                        cancellationToken
                     );
                 }
                 else
                 {
-                    b = _literalDecoder.DecodeNormal(rangeDecoder, (uint)outWindow.Total, prevByte);
+                    b = await _literalDecoder.DecodeNormalAsync(
+                        rangeDecoder,
+                        (uint)outWindow.Total,
+                        prevByte,
+                        cancellationToken
+                    );
                 }
                 await outWindow.PutByteAsync(b, cancellationToken).ConfigureAwait(false);
                 _state.UpdateChar();
@@ -89,15 +208,21 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             else
             {
                 uint len;
-                if (_isRepDecoders[_state._index].Decode(rangeDecoder) == 1)
+                if (
+                    await _isRepDecoders[_state._index].DecodeAsync(rangeDecoder, cancellationToken)
+                    == 1
+                )
                 {
-                    if (_isRepG0Decoders[_state._index].Decode(rangeDecoder) == 0)
+                    if (
+                        await _isRepG0Decoders[_state._index]
+                            .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                    )
                     {
                         if (
-                            _isRep0LongDecoders[
+                            await _isRep0LongDecoders[
                                 (_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
                             ]
-                                .Decode(rangeDecoder) == 0
+                                .DecodeAsync(rangeDecoder, cancellationToken) == 0
                         )
                         {
                             _state.UpdateShortRep();
@@ -110,13 +235,19 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                     else
                     {
                         uint distance;
-                        if (_isRepG1Decoders[_state._index].Decode(rangeDecoder) == 0)
+                        if (
+                            await _isRepG1Decoders[_state._index]
+                                .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                        )
                         {
                             distance = _rep1;
                         }
                         else
                         {
-                            if (_isRepG2Decoders[_state._index].Decode(rangeDecoder) == 0)
+                            if (
+                                await _isRepG2Decoders[_state._index]
+                                    .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                            )
                             {
                                 distance = _rep2;
                             }
@@ -130,7 +261,10 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                         _rep1 = _rep0;
                         _rep0 = distance;
                     }
-                    len = _repLenDecoder.Decode(rangeDecoder, posState) + Base.K_MATCH_MIN_LEN;
+                    len =
+                        await _repLenDecoder
+                            .DecodeAsync(rangeDecoder, posState, cancellationToken)
+                            .ConfigureAwait(false) + Base.K_MATCH_MIN_LEN;
                     _state.UpdateRep();
                 }
                 else
@@ -138,29 +272,44 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                     _rep3 = _rep2;
                     _rep2 = _rep1;
                     _rep1 = _rep0;
-                    len = Base.K_MATCH_MIN_LEN + _lenDecoder.Decode(rangeDecoder, posState);
+                    len =
+                        Base.K_MATCH_MIN_LEN
+                        + await _lenDecoder
+                            .DecodeAsync(rangeDecoder, posState, cancellationToken)
+                            .ConfigureAwait(false);
                     _state.UpdateMatch();
-                    var posSlot = _posSlotDecoder[Base.GetLenToPosState(len)].Decode(rangeDecoder);
+                    var posSlot = await _posSlotDecoder[Base.GetLenToPosState(len)]
+                        .DecodeAsync(rangeDecoder, cancellationToken)
+                        .ConfigureAwait(false);
                     if (posSlot >= Base.K_START_POS_MODEL_INDEX)
                     {
                         var numDirectBits = (int)((posSlot >> 1) - 1);
                         _rep0 = ((2 | (posSlot & 1)) << numDirectBits);
                         if (posSlot < Base.K_END_POS_MODEL_INDEX)
                         {
-                            _rep0 += BitTreeDecoder.ReverseDecode(
-                                _posDecoders,
-                                _rep0 - posSlot - 1,
-                                rangeDecoder,
-                                numDirectBits
-                            );
+                            _rep0 += await BitTreeDecoder
+                                .ReverseDecodeAsync(
+                                    _posDecoders,
+                                    _rep0 - posSlot - 1,
+                                    rangeDecoder,
+                                    numDirectBits,
+                                    cancellationToken
+                                )
+                                .ConfigureAwait(false);
                         }
                         else
                         {
                             _rep0 += (
-                                rangeDecoder.DecodeDirectBits(numDirectBits - Base.K_NUM_ALIGN_BITS)
-                                << Base.K_NUM_ALIGN_BITS
+                                await rangeDecoder
+                                    .DecodeDirectBitsAsync(
+                                        numDirectBits - Base.K_NUM_ALIGN_BITS,
+                                        cancellationToken
+                                    )
+                                    .ConfigureAwait(false) << Base.K_NUM_ALIGN_BITS
                             );
-                            _rep0 += _posAlignDecoder.ReverseDecode(rangeDecoder);
+                            _rep0 += await _posAlignDecoder
+                                .ReverseDecodeAsync(rangeDecoder, cancellationToken)
+                                .ConfigureAwait(false);
                         }
                     }
                     else
