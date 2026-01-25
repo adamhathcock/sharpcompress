@@ -5,7 +5,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Explode;
 
-public class ExplodeStream : Stream, IStreamStack
+public partial class ExplodeStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
