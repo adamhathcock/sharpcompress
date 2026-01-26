@@ -70,25 +70,11 @@ public partial class EntryStream : Stream, IStreamStack
         {
             if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
             {
-                try
-                {
-                    deflateStream.Flush(); //Deflate over reads. Knock it back
-                }
-                catch (NotSupportedException)
-                {
-                    // Ignore: underlying stream does not support required operations for Flush
-                }
+                deflateStream.Flush(); //Deflate over reads. Knock it back
             }
             else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
             {
-                try
-                {
-                    lzmaStream.Flush(); //Lzma over reads. Knock it back
-                }
-                catch (NotSupportedException)
-                {
-                    // Ignore: underlying stream does not support required operations for Flush
-                }
+                lzmaStream.Flush(); //Lzma over reads. Knock it back
             }
         }
 #if DEBUG_STREAMS
@@ -97,6 +83,39 @@ public partial class EntryStream : Stream, IStreamStack
         base.Dispose(disposing);
         _stream.Dispose();
     }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
+        if (!(_completed || _reader.Cancelled))
+        {
+            await SkipEntryAsync().ConfigureAwait(false);
+        }
+
+        //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
+        if (_stream is IStreamStack ss)
+        {
+            if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
+            {
+                await deflateStream.FlushAsync().ConfigureAwait(false);
+            }
+            else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
+            {
+                await lzmaStream.FlushAsync().ConfigureAwait(false);
+            }
+        }
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(EntryStream));
+#endif
+        await base.DisposeAsync().ConfigureAwait(false);
+        await _stream.DisposeAsync().ConfigureAwait(false);
+    }
+#endif
 
     public override bool CanRead => true;
 

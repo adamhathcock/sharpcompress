@@ -604,7 +604,13 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
     public override void Flush()
     {
-        _stream.Flush();
+        // Only flush the underlying stream when in write mode
+        // Flushing input streams during read operations is not meaningful
+        // and can cause issues with forward-only/non-seekable streams
+        if (_streamMode == StreamMode.Writer)
+        {
+            _stream.Flush();
+        }
         //rewind the buffer
         ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
         z.AvailableBytesIn = 0;
@@ -612,7 +618,13 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
     public override async Task FlushAsync(CancellationToken cancellationToken)
     {
-        await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        // Only flush the underlying stream when in write mode
+        // Flushing input streams during read operations is not meaningful
+        // and can cause issues with forward-only/non-seekable streams
+        if (_streamMode == StreamMode.Writer)
+        {
+            await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
         //rewind the buffer
         ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
         z.AvailableBytesIn = 0;

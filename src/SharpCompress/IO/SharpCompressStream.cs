@@ -265,7 +265,6 @@ public partial class SharpCompressStream : Stream, IStreamStack
             ValidateBufferState();
         }
 
-        long orig = _internalPosition;
         long targetPos;
         // Calculate the absolute target position based on origin
         switch (origin)
