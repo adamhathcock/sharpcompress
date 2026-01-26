@@ -26,8 +26,6 @@ internal partial struct BitEncoder
 
     public void Encode(Encoder encoder, uint symbol)
     {
-        // encoder.EncodeBit(Prob, kNumBitModelTotalBits, symbol);
-        // UpdateModel(symbol);
         var newBound = (encoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
         if (symbol == 0)
         {
@@ -85,18 +83,6 @@ internal partial struct BitDecoder
     private const int K_NUM_MOVE_BITS = 5;
 
     private uint _prob;
-
-    public void UpdateModel(int numMoveBits, uint symbol)
-    {
-        if (symbol == 0)
-        {
-            _prob += (K_BIT_MODEL_TOTAL - _prob) >> numMoveBits;
-        }
-        else
-        {
-            _prob -= (_prob) >> numMoveBits;
-        }
-    }
 
     public void Init() => _prob = K_BIT_MODEL_TOTAL >> 1;
 

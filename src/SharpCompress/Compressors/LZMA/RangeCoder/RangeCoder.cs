@@ -44,17 +44,6 @@ internal partial class Encoder
 
     public void CloseStream() => _stream.Dispose();
 
-    public void Encode(uint start, uint size, uint total)
-    {
-        _low += start * (_range /= total);
-        _range *= size;
-        while (_range < K_TOP_VALUE)
-        {
-            _range <<= 8;
-            ShiftLow();
-        }
-    }
-
     public void ShiftLow()
     {
         if ((uint)_low < 0xFF000000 || (uint)(_low >> 32) == 1)
@@ -88,29 +77,7 @@ internal partial class Encoder
         }
     }
 
-    public void EncodeBit(uint size0, int numTotalBits, uint symbol)
-    {
-        var newBound = (_range >> numTotalBits) * size0;
-        if (symbol == 0)
-        {
-            _range = newBound;
-        }
-        else
-        {
-            _low += newBound;
-            _range -= newBound;
-        }
-        while (_range < K_TOP_VALUE)
-        {
-            _range <<= 8;
-            ShiftLow();
-        }
-    }
-
     public long GetProcessedSizeAdd() => -1;
-
-    //return _cacheSize + Stream.Position - StartPosition + 4;
-    // (long)Stream.GetProcessedSize();
 }
 
 internal partial class Decoder
@@ -119,13 +86,11 @@ internal partial class Decoder
     public uint _range;
     public uint _code;
 
-    // public Buffer.InBuffer Stream = new Buffer.InBuffer(1 << 16);
     public Stream _stream;
     public long _total;
 
     public void Init(Stream stream)
     {
-        // Stream.Init(stream);
         _stream = stream;
 
         _code = 0;
@@ -140,8 +105,6 @@ internal partial class Decoder
     public void ReleaseStream() =>
         // Stream.ReleaseStream();
         _stream = null;
-
-    public void CloseStream() => _stream.Dispose();
 
     public void Normalize()
     {
@@ -181,14 +144,6 @@ internal partial class Decoder
         for (var i = numTotalBits; i > 0; i--)
         {
             range >>= 1;
-            /*
-            result <<= 1;
-            if (code >= range)
-            {
-                code -= range;
-                result |= 1;
-            }
-            */
             var t = (code - range) >> 31;
             code -= range & (t - 1);
             result = (result << 1) | (1 - t);

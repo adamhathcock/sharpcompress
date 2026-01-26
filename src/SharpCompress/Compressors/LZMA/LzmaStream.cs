@@ -161,7 +161,7 @@ public partial class LzmaStream : Stream, IStreamStack
         return lzma;
     }
 
-    private LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream? presetDictionary)
+    private LzmaStream(LzmaEncoderProperties properties, bool isLzma2)
     {
         _isLzma2 = isLzma2;
         _availableBytes = 0;
@@ -177,11 +177,6 @@ public partial class LzmaStream : Stream, IStreamStack
         var prop = new byte[5];
         _encoder.WriteCoderProperties(prop);
         Properties = prop;
-
-        if (presetDictionary != null)
-        {
-            _encoder.Train(presetDictionary);
-        }
     }
 
     public static LzmaStream Create(
@@ -197,7 +192,7 @@ public partial class LzmaStream : Stream, IStreamStack
         Stream outputStream
     )
     {
-        var lzma = new LzmaStream(properties, isLzma2, presetDictionary);
+        var lzma = new LzmaStream(properties, isLzma2);
 
         lzma._encoder!.SetStreams(null, outputStream, -1, -1);
 

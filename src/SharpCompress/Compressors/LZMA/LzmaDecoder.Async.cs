@@ -137,7 +137,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
         {
             CreateDictionary();
         }
-        _outWindow.Init(outStream);
+        await _outWindow.InitAsync(outStream);
         if (outSize > 0)
         {
             _outWindow.SetLimit(outSize);
@@ -156,7 +156,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
         await _outWindow.ReleaseStreamAsync(cancellationToken).ConfigureAwait(false);
         rangeDecoder.ReleaseStream();
 
-        _outWindow.Dispose();
+        await _outWindow.DisposeAsync().ConfigureAwait(false);
         _outWindow = null;
     }
 
@@ -331,5 +331,14 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             }
         }
         return false;
+    }
+
+    public async ValueTask TrainAsync(Stream stream)
+    {
+        if (_outWindow is null)
+        {
+            CreateDictionary();
+        }
+        await _outWindow.TrainAsync(stream);
     }
 }

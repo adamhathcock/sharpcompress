@@ -15,7 +15,7 @@ internal partial class Encoder
             var temp = _cache;
             do
             {
-                var b = (byte)(temp + (uint)(_low >> 32));
+                var b = (byte)(temp + (_low >> 32));
                 var buffer = new[] { b };
                 await _stream.WriteAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
                 temp = 0xFF;
@@ -24,22 +24,6 @@ internal partial class Encoder
         }
         _cacheSize++;
         _low = ((uint)_low) << 8;
-    }
-
-    public async ValueTask EncodeAsync(
-        uint start,
-        uint size,
-        uint total,
-        CancellationToken cancellationToken = default
-    )
-    {
-        _low += start * (_range /= total);
-        _range *= size;
-        while (_range < K_TOP_VALUE)
-        {
-            _range <<= 8;
-            await ShiftLowAsync(cancellationToken).ConfigureAwait(false);
-        }
     }
 
     public async ValueTask EncodeBitAsync(
@@ -113,8 +97,6 @@ internal partial class Decoder
         }
         _total = 5;
     }
-
-    public void ReleaseStream() => _stream = null;
 
     public async ValueTask NormalizeAsync(CancellationToken cancellationToken = default)
     {

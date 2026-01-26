@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 using System.Threading;
@@ -10,10 +8,66 @@ namespace SharpCompress.Compressors.LZMA;
 
 public partial class LzmaStream
 {
+    public static async ValueTask<LzmaStream> CreateAsync(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        Stream? presetDictionary,
+        bool isLzma2,
+        bool leaveOpen = false
+    )
+    {
+        var lzma = new LzmaStream(
+            properties,
+            inputStream,
+            inputSize,
+            outputSize,
+            isLzma2,
+            leaveOpen
+        );
+        if (!isLzma2)
+        {
+            if (presetDictionary != null)
+            {
+                await lzma._outWindow.TrainAsync(presetDictionary);
+            }
+
+            await lzma._rangeDecoder.InitAsync(inputStream);
+        }
+        else
+        {
+            if (presetDictionary != null)
+            {
+                await lzma._outWindow.TrainAsync(presetDictionary);
+                lzma._needDictReset = false;
+            }
+        }
+        return lzma;
+    }
+
+    /*public static async ValueTask<LzmaStream> CreateAsync(
+        LzmaEncoderProperties properties,
+        bool isLzma2,
+        Stream? presetDictionary,
+        Stream outputStream
+    )
+    {
+        var lzma = new LzmaStream(properties, isLzma2, presetDictionary);
+
+        lzma._encoder!.SetStreams(null, outputStream, -1, -1);
+
+        if (presetDictionary != null)
+        {
+            lzma._encoder.Train(presetDictionary);
+        }
+        return lzma;
+    }*/
+
     private async ValueTask DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
     {
         var controlBuffer = new byte[1];
-        await _inputStream
+        await _inputStream!
             .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
             .ConfigureAwait(false);
         var control = controlBuffer[0];
@@ -42,13 +96,13 @@ public partial class LzmaStream
 
             _availableBytes = (control & 0x1F) << 16;
             var buffer = new byte[2];
-            await _inputStream
+            await _inputStream!
                 .ReadExactAsync(buffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
             _availableBytes += (buffer[0] << 8) + buffer[1] + 1;
             _inputPosition += 2;
 
-            await _inputStream
+            await _inputStream!
                 .ReadExactAsync(buffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
             _rangeDecoderLimit = (buffer[0] << 8) + buffer[1] + 1;
@@ -57,7 +111,7 @@ public partial class LzmaStream
             if (control >= 0xC0)
             {
                 _needProps = false;
-                await _inputStream
+                await _inputStream!
                     .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
                     .ConfigureAwait(false);
                 Properties[0] = controlBuffer[0];
@@ -86,7 +140,7 @@ public partial class LzmaStream
         {
             _uncompressedChunk = true;
             var buffer = new byte[2];
-            await _inputStream
+            await _inputStream!
                 .ReadExactAsync(buffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
             _availableBytes = (buffer[0] << 8) + buffer[1] + 1;
@@ -141,7 +195,7 @@ public partial class LzmaStream
                     .ConfigureAwait(false);
             }
             else if (
-                await _decoder
+                await _decoder!
                     .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
                     .ConfigureAwait(false)
                 && _outputSize < 0
@@ -165,7 +219,7 @@ public partial class LzmaStream
                 {
                     _outWindow.SetLimit(toProcess + 1);
                     if (
-                        !await _decoder
+                        !await _decoder!
                             .CodeAsync(
                                 _dictionarySize,
                                 _outWindow,
@@ -253,7 +307,7 @@ public partial class LzmaStream
                     .ConfigureAwait(false);
             }
             else if (
-                await _decoder
+                await _decoder!
                     .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
                     .ConfigureAwait(false)
                 && _outputSize < 0
@@ -277,7 +331,7 @@ public partial class LzmaStream
                 {
                     _outWindow.SetLimit(toProcess + 1);
                     if (
-                        !await _decoder
+                        !await _decoder!
                             .CodeAsync(
                                 _dictionarySize,
                                 _outWindow,

@@ -585,7 +585,7 @@ public class LzmaStreamAsyncTests
         long decompressedSize
     )
     {
-        var lzmaStream = LzmaStream.Create(
+        var lzmaStream = await LzmaStream.CreateAsync(
             properties,
             compressedStream,
             compressedSize,

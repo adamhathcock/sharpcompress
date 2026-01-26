@@ -1,18 +1,36 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA.LZ;
 
-internal partial class OutWindow : IDisposable
+internal partial class OutWindow : IAsyncDisposable
 {
+    public async ValueTask InitAsync(Stream stream)
+    {
+        await ReleaseStreamAsync();
+        _stream = stream;
+    }
+
     public async ValueTask ReleaseStreamAsync(CancellationToken cancellationToken = default)
     {
         await FlushAsync(cancellationToken).ConfigureAwait(false);
         _stream = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await ReleaseStreamAsync();
+        if (_buffer is null)
+        {
+            return;
+        }
+        ArrayPool<byte>.Shared.Return(_buffer);
+        _buffer = null;
     }
 
     private async ValueTask FlushAsync(CancellationToken cancellationToken = default)
@@ -139,5 +157,21 @@ internal partial class OutWindow : IDisposable
             }
         }
         return len - size;
+    }
+
+    public async ValueTask TrainAsync(Stream stream)
+    {
+        var len = stream.Length;
+        var size = (len < _windowSize) ? (int)len : _windowSize;
+        stream.Position = len - size;
+        _total = 0;
+        _limit = size;
+        _pos = _windowSize - size;
+        await CopyStreamAsync(stream, size);
+        if (_pos == _windowSize)
+        {
+            _pos = 0;
+        }
+        _streamPos = _pos;
     }
 }
