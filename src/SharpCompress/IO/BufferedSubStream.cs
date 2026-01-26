@@ -69,6 +69,11 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     private void RefillCache()
     {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(BufferedSubStream));
+        }
+
         var count = (int)Math.Min(BytesLeftToRead, _cache!.Length);
         _cacheOffset = 0;
         if (count == 0)
@@ -91,6 +96,11 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     private async ValueTask RefillCacheAsync(CancellationToken cancellationToken)
     {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(BufferedSubStream));
+        }
+
         var count = (int)Math.Min(BytesLeftToRead, _cache!.Length);
         _cacheOffset = 0;
         if (count == 0)
