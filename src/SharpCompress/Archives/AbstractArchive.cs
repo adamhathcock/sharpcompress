@@ -146,6 +146,19 @@ public abstract class AbstractArchive<TEntry, TVolume> : IArchive, IAsyncArchive
     public virtual bool IsEncrypted => false;
 
     /// <summary>
+    /// Returns whether multi-threaded extraction is supported for this archive.
+    /// Multi-threading is supported when:
+    /// 1. The archive is opened from a FileInfo or file path (not a stream)
+    /// 2. Multi-threading is explicitly enabled in ReaderOptions
+    /// 3. The archive is not SOLID (SOLID archives should use sequential extraction)
+    /// </summary>
+    public virtual bool SupportsMultiThreadedExtraction =>
+        _sourceStream is not null
+        && _sourceStream.IsFileMode
+        && ReaderOptions.EnableMultiThreadedExtraction
+        && !IsSolid;
+
+    /// <summary>
     /// The archive can find all the parts of the archive needed to fully extract the archive.  This forces the parsing of the entire archive.
     /// </summary>
     public bool IsComplete

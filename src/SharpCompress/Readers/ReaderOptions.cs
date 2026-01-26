@@ -28,4 +28,12 @@ public class ReaderOptions : OptionsBase
     /// When set, progress updates will be reported as entries are extracted.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; set; }
+
+    /// <summary>
+    /// Enable multi-threaded extraction support when the archive is opened from a FileInfo or file path.
+    /// When enabled, multiple threads can extract different entries concurrently by creating
+    /// independent file streams. This is only effective for archives opened from files, not streams.
+    /// Default is false for backward compatibility.
+    /// </summary>
+    public bool EnableMultiThreadedExtraction { get; set; }
 }

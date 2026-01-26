@@ -44,4 +44,12 @@ public interface IArchive : IDisposable
     /// Returns whether the archive is encrypted.
     /// </summary>
     bool IsEncrypted { get; }
+
+    /// <summary>
+    /// Returns whether multi-threaded extraction is supported for this archive.
+    /// Multi-threading is supported when the archive is opened from a FileInfo or file path
+    /// (not a stream) and the format supports random access (e.g., Zip, Tar, Rar).
+    /// SOLID archives (some Rar, all 7Zip) should use sequential extraction for best performance.
+    /// </summary>
+    bool SupportsMultiThreadedExtraction { get; }
 }
