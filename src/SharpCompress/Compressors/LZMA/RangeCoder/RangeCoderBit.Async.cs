@@ -7,7 +7,7 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
 internal partial struct BitEncoder
 {
-    public async ValueTask EncodeAsync(
+    public ValueTask EncodeAsync(
         Encoder encoder,
         uint symbol,
         CancellationToken cancellationToken = default
@@ -28,14 +28,15 @@ internal partial struct BitEncoder
         if (encoder._range < Encoder.K_TOP_VALUE)
         {
             encoder._range <<= 8;
-            await encoder.ShiftLowAsync(cancellationToken).ConfigureAwait(false);
+            return encoder.ShiftLowAsync(cancellationToken);
         }
+        return default;
     }
 }
 
 internal partial struct BitDecoder
 {
-    public async ValueTask<uint> DecodeAsync(
+    public ValueTask<uint> DecodeAsync(
         Decoder decoder,
         CancellationToken cancellationToken = default
     )
@@ -45,13 +46,17 @@ internal partial struct BitDecoder
         {
             decoder._range = newBound;
             _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;
-            await decoder.Normalize2Async(cancellationToken).ConfigureAwait(false);
-            return 0;
+            return DecodeAsyncHelper(decoder.Normalize2Async(cancellationToken), 0);
         }
         decoder._range -= newBound;
         decoder._code -= newBound;
         _prob -= (_prob) >> K_NUM_MOVE_BITS;
-        await decoder.Normalize2Async(cancellationToken).ConfigureAwait(false);
-        return 1;
+        return DecodeAsyncHelper(decoder.Normalize2Async(cancellationToken), 1);
+    }
+
+    private static async ValueTask<uint> DecodeAsyncHelper(ValueTask normalizeTask, uint result)
+    {
+        await normalizeTask.ConfigureAwait(false);
+        return result;
     }
 }
