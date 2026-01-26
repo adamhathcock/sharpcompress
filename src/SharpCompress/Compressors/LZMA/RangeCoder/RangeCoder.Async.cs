@@ -114,9 +114,29 @@ internal partial class Decoder
         _total = 5;
     }
 
+    public void ReleaseStream() => _stream = null;
+
     public async ValueTask NormalizeAsync(CancellationToken cancellationToken = default)
     {
         while (_range < K_TOP_VALUE)
+        {
+            var buffer = new byte[1];
+            var read = await _stream
+                .ReadAsync(buffer, 0, 1, cancellationToken)
+                .ConfigureAwait(false);
+            if (read == 0)
+            {
+                throw new EndOfStreamException();
+            }
+            _code = (_code << 8) | buffer[0];
+            _range <<= 8;
+            _total++;
+        }
+    }
+
+    public async ValueTask Normalize2Async(CancellationToken cancellationToken = default)
+    {
+        if (_range < K_TOP_VALUE)
         {
             var buffer = new byte[1];
             var read = await _stream

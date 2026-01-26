@@ -45,13 +45,13 @@ internal partial struct BitDecoder
         {
             decoder._range = newBound;
             _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;
-            await decoder.NormalizeAsync(cancellationToken).ConfigureAwait(false);
+            await decoder.Normalize2Async(cancellationToken).ConfigureAwait(false);
             return 0;
         }
         decoder._range -= newBound;
         decoder._code -= newBound;
         _prob -= (_prob) >> K_NUM_MOVE_BITS;
-        await decoder.NormalizeAsync(cancellationToken).ConfigureAwait(false);
+        await decoder.Normalize2Async(cancellationToken).ConfigureAwait(false);
         return 1;
     }
 }
