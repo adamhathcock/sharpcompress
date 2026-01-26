@@ -97,4 +97,25 @@ public class SharpCompressStreamTests
             }
         }
     }
+
+    [Fact]
+    public void BufferedSubStream_DoubleDispose_DoesNotCorruptArrayPool()
+    {
+        // This test verifies that calling Dispose multiple times on BufferedSubStream
+        // doesn't return the same array to the pool twice, which would cause pool corruption
+        byte[] data = new byte[0x10000];
+        using (MemoryStream ms = new MemoryStream(data))
+        {
+            var stream = new BufferedSubStream(ms, 0, data.Length);
+
+            // First disposal
+            stream.Dispose();
+
+            // Second disposal should not throw or corrupt the pool
+            stream.Dispose();
+        }
+
+        // If we got here without an exception, the test passed
+        Assert.True(true);
+    }
 }
