@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -64,7 +65,14 @@ public class SharpCompressStreamTests
         {
             createData(ms);
 
-            using (SharpCompressStream scs = new SharpCompressStream(ms, true, false, 0x10000))
+            using (
+                SharpCompressStream scs = new SharpCompressStream(
+                    new ForwardOnlyStream(ms),
+                    true,
+                    false,
+                    0x10000
+                )
+            )
             {
                 IStreamStack stack = (IStreamStack)scs;
 
