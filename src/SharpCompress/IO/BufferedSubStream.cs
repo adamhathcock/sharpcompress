@@ -64,7 +64,14 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             _cacheLength = 0;
             return;
         }
-        Stream.Position = origin;
+
+        // Only seek if we're not already at the correct position
+        // This avoids expensive seek operations when reading sequentially
+        if (Stream.Position != origin && Stream.CanSeek)
+        {
+            Stream.Position = origin;
+        }
+
         _cacheLength = Stream.Read(_cache, 0, count);
         origin += _cacheLength;
         BytesLeftToRead -= _cacheLength;
@@ -79,7 +86,12 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             _cacheLength = 0;
             return;
         }
-        Stream.Position = origin;
+        // Only seek if we're not already at the correct position
+        // This avoids expensive seek operations when reading sequentially
+        if (Stream.Position != origin && Stream.CanSeek)
+        {
+            Stream.Position = origin;
+        }
         _cacheLength = await Stream
             .ReadAsync(_cache, 0, count, cancellationToken)
             .ConfigureAwait(false);
