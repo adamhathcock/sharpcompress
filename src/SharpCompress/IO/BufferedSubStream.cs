@@ -71,7 +71,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
         // Only seek if we're not already at the correct position
         // This avoids expensive seek operations when reading sequentially
-        if (Stream.Position != origin && Stream.CanSeek)
+        if (Stream.CanSeek && Stream.Position != origin)
         {
             Stream.Position = origin;
         }
@@ -92,7 +92,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
         }
         // Only seek if we're not already at the correct position
         // This avoids expensive seek operations when reading sequentially
-        if (Stream.Position != origin && Stream.CanSeek)
+        if (Stream.CanSeek && Stream.Position != origin)
         {
             Stream.Position = origin;
         }
