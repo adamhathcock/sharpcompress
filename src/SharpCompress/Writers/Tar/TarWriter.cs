@@ -6,6 +6,8 @@ using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.BZip2MT;
+using SharpCompress.Compressors.BZip2MT.OutputStream;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
@@ -37,7 +39,7 @@ public partial class TarWriter : AbstractWriter
                 break;
             case CompressionType.BZip2:
                 {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                    destination = new BZip2ParallelOutputStream(destination);
                 }
                 break;
             case CompressionType.GZip:
