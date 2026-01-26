@@ -10,14 +10,24 @@ internal partial class BufferedSubStream
 {
     private async ValueTask RefillCacheAsync(CancellationToken cancellationToken)
     {
-        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(BufferedSubStream));
+        }
+
+        var count = (int)Math.Min(BytesLeftToRead, _cache!.Length);
         _cacheOffset = 0;
         if (count == 0)
         {
             _cacheLength = 0;
             return;
         }
-        Stream.Position = origin;
+        // Only seek if we're not already at the correct position
+        // This avoids expensive seek operations when reading sequentially
+        if (Stream.CanSeek && Stream.Position != origin)
+        {
+            Stream.Position = origin;
+        }
         _cacheLength = await Stream
             .ReadAsync(_cache, 0, count, cancellationToken)
             .ConfigureAwait(false);
@@ -45,7 +55,7 @@ internal partial class BufferedSubStream
             }
 
             count = Math.Min(count, _cacheLength - _cacheOffset);
-            Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
+            Buffer.BlockCopy(_cache!, _cacheOffset, buffer, offset, count);
             _cacheOffset += count;
         }
 
@@ -72,7 +82,7 @@ internal partial class BufferedSubStream
             }
 
             count = Math.Min(count, _cacheLength - _cacheOffset);
-            _cache.AsSpan(_cacheOffset, count).CopyTo(buffer.Span);
+            _cache!.AsSpan(_cacheOffset, count).CopyTo(buffer.Span);
             _cacheOffset += count;
         }
 
