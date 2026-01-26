@@ -29,17 +29,25 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(BufferedSubStream));
 #endif
-        if (disposing)
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
+
+        if (disposing && _cache is not null)
         {
             ArrayPool<byte>.Shared.Return(_cache);
+            _cache = null;
         }
         base.Dispose(disposing);
     }
 
     private int _cacheOffset;
     private int _cacheLength;
-    private readonly byte[] _cache = ArrayPool<byte>.Shared.Rent(81920);
+    private byte[]? _cache = ArrayPool<byte>.Shared.Rent(81920);
     private long origin;
+    private bool _isDisposed;
 
     private long BytesLeftToRead { get; set; }
 
@@ -61,7 +69,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     private void RefillCache()
     {
-        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
+        var count = (int)Math.Min(BytesLeftToRead, _cache!.Length);
         _cacheOffset = 0;
         if (count == 0)
         {
@@ -83,7 +91,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     private async ValueTask RefillCacheAsync(CancellationToken cancellationToken)
     {
-        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
+        var count = (int)Math.Min(BytesLeftToRead, _cache!.Length);
         _cacheOffset = 0;
         if (count == 0)
         {
@@ -118,7 +126,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             }
 
             count = Math.Min(count, _cacheLength - _cacheOffset);
-            Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
+            Buffer.BlockCopy(_cache!, _cacheOffset, buffer, offset, count);
             _cacheOffset += count;
         }
 
@@ -136,7 +144,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             }
         }
 
-        return _cache[_cacheOffset++];
+        return _cache![_cacheOffset++];
     }
 
     public override async Task<int> ReadAsync(
@@ -159,7 +167,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             }
 
             count = Math.Min(count, _cacheLength - _cacheOffset);
-            Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
+            Buffer.BlockCopy(_cache!, _cacheOffset, buffer, offset, count);
             _cacheOffset += count;
         }
 
@@ -186,7 +194,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             }
 
             count = Math.Min(count, _cacheLength - _cacheOffset);
-            _cache.AsSpan(_cacheOffset, count).CopyTo(buffer.Span);
+            _cache!.AsSpan(_cacheOffset, count).CopyTo(buffer.Span);
             _cacheOffset += count;
         }
 
