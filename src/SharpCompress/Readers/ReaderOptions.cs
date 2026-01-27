@@ -7,6 +7,8 @@ public class ReaderOptions : OptionsBase
 {
     /// <summary>
     /// The default buffer size for stream operations.
+    /// This value (65536 bytes) is preserved for backward compatibility.
+    /// New code should use Constants.BufferSize instead (81920 bytes), which matches .NET's Stream.CopyTo default.
     /// </summary>
     [Obsolete(
         "Use Constants.BufferSize instead. This constant will be removed in a future version."
