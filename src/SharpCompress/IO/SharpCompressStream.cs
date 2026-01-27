@@ -445,7 +445,10 @@ public class SharpCompressStream : Stream, IStreamStack
             if (_bufferedLength == 0)
             {
                 _bufferPosition = 0;
-                _bufferedLength = await FillBufferMemoryAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
+                _bufferedLength = await FillBufferMemoryAsync(
+                        _buffer.AsMemory(0, _bufferSize),
+                        cancellationToken
+                    )
                     .ConfigureAwait(false);
             }
             int available = _bufferedLength - _bufferPosition;
@@ -459,7 +462,10 @@ public class SharpCompressStream : Stream, IStreamStack
             }
             // If buffer exhausted, refill
             _bufferPosition = 0;
-            _bufferedLength = await FillBufferMemoryAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
+            _bufferedLength = await FillBufferMemoryAsync(
+                    _buffer.AsMemory(0, _bufferSize),
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
             if (_bufferedLength == 0)
             {

@@ -54,10 +54,16 @@ public class ZipShortReadTests : ReaderTests
             get => throw new NotSupportedException();
             set => throw new NotSupportedException();
         }
+
         public override void Flush() => throw new NotSupportedException();
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
+
         public override void SetLength(long value) => throw new NotSupportedException();
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
     }
 
     /// <summary>
@@ -69,11 +75,11 @@ public class ZipShortReadTests : ReaderTests
     [InlineData("Zip.deflate.zip", 999, 4096)]
     [InlineData("Zip.deflate.zip", 100, 4096)]
     [InlineData("Zip.deflate.zip", 50, 512)]
-    [InlineData("Zip.deflate.zip", 1, 1)]  // Extreme case: 1 byte at a time
+    [InlineData("Zip.deflate.zip", 1, 1)] // Extreme case: 1 byte at a time
     [InlineData("Zip.deflate.dd.zip", 1000, 4096)]
     [InlineData("Zip.deflate.dd.zip", 999, 4096)]
     [InlineData("Zip.zip64.zip", 3816, 4096)]
-    [InlineData("Zip.zip64.zip", 3815, 4096)]  // Similar to the issue pattern
+    [InlineData("Zip.zip64.zip", 3815, 4096)] // Similar to the issue pattern
     public void Zip_Reader_Handles_Short_Reads(string zipFile, int firstReadSize, int chunkSize)
     {
         // Use an existing test ZIP file
@@ -82,7 +88,7 @@ public class ZipShortReadTests : ReaderTests
         {
             return; // Skip if file doesn't exist
         }
-        
+
         var bytes = File.ReadAllBytes(zipPath);
 
         // Baseline with MemoryStream (seekable, no short reads)
