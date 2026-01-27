@@ -218,7 +218,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
         private SevenZipEntry? _currentEntry;
         private Stream? _currentFolderStream;
         private CFolder? _currentFolder;
-        private int _currentFolderIndex = -1;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
             : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;
@@ -261,7 +260,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
                 _currentFolderStream?.Dispose();
                 _currentFolderStream = null;
                 _currentFolder = folder;
-                _currentFolderIndex = _archive._database!._folders.IndexOf(folder!);
             }
 
             // Create the folder stream once per folder
