@@ -6,6 +6,14 @@ namespace SharpCompress.Readers;
 public class ReaderOptions : OptionsBase
 {
     /// <summary>
+    /// The default buffer size for stream operations.
+    /// </summary>
+    [Obsolete(
+        "Use Constants.BufferSize instead. This constant will be removed in a future version."
+    )]
+    public const int DefaultBufferSize = 0x10000;
+
+    /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)
     /// </summary>
     public bool LookForHeader { get; set; }
