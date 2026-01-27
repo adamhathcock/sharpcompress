@@ -143,6 +143,70 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
         return count;
     }
 
+    /// <summary>
+    /// Fast skip operation that minimizes cache refills and uses larger reads.
+    /// Used by StreamExtensions.Skip to efficiently skip large amounts of data.
+    /// For non-seekable streams like LZMA, we must still read (decompress) the data,
+    /// but we can do it in very large chunks to minimize overhead.
+    /// </summary>
+    internal void SkipInternal(long advanceAmount)
+    {
+        if (advanceAmount <= 0)
+        {
+            return;
+        }
+
+        // First, skip what's already in cache (free)
+        var inCache = _cacheLength - _cacheOffset;
+        if (inCache > 0)
+        {
+            var skipFromCache = (int)Math.Min(advanceAmount, inCache);
+            _cacheOffset += skipFromCache;
+            advanceAmount -= skipFromCache;
+        }
+
+        if (advanceAmount == 0)
+        {
+            return;
+        }
+
+        // For remaining data, we must actually read it from the underlying stream
+        // Use very large reads to minimize LZMA decompression call overhead
+        var skipBuffer = ArrayPool<byte>.Shared.Rent(1048576); // 1MB for skipping
+        try
+        {
+            while (advanceAmount > 0 && BytesLeftToRead > 0)
+            {
+                var toRead = (int)
+                    Math.Min(Math.Min(advanceAmount, BytesLeftToRead), skipBuffer.Length);
+
+                // Only seek if we're not already at the correct position
+                if (Stream.CanSeek && Stream.Position != origin)
+                {
+                    Stream.Position = origin;
+                }
+
+                var read = Stream.Read(skipBuffer, 0, toRead);
+                if (read == 0)
+                {
+                    break;
+                }
+
+                origin += read;
+                BytesLeftToRead -= read;
+                advanceAmount -= read;
+            }
+
+            // Invalidate cache since we skipped past it
+            _cacheOffset = 0;
+            _cacheLength = 0;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(skipBuffer);
+        }
+    }
+
     public override int ReadByte()
     {
         if (_cacheOffset == _cacheLength)

@@ -27,7 +27,6 @@ internal static class ExtractionMethods
         Action<string, ExtractionOptions?> write
     )
     {
-        string destinationFileName;
         var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
 
         //check for trailing slash.
@@ -48,35 +47,40 @@ internal static class ExtractionMethods
 
         options ??= new ExtractionOptions() { Overwrite = true };
 
-        var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
+        // Cache entry.Key to avoid multiple property access
+        var entryKey = entry.Key.NotNull("Entry Key is null");
+        var file = Path.GetFileName(entryKey).NotNull("File is null");
         file = Utility.ReplaceInvalidFileNameChars(file);
+
+        string destinationFileName;
         if (options.ExtractFullPath)
         {
-            var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
-                .NotNull("Directory is null");
-            var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
+            var folder = Path.GetDirectoryName(entryKey).NotNull("Directory is null");
+            // Combine paths first, then get full path once
+            destinationFileName = Path.GetFullPath(
+                Path.Combine(fullDestinationDirectoryPath, folder, file)
+            );
 
-            if (!Directory.Exists(destdir))
+            // Security check before directory creation
+            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
             {
-                if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
-                {
-                    throw new ExtractionException(
-                        "Entry is trying to create a directory outside of the destination directory."
-                    );
-                }
-
-                Directory.CreateDirectory(destdir);
+                throw new ExtractionException(
+                    "Entry is trying to write a file outside of the destination directory."
+                );
             }
-            destinationFileName = Path.Combine(destdir, file);
+
+            // Only create parent directory if needed (Directory.CreateDirectory is idempotent but still has overhead)
+            var parentDir = Path.GetDirectoryName(destinationFileName)!;
+            if (!Directory.Exists(parentDir))
+            {
+                Directory.CreateDirectory(parentDir);
+            }
         }
         else
         {
-            destinationFileName = Path.Combine(fullDestinationDirectoryPath, file);
-        }
-
-        if (!entry.IsDirectory)
-        {
-            destinationFileName = Path.GetFullPath(destinationFileName);
+            destinationFileName = Path.GetFullPath(
+                Path.Combine(fullDestinationDirectoryPath, file)
+            );
 
             if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
             {
@@ -84,6 +88,10 @@ internal static class ExtractionMethods
                     "Entry is trying to write a file outside of the destination directory."
                 );
             }
+        }
+
+        if (!entry.IsDirectory)
+        {
             write(destinationFileName, options);
         }
         else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
@@ -132,7 +140,6 @@ internal static class ExtractionMethods
         CancellationToken cancellationToken = default
     )
     {
-        string destinationFileName;
         var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
 
         //check for trailing slash.
@@ -153,35 +160,40 @@ internal static class ExtractionMethods
 
         options ??= new ExtractionOptions() { Overwrite = true };
 
-        var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
+        // Cache entry.Key to avoid multiple property access
+        var entryKey = entry.Key.NotNull("Entry Key is null");
+        var file = Path.GetFileName(entryKey).NotNull("File is null");
         file = Utility.ReplaceInvalidFileNameChars(file);
+
+        string destinationFileName;
         if (options.ExtractFullPath)
         {
-            var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
-                .NotNull("Directory is null");
-            var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
+            var folder = Path.GetDirectoryName(entryKey).NotNull("Directory is null");
+            // Combine paths first, then get full path once
+            destinationFileName = Path.GetFullPath(
+                Path.Combine(fullDestinationDirectoryPath, folder, file)
+            );
 
-            if (!Directory.Exists(destdir))
+            // Security check before directory creation
+            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
             {
-                if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
-                {
-                    throw new ExtractionException(
-                        "Entry is trying to create a directory outside of the destination directory."
-                    );
-                }
-
-                Directory.CreateDirectory(destdir);
+                throw new ExtractionException(
+                    "Entry is trying to write a file outside of the destination directory."
+                );
             }
-            destinationFileName = Path.Combine(destdir, file);
+
+            // Only create parent directory if needed
+            var parentDir = Path.GetDirectoryName(destinationFileName)!;
+            if (!Directory.Exists(parentDir))
+            {
+                Directory.CreateDirectory(parentDir);
+            }
         }
         else
         {
-            destinationFileName = Path.Combine(fullDestinationDirectoryPath, file);
-        }
-
-        if (!entry.IsDirectory)
-        {
-            destinationFileName = Path.GetFullPath(destinationFileName);
+            destinationFileName = Path.GetFullPath(
+                Path.Combine(fullDestinationDirectoryPath, file)
+            );
 
             if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
             {
@@ -189,6 +201,10 @@ internal static class ExtractionMethods
                     "Entry is trying to write a file outside of the destination directory."
                 );
             }
+        }
+
+        if (!entry.IsDirectory)
+        {
             await writeAsync(destinationFileName, options, cancellationToken).ConfigureAwait(false);
         }
         else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))

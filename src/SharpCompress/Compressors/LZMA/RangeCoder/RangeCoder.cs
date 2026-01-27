@@ -164,8 +164,10 @@ internal class Decoder
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint GetThreshold(uint total) => _code / (_range /= total);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Decode(uint start, uint size)
     {
         _code -= start * _range;
@@ -173,6 +175,7 @@ internal class Decoder
         Normalize();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint DecodeDirectBits(int numTotalBits)
     {
         var range = _range;
@@ -205,6 +208,7 @@ internal class Decoder
         return result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint DecodeBit(uint size0, int numTotalBits)
     {
         var newBound = (_range >> numTotalBits) * size0;

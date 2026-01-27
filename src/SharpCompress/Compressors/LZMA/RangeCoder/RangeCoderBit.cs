@@ -1,3 +1,7 @@
+#nullable disable
+
+using System.Runtime.CompilerServices;
+
 namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
 internal struct BitEncoder
@@ -100,6 +104,7 @@ internal struct BitDecoder
 
     public void Init() => _prob = K_BIT_MODEL_TOTAL >> 1;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint Decode(Decoder rangeDecoder)
     {
         var newBound = (rangeDecoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;

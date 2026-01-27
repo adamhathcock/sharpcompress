@@ -9,7 +9,7 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveEntryExtensions
 {
-    private const int BufferSize = 81920;
+    private const int BufferSize = 1048576; // 1MB buffer for better disk I/O performance
 
     /// <param name="archiveEntry">The archive entry to extract.</param>
     extension(IArchiveEntry archiveEntry)
@@ -135,7 +135,14 @@ public static class IArchiveEntryExtensions
                 options,
                 (x, fm) =>
                 {
-                    using var fs = File.Open(destinationFileName, fm);
+                    // Use larger buffer for better disk I/O performance
+                    using var fs = new FileStream(
+                        destinationFileName,
+                        fm,
+                        FileAccess.Write,
+                        FileShare.None,
+                        bufferSize: 1048576
+                    ); // 1MB buffer
                     entry.WriteTo(fs);
                 }
             );
@@ -155,7 +162,15 @@ public static class IArchiveEntryExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
+                        // Use async I/O with large buffer for better performance
+                        using var fs = new FileStream(
+                            destinationFileName,
+                            fm,
+                            FileAccess.Write,
+                            FileShare.None,
+                            bufferSize: 1048576,
+                            useAsync: true
+                        ); // 1MB buffer
                         await entry.WriteToAsync(fs, null, ct).ConfigureAwait(false);
                     },
                     cancellationToken

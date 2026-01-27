@@ -3,6 +3,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
@@ -42,6 +43,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
             _highCoder.Init();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint Decode(RangeCoder.Decoder rangeDecoder, uint posState)
         {
             if (_choice.Decode(rangeDecoder) == 0)
@@ -78,6 +80,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                 }
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte DecodeNormal(RangeCoder.Decoder rangeDecoder)
             {
                 uint symbol = 1;
@@ -88,6 +91,7 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
                 return (byte)symbol;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte DecodeWithMatchByte(RangeCoder.Decoder rangeDecoder, byte matchByte)
             {
                 uint symbol = 1;
@@ -141,12 +145,15 @@ public class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private uint GetState(uint pos, byte prevByte) =>
             ((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte DecodeNormal(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte) =>
             _coders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte DecodeWithMatchByte(
             RangeCoder.Decoder rangeDecoder,
             uint pos,

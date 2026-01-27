@@ -18,8 +18,34 @@ public static class StreamExtensions
                 return;
             }
 
-            using var readOnlySubStream = new IO.ReadOnlySubStream(stream, advanceAmount);
-            readOnlySubStream.CopyTo(Stream.Null);
+            // For BufferedSubStream, use internal fast skip to avoid multiple cache refills
+            if (stream is IO.BufferedSubStream bufferedSubStream)
+            {
+                bufferedSubStream.SkipInternal(advanceAmount);
+                return;
+            }
+
+            // Use a very large buffer (1MB) to minimize Read() calls when skipping
+            // This is critical for solid 7zip archives with LZMA compression
+            var buffer = ArrayPool<byte>.Shared.Rent(1048576); // 1MB buffer
+            try
+            {
+                long remaining = advanceAmount;
+                while (remaining > 0)
+                {
+                    var toRead = (int)Math.Min(remaining, buffer.Length);
+                    var read = stream.Read(buffer, 0, toRead);
+                    if (read == 0)
+                    {
+                        break; // End of stream
+                    }
+                    remaining -= read;
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         public void Skip() => stream.CopyTo(Stream.Null);

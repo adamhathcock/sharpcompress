@@ -339,7 +339,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
     {
         using Stream s = OpenEntryStream();
         var sourceStream = WrapWithProgress(s, Entry);
-        sourceStream.CopyTo(writeStream, 81920);
+        sourceStream.CopyTo(writeStream, 1048576); // 1MB buffer
     }
 
     internal async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
@@ -347,11 +347,15 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader, IAsyncReader
 #if LEGACY_DOTNET
         using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
-        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
+        await sourceStream
+            .CopyToAsync(writeStream, 1048576, cancellationToken)
+            .ConfigureAwait(false); // 1MB buffer
 #else
         await using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
-        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
+        await sourceStream
+            .CopyToAsync(writeStream, 1048576, cancellationToken)
+            .ConfigureAwait(false); // 1MB buffer
 #endif
     }
 
