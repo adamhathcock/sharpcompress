@@ -251,4 +251,28 @@ public class SevenZipArchiveTests : ArchiveTests
         );
         Assert.False(nonSolidArchive.IsSolid);
     }
+
+    [Fact]
+    public void SevenZipArchive_Solid_ExtractAllEntries_Contiguous()
+    {
+        // This test verifies that solid archives iterate entries as contiguous streams
+        // rather than recreating the decompression stream for each entry
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+        using var archive = SevenZipArchive.Open(testArchive);
+        Assert.True(archive.IsSolid);
+
+        using var reader = archive.ExtractAllEntries();
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                reader.WriteEntryToDirectory(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
+            }
+        }
+
+        VerifyFiles();
+    }
 }
