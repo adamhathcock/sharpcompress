@@ -249,26 +249,27 @@ public class SharpCompressStream : Stream, IStreamStack
 
     /// <summary>
     /// Fills the buffer by reading from the underlying stream, handling short reads.
-    /// Continues reading until the buffer is full or EOF is reached.
-    /// This ensures that buffering properly handles non-seekable streams that return short reads.
+    /// Implements the ReadFully pattern: reads in a loop until buffer is full or EOF is reached.
     /// </summary>
     /// <param name="buffer">Buffer to fill</param>
-    /// <param name="offset">Offset in buffer</param>
+    /// <param name="offset">Offset in buffer (always 0 in current usage)</param>
     /// <param name="count">Number of bytes to read</param>
-    /// <returns>Total number of bytes read</returns>
+    /// <returns>Total number of bytes read (may be less than count if EOF is reached)</returns>
     private int FillBuffer(byte[] buffer, int offset, int count)
     {
-        int totalRead = 0;
-        while (totalRead < count)
+        // Implement ReadFully pattern but return the actual count read
+        // This is the same logic as Utility.ReadFully but returns count instead of bool
+        var total = 0;
+        int read;
+        while ((read = Stream.Read(buffer, offset + total, count - total)) > 0)
         {
-            int read = Stream.Read(buffer, offset + totalRead, count - totalRead);
-            if (read == 0)
+            total += read;
+            if (total >= count)
             {
-                break; // EOF reached
+                return total;
             }
-            totalRead += read;
         }
-        return totalRead;
+        return total;
     }
 
     public override long Seek(long offset, SeekOrigin origin)
@@ -386,8 +387,8 @@ public class SharpCompressStream : Stream, IStreamStack
     }
 
     /// <summary>
-    /// Async version of FillBuffer. Fills the buffer by reading from the underlying stream, handling short reads.
-    /// Continues reading until the buffer is full or EOF is reached.
+    /// Async version of FillBuffer. Implements the ReadFullyAsync pattern.
+    /// Reads in a loop until buffer is full or EOF is reached.
     /// </summary>
     private async Task<int> FillBufferAsync(
         byte[] buffer,
@@ -396,19 +397,25 @@ public class SharpCompressStream : Stream, IStreamStack
         CancellationToken cancellationToken
     )
     {
-        int totalRead = 0;
-        while (totalRead < count)
+        // Implement ReadFullyAsync pattern but return the actual count read
+        // This is the same logic as Utility.ReadFullyAsync but returns count instead of bool
+        var total = 0;
+        int read;
+        while (
+            (
+                read = await Stream
+                    .ReadAsync(buffer, offset + total, count - total, cancellationToken)
+                    .ConfigureAwait(false)
+            ) > 0
+        )
         {
-            int read = await Stream
-                .ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken)
-                .ConfigureAwait(false);
-            if (read == 0)
+            total += read;
+            if (total >= count)
             {
-                break; // EOF reached
+                return total;
             }
-            totalRead += read;
         }
-        return totalRead;
+        return total;
     }
 
     public override async Task WriteAsync(
@@ -486,27 +493,32 @@ public class SharpCompressStream : Stream, IStreamStack
     }
 
     /// <summary>
-    /// Async version of FillBuffer for Memory{byte}. Fills the buffer by reading from the underlying stream, handling short reads.
-    /// Continues reading until the buffer is full or EOF is reached.
+    /// Async version of FillBuffer for Memory{byte}. Implements the ReadFullyAsync pattern.
+    /// Reads in a loop until buffer is full or EOF is reached.
     /// </summary>
     private async ValueTask<int> FillBufferMemoryAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken
     )
     {
-        int totalRead = 0;
-        while (totalRead < buffer.Length)
+        // Implement ReadFullyAsync pattern but return the actual count read
+        var total = 0;
+        int read;
+        while (
+            (
+                read = await Stream
+                    .ReadAsync(buffer.Slice(total), cancellationToken)
+                    .ConfigureAwait(false)
+            ) > 0
+        )
         {
-            int read = await Stream
-                .ReadAsync(buffer.Slice(totalRead), cancellationToken)
-                .ConfigureAwait(false);
-            if (read == 0)
+            total += read;
+            if (total >= buffer.Length)
             {
-                break; // EOF reached
+                return total;
             }
-            totalRead += read;
         }
-        return totalRead;
+        return total;
     }
 
     public override async ValueTask WriteAsync(
