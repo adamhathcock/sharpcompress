@@ -206,11 +206,11 @@ public class SharpCompressStream : Stream, IStreamStack
         {
             ValidateBufferState();
 
-            // Fill buffer if needed
+            // Fill buffer if needed, handling short reads from underlying stream
             if (_bufferedLength == 0)
             {
-                _bufferedLength = Stream.Read(_buffer!, 0, _bufferSize);
                 _bufferPosition = 0;
+                _bufferedLength = FillBuffer(_buffer!, 0, _bufferSize);
             }
             int available = _bufferedLength - _bufferPosition;
             int toRead = Math.Min(count, available);
@@ -222,11 +222,8 @@ public class SharpCompressStream : Stream, IStreamStack
                 return toRead;
             }
             // If buffer exhausted, refill
-            int r = Stream.Read(_buffer!, 0, _bufferSize);
-            if (r == 0)
-                return 0;
-            _bufferedLength = r;
             _bufferPosition = 0;
+            _bufferedLength = FillBuffer(_buffer!, 0, _bufferSize);
             if (_bufferedLength == 0)
             {
                 return 0;
@@ -248,6 +245,30 @@ public class SharpCompressStream : Stream, IStreamStack
             _internalPosition += read;
             return read;
         }
+    }
+
+    /// <summary>
+    /// Fills the buffer by reading from the underlying stream, handling short reads.
+    /// Continues reading until the buffer is full or EOF is reached.
+    /// This ensures that buffering properly handles non-seekable streams that return short reads.
+    /// </summary>
+    /// <param name="buffer">Buffer to fill</param>
+    /// <param name="offset">Offset in buffer</param>
+    /// <param name="count">Number of bytes to read</param>
+    /// <returns>Total number of bytes read</returns>
+    private int FillBuffer(byte[] buffer, int offset, int count)
+    {
+        int totalRead = 0;
+        while (totalRead < count)
+        {
+            int read = Stream.Read(buffer, offset + totalRead, count - totalRead);
+            if (read == 0)
+            {
+                break; // EOF reached
+            }
+            totalRead += read;
+        }
+        return totalRead;
     }
 
     public override long Seek(long offset, SeekOrigin origin)
@@ -324,13 +345,12 @@ public class SharpCompressStream : Stream, IStreamStack
         {
             ValidateBufferState();
 
-            // Fill buffer if needed
+            // Fill buffer if needed, handling short reads from underlying stream
             if (_bufferedLength == 0)
             {
-                _bufferedLength = await Stream
-                    .ReadAsync(_buffer!, 0, _bufferSize, cancellationToken)
-                    .ConfigureAwait(false);
                 _bufferPosition = 0;
+                _bufferedLength = await FillBufferAsync(_buffer!, 0, _bufferSize, cancellationToken)
+                    .ConfigureAwait(false);
             }
             int available = _bufferedLength - _bufferPosition;
             int toRead = Math.Min(count, available);
@@ -342,13 +362,9 @@ public class SharpCompressStream : Stream, IStreamStack
                 return toRead;
             }
             // If buffer exhausted, refill
-            int r = await Stream
-                .ReadAsync(_buffer!, 0, _bufferSize, cancellationToken)
-                .ConfigureAwait(false);
-            if (r == 0)
-                return 0;
-            _bufferedLength = r;
             _bufferPosition = 0;
+            _bufferedLength = await FillBufferAsync(_buffer!, 0, _bufferSize, cancellationToken)
+                .ConfigureAwait(false);
             if (_bufferedLength == 0)
             {
                 return 0;
@@ -367,6 +383,32 @@ public class SharpCompressStream : Stream, IStreamStack
             _internalPosition += read;
             return read;
         }
+    }
+
+    /// <summary>
+    /// Async version of FillBuffer. Fills the buffer by reading from the underlying stream, handling short reads.
+    /// Continues reading until the buffer is full or EOF is reached.
+    /// </summary>
+    private async Task<int> FillBufferAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        int totalRead = 0;
+        while (totalRead < count)
+        {
+            int read = await Stream
+                .ReadAsync(buffer, offset + totalRead, count - totalRead, cancellationToken)
+                .ConfigureAwait(false);
+            if (read == 0)
+            {
+                break; // EOF reached
+            }
+            totalRead += read;
+        }
+        return totalRead;
     }
 
     public override async Task WriteAsync(
@@ -399,13 +441,12 @@ public class SharpCompressStream : Stream, IStreamStack
         {
             ValidateBufferState();
 
-            // Fill buffer if needed
+            // Fill buffer if needed, handling short reads from underlying stream
             if (_bufferedLength == 0)
             {
-                _bufferedLength = await Stream
-                    .ReadAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
-                    .ConfigureAwait(false);
                 _bufferPosition = 0;
+                _bufferedLength = await FillBufferMemoryAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
+                    .ConfigureAwait(false);
             }
             int available = _bufferedLength - _bufferPosition;
             int toRead = Math.Min(buffer.Length, available);
@@ -417,13 +458,9 @@ public class SharpCompressStream : Stream, IStreamStack
                 return toRead;
             }
             // If buffer exhausted, refill
-            int r = await Stream
-                .ReadAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
-                .ConfigureAwait(false);
-            if (r == 0)
-                return 0;
-            _bufferedLength = r;
             _bufferPosition = 0;
+            _bufferedLength = await FillBufferMemoryAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
+                .ConfigureAwait(false);
             if (_bufferedLength == 0)
             {
                 return 0;
@@ -440,6 +477,30 @@ public class SharpCompressStream : Stream, IStreamStack
             _internalPosition += read;
             return read;
         }
+    }
+
+    /// <summary>
+    /// Async version of FillBuffer for Memory{byte}. Fills the buffer by reading from the underlying stream, handling short reads.
+    /// Continues reading until the buffer is full or EOF is reached.
+    /// </summary>
+    private async ValueTask<int> FillBufferMemoryAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken
+    )
+    {
+        int totalRead = 0;
+        while (totalRead < buffer.Length)
+        {
+            int read = await Stream
+                .ReadAsync(buffer.Slice(totalRead), cancellationToken)
+                .ConfigureAwait(false);
+            if (read == 0)
+            {
+                break; // EOF reached
+            }
+            totalRead += read;
+        }
+        return totalRead;
     }
 
     public override async ValueTask WriteAsync(
