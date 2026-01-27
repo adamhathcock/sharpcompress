@@ -1,13 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using SharpCompress.Common;
-using SharpCompress.IO;
 using SharpCompress.Readers;
-using SharpCompress.Readers.Zip;
-using SharpCompress.Test.Mocks;
-using SharpCompress.Writers;
 using Xunit;
 
 namespace SharpCompress.Test.Zip;
