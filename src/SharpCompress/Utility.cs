@@ -11,8 +11,6 @@ namespace SharpCompress;
 
 internal static class Utility
 {
-    //80kb is a good industry standard temporary buffer size
-    private const int TEMP_BUFFER_SIZE = 81920;
     private static readonly HashSet<char> invalidChars = new(Path.GetInvalidFileNameChars());
 
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);
@@ -151,7 +149,7 @@ internal static class Utility
 
     public static long TransferTo(this Stream source, Stream destination, long maxLength)
     {
-        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        var array = ArrayPool<byte>.Shared.Rent(Common.Constants.BufferSize);
         try
         {
             var maxReadSize = array.Length;
@@ -190,7 +188,7 @@ internal static class Utility
         CancellationToken cancellationToken = default
     )
     {
-        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        var array = ArrayPool<byte>.Shared.Rent(Common.Constants.BufferSize);
         try
         {
             var maxReadSize = array.Length;
@@ -268,7 +266,7 @@ internal static class Utility
             return;
         }
 
-        var array = ArrayPool<byte>.Shared.Rent(TEMP_BUFFER_SIZE);
+        var array = ArrayPool<byte>.Shared.Rent(Common.Constants.BufferSize);
         try
         {
             while (advanceAmount > 0)

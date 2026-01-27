@@ -15,6 +15,7 @@ using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Writers.Zip;
 
@@ -87,7 +88,7 @@ public class ZipWriter : AbstractWriter
     {
         using var output = WriteToStream(entryPath, zipWriterEntryOptions);
         var progressStream = WrapWithProgress(source, entryPath);
-        progressStream.CopyTo(output);
+        progressStream.CopyTo(output, Constants.BufferSize);
     }
 
     public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
