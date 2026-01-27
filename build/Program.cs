@@ -240,8 +240,22 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
         var lastTag = allTags.OrderBy(tag => Version.Parse(tag)).LastOrDefault() ?? "0.0.0";
         var lastVersion = Version.Parse(lastTag);
 
-        // Increment minor version for next release
-        var nextVersion = new Version(lastVersion.Major, lastVersion.Minor + 1, 0);
+        // Determine version increment based on branch
+        var currentBranch = await GetCurrentBranch();
+        Version nextVersion;
+
+        if (currentBranch == "release")
+        {
+            // Release branch: increment patch version
+            nextVersion = new Version(lastVersion.Major, lastVersion.Minor, lastVersion.Build + 1);
+            Console.WriteLine($"Building prerelease for release branch (patch increment)");
+        }
+        else
+        {
+            // Master or other branches: increment minor version
+            nextVersion = new Version(lastVersion.Major, lastVersion.Minor + 1, 0);
+            Console.WriteLine($"Building prerelease for {currentBranch} branch (minor increment)");
+        }
 
         // Use commit count since the last version tag if available; otherwise, fall back to total count
         var revListArgs = allTags.Any() ? $"--count {lastTag}..HEAD" : "--count HEAD";
