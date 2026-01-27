@@ -230,7 +230,7 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
     }
     else
     {
-        // Not tagged - create prerelease version based on next minor version
+        // Not tagged - create prerelease version
         var allTags = (await GetGitOutput("tag", "--list"))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Where(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"))
@@ -264,6 +264,28 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
         var version = $"{nextVersion}-beta.{commitCount}";
         Console.WriteLine($"Building prerelease version: {version}");
         return (version, true);
+    }
+}
+
+static async Task<string> GetCurrentBranch()
+{
+    // In GitHub Actions, GITHUB_REF_NAME contains the branch name
+    var githubRefName = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
+    if (!string.IsNullOrEmpty(githubRefName))
+    {
+        return githubRefName;
+    }
+
+    // Fallback to git command for local builds
+    try
+    {
+        var (output, _) = await ReadAsync("git", "branch --show-current");
+        return output.Trim();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Could not determine current branch: {ex.Message}");
+        return "unknown";
     }
 }
 
