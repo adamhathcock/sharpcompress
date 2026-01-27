@@ -26,11 +26,11 @@ namespace SharpCompress.Factories
         public override bool IsArchive(Stream stream, string? password = null)
         {
             //You may have to use some(paranoid) checks to ensure that you actually are
-            //processing an ARC file, since other archivers also adopted to the idea of putting
-            //a 01Ah byte at offset 0, namely: Hyper archiver. To check if you have a
+            //processing an ARC file, since other archivers also adopted the idea of putting
+            //a 01Ah byte at offset 0, namely the Hyper archiver. To check if you have a
             //Hyper - archive, check the next two bytes for "HP" or "ST"(or look below for
-            //"HYP").Also, ZOO archiver also does put a 01Ah at the start of the file,
-            //see: ZOO entry below.
+            //"HYP").Also the ZOO archiver also does put a 01Ah at the start of the file,
+            //see the ZOO entry below.
             var bytes = new byte[2];
             stream.Read(bytes, 0, 2);
             return bytes[0] == 0x1A && bytes[1] < 10; //rather thin, but this is all we have
