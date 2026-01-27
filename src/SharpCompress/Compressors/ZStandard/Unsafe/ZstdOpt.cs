@@ -41,8 +41,11 @@ public static unsafe partial class Methods
     private static void ZSTD_setBasePrices(optState_t* optPtr, int optLevel)
     {
         if (ZSTD_compressedLiterals(optPtr) != 0)
+        {
             optPtr->litSumBasePrice =
                 optLevel != 0 ? ZSTD_fracWeight(optPtr->litSum) : ZSTD_bitWeight(optPtr->litSum);
+        }
+
         optPtr->litLengthSumBasePrice =
             optLevel != 0
                 ? ZSTD_fracWeight(optPtr->litLengthSum)
@@ -103,7 +106,10 @@ public static unsafe partial class Methods
         uint factor = prevsum >> (int)logTarget;
         assert(logTarget < 30);
         if (factor <= 1)
+        {
             return prevsum;
+        }
+
         return ZSTD_downscaleStats(
             table,
             lastEltIndex,
@@ -409,7 +415,9 @@ public static unsafe partial class Methods
                 {
                     uint ml;
                     for (ml = 0; ml <= 52; ml++)
+                    {
                         optPtr->matchLengthFreq[ml] = 1;
+                    }
                 }
 
                 optPtr->matchLengthSum = 52 + 1;
@@ -422,7 +430,10 @@ public static unsafe partial class Methods
         else
         {
             if (compressedLiterals != 0)
+            {
                 optPtr->litSum = ZSTD_scaleStats(optPtr->litFreq, (1 << 8) - 1, 12);
+            }
+
             optPtr->litLengthSum = ZSTD_scaleStats(optPtr->litLengthFreq, 35, 11);
             optPtr->matchLengthSum = ZSTD_scaleStats(optPtr->matchLengthFreq, 52, 11);
             optPtr->offCodeSum = ZSTD_scaleStats(optPtr->offCodeFreq, 31, 11);
@@ -442,11 +453,20 @@ public static unsafe partial class Methods
     )
     {
         if (litLength == 0)
+        {
             return 0;
+        }
+
         if (ZSTD_compressedLiterals(optPtr) == 0)
+        {
             return (litLength << 3) * (1 << 8);
+        }
+
         if (optPtr->priceType == ZSTD_OptPrice_e.zop_predef)
+        {
             return litLength * 6 * (1 << 8);
+        }
+
         {
             uint price = optPtr->litSumBasePrice * litLength;
             uint litPriceMax = optPtr->litSumBasePrice - (1 << 8);
@@ -459,7 +479,10 @@ public static unsafe partial class Methods
                         ? ZSTD_fracWeight(optPtr->litFreq[literals[u]])
                         : ZSTD_bitWeight(optPtr->litFreq[literals[u]]);
                 if (litPrice > litPriceMax)
+                {
                     litPrice = litPriceMax;
+                }
+
                 price -= litPrice;
             }
 
@@ -473,9 +496,15 @@ public static unsafe partial class Methods
     {
         assert(litLength <= 1 << 17);
         if (optPtr->priceType == ZSTD_OptPrice_e.zop_predef)
+        {
             return optLevel != 0 ? ZSTD_fracWeight(litLength) : ZSTD_bitWeight(litLength);
+        }
+
         if (litLength == 1 << 17)
+        {
             return (1 << 8) + ZSTD_litLengthPrice((1 << 17) - 1, optPtr, optLevel);
+        }
+
         {
             uint llCode = ZSTD_LLcode(litLength);
             return (uint)(LL_bits[llCode] * (1 << 8))
@@ -507,8 +536,11 @@ public static unsafe partial class Methods
         uint mlBase = matchLength - 3;
         assert(matchLength >= 3);
         if (optPtr->priceType == ZSTD_OptPrice_e.zop_predef)
+        {
             return (optLevel != 0 ? ZSTD_fracWeight(mlBase) : ZSTD_bitWeight(mlBase))
                 + (16 + offCode) * (1 << 8);
+        }
+
         price =
             offCode * (1 << 8)
             + (
@@ -520,7 +552,10 @@ public static unsafe partial class Methods
                 )
             );
         if (optLevel < 2 && offCode >= 20)
+        {
             price += (offCode - 19) * 2 * (1 << 8);
+        }
+
         {
             uint mlCode = ZSTD_MLcode(mlBase);
             price +=
@@ -553,7 +588,10 @@ public static unsafe partial class Methods
         {
             uint u;
             for (u = 0; u < litLength; u++)
+            {
                 optPtr->litFreq[literals[u]] += 2;
+            }
+
             optPtr->litSum += litLength * 2;
         }
 
@@ -591,9 +629,13 @@ public static unsafe partial class Methods
                 return MEM_read32(memPtr);
             case 3:
                 if (BitConverter.IsLittleEndian)
+                {
                     return MEM_read32(memPtr) << 8;
+                }
                 else
+                {
                     return MEM_read32(memPtr) >> 8;
+                }
         }
     }
 
@@ -695,14 +737,18 @@ public static unsafe partial class Methods
                     prefixStart
                 );
                 if (matchIndex + matchLength >= dictLimit)
+                {
                     match = @base + matchIndex;
+                }
             }
 
             if (matchLength > bestLength)
             {
                 bestLength = matchLength;
                 if (matchLength > matchEndIdx - matchIndex)
+                {
                     matchEndIdx = matchIndex + (uint)matchLength;
+                }
             }
 
             if (ip + matchLength == iend)
@@ -742,7 +788,10 @@ public static unsafe partial class Methods
         {
             uint positions = 0;
             if (bestLength > 384)
+            {
                 positions = 192 < (uint)(bestLength - 384) ? 192 : (uint)(bestLength - 384);
+            }
+
             assert(matchEndIdx > curr + 8);
             return positions > matchEndIdx - (curr + 8) ? positions : matchEndIdx - (curr + 8);
         }
@@ -996,7 +1045,9 @@ public static unsafe partial class Methods
                 match = @base + matchIndex;
 #if DEBUG
                 if (matchIndex >= dictLimit)
+                {
                     assert(memcmp(match, ip, matchLength) == 0);
+                }
 #endif
                 matchLength += ZSTD_count(ip + matchLength, match + matchLength, iLimit);
             }
@@ -1012,14 +1063,19 @@ public static unsafe partial class Methods
                     prefixStart
                 );
                 if (matchIndex + matchLength >= dictLimit)
+                {
                     match = @base + matchIndex;
+                }
             }
 
             if (matchLength > bestLength)
             {
                 assert(matchEndIdx > matchIndex);
                 if (matchLength > matchEndIdx - matchIndex)
+                {
                     matchEndIdx = matchIndex + (uint)matchLength;
+                }
+
                 bestLength = matchLength;
                 assert(curr - matchIndex > 0);
                 matches[mnum].off = curr - matchIndex + 3;
@@ -1028,7 +1084,10 @@ public static unsafe partial class Methods
                 if (matchLength > 1 << 12 || ip + matchLength == iLimit)
                 {
                     if (dictMode == ZSTD_dictMode_e.ZSTD_dictMatchState)
+                    {
                         nbCompares = 0;
+                    }
+
                     break;
                 }
             }
@@ -1086,12 +1145,18 @@ public static unsafe partial class Methods
                     prefixStart
                 );
                 if (dictMatchIndex + matchLength >= dmsHighLimit)
+                {
                     match = @base + dictMatchIndex + dmsIndexDelta;
+                }
+
                 if (matchLength > bestLength)
                 {
                     matchIndex = dictMatchIndex + dmsIndexDelta;
                     if (matchLength > matchEndIdx - matchIndex)
+                    {
                         matchEndIdx = matchIndex + (uint)matchLength;
+                    }
+
                     bestLength = matchLength;
                     assert(curr - matchIndex > 0);
                     matches[mnum].off = curr - matchIndex + 3;
@@ -1148,7 +1213,10 @@ public static unsafe partial class Methods
             ) == mls
         );
         if (ip < ms->window.@base + ms->nextToUpdate)
+        {
             return 0;
+        }
+
         ZSTD_updateTree_internal(ms, ip, iHighLimit, mls, dictMode);
         return ZSTD_insertBtAndGetAllMatches(
             matches,
@@ -1851,7 +1919,9 @@ public static unsafe partial class Methods
                                 opt[cur + 1].litlen = 1;
                                 opt[cur + 1].price = with1literal;
                                 if (last_pos < cur + 1)
+                                {
                                     last_pos = cur + 1;
+                                }
                             }
                         }
                     }
@@ -1871,9 +1941,15 @@ public static unsafe partial class Methods
                 }
 
                 if (inr > ilimit)
+                {
                     continue;
+                }
+
                 if (cur == last_pos)
+                {
                     break;
+                }
+
                 if (optLevel == 0 && opt[cur + 1].price <= opt[cur].price + (1 << 8) / 2)
                 {
                     continue;
@@ -1954,7 +2030,9 @@ public static unsafe partial class Methods
                             else
                             {
                                 if (optLevel == 0)
+                                {
                                     break;
+                                }
                             }
                         }
                     }

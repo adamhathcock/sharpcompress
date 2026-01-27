@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ZStandard;
 
-internal class ZStandardStream : DecompressionStream, IStreamStack
+internal partial class ZStandardStream : DecompressionStream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }

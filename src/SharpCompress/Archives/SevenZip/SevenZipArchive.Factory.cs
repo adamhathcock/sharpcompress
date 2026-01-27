@@ -1,12 +1,10 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common;
-using SharpCompress.Common.SevenZip;
-using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -157,13 +155,56 @@ public partial class SevenZipArchive
         }
     }
 
-    private static ReadOnlySpan<byte> Signature =>
-        new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
+    public static async ValueTask<bool> IsSevenZipFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            return await SignatureMatchAsync(stream, cancellationToken);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static ReadOnlySpan<byte> Signature => [(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C];
 
     private static bool SignatureMatch(Stream stream)
     {
-        var reader = new BinaryReader(stream);
-        ReadOnlySpan<byte> signatureBytes = reader.ReadBytes(6);
-        return signatureBytes.SequenceEqual(Signature);
+        var buffer = ArrayPool<byte>.Shared.Rent(6);
+        try
+        {
+            stream.ReadExact(buffer, 0, 6);
+            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    private static async ValueTask<bool> SignatureMatchAsync(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(6);
+        try
+        {
+            if (!await stream.ReadFullyAsync(buffer, 0, 6, cancellationToken).ConfigureAwait(false))
+            {
+                return false;
+            }
+
+            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 }

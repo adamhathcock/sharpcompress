@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Buffers.Binary;
 using System.IO;
@@ -10,14 +8,14 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
-public class LzmaStream : Stream, IStreamStack
+public partial class LzmaStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
 #endif
     int IStreamStack.DefaultBufferSize { get; set; }
 
-    Stream IStreamStack.BaseStream() => _inputStream;
+    Stream IStreamStack.BaseStream() => _inputStream!;
 
     int IStreamStack.BufferSize
     {
@@ -32,7 +30,7 @@ public class LzmaStream : Stream, IStreamStack
 
     void IStreamStack.SetPosition(long position) { }
 
-    private readonly Stream _inputStream;
+    private readonly Stream? _inputStream;
     private readonly long _inputSize;
     private readonly long _outputSize;
     private readonly bool _leaveOpen;
@@ -40,7 +38,7 @@ public class LzmaStream : Stream, IStreamStack
     private readonly int _dictionarySize;
     private readonly OutWindow _outWindow = new();
     private readonly RangeCoder.Decoder _rangeDecoder = new();
-    private Decoder _decoder;
+    private Decoder? _decoder;
 
     private long _position;
     private bool _endReached;
@@ -54,38 +52,14 @@ public class LzmaStream : Stream, IStreamStack
     private bool _needDictReset = true;
     private bool _needProps = true;
 
-    private readonly Encoder _encoder;
+    private readonly Encoder? _encoder;
     private bool _isDisposed;
 
-    public LzmaStream(byte[] properties, Stream inputStream, bool leaveOpen = false)
-        : this(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen) { }
-
-    public LzmaStream(byte[] properties, Stream inputStream, long inputSize, bool leaveOpen = false)
-        : this(properties, inputStream, inputSize, -1, null, properties.Length < 5, leaveOpen) { }
-
-    public LzmaStream(
+    private LzmaStream(
         byte[] properties,
         Stream inputStream,
         long inputSize,
         long outputSize,
-        bool leaveOpen = false
-    )
-        : this(
-            properties,
-            inputStream,
-            inputSize,
-            outputSize,
-            null,
-            properties.Length < 5,
-            leaveOpen
-        ) { }
-
-    public LzmaStream(
-        byte[] properties,
-        Stream inputStream,
-        long inputSize,
-        long outputSize,
-        Stream presetDictionary,
         bool isLzma2,
         bool leaveOpen = false
     )
@@ -95,21 +69,10 @@ public class LzmaStream : Stream, IStreamStack
         _outputSize = outputSize;
         _isLzma2 = isLzma2;
         _leaveOpen = leaveOpen;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(LzmaStream));
-#endif
-
         if (!isLzma2)
         {
             _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
             _outWindow.Create(_dictionarySize);
-            if (presetDictionary != null)
-            {
-                _outWindow.Train(presetDictionary);
-            }
-
-            _rangeDecoder.Init(inputStream);
 
             _decoder = new Decoder();
             _decoder.SetDecoderProperties(properties);
@@ -124,26 +87,81 @@ public class LzmaStream : Stream, IStreamStack
             _dictionarySize <<= (properties[0] >> 1) + 11;
 
             _outWindow.Create(_dictionarySize);
-            if (presetDictionary != null)
-            {
-                _outWindow.Train(presetDictionary);
-                _needDictReset = false;
-            }
 
             Properties = new byte[1];
             _availableBytes = 0;
         }
     }
 
-    public LzmaStream(LzmaEncoderProperties properties, bool isLzma2, Stream outputStream)
-        : this(properties, isLzma2, null, outputStream) { }
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        bool leaveOpen = false
+    ) => Create(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen);
 
-    public LzmaStream(
-        LzmaEncoderProperties properties,
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        bool leaveOpen = false
+    ) => Create(properties, inputStream, inputSize, -1, null, properties.Length < 5, leaveOpen);
+
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        bool leaveOpen = false
+    ) =>
+        Create(
+            properties,
+            inputStream,
+            inputSize,
+            outputSize,
+            null,
+            properties.Length < 5,
+            leaveOpen
+        );
+
+    public static LzmaStream Create(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        Stream? presetDictionary,
         bool isLzma2,
-        Stream presetDictionary,
-        Stream outputStream
+        bool leaveOpen = false
     )
+    {
+        var lzma = new LzmaStream(
+            properties,
+            inputStream,
+            inputSize,
+            outputSize,
+            isLzma2,
+            leaveOpen
+        );
+        if (!isLzma2)
+        {
+            if (presetDictionary != null)
+            {
+                lzma._outWindow.Train(presetDictionary);
+            }
+
+            lzma._rangeDecoder.Init(inputStream);
+        }
+        else
+        {
+            if (presetDictionary != null)
+            {
+                lzma._outWindow.Train(presetDictionary);
+                lzma._needDictReset = false;
+            }
+        }
+        return lzma;
+    }
+
+    private LzmaStream(LzmaEncoderProperties properties, bool isLzma2)
     {
         _isLzma2 = isLzma2;
         _availableBytes = 0;
@@ -159,17 +177,30 @@ public class LzmaStream : Stream, IStreamStack
         var prop = new byte[5];
         _encoder.WriteCoderProperties(prop);
         Properties = prop;
+    }
 
-        _encoder.SetStreams(null, outputStream, -1, -1);
+    public static LzmaStream Create(
+        LzmaEncoderProperties properties,
+        bool isLzma2,
+        Stream outputStream
+    ) => Create(properties, isLzma2, null, outputStream);
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(LzmaStream));
-#endif
+    public static LzmaStream Create(
+        LzmaEncoderProperties properties,
+        bool isLzma2,
+        Stream? presetDictionary,
+        Stream outputStream
+    )
+    {
+        var lzma = new LzmaStream(properties, isLzma2);
+
+        lzma._encoder!.SetStreams(null, outputStream, -1, -1);
 
         if (presetDictionary != null)
         {
-            _encoder.Train(presetDictionary);
+            lzma._encoder.Train(presetDictionary);
         }
+        return lzma;
     }
 
     public override bool CanRead => _encoder == null;
@@ -250,7 +281,7 @@ public class LzmaStream : Stream, IStreamStack
             {
                 _inputPosition += _outWindow.CopyStream(_inputStream, toProcess);
             }
-            else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
+            else if (_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
             {
                 _availableBytes = _outWindow.AvailableBytes;
             }
@@ -271,7 +302,7 @@ public class LzmaStream : Stream, IStreamStack
                 {
                     // Stream might have End Of Stream marker
                     _outWindow.SetLimit(toProcess + 1);
-                    if (!_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder))
+                    if (!_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder))
                     {
                         _rangeDecoder.ReleaseStream();
                         throw new DataErrorException();
@@ -341,7 +372,7 @@ public class LzmaStream : Stream, IStreamStack
         {
             _inputPosition += _outWindow.CopyStream(_inputStream, 1);
         }
-        else if (_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
+        else if (_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder) && _outputSize < 0)
         {
             _availableBytes = _outWindow.AvailableBytes;
         }
@@ -360,7 +391,7 @@ public class LzmaStream : Stream, IStreamStack
             {
                 // Stream might have End Of Stream marker
                 _outWindow.SetLimit(2);
-                if (!_decoder.Code(_dictionarySize, _outWindow, _rangeDecoder))
+                if (!_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder))
                 {
                     _rangeDecoder.ReleaseStream();
                     throw new DataErrorException();
@@ -381,7 +412,7 @@ public class LzmaStream : Stream, IStreamStack
 
     private void DecodeChunkHeader()
     {
-        var control = _inputStream.ReadByte();
+        var control = _inputStream!.ReadByte();
         _inputPosition++;
 
         if (control == 0x00)
@@ -445,90 +476,6 @@ public class LzmaStream : Stream, IStreamStack
         }
     }
 
-    private async ValueTask DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
-    {
-        var controlBuffer = new byte[1];
-        await _inputStream
-            .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
-            .ConfigureAwait(false);
-        var control = controlBuffer[0];
-        _inputPosition++;
-
-        if (control == 0x00)
-        {
-            _endReached = true;
-            return;
-        }
-
-        if (control >= 0xE0 || control == 0x01)
-        {
-            _needProps = true;
-            _needDictReset = false;
-            _outWindow.Reset();
-        }
-        else if (_needDictReset)
-        {
-            throw new DataErrorException();
-        }
-
-        if (control >= 0x80)
-        {
-            _uncompressedChunk = false;
-
-            _availableBytes = (control & 0x1F) << 16;
-            var buffer = new byte[2];
-            await _inputStream
-                .ReadExactAsync(buffer, 0, 2, cancellationToken)
-                .ConfigureAwait(false);
-            _availableBytes += (buffer[0] << 8) + buffer[1] + 1;
-            _inputPosition += 2;
-
-            await _inputStream
-                .ReadExactAsync(buffer, 0, 2, cancellationToken)
-                .ConfigureAwait(false);
-            _rangeDecoderLimit = (buffer[0] << 8) + buffer[1] + 1;
-            _inputPosition += 2;
-
-            if (control >= 0xC0)
-            {
-                _needProps = false;
-                await _inputStream
-                    .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
-                    .ConfigureAwait(false);
-                Properties[0] = controlBuffer[0];
-                _inputPosition++;
-
-                _decoder = new Decoder();
-                _decoder.SetDecoderProperties(Properties);
-            }
-            else if (_needProps)
-            {
-                throw new DataErrorException();
-            }
-            else if (control >= 0xA0)
-            {
-                _decoder = new Decoder();
-                _decoder.SetDecoderProperties(Properties);
-            }
-
-            _rangeDecoder.Init(_inputStream);
-        }
-        else if (control > 0x02)
-        {
-            throw new DataErrorException();
-        }
-        else
-        {
-            _uncompressedChunk = true;
-            var buffer = new byte[2];
-            await _inputStream
-                .ReadExactAsync(buffer, 0, 2, cancellationToken)
-                .ConfigureAwait(false);
-            _availableBytes = (buffer[0] << 8) + buffer[1] + 1;
-            _inputPosition += 2;
-        }
-    }
-
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
@@ -539,242 +486,6 @@ public class LzmaStream : Stream, IStreamStack
         {
             _position = _encoder.Code(new MemoryStream(buffer, offset, count), false);
         }
-    }
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (_endReached)
-        {
-            return 0;
-        }
-
-        var total = 0;
-        while (total < count)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (_availableBytes == 0)
-            {
-                if (_isLzma2)
-                {
-                    await DecodeChunkHeaderAsync(cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    _endReached = true;
-                }
-                if (_endReached)
-                {
-                    break;
-                }
-            }
-
-            var toProcess = count - total;
-            if (toProcess > _availableBytes)
-            {
-                toProcess = (int)_availableBytes;
-            }
-
-            _outWindow.SetLimit(toProcess);
-            if (_uncompressedChunk)
-            {
-                _inputPosition += await _outWindow
-                    .CopyStreamAsync(_inputStream, toProcess, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            else if (
-                await _decoder
-                    .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
-                    .ConfigureAwait(false)
-                && _outputSize < 0
-            )
-            {
-                _availableBytes = _outWindow.AvailableBytes;
-            }
-
-            var read = _outWindow.Read(buffer, offset, toProcess);
-            total += read;
-            offset += read;
-            _position += read;
-            _availableBytes -= read;
-
-            if (_availableBytes == 0 && !_uncompressedChunk)
-            {
-                if (
-                    !_rangeDecoder.IsFinished
-                    || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit)
-                )
-                {
-                    _outWindow.SetLimit(toProcess + 1);
-                    if (
-                        !await _decoder
-                            .CodeAsync(
-                                _dictionarySize,
-                                _outWindow,
-                                _rangeDecoder,
-                                cancellationToken
-                            )
-                            .ConfigureAwait(false)
-                    )
-                    {
-                        _rangeDecoder.ReleaseStream();
-                        throw new DataErrorException();
-                    }
-                }
-
-                _rangeDecoder.ReleaseStream();
-
-                _inputPosition += _rangeDecoder._total;
-                if (_outWindow.HasPending)
-                {
-                    throw new DataErrorException();
-                }
-            }
-        }
-
-        if (_endReached)
-        {
-            if (_inputSize >= 0 && _inputPosition != _inputSize)
-            {
-                throw new DataErrorException();
-            }
-            if (_outputSize >= 0 && _position != _outputSize)
-            {
-                throw new DataErrorException();
-            }
-        }
-
-        return total;
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (_endReached)
-        {
-            return 0;
-        }
-
-        var total = 0;
-        var offset = 0;
-        var count = buffer.Length;
-        while (total < count)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (_availableBytes == 0)
-            {
-                if (_isLzma2)
-                {
-                    await DecodeChunkHeaderAsync(cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    _endReached = true;
-                }
-                if (_endReached)
-                {
-                    break;
-                }
-            }
-
-            var toProcess = count - total;
-            if (toProcess > _availableBytes)
-            {
-                toProcess = (int)_availableBytes;
-            }
-
-            _outWindow.SetLimit(toProcess);
-            if (_uncompressedChunk)
-            {
-                _inputPosition += await _outWindow
-                    .CopyStreamAsync(_inputStream, toProcess, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            else if (
-                await _decoder
-                    .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
-                    .ConfigureAwait(false)
-                && _outputSize < 0
-            )
-            {
-                _availableBytes = _outWindow.AvailableBytes;
-            }
-
-            var read = _outWindow.Read(buffer, offset, toProcess);
-            total += read;
-            offset += read;
-            _position += read;
-            _availableBytes -= read;
-
-            if (_availableBytes == 0 && !_uncompressedChunk)
-            {
-                if (
-                    !_rangeDecoder.IsFinished
-                    || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit)
-                )
-                {
-                    _outWindow.SetLimit(toProcess + 1);
-                    if (
-                        !await _decoder
-                            .CodeAsync(
-                                _dictionarySize,
-                                _outWindow,
-                                _rangeDecoder,
-                                cancellationToken
-                            )
-                            .ConfigureAwait(false)
-                    )
-                    {
-                        _rangeDecoder.ReleaseStream();
-                        throw new DataErrorException();
-                    }
-                }
-
-                _rangeDecoder.ReleaseStream();
-
-                _inputPosition += _rangeDecoder._total;
-                if (_outWindow.HasPending)
-                {
-                    throw new DataErrorException();
-                }
-            }
-        }
-
-        if (_endReached)
-        {
-            if (_inputSize >= 0 && _inputPosition != _inputSize)
-            {
-                throw new DataErrorException();
-            }
-            if (_outputSize >= 0 && _position != _outputSize)
-            {
-                throw new DataErrorException();
-            }
-        }
-
-        return total;
-    }
-#endif
-
-    public override Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        Write(buffer, offset, count);
-        return Task.CompletedTask;
     }
 
     public byte[] Properties { get; } = new byte[5];

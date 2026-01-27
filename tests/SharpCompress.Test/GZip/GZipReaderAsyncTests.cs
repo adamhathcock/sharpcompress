@@ -22,7 +22,7 @@ public class GZipReaderAsyncTests : ReaderTests
     {
         //read only as GZip item
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        await using var reader = GZipReader.OpenAsyncReader(new AsyncOnlyStream(stream));
         while (await reader.MoveToNextEntryAsync())
         {
             Assert.NotEqual(0, reader.Entry.Size);
@@ -34,71 +34,6 @@ public class GZipReaderAsyncTests : ReaderTests
                 using var entryStream = await reader.OpenEntryStreamAsync();
                 using var ms = new MemoryStream();
                 await entryStream.CopyToAsync(ms);
-            }
-        }
-    }
-
-    protected async Task ReadAsync(
-        string testArchive,
-        CompressionType expectedCompression,
-        ReaderOptions? options = null
-    )
-    {
-        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-
-        options ??= new ReaderOptions() { BufferSize = 0x20000 };
-
-        options.LeaveStreamOpen = true;
-        await ReadImplAsync(testArchive, expectedCompression, options);
-
-        options.LeaveStreamOpen = false;
-        await ReadImplAsync(testArchive, expectedCompression, options);
-        VerifyFiles();
-    }
-
-    private async ValueTask ReadImplAsync(
-        string testArchive,
-        CompressionType expectedCompression,
-        ReaderOptions options
-    )
-    {
-        using var file = File.OpenRead(testArchive);
-        using var protectedStream = SharpCompressStream.Create(
-            new ForwardOnlyStream(file, options.BufferSize),
-            leaveOpen: true,
-            throwOnDispose: true,
-            bufferSize: options.BufferSize
-        );
-        using var testStream = new TestStream(protectedStream);
-        await using (
-            var reader = ReaderFactory.OpenAsyncReader(
-                new AsyncOnlyStream(testStream),
-                options,
-                default
-            )
-        )
-        {
-            await UseReaderAsync(reader, expectedCompression);
-            protectedStream.ThrowOnDispose = false;
-            Assert.False(testStream.IsDisposed, $"{nameof(testStream)} prematurely closed");
-        }
-
-        var message =
-            $"{nameof(options.LeaveStreamOpen)} is set to '{options.LeaveStreamOpen}', so {nameof(testStream.IsDisposed)} should be set to '{!testStream.IsDisposed}', but is set to {testStream.IsDisposed}";
-        Assert.True(options.LeaveStreamOpen != testStream.IsDisposed, message);
-    }
-
-    private async ValueTask UseReaderAsync(IAsyncReader reader, CompressionType expectedCompression)
-    {
-        while (await reader.MoveToNextEntryAsync())
-        {
-            if (!reader.Entry.IsDirectory)
-            {
-                Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
             }
         }
     }

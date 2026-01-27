@@ -82,9 +82,14 @@ namespace SharpCompress.Compressors.RLE90
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (buffer == null)
+            {
                 throw new ArgumentNullException(nameof(buffer));
+            }
+
             if (offset < 0 || count < 0 || offset + count > buffer.Length)
+            {
                 throw new ArgumentOutOfRangeException();
+            }
 
             int bytesWritten = 0;
 

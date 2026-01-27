@@ -13,12 +13,10 @@ public interface IWritableArchiveCommon
     /// </summary>
     /// <returns>IDisposeable to resume entry rebuilding</returns>
     IDisposable PauseEntryRebuilding();
+}
 
-    /// <summary>
-    /// Removes the specified entry from the archive.
-    /// </summary>
-    void RemoveEntry(IArchiveEntry entry);
-
+public interface IWritableArchive : IArchive, IWritableArchiveCommon
+{
     IArchiveEntry AddEntry(
         string key,
         Stream source,
@@ -28,14 +26,16 @@ public interface IWritableArchiveCommon
     );
 
     IArchiveEntry AddDirectoryEntry(string key, DateTime? modified = null);
-}
 
-public interface IWritableArchive : IArchive, IWritableArchiveCommon
-{
     /// <summary>
     /// Saves the archive to the specified stream using the given writer options.
     /// </summary>
     void SaveTo(Stream stream, WriterOptions options);
+
+    /// <summary>
+    /// Removes the specified entry from the archive.
+    /// </summary>
+    void RemoveEntry(IArchiveEntry entry);
 }
 
 public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
@@ -48,4 +48,30 @@ public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
         WriterOptions options,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// Asynchronously adds an entry to the archive with the specified key, source stream, and options.
+    /// </summary>
+    ValueTask<IArchiveEntry> AddEntryAsync(
+        string key,
+        Stream source,
+        bool closeStream,
+        long size = 0,
+        DateTime? modified = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Asynchronously adds a directory entry to the archive with the specified key and modification time.
+    /// </summary>
+    ValueTask<IArchiveEntry> AddDirectoryEntryAsync(
+        string key,
+        DateTime? modified = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Removes the specified entry from the archive.
+    /// </summary>
+    ValueTask RemoveEntryAsync(IArchiveEntry entry);
 }

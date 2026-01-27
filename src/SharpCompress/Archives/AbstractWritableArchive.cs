@@ -10,7 +10,7 @@ using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
 
-public abstract class AbstractWritableArchive<TEntry, TVolume>
+public abstract partial class AbstractWritableArchive<TEntry, TVolume>
     : AbstractArchive<TEntry, TVolume>,
         IWritableArchive,
         IWritableAsyncArchive
@@ -84,12 +84,12 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    void IWritableArchiveCommon.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
+    void IWritableArchive.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
 
     public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
         AddEntry(key, source, false, size, modified);
 
-    IArchiveEntry IWritableArchiveCommon.AddEntry(
+    IArchiveEntry IWritableArchive.AddEntry(
         string key,
         Stream source,
         bool closeStream,
@@ -97,7 +97,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         DateTime? modified
     ) => AddEntry(key, source, closeStream, size, modified);
 
-    IArchiveEntry IWritableArchiveCommon.AddDirectoryEntry(string key, DateTime? modified) =>
+    IArchiveEntry IWritableArchive.AddDirectoryEntry(string key, DateTime? modified) =>
         AddDirectoryEntry(key, modified);
 
     public TEntry AddEntry(
@@ -140,6 +140,24 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         return false;
     }
 
+    ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
+        RemoveEntryAsync((TEntry)entry);
+
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddEntryAsync(
+        string key,
+        Stream source,
+        bool closeStream,
+        long size,
+        DateTime? modified,
+        CancellationToken cancellationToken
+    ) => await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
+
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(
+        string key,
+        DateTime? modified,
+        CancellationToken cancellationToken
+    ) => await AddDirectoryEntryAsync(key, modified, cancellationToken);
+
     public TEntry AddDirectoryEntry(string key, DateTime? modified = null)
     {
         if (key.Length > 0 && key[0] is '/' or '\\')
@@ -161,18 +179,6 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
         //reset streams of new entries
         newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
         SaveTo(stream, options, OldEntries, newEntries);
-    }
-
-    public async ValueTask SaveToAsync(
-        Stream stream,
-        WriterOptions options,
-        CancellationToken cancellationToken = default
-    )
-    {
-        //reset streams of new entries
-        newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-        await SaveToAsync(stream, options, OldEntries, newEntries, cancellationToken)
-            .ConfigureAwait(false);
     }
 
     protected TEntry CreateEntry(
@@ -212,7 +218,7 @@ public abstract class AbstractWritableArchive<TEntry, TVolume>
     protected abstract ValueTask SaveToAsync(
         Stream stream,
         WriterOptions options,
-        IEnumerable<TEntry> oldEntries,
+        IAsyncEnumerable<TEntry> oldEntries,
         IEnumerable<TEntry> newEntries,
         CancellationToken cancellationToken = default
     );

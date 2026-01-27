@@ -68,14 +68,14 @@ public class RarArchiveAsyncTests : ArchiveTests
     private async ValueTask ReadRarPasswordAsync(string testArchive, string? password)
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
-        using (
-            var archive = RarArchive.OpenArchive(
+        await using (
+            var archive = RarArchive.OpenAsyncArchive(
                 stream,
                 new ReaderOptions { Password = password, LeaveStreamOpen = true }
             )
         )
         {
-            foreach (var entry in archive.Entries)
+            await foreach (var entry in archive.EntriesAsync)
             {
                 if (!entry.IsDirectory)
                 {

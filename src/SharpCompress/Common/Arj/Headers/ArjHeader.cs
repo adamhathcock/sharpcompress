@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Crypto;
@@ -15,7 +16,7 @@ namespace SharpCompress.Common.Arj.Headers
         LocalHeader,
     }
 
-    public abstract class ArjHeader
+    public abstract partial class ArjHeader
     {
         private const int FIRST_HDR_SIZE = 34;
         private const ushort ARJ_MAGIC = 0xEA60;
@@ -30,6 +31,8 @@ namespace SharpCompress.Common.Arj.Headers
         public FileType FileType { get; set; }
 
         public abstract ArjHeader? Read(Stream reader);
+
+        // Async methods moved to ArjHeader.Async.cs
 
         public byte[] ReadHeader(Stream stream)
         {
@@ -71,6 +74,8 @@ namespace SharpCompress.Common.Arj.Headers
             }
             return body;
         }
+
+        // ReadHeaderAsync moved to ArjHeader.Async.cs
 
         protected List<byte[]> ReadExtendedHeaders(Stream reader)
         {

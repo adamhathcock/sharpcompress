@@ -4,12 +4,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 
 namespace SharpCompress.Readers.Rar;
 
-internal class MultiVolumeRarReader : RarReader
+internal partial class MultiVolumeRarReader : RarReader
 {
     private readonly IEnumerator<Stream> streams;
     private Stream tempStream;
@@ -46,6 +48,8 @@ internal class MultiVolumeRarReader : RarReader
         tempStream = null;
         return enumerator;
     }
+
+    // Async method and MultiVolumeStreamAsyncEnumerator moved to MultiVolumeRarReader.Async.cs
 
     private class MultiVolumeStreamEnumerator : IEnumerable<FilePart>, IEnumerator<FilePart>
     {

@@ -23,7 +23,9 @@ public class LargeMemoryStream : Stream
     public LargeMemoryStream(int chunkSize = 1024 * 1024)
     {
         if (chunkSize <= 0)
+        {
             throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunkSize));
+        }
 
         _chunks = new List<byte[]>();
         _chunkSize = chunkSize;
@@ -42,7 +44,9 @@ public class LargeMemoryStream : Stream
         {
             ThrowIfDisposed();
             if (_chunks.Count == 0)
+            {
                 return 0;
+            }
 
             long length = (long)(_chunks.Count - 1) * _chunkSize;
             length += _chunks[_chunks.Count - 1].Length;
@@ -61,10 +65,13 @@ public class LargeMemoryStream : Stream
         {
             ThrowIfDisposed();
             if (value < 0)
+            {
                 throw new ArgumentOutOfRangeException(
                     nameof(value),
                     "Position cannot be negative."
                 );
+            }
+
             _position = value;
         }
     }
@@ -79,13 +86,20 @@ public class LargeMemoryStream : Stream
     {
         ThrowIfDisposed();
         if (buffer == null)
+        {
             throw new ArgumentNullException(nameof(buffer));
+        }
+
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
+        {
             throw new ArgumentOutOfRangeException();
+        }
 
         long length = Length;
         if (_position >= length)
+        {
             return 0;
+        }
 
         int bytesToRead = (int)Math.Min(count, length - _position);
         int bytesRead = 0;
@@ -96,7 +110,9 @@ public class LargeMemoryStream : Stream
             int chunkOffset = (int)(_position % _chunkSize);
 
             if (chunkIndex >= _chunks.Count)
+            {
                 break;
+            }
 
             byte[] chunk = _chunks[(int)chunkIndex];
             int availableInChunk = chunk.Length - chunkOffset;
@@ -115,9 +131,14 @@ public class LargeMemoryStream : Stream
     {
         ThrowIfDisposed();
         if (buffer == null)
+        {
             throw new ArgumentNullException(nameof(buffer));
+        }
+
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
+        {
             throw new ArgumentOutOfRangeException();
+        }
 
         int bytesWritten = 0;
 
@@ -156,10 +177,12 @@ public class LargeMemoryStream : Stream
         };
 
         if (newPosition < 0)
+        {
             throw new ArgumentOutOfRangeException(
                 nameof(offset),
                 "Cannot seek before the beginning of the stream."
             );
+        }
 
         _position = newPosition;
         return _position;
@@ -169,7 +192,9 @@ public class LargeMemoryStream : Stream
     {
         ThrowIfDisposed();
         if (value < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(value), "Length cannot be negative.");
+        }
 
         long currentLength = Length;
 
@@ -178,7 +203,9 @@ public class LargeMemoryStream : Stream
             // Truncate
             long chunkIndex = (value + _chunkSize - 1) / _chunkSize;
             if (chunkIndex > 0)
+            {
                 chunkIndex--;
+            }
 
             _chunks.RemoveRange((int)(chunkIndex + 1), _chunks.Count - (int)(chunkIndex + 1));
 
@@ -190,7 +217,9 @@ public class LargeMemoryStream : Stream
             }
 
             if (_position > value)
+            {
                 _position = value;
+            }
         }
         else if (value > currentLength)
         {
@@ -246,7 +275,10 @@ public class LargeMemoryStream : Stream
                 int bytesToRead = (int)Math.Min(length - totalRead, int.MaxValue);
                 int bytesRead = Read(result, totalRead, bytesToRead);
                 if (bytesRead == 0)
+                {
                     break;
+                }
+
                 totalRead += bytesRead;
             }
         }
@@ -261,7 +293,9 @@ public class LargeMemoryStream : Stream
     private void ThrowIfDisposed()
     {
         if (_isDisposed)
+        {
             throw new ObjectDisposedException(GetType().Name);
+        }
     }
 
     protected override void Dispose(bool disposing)

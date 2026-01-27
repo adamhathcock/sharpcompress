@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Arj.Headers;
 using SharpCompress.Crypto;
 
@@ -17,7 +19,7 @@ namespace SharpCompress.Common.Ace.Headers
         RECOVERY64B = 4,
     }
 
-    public abstract class AceHeader
+    public abstract partial class AceHeader
     {
         // ACE signature: bytes at offset 7 should be "**ACE**"
         private static readonly byte[] AceSignature =
@@ -57,6 +59,8 @@ namespace SharpCompress.Common.Ace.Headers
             (HeaderFlags & SharpCompress.Common.Ace.Headers.HeaderFlags.MULTIVOLUME) != 0;
 
         public abstract AceHeader? Read(Stream reader);
+
+        // Async methods moved to AceHeader.Async.cs
 
         public byte[] ReadHeader(Stream stream)
         {

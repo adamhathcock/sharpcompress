@@ -41,7 +41,10 @@ public static unsafe partial class Methods
             bpPtr->blockType = (blockType_e)(cBlockHeader >> 1 & 3);
             bpPtr->origSize = cSize;
             if (bpPtr->blockType == blockType_e.bt_rle)
+            {
                 return 1;
+            }
+
             if (bpPtr->blockType == blockType_e.bt_reserved)
             {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
@@ -198,12 +201,14 @@ public static unsafe partial class Methods
                         }
 
                         if (singleStream == 0)
+                        {
                             if (litSize < 6)
                             {
                                 return unchecked(
                                     (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_literals_headerWrong)
                                 );
                             }
+                        }
 
                         if (litCSize + lhSize > srcSize)
                         {
@@ -325,7 +330,10 @@ public static unsafe partial class Methods
                         dctx->litSize = litSize;
                         dctx->litEntropy = 1;
                         if (litEncType == SymbolEncodingType_e.set_compressed)
+                        {
                             dctx->HUFptr = dctx->entropy.hufTable;
+                        }
+
                         return litCSize + lhSize;
                     }
 
@@ -763,7 +771,10 @@ public static unsafe partial class Methods
                     else
                     {
                         if (normalizedCounter[s] >= largeLimit)
+                        {
                             DTableH.fastMode = 0;
+                        }
+
                         assert(normalizedCounter[s] >= 0);
                         symbolNext[s] = (ushort)normalizedCounter[s];
                     }
@@ -833,7 +844,9 @@ public static unsafe partial class Methods
                     tableDecode[position].baseValue = s;
                     position = position + step & tableMask;
                     while (position > highThreshold)
+                    {
                         position = position + step & tableMask;
+                    }
                 }
             }
 
@@ -1264,7 +1277,10 @@ public static unsafe partial class Methods
         if (length < 8)
         {
             while (op < oend)
+            {
                 *op++ = *ip++;
+            }
+
             return;
         }
 
@@ -1292,7 +1308,9 @@ public static unsafe partial class Methods
         }
 
         while (op < oend)
+        {
             *op++ = *ip++;
+        }
     }
 
     /* ZSTD_safecopyDstBeforeSrc():
@@ -1305,7 +1323,10 @@ public static unsafe partial class Methods
         if (length < 8 || diff > -8)
         {
             while (op < oend)
+            {
                 *op++ = *ip++;
+            }
+
             return;
         }
 
@@ -1317,7 +1338,9 @@ public static unsafe partial class Methods
         }
 
         while (op < oend)
+        {
             *op++ = *ip++;
+        }
     }
 
     /* ZSTD_execSequenceEnd():
@@ -1500,6 +1523,7 @@ public static unsafe partial class Methods
             || oMatchEnd > oend_w
             || MEM_32bits && (nuint)(oend - op) < sequenceLength + 32
         )
+        {
             return ZSTD_execSequenceEnd(
                 op,
                 oend,
@@ -1515,6 +1539,8 @@ public static unsafe partial class Methods
                 virtualStart,
                 dictEnd
             );
+        }
+
         assert(op <= oLitEnd);
         assert(oLitEnd < oMatchEnd);
         assert(oMatchEnd <= oend);
@@ -1610,6 +1636,7 @@ public static unsafe partial class Methods
             || oMatchEnd > oend_w
             || MEM_32bits && (nuint)(oend - op) < sequenceLength + 32
         )
+        {
             return ZSTD_execSequenceEndSplitLitBuffer(
                 op,
                 oend,
@@ -1621,6 +1648,8 @@ public static unsafe partial class Methods
                 virtualStart,
                 dictEnd
             );
+        }
+
         assert(op <= oLitEnd);
         assert(oLitEnd < oMatchEnd);
         assert(oMatchEnd <= oend);
@@ -1772,7 +1801,9 @@ public static unsafe partial class Methods
                     {
                         offset = ofBase + BIT_readBitsFast(&seqState->DStream, ofBits);
                         if (MEM_32bits)
+                        {
                             BIT_reloadDStream(&seqState->DStream);
+                        }
                     }
 
                     seqState->prevOffset.e2 = seqState->prevOffset.e1;
@@ -1798,7 +1829,10 @@ public static unsafe partial class Methods
                                     : (&seqState->prevOffset.e0)[offset];
                             temp -= temp == 0 ? 1U : 0U;
                             if (offset != 1)
+                            {
                                 seqState->prevOffset.e2 = seqState->prevOffset.e1;
+                            }
+
                             seqState->prevOffset.e1 = seqState->prevOffset.e0;
                             seqState->prevOffset.e0 = offset = temp;
                         }
@@ -1809,15 +1843,30 @@ public static unsafe partial class Methods
             }
 
             if (mlBits > 0)
+            {
                 seq.matchLength += BIT_readBitsFast(&seqState->DStream, mlBits);
+            }
+
             if (MEM_32bits && mlBits + llBits >= 25 - (30 - 25))
+            {
                 BIT_reloadDStream(&seqState->DStream);
+            }
+
             if (MEM_64bits && totalBits >= 57 - (9 + 9 + 8))
+            {
                 BIT_reloadDStream(&seqState->DStream);
+            }
+
             if (llBits > 0)
+            {
                 seq.litLength += BIT_readBitsFast(&seqState->DStream, llBits);
+            }
+
             if (MEM_32bits)
+            {
                 BIT_reloadDStream(&seqState->DStream);
+            }
+
             if (isLastSeq == 0)
             {
                 ZSTD_updateFseStateWithDInfo(
@@ -1833,7 +1882,10 @@ public static unsafe partial class Methods
                     mlnbBits
                 );
                 if (MEM_32bits)
+                {
                     BIT_reloadDStream(&seqState->DStream);
+                }
+
                 ZSTD_updateFseStateWithDInfo(
                     &seqState->stateOffb,
                     &seqState->DStream,
@@ -1875,7 +1927,9 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
+                {
                     (&seqState.prevOffset.e0)[i] = dctx->entropy.rep[i];
+                }
             }
 
             if (ERR_isError(BIT_initDStream(&seqState.DStream, ip, (nuint)(iend - ip))))
@@ -1899,7 +1953,10 @@ public static unsafe partial class Methods
                 {
                     sequence = ZSTD_decodeSequence(&seqState, isLongOffset, nbSeq == 1 ? 1 : 0);
                     if (litPtr + sequence.litLength > dctx->litBufferEnd)
+                    {
                         break;
+                    }
+
                     {
                         nuint oneSeqSize = ZSTD_execSequenceSplitLitBuffer(
                             op,
@@ -1913,7 +1970,10 @@ public static unsafe partial class Methods
                             dictEnd
                         );
                         if (ERR_isError(oneSeqSize))
+                        {
                             return oneSeqSize;
+                        }
+
                         op += oneSeqSize;
                     }
                 }
@@ -1950,7 +2010,10 @@ public static unsafe partial class Methods
                             dictEnd
                         );
                         if (ERR_isError(oneSeqSize))
+                        {
                             return oneSeqSize;
+                        }
+
                         op += oneSeqSize;
                     }
 
@@ -1978,7 +2041,10 @@ public static unsafe partial class Methods
                         dictEnd
                     );
                     if (ERR_isError(oneSeqSize))
+                    {
                         return oneSeqSize;
+                    }
+
                     op += oneSeqSize;
                 }
             }
@@ -1996,7 +2062,9 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
+                {
                     dctx->entropy.rep[i] = (uint)(&seqState.prevOffset.e0)[i];
+                }
             }
         }
 
@@ -2071,8 +2139,10 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
+                {
                     System.Runtime.CompilerServices.Unsafe.Add(ref seqState.prevOffset.e0, (int)i) =
                         dctx->entropy.rep[i];
+                }
             }
 
             if (ERR_isError(BIT_initDStream(ref seqState.DStream, ip, (nuint)(iend - ip))))
@@ -2156,6 +2226,7 @@ public static unsafe partial class Methods
                                         ofBits
                                     );
                                 if (MEM_32bits)
+                                {
                                     BIT_reloadDStream(
                                         ref seqState_DStream_bitContainer,
                                         ref seqState_DStream_bitsConsumed,
@@ -2163,6 +2234,7 @@ public static unsafe partial class Methods
                                         seqState_DStream_start,
                                         seqState_DStream_limitPtr
                                     );
+                                }
                             }
 
                             seqState.prevOffset.e2 = seqState.prevOffset.e1;
@@ -2204,7 +2276,10 @@ public static unsafe partial class Methods
                                             );
                                     temp -= temp == 0 ? 1U : 0U;
                                     if (offset != 1)
+                                    {
                                         seqState.prevOffset.e2 = seqState.prevOffset.e1;
+                                    }
+
                                     seqState.prevOffset.e1 = seqState.prevOffset.e0;
                                     seqState.prevOffset.e0 = offset = temp;
                                 }
@@ -2215,12 +2290,16 @@ public static unsafe partial class Methods
                     }
 
                     if (mlBits > 0)
+                    {
                         sequence_matchLength += BIT_readBitsFast(
                             seqState_DStream_bitContainer,
                             ref seqState_DStream_bitsConsumed,
                             mlBits
                         );
+                    }
+
                     if (MEM_32bits && mlBits + llBits >= 25 - (30 - 25))
+                    {
                         BIT_reloadDStream(
                             ref seqState_DStream_bitContainer,
                             ref seqState_DStream_bitsConsumed,
@@ -2228,7 +2307,10 @@ public static unsafe partial class Methods
                             seqState_DStream_start,
                             seqState_DStream_limitPtr
                         );
+                    }
+
                     if (MEM_64bits && totalBits >= 57 - (9 + 9 + 8))
+                    {
                         BIT_reloadDStream(
                             ref seqState_DStream_bitContainer,
                             ref seqState_DStream_bitsConsumed,
@@ -2236,13 +2318,19 @@ public static unsafe partial class Methods
                             seqState_DStream_start,
                             seqState_DStream_limitPtr
                         );
+                    }
+
                     if (llBits > 0)
+                    {
                         sequence_litLength += BIT_readBitsFast(
                             seqState_DStream_bitContainer,
                             ref seqState_DStream_bitsConsumed,
                             llBits
                         );
+                    }
+
                     if (MEM_32bits)
+                    {
                         BIT_reloadDStream(
                             ref seqState_DStream_bitContainer,
                             ref seqState_DStream_bitsConsumed,
@@ -2250,6 +2338,8 @@ public static unsafe partial class Methods
                             seqState_DStream_start,
                             seqState_DStream_limitPtr
                         );
+                    }
+
                     if ((nbSeq == 1 ? 1 : 0) == 0)
                     {
                         ZSTD_updateFseStateWithDInfo(
@@ -2267,6 +2357,7 @@ public static unsafe partial class Methods
                             mlnbBits
                         );
                         if (MEM_32bits)
+                        {
                             BIT_reloadDStream(
                                 ref seqState_DStream_bitContainer,
                                 ref seqState_DStream_bitsConsumed,
@@ -2274,6 +2365,8 @@ public static unsafe partial class Methods
                                 seqState_DStream_start,
                                 seqState_DStream_limitPtr
                             );
+                        }
+
                         ZSTD_updateFseStateWithDInfo(
                             ref seqState.stateOffb,
                             seqState_DStream_bitContainer,
@@ -2406,7 +2499,10 @@ public static unsafe partial class Methods
                 }
 
                 if (ERR_isError(oneSeqSize))
+                {
                     return oneSeqSize;
+                }
+
                 op += oneSeqSize;
             }
 
@@ -2425,11 +2521,13 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
+                {
                     dctx->entropy.rep[i] = (uint)
                         System.Runtime.CompilerServices.Unsafe.Add(
                             ref seqState.prevOffset.e0,
                             (int)i
                         );
+                }
             }
         }
 
@@ -2561,7 +2659,9 @@ public static unsafe partial class Methods
             {
                 int i;
                 for (i = 0; i < 3; i++)
+                {
                     (&seqState.prevOffset.e0)[i] = dctx->entropy.rep[i];
+                }
             }
 
             assert(dst != null);
@@ -2628,7 +2728,10 @@ public static unsafe partial class Methods
                             dictEnd
                         );
                         if (ERR_isError(oneSeqSize))
+                        {
                             return oneSeqSize;
+                        }
+
                         prefetchPos = ZSTD_prefetchMatch(
                             prefetchPos,
                             sequence,
@@ -2666,7 +2769,10 @@ public static unsafe partial class Methods
                                 dictEnd
                             );
                     if (ERR_isError(oneSeqSize))
+                    {
                         return oneSeqSize;
+                    }
+
                     prefetchPos = ZSTD_prefetchMatch(prefetchPos, sequence, prefixStart, dictEnd);
                     sequences[seqNb & 8 - 1] = sequence;
                     op += oneSeqSize;
@@ -2717,7 +2823,10 @@ public static unsafe partial class Methods
                             dictEnd
                         );
                         if (ERR_isError(oneSeqSize))
+                        {
                             return oneSeqSize;
+                        }
+
                         op += oneSeqSize;
                     }
                 }
@@ -2747,7 +2856,10 @@ public static unsafe partial class Methods
                                 dictEnd
                             );
                     if (ERR_isError(oneSeqSize))
+                    {
                         return oneSeqSize;
+                    }
+
                     op += oneSeqSize;
                 }
             }
@@ -2755,7 +2867,9 @@ public static unsafe partial class Methods
             {
                 uint i;
                 for (i = 0; i < 3; i++)
+                {
                     dctx->entropy.rep[i] = (uint)(&seqState.prevOffset.e0)[i];
+                }
             }
         }
 
@@ -2917,7 +3031,9 @@ public static unsafe partial class Methods
                         ? info.maxNbAdditionalBits
                         : table[u].nbAdditionalBits;
                 if (table[u].nbAdditionalBits > 22)
+                {
                     info.longOffsetShare += 1;
+                }
             }
 
             assert(tableLog <= 8);
@@ -2982,7 +3098,10 @@ public static unsafe partial class Methods
                 streaming
             );
             if (ERR_isError(litCSize))
+            {
                 return litCSize;
+            }
+
             ip += litCSize;
             srcSize -= litCSize;
         }
@@ -3015,7 +3134,10 @@ public static unsafe partial class Methods
             int nbSeq;
             nuint seqHSize = ZSTD_decodeSeqHeaders(dctx, &nbSeq, ip, srcSize);
             if (ERR_isError(seqHSize))
+            {
                 return seqHSize;
+            }
+
             ip += seqHSize;
             srcSize -= seqHSize;
             if ((dst == null || dstCapacity == 0) && nbSeq > 0)
@@ -3069,6 +3191,7 @@ public static unsafe partial class Methods
             }
 
             if (dctx->litBufferLocation == ZSTD_litLocation_e.ZSTD_split)
+            {
                 return ZSTD_decompressSequencesSplitLitBuffer(
                     dctx,
                     dst,
@@ -3078,7 +3201,9 @@ public static unsafe partial class Methods
                     nbSeq,
                     isLongOffset
                 );
+            }
             else
+            {
                 return ZSTD_decompressSequences(
                     dctx,
                     dst,
@@ -3088,6 +3213,7 @@ public static unsafe partial class Methods
                     nbSeq,
                     isLongOffset
                 );
+            }
         }
     }
 

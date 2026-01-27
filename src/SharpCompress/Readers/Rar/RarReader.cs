@@ -125,40 +125,5 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         return CreateEntryStream(RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream));
     }
 
-    protected override async System.Threading.Tasks.Task<EntryStream> GetEntryStreamAsync(
-        System.Threading.CancellationToken cancellationToken = default
-    )
-    {
-        if (Entry.IsRedir)
-        {
-            throw new InvalidOperationException("no stream for redirect entry");
-        }
-
-        var stream = new MultiVolumeReadOnlyStream(
-            CreateFilePartEnumerableForCurrentEntry().Cast<RarFilePart>()
-        );
-        if (Entry.IsRarV3)
-        {
-            return CreateEntryStream(
-                await RarCrcStream
-                    .CreateAsync(UnpackV1.Value, Entry.FileHeader, stream, cancellationToken)
-                    .ConfigureAwait(false)
-            );
-        }
-
-        if (Entry.FileHeader.FileCrc?.Length > 5)
-        {
-            return CreateEntryStream(
-                await RarBLAKE2spStream
-                    .CreateAsync(UnpackV2017.Value, Entry.FileHeader, stream, cancellationToken)
-                    .ConfigureAwait(false)
-            );
-        }
-
-        return CreateEntryStream(
-            await RarCrcStream
-                .CreateAsync(UnpackV2017.Value, Entry.FileHeader, stream, cancellationToken)
-                .ConfigureAwait(false)
-        );
-    }
+    // GetEntryStreamAsync moved to RarReader.Async.cs
 }

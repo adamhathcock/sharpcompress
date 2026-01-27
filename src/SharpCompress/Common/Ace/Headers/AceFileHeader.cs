@@ -2,6 +2,8 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using SharpCompress.Common.Arc;
 
@@ -10,7 +12,7 @@ namespace SharpCompress.Common.Ace.Headers
     /// <summary>
     /// ACE file entry header
     /// </summary>
-    public sealed class AceFileHeader : AceHeader
+    public sealed partial class AceFileHeader : AceHeader
     {
         public long DataStartPosition { get; private set; }
         public long PackedSize { get; set; }
@@ -146,6 +148,8 @@ namespace SharpCompress.Common.Ace.Headers
 
             return this;
         }
+
+        // ReadAsync moved to AceFileHeader.Async.cs
 
         public CompressionType GetCompressionType(byte value) =>
             value switch

@@ -1,0 +1,169 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.Common;
+using SharpCompress.Common.Rar;
+using SharpCompress.IO;
+
+namespace SharpCompress.Compressors.Rar;
+
+internal sealed partial class MultiVolumeReadOnlyAsyncStream
+    : MultiVolumeReadOnlyStreamBase,
+        IStreamStack
+{
+    internal static async ValueTask<MultiVolumeReadOnlyAsyncStream> Create(
+        IAsyncEnumerable<RarFilePart> parts
+    )
+    {
+        var stream = new MultiVolumeReadOnlyAsyncStream(parts);
+        await stream.filePartEnumerator.MoveNextAsync();
+        stream.InitializeNextFilePart();
+        return stream;
+    }
+
+#if NET8_0_OR_GREATER
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        if (filePartEnumerator != null)
+        {
+            await filePartEnumerator.DisposeAsync();
+        }
+        currentStream = null;
+    }
+#else
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        //acceptable for now?
+        filePartEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        currentStream = null;
+    }
+#endif
+
+    public override async Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        var totalRead = 0;
+        var currentOffset = offset;
+        var currentCount = count;
+        while (currentCount > 0)
+        {
+            var readSize = currentCount;
+            if (currentCount > maxPosition - currentPosition)
+            {
+                readSize = (int)(maxPosition - currentPosition);
+            }
+
+            var read = await currentStream
+                .NotNull()
+                .ReadAsync(buffer, currentOffset, readSize, cancellationToken)
+                .ConfigureAwait(false);
+            if (read < 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            currentPosition += read;
+            currentOffset += read;
+            currentCount -= read;
+            totalRead += read;
+            if (
+                ((maxPosition - currentPosition) == 0)
+                && filePartEnumerator.Current.FileHeader.IsSplitAfter
+            )
+            {
+                if (filePartEnumerator.Current.FileHeader.R4Salt != null)
+                {
+                    throw new InvalidFormatException(
+                        "Sharpcompress currently does not support multi-volume decryption."
+                    );
+                }
+
+                var fileName = filePartEnumerator.Current.FileHeader.FileName;
+                if (!await filePartEnumerator.MoveNextAsync())
+                {
+                    throw new InvalidFormatException(
+                        "Multi-part rar file is incomplete.  Entry expects a new volume: "
+                            + fileName
+                    );
+                }
+
+                InitializeNextFilePart();
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return totalRead;
+    }
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var totalRead = 0;
+        var currentOffset = 0;
+        var currentCount = buffer.Length;
+        while (currentCount > 0)
+        {
+            var readSize = currentCount;
+            if (currentCount > maxPosition - currentPosition)
+            {
+                readSize = (int)(maxPosition - currentPosition);
+            }
+
+            var read = await currentStream
+                .NotNull()
+                .ReadAsync(buffer.Slice(currentOffset, readSize), cancellationToken)
+                .ConfigureAwait(false);
+            if (read < 0)
+            {
+                throw new EndOfStreamException();
+            }
+
+            currentPosition += read;
+            currentOffset += read;
+            currentCount -= read;
+            totalRead += read;
+            if (
+                ((maxPosition - currentPosition) == 0)
+                && filePartEnumerator.Current.FileHeader.IsSplitAfter
+            )
+            {
+                if (filePartEnumerator.Current.FileHeader.R4Salt != null)
+                {
+                    throw new InvalidFormatException(
+                        "Sharpcompress currently does not support multi-volume decryption."
+                    );
+                }
+                var fileName = filePartEnumerator.Current.FileHeader.FileName;
+                if (!await filePartEnumerator.MoveNextAsync())
+                {
+                    throw new InvalidFormatException(
+                        "Multi-part rar file is incomplete.  Entry expects a new volume: "
+                            + fileName
+                    );
+                }
+                InitializeNextFilePart();
+            }
+            else
+            {
+                break;
+            }
+        }
+        return totalRead;
+    }
+#endif
+}

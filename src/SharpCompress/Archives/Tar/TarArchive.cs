@@ -32,6 +32,10 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
     protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
     {
         var stream = volumes.Single().Stream;
+        if (stream.CanSeek)
+        {
+            stream.Position = 0;
+        }
         TarHeader? previousHeader = null;
         foreach (
             var header in TarHeaderFactory.ReadHeader(
@@ -139,54 +143,10 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
         }
     }
 
-    protected override async ValueTask SaveToAsync(
-        Stream stream,
-        WriterOptions options,
-        IEnumerable<TarArchiveEntry> oldEntries,
-        IEnumerable<TarArchiveEntry> newEntries,
-        CancellationToken cancellationToken = default
-    )
-    {
-        using var writer = new TarWriter(stream, new TarWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries))
-        {
-            if (entry.IsDirectory)
-            {
-                await writer
-                    .WriteDirectoryAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entry.LastModifiedTime,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                using var entryStream = entry.OpenEntryStream();
-                await writer
-                    .WriteAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entryStream,
-                        entry.LastModifiedTime,
-                        entry.Size,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-        }
-    }
-
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
         return TarReader.OpenReader(stream);
-    }
-
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
-    {
-        var stream = Volumes.Single().Stream;
-        stream.Position = 0;
-        return new((IAsyncReader)TarReader.OpenReader(stream));
     }
 }

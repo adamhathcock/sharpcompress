@@ -4,7 +4,7 @@ using System.IO;
 
 namespace SharpCompress.Common.GZip;
 
-public class GZipEntry : Entry
+public partial class GZipEntry : Entry
 {
     private readonly GZipFilePart? _filePart;
 
@@ -42,4 +42,6 @@ public class GZipEntry : Entry
     {
         yield return new GZipEntry(GZipFilePart.Create(stream, options.ArchiveEncoding));
     }
+
+    // Async methods moved to GZipEntry.Async.cs
 }

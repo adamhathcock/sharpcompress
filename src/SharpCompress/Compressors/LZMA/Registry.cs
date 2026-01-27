@@ -51,7 +51,7 @@ internal static class DecoderRegistry
                 return new DeltaFilter(false, inStreams.Single(), info);
             case K_LZMA:
             case K_LZMA2:
-                return new LzmaStream(info, inStreams.Single(), -1, limit);
+                return LzmaStream.Create(info, inStreams.Single(), -1, limit);
             case CMethodId.K_AES_ID:
                 return new AesDecoderStream(inStreams.Single(), info, pass, limit);
             case K_BCJ:
@@ -73,7 +73,7 @@ internal static class DecoderRegistry
             case K_RISCV:
                 return new BCJFilterRISCV(false, inStreams.Single());
             case K_B_ZIP2:
-                return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
+                return BZip2Stream.Create(inStreams.Single(), CompressionMode.Decompress, true);
             case K_PPMD:
                 return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
             case K_DEFLATE:

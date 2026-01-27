@@ -62,9 +62,11 @@ public unsafe class Compressor : IDisposable
     {
         using var cctx = handle.Acquire();
         fixed (byte* dictPtr = dict)
+        {
             Unsafe
                 .Methods.ZSTD_CCtx_loadDictionary(cctx, dictPtr, (nuint)dict.Length)
                 .EnsureZstdSuccess();
+        }
     }
 
     public Compressor(int level = DefaultCompressionLevel)

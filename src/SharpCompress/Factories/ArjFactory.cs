@@ -23,32 +23,26 @@ namespace SharpCompress.Factories
             yield return "arj";
         }
 
-        public override bool IsArchive(
+        public override bool IsArchive(Stream stream, string? password = null) =>
+            ArjHeader.IsArchive(stream);
+
+        public override ValueTask<bool> IsArchiveAsync(
             Stream stream,
             string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        )
-        {
-            return ArjHeader.IsArchive(stream);
-        }
+            CancellationToken cancellationToken = default
+        ) => ArjHeader.IsArchiveAsync(stream, cancellationToken);
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             ArjReader.OpenReader(stream, options);
 
-        public IAsyncReader OpenAsyncReader(
+        public ValueTask<IAsyncReader> OpenAsyncReader(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return (IAsyncReader)ArjReader.OpenReader(stream, options);
+            return new((IAsyncReader)ArjReader.OpenReader(stream, options));
         }
-
-        public override ValueTask<bool> IsArchiveAsync(
-            Stream stream,
-            string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        ) => new(IsArchive(stream, password, bufferSize));
     }
 }

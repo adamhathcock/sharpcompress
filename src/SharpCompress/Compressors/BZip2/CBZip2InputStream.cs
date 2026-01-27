@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ namespace SharpCompress.Compressors.BZip2;
   * start of the BZIP2 stream to make it compatible with other PGP programs.
   */
 
-internal class CBZip2InputStream : Stream, IStreamStack
+internal partial class CBZip2InputStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -167,8 +168,8 @@ internal class CBZip2InputStream : Stream, IStreamStack
         storedCombinedCRC;
     private int computedBlockCRC,
         computedCombinedCRC;
-    private readonly bool decompressConcatenated;
-    private readonly bool leaveOpen;
+    private bool decompressConcatenated;
+    private bool leaveOpen;
 
     private int i2,
         count,
@@ -182,25 +183,29 @@ internal class CBZip2InputStream : Stream, IStreamStack
     private char z;
     private bool isDisposed;
 
-    public CBZip2InputStream(Stream zStream, bool decompressConcatenated, bool leaveOpen = false)
-    {
-        this.decompressConcatenated = decompressConcatenated;
-        this.leaveOpen = leaveOpen;
-        ll8 = null;
-        tt = null;
-        BsSetStream(zStream);
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(CBZip2InputStream));
-#endif
+    private CBZip2InputStream() { }
 
-        Initialize(true);
-        InitBlock();
-        SetupBlock();
+    public static CBZip2InputStream Create(
+        Stream zStream,
+        bool decompressConcatenated,
+        bool leaveOpen
+    )
+    {
+        var cbZip2InputStream = new CBZip2InputStream();
+        cbZip2InputStream.decompressConcatenated = decompressConcatenated;
+        cbZip2InputStream.leaveOpen = leaveOpen;
+        cbZip2InputStream.ll8 = null;
+        cbZip2InputStream.tt = null;
+        cbZip2InputStream.BsSetStream(zStream);
+        cbZip2InputStream.Initialize(true);
+        cbZip2InputStream.InitBlock();
+        cbZip2InputStream.SetupBlock();
+        return cbZip2InputStream;
     }
 
     protected override void Dispose(bool disposing)
     {
-        if (isDisposed)
+        if (isDisposed || leaveOpen)
         {
             return;
         }
@@ -209,10 +214,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
         this.DebugDispose(typeof(CBZip2InputStream));
 #endif
         base.Dispose(disposing);
-        if (!leaveOpen)
-        {
-            bsStream?.Dispose();
-        }
+        bsStream?.Dispose();
     }
 
     internal static int[][] InitIntArray(int n1, int n2)
@@ -1135,28 +1137,6 @@ internal class CBZip2InputStream : Stream, IStreamStack
             buffer[k + offset] = (byte)c;
         }
         return k;
-    }
-
-    public override Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var c = -1;
-        int k;
-        for (k = 0; k < count; ++k)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            c = ReadByte();
-            if (c == -1)
-            {
-                break;
-            }
-            buffer[k + offset] = (byte)c;
-        }
-        return Task.FromResult(k);
     }
 
     public override long Seek(long offset, SeekOrigin origin) => 0;

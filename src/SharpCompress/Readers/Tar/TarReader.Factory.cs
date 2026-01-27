@@ -1,11 +1,13 @@
-#if NET8_0_OR_GREATER
 using System.IO;
 using System.Threading;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers.Tar;
 
-public partial class TarReader : IReaderOpenable
+public partial class TarReader
+#if NET8_0_OR_GREATER
+    : IReaderOpenable
+#endif
 {
     public static IAsyncReader OpenAsyncReader(
         string path,
@@ -50,4 +52,3 @@ public partial class TarReader : IReaderOpenable
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 }
-#endif

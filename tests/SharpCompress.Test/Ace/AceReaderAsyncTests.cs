@@ -60,7 +60,10 @@ namespace SharpCompress.Test.Ace
         public async ValueTask Ace_Multi_Reader_Async()
         {
             var exception = await Assert.ThrowsAsync<MultiVolumeExtractionException>(() =>
-                DoMultiReaderAsync(new[] { "Ace.store.split.ace", "Ace.store.split.c01" })
+                DoMultiReaderAsync(
+                    new[] { "Ace.store.split.ace", "Ace.store.split.c01" },
+                    streams => AceReader.OpenAsyncReader(streams, null)
+                )
             );
         }
 
@@ -68,7 +71,7 @@ namespace SharpCompress.Test.Ace
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsyncReader(
+            await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions()
             );
@@ -93,9 +96,9 @@ namespace SharpCompress.Test.Ace
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsyncReader(
+            await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
-                new ReaderOptions() { LookForHeader = false }
+                new ReaderOptions { LookForHeader = true }
             );
             while (await reader.MoveToNextEntryAsync())
             {
@@ -108,36 +111,29 @@ namespace SharpCompress.Test.Ace
                     );
                 }
             }
-            VerifyFiles();
+            CompareFilesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "alice29.txt"),
+                Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt")
+            );
         }
 
-        private async Task DoMultiReaderAsync(string[] archiveNames)
+        private async Task DoMultiReaderAsync(
+            string[] archives,
+            Func<IEnumerable<Stream>, IAsyncReader> readerFactory
+        )
         {
-            var testArchives = archiveNames
-                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
-                .ToList();
-            var streams = testArchives.Select(File.OpenRead).ToList();
-            try
+            await using var reader = readerFactory(
+                archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+            );
+
+            while (await reader.MoveToNextEntryAsync())
             {
-                await using var reader = ReaderFactory.OpenAsyncReader(
-                    new AsyncOnlyStream(streams.First())
-                );
-                while (await reader.MoveToNextEntryAsync())
+                if (!reader.Entry.IsDirectory)
                 {
-                    if (!reader.Entry.IsDirectory)
-                    {
-                        await reader.WriteEntryToDirectoryAsync(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
-                    }
-                }
-            }
-            finally
-            {
-                foreach (var stream in streams)
-                {
-                    stream.Dispose();
+                    await reader.WriteEntryToDirectoryAsync(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                    );
                 }
             }
         }

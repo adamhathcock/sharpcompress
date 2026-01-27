@@ -4,9 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AwesomeAssertions;
+using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Readers.GZip;
 using SharpCompress.Test.Mocks;
 using Xunit;
 
@@ -111,6 +115,25 @@ public abstract class ReaderTests : TestBase
         }
     }
 
+    protected async Task AssertArchiveAsync<T>(
+        string testArchive,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory
+    {
+        testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        var factory = new TarFactory();
+        factory.IsArchive(new FileInfo(testArchive).OpenRead()).Should().BeTrue();
+        (
+            await factory.IsArchiveAsync(
+                new FileInfo(testArchive).OpenRead(),
+                cancellationToken: cancellationToken
+            )
+        )
+            .Should()
+            .BeTrue();
+    }
+
     protected async Task ReadAsync(
         string testArchive,
         CompressionType? expectedCompression = null,
@@ -127,6 +150,7 @@ public abstract class ReaderTests : TestBase
 
         options.LeaveStreamOpen = false;
         await ReadImplAsync(testArchive, expectedCompression, options, cancellationToken);
+
         VerifyFiles();
     }
 
@@ -138,6 +162,17 @@ public abstract class ReaderTests : TestBase
     )
     {
         using var file = File.OpenRead(testArchive);
+
+#if !LEGACY_DOTNET
+        await using var protectedStream = SharpCompressStream.Create(
+            new ForwardOnlyStream(file, options.BufferSize),
+            leaveOpen: true,
+            throwOnDispose: true,
+            bufferSize: options.BufferSize
+        );
+        await using var testStream = new TestStream(protectedStream);
+#else
+
         using var protectedStream = SharpCompressStream.Create(
             new ForwardOnlyStream(file, options.BufferSize),
             leaveOpen: true,
@@ -145,8 +180,9 @@ public abstract class ReaderTests : TestBase
             bufferSize: options.BufferSize
         );
         using var testStream = new TestStream(protectedStream);
+#endif
         await using (
-            var reader = ReaderFactory.OpenAsyncReader(
+            var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(testStream),
                 options,
                 cancellationToken
@@ -237,18 +273,16 @@ public abstract class ReaderTests : TestBase
 
     protected void DoMultiReader(
         string[] archives,
-        Func<IEnumerable<Stream>, IDisposable> readerFactory
+        Func<IEnumerable<Stream>, IReader> readerFactory
     )
     {
         using var reader = readerFactory(
             archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
         );
 
-        dynamic dynReader = reader;
-
-        while (dynReader.MoveToNextEntry())
+        while (reader.MoveToNextEntry())
         {
-            dynReader.WriteEntryToDirectory(
+            reader.WriteEntryToDirectory(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
             );

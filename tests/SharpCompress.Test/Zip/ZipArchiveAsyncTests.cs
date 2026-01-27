@@ -131,7 +131,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
             var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
-            archive.RemoveEntry(entry);
+            await archive.RemoveEntryAsync(entry);
 
             WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
             writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
@@ -151,7 +151,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
 
         await using (var archive = ZipArchive.OpenAsyncArchive(unmodified))
         {
-            archive.AddEntry("jpg\\test.jpg", jpg);
+            await archive.AddEntryAsync("jpg\\test.jpg", jpg);
 
             WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
             writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
@@ -231,23 +231,25 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var progressReports = new System.Collections.Generic.List<ProgressReport>();
         var progress = new Progress<ProgressReport>(report => progressReports.Add(report));
 
+#if NETFRAMEWORK
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
+#else
+        await using (
+            Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip"))
+        )
+#endif
         {
-            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
-            try
-            {
-                await archive.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-                    progress
-                );
-            }
-            finally
-            {
-                await archive.DisposeAsync();
-            }
+            await using IAsyncArchive archive = ZipArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(stream)
+            );
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
+                progress
+            );
         }
 
+        await Task.Delay(1000);
         VerifyFiles();
         Assert.True(progressReports.Count > 0, "Progress reports should be generated");
     }

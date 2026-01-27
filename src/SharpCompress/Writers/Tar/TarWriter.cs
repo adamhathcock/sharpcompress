@@ -37,7 +37,7 @@ public partial class TarWriter : AbstractWriter
                 break;
             case CompressionType.BZip2:
                 {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
+                    destination = BZip2Stream.Create(destination, CompressionMode.Compress, false);
                 }
                 break;
             case CompressionType.GZip:
@@ -103,17 +103,6 @@ public partial class TarWriter : AbstractWriter
         header.Write(OutputStream);
     }
 
-    public override async ValueTask WriteDirectoryAsync(
-        string directoryName,
-        DateTime? modificationTime,
-        CancellationToken cancellationToken = default
-    )
-    {
-        // Synchronous implementation is sufficient for header-only write
-        WriteDirectory(directoryName, modificationTime);
-        await Task.CompletedTask.ConfigureAwait(false);
-    }
-
     public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
     {
         if (!source.CanSeek && size is null)
@@ -132,41 +121,6 @@ public partial class TarWriter : AbstractWriter
         var progressStream = WrapWithProgress(source, filename);
         size = progressStream.TransferTo(OutputStream, realSize);
         PadTo512(size.Value);
-    }
-
-    public override async ValueTask WriteAsync(
-        string filename,
-        Stream source,
-        DateTime? modificationTime,
-        CancellationToken cancellationToken = default
-    ) => await WriteAsync(filename, source, modificationTime, null, cancellationToken);
-
-    public async ValueTask WriteAsync(
-        string filename,
-        Stream source,
-        DateTime? modificationTime,
-        long? size,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (!source.CanSeek && size is null)
-        {
-            throw new ArgumentException("Seekable stream is required if no size is given.");
-        }
-
-        var realSize = size ?? source.Length;
-
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
-
-        header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
-        header.Name = NormalizeFilename(filename);
-        header.Size = realSize;
-        header.Write(OutputStream);
-        var progressStream = WrapWithProgress(source, filename);
-        var written = await progressStream
-            .TransferToAsync(OutputStream, realSize, cancellationToken)
-            .ConfigureAwait(false);
-        PadTo512(written);
     }
 
     private void PadTo512(long size)

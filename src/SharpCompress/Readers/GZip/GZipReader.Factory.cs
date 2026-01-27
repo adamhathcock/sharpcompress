@@ -1,11 +1,12 @@
-#if NET8_0_OR_GREATER
 using System.IO;
 using System.Threading;
-using SharpCompress.Common;
 
 namespace SharpCompress.Readers.GZip;
 
-public partial class GZipReader : IReaderOpenable
+public partial class GZipReader
+#if NET8_0_OR_GREATER
+    : IReaderOpenable
+#endif
 {
     public static IAsyncReader OpenAsyncReader(
         string path,
@@ -49,5 +50,10 @@ public partial class GZipReader : IReaderOpenable
         fileInfo.NotNull(nameof(fileInfo));
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
+
+    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    {
+        stream.NotNull(nameof(stream));
+        return new GZipReader(stream, options ?? new ReaderOptions());
+    }
 }
-#endif

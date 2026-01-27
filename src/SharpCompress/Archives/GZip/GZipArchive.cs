@@ -36,19 +36,6 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         SaveTo(stream, new WriterOptions(CompressionType.GZip));
     }
 
-    public ValueTask SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
-        SaveToAsync(new FileInfo(filePath), cancellationToken);
-
-    public async ValueTask SaveToAsync(
-        FileInfo fileInfo,
-        CancellationToken cancellationToken = default
-    )
-    {
-        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken)
-            .ConfigureAwait(false);
-    }
-
     protected override GZipArchiveEntry CreateEntryInternal(
         string filePath,
         Stream source,
@@ -92,28 +79,6 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         }
     }
 
-    protected override async ValueTask SaveToAsync(
-        Stream stream,
-        WriterOptions options,
-        IEnumerable<GZipArchiveEntry> oldEntries,
-        IEnumerable<GZipArchiveEntry> newEntries,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (Entries.Count > 1)
-        {
-            throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
-        }
-        using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
-        {
-            using var entryStream = entry.OpenEntryStream();
-            await writer
-                .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
-                .ConfigureAwait(false);
-        }
-    }
-
     protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
     {
         var stream = volumes.Single().Stream;
@@ -123,28 +88,10 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         );
     }
 
-    protected override async IAsyncEnumerable<GZipArchiveEntry> LoadEntriesAsync(
-        IAsyncEnumerable<GZipVolume> volumes
-    )
-    {
-        var stream = (await volumes.SingleAsync()).Stream;
-        yield return new GZipArchiveEntry(
-            this,
-            await GZipFilePart.CreateAsync(stream, ReaderOptions.ArchiveEncoding)
-        );
-    }
-
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
         return GZipReader.OpenReader(stream);
-    }
-
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
-    {
-        var stream = Volumes.Single().Stream;
-        stream.Position = 0;
-        return new((IAsyncReader)GZipReader.OpenReader(stream));
     }
 }

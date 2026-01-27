@@ -1,12 +1,14 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Arj.Headers
 {
-    public class ArjMainHeader : ArjHeader
+    public partial class ArjMainHeader : ArjHeader
     {
         private const int FIRST_HDR_SIZE = 34;
         private const ushort ARJ_MAGIC = 0xEA60;
@@ -44,6 +46,8 @@ namespace SharpCompress.Common.Arj.Headers
             ReadExtendedHeaders(stream);
             return LoadFrom(body);
         }
+
+        // ReadAsync moved to ArjMainHeader.Async.cs
 
         public ArjMainHeader LoadFrom(byte[] headerBytes)
         {

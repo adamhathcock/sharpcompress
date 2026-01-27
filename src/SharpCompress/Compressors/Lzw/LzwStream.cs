@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 
@@ -43,7 +45,7 @@ namespace SharpCompress.Compressors.Lzw
     /// }
     /// </code>
     /// </example>
-    public class LzwStream : Stream, IStreamStack
+    public partial class LzwStream : Stream, IStreamStack
     {
 #if DEBUG_STREAMS
         long IStreamStack.InstanceId { get; set; }
@@ -75,7 +77,9 @@ namespace SharpCompress.Compressors.Lzw
 
                 // Check the magic marker
                 if (result < 0)
+                {
                     throw new IncompleteArchiveException("Failed to read LZW header");
+                }
 
                 if (hdr[0] != (LzwConstants.MAGIC >> 8) || hdr[1] != (LzwConstants.MAGIC & 0xff))
                 {
@@ -124,7 +128,10 @@ namespace SharpCompress.Compressors.Lzw
         {
             int b = Read(one, 0, 1);
             if (b == 1)
+            {
                 return (one[0] & 0xff);
+            }
+
             return -1;
         }
 
@@ -144,10 +151,14 @@ namespace SharpCompress.Compressors.Lzw
         public override int Read(byte[] buffer, int offset, int count)
         {
             if (!headerParsed)
+            {
                 ParseHeader();
+            }
 
             if (eof)
+            {
                 return 0;
+            }
 
             int start = offset;
 
@@ -251,9 +262,11 @@ namespace SharpCompress.Compressors.Lzw
                     if (lOldCode == -1)
                     {
                         if (code >= 256)
+                        {
                             throw new IncompleteArchiveException(
                                 "corrupt input: " + code + " > 255"
                             );
+                        }
 
                         lFinChar = (byte)(lOldCode = code);
                         buffer[offset++] = lFinChar;
@@ -402,7 +415,9 @@ namespace SharpCompress.Compressors.Lzw
 
             // Check the magic marker
             if (result < 0)
+            {
                 throw new IncompleteArchiveException("Failed to read LZW header");
+            }
 
             if (hdr[0] != (LzwConstants.MAGIC >> 8) || hdr[1] != (LzwConstants.MAGIC & 0xff))
             {
@@ -450,7 +465,9 @@ namespace SharpCompress.Compressors.Lzw
             stackP = stack.Length;
 
             for (int idx = 255; idx >= 0; idx--)
+            {
                 tabSuffix[idx] = (byte)idx;
+            }
         }
 
         #region Stream Overrides

@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Arj.Headers
 {
-    public class ArjLocalHeader : ArjHeader
+    public partial class ArjLocalHeader : ArjHeader
     {
         public ArchiveEncoding ArchiveEncoding { get; }
         public long DataStartPosition { get; protected set; }
@@ -54,6 +55,8 @@ namespace SharpCompress.Common.Arj.Headers
             }
             return null;
         }
+
+        // ReadAsync moved to ArjLocalHeader.Async.cs
 
         public ArjLocalHeader LoadFrom(byte[] headerBytes)
         {

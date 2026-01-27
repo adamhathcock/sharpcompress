@@ -23,29 +23,26 @@ namespace SharpCompress.Factories
             yield return "ace";
         }
 
-        public override bool IsArchive(
+        public override bool IsArchive(Stream stream, string? password = null) =>
+            AceHeader.IsArchive(stream);
+
+        public override ValueTask<bool> IsArchiveAsync(
             Stream stream,
             string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        ) => AceHeader.IsArchive(stream);
+            CancellationToken cancellationToken = default
+        ) => AceHeader.IsArchiveAsync(stream, cancellationToken);
 
         public IReader OpenReader(Stream stream, ReaderOptions? options) =>
             AceReader.OpenReader(stream, options);
 
-        public IAsyncReader OpenAsyncReader(
+        public ValueTask<IAsyncReader> OpenAsyncReader(
             Stream stream,
             ReaderOptions? options,
             CancellationToken cancellationToken = default
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return (IAsyncReader)AceReader.OpenReader(stream, options);
+            return new((IAsyncReader)AceReader.OpenReader(stream, options));
         }
-
-        public override ValueTask<bool> IsArchiveAsync(
-            Stream stream,
-            string? password = null,
-            int bufferSize = ReaderOptions.DefaultBufferSize
-        ) => new(IsArchive(stream, password, bufferSize));
     }
 }

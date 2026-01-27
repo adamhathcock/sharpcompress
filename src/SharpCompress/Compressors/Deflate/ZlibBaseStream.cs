@@ -89,6 +89,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
     protected internal int _gzipHeaderByteCount;
 
     private readonly Encoding _encoding;
+    private readonly bool _leaveOpen;
 
     internal int Crc32 => crc?.Crc32Result ?? 0;
 
@@ -99,8 +100,19 @@ internal class ZlibBaseStream : Stream, IStreamStack
         ZlibStreamFlavor flavor,
         Encoding encoding
     )
+        : this(stream, compressionMode, level, flavor, leaveOpen: false, encoding) { }
+
+    public ZlibBaseStream(
+        Stream stream,
+        CompressionMode compressionMode,
+        CompressionLevel level,
+        ZlibStreamFlavor flavor,
+        bool leaveOpen,
+        Encoding encoding
+    )
     {
         _flushMode = FlushType.None;
+        _leaveOpen = leaveOpen;
 
         //this._workingBuffer = new byte[WORKING_BUFFER_SIZE_DEFAULT];
         _stream = stream;
@@ -546,7 +558,10 @@ internal class ZlibBaseStream : Stream, IStreamStack
             finally
             {
                 end();
-                _stream?.Dispose();
+                if (!_leaveOpen)
+                {
+                    _stream?.Dispose();
+                }
                 _stream = null;
             }
         }
@@ -577,7 +592,10 @@ internal class ZlibBaseStream : Stream, IStreamStack
             end();
             if (_stream != null)
             {
-                await _stream.DisposeAsync().ConfigureAwait(false);
+                if (!_leaveOpen)
+                {
+                    await _stream.DisposeAsync().ConfigureAwait(false);
+                }
                 _stream = null;
             }
         }

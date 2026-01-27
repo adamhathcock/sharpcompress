@@ -5,13 +5,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip;
 
-internal class ArchiveReader
+internal partial class ArchiveReader
 {
     internal Stream _stream;
     internal Stack<DataReader> _readerStack = new();
@@ -1270,6 +1272,8 @@ internal class ArchiveReader
         _stream = stream;
     }
 
+    // OpenAsync moved to ArchiveReader.Async.cs
+
     public void Close()
     {
         _stream?.Dispose();
@@ -1382,6 +1386,8 @@ internal class ArchiveReader
         db.Fill();
         return db;
     }
+
+    // ReadDatabaseAsync moved to ArchiveReader.Async.cs
 
     internal class CExtractFolderInfo
     {

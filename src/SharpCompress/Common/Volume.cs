@@ -1,11 +1,12 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public abstract class Volume : IVolume
+public abstract partial class Volume : IVolume, IAsyncDisposable
 {
     private readonly Stream _baseStream;
     private readonly Stream _actualStream;
@@ -21,7 +22,9 @@ public abstract class Volume : IVolume
         }
 
         if (stream is IStreamStack ss)
+        {
             ss.SetBuffer(ReaderOptions.BufferSize, true);
+        }
 
         _actualStream = stream;
     }

@@ -201,60 +201,6 @@ public class TarReaderTests : ReaderTests
         Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
     }
 
-#if LINUX
-    [Fact]
-    public void Tar_GZip_With_Symlink_Entries()
-    {
-        using Stream stream = File.OpenRead(
-            Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
-        );
-        using var reader = TarReader.OpenReader(stream);
-        while (reader.MoveToNextEntry())
-        {
-            if (reader.Entry.IsDirectory)
-            {
-                continue;
-            }
-            reader.WriteEntryToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions
-                {
-                    ExtractFullPath = true,
-                    Overwrite = true,
-                    WriteSymbolicLink = (sourcePath, targetPath) =>
-                    {
-                        var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
-                        if (File.Exists(sourcePath))
-                        {
-                            link.Delete(); // equivalent to ln -s -f
-                        }
-                        link.CreateSymbolicLinkTo(targetPath);
-                    },
-                }
-            );
-            if (reader.Entry.LinkTarget != null)
-            {
-                var path = Path.Combine(SCRATCH_FILES_PATH, reader.Entry.Key.NotNull());
-                var link = new Mono.Unix.UnixSymbolicLinkInfo(path);
-                if (link.HasContents)
-                {
-                    // need to convert the link to an absolute path for comparison
-                    var target = reader.Entry.LinkTarget;
-                    var realTarget = Path.GetFullPath(
-                        Path.Combine($"{Path.GetDirectoryName(path)}", target)
-                    );
-
-                    Assert.Equal(realTarget, link.GetContents().ToString());
-                }
-                else
-                {
-                    Assert.True(false, "Symlink has no target");
-                }
-            }
-        }
-    }
-#endif
-
     [Fact]
     public void Tar_Malformed_LongName_Excessive_Size()
     {

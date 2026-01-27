@@ -6,7 +6,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
-public class TarEntry : Entry
+public partial class TarEntry : Entry
 {
     private readonly TarFilePart? _filePart;
 
@@ -76,4 +76,6 @@ public class TarEntry : Entry
             }
         }
     }
+
+    // Async methods moved to TarEntry.Async.cs
 }

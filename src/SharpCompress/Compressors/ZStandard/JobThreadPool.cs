@@ -47,7 +47,9 @@ internal unsafe class JobThreadPool : IDisposable
     private void Worker(object? obj)
     {
         if (obj is not JobThread poolThread)
+        {
             return;
+        }
 
         var cancellationToken = poolThread.CancellationTokenSource.Token;
         while (!queue.IsCompleted && !cancellationToken.IsCancellationRequested)
@@ -55,7 +57,9 @@ internal unsafe class JobThreadPool : IDisposable
             try
             {
                 if (queue.TryTake(out var job, -1, cancellationToken))
+                {
                     ((delegate* managed<void*, void>)job.function)(job.opaque);
+                }
             }
             catch (InvalidOperationException) { }
             catch (OperationCanceledException) { }
@@ -68,7 +72,9 @@ internal unsafe class JobThreadPool : IDisposable
         queue = new BlockingCollection<Job>(queueSize + 1);
         threads = new List<JobThread>(num);
         for (var i = 0; i < numThreads; i++)
+        {
             CreateThread();
+        }
     }
 
     private void CreateThread()
@@ -93,7 +99,9 @@ internal unsafe class JobThreadPool : IDisposable
             else
             {
                 for (var i = numThreads; i < num; i++)
+                {
                     CreateThread();
+                }
             }
         }
 
@@ -115,16 +123,22 @@ internal unsafe class JobThreadPool : IDisposable
         queue.CompleteAdding();
         List<JobThread> jobThreads;
         lock (threads)
+        {
             jobThreads = new List<JobThread>(threads);
+        }
 
         if (cancel)
         {
             foreach (var thread in jobThreads)
+            {
                 thread.Cancel();
+            }
         }
 
         foreach (var thread in jobThreads)
+        {
             thread.Join();
+        }
     }
 
     public void Dispose()

@@ -43,14 +43,26 @@ public static unsafe partial class Methods
         byte* istart = (byte*)src;
         byte* oend = ZSTD_maybeNullPtrAdd((byte*)dst, (nint)dstSize);
         if (!BitConverter.IsLittleEndian || MEM_32bits)
+        {
             return 0;
+        }
+
         if (dstSize == 0)
+        {
             return 0;
+        }
+
         assert(dst != null);
         if (srcSize < 10)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         if (dtLog != 11)
+        {
             return 0;
+        }
+
         {
             nuint length1 = MEM_readLE16(istart);
             nuint length2 = MEM_readLE16(istart + 2);
@@ -61,9 +73,14 @@ public static unsafe partial class Methods
             args->iend.e2 = args->iend.e1 + length2;
             args->iend.e3 = args->iend.e2 + length3;
             if (length1 < 8 || length2 < 8 || length3 < 8 || length4 < 8)
+            {
                 return 0;
+            }
+
             if (length4 > srcSize)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
         }
 
         args->ip.e0 = args->iend.e1 - sizeof(ulong);
@@ -75,7 +92,10 @@ public static unsafe partial class Methods
         args->op.e2 = args->op.e1 + (dstSize + 3) / 4;
         args->op.e3 = args->op.e2 + (dstSize + 3) / 4;
         if (args->op.e3 >= oend)
+        {
             return 0;
+        }
+
         args->bits[0] = HUF_initFastDStream(args->ip.e0);
         args->bits[1] = HUF_initFastDStream(args->ip.e1);
         args->bits[2] = HUF_initFastDStream(args->ip.e2);
@@ -94,9 +114,15 @@ public static unsafe partial class Methods
     )
     {
         if ((&args->op.e0)[stream] > segmentEnd)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         if ((&args->ip.e0)[stream] < (&args->iend.e0)[stream] - 8)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         assert(sizeof(nuint) == 8);
         bit->bitContainer = MEM_readLEST((&args->ip.e0)[stream]);
         bit->bitsConsumed = ZSTD_countTrailingZeros64(args->bits[stream]);
@@ -142,7 +168,10 @@ public static unsafe partial class Methods
     )
     {
         if (tableLog > targetTableLog)
+        {
             return tableLog;
+        }
+
         if (tableLog < targetTableLog)
         {
             uint scale = targetTableLog - tableLog;
@@ -182,7 +211,10 @@ public static unsafe partial class Methods
         HUF_DEltX1* dt = (HUF_DEltX1*)dtPtr;
         HUF_ReadDTableX1_Workspace* wksp = (HUF_ReadDTableX1_Workspace*)workSpace;
         if ((nuint)sizeof(HUF_ReadDTableX1_Workspace) > wkspSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         iSize = HUF_readStats_wksp(
             wksp->huffWeight,
             255 + 1,
@@ -196,7 +228,10 @@ public static unsafe partial class Methods
             flags
         );
         if (ERR_isError(iSize))
+        {
             return iSize;
+        }
+
         {
             DTableDesc dtd = HUF_getDTableDesc(DTable);
             uint maxTableLog = (uint)(dtd.maxTableLog + 1);
@@ -209,7 +244,10 @@ public static unsafe partial class Methods
                 targetTableLog
             );
             if (tableLog > (uint)(dtd.maxTableLog + 1))
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+            }
+
             dtd.tableType = 0;
             dtd.tableLog = (byte)tableLog;
             memcpy(DTable, &dtd, (uint)sizeof(DTableDesc));
@@ -355,10 +393,16 @@ public static unsafe partial class Methods
             )
             {
                 if (MEM_64bits)
+                {
                     *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
+                }
+
                 *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
                 if (MEM_64bits)
+                {
                     *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
+                }
+
                 *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
             }
         }
@@ -368,12 +412,20 @@ public static unsafe partial class Methods
         }
 
         if (MEM_32bits)
+        {
             while (
                 BIT_reloadDStream(bitDPtr) == BIT_DStream_status.BIT_DStream_unfinished && p < pEnd
             )
+            {
                 *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
+            }
+        }
+
         while (p < pEnd)
+        {
             *p++ = HUF_decodeSymbolX1(bitDPtr, dt, dtLog);
+        }
+
         return (nuint)(pEnd - pStart);
     }
 
@@ -396,12 +448,17 @@ public static unsafe partial class Methods
         {
             nuint _var_err__ = BIT_initDStream(&bitD, cSrc, cSrcSize);
             if (ERR_isError(_var_err__))
+            {
                 return _var_err__;
+            }
         }
 
         HUF_decodeStreamX1(op, &bitD, oend, dt, dtLog);
         if (BIT_endOfDStream(&bitD) == 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         return dstSize;
     }
 
@@ -419,9 +476,15 @@ public static unsafe partial class Methods
     )
     {
         if (cSrcSize < 10)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         if (dstSize < 6)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         {
             byte* istart = (byte*)cSrc;
             byte* ostart = (byte*)dst;
@@ -455,32 +518,46 @@ public static unsafe partial class Methods
             uint dtLog = dtd.tableLog;
             uint endSignal = 1;
             if (length4 > cSrcSize)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             if (opStart4 > oend)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             assert(dstSize >= 6);
             {
                 nuint _var_err__ = BIT_initDStream(&bitD1, istart1, length1);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             {
                 nuint _var_err__ = BIT_initDStream(&bitD2, istart2, length2);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             {
                 nuint _var_err__ = BIT_initDStream(&bitD3, istart3, length3);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             {
                 nuint _var_err__ = BIT_initDStream(&bitD4, istart4, length4);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             if ((nuint)(oend - op4) >= (nuint)sizeof(nuint))
@@ -488,25 +565,49 @@ public static unsafe partial class Methods
                 for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0; )
                 {
                     if (MEM_64bits)
+                    {
                         *op1++ = HUF_decodeSymbolX1(&bitD1, dt, dtLog);
+                    }
+
                     if (MEM_64bits)
+                    {
                         *op2++ = HUF_decodeSymbolX1(&bitD2, dt, dtLog);
+                    }
+
                     if (MEM_64bits)
+                    {
                         *op3++ = HUF_decodeSymbolX1(&bitD3, dt, dtLog);
+                    }
+
                     if (MEM_64bits)
+                    {
                         *op4++ = HUF_decodeSymbolX1(&bitD4, dt, dtLog);
+                    }
+
                     *op1++ = HUF_decodeSymbolX1(&bitD1, dt, dtLog);
                     *op2++ = HUF_decodeSymbolX1(&bitD2, dt, dtLog);
                     *op3++ = HUF_decodeSymbolX1(&bitD3, dt, dtLog);
                     *op4++ = HUF_decodeSymbolX1(&bitD4, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         *op1++ = HUF_decodeSymbolX1(&bitD1, dt, dtLog);
+                    }
+
                     if (MEM_64bits)
+                    {
                         *op2++ = HUF_decodeSymbolX1(&bitD2, dt, dtLog);
+                    }
+
                     if (MEM_64bits)
+                    {
                         *op3++ = HUF_decodeSymbolX1(&bitD3, dt, dtLog);
+                    }
+
                     if (MEM_64bits)
+                    {
                         *op4++ = HUF_decodeSymbolX1(&bitD4, dt, dtLog);
+                    }
+
                     *op1++ = HUF_decodeSymbolX1(&bitD1, dt, dtLog);
                     *op2++ = HUF_decodeSymbolX1(&bitD2, dt, dtLog);
                     *op3++ = HUF_decodeSymbolX1(&bitD3, dt, dtLog);
@@ -531,11 +632,20 @@ public static unsafe partial class Methods
             }
 
             if (op1 > opStart2)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             if (op2 > opStart3)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             if (op3 > opStart4)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             HUF_decodeStreamX1(op1, &bitD1, opStart2, dt, dtLog);
             HUF_decodeStreamX1(op2, &bitD2, opStart3, dt, dtLog);
             HUF_decodeStreamX1(op3, &bitD3, opStart4, dt, dtLog);
@@ -547,7 +657,9 @@ public static unsafe partial class Methods
                     & BIT_endOfDStream(&bitD3)
                     & BIT_endOfDStream(&bitD4);
                 if (endCheck == 0)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
             }
 
             return dstSize;
@@ -633,20 +745,29 @@ public static unsafe partial class Methods
                 nuint symbols = iters * 5;
                 olimit = op3 + symbols;
                 if (op3 == olimit)
+                {
                     break;
+                }
+
                 {
                     if (ip1 < ip0)
+                    {
                         goto _out;
+                    }
                 }
 
                 {
                     if (ip2 < ip1)
+                    {
                         goto _out;
+                    }
                 }
 
                 {
                     if (ip3 < ip2)
+                    {
                         goto _out;
+                    }
                 }
             }
 
@@ -904,7 +1025,9 @@ public static unsafe partial class Methods
             }
 
             if (ret == 0)
+            {
                 return 0;
+            }
         }
 
         assert(args.ip.e0 >= args.ilowest);
@@ -925,9 +1048,14 @@ public static unsafe partial class Methods
             {
                 BIT_DStream_t bit;
                 if (segmentSize <= (nuint)(oend - segmentEnd))
+                {
                     segmentEnd += segmentSize;
+                }
                 else
+                {
                     segmentEnd = oend;
+                }
+
                 {
                     nuint err_code = HUF_initRemainingDStream(&bit, &args, i, segmentEnd);
                     if (ERR_isError(err_code))
@@ -944,7 +1072,9 @@ public static unsafe partial class Methods
                     11
                 );
                 if ((&args.op.e0)[i] != segmentEnd)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
             }
         }
 
@@ -990,7 +1120,9 @@ public static unsafe partial class Methods
                 loopFn
             );
             if (ret != 0)
+            {
                 return ret;
+            }
         }
 
         return ((delegate* managed<void*, nuint, void*, nuint, uint*, nuint>)fallbackFn)(
@@ -1016,9 +1148,15 @@ public static unsafe partial class Methods
         byte* ip = (byte*)cSrc;
         nuint hSize = HUF_readDTableX1_wksp(dctx, cSrc, cSrcSize, workSpace, wkspSize, flags);
         if (ERR_isError(hSize))
+        {
             return hSize;
+        }
+
         if (hSize >= cSrcSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        }
+
         ip += hSize;
         cSrcSize -= hSize;
         return HUF_decompress4X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
@@ -1255,7 +1393,10 @@ public static unsafe partial class Methods
                 int minWeight = (int)(nbBits + (uint)scaleLog);
                 int s;
                 if (minWeight < 1)
+                {
                     minWeight = 1;
+                }
+
                 for (s = begin; s != end; ++s)
                 {
                     HUF_fillDTableX2Level2(
@@ -1309,12 +1450,18 @@ public static unsafe partial class Methods
         uint* rankStart;
         HUF_ReadDTableX2_Workspace* wksp = (HUF_ReadDTableX2_Workspace*)workSpace;
         if ((nuint)sizeof(HUF_ReadDTableX2_Workspace) > wkspSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         rankStart = wksp->rankStart0 + 1;
         memset(wksp->rankStats, 0, sizeof(uint) * 13);
         memset(wksp->rankStart0, 0, sizeof(uint) * 15);
         if (maxTableLog > 12)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         iSize = HUF_readStats_wksp(
             wksp->weightList,
             255 + 1,
@@ -1328,11 +1475,20 @@ public static unsafe partial class Methods
             flags
         );
         if (ERR_isError(iSize))
+        {
             return iSize;
+        }
+
         if (tableLog > maxTableLog)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         if (tableLog <= 11 && maxTableLog > 11)
+        {
             maxTableLog = 11;
+        }
+
         for (maxW = tableLog; wksp->rankStats[maxW] == 0; maxW--) { }
 
         {
@@ -1442,7 +1598,9 @@ public static unsafe partial class Methods
             {
                 BIT_skipBits(DStream, dt[val].nbBits);
                 if (DStream->bitsConsumed > (uint)(sizeof(nuint) * 8))
+                {
                     DStream->bitsConsumed = (uint)(sizeof(nuint) * 8);
+                }
             }
         }
 
@@ -1483,10 +1641,16 @@ public static unsafe partial class Methods
                 )
                 {
                     if (MEM_64bits)
+                    {
                         p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
+                    }
+
                     p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
+                    }
+
                     p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
                 }
             }
@@ -1502,13 +1666,21 @@ public static unsafe partial class Methods
                 BIT_reloadDStream(bitDPtr) == BIT_DStream_status.BIT_DStream_unfinished
                 && p <= pEnd - 2
             )
+            {
                 p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
+            }
+
             while (p <= pEnd - 2)
+            {
                 p += HUF_decodeSymbolX2(p, bitDPtr, dt, dtLog);
+            }
         }
 
         if (p < pEnd)
+        {
             p += HUF_decodeLastSymbolX2(p, bitDPtr, dt, dtLog);
+        }
+
         return (nuint)(p - pStart);
     }
 
@@ -1526,7 +1698,9 @@ public static unsafe partial class Methods
             /* Init */
             nuint _var_err__ = BIT_initDStream(&bitD, cSrc, cSrcSize);
             if (ERR_isError(_var_err__))
+            {
                 return _var_err__;
+            }
         }
 
         {
@@ -1540,7 +1714,10 @@ public static unsafe partial class Methods
         }
 
         if (BIT_endOfDStream(&bitD) == 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         return dstSize;
     }
 
@@ -1558,9 +1735,15 @@ public static unsafe partial class Methods
     )
     {
         if (cSrcSize < 10)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         if (dstSize < 6)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         {
             byte* istart = (byte*)cSrc;
             byte* ostart = (byte*)dst;
@@ -1594,32 +1777,46 @@ public static unsafe partial class Methods
             DTableDesc dtd = HUF_getDTableDesc(DTable);
             uint dtLog = dtd.tableLog;
             if (length4 > cSrcSize)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             if (opStart4 > oend)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             assert(dstSize >= 6);
             {
                 nuint _var_err__ = BIT_initDStream(&bitD1, istart1, length1);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             {
                 nuint _var_err__ = BIT_initDStream(&bitD2, istart2, length2);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             {
                 nuint _var_err__ = BIT_initDStream(&bitD3, istart3, length3);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             {
                 nuint _var_err__ = BIT_initDStream(&bitD4, istart4, length4);
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             if ((nuint)(oend - op4) >= (nuint)sizeof(nuint))
@@ -1627,16 +1824,28 @@ public static unsafe partial class Methods
                 for (; (endSignal & (uint)(op4 < olimit ? 1 : 0)) != 0; )
                 {
                     if (MEM_64bits)
+                    {
                         op1 += HUF_decodeSymbolX2(op1, &bitD1, dt, dtLog);
+                    }
+
                     op1 += HUF_decodeSymbolX2(op1, &bitD1, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         op1 += HUF_decodeSymbolX2(op1, &bitD1, dt, dtLog);
+                    }
+
                     op1 += HUF_decodeSymbolX2(op1, &bitD1, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         op2 += HUF_decodeSymbolX2(op2, &bitD2, dt, dtLog);
+                    }
+
                     op2 += HUF_decodeSymbolX2(op2, &bitD2, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         op2 += HUF_decodeSymbolX2(op2, &bitD2, dt, dtLog);
+                    }
+
                     op2 += HUF_decodeSymbolX2(op2, &bitD2, dt, dtLog);
                     endSignal &=
                         BIT_reloadDStreamFast(&bitD1) == BIT_DStream_status.BIT_DStream_unfinished
@@ -1647,16 +1856,28 @@ public static unsafe partial class Methods
                             ? 1U
                             : 0U;
                     if (MEM_64bits)
+                    {
                         op3 += HUF_decodeSymbolX2(op3, &bitD3, dt, dtLog);
+                    }
+
                     op3 += HUF_decodeSymbolX2(op3, &bitD3, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         op3 += HUF_decodeSymbolX2(op3, &bitD3, dt, dtLog);
+                    }
+
                     op3 += HUF_decodeSymbolX2(op3, &bitD3, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         op4 += HUF_decodeSymbolX2(op4, &bitD4, dt, dtLog);
+                    }
+
                     op4 += HUF_decodeSymbolX2(op4, &bitD4, dt, dtLog);
                     if (MEM_64bits)
+                    {
                         op4 += HUF_decodeSymbolX2(op4, &bitD4, dt, dtLog);
+                    }
+
                     op4 += HUF_decodeSymbolX2(op4, &bitD4, dt, dtLog);
                     endSignal &=
                         BIT_reloadDStreamFast(&bitD3) == BIT_DStream_status.BIT_DStream_unfinished
@@ -1670,11 +1891,20 @@ public static unsafe partial class Methods
             }
 
             if (op1 > opStart2)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             if (op2 > opStart3)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             if (op3 > opStart4)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             HUF_decodeStreamX2(op1, &bitD1, opStart2, dt, dtLog);
             HUF_decodeStreamX2(op2, &bitD2, opStart3, dt, dtLog);
             HUF_decodeStreamX2(op3, &bitD3, opStart4, dt, dtLog);
@@ -1686,7 +1916,9 @@ public static unsafe partial class Methods
                     & BIT_endOfDStream(&bitD3)
                     & BIT_endOfDStream(&bitD4);
                 if (endCheck == 0)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
             }
 
             return dstSize;
@@ -1799,20 +2031,29 @@ public static unsafe partial class Methods
 
                 olimit = op3 + iters * 5;
                 if (op3 == olimit)
+                {
                     break;
+                }
+
                 {
                     if (ip1 < ip0)
+                    {
                         goto _out;
+                    }
                 }
 
                 {
                     if (ip2 < ip1)
+                    {
                         goto _out;
+                    }
                 }
 
                 {
                     if (ip3 < ip2)
+                    {
                         goto _out;
+                    }
                 }
             }
 
@@ -2096,7 +2337,9 @@ public static unsafe partial class Methods
             }
 
             if (ret == 0)
+            {
                 return 0;
+            }
         }
 
         assert(args.ip.e0 >= args.ilowest);
@@ -2116,9 +2359,14 @@ public static unsafe partial class Methods
             {
                 BIT_DStream_t bit;
                 if (segmentSize <= (nuint)(oend - segmentEnd))
+                {
                     segmentEnd += segmentSize;
+                }
                 else
+                {
                     segmentEnd = oend;
+                }
+
                 {
                     nuint err_code = HUF_initRemainingDStream(&bit, &args, i, segmentEnd);
                     if (ERR_isError(err_code))
@@ -2135,7 +2383,9 @@ public static unsafe partial class Methods
                     11
                 );
                 if ((&args.op.e0)[i] != segmentEnd)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
             }
         }
 
@@ -2168,7 +2418,9 @@ public static unsafe partial class Methods
                 loopFn
             );
             if (ret != 0)
+            {
                 return ret;
+            }
         }
 
         return ((delegate* managed<void*, nuint, void*, nuint, uint*, nuint>)fallbackFn)(
@@ -2206,9 +2458,15 @@ public static unsafe partial class Methods
         byte* ip = (byte*)cSrc;
         nuint hSize = HUF_readDTableX2_wksp(DCtx, cSrc, cSrcSize, workSpace, wkspSize, flags);
         if (ERR_isError(hSize))
+        {
             return hSize;
+        }
+
         if (hSize >= cSrcSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        }
+
         ip += hSize;
         cSrcSize -= hSize;
         return HUF_decompress1X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, DCtx, flags);
@@ -2228,9 +2486,15 @@ public static unsafe partial class Methods
         byte* ip = (byte*)cSrc;
         nuint hSize = HUF_readDTableX2_wksp(dctx, cSrc, cSrcSize, workSpace, wkspSize, flags);
         if (ERR_isError(hSize))
+        {
             return hSize;
+        }
+
         if (hSize >= cSrcSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        }
+
         ip += hSize;
         cSrcSize -= hSize;
         return HUF_decompress4X2_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
@@ -2352,9 +2616,15 @@ public static unsafe partial class Methods
     )
     {
         if (dstSize == 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         if (cSrcSize > dstSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         if (cSrcSize == dstSize)
         {
             memcpy(dst, cSrc, (uint)dstSize);
@@ -2432,9 +2702,15 @@ public static unsafe partial class Methods
         byte* ip = (byte*)cSrc;
         nuint hSize = HUF_readDTableX1_wksp(dctx, cSrc, cSrcSize, workSpace, wkspSize, flags);
         if (ERR_isError(hSize))
+        {
             return hSize;
+        }
+
         if (hSize >= cSrcSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        }
+
         ip += hSize;
         cSrcSize -= hSize;
         return HUF_decompress1X1_usingDTable_internal(dst, dstSize, ip, cSrcSize, dctx, flags);
@@ -2474,9 +2750,15 @@ public static unsafe partial class Methods
     )
     {
         if (dstSize == 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         if (cSrcSize == 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         {
             uint algoNb = HUF_selectDecoder(dstSize, cSrcSize);
             return algoNb != 0

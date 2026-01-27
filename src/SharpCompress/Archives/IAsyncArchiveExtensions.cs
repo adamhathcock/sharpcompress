@@ -20,7 +20,7 @@ public static class IAsyncArchiveExtensions
         /// <param name="options">Extraction options.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
-        public async Task WriteToDirectoryAsync(
+        public async ValueTask WriteToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options = null,
             IProgress<ProgressReport>? progress = null,
@@ -47,7 +47,7 @@ public static class IAsyncArchiveExtensions
             }
         }
 
-        private async Task WriteToDirectoryAsyncInternal(
+        private async ValueTask WriteToDirectoryAsyncInternal(
             string destinationDirectory,
             ExtractionOptions? options,
             IProgress<ProgressReport>? progress,

@@ -116,7 +116,9 @@ public static unsafe partial class Methods
                     prefixStart
                 );
                 if (matchIndex + matchLength >= dictLimit)
+                {
                     match = @base + matchIndex;
+                }
             }
 
             if (ip + matchLength == iend)
@@ -202,7 +204,10 @@ public static unsafe partial class Methods
                 prefixStart
             );
             if (dictMatchIndex + matchLength >= dictHighLimit)
+            {
                 match = @base + dictMatchIndex + dictIndexDelta;
+            }
+
             if (matchLength > bestLength)
             {
                 uint matchIndex = dictMatchIndex + dictIndexDelta;
@@ -353,13 +358,18 @@ public static unsafe partial class Methods
                         prefixStart
                     );
                     if (matchIndex + matchLength >= dictLimit)
+                    {
                         match = @base + matchIndex;
+                    }
                 }
 
                 if (matchLength > bestLength)
                 {
                     if (matchLength > matchEndIdx - matchIndex)
+                    {
                         matchEndIdx = matchIndex + (uint)matchLength;
+                    }
+
                     if (
                         4 * (int)(matchLength - bestLength)
                         > (int)(
@@ -452,7 +462,10 @@ public static unsafe partial class Methods
     )
     {
         if (ip < ms->window.@base + ms->nextToUpdate)
+        {
             return 0;
+        }
+
         ZSTD_updateDUBT(ms, ip, iLimit, mls);
         return ZSTD_DUBT_findBestMatch(ms, ip, iLimit, offBasePtr, mls, dictMode);
     }
@@ -577,7 +590,10 @@ public static unsafe partial class Methods
             uint h = (uint)ZSTD_hashPtr(@base + idx, hashLog, ms->cParams.minMatch) << 2;
             uint i;
             for (i = cacheSize - 1; i != 0; i--)
+            {
                 hashTable[h + i] = hashTable[h + i - 1];
+            }
+
             hashTable[h] = idx;
         }
 
@@ -699,7 +715,9 @@ public static unsafe partial class Methods
                     assert(curr - (matchIndex + ddsIndexDelta) > 0);
                     *offsetPtr = curr - (matchIndex + ddsIndexDelta) + 3;
                     if (ip + currentMl == iLimit)
+                    {
                         break;
+                    }
                 }
             }
         }
@@ -732,7 +750,9 @@ public static unsafe partial class Methods
             hashTable[h] = idx;
             idx++;
             if (lazySkipping != 0)
+            {
                 break;
+            }
         }
 
         ms->nextToUpdate = target;
@@ -809,15 +829,19 @@ public static unsafe partial class Methods
                 byte* match = @base + matchIndex;
                 assert(matchIndex >= dictLimit);
                 if (MEM_read32(match + ml - 3) == MEM_read32(ip + ml - 3))
+                {
                     currentMl = ZSTD_count(ip, match, iLimit);
+                }
             }
             else
             {
                 byte* match = dictBase + matchIndex;
                 assert(match + 4 <= dictEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
+                {
                     currentMl =
                         ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart) + 4;
+                }
             }
 
             if (currentMl > ml)
@@ -826,11 +850,16 @@ public static unsafe partial class Methods
                 assert(curr - matchIndex > 0);
                 *offsetPtr = curr - matchIndex + 3;
                 if (ip + currentMl == iLimit)
+                {
                     break;
+                }
             }
 
             if (matchIndex <= minChain)
+            {
                 break;
+            }
+
             matchIndex = chainTable[matchIndex & chainMask];
         }
 
@@ -868,8 +897,11 @@ public static unsafe partial class Methods
                 byte* match = dmsBase + matchIndex;
                 assert(match + 4 <= dmsEnd);
                 if (MEM_read32(match) == MEM_read32(ip))
+                {
                     currentMl =
                         ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart) + 4;
+                }
+
                 if (currentMl > ml)
                 {
                     ml = currentMl;
@@ -877,11 +909,16 @@ public static unsafe partial class Methods
                     assert(curr - (matchIndex + dmsIndexDelta) > 0);
                     *offsetPtr = curr - (matchIndex + dmsIndexDelta) + 3;
                     if (ip + currentMl == iLimit)
+                    {
                         break;
+                    }
                 }
 
                 if (matchIndex <= dmsMinChain)
+                {
                     break;
+                }
+
                 matchIndex = dmsChainTable[matchIndex & dmsChainMask];
             }
         }
@@ -1139,14 +1176,21 @@ public static unsafe partial class Methods
         if (AdvSimd.IsSupported && BitConverter.IsLittleEndian)
         {
             if (rowEntries == 16)
+            {
                 return 4;
+            }
 #if NET9_0_OR_GREATER
             if (AdvSimd.Arm64.IsSupported)
             {
                 if (rowEntries == 32)
+                {
                     return 2;
+                }
+
                 if (rowEntries == 64)
+                {
                     return 1;
+                }
             }
 #endif
         }
@@ -1487,10 +1531,16 @@ public static unsafe partial class Methods
                 uint matchPos = (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
                 uint matchIndex = row[matchPos];
                 if (matchPos == 0)
+                {
                     continue;
+                }
+
                 assert(numMatches < rowEntries);
                 if (matchIndex < lowLimit)
+                {
                     break;
+                }
+
                 if (dictMode != ZSTD_dictMode_e.ZSTD_extDict || matchIndex >= dictLimit)
                 {
 #if NETCOREAPP3_0_OR_GREATER
@@ -1531,16 +1581,20 @@ public static unsafe partial class Methods
                     byte* match = @base + matchIndex;
                     assert(matchIndex >= dictLimit);
                     if (MEM_read32(match + ml - 3) == MEM_read32(ip + ml - 3))
+                    {
                         currentMl = ZSTD_count(ip, match, iLimit);
+                    }
                 }
                 else
                 {
                     byte* match = dictBase + matchIndex;
                     assert(match + 4 <= dictEnd);
                     if (MEM_read32(match) == MEM_read32(ip))
+                    {
                         currentMl =
                             ZSTD_count_2segments(ip + 4, match + 4, iLimit, dictEnd, prefixStart)
                             + 4;
+                    }
                 }
 
                 if (currentMl > ml)
@@ -1549,7 +1603,9 @@ public static unsafe partial class Methods
                     assert(curr - matchIndex > 0);
                     *offsetPtr = curr - matchIndex + 3;
                     if (ip + currentMl == iLimit)
+                    {
                         break;
+                    }
                 }
             }
         }
@@ -1595,9 +1651,14 @@ public static unsafe partial class Methods
                         (headGrouped + ZSTD_VecMask_next(matches)) / groupWidth & rowMask;
                     uint matchIndex = dmsRow[matchPos];
                     if (matchPos == 0)
+                    {
                         continue;
+                    }
+
                     if (matchIndex < dmsLowestIndex)
+                    {
                         break;
+                    }
 #if NETCOREAPP3_0_OR_GREATER
                     if (Sse.IsSupported)
                     {
@@ -1619,9 +1680,11 @@ public static unsafe partial class Methods
                         byte* match = dmsBase + matchIndex;
                         assert(match + 4 <= dmsEnd);
                         if (MEM_read32(match) == MEM_read32(ip))
+                        {
                             currentMl =
                                 ZSTD_count_2segments(ip + 4, match + 4, iLimit, dmsEnd, prefixStart)
                                 + 4;
+                        }
                     }
 
                     if (currentMl > ml)
@@ -1631,7 +1694,9 @@ public static unsafe partial class Methods
                         assert(curr - (matchIndex + dmsIndexDelta) > 0);
                         *offsetPtr = curr - (matchIndex + dmsIndexDelta) + 3;
                         if (ip + currentMl == iLimit)
+                        {
                             break;
+                        }
                     }
                 }
             }
@@ -3186,7 +3251,10 @@ public static unsafe partial class Methods
                 if (mls == 4)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_noDict_4_4(ms, ip, iend, offsetPtr);
+                    }
+
                     return rowLog == 5
                         ? ZSTD_RowFindBestMatch_noDict_4_5(ms, ip, iend, offsetPtr)
                         : ZSTD_RowFindBestMatch_noDict_4_6(ms, ip, iend, offsetPtr);
@@ -3195,14 +3263,20 @@ public static unsafe partial class Methods
                 if (mls == 5)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_noDict_5_4(ms, ip, iend, offsetPtr);
+                    }
+
                     return rowLog == 5
                         ? ZSTD_RowFindBestMatch_noDict_5_5(ms, ip, iend, offsetPtr)
                         : ZSTD_RowFindBestMatch_noDict_5_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (rowLog == 4)
+                {
                     return ZSTD_RowFindBestMatch_noDict_6_4(ms, ip, iend, offsetPtr);
+                }
+
                 return rowLog == 5
                     ? ZSTD_RowFindBestMatch_noDict_6_5(ms, ip, iend, offsetPtr)
                     : ZSTD_RowFindBestMatch_noDict_6_6(ms, ip, iend, offsetPtr);
@@ -3211,7 +3285,10 @@ public static unsafe partial class Methods
             if (searchMethod == searchMethod_e.search_hashChain)
             {
                 if (mls == 4)
+                {
                     return ZSTD_HcFindBestMatch_noDict_4(ms, ip, iend, offsetPtr);
+                }
+
                 return mls == 5
                     ? ZSTD_HcFindBestMatch_noDict_5(ms, ip, iend, offsetPtr)
                     : ZSTD_HcFindBestMatch_noDict_6(ms, ip, iend, offsetPtr);
@@ -3219,7 +3296,10 @@ public static unsafe partial class Methods
 
             // searchMethod_e.search_binaryTree
             if (mls == 4)
+            {
                 return ZSTD_BtFindBestMatch_noDict_4(ms, ip, iend, offsetPtr);
+            }
+
             return mls == 5
                 ? ZSTD_BtFindBestMatch_noDict_5(ms, ip, iend, offsetPtr)
                 : ZSTD_BtFindBestMatch_noDict_6(ms, ip, iend, offsetPtr);
@@ -3232,27 +3312,45 @@ public static unsafe partial class Methods
                 if (mls == 4)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_extDict_4_4(ms, ip, iend, offsetPtr);
+                    }
+
                     if (rowLog == 5)
+                    {
                         return ZSTD_RowFindBestMatch_extDict_4_5(ms, ip, iend, offsetPtr);
+                    }
+
                     return ZSTD_RowFindBestMatch_extDict_4_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 5)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_extDict_5_4(ms, ip, iend, offsetPtr);
+                    }
+
                     if (rowLog == 5)
+                    {
                         return ZSTD_RowFindBestMatch_extDict_5_5(ms, ip, iend, offsetPtr);
+                    }
+
                     return ZSTD_RowFindBestMatch_extDict_5_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 6)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_extDict_6_4(ms, ip, iend, offsetPtr);
+                    }
+
                     if (rowLog == 5)
+                    {
                         return ZSTD_RowFindBestMatch_extDict_6_5(ms, ip, iend, offsetPtr);
+                    }
+
                     return ZSTD_RowFindBestMatch_extDict_6_6(ms, ip, iend, offsetPtr);
                 }
             }
@@ -3260,17 +3358,29 @@ public static unsafe partial class Methods
             if (searchMethod == searchMethod_e.search_hashChain)
             {
                 if (mls == 4)
+                {
                     return ZSTD_HcFindBestMatch_extDict_4(ms, ip, iend, offsetPtr);
+                }
+
                 if (mls == 5)
+                {
                     return ZSTD_HcFindBestMatch_extDict_5(ms, ip, iend, offsetPtr);
+                }
+
                 return ZSTD_HcFindBestMatch_extDict_6(ms, ip, iend, offsetPtr);
             }
 
             // searchMethod_e.search_binaryTree
             if (mls == 4)
+            {
                 return ZSTD_BtFindBestMatch_extDict_4(ms, ip, iend, offsetPtr);
+            }
+
             if (mls == 5)
+            {
                 return ZSTD_BtFindBestMatch_extDict_5(ms, ip, iend, offsetPtr);
+            }
+
             return ZSTD_BtFindBestMatch_extDict_6(ms, ip, iend, offsetPtr);
         }
 
@@ -3281,27 +3391,45 @@ public static unsafe partial class Methods
                 if (mls == 4)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_dictMatchState_4_4(ms, ip, iend, offsetPtr);
+                    }
+
                     if (rowLog == 5)
+                    {
                         return ZSTD_RowFindBestMatch_dictMatchState_4_5(ms, ip, iend, offsetPtr);
+                    }
+
                     return ZSTD_RowFindBestMatch_dictMatchState_4_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 5)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_dictMatchState_5_4(ms, ip, iend, offsetPtr);
+                    }
+
                     if (rowLog == 5)
+                    {
                         return ZSTD_RowFindBestMatch_dictMatchState_5_5(ms, ip, iend, offsetPtr);
+                    }
+
                     return ZSTD_RowFindBestMatch_dictMatchState_5_6(ms, ip, iend, offsetPtr);
                 }
 
                 if (mls == 6)
                 {
                     if (rowLog == 4)
+                    {
                         return ZSTD_RowFindBestMatch_dictMatchState_6_4(ms, ip, iend, offsetPtr);
+                    }
+
                     if (rowLog == 5)
+                    {
                         return ZSTD_RowFindBestMatch_dictMatchState_6_5(ms, ip, iend, offsetPtr);
+                    }
+
                     return ZSTD_RowFindBestMatch_dictMatchState_6_6(ms, ip, iend, offsetPtr);
                 }
             }
@@ -3309,17 +3437,29 @@ public static unsafe partial class Methods
             if (searchMethod == searchMethod_e.search_hashChain)
             {
                 if (mls == 4)
+                {
                     return ZSTD_HcFindBestMatch_dictMatchState_4(ms, ip, iend, offsetPtr);
+                }
+
                 if (mls == 5)
+                {
                     return ZSTD_HcFindBestMatch_dictMatchState_5(ms, ip, iend, offsetPtr);
+                }
+
                 return ZSTD_HcFindBestMatch_dictMatchState_6(ms, ip, iend, offsetPtr);
             }
 
             // search_binaryTree
             if (mls == 4)
+            {
                 return ZSTD_BtFindBestMatch_dictMatchState_4(ms, ip, iend, offsetPtr);
+            }
+
             if (mls == 5)
+            {
                 return ZSTD_BtFindBestMatch_dictMatchState_5(ms, ip, iend, offsetPtr);
+            }
+
             return ZSTD_BtFindBestMatch_dictMatchState_6(ms, ip, iend, offsetPtr);
         }
 
@@ -3328,27 +3468,45 @@ public static unsafe partial class Methods
             if (mls == 4)
             {
                 if (rowLog == 4)
+                {
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_4(ms, ip, iend, offsetPtr);
+                }
+
                 if (rowLog == 5)
+                {
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_5(ms, ip, iend, offsetPtr);
+                }
+
                 return ZSTD_RowFindBestMatch_dedicatedDictSearch_4_6(ms, ip, iend, offsetPtr);
             }
 
             if (mls == 5)
             {
                 if (rowLog == 4)
+                {
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_4(ms, ip, iend, offsetPtr);
+                }
+
                 if (rowLog == 5)
+                {
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_5(ms, ip, iend, offsetPtr);
+                }
+
                 return ZSTD_RowFindBestMatch_dedicatedDictSearch_5_6(ms, ip, iend, offsetPtr);
             }
 
             if (mls == 6)
             {
                 if (rowLog == 4)
+                {
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_4(ms, ip, iend, offsetPtr);
+                }
+
                 if (rowLog == 5)
+                {
                     return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_5(ms, ip, iend, offsetPtr);
+                }
+
                 return ZSTD_RowFindBestMatch_dedicatedDictSearch_6_6(ms, ip, iend, offsetPtr);
             }
         }
@@ -3356,17 +3514,29 @@ public static unsafe partial class Methods
         if (searchMethod == searchMethod_e.search_hashChain)
         {
             if (mls == 4)
+            {
                 return ZSTD_HcFindBestMatch_dedicatedDictSearch_4(ms, ip, iend, offsetPtr);
+            }
+
             if (mls == 5)
+            {
                 return ZSTD_HcFindBestMatch_dedicatedDictSearch_5(ms, ip, iend, offsetPtr);
+            }
+
             return ZSTD_HcFindBestMatch_dedicatedDictSearch_6(ms, ip, iend, offsetPtr);
         }
 
         // searchMethod_e.search_binaryTree
         if (mls == 4)
+        {
             return ZSTD_BtFindBestMatch_dedicatedDictSearch_4(ms, ip, iend, offsetPtr);
+        }
+
         if (mls == 5)
+        {
             return ZSTD_BtFindBestMatch_dedicatedDictSearch_5(ms, ip, iend, offsetPtr);
+        }
+
         return ZSTD_BtFindBestMatch_dedicatedDictSearch_6(ms, ip, iend, offsetPtr);
     }
 
@@ -3481,7 +3651,9 @@ public static unsafe partial class Methods
                             prefixLowest
                         ) + 4;
                     if (depth == 0)
+                    {
                         goto _storeSequence;
+                    }
                 }
             }
 
@@ -3493,7 +3665,9 @@ public static unsafe partial class Methods
             {
                 matchLength = ZSTD_count(ip + 1 + 4, ip + 1 + 4 - offset_1, iend) + 4;
                 if (depth == 0)
+                {
                     goto _storeSequence;
+                }
             }
 
             {
@@ -3526,6 +3700,7 @@ public static unsafe partial class Methods
             }
 
             if (depth >= 1)
+            {
                 while (ip < ilimit)
                 {
                     ip++;
@@ -3693,6 +3868,7 @@ public static unsafe partial class Methods
 
                     break;
                 }
+            }
 
             if (offBase > 3)
             {
@@ -4267,6 +4443,7 @@ public static unsafe partial class Methods
                         & (offset_1 <= curr + 1 - windowLow ? 1 : 0)
                     ) != 0
                 )
+                {
                     if (MEM_read32(ip + 1) == MEM_read32(repMatch))
                     {
                         /* repcode detected we should take it */
@@ -4280,8 +4457,11 @@ public static unsafe partial class Methods
                                 prefixStart
                             ) + 4;
                         if (depth == 0)
+                        {
                             goto _storeSequence;
+                        }
                     }
+                }
             }
 
             {
@@ -4313,6 +4493,7 @@ public static unsafe partial class Methods
             }
 
             if (depth >= 1)
+            {
                 while (ip < ilimit)
                 {
                     ip++;
@@ -4329,6 +4510,7 @@ public static unsafe partial class Methods
                                 & (offset_1 <= curr - windowLow ? 1 : 0)
                             ) != 0
                         )
+                        {
                             if (MEM_read32(ip) == MEM_read32(repMatch))
                             {
                                 /* repcode detected */
@@ -4354,6 +4536,7 @@ public static unsafe partial class Methods
                                     start = ip;
                                 }
                             }
+                        }
                     }
 
                     {
@@ -4396,6 +4579,7 @@ public static unsafe partial class Methods
                                     & (offset_1 <= curr - windowLow ? 1 : 0)
                                 ) != 0
                             )
+                            {
                                 if (MEM_read32(ip) == MEM_read32(repMatch))
                                 {
                                     /* repcode detected */
@@ -4421,6 +4605,7 @@ public static unsafe partial class Methods
                                         start = ip;
                                     }
                                 }
+                            }
                         }
 
                         {
@@ -4450,6 +4635,7 @@ public static unsafe partial class Methods
 
                     break;
                 }
+            }
 
             if (offBase > 3)
             {
@@ -4499,6 +4685,7 @@ public static unsafe partial class Methods
                         & (offset_2 <= repCurrent - windowLow ? 1 : 0)
                     ) != 0
                 )
+                {
                     if (MEM_read32(ip) == MEM_read32(repMatch))
                     {
                         /* repcode detected we should take it */
@@ -4516,6 +4703,7 @@ public static unsafe partial class Methods
                         anchor = ip;
                         continue;
                     }
+                }
 
                 break;
             }

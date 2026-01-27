@@ -15,7 +15,10 @@ public static unsafe partial class Methods
     {
         assert(hashLog >= 8);
         if (hashLog == 8)
+        {
             return ((byte*)p)[0];
+        }
+
         assert(hashLog <= 10);
         return MEM_read16(p) * 0x9e3779b9 >> (int)(32 - hashLog);
     }
@@ -220,7 +223,9 @@ public static unsafe partial class Methods
             {
                 mergeEvents(&fpstats->pastEvents, &fpstats->newEvents);
                 if (penalty > 0)
+                {
                     penalty--;
+                }
             }
         }
 
@@ -255,7 +260,10 @@ public static unsafe partial class Methods
         HIST_add(fpstats->newEvents.events, (sbyte*)blockStart + blockSize - 512, 512);
         fpstats->pastEvents.nbEvents = fpstats->newEvents.nbEvents = 512;
         if (compareFingerprints(&fpstats->pastEvents, &fpstats->newEvents, 0, 8) == 0)
+        {
             return blockSize;
+        }
+
         HIST_add(middleEvents->events, (sbyte*)blockStart + blockSize / 2 - 512 / 2, 512);
         middleEvents->nbEvents = 512;
         {
@@ -263,7 +271,10 @@ public static unsafe partial class Methods
             ulong distFromEnd = fpDistance(&fpstats->newEvents, middleEvents, 8);
             const ulong minDistance = 512 * 512 / 3;
             if (abs64((long)distFromBegin - (long)distFromEnd) < minDistance)
+            {
                 return 64 * (1 << 10);
+            }
+
             return (nuint)(distFromBegin > distFromEnd ? 32 * (1 << 10) : 96 * (1 << 10));
         }
     }
@@ -289,7 +300,10 @@ public static unsafe partial class Methods
     {
         assert(0 <= level && level <= 4);
         if (level == 0)
+        {
             return ZSTD_splitBlock_fromBorders(blockStart, blockSize, workspace, wkspSize);
+        }
+
         return ZSTD_splitBlock_byChunks(blockStart, blockSize, level - 1, workspace, wkspSize);
     }
 }

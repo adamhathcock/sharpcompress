@@ -30,11 +30,15 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(
+    public override bool IsArchive(Stream stream, string? password = null) =>
+        SevenZipArchive.IsSevenZipFile(stream);
+
+    /// <inheritdoc/>
+    public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => SevenZipArchive.IsSevenZipFile(stream);
+        CancellationToken cancellationToken = default
+    ) => SevenZipArchive.IsSevenZipFileAsync(stream, cancellationToken);
 
     #endregion
 
@@ -46,28 +50,15 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
 
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
-        (IAsyncArchive)OpenArchive(stream, readerOptions);
+        SevenZipArchive.OpenAsyncArchive(stream, readerOptions, CancellationToken.None);
 
     /// <inheritdoc/>
     public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         SevenZipArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
-    }
-
-    public override ValueTask<bool> IsArchiveAsync(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => new(IsArchive(stream, password, bufferSize));
+    public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
+        SevenZipArchive.OpenAsyncArchive(fileInfo, readerOptions, CancellationToken.None);
 
     #endregion
 
@@ -83,7 +74,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
-    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
+    ) => SevenZipArchive.OpenAsyncArchive(streams, readerOptions, CancellationToken.None);
 
     /// <inheritdoc/>
     public IArchive OpenArchive(
@@ -96,11 +87,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
-    }
+    ) => SevenZipArchive.OpenAsyncArchive(fileInfos, readerOptions, cancellationToken);
 
     #endregion
 

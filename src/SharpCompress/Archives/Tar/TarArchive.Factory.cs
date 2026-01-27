@@ -2,15 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
-using SharpCompress.Writers;
-using SharpCompress.Writers.Tar;
 
 namespace SharpCompress.Archives.Tar;
 
@@ -23,7 +21,7 @@ public partial class TarArchive
     public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        return OpenArchive(new FileInfo(filePath), readerOptions);
     }
 
     public static IWritableArchive OpenArchive(
@@ -36,7 +34,7 @@ public partial class TarArchive
             new SourceStream(
                 fileInfo,
                 i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
             )
         );
     }
@@ -52,7 +50,7 @@ public partial class TarArchive
             new SourceStream(
                 files[0],
                 i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
             )
         );
     }
@@ -154,15 +152,44 @@ public partial class TarArchive
         try
         {
             var tarHeader = new TarHeader(new ArchiveEncoding());
-            var readSucceeded = tarHeader.Read(new BinaryReader(stream));
+            var reader = new BinaryReader(stream, Encoding.UTF8, false);
+            var readSucceeded = tarHeader.Read(reader);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0
                 && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
             return readSucceeded || isEmptyArchive;
         }
-        catch { }
-        return false;
+        catch (Exception)
+        {
+            // Catch all exceptions during tar header reading to determine if this is a valid tar file
+            // Invalid tar files or corrupted streams will throw various exceptions
+            return false;
+        }
+    }
+
+    public static async ValueTask<bool> IsTarFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var tarHeader = new TarHeader(new ArchiveEncoding());
+            var reader = new AsyncBinaryReader(stream, false);
+            var readSucceeded = await tarHeader.ReadAsync(reader);
+            var isEmptyArchive =
+                tarHeader.Name?.Length == 0
+                && tarHeader.Size == 0
+                && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
+            return readSucceeded || isEmptyArchive;
+        }
+        catch (Exception)
+        {
+            // Catch all exceptions during tar header reading to determine if this is a valid tar file
+            // Invalid tar files or corrupted streams will throw various exceptions
+            return false;
+        }
     }
 
     public static IWritableArchive CreateArchive() => new TarArchive();

@@ -61,7 +61,7 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_PathRead() =>
-        ArchiveFileRead(new SevenZipFactory(), "7Zip.LZMA2.exe", new() { LookForHeader = true });
+        ArchiveFileRead("7Zip.LZMA2.exe", new() { LookForHeader = true }, new SevenZipFactory());
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>
@@ -85,6 +85,7 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_BZip2_Split() =>
         Assert.Throws<InvalidOperationException>(() =>
             ArchiveStreamRead(
+                ".001",
                 null,
                 "Original.7z.001",
                 "Original.7z.002",
@@ -99,15 +100,18 @@ public class SevenZipArchiveTests : ArchiveTests
     //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
     [Fact]
     public void SevenZipArchive_BZip2_Split_Working() =>
-        ArchiveStreamMultiRead(
-            null,
-            "7Zip.BZip2.split.001",
-            "7Zip.BZip2.split.002",
-            "7Zip.BZip2.split.003",
-            "7Zip.BZip2.split.004",
-            "7Zip.BZip2.split.005",
-            "7Zip.BZip2.split.006",
-            "7Zip.BZip2.split.007"
+        Assert.Throws<InvalidOperationException>(() =>
+            ArchiveStreamRead(
+                ".001",
+                null,
+                "7Zip.BZip2.split.001",
+                "7Zip.BZip2.split.002",
+                "7Zip.BZip2.split.003",
+                "7Zip.BZip2.split.004",
+                "7Zip.BZip2.split.005",
+                "7Zip.BZip2.split.006",
+                "7Zip.BZip2.split.007"
+            )
         );
 
     //will detect and load other files
@@ -149,16 +153,14 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_ZSTD_Split() =>
-        Assert.Throws<InvalidOperationException>(() =>
-            ArchiveStreamRead(
-                null,
-                "7Zip.ZSTD.Split.7z.001",
-                "7Zip.ZSTD.Split.7z.002",
-                "7Zip.ZSTD.Split.7z.003",
-                "7Zip.ZSTD.Split.7z.004",
-                "7Zip.ZSTD.Split.7z.005",
-                "7Zip.ZSTD.Split.7z.006"
-            )
+        ArchiveStreamMultiRead(
+            null,
+            "7Zip.ZSTD.Split.7z.001",
+            "7Zip.ZSTD.Split.7z.002",
+            "7Zip.ZSTD.Split.7z.003",
+            "7Zip.ZSTD.Split.7z.004",
+            "7Zip.ZSTD.Split.7z.005",
+            "7Zip.ZSTD.Split.7z.006"
         );
 
     [Fact]

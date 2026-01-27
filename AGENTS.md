@@ -179,3 +179,58 @@ SharpCompress supports multiple archive and compression formats:
 3. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
 4. **Tar + non-seekable stream** - Must provide file size or it will throw
 6. **Format detection** - Use `ReaderFactory.Open()` for auto-detection, test with actual archive files
+
+### Async Struct-Copy Bug in LZMA RangeCoder
+
+When implementing async methods on mutable `struct` types (like `BitEncoder` and `BitDecoder` in the LZMA RangeCoder), be aware that the async state machine copies the struct when `await` is encountered. This means mutations to struct fields after the `await` point may not persist back to the original struct stored in arrays or fields.
+
+**The Bug:**
+```csharp
+// BAD: async method on mutable struct
+public async ValueTask<uint> DecodeAsync(Decoder decoder, CancellationToken cancellationToken = default)
+{
+    var newBound = (decoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
+    if (decoder._code < newBound)
+    {
+        decoder._range = newBound;
+        _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;  // Mutates _prob
+        await decoder.Normalize2Async(cancellationToken).ConfigureAwait(false);  // Struct gets copied here
+        return 0;  // Original _prob update may be lost
+    }
+    // ...
+}
+```
+
+**The Fix:**
+Refactor async methods on mutable structs to perform all struct mutations synchronously before any `await`, or use a helper method to separate the await from the struct mutation:
+
+```csharp
+// GOOD: struct mutations happen synchronously, await is conditional
+public ValueTask<uint> DecodeAsync(Decoder decoder, CancellationToken cancellationToken = default)
+{
+    var newBound = (decoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
+    if (decoder._code < newBound)
+    {
+        decoder._range = newBound;
+        _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;  // All mutations complete
+        return DecodeAsyncHelper(decoder.Normalize2Async(cancellationToken), 0);  // Await in helper
+    }
+    decoder._range -= newBound;
+    decoder._code -= newBound;
+    _prob -= (_prob) >> K_NUM_MOVE_BITS;  // All mutations complete
+    return DecodeAsyncHelper(decoder.Normalize2Async(cancellationToken), 1);  // Await in helper
+}
+
+private static async ValueTask<uint> DecodeAsyncHelper(ValueTask normalizeTask, uint result)
+{
+    await normalizeTask.ConfigureAwait(false);
+    return result;
+}
+```
+
+**Why This Matters:**
+In LZMA, the `BitEncoder` and `BitDecoder` structs maintain adaptive probability models in their `_prob` field. When these structs are stored in arrays (e.g., `_models[m]`), the async state machine copy breaks the adaptive model, causing incorrect bit decoding and eventually `DataErrorException` exceptions.
+
+**Related Files:**
+- `src/SharpCompress/Compressors/LZMA/RangeCoder/RangeCoderBit.Async.cs` - Fixed
+- `src/SharpCompress/Compressors/LZMA/RangeCoder/RangeCoderBitTree.Async.cs` - Uses readonly structs, so this pattern doesn't apply

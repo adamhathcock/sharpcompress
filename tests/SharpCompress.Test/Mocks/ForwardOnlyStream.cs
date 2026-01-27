@@ -81,7 +81,7 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
         CancellationToken cancellationToken
     ) => stream.ReadAsync(buffer, offset, count, cancellationToken);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
@@ -102,7 +102,7 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
         CancellationToken cancellationToken
     ) => stream.WriteAsync(buffer, offset, count, cancellationToken);
 
-#if !NETFRAMEWORK && !NETSTANDARD2_0
+#if !LEGACY_DOTNET
     public override ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default

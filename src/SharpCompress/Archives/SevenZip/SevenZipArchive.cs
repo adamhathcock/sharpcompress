@@ -32,32 +32,45 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         IEnumerable<SevenZipVolume> volumes
     )
     {
-        var stream = volumes.Single().Stream;
-        LoadFactory(stream);
-        if (_database is null)
+        foreach (var volume in volumes)
         {
-            return Enumerable.Empty<SevenZipArchiveEntry>();
-        }
-        var entries = new SevenZipArchiveEntry[_database._files.Count];
-        for (var i = 0; i < _database._files.Count; i++)
-        {
-            var file = _database._files[i];
-            entries[i] = new SevenZipArchiveEntry(
-                this,
-                new SevenZipFilePart(stream, _database, i, file, ReaderOptions.ArchiveEncoding)
-            );
-        }
-        foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
-        {
-            var isSolid = false;
-            foreach (var entry in group)
+            LoadFactory(volume.Stream);
+            if (_database is null)
             {
-                entry.IsSolid = isSolid;
-                isSolid = true;
+                yield break;
+            }
+            var entries = new SevenZipArchiveEntry[_database._files.Count];
+            for (var i = 0; i < _database._files.Count; i++)
+            {
+                var file = _database._files[i];
+                entries[i] = new SevenZipArchiveEntry(
+                    this,
+                    new SevenZipFilePart(
+                        volume.Stream,
+                        _database,
+                        i,
+                        file,
+                        ReaderOptions.ArchiveEncoding
+                    )
+                );
+            }
+            foreach (
+                var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder)
+            )
+            {
+                var isSolid = false;
+                foreach (var entry in group)
+                {
+                    entry.IsSolid = isSolid;
+                    isSolid = true;
+                }
+            }
+
+            foreach (var entry in entries)
+            {
+                yield return entry;
             }
         }
-
-        return entries;
     }
 
     private void LoadFactory(Stream stream)
@@ -73,9 +86,6 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 
     protected override IReader CreateReaderForSolidExtraction() =>
         new SevenZipReader(ReaderOptions, this);
-
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
-        new(new SevenZipReader(ReaderOptions, this));
 
     public override bool IsSolid =>
         Entries

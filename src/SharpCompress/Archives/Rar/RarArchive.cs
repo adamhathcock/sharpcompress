@@ -24,7 +24,10 @@ public interface IRarArchive : IArchive, IRarArchiveCommon { }
 
 public interface IRarAsyncArchive : IAsyncArchive, IRarArchiveCommon { }
 
-public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, IRarArchive
+public partial class RarArchive
+    : AbstractArchive<RarArchiveEntry, RarVolume>,
+        IRarArchive,
+        IRarAsyncArchive
 {
     private bool _disposed;
     internal Lazy<IRarUnpack> UnpackV2017 { get; } =
@@ -48,22 +51,13 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
         }
     }
 
-    public override async ValueTask DisposeAsync()
-    {
-        if (!_disposed)
-        {
-            if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
-            {
-                unpackV1.Dispose();
-            }
-
-            _disposed = true;
-            await base.DisposeAsync();
-        }
-    }
-
     protected override IEnumerable<RarArchiveEntry> LoadEntries(IEnumerable<RarVolume> volumes) =>
         RarArchiveEntryFactory.GetEntries(this, volumes, ReaderOptions);
+
+    // Simple async property - kept in original file
+    protected override IAsyncEnumerable<RarArchiveEntry> LoadEntriesAsync(
+        IAsyncEnumerable<RarVolume> volumes
+    ) => RarArchiveEntryFactory.GetEntriesAsync(this, volumes, ReaderOptions);
 
     protected override IEnumerable<RarVolume> LoadVolumes(SourceStream sourceStream)
     {
@@ -86,13 +80,7 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
         return new StreamRarArchiveVolume(sourceStream, ReaderOptions, i++).AsEnumerable();
     }
 
-    protected override IReader CreateReaderForSolidExtraction() =>
-        CreateReaderForSolidExtractionInternal();
-
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
-        new(CreateReaderForSolidExtractionInternal());
-
-    private RarReader CreateReaderForSolidExtractionInternal()
+    protected override IReader CreateReaderForSolidExtraction()
     {
         if (this.IsMultipartVolume())
         {
@@ -114,5 +102,6 @@ public partial class RarArchive : AbstractArchive<RarArchiveEntry, RarVolume>, I
     public override bool IsEncrypted => Entries.First(x => !x.IsDirectory).IsEncrypted;
 
     public virtual int MinVersion => Volumes.First().MinVersion;
+
     public virtual int MaxVersion => Volumes.First().MaxVersion;
 }

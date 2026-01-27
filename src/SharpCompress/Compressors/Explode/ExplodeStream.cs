@@ -5,7 +5,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Explode;
 
-public class ExplodeStream : Stream, IStreamStack
+public partial class ExplodeStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -58,7 +58,7 @@ public class ExplodeStream : Stream, IStreamStack
     private int distance;
     private int length;
 
-    internal ExplodeStream(
+    private ExplodeStream(
         Stream inStr,
         long compressedSize,
         long uncompressedSize,
@@ -72,10 +72,20 @@ public class ExplodeStream : Stream, IStreamStack
         this.compressedSize = (int)compressedSize;
         unCompressedSize = (long)uncompressedSize;
         this.generalPurposeBitFlag = generalPurposeBitFlag;
-        explode_SetTables();
-
         windowsBuffer = new byte[WSIZE];
-        explode_var_init();
+    }
+
+    internal static ExplodeStream Create(
+        Stream inStr,
+        long compressedSize,
+        long uncompressedSize,
+        HeaderFlags generalPurposeBitFlag
+    )
+    {
+        var ex = new ExplodeStream(inStr, compressedSize, uncompressedSize, generalPurposeBitFlag);
+        ex.explode_SetTables();
+        ex.explode_var_init();
+        return ex;
     }
 
     protected override void Dispose(bool disposing)
@@ -492,7 +502,10 @@ public class ExplodeStream : Stream, IStreamStack
             int bitLengthOfCodes = (nextByte & 0xf) + 1; /* bits in code (1..16) */
             int numOfCodes = ((nextByte & 0xf0) >> 4) + 1; /* codes with those bits (1..16) */
             if (outIndex + numOfCodes > numberExpected)
+            {
                 return 4; /* don't overflow arrBitLengths[] */
+            }
+
             do
             {
                 arrBitLengths[outIndex++] = bitLengthOfCodes;
@@ -516,7 +529,9 @@ public class ExplodeStream : Stream, IStreamStack
         {
             bitsForLiteralCodeTable = 9; /* base table size for literals */
             if ((returnCode = get_tree(arrBitLengthsForCodes, 256)) != 0)
+            {
                 return returnCode;
+            }
 
             if (
                 (
@@ -531,10 +546,14 @@ public class ExplodeStream : Stream, IStreamStack
                     )
                 ) != 0
             )
+            {
                 return returnCode;
+            }
 
             if ((returnCode = get_tree(arrBitLengthsForCodes, 64)) != 0)
+            {
                 return returnCode;
+            }
 
             if (
                 (
@@ -549,13 +568,17 @@ public class ExplodeStream : Stream, IStreamStack
                     )
                 ) != 0
             )
+            {
                 return returnCode;
+            }
         }
         else
         /* No literal tree--minimum match length is 2 */
         {
             if ((returnCode = get_tree(arrBitLengthsForCodes, 64)) != 0)
+            {
                 return returnCode;
+            }
 
             hufLiteralCodeTable = null;
 
@@ -572,11 +595,15 @@ public class ExplodeStream : Stream, IStreamStack
                     )
                 ) != 0
             )
+            {
                 return returnCode;
+            }
         }
 
         if ((returnCode = get_tree(arrBitLengthsForCodes, 64)) != 0)
+        {
             return (int)returnCode;
+        }
 
         if ((generalPurposeBitFlag & HeaderFlags.Bit1) != 0) /* true if 8K */
         {
@@ -635,9 +662,14 @@ public class ExplodeStream : Stream, IStreamStack
             DumpBits(huftPointer.NumberOfBitsUsed);
             e = huftPointer.NumberOfExtraBits;
             if (e <= 32)
+            {
                 break;
+            }
+
             if (e == INVALID_CODE)
+            {
                 return 1;
+            }
 
             e &= 31;
             NeedBits(e);
@@ -690,7 +722,9 @@ public class ExplodeStream : Stream, IStreamStack
                                 out _
                             ) != 0
                         )
+                        {
                             throw new Exception("Error decoding literal value");
+                        }
 
                         nextByte = (byte)huftPointer.Value;
                     }
@@ -706,7 +740,9 @@ public class ExplodeStream : Stream, IStreamStack
                     outBytesCount++;
 
                     if (windowIndex == WSIZE)
+                    {
                         windowIndex = 0;
+                    }
 
                     continue;
                 }
@@ -725,7 +761,9 @@ public class ExplodeStream : Stream, IStreamStack
                         out _
                     ) != 0
                 )
+                {
                     throw new Exception("Error decoding distance high bits");
+                }
 
                 distance = windowIndex - (distance + huftPointer.Value); /* construct offset */
 
@@ -739,7 +777,9 @@ public class ExplodeStream : Stream, IStreamStack
                         out int extraBitLength
                     ) != 0
                 )
+                {
                     throw new Exception("Error decoding coded length");
+                }
 
                 length = huftPointer.Value;
 
@@ -751,7 +791,9 @@ public class ExplodeStream : Stream, IStreamStack
                 }
 
                 if (length > (unCompressedSize - outBytesCount))
+                {
                     length = (int)(unCompressedSize - outBytesCount);
+                }
 
                 distance &= WSIZE - 1;
             }
@@ -764,10 +806,14 @@ public class ExplodeStream : Stream, IStreamStack
                 outBytesCount++;
 
                 if (distance == WSIZE)
+                {
                     distance = 0;
+                }
 
                 if (windowIndex == WSIZE)
+                {
                     windowIndex = 0;
+                }
 
                 length--;
             }

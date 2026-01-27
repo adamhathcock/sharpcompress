@@ -2,6 +2,8 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Ace.Headers;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Crypto;
@@ -11,7 +13,7 @@ namespace SharpCompress.Common.Ace.Headers
     /// <summary>
     /// ACE main archive header
     /// </summary>
-    public sealed class AceMainHeader : AceHeader
+    public sealed partial class AceMainHeader : AceHeader
     {
         public byte ExtractVersion { get; set; }
         public byte CreatorVersion { get; set; }
@@ -93,5 +95,7 @@ namespace SharpCompress.Common.Ace.Headers
 
             return this;
         }
+
+        // ReadAsync moved to AceMainHeader.Async.cs
     }
 }

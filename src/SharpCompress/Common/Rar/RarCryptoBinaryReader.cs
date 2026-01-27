@@ -1,5 +1,3 @@
-#nullable disable
-
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
@@ -9,20 +7,28 @@ namespace SharpCompress.Common.Rar;
 
 internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
 {
-    private BlockTransformer _rijndael;
+    private BlockTransformer _rijndael = default!;
     private readonly Queue<byte> _data = new();
     private long _readCount;
 
-    public RarCryptoBinaryReader(Stream stream, ICryptKey cryptKey)
-        : base(stream)
-    {
-        var salt = base.ReadBytes(EncryptionConstV5.SIZE_SALT30);
-        _readCount += EncryptionConstV5.SIZE_SALT30;
-        _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
-    }
+    private RarCryptoBinaryReader(Stream stream)
+        : base(stream) { }
 
-    public RarCryptoBinaryReader(Stream stream, ICryptKey cryptKey, byte[] salt)
-        : base(stream) => _rijndael = new BlockTransformer(cryptKey.Transformer(salt));
+    public static RarCryptoBinaryReader Create(
+        Stream stream,
+        ICryptKey cryptKey,
+        byte[]? salt = null
+    )
+    {
+        var binary = new RarCryptoBinaryReader(stream);
+        if (salt == null)
+        {
+            salt = binary.ReadBytesBase(EncryptionConstV5.SIZE_SALT30);
+            binary._readCount += EncryptionConstV5.SIZE_SALT30;
+        }
+        binary._rijndael = new BlockTransformer(cryptKey.Transformer(salt));
+        return binary;
+    }
 
     // track read count ourselves rather than using the underlying stream since we buffer
     public override long CurrentReadByteCount
@@ -39,6 +45,8 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
     public override byte ReadByte() => ReadAndDecryptBytes(1)[0];
 
     public override byte[] ReadBytes(int count) => ReadAndDecryptBytes(count);
+
+    private byte[] ReadBytesBase(int count) => base.ReadBytes(count);
 
     private byte[] ReadAndDecryptBytes(int count)
     {

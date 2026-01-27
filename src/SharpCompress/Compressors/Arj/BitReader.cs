@@ -4,7 +4,7 @@ using System.IO;
 namespace SharpCompress.Compressors.Arj
 {
     [CLSCompliant(true)]
-    public class BitReader
+    public partial class BitReader
     {
         private readonly Stream _input;
         private int _bitBuffer; // currently buffered bits

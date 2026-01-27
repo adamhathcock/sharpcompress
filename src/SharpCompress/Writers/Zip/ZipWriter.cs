@@ -52,7 +52,7 @@ public partial class ZipWriter : AbstractWriter
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing && OutputStream is not null)
+        if (isDisposing)
         {
             ulong size = 0;
             foreach (var entry in entries)
@@ -162,16 +162,7 @@ public partial class ZipWriter : AbstractWriter
         WriteDirectoryEntry(normalizedName, options);
     }
 
-    public override async ValueTask WriteDirectoryAsync(
-        string directoryName,
-        DateTime? modificationTime,
-        CancellationToken cancellationToken = default
-    )
-    {
-        // Synchronous implementation is sufficient for directory entries
-        WriteDirectory(directoryName, modificationTime);
-        await Task.CompletedTask.ConfigureAwait(false);
-    }
+    // WriteDirectoryAsync moved to ZipWriter.Async.cs
 
     private void WriteDirectoryEntry(string directoryPath, ZipWriterEntryOptions options)
     {
@@ -443,7 +434,7 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return new BZip2Stream(counting, CompressionMode.Compress, false);
+                    return BZip2Stream.Create(counting, CompressionMode.Compress, false);
                 }
                 case ZipCompressionMethod.LZMA:
                 {
@@ -452,7 +443,7 @@ public partial class ZipWriter : AbstractWriter
                     counting.WriteByte(5);
                     counting.WriteByte(0);
 
-                    var lzmaStream = new LzmaStream(
+                    var lzmaStream = LzmaStream.Create(
                         new LzmaEncoderProperties(!originalStream.CanSeek),
                         false,
                         counting

@@ -95,7 +95,7 @@ namespace SharpCompress.Test.Arj
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsyncReader(
+            await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
                 new ReaderOptions()
             );
@@ -123,9 +123,9 @@ namespace SharpCompress.Test.Arj
         {
             testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
             using Stream stream = File.OpenRead(testArchive);
-            await using var reader = ReaderFactory.OpenAsyncReader(
+            await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
-                new ReaderOptions() { LookForHeader = false }
+                new ReaderOptions() { LookForHeader = true }
             );
             while (await reader.MoveToNextEntryAsync())
             {
@@ -138,12 +138,15 @@ namespace SharpCompress.Test.Arj
                     );
                 }
             }
-            VerifyFiles();
+            CompareFilesByPath(
+                Path.Combine(SCRATCH_FILES_PATH, "alice29.txt"),
+                Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt")
+            );
         }
 
         private async Task DoMultiReaderAsync(
             string[] archiveNames,
-            Func<IEnumerable<Stream>, IAsyncReader> openReader
+            Func<IEnumerable<Stream>, ValueTask<IAsyncReader>> openReader
         )
         {
             var testArchives = archiveNames
@@ -152,7 +155,7 @@ namespace SharpCompress.Test.Arj
             var streams = testArchives.Select(File.OpenRead).ToList();
             try
             {
-                await using var reader = openReader(streams);
+                await using var reader = await openReader(streams);
                 while (await reader.MoveToNextEntryAsync())
                 {
                     if (!reader.Entry.IsDirectory)

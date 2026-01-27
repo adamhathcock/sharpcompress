@@ -108,7 +108,10 @@ public static unsafe partial class Methods
         bitC.ptr = bitC.startPtr;
         bitC.endPtr = bitC.startPtr + dstCapacity - sizeof(nuint);
         if (dstCapacity <= (nuint)sizeof(nuint))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         return 0;
     }
 
@@ -204,7 +207,10 @@ public static unsafe partial class Methods
         MEM_writeLEST(bitC_ptr, bitC_bitContainer);
         bitC_ptr += nbBytes;
         if (bitC_ptr > bitC_endPtr)
+        {
             bitC_ptr = bitC_endPtr;
+        }
+
         bitC_bitPos &= 7;
         bitC_bitContainer >>= (int)(nbBytes * 8);
     }
@@ -224,7 +230,10 @@ public static unsafe partial class Methods
         BIT_addBitsFast(ref bitC_bitContainer, ref bitC_bitPos, 1, 1);
         BIT_flushBits(ref bitC_bitContainer, ref bitC_bitPos, ref bitC_ptr, bitC_endPtr);
         if (bitC_ptr >= bitC_endPtr)
+        {
             return 0;
+        }
+
         return (nuint)(bitC_ptr - bitC_startPtr) + (nuint)(bitC_bitPos > 0 ? 1 : 0);
     }
 
@@ -256,7 +265,9 @@ public static unsafe partial class Methods
                 byte lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD->bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                }
             }
         }
         else
@@ -291,7 +302,9 @@ public static unsafe partial class Methods
                 byte lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD->bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
             }
 
             bitD->bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;
@@ -409,7 +422,10 @@ public static unsafe partial class Methods
     private static BIT_DStream_status BIT_reloadDStreamFast(BIT_DStream_t* bitD)
     {
         if (bitD->ptr < bitD->limitPtr)
+        {
             return BIT_DStream_status.BIT_DStream_overflow;
+        }
+
         return BIT_reloadDStream_internal(bitD);
     }
 
@@ -450,7 +466,10 @@ public static unsafe partial class Methods
         if (bitD->ptr == bitD->start)
         {
             if (bitD->bitsConsumed < (uint)(sizeof(nuint) * 8))
+            {
                 return BIT_DStream_status.BIT_DStream_endOfBuffer;
+            }
+
             return BIT_DStream_status.BIT_DStream_completed;
         }
 
@@ -509,7 +528,9 @@ public static unsafe partial class Methods
                 byte lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD.bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+                }
             }
         }
         else
@@ -544,7 +565,9 @@ public static unsafe partial class Methods
                 byte lastByte = ((byte*)srcBuffer)[srcSize - 1];
                 bitD.bitsConsumed = lastByte != 0 ? 8 - ZSTD_highbit32(lastByte) : 0;
                 if (lastByte == 0)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
             }
 
             bitD.bitsConsumed += (uint)((nuint)sizeof(nuint) - srcSize) * 8;
@@ -638,7 +661,10 @@ public static unsafe partial class Methods
     )
     {
         if (bitD_ptr < bitD_limitPtr)
+        {
             return BIT_DStream_status.BIT_DStream_overflow;
+        }
+
         return BIT_reloadDStream_internal(
             ref bitD_bitContainer,
             ref bitD_bitsConsumed,
@@ -681,7 +707,10 @@ public static unsafe partial class Methods
         if (bitD_ptr == bitD_start)
         {
             if (bitD_bitsConsumed < (uint)(sizeof(nuint) * 8))
+            {
                 return BIT_DStream_status.BIT_DStream_endOfBuffer;
+            }
+
             return BIT_DStream_status.BIT_DStream_completed;
         }
 

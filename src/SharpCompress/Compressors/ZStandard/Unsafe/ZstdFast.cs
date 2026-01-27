@@ -29,7 +29,10 @@ public static unsafe partial class Methods
             }
 
             if (dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast)
+            {
                 continue;
+            }
+
             {
                 uint p;
                 for (p = 1; p < fastHashFillStep; ++p)
@@ -65,7 +68,10 @@ public static unsafe partial class Methods
             nuint hash0 = ZSTD_hashPtr(ip, hBits, mls);
             hashTable[hash0] = curr;
             if (dtlm == ZSTD_dictTableLoadMethod_e.ZSTD_dtlm_fast)
+            {
                 continue;
+            }
+
             {
                 uint p;
                 for (p = 1; p < fastHashFillStep; ++p)
@@ -110,7 +116,10 @@ public static unsafe partial class Methods
          */
         byte* mvalAddr = ZSTD_selectAddr(matchIdx, idxLowLimit, matchAddress, dummy);
         if (MEM_read32(currentPtr) != MEM_read32(mvalAddr))
+        {
             return 0;
+        }
+
         return matchIdx >= idxLowLimit ? 1 : 0;
     }
 
@@ -729,7 +738,10 @@ public static unsafe partial class Methods
                 ip0 = ip1;
                 ip1 = ip1 + step;
                 if (ip1 > ilimit)
+                {
                     goto _cleanup;
+                }
+
                 curr = (uint)(ip0 - @base);
                 hash0 = hash1;
             }
@@ -941,7 +953,10 @@ public static unsafe partial class Methods
         byte* nextStep;
         const nuint kStepIncr = 1 << 8 - 1;
         if (prefixStartIndex == dictStartIndex)
+        {
             return ZSTD_compressBlock_fast(ms, seqStore, rep, src, srcSize);
+        }
+
         {
             uint curr = (uint)(ip0 - @base);
             uint maxRep = curr - dictStartIndex;
