@@ -262,7 +262,7 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
     {
         using Stream s = OpenEntryStream();
         var sourceStream = WrapWithProgress(s, Entry);
-        sourceStream.CopyTo(writeStream, 81920);
+        sourceStream.CopyTo(writeStream, Constants.BufferSize);
     }
 
     internal async Task WriteAsync(Stream writeStream, CancellationToken cancellationToken)
@@ -270,11 +270,15 @@ public abstract class AbstractReader<TEntry, TVolume> : IReader
 #if NETFRAMEWORK || NETSTANDARD2_0
         using Stream s = OpenEntryStream();
         var sourceStream = WrapWithProgress(s, Entry);
-        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
+        await sourceStream
+            .CopyToAsync(writeStream, Constants.BufferSize, cancellationToken)
+            .ConfigureAwait(false);
 #else
         await using Stream s = OpenEntryStream();
         var sourceStream = WrapWithProgress(s, Entry);
-        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
+        await sourceStream
+            .CopyToAsync(writeStream, Constants.BufferSize, cancellationToken)
+            .ConfigureAwait(false);
 #endif
     }
 

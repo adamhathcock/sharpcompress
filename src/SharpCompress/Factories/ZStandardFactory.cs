@@ -20,9 +20,6 @@ internal class ZStandardFactory : Factory
         yield return "zstd";
     }
 
-    public override bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = 65536
-    ) => ZStandardStream.IsZStandard(stream);
+    public override bool IsArchive(Stream stream, string? password = null) =>
+        ZStandardStream.IsZStandard(stream);
 }

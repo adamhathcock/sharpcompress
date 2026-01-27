@@ -4,7 +4,7 @@ using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.Zip;
 
-public class ZipWriterEntryOptions
+public class ZipWriterEntryOptions : OptionsBase
 {
     public CompressionType? CompressionType { get; set; }
 

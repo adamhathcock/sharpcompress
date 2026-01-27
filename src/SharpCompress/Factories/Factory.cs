@@ -51,11 +51,7 @@ public abstract class Factory : IFactory
     public abstract IEnumerable<string> GetSupportedExtensions();
 
     /// <inheritdoc/>
-    public abstract bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    );
+    public abstract bool IsArchive(Stream stream, string? password = null);
 
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;
@@ -82,7 +78,7 @@ public abstract class Factory : IFactory
         {
             long pos = ((IStreamStack)stream).GetPosition();
 
-            if (IsArchive(stream, options.Password, options.BufferSize))
+            if (IsArchive(stream, options.Password))
             {
                 ((IStreamStack)stream).StackSeek(pos);
                 reader = readerFactory.OpenReader(stream, options);

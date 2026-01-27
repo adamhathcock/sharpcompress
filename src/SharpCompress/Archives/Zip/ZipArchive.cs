@@ -124,38 +124,27 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         );
     }
 
-    public static bool IsZipFile(
-        string filePath,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => IsZipFile(new FileInfo(filePath), password, bufferSize);
+    public static bool IsZipFile(string filePath, string? password = null) =>
+        IsZipFile(new FileInfo(filePath), password);
 
-    public static bool IsZipFile(
-        FileInfo fileInfo,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipFile(FileInfo fileInfo, string? password = null)
     {
         if (!fileInfo.Exists)
         {
             return false;
         }
         using Stream stream = fileInfo.OpenRead();
-        return IsZipFile(stream, password, bufferSize);
+        return IsZipFile(stream, password);
     }
 
-    public static bool IsZipFile(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipFile(Stream stream, string? password = null)
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
             if (stream is not SharpCompressStream)
             {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
+                stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
             }
 
             var header = headerFactory
@@ -177,18 +166,14 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         }
     }
 
-    public static bool IsZipMulti(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipMulti(Stream stream, string? password = null)
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
             if (stream is not SharpCompressStream)
             {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
+                stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
             }
 
             var header = headerFactory
@@ -229,7 +214,7 @@ public class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
         if (streams.Count() > 1) //test part 2 - true = multipart not split
         {
             streams[1].Position += 4; //skip the POST_DATA_DESCRIPTOR to prevent an exception
-            var isZip = IsZipFile(streams[1], ReaderOptions.Password, ReaderOptions.BufferSize);
+            var isZip = IsZipFile(streams[1], ReaderOptions.Password);
             streams[1].Position -= 4;
             if (isZip)
             {

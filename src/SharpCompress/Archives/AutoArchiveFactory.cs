@@ -14,11 +14,8 @@ class AutoArchiveFactory : IArchiveFactory
 
     public IEnumerable<string> GetSupportedExtensions() => throw new NotSupportedException();
 
-    public bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => throw new NotSupportedException();
+    public bool IsArchive(Stream stream, string? password = null) =>
+        throw new NotSupportedException();
 
     public FileInfo? GetFilePart(int index, FileInfo part1) => throw new NotSupportedException();
 

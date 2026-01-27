@@ -29,11 +29,8 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => RarArchive.IsRarFile(stream);
+    public override bool IsArchive(Stream stream, string? password = null) =>
+        RarArchive.IsRarFile(stream);
 
     /// <inheritdoc/>
     public override FileInfo? GetFilePart(int index, FileInfo part1) =>
