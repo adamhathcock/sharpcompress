@@ -12,98 +12,9 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.SevenZip;
 
-public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
+public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
 {
     private ArchiveDatabase? _database;
-
-    /// <summary>
-    /// Constructor expects a filepath to an existing file.
-    /// </summary>
-    /// <param name="filePath"></param>
-    /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(string filePath, ReaderOptions? readerOptions = null)
-    {
-        filePath.NotNullOrEmpty("filePath");
-        return Open(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
-    }
-
-    /// <summary>
-    /// Constructor with a FileInfo object to an existing file.
-    /// </summary>
-    /// <param name="fileInfo"></param>
-    /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        fileInfo.NotNull("fileInfo");
-        return new SevenZipArchive(
-            new SourceStream(
-                fileInfo,
-                i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Constructor with all file parts passed in
-    /// </summary>
-    /// <param name="fileInfos"></param>
-    /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(
-        IEnumerable<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
-    )
-    {
-        fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
-        return new SevenZipArchive(
-            new SourceStream(
-                files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Constructor with all stream parts passed in
-    /// </summary>
-    /// <param name="streams"></param>
-    /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(
-        IEnumerable<Stream> streams,
-        ReaderOptions? readerOptions = null
-    )
-    {
-        streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
-        return new SevenZipArchive(
-            new SourceStream(
-                strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
-            )
-        );
-    }
-
-    /// <summary>
-    /// Takes a seekable Stream as a source
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="readerOptions"></param>
-    public static SevenZipArchive Open(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        stream.NotNull("stream");
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
-
-        return new SevenZipArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
-        );
-    }
 
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
@@ -116,18 +27,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     {
         sourceStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
         return new SevenZipVolume(sourceStream, ReaderOptions, 0).AsEnumerable(); //simple single volume or split, multivolume not supported
-    }
-
-    public static bool IsSevenZipFile(string filePath) => IsSevenZipFile(new FileInfo(filePath));
-
-    public static bool IsSevenZipFile(FileInfo fileInfo)
-    {
-        if (!fileInfo.Exists)
-        {
-            return false;
-        }
-        using Stream stream = fileInfo.OpenRead();
-        return IsSevenZipFile(stream);
     }
 
     internal SevenZipArchive()
@@ -174,28 +73,6 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
             reader.Open(stream, lookForHeader: ReaderOptions.LookForHeader);
             _database = reader.ReadDatabase(new PasswordProvider(ReaderOptions.Password));
         }
-    }
-
-    public static bool IsSevenZipFile(Stream stream)
-    {
-        try
-        {
-            return SignatureMatch(stream);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static ReadOnlySpan<byte> Signature =>
-        new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
-
-    private static bool SignatureMatch(Stream stream)
-    {
-        var reader = new BinaryReader(stream);
-        ReadOnlySpan<byte> signatureBytes = reader.ReadBytes(6);
-        return signatureBytes.SequenceEqual(Signature);
     }
 
     protected override IReader CreateReaderForSolidExtraction() =>

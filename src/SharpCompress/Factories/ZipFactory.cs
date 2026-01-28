@@ -78,6 +78,41 @@ public class ZipFactory
     }
 
     /// <inheritdoc/>
+    public override async ValueTask<bool> IsArchiveAsync(
+        Stream stream,
+        string? password = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var startPosition = stream.CanSeek ? stream.Position : -1;
+
+        // probe for single volume zip
+
+        if (stream is not SharpCompressStream) // wrap to provide buffer bef
+        {
+            stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
+        }
+
+        if (await ZipArchive.IsZipFileAsync(stream, password, cancellationToken))
+        {
+            return true;
+        }
+
+        // probe for a multipart zip
+
+        if (!stream.CanSeek)
+        {
+            return false;
+        }
+
+        stream.Position = startPosition;
+
+        //test the zip (last) file of a multipart zip
+        return await ZipArchive.IsZipMultiAsync(stream, password, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public override FileInfo? GetFilePart(int index, FileInfo part1) =>
         ZipArchiveVolumeFactory.GetFilePart(index, part1);
 
