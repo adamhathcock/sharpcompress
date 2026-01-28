@@ -109,7 +109,14 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        return await ZipArchive.IsZipMultiAsync(stream, password, cancellationToken);
+        if (await ZipArchive.IsZipMultiAsync(stream, password, cancellationToken))
+        {
+            return true;
+        }
+
+        stream.Position = startPosition;
+
+        return false;
     }
 
     /// <inheritdoc/>
