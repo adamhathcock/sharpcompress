@@ -212,12 +212,31 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
 
-    private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
+    internal sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
     {
         private readonly SevenZipArchive _archive;
         private SevenZipEntry? _currentEntry;
         private Stream? _currentFolderStream;
         private CFolder? _currentFolder;
+
+        /// <summary>
+        /// Enables internal diagnostics for tests.
+        /// When disabled (default), diagnostics properties return null to avoid exposing internal state.
+        /// </summary>
+        internal bool DiagnosticsEnabled { get; set; }
+
+        /// <summary>
+        /// Current folder instance used to decide whether the solid folder stream should be reused.
+        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
+        /// </summary>
+        internal object? DiagnosticsCurrentFolder => DiagnosticsEnabled ? _currentFolder : null;
+
+        /// <summary>
+        /// Current shared folder stream instance.
+        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
+        /// </summary>
+        internal Stream? DiagnosticsCurrentFolderStream =>
+            DiagnosticsEnabled ? _currentFolderStream : null;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
             : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;

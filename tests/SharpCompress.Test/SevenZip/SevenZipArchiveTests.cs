@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
@@ -288,19 +287,8 @@ public class SevenZipArchiveTests : ArchiveTests
 
         using var reader = archive.ExtractAllEntries();
 
-        // Use reflection to access the private fields
-        var readerType = reader.GetType();
-        var folderStreamField = readerType.GetField(
-            "_currentFolderStream",
-            BindingFlags.NonPublic | BindingFlags.Instance
-        );
-        var currentFolderField = readerType.GetField(
-            "_currentFolder",
-            BindingFlags.NonPublic | BindingFlags.Instance
-        );
-
-        Assert.NotNull(folderStreamField);
-        Assert.NotNull(currentFolderField);
+        var sevenZipReader = Assert.IsType<SevenZipArchive.SevenZipReader>(reader);
+        sevenZipReader.DiagnosticsEnabled = true;
 
         Stream? currentFolderStreamInstance = null;
         object? currentFolder = null;
@@ -322,9 +310,8 @@ public class SevenZipArchiveTests : ArchiveTests
 
                 entryCount++;
 
-                // Get the current folder and folder stream via reflection
-                var folderStream = folderStreamField.GetValue(reader) as Stream;
-                var folder = currentFolderField.GetValue(reader);
+                var folderStream = sevenZipReader.DiagnosticsCurrentFolderStream;
+                var folder = sevenZipReader.DiagnosticsCurrentFolder;
 
                 Assert.NotNull(folderStream); // Folder stream should exist
 
@@ -356,9 +343,6 @@ public class SevenZipArchiveTests : ArchiveTests
         Assert.True(entryCount > 1, "Test should have multiple entries to verify stream reuse");
 
         // The critical check: within a single folder, the stream should NEVER be recreated
-        Assert.Equal(
-            0,
-            streamRecreationsWithinFolder
-        ); // Folder stream should remain the same for all entries in the same folder
+        Assert.Equal(0, streamRecreationsWithinFolder); // Folder stream should remain the same for all entries in the same folder
     }
 }
