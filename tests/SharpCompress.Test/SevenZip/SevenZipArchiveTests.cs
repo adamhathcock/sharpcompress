@@ -260,7 +260,7 @@ public class SevenZipArchiveTests : ArchiveTests
         // This test verifies that solid archives iterate entries as contiguous streams
         // rather than recreating the decompression stream for each entry
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
-        using var archive = SevenZipArchive.Open(testArchive);
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
         Assert.True(archive.IsSolid);
 
         using var reader = archive.ExtractAllEntries();
@@ -284,7 +284,7 @@ public class SevenZipArchiveTests : ArchiveTests
         // This test verifies that the folder stream is reused within each folder
         // and not recreated for each entry in solid archives
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
-        using var archive = SevenZipArchive.Open(testArchive);
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
         Assert.True(archive.IsSolid);
 
         using var reader = archive.ExtractAllEntries();

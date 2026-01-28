@@ -97,7 +97,10 @@ public class ZipShortReadTests : ReaderTests
     private List<string> ReadEntriesFromStream(Stream stream)
     {
         var names = new List<string>();
-        using var reader = ReaderFactory.Open(stream, new ReaderOptions { LeaveStreamOpen = true });
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { LeaveStreamOpen = true }
+        );
 
         while (reader.MoveToNextEntry())
         {
