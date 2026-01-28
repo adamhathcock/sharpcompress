@@ -107,31 +107,28 @@ public class GZipFactory
 
     /// <inheritdoc/>
     internal override bool TryOpenReader(
-        SharpCompressStream rewindableStream,
+        RewindableStream rewindableStream,
         ReaderOptions options,
         out IReader? reader
     )
     {
         reader = null;
 
-        long pos = ((IStreamStack)rewindableStream).GetPosition();
-
         if (GZipArchive.IsGZipFile(rewindableStream))
         {
-            ((IStreamStack)rewindableStream).StackSeek(pos);
+            rewindableStream.Rewind();
             var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
-                ((IStreamStack)rewindableStream).StackSeek(pos);
+                rewindableStream.Rewind();
                 reader = new TarReader(rewindableStream, options, CompressionType.GZip);
                 return true;
             }
-
-            ((IStreamStack)rewindableStream).StackSeek(pos);
+            rewindableStream.Rewind();
             reader = OpenReader(rewindableStream, options);
             return true;
         }
-
+        rewindableStream.Rewind();
         return false;
     }
 

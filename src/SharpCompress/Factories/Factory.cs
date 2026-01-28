@@ -75,7 +75,7 @@ public abstract class Factory : IFactory
     /// <param name="reader"></param>
     /// <returns></returns>
     internal virtual bool TryOpenReader(
-        SharpCompressStream stream,
+        RewindableStream stream,
         ReaderOptions options,
         out IReader? reader
     )
@@ -84,16 +84,15 @@ public abstract class Factory : IFactory
 
         if (this is IReaderFactory readerFactory)
         {
-            long pos = ((IStreamStack)stream).GetPosition();
-
+            stream.Rewind();
             if (IsArchive(stream, options.Password))
             {
-                ((IStreamStack)stream).StackSeek(pos);
+                stream.Rewind();
                 reader = readerFactory.OpenReader(stream, options);
                 return true;
             }
         }
-
+        stream.Rewind();
         return false;
     }
 }

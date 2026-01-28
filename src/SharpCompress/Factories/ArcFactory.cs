@@ -36,8 +36,11 @@ namespace SharpCompress.Factories
             var buffer = ArrayPool<byte>.Shared.Rent(2);
             try
             {
-                stream.ReadExact(buffer, 0, 2);
-                return buffer[0] == 0x1A && buffer[1] < 10; //rather thin, but this is all we have
+                if (stream.ReadFully(buffer.AsSpan(0, 2)))
+                {
+                    return buffer[0] == 0x1A && buffer[1] < 10; //rather thin, but this is all we have
+                }
+                return false;
             }
             finally
             {

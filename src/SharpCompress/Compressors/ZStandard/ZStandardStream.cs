@@ -35,8 +35,14 @@ internal partial class ZStandardStream : DecompressionStream, IStreamStack
 
     internal static bool IsZStandard(Stream stream)
     {
-        var br = new BinaryReader(stream);
-        var magic = br.ReadUInt32();
+        var buffer = new byte[4];
+        var bytesRead = stream.Read(buffer, 0, 4);
+        if (bytesRead < 4)
+        {
+            return false;
+        }
+
+        var magic = BitConverter.ToUInt32(buffer, 0);
         if (ZstandardConstants.MAGIC != magic)
         {
             return false;

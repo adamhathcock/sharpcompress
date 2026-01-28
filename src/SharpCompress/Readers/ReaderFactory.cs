@@ -34,9 +34,8 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
-
-        long pos = bStream.GetPosition();
+        var bStream = new RewindableStream(stream);
+        bStream.StartRecording();
 
         var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
 
@@ -53,9 +52,9 @@ public static partial class ReaderFactory
                 && reader != null
             )
             {
+                bStream.Rewind();
                 return reader;
             }
-            bStream.StackSeek(pos);
         }
 
         foreach (var factory in factories)
@@ -64,7 +63,7 @@ public static partial class ReaderFactory
             {
                 continue; // Already tested above
             }
-            bStream.StackSeek(pos);
+            bStream.Rewind();
             if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
                 return reader;
