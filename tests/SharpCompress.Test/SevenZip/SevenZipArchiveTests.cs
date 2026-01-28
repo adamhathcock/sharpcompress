@@ -251,4 +251,98 @@ public class SevenZipArchiveTests : ArchiveTests
         );
         Assert.False(nonSolidArchive.IsSolid);
     }
+
+    [Fact]
+    public void SevenZipArchive_Solid_ExtractAllEntries_Contiguous()
+    {
+        // This test verifies that solid archives iterate entries as contiguous streams
+        // rather than recreating the decompression stream for each entry
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+        using var archive = SevenZipArchive.Open(testArchive);
+        Assert.True(archive.IsSolid);
+
+        using var reader = archive.ExtractAllEntries();
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                reader.WriteEntryToDirectory(
+                    SCRATCH_FILES_PATH,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
+            }
+        }
+
+        VerifyFiles();
+    }
+
+    [Fact]
+    public void SevenZipArchive_Solid_VerifyStreamReuse()
+    {
+        // This test verifies that the folder stream is reused within each folder
+        // and not recreated for each entry in solid archives
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+        using var archive = SevenZipArchive.Open(testArchive);
+        Assert.True(archive.IsSolid);
+
+        using var reader = archive.ExtractAllEntries();
+
+        var sevenZipReader = Assert.IsType<SevenZipArchive.SevenZipReader>(reader);
+        sevenZipReader.DiagnosticsEnabled = true;
+
+        Stream? currentFolderStreamInstance = null;
+        object? currentFolder = null;
+        var entryCount = 0;
+        var entriesInCurrentFolder = 0;
+        var streamRecreationsWithinFolder = 0;
+
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                // Extract the entry to trigger GetEntryStream
+                using var entryStream = reader.OpenEntryStream();
+                var buffer = new byte[4096];
+                while (entryStream.Read(buffer, 0, buffer.Length) > 0)
+                {
+                    // Read the stream to completion
+                }
+
+                entryCount++;
+
+                var folderStream = sevenZipReader.DiagnosticsCurrentFolderStream;
+                var folder = sevenZipReader.DiagnosticsCurrentFolder;
+
+                Assert.NotNull(folderStream); // Folder stream should exist
+
+                // Check if we're in a new folder
+                if (currentFolder == null || !ReferenceEquals(currentFolder, folder))
+                {
+                    // Starting a new folder
+                    currentFolder = folder;
+                    currentFolderStreamInstance = folderStream;
+                    entriesInCurrentFolder = 1;
+                }
+                else
+                {
+                    // Same folder - verify stream wasn't recreated
+                    entriesInCurrentFolder++;
+
+                    if (!ReferenceEquals(currentFolderStreamInstance, folderStream))
+                    {
+                        // Stream was recreated within the same folder - this is the bug we're testing for!
+                        streamRecreationsWithinFolder++;
+                    }
+
+                    currentFolderStreamInstance = folderStream;
+                }
+            }
+        }
+
+        // Verify we actually tested multiple entries
+        Assert.True(entryCount > 1, "Test should have multiple entries to verify stream reuse");
+
+        // The critical check: within a single folder, the stream should NEVER be recreated
+        Assert.Equal(0, streamRecreationsWithinFolder); // Folder stream should remain the same for all entries in the same folder
+    }
 }

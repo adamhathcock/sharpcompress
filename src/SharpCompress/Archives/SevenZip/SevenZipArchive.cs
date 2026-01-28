@@ -212,10 +212,31 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
 
-    private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
+    internal sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
     {
         private readonly SevenZipArchive _archive;
         private SevenZipEntry? _currentEntry;
+        private Stream? _currentFolderStream;
+        private CFolder? _currentFolder;
+
+        /// <summary>
+        /// Enables internal diagnostics for tests.
+        /// When disabled (default), diagnostics properties return null to avoid exposing internal state.
+        /// </summary>
+        internal bool DiagnosticsEnabled { get; set; }
+
+        /// <summary>
+        /// Current folder instance used to decide whether the solid folder stream should be reused.
+        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
+        /// </summary>
+        internal object? DiagnosticsCurrentFolder => DiagnosticsEnabled ? _currentFolder : null;
+
+        /// <summary>
+        /// Current shared folder stream instance.
+        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
+        /// </summary>
+        internal Stream? DiagnosticsCurrentFolderStream =>
+            DiagnosticsEnabled ? _currentFolderStream : null;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
             : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;
@@ -231,9 +252,10 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
                 _currentEntry = dir;
                 yield return dir;
             }
-            // For non-directory entries, yield them without creating shared streams
-            // Each call to GetEntryStream() will create a fresh decompression stream
-            // to avoid state corruption issues with async operations
+            // For solid archives (entries in the same folder share a compressed stream),
+            // we must iterate entries sequentially and maintain the folder stream state
+            // across entries in the same folder to avoid recreating the decompression
+            // stream for each file, which breaks contiguous streaming.
             foreach (var entry in entries.Where(x => !x.IsDirectory))
             {
                 _currentEntry = entry;
@@ -243,19 +265,53 @@ public class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVol
 
         protected override EntryStream GetEntryStream()
         {
-            // Create a fresh decompression stream for each file (no state sharing).
-            // However, the LZMA decoder has bugs in its async implementation that cause
-            // state corruption even on fresh streams. The SyncOnlyStream wrapper
-            // works around these bugs by forcing async operations to use sync equivalents.
-            //
-            // TODO: Fix the LZMA decoder async bugs (in LzmaStream, Decoder, OutWindow)
-            // so this wrapper is no longer necessary.
             var entry = _currentEntry.NotNull("currentEntry is not null");
             if (entry.IsDirectory)
             {
                 return CreateEntryStream(Stream.Null);
             }
-            return CreateEntryStream(new SyncOnlyStream(entry.FilePart.GetCompressedStream()));
+
+            var filePart = (SevenZipFilePart)entry.FilePart;
+            if (!filePart.Header.HasStream)
+            {
+                // Entries with no underlying stream (e.g., empty files or anti-items)
+                // should return an empty stream, matching previous behavior.
+                return CreateEntryStream(Stream.Null);
+            }
+
+            var folder = filePart.Folder;
+            // Check if we're starting a new folder - dispose old folder stream if needed
+            if (folder != _currentFolder)
+            {
+                _currentFolderStream?.Dispose();
+                _currentFolderStream = null;
+                _currentFolder = folder;
+            }
+
+            // Create the folder stream once per folder
+            if (_currentFolderStream is null)
+            {
+                _currentFolderStream = _archive._database!.GetFolderStream(
+                    _archive.Volumes.Single().Stream,
+                    folder!,
+                    _archive._database.PasswordProvider
+                );
+            }
+
+            // Wrap with SyncOnlyStream to work around LZMA async bugs
+            // Return a ReadOnlySubStream that reads from the shared folder stream
+            return CreateEntryStream(
+                new SyncOnlyStream(
+                    new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
+                )
+            );
+        }
+
+        public override void Dispose()
+        {
+            _currentFolderStream?.Dispose();
+            _currentFolderStream = null;
+            base.Dispose();
         }
     }
 
