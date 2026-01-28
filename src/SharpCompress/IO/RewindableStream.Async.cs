@@ -14,18 +14,14 @@ internal partial class RewindableStream
         CancellationToken cancellationToken
     )
     {
-        //don't actually read if we don't really want to read anything
-        //currently a network stream bug on Windows for .NET Core
         if (count == 0)
         {
             return 0;
         }
         int read;
-        if (_isRewound && _bufferStream.Position != _bufferStream.Length)
+        if (_isRewound && _bufferPosition != _bufferLength)
         {
-            read = await _bufferStream
-                .ReadAsync(buffer, offset, count, cancellationToken)
-                .ConfigureAwait(false);
+            read = ReadFromBuffer(buffer, offset, count);
             if (read < count)
             {
                 int tempRead = await stream
@@ -33,16 +29,18 @@ internal partial class RewindableStream
                     .ConfigureAwait(false);
                 if (IsRecording)
                 {
-                    await _bufferStream
-                        .WriteAsync(buffer, offset + read, tempRead, cancellationToken)
-                        .ConfigureAwait(false);
+                    WriteToBuffer(buffer, offset + read, tempRead);
                 }
                 read += tempRead;
             }
-            if (_bufferStream.Position == _bufferStream.Length && !IsRecording)
+            if (_bufferPosition == _bufferLength)
             {
                 _isRewound = false;
-                _bufferStream.SetLength(0);
+                _bufferPosition = 0;
+                if (!IsRecording)
+                {
+                    _bufferLength = 0;
+                }
             }
             return read;
         }
@@ -52,9 +50,8 @@ internal partial class RewindableStream
             .ConfigureAwait(false);
         if (IsRecording)
         {
-            await _bufferStream
-                .WriteAsync(buffer, offset, read, cancellationToken)
-                .ConfigureAwait(false);
+            WriteToBuffer(buffer, offset, read);
+            _bufferPosition = _bufferLength;
         }
         return read;
     }
@@ -65,17 +62,15 @@ internal partial class RewindableStream
         CancellationToken cancellationToken = default
     )
     {
-        //don't actually read if we don't really want to read anything
-        //currently a network stream bug on Windows for .NET Core
         if (buffer.Length == 0)
         {
             return 0;
         }
         int read;
-        if (_isRewound && _bufferStream.Position != _bufferStream.Length)
+        if (_isRewound && _bufferPosition != _bufferLength)
         {
             var bufferSpan = buffer.Span;
-            read = _bufferStream.Read(bufferSpan);
+            read = ReadFromBuffer(bufferSpan);
             if (read < bufferSpan.Length)
             {
                 int tempRead = await stream
@@ -83,16 +78,18 @@ internal partial class RewindableStream
                     .ConfigureAwait(false);
                 if (IsRecording)
                 {
-                    await _bufferStream
-                        .WriteAsync(buffer.Slice(read, tempRead), cancellationToken)
-                        .ConfigureAwait(false);
+                    WriteToBuffer(buffer.Slice(read, tempRead).Span);
                 }
                 read += tempRead;
             }
-            if (_bufferStream.Position == _bufferStream.Length && !IsRecording)
+            if (_bufferPosition == _bufferLength)
             {
                 _isRewound = false;
-                _bufferStream.SetLength(0);
+                _bufferPosition = 0;
+                if (!IsRecording)
+                {
+                    _bufferLength = 0;
+                }
             }
             return read;
         }
@@ -100,7 +97,8 @@ internal partial class RewindableStream
         read = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (IsRecording)
         {
-            await _bufferStream.WriteAsync(buffer.Slice(0, read), cancellationToken).ConfigureAwait(false);
+            WriteToBuffer(buffer.Slice(0, read).Span);
+            _bufferPosition = _bufferLength;
         }
         return read;
     }

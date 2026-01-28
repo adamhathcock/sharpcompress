@@ -1,11 +1,16 @@
 using System;
+using System.Buffers;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.IO
 {
     internal partial class RewindableStream(Stream stream) : Stream
     {
-        private MemoryStream _bufferStream = new MemoryStream();
+        private readonly int _bufferSize = Constants.RewindableBufferSize;
+        private byte[]? _buffer = ArrayPool<byte>.Shared.Rent(Constants.RewindableBufferSize);
+        private int _bufferLength = 0;
+        private int _bufferPosition = 0;
         private bool _isRewound;
         private bool _isDisposed;
 
@@ -21,6 +26,8 @@ namespace SharpCompress.IO
             base.Dispose(disposing);
             if (disposing)
             {
+                ArrayPool<byte>.Shared.Return(_buffer!);
+                _buffer = null;
                 stream.Dispose();
             }
         }
@@ -29,39 +36,50 @@ namespace SharpCompress.IO
         {
             _isRewound = true;
             IsRecording = !stopRecording;
-            _bufferStream.Position = 0;
+            _bufferPosition = 0;
         }
 
         public void Rewind(MemoryStream buffer)
         {
-            if (_bufferStream.Position >= buffer.Length)
+            long bufferLength = buffer.Length;
+            if (_bufferPosition >= bufferLength)
             {
-                _bufferStream.Position -= buffer.Length;
+                _bufferPosition -= (int)bufferLength;
             }
             else
             {
-                _bufferStream.TransferTo(buffer, buffer.Length - _bufferStream.Position);
-                //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
-                //https://github.com/adamhathcock/sharpcompress/issues/306
-                _bufferStream = new MemoryStream();
+                int bytesToKeep = _bufferLength - _bufferPosition;
+                if (bytesToKeep > 0)
+                {
+                    Array.Copy(_buffer!, _bufferPosition, _buffer!, 0, bytesToKeep);
+                }
+                if (bufferLength > _bufferSize)
+                {
+                    throw new InvalidOperationException(
+                        $"External buffer size ({bufferLength} bytes) exceeds internal buffer capacity ({_bufferSize} bytes)"
+                    );
+                }
+                _bufferLength = (int)bufferLength;
+                _bufferPosition = 0;
                 buffer.Position = 0;
-                buffer.TransferTo(_bufferStream, buffer.Length);
-                _bufferStream.Position = 0;
+                int bytesRead = buffer.Read(_buffer!, 0, _bufferLength);
+                _bufferLength = bytesRead;
+                _bufferPosition = 0;
             }
             _isRewound = true;
         }
 
         public void StartRecording()
         {
-            //if (isRewound && bufferStream.Position != 0)
-            //   throw new System.NotImplementedException();
-            if (_bufferStream.Position != 0)
+            if (_bufferPosition != 0)
             {
-                byte[] data = _bufferStream.ToArray();
-                long position = _bufferStream.Position;
-                _bufferStream.SetLength(0);
-                _bufferStream.Write(data, (int)position, data.Length - (int)position);
-                _bufferStream.Position = 0;
+                int bytesToKeep = _bufferLength - _bufferPosition;
+                if (bytesToKeep > 0)
+                {
+                    Array.Copy(_buffer!, _bufferPosition, _buffer!, 0, bytesToKeep);
+                }
+                _bufferLength = bytesToKeep;
+                _bufferPosition = 0;
             }
             IsRecording = true;
         }
@@ -78,51 +96,61 @@ namespace SharpCompress.IO
 
         public override long Position
         {
-            get => stream.Position + _bufferStream.Position - _bufferStream.Length;
+            get
+            {
+                if (_isRewound || _bufferPosition < _bufferLength)
+                {
+                    return stream.Position + _bufferPosition - _bufferLength;
+                }
+                return stream.Position;
+            }
             set
             {
                 if (!_isRewound)
                 {
                     stream.Position = value;
                 }
-                else if (value < stream.Position - _bufferStream.Length || value >= stream.Position)
+                else if (value < stream.Position - _bufferLength || value >= stream.Position)
                 {
                     stream.Position = value;
                     _isRewound = false;
-                    _bufferStream.SetLength(0);
+                    _bufferLength = 0;
+                    _bufferPosition = 0;
                 }
                 else
                 {
-                    _bufferStream.Position = value - stream.Position + _bufferStream.Length;
+                    _bufferPosition = (int)(value - stream.Position + _bufferLength);
                 }
             }
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            //don't actually read if we don't really want to read anything
-            //currently a network stream bug on Windows for .NET Core
             if (count == 0)
             {
                 return 0;
             }
             int read;
-            if (_isRewound && _bufferStream.Position != _bufferStream.Length)
+            if (_isRewound && _bufferPosition != _bufferLength)
             {
-                read = _bufferStream.Read(buffer, offset, count);
+                read = ReadFromBuffer(buffer, offset, count);
                 if (read < count)
                 {
                     int tempRead = stream.Read(buffer, offset + read, count - read);
                     if (IsRecording)
                     {
-                        _bufferStream.Write(buffer, offset + read, tempRead);
+                        WriteToBuffer(buffer, offset + read, tempRead);
                     }
                     read += tempRead;
                 }
-                if (_bufferStream.Position == _bufferStream.Length && !IsRecording)
+                if (_bufferPosition == _bufferLength)
                 {
                     _isRewound = false;
-                    _bufferStream.SetLength(0);
+                    _bufferPosition = 0;
+                    if (!IsRecording)
+                    {
+                        _bufferLength = 0;
+                    }
                 }
                 return read;
             }
@@ -130,7 +158,8 @@ namespace SharpCompress.IO
             read = stream.Read(buffer, offset, count);
             if (IsRecording)
             {
-                _bufferStream.Write(buffer, offset, read);
+                WriteToBuffer(buffer, offset, read);
+                _bufferPosition = _bufferLength;
             }
             return read;
         }
@@ -138,29 +167,31 @@ namespace SharpCompress.IO
 #if !LEGACY_DOTNET
         public override int Read(Span<byte> buffer)
         {
-            //don't actually read if we don't really want to read anything
-            //currently a network stream bug on Windows for .NET Core
             if (buffer.Length == 0)
             {
                 return 0;
             }
             int read;
-            if (_isRewound && _bufferStream.Position != _bufferStream.Length)
+            if (_isRewound && _bufferPosition != _bufferLength)
             {
-                read = _bufferStream.Read(buffer);
+                read = ReadFromBuffer(buffer);
                 if (read < buffer.Length)
                 {
                     int tempRead = stream.Read(buffer.Slice(read));
                     if (IsRecording)
                     {
-                        _bufferStream.Write(buffer.Slice(read, tempRead));
+                        WriteToBuffer(buffer.Slice(read, tempRead));
                     }
                     read += tempRead;
                 }
-                if (_bufferStream.Position == _bufferStream.Length && !IsRecording)
+                if (_bufferPosition == _bufferLength)
                 {
                     _isRewound = false;
-                    _bufferStream.SetLength(0);
+                    _bufferPosition = 0;
+                    if (!IsRecording)
+                    {
+                        _bufferLength = 0;
+                    }
                 }
                 return read;
             }
@@ -168,16 +199,67 @@ namespace SharpCompress.IO
             read = stream.Read(buffer);
             if (IsRecording)
             {
-                _bufferStream.Write(buffer.Slice(0, read));
+                WriteToBuffer(buffer.Slice(0, read));
+                _bufferPosition = _bufferLength;
             }
             return read;
         }
 #endif
 
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
+
+        private int ReadFromBuffer(byte[] buffer, int offset, int count)
+        {
+            int bytesToRead = Math.Min(count, _bufferLength - _bufferPosition);
+            if (bytesToRead > 0)
+            {
+                Array.Copy(_buffer!, _bufferPosition, buffer, offset, bytesToRead);
+                _bufferPosition += bytesToRead;
+            }
+            return bytesToRead;
+        }
+
+        private int ReadFromBuffer(Span<byte> buffer)
+        {
+            int bytesToRead = Math.Min(buffer.Length, _bufferLength - _bufferPosition);
+            if (bytesToRead > 0)
+            {
+                _buffer!.AsSpan(_bufferPosition, bytesToRead).CopyTo(buffer);
+                _bufferPosition += bytesToRead;
+            }
+            return bytesToRead;
+        }
+
+        private void WriteToBuffer(byte[] data, int offset, int count)
+        {
+            int spaceAvailable = _bufferSize - _bufferLength;
+            if (count > spaceAvailable)
+            {
+                throw new InvalidOperationException(
+                    $"Buffer overflow: Cannot write {count} bytes. Only {spaceAvailable} bytes available in {_bufferSize} byte buffer."
+                );
+            }
+            Array.Copy(data, offset, _buffer!, _bufferLength, count);
+            _bufferLength += count;
+        }
+
+        private void WriteToBuffer(ReadOnlySpan<byte> data)
+        {
+            int spaceAvailable = _bufferSize - _bufferLength;
+            if (data.Length > spaceAvailable)
+            {
+                throw new InvalidOperationException(
+                    $"Buffer overflow: Cannot write {data.Length} bytes. Only {spaceAvailable} bytes available in {_bufferSize} byte buffer."
+                );
+            }
+            data.CopyTo(_buffer!.AsSpan(_bufferLength));
+            _bufferLength += data.Length;
+        }
     }
 }

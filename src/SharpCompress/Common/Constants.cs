@@ -7,4 +7,6 @@ public static class Constants
     /// This can be modified globally at runtime.
     /// </summary>
     public static int BufferSize { get; set; } = 81920;
+
+    public static int RewindableBufferSize { get; set; } = 81920;
 }
