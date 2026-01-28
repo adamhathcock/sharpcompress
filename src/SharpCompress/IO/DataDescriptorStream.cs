@@ -30,6 +30,7 @@ public class DataDescriptorStream : Stream, IStreamStack
     private int _searchPosition;
     private bool _isDisposed;
     private bool _done;
+    private long _lastRewindPosition = -1;
 
     private static byte[] _dataDescriptorMarker = new byte[] { 0x50, 0x4b, 0x07, 0x08 };
     private static long _dataDescriptorSize = 24;
@@ -163,8 +164,14 @@ public class DataDescriptorStream : Stream, IStreamStack
 
         if (_searchPosition > 0)
         {
-            read -= _searchPosition;
-            _stream.Position -= _searchPosition;
+            var newPosition = _stream.Position - _searchPosition;
+            // Prevent infinite loop: don't rewind to the same position twice
+            if (newPosition != _lastRewindPosition)
+            {
+                read -= _searchPosition;
+                _stream.Position = newPosition;
+                _lastRewindPosition = newPosition;
+            }
             _searchPosition = 0;
         }
 
