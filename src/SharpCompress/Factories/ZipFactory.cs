@@ -49,10 +49,10 @@ public class ZipFactory
 
         if (stream is not SharpCompressStream) // wrap to provide buffer bef
         {
-            stream = new SharpCompressStream(stream, bufferSize: ReaderOptions.DefaultBufferSize);
+            stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
         }
 
-        if (ZipArchive.IsZipFile(stream, password, ReaderOptions.DefaultBufferSize))
+        if (ZipArchive.IsZipFile(stream, password))
         {
             return true;
         }
@@ -67,7 +67,7 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (ZipArchive.IsZipMulti(stream, password, ReaderOptions.DefaultBufferSize))
+        if (ZipArchive.IsZipMulti(stream, password))
         {
             return true;
         }
@@ -91,17 +91,10 @@ public class ZipFactory
 
         if (stream is not SharpCompressStream) // wrap to provide buffer bef
         {
-            stream = new SharpCompressStream(stream, bufferSize: ReaderOptions.DefaultBufferSize);
+            stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
         }
 
-        if (
-            await ZipArchive.IsZipFileAsync(
-                stream,
-                password,
-                ReaderOptions.DefaultBufferSize,
-                cancellationToken
-            )
-        )
+        if (await ZipArchive.IsZipFileAsync(stream, password, cancellationToken))
         {
             return true;
         }
@@ -116,14 +109,7 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (
-            await ZipArchive.IsZipMultiAsync(
-                stream,
-                password,
-                ReaderOptions.DefaultBufferSize,
-                cancellationToken
-            )
-        )
+        if (await ZipArchive.IsZipMultiAsync(stream, password, cancellationToken))
         {
             return true;
         }

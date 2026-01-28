@@ -9,8 +9,6 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveEntryExtensions
 {
-    private const int BufferSize = 81920;
-
     /// <param name="archiveEntry">The archive entry to extract.</param>
     extension(IArchiveEntry archiveEntry)
     {
@@ -28,7 +26,7 @@ public static class IArchiveEntryExtensions
 
             using var entryStream = archiveEntry.OpenEntryStream();
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
-            sourceStream.CopyTo(streamToWriteTo, BufferSize);
+            sourceStream.CopyTo(streamToWriteTo, Constants.BufferSize);
         }
 
         /// <summary>
@@ -51,7 +49,7 @@ public static class IArchiveEntryExtensions
             using var entryStream = await archiveEntry.OpenEntryStreamAsync(cancellationToken);
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
             await sourceStream
-                .CopyToAsync(streamToWriteTo, BufferSize, cancellationToken)
+                .CopyToAsync(streamToWriteTo, Constants.BufferSize, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
