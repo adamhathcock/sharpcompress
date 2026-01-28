@@ -43,8 +43,8 @@ internal static partial class Utility
             while (length > 0)
             {
                 var fetched = await source
-                                    .ReadAsync(buffer, offset, length, cancellationToken)
-                                    .ConfigureAwait(false);
+                    .ReadAsync(buffer, offset, length, cancellationToken)
+                    .ConfigureAwait(false);
                 if (fetched <= 0)
                 {
                     throw new EndOfStreamException();
@@ -64,11 +64,10 @@ internal static partial class Utility
             // Use ReadOnlySubStream to limit reading and leverage framework's CopyToAsync
             using var limitedStream = new IO.ReadOnlySubStream(source, maxLength);
             await limitedStream
-                  .CopyToAsync(destination, Constants.BufferSize, cancellationToken)
-                  .ConfigureAwait(false);
+                .CopyToAsync(destination, Constants.BufferSize, cancellationToken)
+                .ConfigureAwait(false);
             return limitedStream.Position;
         }
-
 
         public async ValueTask<bool> ReadFullyAsync(
             byte[] buffer,
@@ -80,8 +79,8 @@ internal static partial class Utility
             while (
                 (
                     read = await source
-                                 .ReadAsync(buffer, total, buffer.Length - total, cancellationToken)
-                                 .ConfigureAwait(false)
+                        .ReadAsync(buffer, total, buffer.Length - total, cancellationToken)
+                        .ConfigureAwait(false)
                 ) > 0
             )
             {
@@ -106,8 +105,8 @@ internal static partial class Utility
             while (
                 (
                     read = await source
-                                 .ReadAsync(buffer, offset + total, count - total, cancellationToken)
-                                 .ConfigureAwait(false)
+                        .ReadAsync(buffer, offset + total, count - total, cancellationToken)
+                        .ConfigureAwait(false)
                 ) > 0
             )
             {

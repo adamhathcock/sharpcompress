@@ -57,13 +57,12 @@ public partial class SharpCompressStream
         else
         {
             int read = await Stream
-                             .ReadAsync(buffer, offset, count, cancellationToken)
-                             .ConfigureAwait(false);
+                .ReadAsync(buffer, offset, count, cancellationToken)
+                .ConfigureAwait(false);
             _internalPosition += read;
             return read;
         }
     }
-
 
     /// <summary>
     /// Async version of FillBuffer. Implements the ReadFullyAsync pattern.
@@ -83,8 +82,8 @@ public partial class SharpCompressStream
         while (
             (
                 read = await Stream
-                             .ReadAsync(buffer, offset + total, count - total, cancellationToken)
-                             .ConfigureAwait(false)
+                    .ReadAsync(buffer, offset + total, count - total, cancellationToken)
+                    .ConfigureAwait(false)
             ) > 0
         )
         {
@@ -96,7 +95,6 @@ public partial class SharpCompressStream
         }
         return total;
     }
-
 
     public override async Task WriteAsync(
         byte[] buffer,
@@ -189,8 +187,8 @@ public partial class SharpCompressStream
         while (
             (
                 read = await Stream
-                             .ReadAsync(buffer.Slice(total), cancellationToken)
-                             .ConfigureAwait(false)
+                    .ReadAsync(buffer.Slice(total), cancellationToken)
+                    .ConfigureAwait(false)
             ) > 0
         )
         {
@@ -202,7 +200,6 @@ public partial class SharpCompressStream
         }
         return total;
     }
-
 
     public override async ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,

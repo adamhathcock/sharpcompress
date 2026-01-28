@@ -156,8 +156,8 @@ internal static partial class Utility
                 {
                     var toRead = (int)Math.Min(array.Length, advanceAmount);
                     var read = await source
-                                     .ReadAsync(array, 0, toRead, cancellationToken)
-                                     .ConfigureAwait(false);
+                        .ReadAsync(array, 0, toRead, cancellationToken)
+                        .ConfigureAwait(false);
                     if (read <= 0)
                     {
                         break;
@@ -232,7 +232,6 @@ internal static partial class Utility
         }
 #endif
 
-
         /// <summary>
         /// Read exactly the requested number of bytes from a stream. Throws EndOfStreamException if not enough data is available.
         /// </summary>
@@ -271,7 +270,6 @@ internal static partial class Utility
             }
         }
     }
-
 
     public static string TrimNulls(this string source) => source.Replace('\0', ' ').Trim();
 
