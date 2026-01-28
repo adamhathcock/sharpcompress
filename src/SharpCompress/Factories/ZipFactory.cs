@@ -49,10 +49,10 @@ public class ZipFactory
 
         if (stream is not SharpCompressStream) // wrap to provide buffer bef
         {
-            stream = new SharpCompressStream(stream, bufferSize: ReaderOptions.DefaultBufferSize);
+            stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
         }
 
-        if (ZipArchive.IsZipFile(stream, password, ReaderOptions.DefaultBufferSize))
+        if (ZipArchive.IsZipFile(stream, password))
         {
             return true;
         }
@@ -67,63 +67,7 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (ZipArchive.IsZipMulti(stream, password, ReaderOptions.DefaultBufferSize))
-        {
-            return true;
-        }
-
-        stream.Position = startPosition;
-
-        return false;
-    }
-
-    /// <inheritdoc/>
-    public override async ValueTask<bool> IsArchiveAsync(
-        Stream stream,
-        string? password = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var startPosition = stream.CanSeek ? stream.Position : -1;
-
-        // probe for single volume zip
-
-        if (stream is not SharpCompressStream) // wrap to provide buffer bef
-        {
-            stream = new SharpCompressStream(stream, bufferSize: ReaderOptions.DefaultBufferSize);
-        }
-
-        if (
-            await ZipArchive.IsZipFileAsync(
-                stream,
-                password,
-                ReaderOptions.DefaultBufferSize,
-                cancellationToken
-            )
-        )
-        {
-            return true;
-        }
-
-        // probe for a multipart zip
-
-        if (!stream.CanSeek)
-        {
-            return false;
-        }
-
-        stream.Position = startPosition;
-
-        //test the zip (last) file of a multipart zip
-        if (
-            await ZipArchive.IsZipMultiAsync(
-                stream,
-                password,
-                ReaderOptions.DefaultBufferSize,
-                cancellationToken
-            )
-        )
+        if (ZipArchive.IsZipMulti(stream, password))
         {
             return true;
         }

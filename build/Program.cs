@@ -230,7 +230,7 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
     }
     else
     {
-        // Not tagged - create prerelease version based on next minor version
+        // Not tagged - create prerelease version
         var allTags = (await GetGitOutput("tag", "--list"))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
             .Where(tag => Regex.IsMatch(tag.Trim(), @"^\d+\.\d+\.\d+$"))
@@ -240,8 +240,22 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
         var lastTag = allTags.OrderBy(tag => Version.Parse(tag)).LastOrDefault() ?? "0.0.0";
         var lastVersion = Version.Parse(lastTag);
 
-        // Increment minor version for next release
-        var nextVersion = new Version(lastVersion.Major, lastVersion.Minor + 1, 0);
+        // Determine version increment based on branch
+        var currentBranch = await GetCurrentBranch();
+        Version nextVersion;
+
+        if (currentBranch == "release")
+        {
+            // Release branch: increment patch version
+            nextVersion = new Version(lastVersion.Major, lastVersion.Minor, lastVersion.Build + 1);
+            Console.WriteLine($"Building prerelease for release branch (patch increment)");
+        }
+        else
+        {
+            // Master or other branches: increment minor version
+            nextVersion = new Version(lastVersion.Major, lastVersion.Minor + 1, 0);
+            Console.WriteLine($"Building prerelease for {currentBranch} branch (minor increment)");
+        }
 
         // Use commit count since the last version tag if available; otherwise, fall back to total count
         var revListArgs = allTags.Any() ? $"--count {lastTag}..HEAD" : "--count HEAD";
@@ -250,6 +264,28 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
         var version = $"{nextVersion}-beta.{commitCount}";
         Console.WriteLine($"Building prerelease version: {version}");
         return (version, true);
+    }
+}
+
+static async Task<string> GetCurrentBranch()
+{
+    // In GitHub Actions, GITHUB_REF_NAME contains the branch name
+    var githubRefName = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
+    if (!string.IsNullOrEmpty(githubRefName))
+    {
+        return githubRefName;
+    }
+
+    // Fallback to git command for local builds
+    try
+    {
+        var (output, _) = await ReadAsync("git", "branch --show-current");
+        return output.Trim();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Could not determine current branch: {ex.Message}");
+        return "unknown";
     }
 }
 

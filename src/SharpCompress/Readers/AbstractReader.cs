@@ -196,7 +196,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     {
         using Stream s = OpenEntryStream();
         var sourceStream = WrapWithProgress(s, Entry);
-        sourceStream.CopyTo(writeStream, 81920);
+        sourceStream.CopyTo(writeStream, Constants.BufferSize);
     }
 
     private Stream WrapWithProgress(Stream source, Entry entry)

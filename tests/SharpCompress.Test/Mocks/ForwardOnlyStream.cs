@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.IO;
-using SharpCompress.Readers;
 
 namespace SharpCompress.Test.Mocks;
 
@@ -31,8 +31,8 @@ public class ForwardOnlyStream : SharpCompressStream, IStreamStack
 
     public bool IsDisposed { get; private set; }
 
-    public ForwardOnlyStream(Stream stream, int bufferSize = ReaderOptions.DefaultBufferSize)
-        : base(stream, bufferSize: bufferSize)
+    public ForwardOnlyStream(Stream stream, int? bufferSize = null)
+        : base(stream, bufferSize: bufferSize ?? Constants.BufferSize)
     {
         this.stream = stream;
 #if DEBUG_STREAMS
