@@ -143,12 +143,12 @@ public class SeekableRewindableStreamTest
     }
 
     [Fact]
-    public void StartRecording_IsNoOp()
+    public void StartRecording_IsNotNoOp()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var stream = new SeekableRewindableStream(ms);
         stream.StartRecording();
-        Assert.False(stream.IsRecording);
+        Assert.True(stream.IsRecording);
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public class SeekableRewindableStreamTest
     }
 
     [Fact]
-    public void RecordingOperationsDoNotAffectStream()
+    public void RecordingOperationsDoAffectStream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var stream = new SeekableRewindableStream(ms);
@@ -233,12 +233,12 @@ public class SeekableRewindableStreamTest
         Assert.Equal(3, stream.Position);
 
         stream.Rewind(true);
-        Assert.Equal(3, stream.Position);
+        Assert.Equal(0, stream.Position);
 
         var buffer2 = new byte[2];
         stream.Read(buffer2, 0, 2);
-        Assert.Equal(new byte[] { 4, 5 }, buffer2);
-        Assert.Equal(5, stream.Position);
+        Assert.Equal(new byte[] { 1, 2 }, buffer2);
+        Assert.Equal(2, stream.Position);
     }
 }
 

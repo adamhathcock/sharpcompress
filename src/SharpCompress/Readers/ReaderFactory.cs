@@ -66,7 +66,6 @@ public static partial class ReaderFactory
             bStream.Rewind();
             if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
-                bStream.Rewind(true);
                 return reader;
             }
         }

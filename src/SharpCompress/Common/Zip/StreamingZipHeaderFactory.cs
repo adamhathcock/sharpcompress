@@ -23,7 +23,7 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
-        var rewindableStream = RewindableStream.EnsureSeekable(stream);
+        var rewindableStream = new RewindableStream(stream);
         while (true)
         {
             var reader = new BinaryReader(rewindableStream);

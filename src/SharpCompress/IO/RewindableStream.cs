@@ -43,7 +43,9 @@ internal partial class RewindableStream : Stream
     {
         if (!IsRecording)
         {
-            throw new InvalidOperationException("StopRecording can only be called when recording is active.");
+            throw new InvalidOperationException(
+                "StopRecording can only be called when recording is active."
+            );
         }
         _hasStoppedRecording = true;
         isRewound = true;
@@ -64,34 +66,19 @@ internal partial class RewindableStream : Stream
         return new RewindableStream(stream);
     }
 
-    public void Rewind(MemoryStream buffer)
-    {
-        if (bufferStream.Position >= buffer.Length)
-        {
-            bufferStream.Position -= buffer.Length;
-        }
-        else
-        {
-            bufferStream.TransferTo(buffer, buffer.Length);
-            //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
-            //https://github.com/adamhathcock/sharpcompress/issues/306
-            bufferStream = new MemoryStream();
-            buffer.Position = 0;
-            buffer.TransferTo(bufferStream, buffer.Length);
-            bufferStream.Position = 0;
-        }
-        isRewound = true;
-    }
-
     public virtual void StartRecording()
     {
         if (IsRecording)
         {
-            throw new InvalidOperationException("StartRecording can only be called when not already recording.");
+            throw new InvalidOperationException(
+                "StartRecording can only be called when not already recording."
+            );
         }
         if (_hasStoppedRecording)
         {
-            throw new InvalidOperationException("StartRecording cannot be called after StopRecording has been called.");
+            throw new InvalidOperationException(
+                "StartRecording cannot be called after StopRecording has been called."
+            );
         }
         //if (isRewound && bufferStream.Position != 0)
         //   throw new System.NotImplementedException();
@@ -135,13 +122,6 @@ internal partial class RewindableStream : Stream
             {
                 isRewound = true;
                 bufferStream.Position = value - bufferStart;
-            }
-            else if (stream.CanSeek)
-            {
-                stream.Position = value;
-                isRewound = false;
-                bufferStream.SetLength(0);
-                streamPosition = value;
             }
             else
             {

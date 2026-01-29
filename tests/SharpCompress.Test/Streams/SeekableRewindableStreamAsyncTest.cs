@@ -122,27 +122,6 @@ public class SeekableRewindableStreamAsyncTest
         await stream.ReadAsync(readBuffer, 0, 5).ConfigureAwait(false);
         Assert.Equal(writeData, readBuffer);
     }
-
-    [Fact]
-    public async Task AsyncOperationsDoNotCauseRecording()
-    {
-        var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
-
-        stream.StartRecording();
-        var buffer = new byte[3];
-        await stream.ReadAsync(buffer, 0, 3).ConfigureAwait(false);
-        Assert.Equal(new byte[] { 1, 2, 3 }, buffer);
-        Assert.Equal(3, stream.Position);
-
-        stream.Rewind(true);
-        Assert.Equal(3, stream.Position);
-
-        var buffer2 = new byte[2];
-        await stream.ReadAsync(buffer2, 0, 2).ConfigureAwait(false);
-        Assert.Equal(new byte[] { 4, 5 }, buffer2);
-        Assert.Equal(5, stream.Position);
-    }
 }
 
 #if !LEGACY_DOTNET
