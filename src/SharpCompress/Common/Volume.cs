@@ -18,7 +18,7 @@ public abstract partial class Volume : IVolume, IAsyncDisposable
         _baseStream = stream;
         if (ReaderOptions.LeaveStreamOpen)
         {
-            stream = SharpCompressStream.Create(stream, leaveOpen: true);
+            stream = new NonDisposingStream(stream);
         }
 
         if (stream is IStreamStack ss)

@@ -168,7 +168,7 @@ public class TarFactory
                 var decompressedStream = wrapper.CreateStream(rewindableStream);
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
-                    rewindableStream.Rewind();
+                    rewindableStream.StopRecording();
                     return new TarReader(rewindableStream, options, wrapper.CompressionType);
                 }
             }
@@ -185,18 +185,19 @@ public class TarFactory
     {
         cancellationToken.ThrowIfCancellationRequested();
         options ??= new ReaderOptions();
-        var rewindableStream = new SharpCompressStream(stream);
-        var pos = rewindableStream.GetPosition();
+        var rewindableStream = new RewindableStream(stream);
+        rewindableStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
-            rewindableStream.StackSeek(pos);
+            rewindableStream.Rewind();
             if (await wrapper.IsMatchAsync(rewindableStream, cancellationToken))
             {
-                rewindableStream.StackSeek(pos);
+                rewindableStream.Rewind();
                 var decompressedStream = wrapper.CreateStream(rewindableStream);
                 if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
                 {
-                    rewindableStream.StackSeek(pos);
+                    rewindableStream.Rewind();
+                    rewindableStream.StopRecording();
                     return new TarReader(rewindableStream, options, wrapper.CompressionType);
                 }
             }

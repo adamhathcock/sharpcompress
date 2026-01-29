@@ -84,6 +84,13 @@ namespace SharpCompress.IO
             IsRecording = true;
         }
 
+        public void StopRecording()
+        {
+            _isRewound = true;
+            IsRecording = false;
+            _bufferPosition = 0;
+        }
+
         public override bool CanRead => true;
 
         public override bool CanSeek => stream.CanSeek;

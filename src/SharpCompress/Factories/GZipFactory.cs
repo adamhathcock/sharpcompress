@@ -120,11 +120,11 @@ public class GZipFactory
             var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Rewind();
+                rewindableStream.StopRecording();
                 reader = new TarReader(rewindableStream, options, CompressionType.GZip);
                 return true;
             }
-            rewindableStream.Rewind();
+            rewindableStream.StopRecording();
             reader = OpenReader(rewindableStream, options);
             return true;
         }

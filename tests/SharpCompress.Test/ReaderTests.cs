@@ -164,11 +164,8 @@ public abstract class ReaderTests : TestBase
         using var file = File.OpenRead(testArchive);
 
 #if !LEGACY_DOTNET
-        await using var protectedStream = SharpCompressStream.Create(
-            new ForwardOnlyStream(file, options.BufferSize),
-            leaveOpen: true,
-            throwOnDispose: true,
-            bufferSize: options.BufferSize
+        await using var protectedStream = new NonDisposingStream(
+            new ForwardOnlyStream(file, options.BufferSize)
         );
         await using var testStream = new TestStream(protectedStream);
 #else

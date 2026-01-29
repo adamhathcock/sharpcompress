@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.IO;
@@ -398,4 +399,70 @@ public class RewindableStreamAsyncTest
         return result.ToArray();
     }
 #endif
+
+    [Fact]
+    public async ValueTask TestStopRecordingAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        stream.StopRecording();
+
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(5, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(6, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(7, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        Assert.False(stream.IsRecording);
+    }
+
+    [Fact]
+    public async ValueTask TestStopRecordingNoFurtherBufferingAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        var buffer = new byte[8];
+        await stream.ReadAsync(buffer, 0, 8).ConfigureAwait(false);
+
+        stream.StopRecording();
+
+        await stream.ReadAsync(buffer, 0, 8).ConfigureAwait(false);
+        Assert.Equal(BitConverter.GetBytes(1), buffer.Take(4).ToArray());
+        Assert.Equal(BitConverter.GetBytes(2), buffer.Skip(4).Take(4).ToArray());
+
+        int bytesRead = await stream.ReadAsync(buffer, 0, 8).ConfigureAwait(false);
+        Assert.Equal(8, bytesRead);
+
+        Assert.False(stream.IsRecording);
+    }
 }

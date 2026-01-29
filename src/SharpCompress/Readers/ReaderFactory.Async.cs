@@ -54,8 +54,8 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var bStream = new SharpCompressStream(stream, bufferSize: options.BufferSize);
-        long pos = bStream.GetPosition();
+        var bStream = new RewindableStream(stream);
+        bStream.StartRecording();
 
         var factories = Factory.Factories.OfType<Factory>();
 
@@ -68,7 +68,7 @@ public static partial class ReaderFactory
             );
             if (testedFactory is IReaderFactory readerFactory)
             {
-                bStream.StackSeek(pos);
+                bStream.Rewind();
                 if (
                     await testedFactory.IsArchiveAsync(
                         bStream,
@@ -76,11 +76,12 @@ public static partial class ReaderFactory
                     )
                 )
                 {
-                    bStream.StackSeek(pos);
+                    bStream.Rewind();
+                    bStream.StopRecording();
                     return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
                 }
             }
-            bStream.StackSeek(pos);
+            bStream.Rewind();
         }
 
         foreach (var factory in factories)
@@ -89,13 +90,14 @@ public static partial class ReaderFactory
             {
                 continue; // Already tested above
             }
-            bStream.StackSeek(pos);
+            bStream.Rewind();
             if (
                 factory is IReaderFactory readerFactory
                 && await factory.IsArchiveAsync(bStream, cancellationToken: cancellationToken)
             )
             {
-                bStream.StackSeek(pos);
+                bStream.Rewind();
+                bStream.StopRecording();
                 return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
             }
         }

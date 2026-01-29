@@ -52,7 +52,7 @@ public static partial class ReaderFactory
                 && reader != null
             )
             {
-                bStream.Rewind();
+                bStream.StopRecording();
                 return reader;
             }
         }
