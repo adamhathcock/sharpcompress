@@ -60,13 +60,20 @@ internal class SevenZipFilePart : FilePart
         return new ReadOnlySubStream(folderStream, Header.Size, leaveOpen: false);
     }
 
-    internal override async ValueTask<Stream?> GetCompressedStreamAsync(CancellationToken cancellationToken = default)
+    internal override async ValueTask<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         if (!Header.HasStream)
         {
             return Stream.Null;
         }
-        var folderStream = await _database.GetFolderStreamAsync(_stream, Folder!, _database.PasswordProvider, cancellationToken);
+        var folderStream = await _database.GetFolderStreamAsync(
+            _stream,
+            Folder!,
+            _database.PasswordProvider,
+            cancellationToken
+        );
 
         var firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
         var skipCount = Index - firstFileIndex;

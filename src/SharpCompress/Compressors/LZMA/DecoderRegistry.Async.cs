@@ -60,7 +60,12 @@ internal static partial class DecoderRegistry
             case K_RISCV:
                 return new BCJFilterRISCV(false, inStreams.Single());
             case K_B_ZIP2:
-                return await BZip2Stream.CreateAsync(inStreams.Single(), CompressionMode.Decompress, true, cancellationToken: cancellationToken);
+                return await BZip2Stream.CreateAsync(
+                    inStreams.Single(),
+                    CompressionMode.Decompress,
+                    true,
+                    cancellationToken: cancellationToken
+                );
             case K_PPMD:
                 return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
             case K_DEFLATE:

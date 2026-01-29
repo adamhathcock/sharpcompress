@@ -43,11 +43,7 @@ public class ArchiveTests : ReaderTests
     {
         foreach (var path in testArchives)
         {
-            using (
-                var stream = new NonDisposingStream(
-                    File.OpenRead(path)
-                )
-            )
+            using (var stream = new NonDisposingStream(File.OpenRead(path)))
             {
                 try
                 {

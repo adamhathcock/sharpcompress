@@ -20,7 +20,11 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     private bool _wroteCurrentEntry;
     private readonly bool _disposeVolume;
 
-    internal AbstractReader(ReaderOptions options, ArchiveType archiveType, bool disposeVolume = true)
+    internal AbstractReader(
+        ReaderOptions options,
+        ArchiveType archiveType,
+        bool disposeVolume = true
+    )
     {
         ArchiveType = archiveType;
         _disposeVolume = disposeVolume;

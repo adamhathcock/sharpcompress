@@ -24,7 +24,7 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
         //the original code wrapped this with RewindableStream. Wrap with SharpCompressStream as we can get the buffer size
-         var rewindableStream = stream;
+        var rewindableStream = stream;
         while (true)
         {
             var reader = new BinaryReader(rewindableStream);

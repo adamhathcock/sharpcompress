@@ -264,7 +264,8 @@ internal static class DecoderStreamHelper
         }
 
         var unpackSize = folderInfo._unpackSizes[outStreamId];
-        return await DecoderRegistry.CreateDecoderStreamAsync(
+        return await DecoderRegistry
+            .CreateDecoderStreamAsync(
                 coderInfo._methodId,
                 inStreams,
                 coderInfo._props,
