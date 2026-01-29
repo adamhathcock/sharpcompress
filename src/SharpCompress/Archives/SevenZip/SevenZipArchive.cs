@@ -129,7 +129,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             DiagnosticsEnabled ? _currentFolderStream : null;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
-            : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;
+            : base(readerOptions, ArchiveType.SevenZip, false) => this._archive = archive;
 
         public override SevenZipVolume Volume => _archive.Volumes.Single();
 

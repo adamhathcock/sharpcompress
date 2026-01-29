@@ -18,10 +18,12 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     private IEnumerator<TEntry>? _entriesForCurrentReadStream;
     private IAsyncEnumerator<TEntry>? _entriesForCurrentReadStreamAsync;
     private bool _wroteCurrentEntry;
+    private readonly bool _disposeVolume;
 
-    internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
+    internal AbstractReader(ReaderOptions options, ArchiveType archiveType, bool disposeVolume = true)
     {
         ArchiveType = archiveType;
+        _disposeVolume = disposeVolume;
         Options = options;
     }
 
@@ -56,7 +58,10 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     public virtual void Dispose()
     {
         _entriesForCurrentReadStream?.Dispose();
-        Volume?.Dispose();
+        if (_disposeVolume)
+        {
+            Volume?.Dispose();
+        }
     }
 
     #endregion

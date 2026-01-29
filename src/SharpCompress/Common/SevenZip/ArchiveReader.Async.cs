@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -125,10 +126,12 @@ internal sealed partial class ArchiveReader
                     throw new InvalidOperationException();
                 }
 
-                var dataVector = ReadAndDecodePackedStreams(
-                    db._startPositionAfterHeader,
-                    db.PasswordProvider
-                );
+                var dataVector = await ReadAndDecodePackedStreamsAsync(
+                        db._startPositionAfterHeader,
+                        db.PasswordProvider,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
 
                 // compressed header without content is odd but ok
                 if (dataVector.Count == 0)
@@ -150,9 +153,428 @@ internal sealed partial class ArchiveReader
                 }
             }
 
-            ReadHeader(db, db.PasswordProvider);
+            await ReadHeaderAsync(db, db.PasswordProvider, cancellationToken).ConfigureAwait(false);
         }
         db.Fill();
         return db;
+    }
+
+    private async ValueTask<List<byte[]>> ReadAndDecodePackedStreamsAsync(
+        long baseOffset,
+        IPasswordProvider pass,
+        CancellationToken cancellationToken
+    )
+    {
+#if DEBUG
+        Log.WriteLine("-- ReadAndDecodePackedStreamsAsync --");
+        Log.PushIndent();
+#endif
+        try
+        {
+            ReadStreamsInfo(
+                null,
+                out var dataStartPos,
+                out var packSizes,
+                out var packCrCs,
+                out var folders,
+                out var numUnpackStreamsInFolders,
+                out var unpackSizes,
+                out var digests
+            );
+
+            dataStartPos += baseOffset;
+
+            var dataVector = new List<byte[]>(folders.Count);
+            var packIndex = 0;
+            foreach (var folder in folders)
+            {
+                var oldDataStartPos = dataStartPos;
+                var myPackSizes = new long[folder._packStreams.Count];
+                for (var i = 0; i < myPackSizes.Length; i++)
+                {
+                    var packSize = packSizes[packIndex + i];
+                    myPackSizes[i] = packSize;
+                    dataStartPos += packSize;
+                }
+
+                var outStream = await DecoderStreamHelper
+                    .CreateDecoderStreamAsync(
+                        _stream,
+                        oldDataStartPos,
+                        myPackSizes,
+                        folder,
+                        pass,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+
+                var unpackSize = checked((int)folder.GetUnpackSize());
+                var data = new byte[unpackSize];
+                await outStream
+                    .ReadExactAsync(data, 0, data.Length, cancellationToken)
+                    .ConfigureAwait(false);
+                if (outStream.ReadByte() >= 0)
+                {
+                    throw new InvalidFormatException("Decoded stream is longer than expected.");
+                }
+                dataVector.Add(data);
+
+                if (folder.UnpackCrcDefined)
+                {
+                    if (
+                        Crc.Finish(Crc.Update(Crc.INIT_CRC, data, 0, unpackSize))
+                        != folder._unpackCrc
+                    )
+                    {
+                        throw new InvalidFormatException(
+                            "Decoded stream does not match expected CRC."
+                        );
+                    }
+                }
+            }
+            return dataVector;
+        }
+        finally
+        {
+#if DEBUG
+            Log.PopIndent();
+#endif
+        }
+    }
+
+    private async ValueTask ReadHeaderAsync(
+        ArchiveDatabase db,
+        IPasswordProvider getTextPassword,
+        CancellationToken cancellationToken
+    )
+    {
+#if DEBUG
+        Log.WriteLine("-- ReadHeaderAsync --");
+        Log.PushIndent();
+#endif
+        try
+        {
+            var type = ReadId();
+
+            if (type == BlockType.ArchiveProperties)
+            {
+                ReadArchiveProperties();
+                type = ReadId();
+            }
+
+            List<byte[]> dataVector = null;
+            if (type == BlockType.AdditionalStreamsInfo)
+            {
+                dataVector = await ReadAndDecodePackedStreamsAsync(
+                        db._startPositionAfterHeader,
+                        getTextPassword,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+                type = ReadId();
+            }
+
+            List<long> unpackSizes;
+            List<uint?> digests;
+
+            if (type == BlockType.MainStreamsInfo)
+            {
+                ReadStreamsInfo(
+                    dataVector,
+                    out db._dataStartPosition,
+                    out db._packSizes,
+                    out db._packCrCs,
+                    out db._folders,
+                    out db._numUnpackStreamsVector,
+                    out unpackSizes,
+                    out digests
+                );
+
+                db._dataStartPosition += db._startPositionAfterHeader;
+                type = ReadId();
+            }
+            else
+            {
+                unpackSizes = new List<long>(db._folders.Count);
+                digests = new List<uint?>(db._folders.Count);
+                db._numUnpackStreamsVector = new List<int>(db._folders.Count);
+                for (var i = 0; i < db._folders.Count; i++)
+                {
+                    var folder = db._folders[i];
+                    unpackSizes.Add(folder.GetUnpackSize());
+                    digests.Add(folder._unpackCrc);
+                    db._numUnpackStreamsVector.Add(1);
+                }
+            }
+
+            db._files.Clear();
+
+            if (type == BlockType.End)
+            {
+                return;
+            }
+
+            if (type != BlockType.FilesInfo)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var numFiles = ReadNum();
+#if DEBUG
+            Log.WriteLine("NumFiles: " + numFiles);
+#endif
+            db._files = new List<CFileItem>(numFiles);
+            for (var i = 0; i < numFiles; i++)
+            {
+                db._files.Add(new CFileItem());
+            }
+
+            var emptyStreamVector = new BitVector(numFiles);
+            BitVector emptyFileVector = null;
+            BitVector antiFileVector = null;
+            var numEmptyStreams = 0;
+
+            for (; ; )
+            {
+                type = ReadId();
+                if (type == BlockType.End)
+                {
+                    break;
+                }
+
+                var size = checked((long)ReadNumber());
+                var oldPos = _currentReader.Offset;
+                switch (type)
+                {
+                    case BlockType.Name:
+                        using (var streamSwitch = new CStreamSwitch())
+                        {
+                            streamSwitch.Set(this, dataVector);
+#if DEBUG
+                            Log.Write("FileNames:");
+#endif
+                            for (var i = 0; i < db._files.Count; i++)
+                            {
+                                db._files[i].Name = _currentReader.ReadString();
+#if DEBUG
+                                Log.Write("  " + db._files[i].Name);
+#endif
+                            }
+#if DEBUG
+                            Log.WriteLine();
+#endif
+                        }
+                        break;
+                    case BlockType.WinAttributes:
+#if DEBUG
+                        Log.Write("WinAttributes:");
+#endif
+                        ReadAttributeVector(
+                            dataVector,
+                            numFiles,
+                            delegate(int i, uint? attr)
+                            {
+                                db._files[i].ExtendedAttrib = attr;
+
+                                if (attr.HasValue && (attr.Value >> 16) != 0)
+                                {
+                                    attr = attr.Value & 0x7FFFu;
+                                }
+
+                                db._files[i].Attrib = attr;
+#if DEBUG
+                                Log.Write(
+                                    "  " + (attr.HasValue ? attr.Value.ToString("x8") : "n/a")
+                                );
+#endif
+                            }
+                        );
+#if DEBUG
+                        Log.WriteLine();
+#endif
+                        break;
+                    case BlockType.EmptyStream:
+                        emptyStreamVector = ReadBitVector(numFiles);
+#if DEBUG
+
+                        Log.Write("EmptyStream: ");
+#endif
+                        for (var i = 0; i < emptyStreamVector.Length; i++)
+                        {
+                            if (emptyStreamVector[i])
+                            {
+#if DEBUG
+                                Log.Write("x");
+#endif
+                                numEmptyStreams++;
+                            }
+                            else
+                            {
+#if DEBUG
+                                Log.Write(".");
+#endif
+                            }
+                        }
+#if DEBUG
+                        Log.WriteLine();
+#endif
+
+                        emptyFileVector = new BitVector(numEmptyStreams);
+                        antiFileVector = new BitVector(numEmptyStreams);
+                        break;
+                    case BlockType.EmptyFile:
+                        emptyFileVector = ReadBitVector(numEmptyStreams);
+#if DEBUG
+                        Log.Write("EmptyFile: ");
+                        for (var i = 0; i < numEmptyStreams; i++)
+                        {
+                            Log.Write(emptyFileVector[i] ? "x" : ".");
+                        }
+                        Log.WriteLine();
+#endif
+                        break;
+                    case BlockType.Anti:
+                        antiFileVector = ReadBitVector(numEmptyStreams);
+#if DEBUG
+                        Log.Write("Anti: ");
+                        for (var i = 0; i < numEmptyStreams; i++)
+                        {
+                            Log.Write(antiFileVector[i] ? "x" : ".");
+                        }
+                        Log.WriteLine();
+#endif
+                        break;
+                    case BlockType.StartPos:
+#if DEBUG
+                        Log.Write("StartPos:");
+#endif
+                        ReadNumberVector(
+                            dataVector,
+                            numFiles,
+                            delegate(int i, long? startPos)
+                            {
+                                db._files[i].StartPos = startPos;
+#if DEBUG
+                                Log.Write(
+                                    "  " + (startPos.HasValue ? startPos.Value.ToString() : "n/a")
+                                );
+#endif
+                            }
+                        );
+#if DEBUG
+                        Log.WriteLine();
+#endif
+                        break;
+                    case BlockType.CTime:
+#if DEBUG
+                        Log.Write("CTime:");
+#endif
+                        ReadDateTimeVector(
+                            dataVector,
+                            numFiles,
+                            delegate(int i, DateTime? time)
+                            {
+                                db._files[i].CTime = time;
+#if DEBUG
+                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
+#endif
+                            }
+                        );
+#if DEBUG
+                        Log.WriteLine();
+#endif
+                        break;
+                    case BlockType.ATime:
+#if DEBUG
+                        Log.Write("ATime:");
+#endif
+                        ReadDateTimeVector(
+                            dataVector,
+                            numFiles,
+                            delegate(int i, DateTime? time)
+                            {
+                                db._files[i].ATime = time;
+#if DEBUG
+                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
+#endif
+                            }
+                        );
+#if DEBUG
+                        Log.WriteLine();
+#endif
+                        break;
+                    case BlockType.MTime:
+#if DEBUG
+                        Log.Write("MTime:");
+#endif
+                        ReadDateTimeVector(
+                            dataVector,
+                            numFiles,
+                            delegate(int i, DateTime? time)
+                            {
+                                db._files[i].MTime = time;
+#if DEBUG
+                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
+#endif
+                            }
+                        );
+#if DEBUG
+                        Log.WriteLine();
+#endif
+                        break;
+                    case BlockType.Dummy:
+#if DEBUG
+                        Log.Write("Dummy: " + size);
+#endif
+                        for (long j = 0; j < size; j++)
+                        {
+                            if (ReadByte() != 0)
+                            {
+                                throw new InvalidOperationException();
+                            }
+                        }
+                        break;
+                    default:
+                        SkipData(size);
+                        break;
+                }
+
+                var checkRecordsSize = (db._majorVersion > 0 || db._minorVersion > 2);
+                if (checkRecordsSize && _currentReader.Offset - oldPos != size)
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+
+            var emptyFileIndex = 0;
+            var sizeIndex = 0;
+            for (var i = 0; i < numFiles; i++)
+            {
+                var file = db._files[i];
+                file.HasStream = !emptyStreamVector[i];
+                if (file.HasStream)
+                {
+                    file.IsDir = false;
+                    file.IsAnti = false;
+                    file.Size = unpackSizes[sizeIndex];
+                    file.Crc = digests[sizeIndex];
+                    sizeIndex++;
+                }
+                else
+                {
+                    file.IsDir = !emptyFileVector[emptyFileIndex];
+                    file.IsAnti = antiFileVector[emptyFileIndex];
+                    emptyFileIndex++;
+                    file.Size = 0;
+                    file.Crc = null;
+                }
+            }
+        }
+        finally
+        {
+#if DEBUG
+            Log.PopIndent();
+#endif
+        }
     }
 }

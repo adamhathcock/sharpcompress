@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
@@ -13,30 +15,13 @@ namespace SharpCompress.Compressors.LZMA;
 
 internal static partial class DecoderRegistry
 {
-    private const uint K_COPY = 0x0;
-    private const uint K_DELTA = 0x3;
-    private const uint K_LZMA2 = 0x21;
-    private const uint K_LZMA = 0x030101;
-    private const uint K_PPMD = 0x030401;
-    private const uint K_BCJ = 0x03030103;
-    private const uint K_BCJ2 = 0x0303011B;
-    private const uint K_PPC = 0x03030205;
-    private const uint K_IA64 = 0x03030401;
-    private const uint K_ARM = 0x03030501;
-    private const uint K_ARMT = 0x03030701;
-    private const uint K_SPARC = 0x03030805;
-    private const uint K_ARM64 = 0x0A;
-    private const uint K_RISCV = 0x0B;
-    private const uint K_DEFLATE = 0x040108;
-    private const uint K_B_ZIP2 = 0x040202;
-    private const uint K_ZSTD = 0x4F71101;
-
-    internal static Stream CreateDecoderStream(
+    internal static async ValueTask<Stream> CreateDecoderStreamAsync(
         CMethodId id,
         Stream[] inStreams,
         byte[] info,
         IPasswordProvider pass,
-        long limit
+        long limit,
+        CancellationToken cancellationToken
     )
     {
         switch (id._id)
@@ -51,7 +36,9 @@ internal static partial class DecoderRegistry
                 return new DeltaFilter(false, inStreams.Single(), info);
             case K_LZMA:
             case K_LZMA2:
-                return LzmaStream.Create(info, inStreams.Single(), -1, limit);
+                return await LzmaStream
+                    .CreateAsync(info, inStreams.Single(), -1, limit, null, info.Length < 5, false)
+                    .ConfigureAwait(false);
             case CMethodId.K_AES_ID:
                 return new AesDecoderStream(inStreams.Single(), info, pass, limit);
             case K_BCJ:
@@ -73,7 +60,7 @@ internal static partial class DecoderRegistry
             case K_RISCV:
                 return new BCJFilterRISCV(false, inStreams.Single());
             case K_B_ZIP2:
-                return BZip2Stream.Create(inStreams.Single(), CompressionMode.Decompress, true);
+                return await BZip2Stream.CreateAsync(inStreams.Single(), CompressionMode.Decompress, true, cancellationToken: cancellationToken);
             case K_PPMD:
                 return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
             case K_DEFLATE:

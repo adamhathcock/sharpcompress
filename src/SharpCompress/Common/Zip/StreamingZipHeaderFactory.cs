@@ -23,24 +23,8 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
-        if (stream is not SharpCompressStream) //ensure the stream is already a SharpCompressStream. So the buffer/size will already be set
-        {
-            //the original code wrapped this with RewindableStream. Wrap with SharpCompressStream as we can get the buffer size
-            if (stream is SourceStream src)
-            {
-                stream = new SharpCompressStream(
-                    stream,
-                    src.ReaderOptions.LeaveStreamOpen,
-                    bufferSize: src.ReaderOptions.BufferSize
-                );
-            }
-            else
-            {
-                throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
-            }
-        }
-        var rewindableStream = (SharpCompressStream)stream;
-
+        //the original code wrapped this with RewindableStream. Wrap with SharpCompressStream as we can get the buffer size
+         var rewindableStream = stream;
         while (true)
         {
             var reader = new BinaryReader(rewindableStream);

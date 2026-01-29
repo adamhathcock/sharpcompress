@@ -44,10 +44,8 @@ public class ArchiveTests : ReaderTests
         foreach (var path in testArchives)
         {
             using (
-                var stream = SharpCompressStream.Create(
-                    File.OpenRead(path),
-                    leaveOpen: true,
-                    throwOnDispose: true
+                var stream = new NonDisposingStream(
+                    File.OpenRead(path)
                 )
             )
             {
