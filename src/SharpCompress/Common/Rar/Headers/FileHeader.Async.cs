@@ -119,7 +119,9 @@ internal partial class FileHeader
             {
                 case FHEXTRA_CRYPT:
                     {
-                        Rar5CryptoInfo = await Rar5CryptoInfo.CreateAsync(reader, true);
+                        Rar5CryptoInfo = await Rar5CryptoInfo
+                            .CreateAsync(reader, true)
+                            .ConfigureAwait(false);
                         if (Rar5CryptoInfo.PswCheck.All(singleByte => singleByte == 0))
                         {
                             Rar5CryptoInfo = null;

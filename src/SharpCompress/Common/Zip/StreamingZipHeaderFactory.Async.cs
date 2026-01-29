@@ -72,7 +72,7 @@ internal sealed partial class StreamingZipHeaderFactory
         )
         {
             _headerFactory = headerFactory;
-            _rewindableStream = RewindableStream.EnsureSeekable(stream);
+            _rewindableStream = new RewindableStream(stream);
             _reader = new AsyncBinaryReader(_rewindableStream, leaveOpen: true);
             _cancellationToken = cancellationToken;
         }
