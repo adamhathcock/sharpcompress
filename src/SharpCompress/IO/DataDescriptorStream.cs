@@ -30,7 +30,7 @@ public class DataDescriptorStream : Stream, IStreamStack
     private int _searchPosition;
     private bool _isDisposed;
     private bool _done;
-    private long _lastRewindPosition = -1;
+    private int _previousSearchPosition;
 
     private static byte[] _dataDescriptorMarker = new byte[] { 0x50, 0x4b, 0x07, 0x08 };
     private static long _dataDescriptorSize = 24;
@@ -117,6 +117,36 @@ public class DataDescriptorStream : Stream, IStreamStack
 
         var read = _stream.Read(buffer, offset, count);
 
+        // Detect infinite loop: if we just rewound and read the exact same bytes again
+        // (indicated by read == _previousSearchPosition and all bytes matching),
+        // it means these bytes are data, not a signature. Don't rewind again.
+        var inInfiniteLoop =
+            _previousSearchPosition > 0 && read == _previousSearchPosition && read <= 3;
+
+        if (inInfiniteLoop)
+        {
+            // Verify all bytes match the pattern
+            var allMatch = true;
+            for (var i = 0; i < read && allMatch; i++)
+            {
+                if (buffer[offset + i] != _dataDescriptorMarker[i])
+                {
+                    allMatch = false;
+                }
+            }
+
+            if (allMatch)
+            {
+                // This is the infinite loop condition - these bytes are data, not signature
+                // Reset state and return the bytes as data
+                _searchPosition = 0;
+                _previousSearchPosition = 0;
+                return read;
+            }
+        }
+
+        _previousSearchPosition = 0;
+
         for (var i = 0; i < read; i++)
         {
             if (buffer[offset + i] == _dataDescriptorMarker[_searchPosition])
@@ -164,14 +194,9 @@ public class DataDescriptorStream : Stream, IStreamStack
 
         if (_searchPosition > 0)
         {
-            var newPosition = _stream.Position - _searchPosition;
-            // Prevent infinite loop: don't rewind to the same position twice
-            if (newPosition != _lastRewindPosition)
-            {
-                read -= _searchPosition;
-                _stream.Position = newPosition;
-                _lastRewindPosition = newPosition;
-            }
+            read -= _searchPosition;
+            _stream.Position -= _searchPosition;
+            _previousSearchPosition = _searchPosition;
             _searchPosition = 0;
         }
 
