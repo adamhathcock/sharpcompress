@@ -143,7 +143,7 @@ public class RewindableStreamAsyncTest
         Assert.Equal(0, BitConverter.ToInt32(buffer, 0));
         Assert.Equal(1, BitConverter.ToInt32(buffer, 4));
 
-        stream.Rewind(false);
+        stream.Rewind();
         await stream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
         Assert.Equal(0, BitConverter.ToInt32(buffer, 0));
         Assert.Equal(1, BitConverter.ToInt32(buffer, 4));

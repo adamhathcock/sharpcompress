@@ -11,8 +11,9 @@ namespace SharpCompress.IO
         private byte[]? _buffer = ArrayPool<byte>.Shared.Rent(Constants.RewindableBufferSize);
         private int _bufferLength = 0;
         private int _bufferPosition = 0;
-        private bool _isRewound;
+        private bool _isBuffering;
         private bool _isDisposed;
+        private long _streamPosition;
 
         internal bool IsRecording { get; private set; }
 
@@ -34,7 +35,7 @@ namespace SharpCompress.IO
 
         public void Rewind(bool stopRecording = false)
         {
-            _isRewound = true;
+            _isBuffering = true;
             IsRecording = !stopRecording;
             _bufferPosition = 0;
         }
@@ -66,7 +67,7 @@ namespace SharpCompress.IO
                 _bufferLength = bytesRead;
                 _bufferPosition = 0;
             }
-            _isRewound = true;
+            _isBuffering = true;
         }
 
         public void StartRecording()
@@ -86,14 +87,14 @@ namespace SharpCompress.IO
 
         public void StopRecording()
         {
-            _isRewound = true;
+            _isBuffering = true;
             IsRecording = false;
             _bufferPosition = 0;
         }
 
         public override bool CanRead => true;
 
-        public override bool CanSeek => stream.CanSeek;
+        public override bool CanSeek => true;
 
         public override bool CanWrite => false;
 
@@ -105,28 +106,25 @@ namespace SharpCompress.IO
         {
             get
             {
-                if (_isRewound || _bufferPosition < _bufferLength)
+                if (_isBuffering || _bufferPosition < _bufferLength)
                 {
-                    return stream.Position + _bufferPosition - _bufferLength;
+                    return _streamPosition - _bufferLength + _bufferPosition;
                 }
-                return stream.Position;
+                return _streamPosition;
             }
             set
             {
-                if (!_isRewound)
+                long bufferStart = _streamPosition - _bufferLength;
+                long bufferEnd = _streamPosition;
+
+                if (value >= bufferStart && value < bufferEnd)
                 {
-                    stream.Position = value;
-                }
-                else if (value < stream.Position - _bufferLength || value >= stream.Position)
-                {
-                    stream.Position = value;
-                    _isRewound = false;
-                    _bufferLength = 0;
-                    _bufferPosition = 0;
+                    _isBuffering = true;
+                    _bufferPosition = (int)(value - bufferStart);
                 }
                 else
                 {
-                    _bufferPosition = (int)(value - stream.Position + _bufferLength);
+                    throw new NotSupportedException("Cannot seek outside buffered region.");
                 }
             }
         }
@@ -138,7 +136,7 @@ namespace SharpCompress.IO
                 return 0;
             }
             int read;
-            if (_isRewound && _bufferPosition != _bufferLength)
+            if (_isBuffering && _bufferPosition != _bufferLength)
             {
                 read = ReadFromBuffer(buffer, offset, count);
                 if (read < count)
@@ -148,11 +146,12 @@ namespace SharpCompress.IO
                     {
                         WriteToBuffer(buffer, offset + read, tempRead);
                     }
+                    _streamPosition += tempRead;
                     read += tempRead;
                 }
                 if (_bufferPosition == _bufferLength)
                 {
-                    _isRewound = false;
+                    _isBuffering = false;
                     _bufferPosition = 0;
                     if (!IsRecording)
                     {
@@ -168,6 +167,7 @@ namespace SharpCompress.IO
                 WriteToBuffer(buffer, offset, read);
                 _bufferPosition = _bufferLength;
             }
+            _streamPosition += read;
             return read;
         }
 
@@ -179,7 +179,7 @@ namespace SharpCompress.IO
                 return 0;
             }
             int read;
-            if (_isRewound && _bufferPosition != _bufferLength)
+            if (_isBuffering && _bufferPosition != _bufferLength)
             {
                 read = ReadFromBuffer(buffer);
                 if (read < buffer.Length)
@@ -189,11 +189,12 @@ namespace SharpCompress.IO
                     {
                         WriteToBuffer(buffer.Slice(read, tempRead));
                     }
+                    _streamPosition += tempRead;
                     read += tempRead;
                 }
                 if (_bufferPosition == _bufferLength)
                 {
-                    _isRewound = false;
+                    _isBuffering = false;
                     _bufferPosition = 0;
                     if (!IsRecording)
                     {
@@ -209,6 +210,7 @@ namespace SharpCompress.IO
                 WriteToBuffer(buffer.Slice(0, read));
                 _bufferPosition = _bufferLength;
             }
+            _streamPosition += read;
             return read;
         }
 #endif

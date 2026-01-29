@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.IO;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -145,7 +146,7 @@ public class RewindableStreamTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
         Assert.Equal(0, stream.Position);
 
         var buffer = new byte[4];
@@ -171,7 +172,8 @@ public class RewindableStreamTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        stream.StartRecording();
         var br = new BinaryReader(stream);
 
         Assert.Equal(0, br.ReadInt32());
@@ -191,7 +193,7 @@ public class RewindableStreamTest
         bw.Write(2);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
         stream.Dispose();
         Assert.Throws<ObjectDisposedException>(() => stream.Read(new byte[4], 0, 4));
     }
@@ -211,7 +213,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -245,7 +247,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
         stream.StartRecording();
 
         var buffer = new byte[8];
@@ -297,4 +299,232 @@ public class RewindableStreamTest
         Assert.Equal(BitConverter.GetBytes(4), buffer.Skip(4).Take(4).ToArray());
     }
 #endif
+
+    [Fact]
+    public void TestNonSeekableStream_Rewind()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Flush();
+        ms.Position = 0;
+
+        var nonSeekableStream = new NonSeekableStreamWrapper(ms);
+        var stream = new RewindableStream(nonSeekableStream);
+        stream.StartRecording();
+        var br = new BinaryReader(stream);
+
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+        stream.Rewind(true);
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+        Assert.Equal(5, br.ReadInt32());
+        Assert.Equal(6, br.ReadInt32());
+        Assert.Equal(7, br.ReadInt32());
+    }
+
+    [Fact]
+    public void TestNonSeekableStream_Recording()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Flush();
+        ms.Position = 0;
+
+        var nonSeekableStream = new NonSeekableStreamWrapper(ms);
+        var stream = new RewindableStream(nonSeekableStream);
+        stream.StartRecording();
+        var br = new BinaryReader(stream);
+
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        stream.Rewind(false);
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+    }
+
+    [Fact]
+    public void TestNonSeekableStream_Position()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        for (int i = 0; i < 10; i++)
+        {
+            bw.Write(i);
+        }
+        bw.Flush();
+        ms.Position = 0;
+
+        var nonSeekableStream = new NonSeekableStreamWrapper(ms);
+        var stream = new RewindableStream(nonSeekableStream);
+        Assert.Equal(0, stream.Position);
+        Assert.True(stream.CanSeek);
+
+        var buffer = new byte[4];
+        stream.Read(buffer, 0, 4);
+        Assert.Equal(4, stream.Position);
+
+        stream.StartRecording();
+        stream.Read(buffer, 0, 4);
+        Assert.Equal(8, stream.Position);
+
+        stream.Rewind();
+        Assert.Equal(4, stream.Position);
+    }
+
+    [Fact]
+    public void TestNonSeekableStream_PositionSet_WithinBuffer()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Flush();
+        ms.Position = 0;
+
+        var nonSeekableStream = new NonSeekableStreamWrapper(ms);
+        var stream = new RewindableStream(nonSeekableStream);
+        stream.StartRecording();
+
+        var buffer = new byte[4];
+        stream.Read(buffer, 0, 4);
+        Assert.Equal(1, BitConverter.ToInt32(buffer, 0));
+
+        stream.Read(buffer, 0, 4);
+        Assert.Equal(2, BitConverter.ToInt32(buffer, 0));
+
+        stream.Position = 0;
+        Assert.Equal(0, stream.Position);
+
+        stream.Read(buffer, 0, 4);
+        Assert.Equal(1, BitConverter.ToInt32(buffer, 0));
+
+        stream.Read(buffer, 0, 4);
+        Assert.Equal(2, BitConverter.ToInt32(buffer, 0));
+    }
+
+    [Fact]
+    public void TestNonSeekableStream_PositionSet_OutsideBuffer_Throws()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Flush();
+        ms.Position = 0;
+
+        var nonSeekableStream = new NonSeekableStreamWrapper(ms);
+        var stream = new RewindableStream(nonSeekableStream);
+        stream.StartRecording();
+
+        var buffer = new byte[4];
+        stream.Read(buffer, 0, 4);
+
+        Assert.Throws<NotSupportedException>(() => stream.Position = 100);
+    }
+
+    [Fact]
+    public void TestNonSeekableStream_StopRecordingBasic()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Flush();
+        ms.Position = 0;
+
+        var nonSeekableStream = new NonSeekableStreamWrapper(ms);
+        var stream = new RewindableStream(nonSeekableStream);
+        stream.StartRecording();
+        var br = new BinaryReader(stream);
+
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        stream.StopRecording();
+
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+        Assert.Equal(5, br.ReadInt32());
+        Assert.Equal(6, br.ReadInt32());
+        Assert.Equal(7, br.ReadInt32());
+
+        Assert.False(stream.IsRecording);
+    }
+
+    private class NonSeekableStreamWrapper : Stream
+    {
+        private readonly Stream _baseStream;
+
+        public NonSeekableStreamWrapper(Stream baseStream)
+        {
+            _baseStream = baseStream;
+        }
+
+        public override bool CanRead => _baseStream.CanRead;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => _baseStream.CanWrite;
+
+        public override long Length => _baseStream.Length;
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush() => _baseStream.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            _baseStream.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
+
+        public override void SetLength(long value) => _baseStream.SetLength(value);
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            _baseStream.Write(buffer, offset, count);
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _baseStream.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+    }
 }

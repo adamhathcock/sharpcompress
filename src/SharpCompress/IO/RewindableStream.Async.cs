@@ -19,7 +19,7 @@ internal partial class RewindableStream
             return 0;
         }
         int read;
-        if (_isRewound && _bufferPosition != _bufferLength)
+        if (_isBuffering && _bufferPosition != _bufferLength)
         {
             read = ReadFromBuffer(buffer, offset, count);
             if (read < count)
@@ -31,11 +31,12 @@ internal partial class RewindableStream
                 {
                     WriteToBuffer(buffer, offset + read, tempRead);
                 }
+                _streamPosition += tempRead;
                 read += tempRead;
             }
             if (_bufferPosition == _bufferLength)
             {
-                _isRewound = false;
+                _isBuffering = false;
                 _bufferPosition = 0;
                 if (!IsRecording)
                 {
@@ -53,6 +54,7 @@ internal partial class RewindableStream
             WriteToBuffer(buffer, offset, read);
             _bufferPosition = _bufferLength;
         }
+        _streamPosition += read;
         return read;
     }
 
@@ -67,7 +69,7 @@ internal partial class RewindableStream
             return 0;
         }
         int read;
-        if (_isRewound && _bufferPosition != _bufferLength)
+        if (_isBuffering && _bufferPosition != _bufferLength)
         {
             var bufferSpan = buffer.Span;
             read = ReadFromBuffer(bufferSpan);
@@ -80,11 +82,12 @@ internal partial class RewindableStream
                 {
                     WriteToBuffer(buffer.Slice(read, tempRead).Span);
                 }
+                _streamPosition += tempRead;
                 read += tempRead;
             }
             if (_bufferPosition == _bufferLength)
             {
-                _isRewound = false;
+                _isBuffering = false;
                 _bufferPosition = 0;
                 if (!IsRecording)
                 {
@@ -100,6 +103,7 @@ internal partial class RewindableStream
             WriteToBuffer(buffer.Slice(0, read).Span);
             _bufferPosition = _bufferLength;
         }
+        _streamPosition += read;
         return read;
     }
 #endif
