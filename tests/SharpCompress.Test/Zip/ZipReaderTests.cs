@@ -530,4 +530,95 @@ public class ZipReaderTests : ReaderTests
         // Should iterate through all entries, not just the first one
         Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
     }
+
+    [Fact]
+    public void DataDescriptorStream_BoundaryBug_ReproduceInfiniteLoop()
+    {
+        // Regression test for DataDescriptorStream boundary bug
+        // Issue: When the first byte of the data descriptor signature (0x50 = 'P')
+        // appears at the end of a read buffer, the reader would get stuck in an
+        // infinite loop, causing extraction to fail.
+        //
+        // This test reproduces the exact scenario described in the issue:
+        // - Streaming ZIP reader (non-seekable stream)
+        // - DataDescriptorStream (triggered by CompressionType.None + non-seekable)
+        // - Payload filled with 0x50 ('P') bytes
+        // - Payload size that causes boundary condition
+
+        // Create a payload filled with 0x50 bytes that will trigger the boundary bug
+        // The bug occurs when partial signature matches fall on buffer boundaries
+        const int payloadSize = 100000; // Large enough to span multiple read buffers
+        var payload = new byte[payloadSize];
+        for (var i = 0; i < payloadSize; i++)
+        {
+            payload[i] = 0x50; // Fill with 'P' bytes (0x50 = first byte of PK signature)
+        }
+
+        using var memory = new MemoryStream();
+
+        // Use non-seekable stream to force data descriptor mode
+        // This triggers the use of DataDescriptorStream
+        Stream writeStream = new TestStream(memory, read: true, write: true, seek: false);
+
+        // Write ZIP with no compression (this ensures DataDescriptorStream is used)
+        using (
+            var zipWriter = WriterFactory.Open(writeStream, ArchiveType.Zip, CompressionType.None)
+        )
+        {
+            zipWriter.Write("test.txt", new MemoryStream(payload));
+        }
+
+        // Read back the ZIP
+        var zipBytes = memory.ToArray();
+        var readStream = new MemoryStream(zipBytes);
+
+        using var reader = ZipReader.Open(readStream);
+
+        var extracted = false;
+        var readIterations = 0;
+        const int maxIterations = 1000; // Safety limit to detect infinite loops
+
+        while (reader.MoveToNextEntry())
+        {
+            using var entryStream = reader.OpenEntryStream();
+            var outputStream = new MemoryStream();
+            var buffer = new byte[8192];
+
+            int bytesRead;
+            while ((bytesRead = entryStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                outputStream.Write(buffer, 0, bytesRead);
+                readIterations++;
+
+                // Detect infinite loop - the bug causes read to return very small amounts repeatedly
+                if (readIterations > maxIterations)
+                {
+                    Assert.Fail(
+                        $"Detected infinite loop: Read called {readIterations} times, "
+                            + $"extracted {outputStream.Length} of {payloadSize} bytes. "
+                            + "This indicates the DataDescriptorStream boundary bug is present."
+                    );
+                }
+            }
+
+            // Verify we extracted all the data correctly
+            var extractedData = outputStream.ToArray();
+            Assert.Equal(payloadSize, extractedData.Length);
+
+            // Verify content is correct (all 0x50 bytes)
+            for (var i = 0; i < payloadSize; i++)
+            {
+                if (extractedData[i] != 0x50)
+                {
+                    Assert.Fail(
+                        $"Data corruption at byte {i}: expected 0x50, got 0x{extractedData[i]:X2}"
+                    );
+                }
+            }
+
+            extracted = true;
+        }
+
+        Assert.True(extracted, "Failed to extract the entry");
+    }
 }
