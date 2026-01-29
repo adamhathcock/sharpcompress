@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress;
 
@@ -143,7 +144,7 @@ internal static partial class Utility
             CancellationToken cancellationToken = default
         )
         {
-            if (source.CanSeek)
+            if (source.CanSeek && source is not RewindableStream)
             {
                 source.Position += advanceAmount;
                 return;
