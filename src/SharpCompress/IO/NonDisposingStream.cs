@@ -33,7 +33,7 @@ internal class NonDisposingStream : Stream
 
     public override bool CanRead => !_isDisposed && _stream.CanRead;
 
-    public override bool CanSeek => !_isDisposed && _stream.CanSeek;
+    public override bool CanSeek => !_isDisposed && _stream.CanSeek && _stream is not RewindableStream;
 
     public override bool CanWrite => !_isDisposed && _stream.CanWrite;
 

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress;
 
@@ -12,13 +13,13 @@ public static class StreamExtensions
     {
         public void Skip(long advanceAmount)
         {
-            if (stream.CanSeek)
+            if (stream.CanSeek && stream is not RewindableStream)
             {
                 stream.Position += advanceAmount;
                 return;
             }
 
-            using var readOnlySubStream = new IO.ReadOnlySubStream(stream, advanceAmount);
+            using var readOnlySubStream = new ReadOnlySubStream(stream, advanceAmount);
             readOnlySubStream.CopyTo(Stream.Null);
         }
 

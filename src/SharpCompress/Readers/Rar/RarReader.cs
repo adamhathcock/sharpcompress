@@ -97,6 +97,16 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         }
     }
 
+    protected override async IAsyncEnumerable<RarReaderEntry> GetEntriesAsync(Stream stream)
+    {
+        volume = new RarReaderVolume(stream, Options, 0);
+        await foreach (var fp in volume.ReadFilePartsAsync())
+        {
+            ValidateArchive(volume);
+            yield return new RarReaderEntry(volume.IsSolidArchive, fp);
+        }
+    }
+
     protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
         Entry.Parts;
 
