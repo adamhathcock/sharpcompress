@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.IO;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -248,7 +249,7 @@ public class RewindableStreamAsyncTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
         Assert.Equal(0, stream.Position);
 
         var buffer = new byte[4];
@@ -562,8 +563,8 @@ public class RewindableStreamAsyncTest
         Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
         Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
         Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
-
-        // Continue reading from underlying stream (values 7, 8 since 5, 6 were already consumed)
+        Assert.Equal(5, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(6, await ReadInt32Async(stream).ConfigureAwait(false));
         Assert.Equal(7, await ReadInt32Async(stream).ConfigureAwait(false));
         Assert.Equal(8, await ReadInt32Async(stream).ConfigureAwait(false));
     }

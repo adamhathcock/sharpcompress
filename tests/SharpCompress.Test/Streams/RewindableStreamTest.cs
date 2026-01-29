@@ -593,8 +593,8 @@ public class RewindableStreamTest
         Assert.Equal(2, br.ReadInt32());
         Assert.Equal(3, br.ReadInt32());
         Assert.Equal(4, br.ReadInt32());
-
-        // Continue reading from underlying stream (values 7, 8 since 5, 6 were already consumed)
+        Assert.Equal(5, br.ReadInt32());
+        Assert.Equal(6, br.ReadInt32());
         Assert.Equal(7, br.ReadInt32());
         Assert.Equal(8, br.ReadInt32());
     }
@@ -635,6 +635,7 @@ public class RewindableStreamTest
 
         var stream = new RewindableStream(ms);
         stream.StartRecording();
+        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
 
         var br = new BinaryReader(stream);
         Assert.Equal(1, br.ReadInt32());
@@ -645,6 +646,7 @@ public class RewindableStreamTest
 
         // Trying to start recording again should throw
         Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
+        Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
     }
 
     private class NonSeekableStreamWrapper : Stream

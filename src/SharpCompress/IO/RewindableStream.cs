@@ -1,248 +1,196 @@
 using System;
-using System.Buffers;
 using System.IO;
-using SharpCompress.Common;
 
-namespace SharpCompress.IO
+namespace SharpCompress.IO;
+
+internal partial class RewindableStream : Stream
 {
-    internal partial class RewindableStream(Stream stream) : Stream
+    private readonly Stream stream;
+    private MemoryStream bufferStream = new MemoryStream();
+    private bool isRewound;
+    private bool isDisposed;
+    private long streamPosition;
+    private bool _hasStoppedRecording;
+
+    public RewindableStream(Stream stream) => this.stream = stream;
+
+    internal virtual bool IsRecording { get; private set; }
+
+    protected override void Dispose(bool disposing)
     {
-        public static RewindableStream EnsureSeekable(Stream stream)
+        if (isDisposed)
         {
-            return stream.CanSeek ? new SeekableRewindableStream(stream) : new RewindableStream(stream);
+            return;
         }
-        private readonly int _bufferSize = Constants.RewindableBufferSize;
-        private byte[]? _buffer = ArrayPool<byte>.Shared.Rent(Constants.RewindableBufferSize);
-        private int _bufferLength = 0;
-        private int _bufferPosition = 0;
-        private bool _isBuffering;
-        private bool _isDisposed;
-        private long _streamPosition;
-
-        internal virtual bool IsRecording { get; private set; }
-
-        protected override void Dispose(bool disposing)
+        isDisposed = true;
+        base.Dispose(disposing);
+        if (disposing)
         {
-            if (_isDisposed)
-            {
-                return;
-            }
-            _isDisposed = true;
-            base.Dispose(disposing);
-            if (disposing)
-            {
-                ArrayPool<byte>.Shared.Return(_buffer!);
-                _buffer = null;
-                stream.Dispose();
-            }
-        }
-
-        public virtual void Rewind(bool stopRecording = false)
-        {
-            _isBuffering = true;
-            IsRecording = !stopRecording;
-            _bufferPosition = 0;
-        }
-
-        public virtual void StartRecording()
-        {
-            if (_bufferPosition != 0)
-            {
-                int bytesToKeep = _bufferLength - _bufferPosition;
-                if (bytesToKeep > 0)
-                {
-                    Array.Copy(_buffer!, _bufferPosition, _buffer!, 0, bytesToKeep);
-                }
-                _bufferLength = bytesToKeep;
-                _bufferPosition = 0;
-            }
-            IsRecording = true;
-        }
-
-        public virtual void StopRecording()
-        {
-            _isBuffering = true;
-            IsRecording = false;
-            _bufferPosition = 0;
-        }
-
-        public override bool CanRead => true;
-
-        public override bool CanSeek => true;
-
-        public override bool CanWrite => false;
-
-        public override void Flush() => throw new NotSupportedException();
-
-        public override long Length => throw new NotSupportedException();
-
-        public override long Position
-        {
-            get
-            {
-                if (_isBuffering || _bufferPosition < _bufferLength)
-                {
-                    return _streamPosition - _bufferLength + _bufferPosition;
-                }
-                return _streamPosition;
-            }
-            set
-            {
-                long bufferStart = _streamPosition - _bufferLength;
-                long bufferEnd = _streamPosition;
-
-                if (value >= bufferStart && value < bufferEnd)
-                {
-                    _isBuffering = true;
-                    _bufferPosition = (int)(value - bufferStart);
-                }
-                else
-                {
-                    throw new NotSupportedException("Cannot seek outside buffered region.");
-                }
-            }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            if (count == 0)
-            {
-                return 0;
-            }
-            int read;
-            if (_isBuffering && _bufferPosition != _bufferLength)
-            {
-                read = ReadFromBuffer(buffer, offset, count);
-                if (read < count)
-                {
-                    int tempRead = stream.Read(buffer, offset + read, count - read);
-                    if (IsRecording)
-                    {
-                        WriteToBuffer(buffer, offset + read, tempRead);
-                    }
-                    _streamPosition += tempRead;
-                    read += tempRead;
-                }
-                if (_bufferPosition == _bufferLength)
-                {
-                    _isBuffering = false;
-                    _bufferPosition = 0;
-                    if (!IsRecording)
-                    {
-                        _bufferLength = 0;
-                    }
-                }
-                return read;
-            }
-
-            read = stream.Read(buffer, offset, count);
-            if (IsRecording)
-            {
-                WriteToBuffer(buffer, offset, read);
-                _bufferPosition = _bufferLength;
-            }
-            _streamPosition += read;
-            return read;
-        }
-
-#if !LEGACY_DOTNET
-        public override int Read(Span<byte> buffer)
-        {
-            if (buffer.Length == 0)
-            {
-                return 0;
-            }
-            int read;
-            if (_isBuffering && _bufferPosition != _bufferLength)
-            {
-                read = ReadFromBuffer(buffer);
-                if (read < buffer.Length)
-                {
-                    int tempRead = stream.Read(buffer.Slice(read));
-                    if (IsRecording)
-                    {
-                        WriteToBuffer(buffer.Slice(read, tempRead));
-                    }
-                    _streamPosition += tempRead;
-                    read += tempRead;
-                }
-                if (_bufferPosition == _bufferLength)
-                {
-                    _isBuffering = false;
-                    _bufferPosition = 0;
-                    if (!IsRecording)
-                    {
-                        _bufferLength = 0;
-                    }
-                }
-                return read;
-            }
-
-            read = stream.Read(buffer);
-            if (IsRecording)
-            {
-                WriteToBuffer(buffer.Slice(0, read));
-                _bufferPosition = _bufferLength;
-            }
-            _streamPosition += read;
-            return read;
-        }
-#endif
-
-        public override long Seek(long offset, SeekOrigin origin) =>
-            throw new NotSupportedException();
-
-        public override void SetLength(long value) => throw new NotSupportedException();
-
-        public override void Write(byte[] buffer, int offset, int count) =>
-            throw new NotSupportedException();
-
-        private int ReadFromBuffer(byte[] buffer, int offset, int count)
-        {
-            int bytesToRead = Math.Min(count, _bufferLength - _bufferPosition);
-            if (bytesToRead > 0)
-            {
-                Array.Copy(_buffer!, _bufferPosition, buffer, offset, bytesToRead);
-                _bufferPosition += bytesToRead;
-            }
-            return bytesToRead;
-        }
-
-        private int ReadFromBuffer(Span<byte> buffer)
-        {
-            int bytesToRead = Math.Min(buffer.Length, _bufferLength - _bufferPosition);
-            if (bytesToRead > 0)
-            {
-                _buffer!.AsSpan(_bufferPosition, bytesToRead).CopyTo(buffer);
-                _bufferPosition += bytesToRead;
-            }
-            return bytesToRead;
-        }
-
-        private void WriteToBuffer(byte[] data, int offset, int count)
-        {
-            int spaceAvailable = _bufferSize - _bufferLength;
-            if (count > spaceAvailable)
-            {
-                throw new InvalidOperationException(
-                    $"Buffer overflow: Cannot write {count} bytes. Only {spaceAvailable} bytes available in {_bufferSize} byte buffer."
-                );
-            }
-            Array.Copy(data, offset, _buffer!, _bufferLength, count);
-            _bufferLength += count;
-        }
-
-        private void WriteToBuffer(ReadOnlySpan<byte> data)
-        {
-            int spaceAvailable = _bufferSize - _bufferLength;
-            if (data.Length > spaceAvailable)
-            {
-                throw new InvalidOperationException(
-                    $"Buffer overflow: Cannot write {data.Length} bytes. Only {spaceAvailable} bytes available in {_bufferSize} byte buffer."
-                );
-            }
-            data.CopyTo(_buffer!.AsSpan(_bufferLength));
-            _bufferLength += data.Length;
+            stream.Dispose();
         }
     }
+
+    public void Rewind() => Rewind(false);
+
+    public virtual void Rewind(bool stopRecording)
+    {
+        isRewound = true;
+        IsRecording = !stopRecording;
+        bufferStream.Position = 0;
+    }
+
+    public virtual void StopRecording()
+    {
+        if (!IsRecording)
+        {
+            throw new InvalidOperationException("StopRecording can only be called when recording is active.");
+        }
+        _hasStoppedRecording = true;
+        isRewound = true;
+        IsRecording = false;
+        bufferStream.Position = 0;
+    }
+
+    public static RewindableStream EnsureSeekable(Stream stream)
+    {
+        if (stream is RewindableStream rewindableStream)
+        {
+            return rewindableStream;
+        }
+        if (stream.CanSeek)
+        {
+            return new SeekableRewindableStream(stream);
+        }
+        return new RewindableStream(stream);
+    }
+
+    public void Rewind(MemoryStream buffer)
+    {
+        if (bufferStream.Position >= buffer.Length)
+        {
+            bufferStream.Position -= buffer.Length;
+        }
+        else
+        {
+            bufferStream.TransferTo(buffer, buffer.Length);
+            //create new memorystream to allow proper resizing as memorystream could be a user provided buffer
+            //https://github.com/adamhathcock/sharpcompress/issues/306
+            bufferStream = new MemoryStream();
+            buffer.Position = 0;
+            buffer.TransferTo(bufferStream, buffer.Length);
+            bufferStream.Position = 0;
+        }
+        isRewound = true;
+    }
+
+    public virtual void StartRecording()
+    {
+        if (IsRecording)
+        {
+            throw new InvalidOperationException("StartRecording can only be called when not already recording.");
+        }
+        if (_hasStoppedRecording)
+        {
+            throw new InvalidOperationException("StartRecording cannot be called after StopRecording has been called.");
+        }
+        //if (isRewound && bufferStream.Position != 0)
+        //   throw new System.NotImplementedException();
+        if (bufferStream.Position != 0)
+        {
+            var data = bufferStream.ToArray();
+            var position = bufferStream.Position;
+            bufferStream.SetLength(0);
+            bufferStream.Write(data, (int)position, data.Length - (int)position);
+            bufferStream.Position = 0;
+        }
+        IsRecording = true;
+    }
+
+    public override bool CanRead => true;
+
+    public override bool CanSeek => true;
+
+    public override bool CanWrite => false;
+
+    public override void Flush() => throw new NotSupportedException();
+
+    public override long Length => throw new NotSupportedException();
+
+    public override long Position
+    {
+        get
+        {
+            if (isRewound || bufferStream.Position < bufferStream.Length)
+            {
+                return streamPosition - bufferStream.Length + bufferStream.Position;
+            }
+            return streamPosition;
+        }
+        set
+        {
+            long bufferStart = streamPosition - bufferStream.Length;
+            long bufferEnd = streamPosition;
+
+            if (value >= bufferStart && value < bufferEnd)
+            {
+                isRewound = true;
+                bufferStream.Position = value - bufferStart;
+            }
+            else if (stream.CanSeek)
+            {
+                stream.Position = value;
+                isRewound = false;
+                bufferStream.SetLength(0);
+                streamPosition = value;
+            }
+            else
+            {
+                throw new NotSupportedException("Cannot seek outside buffered region.");
+            }
+        }
+    }
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        if (count == 0)
+        {
+            return 0;
+        }
+        int read;
+        if (isRewound && bufferStream.Position != bufferStream.Length)
+        {
+            var readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
+            read = bufferStream.Read(buffer, offset, readCount);
+            if (read < readCount)
+            {
+                var tempRead = stream.Read(buffer, offset + read, count - read);
+                if (IsRecording)
+                {
+                    bufferStream.Write(buffer, offset + read, tempRead);
+                }
+                streamPosition += tempRead;
+                read += tempRead;
+            }
+            if (bufferStream.Position == bufferStream.Length)
+            {
+                isRewound = false;
+            }
+            return read;
+        }
+
+        read = stream.Read(buffer, offset, count);
+        if (IsRecording)
+        {
+            bufferStream.Write(buffer, offset, read);
+        }
+        streamPosition += read;
+        return read;
+    }
+
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+    public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
 }

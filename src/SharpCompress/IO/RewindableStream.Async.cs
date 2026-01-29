@@ -18,30 +18,31 @@ internal partial class RewindableStream
         {
             return 0;
         }
+
         int read;
-        if (_isBuffering && _bufferPosition != _bufferLength)
+        if (isRewound && bufferStream.Position != bufferStream.Length)
         {
-            read = ReadFromBuffer(buffer, offset, count);
-            if (read < count)
+            var readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
+            read = await bufferStream
+                .ReadAsync(buffer, offset, readCount, cancellationToken)
+                .ConfigureAwait(false);
+            if (read < readCount)
             {
-                int tempRead = await stream
+                var tempRead = await stream
                     .ReadAsync(buffer, offset + read, count - read, cancellationToken)
                     .ConfigureAwait(false);
                 if (IsRecording)
                 {
-                    WriteToBuffer(buffer, offset + read, tempRead);
+                    await bufferStream
+                        .WriteAsync(buffer, offset + read, tempRead, cancellationToken)
+                        .ConfigureAwait(false);
                 }
-                _streamPosition += tempRead;
+                streamPosition += tempRead;
                 read += tempRead;
             }
-            if (_bufferPosition == _bufferLength)
+            if (bufferStream.Position == bufferStream.Length)
             {
-                _isBuffering = false;
-                _bufferPosition = 0;
-                if (!IsRecording)
-                {
-                    _bufferLength = 0;
-                }
+                isRewound = false;
             }
             return read;
         }
@@ -51,10 +52,11 @@ internal partial class RewindableStream
             .ConfigureAwait(false);
         if (IsRecording)
         {
-            WriteToBuffer(buffer, offset, read);
-            _bufferPosition = _bufferLength;
+            await bufferStream
+                .WriteAsync(buffer, offset, read, cancellationToken)
+                .ConfigureAwait(false);
         }
-        _streamPosition += read;
+        streamPosition += read;
         return read;
     }
 
@@ -68,31 +70,31 @@ internal partial class RewindableStream
         {
             return 0;
         }
+
         int read;
-        if (_isBuffering && _bufferPosition != _bufferLength)
+        if (isRewound && bufferStream.Position != bufferStream.Length)
         {
-            var bufferSpan = buffer.Span;
-            read = ReadFromBuffer(bufferSpan);
-            if (read < bufferSpan.Length)
+            var readCount = (int)
+                Math.Min(buffer.Length, bufferStream.Length - bufferStream.Position);
+            read = await bufferStream
+                .ReadAsync(buffer.Slice(0, readCount), cancellationToken)
+                .ConfigureAwait(false);
+            if (read < readCount)
             {
-                int tempRead = await stream
+                var tempRead = await stream
                     .ReadAsync(buffer.Slice(read), cancellationToken)
                     .ConfigureAwait(false);
                 if (IsRecording)
                 {
-                    WriteToBuffer(buffer.Slice(read, tempRead).Span);
+                    await bufferStream
+                        .WriteAsync(buffer.Slice(read, tempRead), cancellationToken)
+                        .ConfigureAwait(false);
                 }
-                _streamPosition += tempRead;
                 read += tempRead;
             }
-            if (_bufferPosition == _bufferLength)
+            if (bufferStream.Position == bufferStream.Length)
             {
-                _isBuffering = false;
-                _bufferPosition = 0;
-                if (!IsRecording)
-                {
-                    _bufferLength = 0;
-                }
+                isRewound = false;
             }
             return read;
         }
@@ -100,11 +102,53 @@ internal partial class RewindableStream
         read = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (IsRecording)
         {
-            WriteToBuffer(buffer.Slice(0, read).Span);
-            _bufferPosition = _bufferLength;
+            await bufferStream
+                .WriteAsync(buffer.Slice(0, read), cancellationToken)
+                .ConfigureAwait(false);
         }
-        _streamPosition += read;
         return read;
+    }
+#endif
+
+    public override Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
+
+#if !LEGACY_DOTNET
+    public override ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    ) => throw new NotSupportedException();
+#endif
+
+    public override Task FlushAsync(CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+
+    public override async Task CopyToAsync(
+        Stream destination,
+        int bufferSize,
+        CancellationToken cancellationToken
+    )
+    {
+        byte[] buffer = new byte[bufferSize];
+        int bytesRead;
+        while ((bytesRead = await ReadAsync(buffer, 0, buffer.Length, cancellationToken)) != 0)
+        {
+            await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+        }
+    }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask DisposeAsync()
+    {
+        if (!isDisposed)
+        {
+            isDisposed = true;
+            await stream.DisposeAsync();
+        }
     }
 #endif
 }
