@@ -87,7 +87,7 @@ public abstract class Factory : IFactory
             stream.Rewind();
             if (IsArchive(stream, options.Password))
             {
-                stream.StopRecording();
+                stream.Rewind(true);
                 reader = readerFactory.OpenReader(stream, options);
                 return true;
             }

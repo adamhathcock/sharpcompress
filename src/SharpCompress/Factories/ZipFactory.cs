@@ -44,14 +44,6 @@ public class ZipFactory
     public override bool IsArchive(Stream stream, string? password = null)
     {
         var startPosition = stream.CanSeek ? stream.Position : -1;
-
-        // probe for single volume zip
-
-        if (stream is not SharpCompressStream) // wrap to provide buffer bef
-        {
-            stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
-        }
-
         if (ZipArchive.IsZipFile(stream, password))
         {
             return true;

@@ -40,13 +40,7 @@ public class DataDescriptorStream : Stream, IStreamStack
         _start = _stream.Position;
         _searchPosition = 0;
         _done = false;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(DataDescriptorStream));
-#endif
     }
-
-    internal bool IsRecording { get; private set; }
 
     protected override void Dispose(bool disposing)
     {
@@ -55,9 +49,6 @@ public class DataDescriptorStream : Stream, IStreamStack
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(DataDescriptorStream));
-#endif
         base.Dispose(disposing);
         if (disposing)
         {

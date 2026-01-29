@@ -465,4 +465,152 @@ public class RewindableStreamAsyncTest
 
         Assert.False(stream.IsRecording);
     }
+
+    [Fact]
+    public async ValueTask TestStopRecordingThenRewindAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Write(8);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        // Read first 4 values (gets buffered)
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // Stop recording
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // Rewind to start of buffer
+        stream.Rewind(true);
+
+        // Should be able to read from buffer again
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // Continue reading remaining data from underlying stream
+        Assert.Equal(5, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(6, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(7, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(8, await ReadInt32Async(stream).ConfigureAwait(false));
+    }
+
+    [Fact]
+    public async ValueTask TestMultipleRewindsAfterStopRecordingAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Write(8);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        // Read first 4 values (gets buffered)
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // Stop recording
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // First rewind - read all buffered data, then continue with underlying stream
+        stream.Rewind();
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(5, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(6, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // Second rewind - should still be able to read from buffer
+        stream.Rewind();
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // Third rewind - still works
+        stream.Rewind();
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(2, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(3, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(4, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // Continue reading from underlying stream (values 7, 8 since 5, 6 were already consumed)
+        Assert.Equal(7, await ReadInt32Async(stream).ConfigureAwait(false));
+        Assert.Equal(8, await ReadInt32Async(stream).ConfigureAwait(false));
+    }
+
+    [Fact]
+    public async ValueTask TestStopRecordingTwiceThrowsAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // First StopRecording should succeed
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // Second StopRecording should throw
+        Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
+    }
+
+    [Fact]
+    public async ValueTask TestStartRecordingAfterStopRecordingThrowsAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
+
+        // Stop recording
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // Trying to start recording again should throw
+        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
+    }
 }

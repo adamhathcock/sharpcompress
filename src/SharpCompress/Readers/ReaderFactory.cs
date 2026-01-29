@@ -34,7 +34,7 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var bStream = new RewindableStream(stream);
+        var bStream = RewindableStream.EnsureSeekable(stream);
         bStream.StartRecording();
 
         var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
@@ -52,7 +52,7 @@ public static partial class ReaderFactory
                 && reader != null
             )
             {
-                bStream.StopRecording();
+                bStream.Rewind(true);
                 return reader;
             }
         }
@@ -66,6 +66,7 @@ public static partial class ReaderFactory
             bStream.Rewind();
             if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
             {
+                bStream.Rewind(true);
                 return reader;
             }
         }
@@ -74,6 +75,4 @@ public static partial class ReaderFactory
             "Cannot determine compressed stream type.  Supported Reader Formats: Ace, Arc, Arj, Zip, GZip, BZip2, Tar, Rar, LZip, XZ, ZStandard"
         );
     }
-
-    // Async methods moved to ReaderFactory.Async.cs
 }

@@ -23,8 +23,7 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
-        //the original code wrapped this with RewindableStream. Wrap with SharpCompressStream as we can get the buffer size
-        var rewindableStream = stream;
+        var rewindableStream = RewindableStream.EnsureSeekable(stream);
         while (true)
         {
             var reader = new BinaryReader(rewindableStream);
@@ -175,8 +174,9 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
                 } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
                 else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                 {
+                    rewindableStream.StartRecording();
                     var nextHeaderBytes = reader.ReadUInt32();
-                    ((IStreamStack)rewindableStream).Rewind(sizeof(uint));
+                    rewindableStream.Rewind(true);
 
                     // Check if next data is PostDataDescriptor, streamed file with 0 length
                     header.HasData = !IsHeader(nextHeaderBytes);
@@ -188,26 +188,5 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
             }
             yield return header;
         }
-    }
-
-    private static SharpCompressStream EnsureSharpCompressStream(Stream stream)
-    {
-        if (stream is SharpCompressStream sharpCompressStream)
-        {
-            return sharpCompressStream;
-        }
-
-        // Ensure the stream is already a SharpCompressStream so the buffer/size is set.
-        // The original code wrapped this with RewindableStream; use SharpCompressStream so we can get the buffer size.
-        if (stream is SourceStream src)
-        {
-            return new SharpCompressStream(
-                stream,
-                src.ReaderOptions.LeaveStreamOpen,
-                bufferSize: src.ReaderOptions.BufferSize
-            );
-        }
-
-        throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
     }
 }

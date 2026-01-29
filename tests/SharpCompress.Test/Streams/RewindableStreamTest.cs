@@ -95,47 +95,6 @@ public class RewindableStreamTest
     }
 
     [Fact]
-    public void TestRewindWithPartialBuffer()
-    {
-        var ms = new MemoryStream();
-        var bw = new BinaryWriter(ms);
-        bw.Write(1);
-        bw.Write(2);
-        bw.Write(3);
-        bw.Write(4);
-        bw.Write(5);
-        bw.Write(6);
-        bw.Write(7);
-        bw.Flush();
-        ms.Position = 0;
-        var stream = new RewindableStream(ms);
-        stream.StartRecording();
-        var br = new BinaryReader(stream);
-        Assert.Equal(1, br.ReadInt32());
-        Assert.Equal(2, br.ReadInt32());
-        Assert.Equal(3, br.ReadInt32());
-        Assert.Equal(4, br.ReadInt32());
-        Assert.Equal(5, br.ReadInt32());
-        Assert.Equal(6, br.ReadInt32());
-
-        // Create a buffer with the last 2 ints (12-16 bytes)
-        var externalBuffer = new MemoryStream();
-        externalBuffer.Write(BitConverter.GetBytes(3), 0, 4);
-        externalBuffer.Write(BitConverter.GetBytes(4), 0, 4);
-        externalBuffer.Write(BitConverter.GetBytes(5), 0, 4);
-        externalBuffer.Write(BitConverter.GetBytes(6), 0, 4);
-        externalBuffer.Position = 0;
-
-        // Rewind by 12 bytes (3 ints worth)
-        stream.Rewind(externalBuffer);
-        Assert.Equal(3, br.ReadInt32());
-        Assert.Equal(4, br.ReadInt32());
-        Assert.Equal(5, br.ReadInt32());
-        Assert.Equal(6, br.ReadInt32());
-        Assert.Equal(7, br.ReadInt32());
-    }
-
-    [Fact]
     public void TestPosition()
     {
         var ms = new MemoryStream();
@@ -480,6 +439,212 @@ public class RewindableStreamTest
         Assert.Equal(7, br.ReadInt32());
 
         Assert.False(stream.IsRecording);
+    }
+
+    [Fact]
+    public void TestStopRecordingThenRewind()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Write(8);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+        var br = new BinaryReader(new ForwardOnlyStream(stream));
+
+        // Read first 4 values (gets buffered)
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        // Stop recording
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // Rewind to start of buffer
+        stream.Rewind(true);
+
+        // Should be able to read from buffer again
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+        // Rewind to start of buffer
+        stream.Rewind();
+        // Should be able to read from buffer again
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        // Continue reading remaining data from underlying stream
+        Assert.Equal(5, br.ReadInt32());
+        Assert.Equal(6, br.ReadInt32());
+        Assert.Equal(7, br.ReadInt32());
+        Assert.Equal(8, br.ReadInt32());
+    }
+
+    [Fact]
+    public void TestNonSeekableStream_StopRecordingThenRewind()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Write(8);
+        bw.Flush();
+        ms.Position = 0;
+
+        var nonSeekableStream = new NonSeekableStreamWrapper(ms);
+        var stream = new RewindableStream(nonSeekableStream);
+        stream.StartRecording();
+        var br = new BinaryReader(stream);
+
+        // Read first 4 values (gets buffered)
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        // Stop recording
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // Rewind to start of buffer
+        stream.Rewind(true);
+
+        // Should be able to read from buffer again
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        // Continue reading remaining data from underlying stream
+        Assert.Equal(5, br.ReadInt32());
+        Assert.Equal(6, br.ReadInt32());
+        Assert.Equal(7, br.ReadInt32());
+        Assert.Equal(8, br.ReadInt32());
+    }
+
+    [Fact]
+    public void TestMultipleRewindsAfterStopRecording()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Write(3);
+        bw.Write(4);
+        bw.Write(5);
+        bw.Write(6);
+        bw.Write(7);
+        bw.Write(8);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+        var br = new BinaryReader(stream);
+
+        // Read first 4 values (gets buffered)
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        // Stop recording
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // First rewind - read all buffered data, then continue with underlying stream
+        stream.Rewind();
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+        Assert.Equal(5, br.ReadInt32());
+        Assert.Equal(6, br.ReadInt32());
+
+        // Second rewind - should still be able to read from buffer
+        stream.Rewind();
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        // Third rewind - still works
+        stream.Rewind();
+        Assert.Equal(1, br.ReadInt32());
+        Assert.Equal(2, br.ReadInt32());
+        Assert.Equal(3, br.ReadInt32());
+        Assert.Equal(4, br.ReadInt32());
+
+        // Continue reading from underlying stream (values 7, 8 since 5, 6 were already consumed)
+        Assert.Equal(7, br.ReadInt32());
+        Assert.Equal(8, br.ReadInt32());
+    }
+
+    [Fact]
+    public void TestStopRecordingTwiceThrows()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        var br = new BinaryReader(stream);
+        Assert.Equal(1, br.ReadInt32());
+
+        // First StopRecording should succeed
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // Second StopRecording should throw
+        Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
+    }
+
+    [Fact]
+    public void TestStartRecordingAfterStopRecordingThrows()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write(1);
+        bw.Write(2);
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(ms);
+        stream.StartRecording();
+
+        var br = new BinaryReader(stream);
+        Assert.Equal(1, br.ReadInt32());
+
+        // Stop recording
+        stream.StopRecording();
+        Assert.False(stream.IsRecording);
+
+        // Trying to start recording again should throw
+        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
     }
 
     private class NonSeekableStreamWrapper : Stream

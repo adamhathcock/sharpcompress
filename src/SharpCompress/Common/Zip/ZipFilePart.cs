@@ -213,7 +213,7 @@ internal abstract partial class ZipFilePart : FilePart
             ) || Header.IsZip64
         )
         {
-            plainStream = SharpCompressStream.Create(plainStream, leaveOpen: true); //make sure AES doesn't close
+            plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close
         }
         else
         {

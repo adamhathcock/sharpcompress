@@ -60,7 +60,7 @@ internal sealed partial class StreamingZipHeaderFactory
     private sealed class StreamHeaderAsyncEnumerator : IAsyncEnumerator<ZipHeader>, IDisposable
     {
         private readonly StreamingZipHeaderFactory _headerFactory;
-        private readonly SharpCompressStream _rewindableStream;
+        private readonly RewindableStream _rewindableStream;
         private readonly AsyncBinaryReader _reader;
         private readonly CancellationToken _cancellationToken;
         private bool _completed;
@@ -72,7 +72,7 @@ internal sealed partial class StreamingZipHeaderFactory
         )
         {
             _headerFactory = headerFactory;
-            _rewindableStream = EnsureSharpCompressStream(stream);
+            _rewindableStream = RewindableStream.EnsureSeekable(stream);
             _reader = new AsyncBinaryReader(_rewindableStream, leaveOpen: true);
             _cancellationToken = cancellationToken;
         }
@@ -281,10 +281,11 @@ internal sealed partial class StreamingZipHeaderFactory
                     } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
                     else if (localHeader.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                     {
+                        _rewindableStream.StartRecording();
                         var nextHeaderBytes = await _reader
                             .ReadUInt32Async(_cancellationToken)
                             .ConfigureAwait(false);
-                        ((IStreamStack)_rewindableStream).Rewind(sizeof(uint));
+                        _rewindableStream.Rewind(true);
 
                         // Check if next data is PostDataDescriptor, streamed file with 0 length
                         header.HasData = !IsHeader(nextHeaderBytes);
@@ -312,30 +313,6 @@ internal sealed partial class StreamingZipHeaderFactory
         public void Dispose()
         {
             _reader.Dispose();
-        }
-
-        /// <summary>
-        /// Ensures the stream is a <see cref="SharpCompressStream"/> so header parsing can use rewind/buffer helpers.
-        /// </summary>
-        private static SharpCompressStream EnsureSharpCompressStream(Stream stream)
-        {
-            if (stream is SharpCompressStream sharpCompressStream)
-            {
-                return sharpCompressStream;
-            }
-
-            // Ensure the stream is already a SharpCompressStream so the buffer/size is set.
-            // The original code wrapped this with RewindableStream; use SharpCompressStream so we can get the buffer size.
-            if (stream is SourceStream src)
-            {
-                return new SharpCompressStream(
-                    stream,
-                    src.ReaderOptions.LeaveStreamOpen,
-                    bufferSize: src.ReaderOptions.BufferSize
-                );
-            }
-
-            throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
         }
     }
 }

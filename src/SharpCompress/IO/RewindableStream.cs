@@ -7,6 +7,10 @@ namespace SharpCompress.IO
 {
     internal partial class RewindableStream(Stream stream) : Stream
     {
+        public static RewindableStream EnsureSeekable(Stream stream)
+        {
+            return stream.CanSeek ? new SeekableRewindableStream(stream) : new RewindableStream(stream);
+        }
         private readonly int _bufferSize = Constants.RewindableBufferSize;
         private byte[]? _buffer = ArrayPool<byte>.Shared.Rent(Constants.RewindableBufferSize);
         private int _bufferLength = 0;
@@ -15,7 +19,7 @@ namespace SharpCompress.IO
         private bool _isDisposed;
         private long _streamPosition;
 
-        internal bool IsRecording { get; private set; }
+        internal virtual bool IsRecording { get; private set; }
 
         protected override void Dispose(bool disposing)
         {
@@ -33,44 +37,14 @@ namespace SharpCompress.IO
             }
         }
 
-        public void Rewind(bool stopRecording = false)
+        public virtual void Rewind(bool stopRecording = false)
         {
             _isBuffering = true;
             IsRecording = !stopRecording;
             _bufferPosition = 0;
         }
 
-        public void Rewind(MemoryStream buffer)
-        {
-            long bufferLength = buffer.Length;
-            if (_bufferPosition >= bufferLength)
-            {
-                _bufferPosition -= (int)bufferLength;
-            }
-            else
-            {
-                int bytesToKeep = _bufferLength - _bufferPosition;
-                if (bytesToKeep > 0)
-                {
-                    Array.Copy(_buffer!, _bufferPosition, _buffer!, 0, bytesToKeep);
-                }
-                if (bufferLength > _bufferSize)
-                {
-                    throw new InvalidOperationException(
-                        $"External buffer size ({bufferLength} bytes) exceeds internal buffer capacity ({_bufferSize} bytes)"
-                    );
-                }
-                _bufferLength = (int)bufferLength;
-                _bufferPosition = 0;
-                buffer.Position = 0;
-                int bytesRead = buffer.Read(_buffer!, 0, _bufferLength);
-                _bufferLength = bytesRead;
-                _bufferPosition = 0;
-            }
-            _isBuffering = true;
-        }
-
-        public void StartRecording()
+        public virtual void StartRecording()
         {
             if (_bufferPosition != 0)
             {
@@ -85,7 +59,7 @@ namespace SharpCompress.IO
             IsRecording = true;
         }
 
-        public void StopRecording()
+        public virtual void StopRecording()
         {
             _isBuffering = true;
             IsRecording = false;
