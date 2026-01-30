@@ -201,7 +201,7 @@ internal abstract partial class ZipFilePart
                 await stream
                     .ReadFullyAsync(props, 0, propsSize, cancellationToken)
                     .ConfigureAwait(false);
-                return LzmaStream.Create(
+                return await LzmaStream.CreateAsync(
                     props,
                     stream,
                     Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,

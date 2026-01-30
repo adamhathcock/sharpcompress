@@ -8,6 +8,22 @@ namespace SharpCompress.Compressors.LZMA;
 
 public partial class LzmaStream
 {
+    public static ValueTask<LzmaStream> CreateAsync(
+        byte[] properties,
+        Stream inputStream,
+        long inputSize,
+        long outputSize,
+        bool leaveOpen = false
+    ) =>
+        CreateAsync(
+            properties,
+            inputStream,
+            inputSize,
+            outputSize,
+            null,
+            properties.Length < 5,
+            leaveOpen
+        );
     public static async ValueTask<LzmaStream> CreateAsync(
         byte[] properties,
         Stream inputStream,
