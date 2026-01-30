@@ -40,7 +40,7 @@ public class PpmdStream : Stream, IStreamStack
     private long _position;
     private bool _isDisposed;
 
-    public PpmdStream(PpmdProperties properties, Stream stream, bool compress)
+    private PpmdStream(PpmdProperties properties, Stream stream, bool compress)
     {
         _properties = properties;
         _stream = stream;
@@ -83,6 +83,9 @@ public class PpmdStream : Stream, IStreamStack
             _decoder.Init(stream);
         }
     }
+
+    public static PpmdStream Create(PpmdProperties properties, Stream stream, bool compress) =>
+        new PpmdStream(properties, stream, compress);
 
     public override bool CanRead => !_compress;
 

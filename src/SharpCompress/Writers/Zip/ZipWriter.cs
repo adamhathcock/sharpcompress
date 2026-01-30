@@ -455,7 +455,7 @@ public partial class ZipWriter : AbstractWriter
                 case ZipCompressionMethod.PPMd:
                 {
                     counting.Write(writer.PpmdProperties.Properties, 0, 2);
-                    return new PpmdStream(writer.PpmdProperties, counting, true);
+                    return PpmdStream.Create(writer.PpmdProperties, counting, true);
                 }
                 case ZipCompressionMethod.ZStandard:
                 {

@@ -67,7 +67,7 @@ internal static partial class DecoderRegistry
                     cancellationToken: cancellationToken
                 );
             case K_PPMD:
-                return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
+                return PpmdStream.Create(new PpmdProperties(info), inStreams.Single(), false);
             case K_DEFLATE:
                 return new DeflateStream(inStreams.Single(), CompressionMode.Decompress);
             case K_ZSTD:

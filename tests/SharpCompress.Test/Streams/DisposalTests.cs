@@ -136,7 +136,7 @@ public class DisposalTests
         // PpmdStream seems to not dispose inner stream based on code analysis
         // It takes PpmdProperties which we need to mock or create.
         var props = new PpmdProperties();
-        VerifyNeverDispose(stream => new PpmdStream(props, stream, false));
+        VerifyNeverDispose(stream => PpmdStream.Create(props, stream, false));
     }
 
     [Fact]

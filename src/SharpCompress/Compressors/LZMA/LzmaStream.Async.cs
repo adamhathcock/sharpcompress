@@ -24,6 +24,7 @@ public partial class LzmaStream
             properties.Length < 5,
             leaveOpen
         );
+
     public static async ValueTask<LzmaStream> CreateAsync(
         byte[] properties,
         Stream inputStream,
