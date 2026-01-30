@@ -191,4 +191,15 @@ internal partial class Decoder
         await NormalizeAsync(cancellationToken).ConfigureAwait(false);
         return symbol;
     }
+
+    public async ValueTask DecodeAsync(
+        uint start,
+        uint size,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _code -= start * _range;
+        _range *= size;
+        await NormalizeAsync(cancellationToken).ConfigureAwait(false);
+    }
 }

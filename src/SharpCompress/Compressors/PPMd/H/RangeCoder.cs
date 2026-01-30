@@ -127,6 +127,39 @@ internal class RangeCoder
         }
     }
 
+    private async ValueTask<long> ReadCharAsync(CancellationToken cancellationToken = default)
+    {
+        if (_unpackRead != null)
+        {
+            return _unpackRead.Char;
+        }
+        if (_stream != null)
+        {
+            byte[] buffer = new byte[1];
+            await _stream.ReadFullyAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            return buffer[0];
+        }
+        return -1;
+    }
+
+    internal async ValueTask AriDecNormalizeAsync(CancellationToken cancellationToken = default)
+    {
+        var c2 = false;
+        while ((_low ^ (_low + _range)) < TOP || (c2 = _range < BOT))
+        {
+            if (c2)
+            {
+                _range = (-_low & (BOT - 1)) & UINT_MASK;
+                c2 = false;
+            }
+            _code =
+                ((_code << 8) | await ReadCharAsync(cancellationToken).ConfigureAwait(false))
+                & UINT_MASK;
+            _range = (_range << 8) & UINT_MASK;
+            _low = (_low << 8) & UINT_MASK;
+        }
+    }
+
     // Debug
     public override string ToString()
     {

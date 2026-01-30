@@ -261,6 +261,118 @@ public class PpmdStream : Stream, IStreamStack
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
+    public override async Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        if (_compress)
+        {
+            return 0;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var size = 0;
+        if (_properties.Version == PpmdVersion.I1)
+        {
+            size = await _model
+                .DecodeBlockAsync(_stream, buffer, offset, count, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        if (_properties.Version == PpmdVersion.H)
+        {
+            int c;
+            while (
+                size < count
+                && (c = await _modelH.DecodeCharAsync(cancellationToken).ConfigureAwait(false)) >= 0
+            )
+            {
+                buffer[offset++] = (byte)c;
+                size++;
+            }
+        }
+        if (_properties.Version == PpmdVersion.H7Z)
+        {
+            int c;
+            while (
+                size < count
+                && (
+                    c = await _modelH
+                        .DecodeCharAsync(_decoder, cancellationToken)
+                        .ConfigureAwait(false)
+                ) >= 0
+            )
+            {
+                buffer[offset++] = (byte)c;
+                size++;
+            }
+        }
+        _position += size;
+        return size;
+    }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_compress)
+        {
+            return 0;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var size = 0;
+        var offset = 0;
+        var count = buffer.Length;
+
+        if (_properties.Version == PpmdVersion.I1)
+        {
+            // Need to use a temporary buffer since DecodeBlockAsync works with byte[]
+            var tempBuffer = new byte[count];
+            size = await _model
+                .DecodeBlockAsync(_stream, tempBuffer, 0, count, cancellationToken)
+                .ConfigureAwait(false);
+            tempBuffer.AsMemory(0, size).CopyTo(buffer);
+        }
+        if (_properties.Version == PpmdVersion.H)
+        {
+            int c;
+            while (
+                size < count
+                && (c = await _modelH.DecodeCharAsync(cancellationToken).ConfigureAwait(false)) >= 0
+            )
+            {
+                buffer.Span[offset++] = (byte)c;
+                size++;
+            }
+        }
+        if (_properties.Version == PpmdVersion.H7Z)
+        {
+            int c;
+            while (
+                size < count
+                && (
+                    c = await _modelH
+                        .DecodeCharAsync(_decoder, cancellationToken)
+                        .ConfigureAwait(false)
+                ) >= 0
+            )
+            {
+                buffer.Span[offset++] = (byte)c;
+                size++;
+            }
+        }
+        _position += size;
+        return size;
+    }
+#endif
+
     public override void Write(byte[] buffer, int offset, int count)
     {
         if (_compress)

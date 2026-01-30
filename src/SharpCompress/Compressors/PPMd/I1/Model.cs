@@ -347,6 +347,81 @@ internal partial class Model
         return total;
     }
 
+    internal async ValueTask<int> DecodeBlockAsync(
+        Stream source,
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_minimumContext == PpmContext.ZERO)
+        {
+            return 0;
+        }
+
+        var total = 0;
+        while (total < count)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_numberStatistics != 0)
+            {
+                DecodeSymbol1(_minimumContext);
+            }
+            else
+            {
+                DecodeBinarySymbol(_minimumContext);
+            }
+
+            _coder.RangeRemoveSubrange();
+
+            while (_foundState == PpmState.ZERO)
+            {
+                await _coder
+                    .RangeDecoderNormalizeAsync(source, cancellationToken)
+                    .ConfigureAwait(false);
+                do
+                {
+                    _orderFall++;
+                    _minimumContext = _minimumContext.Suffix;
+                    if (_minimumContext == PpmContext.ZERO)
+                    {
+                        goto StopDecoding;
+                    }
+                } while (_minimumContext.NumberStatistics == _numberMasked);
+                DecodeSymbol2(_minimumContext);
+                _coder.RangeRemoveSubrange();
+            }
+
+            buffer[offset] = _foundState.Symbol;
+            offset++;
+            total++;
+
+            if (_orderFall == 0 && (Pointer)_foundState.Successor >= _allocator._baseUnit)
+            {
+                _maximumContext = _foundState.Successor;
+            }
+            else
+            {
+                UpdateModel(_minimumContext);
+                if (_escapeCount == 0)
+                {
+                    ClearMask();
+                }
+            }
+
+            _minimumContext = _maximumContext;
+            _numberStatistics = _minimumContext.NumberStatistics;
+            await _coder
+                .RangeDecoderNormalizeAsync(source, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        StopDecoding:
+        return total;
+    }
+
     #endregion
 
     #region Private Methods

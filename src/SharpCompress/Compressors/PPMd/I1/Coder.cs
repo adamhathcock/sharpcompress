@@ -110,6 +110,24 @@ internal class Coder
         }
     }
 
+    public async ValueTask RangeDecoderNormalizeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (
+            (_low ^ (_low + _range)) < RANGE_TOP
+            || _range < RANGE_BOTTOM && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
+        )
+        {
+            byte[] buffer = new byte[1];
+            await stream.ReadFullyAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            _code = (_code << 8) | buffer[0];
+            _range <<= 8;
+            _low <<= 8;
+        }
+    }
+
     public uint RangeGetCurrentCount() => (_code - _low) / (_range /= _scale);
 
     public uint RangeGetCurrentShiftCount(int rangeShift) =>
