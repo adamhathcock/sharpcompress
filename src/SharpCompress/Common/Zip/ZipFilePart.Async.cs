@@ -222,7 +222,9 @@ internal abstract partial class ZipFilePart
             {
                 var props = new byte[2];
                 await stream.ReadFullyAsync(props, 0, 2, cancellationToken).ConfigureAwait(false);
-                return PpmdStream.Create(new PpmdProperties(props), stream, false);
+                return await PpmdStream
+                    .CreateAsync(new PpmdProperties(props), stream, false, cancellationToken)
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.WinzipAes:
             {

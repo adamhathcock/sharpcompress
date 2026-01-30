@@ -2,7 +2,10 @@
 
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.Rar;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.PPMd.H;
 
@@ -31,6 +34,8 @@ internal class RangeCoder
         Init();
     }
 
+    internal RangeCoder() { }
+
     private void Init()
     {
         SubRange = new SubRange();
@@ -40,6 +45,22 @@ internal class RangeCoder
         for (var i = 0; i < 4; i++)
         {
             _code = ((_code << 8) | Char) & UINT_MASK;
+        }
+    }
+
+    internal async ValueTask InitAsync(Stream stream, CancellationToken cancellationToken = default)
+    {
+        SubRange = new SubRange();
+
+        _low = _code = 0L;
+        _range = 0xFFFFffffL;
+
+        byte[] buffer = new byte[4];
+        await stream.ReadFullyAsync(buffer, 0, 4, cancellationToken).ConfigureAwait(false);
+
+        for (var i = 0; i < 4; i++)
+        {
+            _code = ((_code << 8) | buffer[i]) & UINT_MASK;
         }
     }
 

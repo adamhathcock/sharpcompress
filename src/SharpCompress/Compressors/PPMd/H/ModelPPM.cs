@@ -3,6 +3,8 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.Rar;
 using Decoder = SharpCompress.Compressors.LZMA.RangeCoder.Decoder;
 
@@ -761,6 +763,43 @@ internal class ModelPpm
         if (stream != null)
         {
             Coder = new RangeCoder(stream);
+        }
+
+        if (maxOrder == 1)
+        {
+            SubAlloc.StopSubAllocator();
+            return (false);
+        }
+        SubAlloc.StartSubAllocator(maxMemory);
+        _minContext = new PpmContext(Heap);
+
+        //medContext = new PPMContext(Heap);
+        _maxContext = new PpmContext(Heap);
+        FoundState = new State(Heap);
+        _dummySee2Cont = new See2Context();
+        for (var i = 0; i < 25; i++)
+        {
+            for (var j = 0; j < 16; j++)
+            {
+                _see2Cont[i][j] = new See2Context();
+            }
+        }
+        StartModelRare(maxOrder);
+
+        return (_minContext.Address != 0);
+    }
+
+    internal async ValueTask<bool> DecodeInitAsync(
+        Stream stream,
+        int maxOrder,
+        int maxMemory,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (stream != null)
+        {
+            Coder = new RangeCoder();
+            await Coder.InitAsync(stream, cancellationToken).ConfigureAwait(false);
         }
 
         if (maxOrder == 1)

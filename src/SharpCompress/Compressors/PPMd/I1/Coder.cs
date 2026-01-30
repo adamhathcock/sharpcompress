@@ -1,6 +1,9 @@
 #region Using
 
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.IO;
 
 #endregion
 
@@ -73,6 +76,24 @@ internal class Coder
         for (uint index = 0; index < 4; index++)
         {
             _code = (_code << 8) | (byte)stream.ReadByte();
+        }
+    }
+
+    public async ValueTask RangeDecoderInitializeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _low = 0;
+        _code = 0;
+        _range = uint.MaxValue;
+
+        byte[] buffer = new byte[4];
+        await stream.ReadFullyAsync(buffer, 0, 4, cancellationToken).ConfigureAwait(false);
+
+        for (uint index = 0; index < 4; index++)
+        {
+            _code = (_code << 8) | buffer[index];
         }
     }
 

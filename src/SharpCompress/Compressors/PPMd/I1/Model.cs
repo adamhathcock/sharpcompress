@@ -2,6 +2,8 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 // This is a port of Dmitry Shkarin's PPMd Variant I Revision 1.
 // Ported by Michael Bone (mjbone03@yahoo.com.au).
@@ -261,6 +263,21 @@ internal partial class Model
         _allocator = properties._allocator;
         _coder = new Coder();
         _coder.RangeDecoderInitialize(source);
+        StartModel(properties.ModelOrder, properties.RestorationMethod);
+        _minimumContext = _maximumContext;
+        _numberStatistics = _minimumContext.NumberStatistics;
+        return _coder;
+    }
+
+    internal async ValueTask<Coder> DecodeStartAsync(
+        Stream source,
+        PpmdProperties properties,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _allocator = properties._allocator;
+        _coder = new Coder();
+        await _coder.RangeDecoderInitializeAsync(source, cancellationToken).ConfigureAwait(false);
         StartModel(properties.ModelOrder, properties.RestorationMethod);
         _minimumContext = _maximumContext;
         _numberStatistics = _minimumContext.NumberStatistics;
