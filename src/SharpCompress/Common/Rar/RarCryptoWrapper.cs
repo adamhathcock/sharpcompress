@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Rar;
@@ -54,6 +56,81 @@ internal sealed class RarCryptoWrapper : Stream
         }
         return count;
     }
+
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => ReadAndDecryptAsync(buffer, offset, count, cancellationToken);
+
+    private async Task<int> ReadAndDecryptAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var queueSize = _data.Count;
+        var sizeToRead = count - queueSize;
+
+        if (sizeToRead > 0)
+        {
+            var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
+            byte[] cipherText = new byte[16];
+
+            for (var i = 0; i < alignedSize / 16; i++)
+            {
+                var bytesRead = await _actualStream
+                    .ReadAsync(cipherText, 0, 16, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (bytesRead == 0)
+                {
+                    break;
+                }
+
+                var readBytes = _rijndael.ProcessBlock(cipherText.AsSpan(0, bytesRead));
+                foreach (var readByte in readBytes)
+                {
+                    _data.Enqueue(readByte);
+                }
+            }
+        }
+
+        var bytesToReturn = Math.Min(count, _data.Count);
+        for (var i = 0; i < bytesToReturn; i++)
+        {
+            buffer[offset + i] = _data.Dequeue();
+        }
+
+        return bytesToReturn;
+    }
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
+        try
+        {
+            var bytesRead = await ReadAndDecryptAsync(array, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
+            new ReadOnlySpan<byte>(array, 0, bytesRead).CopyTo(buffer.Span);
+            return bytesRead;
+        }
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(array);
+        }
+    }
+#endif
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
