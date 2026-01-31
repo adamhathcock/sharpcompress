@@ -10,7 +10,6 @@ internal partial class RewindableStream : Stream
     private bool isRewound;
     private bool isDisposed;
     private long streamPosition;
-    private bool _hasStoppedRecording;
 
     public RewindableStream(Stream stream) => this.stream = stream;
 
@@ -47,7 +46,6 @@ internal partial class RewindableStream : Stream
                 "StopRecording can only be called when recording is active."
             );
         }
-        _hasStoppedRecording = true;
         isRewound = true;
         IsRecording = false;
         bufferStream.Position = 0;
@@ -72,12 +70,6 @@ internal partial class RewindableStream : Stream
         {
             throw new InvalidOperationException(
                 "StartRecording can only be called when not already recording."
-            );
-        }
-        if (_hasStoppedRecording)
-        {
-            throw new InvalidOperationException(
-                "StartRecording cannot be called after StopRecording has been called."
             );
         }
         //if (isRewound && bufferStream.Position != 0)

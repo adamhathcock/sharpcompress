@@ -80,19 +80,12 @@ public class ZipFactory
         var startPosition = stream.CanSeek ? stream.Position : -1;
 
         // probe for single volume zip
-
-        if (stream is not SharpCompressStream) // wrap to provide buffer bef
-        {
-            stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
-        }
-
         if (await ZipArchive.IsZipFileAsync(stream, password, cancellationToken))
         {
             return true;
         }
 
         // probe for a multipart zip
-
         if (!stream.CanSeek)
         {
             return false;
