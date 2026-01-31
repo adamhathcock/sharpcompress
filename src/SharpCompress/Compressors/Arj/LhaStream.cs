@@ -26,25 +26,7 @@ namespace SharpCompress.Compressors.Arj
         private readonly int _originalSize;
         private int _producedBytes = 0;
 
-#if DEBUG_STREAMS
-        long IStreamStack.InstanceId { get; set; }
-#endif
-        int IStreamStack.DefaultBufferSize { get; set; }
-
         Stream IStreamStack.BaseStream() => _stream;
-
-        int IStreamStack.BufferSize
-        {
-            get => 0;
-            set { }
-        }
-        int IStreamStack.BufferPosition
-        {
-            get => 0;
-            set { }
-        }
-
-        void IStreamStack.SetPosition(long position) { }
 
         public LhaStream(Stream compressedStream, int originalSize)
         {

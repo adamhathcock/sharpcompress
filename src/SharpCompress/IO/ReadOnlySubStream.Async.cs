@@ -18,7 +18,7 @@ internal partial class ReadOnlySubStream
         {
             count = (int)BytesLeftToRead;
         }
-        var read = await Stream
+        var read = await _stream
             .ReadAsync(buffer, offset, count, cancellationToken)
             .ConfigureAwait(false);
         if (read > 0)
@@ -36,7 +36,7 @@ internal partial class ReadOnlySubStream
     )
     {
         var sliceLen = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;
-        var read = await Stream
+        var read = await _stream
             .ReadAsync(buffer.Slice(0, (int)sliceLen), cancellationToken)
             .ConfigureAwait(false);
         if (read > 0)

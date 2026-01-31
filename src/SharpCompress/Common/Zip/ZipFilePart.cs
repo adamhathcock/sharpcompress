@@ -45,7 +45,7 @@ internal abstract partial class ZipFilePart : FilePart
         );
         if (LeaveStreamOpen)
         {
-            return SharpCompressStream.Create(decompressionStream, leaveOpen: true);
+            return new NonDisposingStream(decompressionStream);
         }
         return decompressionStream;
     }

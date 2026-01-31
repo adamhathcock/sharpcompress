@@ -67,17 +67,13 @@ public abstract class ReaderTests : TestBase
     private void ReadImplCore(string testArchive, ReaderOptions options, Action<IReader> useReader)
     {
         using var file = File.OpenRead(testArchive);
-        using var protectedStream = SharpCompressStream.Create(
-            new ForwardOnlyStream(file, options.BufferSize),
-            leaveOpen: true,
-            throwOnDispose: true,
-            bufferSize: options.BufferSize
+        using var protectedStream = new NonDisposingStream(
+            new ForwardOnlyStream(file, options.BufferSize)
         );
         using var testStream = new TestStream(protectedStream);
         using (var reader = ReaderFactory.OpenReader(testStream, options))
         {
             useReader(reader);
-            protectedStream.ThrowOnDispose = false;
             Assert.False(testStream.IsDisposed, $"{nameof(testStream)} prematurely closed");
         }
 
@@ -170,11 +166,8 @@ public abstract class ReaderTests : TestBase
         await using var testStream = new TestStream(protectedStream);
 #else
 
-        using var protectedStream = SharpCompressStream.Create(
-            new ForwardOnlyStream(file, options.BufferSize),
-            leaveOpen: true,
-            throwOnDispose: true,
-            bufferSize: options.BufferSize
+        using var protectedStream = new NonDisposingStream(
+            new ForwardOnlyStream(file, options.BufferSize)
         );
         using var testStream = new TestStream(protectedStream);
 #endif
@@ -187,7 +180,6 @@ public abstract class ReaderTests : TestBase
         )
         {
             await UseReaderAsync(reader, expectedCompression, cancellationToken);
-            protectedStream.ThrowOnDispose = false;
             Assert.False(testStream.IsDisposed, $"{nameof(testStream)} prematurely closed");
         }
 

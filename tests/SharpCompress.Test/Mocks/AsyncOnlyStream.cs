@@ -6,25 +6,35 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Test.Mocks;
 
-public class AsyncOnlyStream : SharpCompressStream
+public class AsyncOnlyStream : Stream, IStreamStack
 {
+    private readonly Stream _stream;
+
+#if DEBUG_STREAMS
+    long IStreamStack.InstanceId { get; set; }
+#endif
+
+    Stream IStreamStack.BaseStream() => _stream;
+
     public AsyncOnlyStream(Stream stream)
-        : base(stream)
     {
-        // Console.WriteLine("AsyncOnlyStream created");
+        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+#if DEBUG_STREAMS
+        this.DebugConstruct(typeof(AsyncOnlyStream));
+#endif
     }
 
-    public override bool CanRead => Stream.CanRead;
-    public override bool CanSeek => Stream.CanSeek;
-    public override bool CanWrite => Stream.CanWrite;
-    public override long Length => Stream.Length;
+    public override bool CanRead => _stream.CanRead;
+    public override bool CanSeek => _stream.CanSeek;
+    public override bool CanWrite => _stream.CanWrite;
+    public override long Length => _stream.Length;
     public override long Position
     {
-        get => Stream.Position;
-        set => Stream.Position = value;
+        get => _stream.Position;
+        set => _stream.Position = value;
     }
 
-    public override void Flush() => Stream.Flush();
+    public override void Flush() => _stream.Flush();
 
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException("Synchronous Read is not supported");
@@ -34,33 +44,45 @@ public class AsyncOnlyStream : SharpCompressStream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => Stream.ReadAsync(buffer, offset, count, cancellationToken);
+    ) => _stream.ReadAsync(buffer, offset, count, cancellationToken);
 
 #if NET8_0_OR_GREATER
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => Stream.ReadAsync(buffer, cancellationToken);
+    ) => _stream.ReadAsync(buffer, cancellationToken);
 #endif
 
-    public override long Seek(long offset, SeekOrigin origin) => Stream.Seek(offset, origin);
+    public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
 
-    public override void SetLength(long value) => Stream.SetLength(value);
+    public override void SetLength(long value) => _stream.SetLength(value);
 
     public override Task WriteAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => Stream.WriteAsync(buffer, offset, count, cancellationToken);
+    ) => _stream.WriteAsync(buffer, offset, count, cancellationToken);
 
 #if NET8_0_OR_GREATER
     public override ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => Stream.WriteAsync(buffer, cancellationToken);
+    ) => _stream.WriteAsync(buffer, cancellationToken);
 #endif
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        Stream.Write(buffer, offset, count);
+        _stream.Write(buffer, offset, count);
+
+    protected override void Dispose(bool disposing)
+    {
+#if DEBUG_STREAMS
+        this.DebugDispose(typeof(AsyncOnlyStream));
+#endif
+        if (disposing)
+        {
+            _stream.Dispose();
+        }
+        base.Dispose(disposing);
+    }
 }

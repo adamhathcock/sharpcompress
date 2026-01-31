@@ -7,25 +7,7 @@ namespace SharpCompress.Compressors.Explode;
 
 public partial class ExplodeStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
     Stream IStreamStack.BaseStream() => inStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     private const int INVALID_CODE = 99;
     private const int WSIZE = 64 * 1024;

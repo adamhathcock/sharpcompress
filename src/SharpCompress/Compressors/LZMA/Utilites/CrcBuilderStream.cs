@@ -8,25 +8,8 @@ namespace SharpCompress.Compressors.LZMA.Utilites;
 
 internal partial class CrcBuilderStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
 
     Stream IStreamStack.BaseStream() => _mTarget;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     private readonly Stream _mTarget;
     private uint _mCrc;

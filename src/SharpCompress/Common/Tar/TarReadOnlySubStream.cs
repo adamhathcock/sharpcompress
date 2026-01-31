@@ -4,33 +4,18 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
-internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
+internal class TarReadOnlySubStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
+    private readonly Stream _stream;
 
-    Stream IStreamStack.BaseStream() => base.Stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
+    Stream IStreamStack.BaseStream() => _stream;
 
     private bool _isDisposed;
     private long _amountRead;
 
     public TarReadOnlySubStream(Stream stream, long bytesToRead)
-        : base(stream, leaveOpen: true, throwOnDispose: false)
     {
+        _stream = stream;
         BytesLeftToRead = bytesToRead;
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(TarReadOnlySubStream));
@@ -51,7 +36,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         if (disposing)
         {
             // Ensure we read all remaining blocks for this entry.
-            Stream.Skip(BytesLeftToRead);
+            _stream.Skip(BytesLeftToRead);
             _amountRead += BytesLeftToRead;
 
             // If the last block wasn't a full 512 bytes, skip the remaining padding bytes.
@@ -59,11 +44,9 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
 
             if (bytesInLastBlock != 0)
             {
-                Stream.Skip(512 - bytesInLastBlock);
+                _stream.Skip(512 - bytesInLastBlock);
             }
         }
-
-        base.Dispose(disposing);
     }
 
 #if !LEGACY_DOTNET
@@ -79,7 +62,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         this.DebugDispose(typeof(TarReadOnlySubStream));
 #endif
         // Ensure we read all remaining blocks for this entry.
-        await Stream.SkipAsync(BytesLeftToRead).ConfigureAwait(false);
+        await _stream.SkipAsync(BytesLeftToRead).ConfigureAwait(false);
         _amountRead += BytesLeftToRead;
 
         // If the last block wasn't a full 512 bytes, skip the remaining padding bytes.
@@ -87,11 +70,9 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
 
         if (bytesInLastBlock != 0)
         {
-            await Stream.SkipAsync(512 - bytesInLastBlock).ConfigureAwait(false);
+            await _stream.SkipAsync(512 - bytesInLastBlock).ConfigureAwait(false);
         }
 
-        // Call base Dispose instead of base DisposeAsync to avoid double disposal
-        base.Dispose(true);
         GC.SuppressFinalize(this);
     }
 #endif
@@ -124,7 +105,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             count = (int)BytesLeftToRead;
         }
-        var read = Stream.Read(buffer, offset, count);
+        var read = _stream.Read(buffer, offset, count);
         if (read > 0)
         {
             BytesLeftToRead -= read;
@@ -139,7 +120,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             return -1;
         }
-        var value = Stream.ReadByte();
+        var value = _stream.ReadByte();
         if (value != -1)
         {
             --BytesLeftToRead;
@@ -159,7 +140,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             count = (int)BytesLeftToRead;
         }
-        var read = await Stream
+        var read = await _stream
             .ReadAsync(buffer, offset, count, cancellationToken)
             .ConfigureAwait(false);
         if (read > 0)
@@ -180,7 +161,7 @@ internal class TarReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             buffer = buffer.Slice(0, (int)BytesLeftToRead);
         }
-        var read = await Stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+        var read = await _stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (read > 0)
         {
             BytesLeftToRead -= read;

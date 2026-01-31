@@ -6,25 +6,7 @@ namespace SharpCompress.Compressors.Reduce;
 
 public partial class ReduceStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
     Stream IStreamStack.BaseStream() => inStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     private readonly long unCompressedSize;
     private readonly long compressedSize;

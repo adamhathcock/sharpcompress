@@ -177,11 +177,6 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
-            }
-
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
@@ -220,11 +215,6 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
-            }
-
             var header = await headerFactory
                 .ReadStreamHeaderAsync(stream)
                 .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
@@ -259,11 +249,6 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: Constants.BufferSize);
-            }
-
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);

@@ -65,7 +65,7 @@ public abstract class Factory : IFactory
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;
 
     /// <summary>
-    /// Tries to open an <see cref="IReader"/> from a <see cref="SharpCompressStream"/>.
+    /// Tries to open an <see cref="IReader"/> from a <see cref="RewindableStream"/>.
     /// </summary>
     /// <remarks>
     /// This method provides extra insight to support loading compressed TAR files.

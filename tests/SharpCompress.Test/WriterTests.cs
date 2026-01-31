@@ -43,10 +43,7 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var reader = ReaderFactory.OpenReader(
-                SharpCompressStream.Create(stream, leaveOpen: true),
-                readerOptions
-            );
+            using var reader = ReaderFactory.OpenReader(new NonDisposingStream(stream), readerOptions);
             reader.WriteAllToDirectory(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true }
@@ -93,7 +90,7 @@ public class WriterTests : TestBase
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
             await using var reader = await ReaderFactory.OpenAsyncReader(
-                new AsyncOnlyStream(SharpCompressStream.Create(stream, leaveOpen: true)),
+                new AsyncOnlyStream(new NonDisposingStream(stream)),
                 readerOptions,
                 cancellationToken
             );

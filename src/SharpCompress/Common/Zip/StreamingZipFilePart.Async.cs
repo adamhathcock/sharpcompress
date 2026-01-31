@@ -24,7 +24,7 @@ internal sealed partial class StreamingZipFilePart
             .ConfigureAwait(false);
         if (LeaveStreamOpen)
         {
-            return SharpCompressStream.Create(_decompressionStream, leaveOpen: true);
+            return new NonDisposingStream(_decompressionStream);
         }
         return _decompressionStream;
     }

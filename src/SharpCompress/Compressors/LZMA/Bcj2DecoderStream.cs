@@ -9,25 +9,7 @@ namespace SharpCompress.Compressors.LZMA;
 
 internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
     Stream IStreamStack.BaseStream() => _mMainStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     private const int K_NUM_TOP_BITS = 24;
     private const uint K_TOP_VALUE = (1 << K_NUM_TOP_BITS);

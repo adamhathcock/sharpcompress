@@ -20,7 +20,6 @@ public static partial class ArchiveFactory
     )
     {
         readerOptions ??= new ReaderOptions();
-        stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
         var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken);
         return factory.OpenAsyncArchive(stream, readerOptions);
     }

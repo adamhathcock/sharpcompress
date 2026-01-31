@@ -11,27 +11,9 @@ namespace SharpCompress.Compressors.ZStandard;
 
 internal partial class ZStandardStream : DecompressionStream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
-    public int DefaultBufferSize { get; set; }
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
     private readonly Stream stream;
 
     Stream IStreamStack.BaseStream() => stream;
-
-    void IStreamStack.SetPosition(long position) { }
 
     internal static bool IsZStandard(Stream stream)
     {

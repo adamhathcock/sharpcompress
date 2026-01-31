@@ -11,26 +11,7 @@ internal sealed partial class MultiVolumeReadOnlyStream
     : MultiVolumeReadOnlyStreamBase,
         IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
     Stream IStreamStack.BaseStream() => currentStream.NotNull();
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     private long currentPosition;
     private long maxPosition;

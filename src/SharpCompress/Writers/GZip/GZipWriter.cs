@@ -16,7 +16,7 @@ public sealed partial class GZipWriter : AbstractWriter
     {
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = SharpCompressStream.Create(destination, leaveOpen: true);
+            destination = new NonDisposingStream(destination);
         }
         InitializeStream(
             new GZipStream(

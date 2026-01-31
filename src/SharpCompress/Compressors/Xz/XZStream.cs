@@ -12,24 +12,7 @@ namespace SharpCompress.Compressors.Xz;
 [CLSCompliant(false)]
 public sealed partial class XZStream : XZReadOnlyStream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
     Stream IStreamStack.BaseStream() => _baseStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     public XZStream(Stream baseStream)
         : base(baseStream)

@@ -6,17 +6,19 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-internal partial class BufferedSubStream : SharpCompressStream, IStreamStack
+internal partial class BufferedSubStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
 #endif
 
-    Stream IStreamStack.BaseStream() => base.Stream;
+    Stream IStreamStack.BaseStream() => _stream;
+
+    private readonly Stream _stream;
 
     public BufferedSubStream(Stream stream, long origin, long bytesToRead)
-        : base(stream, leaveOpen: true, throwOnDispose: false)
     {
+        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(BufferedSubStream));
 #endif
@@ -84,12 +86,12 @@ internal partial class BufferedSubStream : SharpCompressStream, IStreamStack
 
         // Only seek if we're not already at the correct position
         // This avoids expensive seek operations when reading sequentially
-        if (Stream.CanSeek && Stream.Position != origin)
+        if (_stream.CanSeek && _stream.Position != origin)
         {
-            Stream.Position = origin;
+            _stream.Position = origin;
         }
 
-        _cacheLength = Stream.Read(_cache, 0, count);
+        _cacheLength = _stream.Read(_cache, 0, count);
         origin += _cacheLength;
         BytesLeftToRead -= _cacheLength;
     }

@@ -8,25 +8,7 @@ namespace SharpCompress.Compressors.Arj
     [CLSCompliant(true)]
     public sealed partial class LHDecoderStream : Stream, IStreamStack
     {
-#if DEBUG_STREAMS
-        long IStreamStack.InstanceId { get; set; }
-#endif
-        int IStreamStack.DefaultBufferSize { get; set; }
-
         Stream IStreamStack.BaseStream() => _stream;
-
-        int IStreamStack.BufferSize
-        {
-            get => 0;
-            set { }
-        }
-        int IStreamStack.BufferPosition
-        {
-            get => 0;
-            set { }
-        }
-
-        void IStreamStack.SetPosition(long position) { }
 
         private readonly BitReader _bitReader;
         private readonly Stream _stream;
