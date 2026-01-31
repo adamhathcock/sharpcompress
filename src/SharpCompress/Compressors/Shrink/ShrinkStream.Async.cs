@@ -33,11 +33,6 @@ internal partial class ShrinkStream : Stream, IStreamStack
             return;
         }
 
-        if (inStream.Position == (long)_compressedSize)
-        {
-            return;
-        }
-
         // Read all compressed data asynchronously
         var src = new byte[_compressedSize];
         int bytesRead = 0;

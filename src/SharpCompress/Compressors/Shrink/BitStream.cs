@@ -2,6 +2,7 @@ namespace SharpCompress.Compressors.Shrink
 {
     internal class BitStream
     {
+        private const int EOF = 1234;
         private byte[] _src;
         private int _srcLen;
         private int _byteIdx;
@@ -43,7 +44,7 @@ namespace SharpCompress.Compressors.Shrink
         {
             if (_byteIdx >= _srcLen)
             {
-                return 0;
+                return EOF;
             }
 
             return _src[_byteIdx++];

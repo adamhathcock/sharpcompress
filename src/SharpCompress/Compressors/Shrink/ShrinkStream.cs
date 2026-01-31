@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Shrink;
@@ -84,13 +85,8 @@ internal partial class ShrinkStream : Stream, IStreamStack
     {
         if (!_decompressed)
         {
-            if (inStream.Position == (long)_compressedSize)
-            {
-                return 0;
-            }
-
             var src = new byte[_compressedSize];
-            inStream.Read(src, 0, (int)_compressedSize);
+            inStream.ReadExact(src, 0, (int)_compressedSize);
             var srcUsed = 0;
             var dstUsed = 0;
 
