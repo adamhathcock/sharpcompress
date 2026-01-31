@@ -136,12 +136,15 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.Shrink:
             {
-                return new ShrinkStream(
-                    stream,
-                    CompressionMode.Decompress,
-                    Header.CompressedSize,
-                    Header.UncompressedSize
-                );
+                return await ShrinkStream
+                    .CreateAsync(
+                        stream,
+                        CompressionMode.Decompress,
+                        Header.CompressedSize,
+                        Header.UncompressedSize,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Reduce1:
             {
