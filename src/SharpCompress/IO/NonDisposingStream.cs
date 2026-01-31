@@ -10,7 +10,7 @@ namespace SharpCompress.IO;
 /// This is useful when working with compression streams directly and you want
 /// to keep the base stream open after the compression stream is disposed.
 /// </summary>
-internal class NonDisposingStream : Stream
+internal class NonDisposingStream : Stream, IStreamStack
 {
     private readonly Stream _stream;
     private bool _isDisposed;
@@ -214,4 +214,11 @@ internal class NonDisposingStream : Stream
             throw new ObjectDisposedException(nameof(NonDisposingStream));
         }
     }
+
+    public int DefaultBufferSize { get; set; }
+    public Stream BaseStream() => _stream;
+
+    public int BufferSize { get; set; }
+    public int BufferPosition { get; set; }
+    public void SetPosition(long position) => throw new NotImplementedException();
 }

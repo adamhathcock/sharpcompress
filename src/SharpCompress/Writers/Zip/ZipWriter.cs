@@ -417,7 +417,7 @@ public partial class ZipWriter : AbstractWriter
 
         private Stream GetWriteStream(Stream writeStream)
         {
-            counting = new CountingStream(writeStream, leaveOpen: true);
+            counting = new CountingStream(new NonDisposingStream(writeStream));
             Stream output = counting;
             switch (zipCompressionMethod)
             {

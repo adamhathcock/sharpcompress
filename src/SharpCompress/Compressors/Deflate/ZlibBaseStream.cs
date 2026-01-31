@@ -594,7 +594,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             _stream.Flush();
         }
         //rewind the buffer
-        ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+        //unused: ((IStreamStack)this).Rewind(z.AvailableBytesIn);
         z.AvailableBytesIn = 0;
     }
 
@@ -608,7 +608,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
         //rewind the buffer
-        ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+        //unused: ((IStreamStack)this).Rewind(z.AvailableBytesIn);
         z.AvailableBytesIn = 0;
     }
 
@@ -984,7 +984,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+            //unused: ((IStreamStack)this).Rewind(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 
@@ -1176,7 +1176,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+            //unused: ((IStreamStack)this).Rewind(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 

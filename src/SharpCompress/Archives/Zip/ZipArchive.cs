@@ -35,7 +35,7 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
     protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream stream)
     {
         stream.LoadAllParts();
-        stream.Position = 0;
+        //stream.Position = 0;
 
         var streams = stream.Streams.ToList();
         var idx = 0;
@@ -156,7 +156,7 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;
-        ((IStreamStack)stream).StackSeek(0);
+        //stream.Position = 0;
         return ZipReader.OpenReader(stream, ReaderOptions, Entries);
     }
 

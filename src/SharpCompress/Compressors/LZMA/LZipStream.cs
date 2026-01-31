@@ -52,7 +52,7 @@ public sealed partial class LZipStream : Stream, IStreamStack
             var dSize = 104 * 1024;
             WriteHeaderSize(stream);
 
-            _countingWritableSubStream = new CountingStream(stream, leaveOpen: true);
+            _countingWritableSubStream = new CountingStream(new NonDisposingStream(stream));
             _stream = new Crc32Stream(
                 LzmaStream.Create(
                     new LzmaEncoderProperties(true, dSize),
