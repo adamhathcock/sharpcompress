@@ -5,13 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal sealed partial class MultiVolumeReadOnlyAsyncStream
-    : MultiVolumeReadOnlyStreamBase,
-        IStreamStack
+internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOnlyStreamBase
 {
     internal static async ValueTask<MultiVolumeReadOnlyAsyncStream> Create(
         IAsyncEnumerable<RarFilePart> parts

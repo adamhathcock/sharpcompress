@@ -2,15 +2,12 @@
 
 using System;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Crypto;
 
 [CLSCompliant(false)]
-public sealed class Crc32Stream : Stream, IStreamStack
+public sealed class Crc32Stream : Stream
 {
-    Stream IStreamStack.BaseStream() => stream;
-
     private readonly Stream stream;
     private readonly uint[] _table;
     private uint seed;

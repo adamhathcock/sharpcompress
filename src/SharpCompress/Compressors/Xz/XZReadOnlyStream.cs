@@ -1,13 +1,10 @@
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz;
 
-public abstract class XZReadOnlyStream : ReadOnlyStream, IStreamStack
+public abstract class XZReadOnlyStream : ReadOnlyStream
 {
-    Stream IStreamStack.BaseStream() => base.BaseStream;
-
     public XZReadOnlyStream(Stream stream)
     {
         BaseStream = stream;

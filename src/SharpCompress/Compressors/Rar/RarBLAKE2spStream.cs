@@ -5,14 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal partial class RarBLAKE2spStream : RarStream, IStreamStack
+internal partial class RarBLAKE2spStream : RarStream
 {
-    Stream IStreamStack.BaseStream() => readStream;
-
     private readonly MultiVolumeReadOnlyStreamBase readStream;
     private readonly bool disableCRCCheck;
 

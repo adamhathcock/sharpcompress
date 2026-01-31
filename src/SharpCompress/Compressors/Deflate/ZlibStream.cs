@@ -30,14 +30,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
-public partial class ZlibStream : Stream, IStreamStack
+public partial class ZlibStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _baseStream;
-
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;
 

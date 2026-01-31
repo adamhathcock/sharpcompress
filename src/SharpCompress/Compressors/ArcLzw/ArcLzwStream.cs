@@ -4,12 +4,9 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.Compressors.Squeezed;
-using SharpCompress.IO;
 
-public partial class ArcLzwStream : Stream, IStreamStack
+public partial class ArcLzwStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _stream;
-
     private Stream _stream;
     private bool _processed;
     private bool _useCrunched;

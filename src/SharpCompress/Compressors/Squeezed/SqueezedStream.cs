@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using SharpCompress.Compressors.RLE90;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Squeezed
 {
     [CLSCompliant(true)]
-    public class SqueezeStream : Stream, IStreamStack
+    public class SqueezeStream : Stream
     {
-        Stream IStreamStack.BaseStream() => _stream;
-
         private readonly Stream _stream;
         private readonly int _compressedSize;
         private const int NUMVALS = 257;

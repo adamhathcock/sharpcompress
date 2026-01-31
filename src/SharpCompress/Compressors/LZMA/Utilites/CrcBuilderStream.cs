@@ -2,14 +2,11 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA.Utilites;
 
-internal partial class CrcBuilderStream : Stream, IStreamStack
+internal partial class CrcBuilderStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _mTarget;
-
     private readonly Stream _mTarget;
     private uint _mCrc;
     private bool _mFinished;

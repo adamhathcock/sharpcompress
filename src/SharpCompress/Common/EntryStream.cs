@@ -8,10 +8,8 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public partial class EntryStream : Stream, IStreamStack
+public partial class EntryStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _stream;
-
     private readonly IReader _reader;
     private readonly Stream _stream;
     private bool _completed;

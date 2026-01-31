@@ -2,19 +2,12 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Test.Mocks;
 
-public class AsyncOnlyStream : Stream, IStreamStack
+public class AsyncOnlyStream : Stream
 {
     private readonly Stream _stream;
-
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
-    Stream IStreamStack.BaseStream() => _stream;
 
     public AsyncOnlyStream(Stream stream)
     {

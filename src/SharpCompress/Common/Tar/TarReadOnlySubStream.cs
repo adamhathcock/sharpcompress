@@ -1,14 +1,11 @@
 using System;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
-internal class TarReadOnlySubStream : Stream, IStreamStack
+internal class TarReadOnlySubStream : Stream
 {
     private readonly Stream _stream;
-
-    Stream IStreamStack.BaseStream() => _stream;
 
     private bool _isDisposed;
     private long _amountRead;

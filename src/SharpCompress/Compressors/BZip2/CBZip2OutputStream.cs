@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
-
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
  *
@@ -41,10 +39,8 @@ namespace SharpCompress.Compressors.BZip2;
   * start of the BZIP2 stream to make it compatible with other PGP programs.
   */
 
-internal sealed class CBZip2OutputStream : Stream, IStreamStack
+internal sealed class CBZip2OutputStream : Stream
 {
-    Stream IStreamStack.BaseStream() => bsStream;
-
     private const int SETMASK = (1 << 21);
     private const int CLEARMASK = (~SETMASK);
     private const int GREATER_ICOST = 15;

@@ -4,14 +4,11 @@ using System;
 using System.Buffers;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal partial class RarStream : Stream, IStreamStack
+internal partial class RarStream : Stream
 {
-    Stream IStreamStack.BaseStream() => readStream;
-
     private readonly IRarUnpack unpack;
     private readonly FileHeader fileHeader;
     private readonly Stream readStream;

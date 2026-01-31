@@ -5,7 +5,6 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -41,10 +40,8 @@ namespace SharpCompress.Compressors.BZip2;
   * start of the BZIP2 stream to make it compatible with other PGP programs.
   */
 
-internal partial class CBZip2InputStream : Stream, IStreamStack
+internal partial class CBZip2InputStream : Stream
 {
-    Stream IStreamStack.BaseStream() => bsStream;
-
     private static void Cadvise()
     {
         //System.out.Println("CRC Error");

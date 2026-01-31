@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.RLE90
 {
@@ -8,10 +7,8 @@ namespace SharpCompress.Compressors.RLE90
     /// Real-time streaming RLE90 decompression stream.
     /// Decompresses bytes on demand without buffering the entire file in memory.
     /// </summary>
-    public class RunLength90Stream : Stream, IStreamStack
+    public class RunLength90Stream : Stream
     {
-        Stream IStreamStack.BaseStream() => _stream;
-
         private readonly Stream _stream;
         private readonly int _compressedSize;
         private int _bytesReadFromSource;

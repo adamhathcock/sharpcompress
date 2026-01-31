@@ -32,14 +32,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
-public partial class GZipStream : Stream, IStreamStack
+public partial class GZipStream : Stream
 {
-    Stream IStreamStack.BaseStream() => BaseStream;
-
     internal static readonly DateTime UNIX_EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private string? _comment;

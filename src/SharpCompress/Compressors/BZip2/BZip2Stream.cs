@@ -2,14 +2,11 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2;
 
-public sealed partial class BZip2Stream : Stream, IStreamStack
+public sealed partial class BZip2Stream : Stream
 {
-    Stream IStreamStack.BaseStream() => stream;
-
     private Stream stream = default!;
     private bool isDisposed;
     private bool leaveOpen;

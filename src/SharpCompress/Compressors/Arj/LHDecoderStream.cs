@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Arj
 {
     [CLSCompliant(true)]
-    public sealed partial class LHDecoderStream : Stream, IStreamStack
+    public sealed partial class LHDecoderStream : Stream
     {
-        Stream IStreamStack.BaseStream() => _stream;
-
         private readonly BitReader _bitReader;
         private readonly Stream _stream;
 

@@ -10,14 +10,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate64;
 
-public sealed partial class Deflate64Stream : Stream, IStreamStack
+public sealed partial class Deflate64Stream : Stream
 {
-    Stream IStreamStack.BaseStream() => _stream;
-
     private const int DEFAULT_BUFFER_SIZE = 8192;
 
     private Stream _stream;

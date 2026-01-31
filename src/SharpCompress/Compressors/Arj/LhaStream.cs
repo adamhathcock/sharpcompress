@@ -2,12 +2,11 @@ using System;
 using System.Data;
 using System.IO;
 using System.Linq;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Arj
 {
     [CLSCompliant(true)]
-    public sealed class LhaStream<C> : Stream, IStreamStack
+    public sealed class LhaStream<C> : Stream
         where C : ILhaDecoderConfig, new()
     {
         private readonly BitReader _bitReader;
@@ -25,8 +24,6 @@ namespace SharpCompress.Compressors.Arj
 
         private readonly int _originalSize;
         private int _producedBytes = 0;
-
-        Stream IStreamStack.BaseStream() => _stream;
 
         public LhaStream(Stream compressedStream, int originalSize)
         {

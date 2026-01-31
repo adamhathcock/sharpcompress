@@ -7,14 +7,11 @@ using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 using SharpCompress.Compressors.PPMd.H;
 using SharpCompress.Compressors.PPMd.I1;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.PPMd;
 
-public class PpmdStream : Stream, IStreamStack
+public class PpmdStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _stream;
-
     private readonly PpmdProperties _properties;
     private readonly Stream _stream;
     private readonly bool _compress;

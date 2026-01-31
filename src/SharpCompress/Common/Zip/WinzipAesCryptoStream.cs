@@ -2,14 +2,11 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
-using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
-internal class WinzipAesCryptoStream : Stream, IStreamStack
+internal class WinzipAesCryptoStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _stream;
-
     private const int BLOCK_SIZE_IN_BYTES = 16;
     private readonly SymmetricAlgorithm _cipher;
     private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];

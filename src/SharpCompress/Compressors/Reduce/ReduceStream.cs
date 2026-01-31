@@ -1,13 +1,10 @@
 using System;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Reduce;
 
-public partial class ReduceStream : Stream, IStreamStack
+public partial class ReduceStream : Stream
 {
-    Stream IStreamStack.BaseStream() => inStream;
-
     private readonly long unCompressedSize;
     private readonly long compressedSize;
     private readonly Stream inStream;

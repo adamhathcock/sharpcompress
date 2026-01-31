@@ -34,7 +34,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Tar.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
@@ -45,10 +44,8 @@ internal enum ZlibStreamFlavor
     GZIP = 1952,
 }
 
-internal class ZlibBaseStream : Stream, IStreamStack
+internal class ZlibBaseStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _stream;
-
     protected internal ZlibCodec _z; // deferred init... new ZlibCodec();
 
     protected internal StreamMode _streamMode = StreamMode.Undefined;

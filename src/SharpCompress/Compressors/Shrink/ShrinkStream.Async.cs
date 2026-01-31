@@ -2,11 +2,10 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Shrink;
 
-internal partial class ShrinkStream : Stream, IStreamStack
+internal partial class ShrinkStream : Stream
 {
     internal static async ValueTask<ShrinkStream> CreateAsync(
         Stream stream,

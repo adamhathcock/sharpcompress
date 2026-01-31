@@ -81,6 +81,30 @@ public class ZipReaderTests : ReaderTests
     }
 
     [Fact]
+    public void Zip_Deflate_Streamed2_Skip()
+    {
+        using Stream stream = new ForwardOnlyStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd-.zip"))
+        );
+        using var reader = ReaderFactory.OpenReader(stream);
+        var x = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                x++;
+                if (x % 2 == 0)
+                {
+                    reader.WriteEntryToDirectory(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                    );
+                }
+            }
+        }
+    }
+
+    [Fact]
     public void Zip_Deflate_Read() => Read("Zip.deflate.zip", CompressionType.Deflate);
 
     [Fact]

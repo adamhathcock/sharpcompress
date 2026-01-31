@@ -3,16 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal sealed partial class MultiVolumeReadOnlyStream
-    : MultiVolumeReadOnlyStreamBase,
-        IStreamStack
+internal sealed partial class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStreamBase
 {
-    Stream IStreamStack.BaseStream() => currentStream.NotNull();
-
     private long currentPosition;
     private long maxPosition;
 

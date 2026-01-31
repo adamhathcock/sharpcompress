@@ -84,6 +84,30 @@ public class ZipReaderAsyncTests : ReaderTests
     }
 
     [Fact]
+    public async ValueTask Zip_Deflate_Streamed2_Skip_Async()
+    {
+        using Stream stream = new ForwardOnlyStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd-.zip"))
+        );
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        var x = 0;
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                x++;
+                if (x % 2 == 0)
+                {
+                    await reader.WriteEntryToDirectoryAsync(
+                        SCRATCH_FILES_PATH,
+                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                    );
+                }
+            }
+        }
+    }
+
+    [Fact]
     public async ValueTask Zip_Deflate_Read_Async() =>
         await ReadAsync("Zip.deflate.zip", CompressionType.Deflate);
 

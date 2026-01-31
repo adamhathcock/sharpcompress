@@ -1,14 +1,11 @@
 using System;
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Explode;
 
-public partial class ExplodeStream : Stream, IStreamStack
+public partial class ExplodeStream : Stream
 {
-    Stream IStreamStack.BaseStream() => inStream;
-
     private const int INVALID_CODE = 99;
     private const int WSIZE = 64 * 1024;
 

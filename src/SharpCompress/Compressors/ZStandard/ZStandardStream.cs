@@ -5,15 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ZStandard;
 
-internal partial class ZStandardStream : DecompressionStream, IStreamStack
+internal partial class ZStandardStream : DecompressionStream
 {
     private readonly Stream stream;
-
-    Stream IStreamStack.BaseStream() => stream;
 
     internal static bool IsZStandard(Stream stream)
     {

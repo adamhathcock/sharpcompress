@@ -1,14 +1,11 @@
 using System;
 using System.IO;
 using SharpCompress;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Shrink;
 
-internal partial class ShrinkStream : Stream, IStreamStack
+internal partial class ShrinkStream : Stream
 {
-    Stream IStreamStack.BaseStream() => inStream;
-
     private Stream inStream;
     private CompressionMode _compressionMode;
 

@@ -4,14 +4,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.LZ;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
-public partial class LzmaStream : Stream, IStreamStack
+public partial class LzmaStream : Stream
 {
-    Stream IStreamStack.BaseStream() => _inputStream!;
-
     private readonly Stream? _inputStream;
     private readonly long _inputSize;
     private readonly long _outputSize;
