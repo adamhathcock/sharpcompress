@@ -4,7 +4,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Reduce;
 
-public class ReduceStream : Stream, IStreamStack
+public partial class ReduceStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
@@ -44,7 +44,7 @@ public class ReduceStream : Stream, IStreamStack
     private int length;
     private int distance;
 
-    public ReduceStream(Stream inStr, long compsize, long unCompSize, int factor)
+    private ReduceStream(Stream inStr, long compsize, long unCompSize, int factor)
     {
         inStream = inStr;
         compressedSize = compsize;
@@ -69,7 +69,13 @@ public class ReduceStream : Stream, IStreamStack
         outByte = 0;
 
         LoadBitLengthTable();
-        LoadNextByteTable();
+    }
+
+    public static ReduceStream Create(Stream inStr, long compsize, long unCompSize, int factor)
+    {
+        var stream = new ReduceStream(inStr, compsize, unCompSize, factor);
+        stream.LoadNextByteTable();
+        return stream;
     }
 
     protected override void Dispose(bool disposing)

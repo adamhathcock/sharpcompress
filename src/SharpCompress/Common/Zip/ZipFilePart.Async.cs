@@ -148,19 +148,43 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.Reduce1:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 1);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    1,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Reduce2:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 2);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    2,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Reduce3:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 3);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    3,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Reduce4:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 4);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    4,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Explode:
             {

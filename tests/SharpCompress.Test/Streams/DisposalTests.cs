@@ -174,7 +174,7 @@ public class DisposalTests
     public void ReduceStream_Disposal()
     {
         // ReduceStream does not dispose inner stream
-        VerifyNeverDispose(stream => new ReduceStream(stream, 0, 0, 1));
+        VerifyNeverDispose(stream => ReduceStream.Create(stream, 0, 0, 1));
     }
 
     [Fact]
