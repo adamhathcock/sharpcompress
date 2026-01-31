@@ -222,8 +222,26 @@ public partial class SourceStream : Stream, IStreamStack
             SetStream(0);
             while (_prevSize + Current.Length < pos)
             {
-                _prevSize += Current.Length;
-                SetStream(_stream + 1);
+                var currentLength = Current.Length;
+                var currentStreamIndex = _stream;
+                _prevSize += currentLength;
+
+                if (!SetStream(_stream + 1))
+                {
+                    // No more streams available, cannot seek to requested position
+                    throw new InvalidOperationException(
+                        $"Cannot seek to position {pos}. End of stream reached at position {_prevSize}."
+                    );
+                }
+
+                // Check if we're making progress (stream changed or has non-zero length)
+                if (_stream == currentStreamIndex && currentLength == 0)
+                {
+                    // Stream didn't change and has zero length - infinite loop detected
+                    throw new InvalidOperationException(
+                        $"Cannot seek to position {pos}. Stream has zero length and no next stream available."
+                    );
+                }
             }
         }
 
