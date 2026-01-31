@@ -223,7 +223,6 @@ public partial class SourceStream : Stream, IStreamStack
             while (_prevSize + Current.Length < pos)
             {
                 var currentLength = Current.Length;
-                var currentStreamIndex = _stream;
                 _prevSize += currentLength;
 
                 if (!SetStream(_stream + 1))
@@ -234,12 +233,13 @@ public partial class SourceStream : Stream, IStreamStack
                     );
                 }
 
-                // Check if we're making progress (stream changed or has non-zero length)
-                if (_stream == currentStreamIndex && currentLength == 0)
+                // Safety check: if we have a zero-length stream and we're still not
+                // making progress toward the target position, we're in an invalid state
+                if (currentLength == 0 && Current.Length == 0)
                 {
-                    // Stream didn't change and has zero length - infinite loop detected
+                    // Both old and new stream have zero length - cannot make progress
                     throw new InvalidOperationException(
-                        $"Cannot seek to position {pos}. Stream has zero length and no next stream available."
+                        $"Cannot seek to position {pos}. Encountered zero-length streams at position {_prevSize}."
                     );
                 }
             }
