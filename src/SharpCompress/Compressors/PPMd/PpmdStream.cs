@@ -13,7 +13,6 @@ namespace SharpCompress.Compressors.PPMd;
 
 public class PpmdStream : Stream, IStreamStack
 {
-
     Stream IStreamStack.BaseStream() => _stream;
 
     private readonly PpmdProperties _properties;

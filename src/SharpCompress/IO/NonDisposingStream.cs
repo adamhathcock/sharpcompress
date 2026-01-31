@@ -216,9 +216,11 @@ internal class NonDisposingStream : Stream, IStreamStack
     }
 
     public int DefaultBufferSize { get; set; }
+
     public Stream BaseStream() => _stream;
 
     public int BufferSize { get; set; }
     public int BufferPosition { get; set; }
+
     public void SetPosition(long position) => throw new NotImplementedException();
 }

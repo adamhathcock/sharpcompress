@@ -41,8 +41,7 @@ internal class CountingStream : Stream
     public override int Read(byte[] buffer, int offset, int count) =>
         _stream.Read(buffer, offset, count);
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        _stream.Seek(offset, origin);
+    public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
 
     public override void SetLength(long value) => _stream.SetLength(value);
 

@@ -8,7 +8,6 @@ namespace SharpCompress.Compressors.LZMA.Utilites;
 
 internal partial class CrcBuilderStream : Stream, IStreamStack
 {
-
     Stream IStreamStack.BaseStream() => _mTarget;
 
     private readonly Stream _mTarget;

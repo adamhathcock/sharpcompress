@@ -23,7 +23,7 @@ internal partial class ReadOnlySubStream : Stream, IStreamStack
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         _leaveOpen = leaveOpen;
-        
+
         if (origin != null && stream.Position != origin.Value)
         {
             stream.Position = origin.Value;

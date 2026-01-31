@@ -10,11 +10,9 @@ namespace SharpCompress.IO
 {
     public interface IStreamStack
     {
-
         /// <summary>
         /// Returns the immediate underlying stream in the stack.
         /// </summary>
         Stream BaseStream();
-
     }
 }

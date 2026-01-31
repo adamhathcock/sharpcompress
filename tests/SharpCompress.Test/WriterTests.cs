@@ -43,7 +43,10 @@ public class WriterTests : TestBase
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var reader = ReaderFactory.OpenReader(new NonDisposingStream(stream), readerOptions);
+            using var reader = ReaderFactory.OpenReader(
+                new NonDisposingStream(stream),
+                readerOptions
+            );
             reader.WriteAllToDirectory(
                 SCRATCH_FILES_PATH,
                 new ExtractionOptions { ExtractFullPath = true }

@@ -10,7 +10,6 @@ namespace SharpCompress.Common;
 
 public partial class EntryStream : Stream, IStreamStack
 {
-
     Stream IStreamStack.BaseStream() => _stream;
 
     private readonly IReader _reader;

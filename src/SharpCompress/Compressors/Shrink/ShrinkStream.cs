@@ -7,7 +7,6 @@ namespace SharpCompress.Compressors.Shrink;
 
 internal partial class ShrinkStream : Stream, IStreamStack
 {
-
     Stream IStreamStack.BaseStream() => inStream;
 
     private Stream inStream;

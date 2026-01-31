@@ -8,9 +8,7 @@ using SharpCompress.IO;
 
 public partial class ArcLzwStream : Stream, IStreamStack
 {
-
     Stream IStreamStack.BaseStream() => _stream;
-
 
     private Stream _stream;
     private bool _processed;
