@@ -72,7 +72,9 @@ internal sealed partial class StreamingZipHeaderFactory
         )
         {
             _headerFactory = headerFactory;
-            _rewindableStream = new RewindableStream(stream);
+            // Use EnsureSeekable to avoid double-wrapping if stream is already a RewindableStream,
+            // and to preserve seekability for DataDescriptorStream which needs to seek backward
+            _rewindableStream = RewindableStream.EnsureSeekable(stream);
             _reader = new AsyncBinaryReader(_rewindableStream, leaveOpen: true);
             _cancellationToken = cancellationToken;
         }
@@ -281,14 +283,29 @@ internal sealed partial class StreamingZipHeaderFactory
                     } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
                     else if (localHeader.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                     {
-                        _rewindableStream.StartRecording();
-                        var nextHeaderBytes = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
-                        _rewindableStream.Rewind(true);
-
-                        // Check if next data is PostDataDescriptor, streamed file with 0 length
-                        header.HasData = !IsHeader(nextHeaderBytes);
+                        // Peek ahead to check if next data is a header or file data.
+                        // For SeekableRewindableStream, use direct position save/restore to avoid
+                        // interfering with any recording state set by the caller (e.g., ReaderFactory).
+                        // Plain RewindableStream can use StartRecording/Rewind safely since it was
+                        // created fresh by EnsureSeekable and isn't shared with the caller.
+                        if (_rewindableStream is SeekableRewindableStream)
+                        {
+                            var savedPosition = _rewindableStream.Position;
+                            var nextHeaderBytes = await _reader
+                                .ReadUInt32Async(_cancellationToken)
+                                .ConfigureAwait(false);
+                            _rewindableStream.Position = savedPosition;
+                            header.HasData = !IsHeader(nextHeaderBytes);
+                        }
+                        else
+                        {
+                            _rewindableStream.StartRecording();
+                            var nextHeaderBytes = await _reader
+                                .ReadUInt32Async(_cancellationToken)
+                                .ConfigureAwait(false);
+                            _rewindableStream.Rewind(true);
+                            header.HasData = !IsHeader(nextHeaderBytes);
+                        }
                     }
                     else // We are not streaming and compressed size is 0, we have no data
                     {
