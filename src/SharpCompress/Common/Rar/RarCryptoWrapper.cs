@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.Rar;
@@ -81,22 +82,24 @@ internal sealed class RarCryptoWrapper : Stream
             var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
             byte[] cipherText = new byte[16];
 
-            for (var i = 0; i < alignedSize / 16; i++)
+            try
             {
-                var bytesRead = await _actualStream
-                    .ReadAsync(cipherText, 0, 16, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (bytesRead == 0)
+                for (var i = 0; i < alignedSize / 16; i++)
                 {
-                    break;
-                }
+                    await _actualStream
+                        .ReadExactAsync(cipherText, 0, 16, cancellationToken)
+                        .ConfigureAwait(false);
 
-                var readBytes = _rijndael.ProcessBlock(cipherText.AsSpan(0, bytesRead));
-                foreach (var readByte in readBytes)
-                {
-                    _data.Enqueue(readByte);
+                    var readBytes = _rijndael.ProcessBlock(cipherText);
+                    foreach (var readByte in readBytes)
+                    {
+                        _data.Enqueue(readByte);
+                    }
                 }
+            }
+            catch (EndOfStreamException e)
+            {
+                throw new InvalidFormatException("Unexpected end of encrypted stream", e);
             }
         }
 
