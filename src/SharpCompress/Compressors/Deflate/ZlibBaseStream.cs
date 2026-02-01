@@ -34,6 +34,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
@@ -44,8 +45,10 @@ internal enum ZlibStreamFlavor
     GZIP = 1952,
 }
 
-internal class ZlibBaseStream : Stream
+internal class ZlibBaseStream : Stream, IStreamStack
 {
+    Stream IStreamStack.BaseStream() => _stream;
+
     protected internal ZlibCodec _z; // deferred init... new ZlibCodec();
 
     protected internal StreamMode _streamMode = StreamMode.Undefined;
@@ -590,8 +593,24 @@ internal class ZlibBaseStream : Stream
         {
             _stream.Flush();
         }
-        //rewind the buffer
-        //unused: ((IStreamStack)this).Rewind(z.AvailableBytesIn);
+        else if (_streamMode == StreamMode.Reader && z.AvailableBytesIn > 0)
+        {
+            // Rewind the underlying stream by the number of unconsumed bytes in the buffer
+            // This handles the case where the decompressor over-read past the end of the entry
+            if (_stream is IStreamStack stack)
+            {
+                var root = stack.GetRootStream();
+                if (root.CanSeek)
+                {
+                    // Try to seek backward on the root stream; ignore if not supported
+                    try
+                    {
+                        root.Seek(-z.AvailableBytesIn, SeekOrigin.Current);
+                    }
+                    catch (NotSupportedException) { }
+                }
+            }
+        }
         z.AvailableBytesIn = 0;
     }
 
@@ -604,8 +623,24 @@ internal class ZlibBaseStream : Stream
         {
             await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
-        //rewind the buffer
-        //unused: ((IStreamStack)this).Rewind(z.AvailableBytesIn);
+        else if (_streamMode == StreamMode.Reader && z.AvailableBytesIn > 0)
+        {
+            // Rewind the underlying stream by the number of unconsumed bytes in the buffer
+            // This handles the case where the decompressor over-read past the end of the entry
+            if (_stream is IStreamStack stack)
+            {
+                var root = stack.GetRootStream();
+                if (root.CanSeek)
+                {
+                    // Try to seek backward on the root stream; ignore if not supported
+                    try
+                    {
+                        root.Seek(-z.AvailableBytesIn, SeekOrigin.Current);
+                    }
+                    catch (NotSupportedException) { }
+                }
+            }
+        }
         z.AvailableBytesIn = 0;
     }
 

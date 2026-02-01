@@ -48,11 +48,17 @@ public partial class EntryStream : Stream
         //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
         if (_stream is IStreamStack ss)
         {
-            if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
+            if (
+                ss.GetStream<SharpCompress.Compressors.Deflate.DeflateStream>()
+                is SharpCompress.Compressors.Deflate.DeflateStream deflateStream
+            )
             {
                 deflateStream.Flush(); //Deflate over reads. Knock it back
             }
-            else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
+            else if (
+                ss.GetStream<SharpCompress.Compressors.LZMA.LzmaStream>()
+                is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream
+            )
             {
                 lzmaStream.Flush(); //Lzma over reads. Knock it back
             }

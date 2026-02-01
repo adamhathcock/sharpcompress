@@ -29,10 +29,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
 
-public partial class DeflateStream : Stream
+public partial class DeflateStream : Stream, IStreamStack
 {
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;
@@ -268,6 +269,8 @@ public partial class DeflateStream : Stream
             base.Dispose(disposing);
         }
     }
+
+    Stream IStreamStack.BaseStream() => _baseStream;
 
     /// <summary>
     /// Flush the stream.

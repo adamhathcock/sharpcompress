@@ -105,20 +105,22 @@ internal partial class RewindableStream : Stream
             }
             return streamPosition;
         }
-        set
-        {
-            long bufferStart = streamPosition - bufferStream.Length;
-            long bufferEnd = streamPosition;
+        set => SeekToPosition(value);
+    }
 
-            if (value >= bufferStart && value < bufferEnd)
-            {
-                isRewound = true;
-                bufferStream.Position = value - bufferStart;
-            }
-            else
-            {
-                throw new NotSupportedException("Cannot seek outside buffered region.");
-            }
+    private void SeekToPosition(long targetPosition)
+    {
+        long bufferStart = streamPosition - bufferStream.Length;
+        long bufferEnd = streamPosition;
+
+        if (targetPosition >= bufferStart && targetPosition <= bufferEnd)
+        {
+            isRewound = true;
+            bufferStream.Position = targetPosition - bufferStart;
+        }
+        else
+        {
+            throw new NotSupportedException("Cannot seek outside buffered region.");
         }
     }
 
@@ -159,7 +161,19 @@ internal partial class RewindableStream : Stream
         return read;
     }
 
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        long targetPosition = origin switch
+        {
+            SeekOrigin.Begin => offset,
+            SeekOrigin.Current => Position + offset,
+            SeekOrigin.End => throw new NotSupportedException("Seeking from end is not supported."),
+            _ => throw new ArgumentOutOfRangeException(nameof(origin)),
+        };
+
+        SeekToPosition(targetPosition);
+        return targetPosition;
+    }
 
     public override void SetLength(long value) => throw new NotSupportedException();
 
