@@ -42,6 +42,7 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
     {
         if (_volume == null)
         {
+            //this resets the stream
             _volume = new AceVolume(stream, Options, 0);
             ValidateArchive(_volume);
         }
@@ -79,6 +80,13 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
 
     protected override async IAsyncEnumerable<AceEntry> GetEntriesAsync(Stream stream)
     {
+        if (_volume == null)
+        {
+            //this resets the stream
+            _volume = new AceVolume(stream, Options, 0);
+            ValidateArchive(_volume);
+        }
+
         var mainHeaderReader = new AceMainHeader(_archiveEncoding);
         var mainHeader = await mainHeaderReader.ReadAsync(stream);
         if (mainHeader == null)
@@ -89,12 +97,6 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
         if (mainHeader?.IsMultiVolume == true)
         {
             throw new MultiVolumeExtractionException("Multi volumes are currently not supported");
-        }
-
-        if (_volume == null)
-        {
-            _volume = new AceVolume(stream, Options, 0);
-            ValidateArchive(_volume);
         }
 
         var localHeaderReader = new AceFileHeader(_archiveEncoding);

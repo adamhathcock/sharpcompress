@@ -19,7 +19,7 @@ public abstract partial class AceHeader
     {
         // Read header CRC (2 bytes) and header size (2 bytes)
         var headerBytes = new byte[4];
-        if (await stream.ReadAsync(headerBytes, 0, 4, cancellationToken) != 4)
+        if (!await stream.ReadFullyAsync(headerBytes, 0, 4, cancellationToken))
         {
             return Array.Empty<byte>();
         }
@@ -33,7 +33,7 @@ public abstract partial class AceHeader
 
         // Read the header data
         var body = new byte[HeaderSize];
-        if (await stream.ReadAsync(body, 0, HeaderSize, cancellationToken) != HeaderSize)
+        if (!await stream.ReadFullyAsync(body, 0, HeaderSize, cancellationToken))
         {
             return Array.Empty<byte>();
         }
@@ -59,7 +59,7 @@ public abstract partial class AceHeader
     )
     {
         var bytes = new byte[14];
-        if (await stream.ReadAsync(bytes, 0, 14, cancellationToken) != 14)
+        if (!await stream.ReadFullyAsync(bytes, 0, 14, cancellationToken))
         {
             return false;
         }
