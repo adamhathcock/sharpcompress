@@ -717,4 +717,38 @@ public class RarArchiveTests : ArchiveTests
         // Verify the exception message matches our expectation
         Assert.Contains("unpacked file size does not match header", exception.Message);
     }
+
+    /// <summary>
+    /// Test case for malformed RAR archives that previously caused infinite loops.
+    /// This test verifies that attempting to read entries from a potentially malformed
+    /// 512-byte RAR archive throws an InvalidOperationException instead of looping infinitely.
+    /// See: https://github.com/adamhathcock/sharpcompress/issues/1176
+    /// </summary>
+    [Fact]
+    public void Rar_MalformedArchive_NoInfiniteLoop()
+    {
+        var testFile = "Rar.malformed_512byte.rar";
+        var readerOptions = new ReaderOptions { LookForHeader = true };
+
+        // This should throw InvalidOperationException, not hang in an infinite loop
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+        {
+            using var fileStream = File.Open(
+                Path.Combine(TEST_ARCHIVES_PATH, testFile),
+                FileMode.Open
+            );
+            using IRarArchive rarFile = RarArchive.OpenArchive(fileStream, readerOptions);
+            using IArchive archive = rarFile;
+
+            // Attempting to enumerate entries should throw an exception
+            // instead of looping infinitely
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                // This line should not be reached due to the exception
+            }
+        });
+
+        // Verify that the exception is related to seeking beyond available data
+        Assert.Contains("Cannot seek to position", exception.Message);
+    }
 }
