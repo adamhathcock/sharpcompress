@@ -737,8 +737,7 @@ public class RarArchiveTests : ArchiveTests
                 Path.Combine(TEST_ARCHIVES_PATH, testFile),
                 FileMode.Open
             );
-            using IRarArchive rarFile = RarArchive.OpenArchive(fileStream, readerOptions);
-            using IArchive archive = rarFile;
+            using var archive = RarArchive.Open(fileStream, readerOptions);
 
             // Attempting to enumerate entries should throw an exception
             // instead of looping infinitely
