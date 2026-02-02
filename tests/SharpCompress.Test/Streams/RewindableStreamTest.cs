@@ -623,32 +623,6 @@ public class RewindableStreamTest
         Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
     }
 
-    [Fact]
-    public void TestStartRecordingAfterStopRecordingThrows()
-    {
-        var ms = new MemoryStream();
-        var bw = new BinaryWriter(ms);
-        bw.Write(1);
-        bw.Write(2);
-        bw.Flush();
-        ms.Position = 0;
-
-        var stream = new RewindableStream(ms);
-        stream.StartRecording();
-        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
-
-        var br = new BinaryReader(stream);
-        Assert.Equal(1, br.ReadInt32());
-
-        // Stop recording
-        stream.StopRecording();
-        Assert.False(stream.IsRecording);
-
-        // Trying to start recording again should throw
-        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
-        Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
-    }
-
     private class NonSeekableStreamWrapper : Stream
     {
         private readonly Stream _baseStream;

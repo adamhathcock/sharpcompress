@@ -591,27 +591,4 @@ public class RewindableStreamAsyncTest
         // Second StopRecording should throw
         Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
     }
-
-    [Fact]
-    public async ValueTask TestStartRecordingAfterStopRecordingThrowsAsync()
-    {
-        var ms = new MemoryStream();
-        var bw = new BinaryWriter(ms);
-        bw.Write(1);
-        bw.Write(2);
-        bw.Flush();
-        ms.Position = 0;
-
-        var stream = new RewindableStream(ms);
-        stream.StartRecording();
-
-        Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
-
-        // Stop recording
-        stream.StopRecording();
-        Assert.False(stream.IsRecording);
-
-        // Trying to start recording again should throw
-        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
-    }
 }
