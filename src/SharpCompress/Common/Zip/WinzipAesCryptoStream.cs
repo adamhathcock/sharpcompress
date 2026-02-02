@@ -2,10 +2,11 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip;
 
-internal class WinzipAesCryptoStream : Stream
+internal partial class WinzipAesCryptoStream : Stream
 {
     private const int BLOCK_SIZE_IN_BYTES = 16;
     private readonly SymmetricAlgorithm _cipher;
@@ -73,9 +74,17 @@ internal class WinzipAesCryptoStream : Stream
 #endif
         if (disposing)
         {
-            //read out last 10 auth bytes
-            Span<byte> ten = stackalloc byte[10];
-            _stream.ReadFully(ten);
+            // Read out last 10 auth bytes - catch exceptions for async-only streams
+            try
+            {
+                Span<byte> ten = stackalloc byte[10];
+                _stream.ReadFully(ten);
+            }
+            catch (NotSupportedException)
+            {
+                // Stream may be async-only, auth bytes will be skipped
+                // This is acceptable when the entire stream has been read
+            }
             _stream.Dispose();
         }
     }

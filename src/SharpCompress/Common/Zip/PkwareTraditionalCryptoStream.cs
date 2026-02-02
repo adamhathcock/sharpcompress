@@ -9,7 +9,7 @@ internal enum CryptoMode
     Decrypt,
 }
 
-internal class PkwareTraditionalCryptoStream : Stream
+internal partial class PkwareTraditionalCryptoStream : Stream
 {
     private readonly PkwareTraditionalEncryptionData _encryptor;
     private readonly CryptoMode _mode;
