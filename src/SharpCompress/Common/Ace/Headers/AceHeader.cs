@@ -66,7 +66,7 @@ namespace SharpCompress.Common.Ace.Headers
         {
             // Read header CRC (2 bytes) and header size (2 bytes)
             var headerBytes = new byte[4];
-            if (stream.Read(headerBytes, 0, 4) != 4)
+            if (!stream.ReadFully(headerBytes))
             {
                 return Array.Empty<byte>();
             }
@@ -80,7 +80,7 @@ namespace SharpCompress.Common.Ace.Headers
 
             // Read the header data
             var body = new byte[HeaderSize];
-            if (stream.Read(body, 0, HeaderSize) != HeaderSize)
+            if (!stream.ReadFully(body))
             {
                 return Array.Empty<byte>();
             }

@@ -28,9 +28,6 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
         _archiveEncoding = Options.ArchiveEncoding;
     }
 
-    private AceReader(Stream stream, ReaderOptions options)
-        : this(options) { }
-
     /// <summary>
     /// Derived class must create or manage the Volume itself.
     /// AbstractReader.Volume is get-only, so it cannot be set here.
@@ -43,6 +40,12 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
 
     protected override IEnumerable<AceEntry> GetEntries(Stream stream)
     {
+        if (_volume == null)
+        {
+            _volume = new AceVolume(stream, Options, 0);
+            ValidateArchive(_volume);
+        }
+
         var mainHeaderReader = new AceMainHeader(_archiveEncoding);
         var mainHeader = mainHeaderReader.Read(stream);
         if (mainHeader == null)
@@ -50,15 +53,9 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
             yield break;
         }
 
-        if (mainHeader?.IsMultiVolume == true)
+        if (mainHeader.IsMultiVolume)
         {
             throw new MultiVolumeExtractionException("Multi volumes are currently not supported");
-        }
-
-        if (_volume == null)
-        {
-            _volume = new AceVolume(stream, Options, 0);
-            ValidateArchive(_volume);
         }
 
         var localHeaderReader = new AceFileHeader(_archiveEncoding);
