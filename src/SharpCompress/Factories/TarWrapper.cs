@@ -20,6 +20,7 @@ public class TarWrapper(
     Func<Stream, bool> canHandle,
     Func<Stream, CancellationToken, ValueTask<bool>> canHandleAsync,
     Func<Stream, Stream> createStream,
+    Func<Stream, CancellationToken, ValueTask<Stream>> createStreamAsync,
     IEnumerable<string> knownExtensions,
     bool wrapInSharpCompressStream = true
 )
@@ -30,6 +31,8 @@ public class TarWrapper(
     public bool WrapInSharpCompressStream { get; } = wrapInSharpCompressStream;
 
     public Func<Stream, Stream> CreateStream { get; } = createStream;
+    public Func<Stream, CancellationToken, ValueTask<Stream>> CreateStreamAsync { get; } =
+        createStreamAsync;
 
     public IEnumerable<string> KnownExtensions { get; } = knownExtensions;
 
@@ -41,6 +44,7 @@ public class TarWrapper(
             (_) => true,
             (_, _) => new ValueTask<bool>(true),
             (stream) => stream,
+            (stream, _) => new ValueTask<Stream>(stream),
             ["tar"],
             false
         ), // We always do a test for IsTarFile later
@@ -49,6 +53,8 @@ public class TarWrapper(
             BZip2Stream.IsBZip2,
             BZip2Stream.IsBZip2Async,
             (stream) => BZip2Stream.Create(stream, CompressionMode.Decompress, false),
+            async (stream, _) =>
+                await BZip2Stream.CreateAsync(stream, CompressionMode.Decompress, false),
             ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"]
         ),
         new(
@@ -56,6 +62,8 @@ public class TarWrapper(
             GZipArchive.IsGZipFile,
             GZipArchive.IsGZipFileAsync,
             (stream) => new GZipStream(stream, CompressionMode.Decompress),
+            (stream, _) =>
+                new ValueTask<Stream>(new GZipStream(stream, CompressionMode.Decompress)),
             ["tar.gz", "taz", "tgz"]
         ),
         new(
@@ -63,6 +71,7 @@ public class TarWrapper(
             ZStandardStream.IsZStandard,
             ZStandardStream.IsZStandardAsync,
             (stream) => new ZStandardStream(stream),
+            (stream, _) => new ValueTask<Stream>(new ZStandardStream(stream)),
             ["tar.zst", "tar.zstd", "tzst", "tzstd"]
         ),
         new(
@@ -70,6 +79,8 @@ public class TarWrapper(
             LZipStream.IsLZipFile,
             LZipStream.IsLZipFileAsync,
             (stream) => new LZipStream(stream, CompressionMode.Decompress),
+            (stream, _) =>
+                new ValueTask<Stream>(new LZipStream(stream, CompressionMode.Decompress)),
             ["tar.lz"]
         ),
         new(
@@ -77,6 +88,7 @@ public class TarWrapper(
             XZStream.IsXZStream,
             XZStream.IsXZStreamAsync,
             (stream) => new XZStream(stream),
+            (stream, _) => new ValueTask<Stream>(new XZStream(stream)),
             ["tar.xz", "txz"],
             false
         ),
@@ -85,6 +97,7 @@ public class TarWrapper(
             LzwStream.IsLzwStream,
             LzwStream.IsLzwStreamAsync,
             (stream) => new LzwStream(stream),
+            (stream, _) => new ValueTask<Stream>(new LzwStream(stream)),
             ["tar.Z", "tZ", "taZ"],
             false
         ),

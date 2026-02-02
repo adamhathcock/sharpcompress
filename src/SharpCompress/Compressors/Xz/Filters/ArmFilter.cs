@@ -10,7 +10,7 @@ using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
-public class ArmFilter : BlockFilter
+public partial class ArmFilter : BlockFilter
 {
     public override bool AllowAsLast => false;
 

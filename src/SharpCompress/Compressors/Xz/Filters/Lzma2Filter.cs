@@ -6,7 +6,7 @@ using SharpCompress.Compressors.LZMA;
 namespace SharpCompress.Compressors.Xz.Filters;
 
 [CLSCompliant(false)]
-public class Lzma2Filter : BlockFilter
+public partial class Lzma2Filter : BlockFilter
 {
     public override bool AllowAsLast => true;
     public override bool AllowAsNonLast => false;
