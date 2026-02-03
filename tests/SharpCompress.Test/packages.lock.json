@@ -39,6 +39,12 @@
           "Microsoft.SourceLink.Common": "10.0.102"
         }
       },
+      "Mono.Posix.NETStandard": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "vSN/L1uaVwKsiLa95bYu2SGkF0iY3xMblTfxc8alSziPuVfJpj3geVqHGAA75J7cZkMuKpFVikz82Lo6y6LLdA=="
+      },
       "xunit": {
         "type": "Direct",
         "requested": "[2.9.3, )",
@@ -245,6 +251,12 @@
           "Microsoft.Build.Tasks.Git": "10.0.102",
           "Microsoft.SourceLink.Common": "10.0.102"
         }
+      },
+      "Mono.Posix.NETStandard": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "vSN/L1uaVwKsiLa95bYu2SGkF0iY3xMblTfxc8alSziPuVfJpj3geVqHGAA75J7cZkMuKpFVikz82Lo6y6LLdA=="
       },
       "xunit": {
         "type": "Direct",
