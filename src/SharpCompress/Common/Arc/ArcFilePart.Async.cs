@@ -1,13 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common.GZip;
-using SharpCompress.Common.Tar;
-using SharpCompress.Common.Tar.Headers;
-using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.Compressors.Squeezed;
@@ -15,22 +9,11 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Arc
 {
-    public partial class ArcFilePart : FilePart
+    public partial class ArcFilePart
     {
-        private readonly Stream? _stream;
-
-        internal ArcFilePart(ArcEntryHeader localArcHeader, Stream? seekableStream)
-            : base(localArcHeader.ArchiveEncoding)
-        {
-            _stream = seekableStream;
-            Header = localArcHeader;
-        }
-
-        internal ArcEntryHeader Header { get; set; }
-
-        internal override string? FilePartName => Header.Name;
-
-        internal override Stream GetCompressedStream()
+        internal override async ValueTask<Stream?> GetCompressedStreamAsync(
+            CancellationToken cancellationToken = default
+        )
         {
             if (_stream != null)
             {
@@ -51,9 +34,10 @@ namespace SharpCompress.Common.Arc
                         );
                         break;
                     case CompressionType.Squeezed:
-                        compressedStream = SqueezeStream.Create(
+                        compressedStream = await SqueezeStream.CreateAsync(
                             _stream,
-                            (int)Header.CompressedSize
+                            (int)Header.CompressedSize,
+                            cancellationToken
                         );
                         break;
                     case CompressionType.Crunched:
@@ -78,9 +62,7 @@ namespace SharpCompress.Common.Arc
                 }
                 return compressedStream;
             }
-            return _stream.NotNull();
+            return _stream;
         }
-
-        internal override Stream? GetRawStream() => _stream;
     }
 }

@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Arc
 {
@@ -25,6 +27,23 @@ namespace SharpCompress.Common.Arc
         {
             byte[] headerBytes = new byte[29];
             if (stream.Read(headerBytes, 0, headerBytes.Length) != headerBytes.Length)
+            {
+                return null;
+            }
+            DataStartPosition = stream.Position;
+            return LoadFrom(headerBytes);
+        }
+
+        public async ValueTask<ArcEntryHeader?> ReadHeaderAsync(
+            Stream stream,
+            CancellationToken cancellationToken = default
+        )
+        {
+            byte[] headerBytes = new byte[29];
+            if (
+                await stream.ReadAsync(headerBytes, 0, headerBytes.Length, cancellationToken)
+                != headerBytes.Length
+            )
             {
                 return null;
             }
