@@ -59,6 +59,17 @@ internal partial class RewindableStream : Stream, IStreamStack
         {
             return rewindableStream;
         }
+
+        // Check if stream is wrapping a RewindableStream (e.g., NonDisposingStream)
+        if (stream is IStreamStack streamStack)
+        {
+            var underlying = streamStack.GetStream<RewindableStream>();
+            if (underlying is not null)
+            {
+                return underlying;
+            }
+        }
+
         if (stream.CanSeek)
         {
             return new SeekableRewindableStream(stream);

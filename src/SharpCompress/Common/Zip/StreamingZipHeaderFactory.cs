@@ -173,14 +173,38 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                 } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
                 else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                 {
-                    var nextHeaderBytes = reader.ReadUInt32();
-                    if (rewindableStream is IStreamStack ss)
+                    // Peek ahead to check if next data is a header or file data.
+                    // For SeekableRewindableStream, use direct position save/restore to avoid
+                    // interfering with any recording state set by the caller (e.g., ReaderFactory).
+                    // Plain RewindableStream can use StartRecording/Rewind safely since it was
+                    // created fresh by EnsureSeekable and isn't shared with the caller.
+                    if (rewindableStream is SeekableRewindableStream)
                     {
-                        ss.Rewind(sizeof(uint));
+                        var savedPosition = rewindableStream.Position;
+                        var nextHeaderBytes = reader.ReadUInt32();
+                        rewindableStream.Position = savedPosition;
+                        header.HasData = !IsHeader(nextHeaderBytes);
                     }
-
-                    // Check if next data is PostDataDescriptor, streamed file with 0 length
-                    header.HasData = !IsHeader(nextHeaderBytes);
+                    else
+                    {
+                        // Only start recording if not already recording.
+                        // The stream may already be recording if it was created by ReaderFactory.
+                        if (!rewindableStream.IsRecording)
+                        {
+                            rewindableStream.StartRecording();
+                            var nextHeaderBytes = reader.ReadUInt32();
+                            rewindableStream.Rewind(true);
+                            header.HasData = !IsHeader(nextHeaderBytes);
+                        }
+                        else
+                        {
+                            // If already recording, save position and restore after peek
+                            var savedPosition = rewindableStream.Position;
+                            var nextHeaderBytes = reader.ReadUInt32();
+                            rewindableStream.Position = savedPosition;
+                            header.HasData = !IsHeader(nextHeaderBytes);
+                        }
+                    }
                 }
                 else // We are not streaming and compressed size is 0, we have no data
                 {
