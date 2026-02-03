@@ -135,7 +135,7 @@ internal partial class RewindableStream : Stream
         {
             var readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
             read = bufferStream.Read(buffer, offset, readCount);
-            if (read < readCount)
+            if (read < count)
             {
                 var tempRead = stream.Read(buffer, offset + read, count - read);
                 if (IsRecording)

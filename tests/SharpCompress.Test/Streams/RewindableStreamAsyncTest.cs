@@ -591,4 +591,315 @@ public class RewindableStreamAsyncTest
         // Second StopRecording should throw
         Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
     }
+
+    [Fact]
+    public async ValueTask TestReadMoreThanBufferSizeAfterRewindAsync()
+    {
+        // This test verifies the fix for the bug where reading more bytes than
+        // are in the buffer after a rewind would only return the buffered bytes
+        // instead of continuing to read from the underlying stream.
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+
+        // Write 29 bytes (simulating Arc header)
+        for (int i = 0; i < 29; i++)
+        {
+            bw.Write((byte)i);
+        }
+
+        // Write 5252 bytes (simulating Arc compressed data)
+        for (int i = 0; i < 5252; i++)
+        {
+            bw.Write((byte)(i % 256));
+        }
+
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+
+        // Simulate factory detection: record first 512 bytes
+        stream.StartRecording();
+        var probeBuffer = new byte[512];
+        int probeRead = await stream.ReadAsync(probeBuffer, 0, 512).ConfigureAwait(false);
+        Assert.Equal(512, probeRead);
+
+        // Stop recording and rewind (simulates what ReaderFactory does)
+        stream.Rewind(true);
+
+        // Read header (29 bytes) - should come from buffer
+        var headerBuffer = new byte[29];
+        int headerRead = await stream.ReadAsync(headerBuffer, 0, 29).ConfigureAwait(false);
+        Assert.Equal(29, headerRead);
+
+        // Read compressed data (5252 bytes) - buffer has 483 bytes left,
+        // but we need 5252 bytes. This should read all 5252 bytes, not just 483.
+        var dataBuffer = new byte[5252];
+        int dataRead = await stream.ReadAsync(dataBuffer, 0, 5252).ConfigureAwait(false);
+        Assert.Equal(5252, dataRead);
+
+        // Verify we read the correct data
+        for (int i = 0; i < 5252; i++)
+        {
+            Assert.Equal((byte)(i % 256), dataBuffer[i]);
+        }
+
+        // Verify stream position is correct (29 + 5252 = 5281)
+        Assert.Equal(5281, stream.Position);
+    }
+
+    [Fact]
+    public async ValueTask TestReadExactlyBufferSizeAfterRewindAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+
+        // Write 1024 bytes
+        for (int i = 0; i < 1024; i++)
+        {
+            bw.Write((byte)(i % 256));
+        }
+
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+
+        // Record first 512 bytes
+        stream.StartRecording();
+        var probeBuffer = new byte[512];
+        await stream.ReadAsync(probeBuffer, 0, 512).ConfigureAwait(false);
+        stream.Rewind(true);
+
+        // Read exactly the buffer size (512 bytes)
+        var buffer = new byte[512];
+        int bytesRead = await stream.ReadAsync(buffer, 0, 512).ConfigureAwait(false);
+        Assert.Equal(512, bytesRead);
+
+        // Verify we read the correct data
+        for (int i = 0; i < 512; i++)
+        {
+            Assert.Equal((byte)(i % 256), buffer[i]);
+        }
+    }
+
+    [Fact]
+    public async ValueTask TestReadLessThanBufferSizeAfterRewindAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+
+        // Write 1024 bytes
+        for (int i = 0; i < 1024; i++)
+        {
+            bw.Write((byte)(i % 256));
+        }
+
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+
+        // Record first 512 bytes
+        stream.StartRecording();
+        var probeBuffer = new byte[512];
+        await stream.ReadAsync(probeBuffer, 0, 512).ConfigureAwait(false);
+        stream.Rewind(true);
+
+        // Read less than buffer size (256 bytes)
+        var buffer = new byte[256];
+        int bytesRead = await stream.ReadAsync(buffer, 0, 256).ConfigureAwait(false);
+        Assert.Equal(256, bytesRead);
+
+        // Verify we read the correct data
+        for (int i = 0; i < 256; i++)
+        {
+            Assert.Equal((byte)(i % 256), buffer[i]);
+        }
+    }
+
+    [Fact]
+    public async ValueTask TestMultipleReadsExceedingBufferAfterRewindAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+
+        // Write 2048 bytes
+        for (int i = 0; i < 2048; i++)
+        {
+            bw.Write((byte)(i % 256));
+        }
+
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+
+        // Record first 512 bytes
+        stream.StartRecording();
+        var probeBuffer = new byte[512];
+        await stream.ReadAsync(probeBuffer, 0, 512).ConfigureAwait(false);
+        stream.Rewind(true);
+
+        // Read in chunks that will exceed the buffer
+        var buffer = new byte[800];
+
+        // First read: 800 bytes (512 from buffer + 288 from underlying stream)
+        int bytesRead1 = await stream.ReadAsync(buffer, 0, 800).ConfigureAwait(false);
+        Assert.Equal(800, bytesRead1);
+
+        // Second read: 800 bytes (all from underlying stream)
+        int bytesRead2 = await stream.ReadAsync(buffer, 0, 800).ConfigureAwait(false);
+        Assert.Equal(800, bytesRead2);
+
+        // Third read: remaining 448 bytes
+        int bytesRead3 = await stream.ReadAsync(buffer, 0, 800).ConfigureAwait(false);
+        Assert.Equal(448, bytesRead3);
+
+        // Verify stream position
+        Assert.Equal(2048, stream.Position);
+    }
+
+    [Fact]
+    public async ValueTask TestReadPartiallyFromBufferThenUnderlyingStreamAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+
+        // Write 1000 bytes with specific pattern
+        for (int i = 0; i < 1000; i++)
+        {
+            bw.Write((byte)i);
+        }
+
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+
+        // Record first 100 bytes
+        stream.StartRecording();
+        var probeBuffer = new byte[100];
+        await stream.ReadAsync(probeBuffer, 0, 100).ConfigureAwait(false);
+        stream.Rewind(true);
+
+        // Read 50 bytes (from buffer)
+        var buffer1 = new byte[50];
+        int read1 = await stream.ReadAsync(buffer1, 0, 50).ConfigureAwait(false);
+        Assert.Equal(50, read1);
+        for (int i = 0; i < 50; i++)
+        {
+            Assert.Equal((byte)i, buffer1[i]);
+        }
+
+        // Read 150 bytes (50 from buffer + 100 from underlying stream)
+        var buffer2 = new byte[150];
+        int read2 = await stream.ReadAsync(buffer2, 0, 150).ConfigureAwait(false);
+        Assert.Equal(150, read2);
+        for (int i = 0; i < 150; i++)
+        {
+            Assert.Equal((byte)(i + 50), buffer2[i]);
+        }
+
+        // Verify position
+        Assert.Equal(200, stream.Position);
+    }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public async ValueTask TestReadMoreThanBufferSizeAfterRewindMemoryAsync()
+    {
+        // Same as TestReadMoreThanBufferSizeAfterRewindAsync but using Memory<byte>
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+
+        // Write 29 bytes (simulating Arc header)
+        for (int i = 0; i < 29; i++)
+        {
+            bw.Write((byte)i);
+        }
+
+        // Write 5252 bytes (simulating Arc compressed data)
+        for (int i = 0; i < 5252; i++)
+        {
+            bw.Write((byte)(i % 256));
+        }
+
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+
+        // Simulate factory detection: record first 512 bytes
+        stream.StartRecording();
+        var probeBuffer = new byte[512];
+        int probeRead = await stream.ReadAsync(probeBuffer.AsMemory()).ConfigureAwait(false);
+        Assert.Equal(512, probeRead);
+
+        // Stop recording and rewind (simulates what ReaderFactory does)
+        stream.Rewind(true);
+
+        // Read header (29 bytes) - should come from buffer
+        var headerBuffer = new byte[29];
+        int headerRead = await stream.ReadAsync(headerBuffer.AsMemory()).ConfigureAwait(false);
+        Assert.Equal(29, headerRead);
+
+        // Read compressed data (5252 bytes) - buffer has 483 bytes left,
+        // but we need 5252 bytes. This should read all 5252 bytes, not just 483.
+        var dataBuffer = new byte[5252];
+        int dataRead = await stream.ReadAsync(dataBuffer.AsMemory()).ConfigureAwait(false);
+        Assert.Equal(5252, dataRead);
+
+        // Verify we read the correct data
+        for (int i = 0; i < 5252; i++)
+        {
+            Assert.Equal((byte)(i % 256), dataBuffer[i]);
+        }
+
+        // Verify stream position is correct (29 + 5252 = 5281)
+        Assert.Equal(5281, stream.Position);
+    }
+
+    [Fact]
+    public async ValueTask TestMultipleReadsExceedingBufferAfterRewindMemoryAsync()
+    {
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+
+        // Write 2048 bytes
+        for (int i = 0; i < 2048; i++)
+        {
+            bw.Write((byte)(i % 256));
+        }
+
+        bw.Flush();
+        ms.Position = 0;
+
+        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+
+        // Record first 512 bytes
+        stream.StartRecording();
+        var probeBuffer = new byte[512];
+        await stream.ReadAsync(probeBuffer.AsMemory()).ConfigureAwait(false);
+        stream.Rewind(true);
+
+        // Read in chunks that will exceed the buffer
+        var buffer = new byte[800];
+
+        // First read: 800 bytes (512 from buffer + 288 from underlying stream)
+        int bytesRead1 = await stream.ReadAsync(buffer.AsMemory()).ConfigureAwait(false);
+        Assert.Equal(800, bytesRead1);
+
+        // Second read: 800 bytes (all from underlying stream)
+        int bytesRead2 = await stream.ReadAsync(buffer.AsMemory()).ConfigureAwait(false);
+        Assert.Equal(800, bytesRead2);
+
+        // Third read: remaining 448 bytes
+        int bytesRead3 = await stream.ReadAsync(buffer.AsMemory()).ConfigureAwait(false);
+        Assert.Equal(448, bytesRead3);
+
+        // Verify stream position
+        Assert.Equal(2048, stream.Position);
+    }
+#endif
 }

@@ -26,7 +26,7 @@ internal partial class RewindableStream
             read = await bufferStream
                 .ReadAsync(buffer, offset, readCount, cancellationToken)
                 .ConfigureAwait(false);
-            if (read < readCount)
+            if (read < count)
             {
                 var tempRead = await stream
                     .ReadAsync(buffer, offset + read, count - read, cancellationToken)
@@ -79,7 +79,7 @@ internal partial class RewindableStream
             read = await bufferStream
                 .ReadAsync(buffer.Slice(0, readCount), cancellationToken)
                 .ConfigureAwait(false);
-            if (read < readCount)
+            if (read < buffer.Length)
             {
                 var tempRead = await stream
                     .ReadAsync(buffer.Slice(read), cancellationToken)
@@ -90,6 +90,7 @@ internal partial class RewindableStream
                         .WriteAsync(buffer.Slice(read, tempRead), cancellationToken)
                         .ConfigureAwait(false);
                 }
+                streamPosition += tempRead;
                 read += tempRead;
             }
             if (bufferStream.Position == bufferStream.Length)
@@ -106,6 +107,7 @@ internal partial class RewindableStream
                 .WriteAsync(buffer.Slice(0, read), cancellationToken)
                 .ConfigureAwait(false);
         }
+        streamPosition += read;
         return read;
     }
 #endif
