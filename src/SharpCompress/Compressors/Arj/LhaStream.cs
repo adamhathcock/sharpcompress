@@ -6,7 +6,7 @@ using System.Linq;
 namespace SharpCompress.Compressors.Arj
 {
     [CLSCompliant(true)]
-    public sealed class LhaStream<C> : Stream
+    public sealed partial class LhaStream<C> : Stream
         where C : ILhaDecoderConfig, new()
     {
         private readonly BitReader _bitReader;
