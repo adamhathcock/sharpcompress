@@ -5,6 +5,7 @@ namespace SharpCompress.IO;
 
 internal sealed partial class SeekableRewindableStream : RewindableStream
 {
+    public override Stream BaseStream() => _underlyingStream;
     private readonly Stream _underlyingStream;
     private long? _recordedPosition;
 

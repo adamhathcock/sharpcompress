@@ -8,10 +8,6 @@ namespace SharpCompress.IO;
 
 internal partial class BufferedSubStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
     Stream IStreamStack.BaseStream() => _stream;
 
     private readonly Stream _stream;
@@ -19,18 +15,12 @@ internal partial class BufferedSubStream : Stream, IStreamStack
     public BufferedSubStream(Stream stream, long origin, long bytesToRead)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(BufferedSubStream));
-#endif
         this.origin = origin;
         this.BytesLeftToRead = bytesToRead;
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(BufferedSubStream));
-#endif
         if (_isDisposed)
         {
             return;

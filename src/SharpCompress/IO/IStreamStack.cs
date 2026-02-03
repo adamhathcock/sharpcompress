@@ -49,5 +49,22 @@ namespace SharpCompress.IO
             }
             return current;
         }
+
+        internal static void Rewind(this IStreamStack stream, int count)
+        {
+            IStreamStack? buffStream = null;
+            IStreamStack? current = stream;
+
+            while (buffStream == null && current != null)
+            {
+                if (current is RewindableStream rewindableStream)
+                {
+                    buffStream = current;
+                    rewindableStream.Position -= Math.Min(rewindableStream.Position, count);
+                }
+                current = current.BaseStream() as IStreamStack;
+            }
+        }
+
     }
 }

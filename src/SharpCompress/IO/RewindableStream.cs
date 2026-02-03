@@ -3,8 +3,10 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal partial class RewindableStream : Stream
+internal partial class RewindableStream : Stream, IStreamStack
 {
+    public virtual Stream BaseStream() => stream;
+
     private readonly Stream stream;
     private MemoryStream bufferStream = new MemoryStream();
     private bool isRewound;

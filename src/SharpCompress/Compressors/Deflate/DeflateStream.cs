@@ -64,10 +64,6 @@ public partial class DeflateStream : Stream, IStreamStack
             leaveOpen,
             forceEncoding
         );
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(DeflateStream));
-#endif
     }
 
     #region Zlib properties
