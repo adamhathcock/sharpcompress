@@ -7,7 +7,7 @@ namespace SharpCompress.Compressors.RLE90
     /// Real-time streaming RLE90 decompression stream.
     /// Decompresses bytes on demand without buffering the entire file in memory.
     /// </summary>
-    public class RunLength90Stream : Stream
+    public partial class RunLength90Stream : Stream
     {
         private readonly Stream _stream;
         private readonly int _compressedSize;
