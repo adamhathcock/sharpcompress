@@ -4,9 +4,12 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SharpCompress.Common;
+namespace SharpCompress.IO;
 
 public sealed class AsyncBinaryReader : IDisposable
+#if NET8_0_OR_GREATER
+, IAsyncDisposable
+#endif
 {
     private readonly Stream _stream;
     private readonly Stream _originalStream;
@@ -14,7 +17,7 @@ public sealed class AsyncBinaryReader : IDisposable
     private readonly byte[] _buffer = new byte[8];
     private bool _disposed;
 
-    public AsyncBinaryReader(Stream stream, bool leaveOpen = false, int bufferSize = 4096)
+    public AsyncBinaryReader(Stream stream, bool leaveOpen = false)
     {
         if (!stream.CanRead)
         {
@@ -23,9 +26,6 @@ public sealed class AsyncBinaryReader : IDisposable
 
         _originalStream = stream ?? throw new ArgumentNullException(nameof(stream));
         _leaveOpen = leaveOpen;
-
-        // Use the stream directly without wrapping in BufferedStream
-        // BufferedStream uses synchronous Read internally which doesn't work with async-only streams
         _stream = stream;
     }
 
