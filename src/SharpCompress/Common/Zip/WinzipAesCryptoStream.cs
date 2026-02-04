@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
@@ -18,15 +19,17 @@ internal partial class WinzipAesCryptoStream : Stream
     private bool _isFinalBlock;
     private long _totalBytesLeftToRead;
     private bool _isDisposed;
+    private bool _useSyncOverAsyncDispose;
 
     internal WinzipAesCryptoStream(
         Stream stream,
         WinzipAesEncryptionData winzipAesEncryptionData,
-        long length
-    )
+        long length,
+        bool useSyncOverAsyncDispose)
     {
         _stream = stream;
         _totalBytesLeftToRead = length;
+        _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(WinzipAesCryptoStream));
@@ -75,18 +78,28 @@ internal partial class WinzipAesCryptoStream : Stream
         if (disposing)
         {
             // Read out last 10 auth bytes - catch exceptions for async-only streams
-            try
-            {
-                Span<byte> ten = stackalloc byte[10];
-                _stream.ReadFully(ten);
-            }
-            catch (NotSupportedException)
-            {
-                // Stream may be async-only, auth bytes will be skipped
-                // This is acceptable when the entire stream has been read
-            }
+                if (_useSyncOverAsyncDispose)
+                {
+                    var ten = ArrayPool<byte>.Shared.Rent(10);
+                    try {
+                    _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
+                    } finally {
+                        ArrayPool<byte>.Shared.Return(ten);
+                    }
+                }
+                else
+                {
+                    Span<byte> ten = stackalloc byte[10];
+                    _stream.ReadFully(ten);
+                }
             _stream.Dispose();
         }
+    }
+
+    private async Task ReadAuthBytesAsync()
+    {
+        byte[] authBytes = new byte[10];
+        await _stream.ReadFullyAsync(authBytes, 0, 10).ConfigureAwait(false);
     }
 
     public override void Flush() { }
