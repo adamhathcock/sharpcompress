@@ -54,8 +54,8 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var bStream = new SharpCompressStream(stream);
-        bStream.StartRecording();
+        var sharpCompressStream = new SharpCompressStream(stream);
+        sharpCompressStream.StartRecording();
 
         var factories = Factory.Factories.OfType<Factory>();
 
@@ -68,20 +68,24 @@ public static partial class ReaderFactory
             );
             if (testedFactory is IReaderFactory readerFactory)
             {
-                bStream.Rewind();
+                sharpCompressStream.Rewind();
                 if (
                     await testedFactory.IsArchiveAsync(
-                        bStream,
+                        sharpCompressStream,
                         cancellationToken: cancellationToken
                     )
                 )
                 {
-                    bStream.Rewind();
-                    bStream.StopRecording();
-                    return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
+                    sharpCompressStream.Rewind();
+                    sharpCompressStream.StopRecording();
+                    return await readerFactory.OpenAsyncReader(
+                        sharpCompressStream,
+                        options,
+                        cancellationToken
+                    );
                 }
             }
-            bStream.Rewind();
+            sharpCompressStream.Rewind();
         }
 
         foreach (var factory in factories)
@@ -90,15 +94,22 @@ public static partial class ReaderFactory
             {
                 continue; // Already tested above
             }
-            bStream.Rewind();
+            sharpCompressStream.Rewind();
             if (
                 factory is IReaderFactory readerFactory
-                && await factory.IsArchiveAsync(bStream, cancellationToken: cancellationToken)
+                && await factory.IsArchiveAsync(
+                    sharpCompressStream,
+                    cancellationToken: cancellationToken
+                )
             )
             {
-                bStream.Rewind();
-                bStream.StopRecording();
-                return await readerFactory.OpenAsyncReader(bStream, options, cancellationToken);
+                sharpCompressStream.Rewind();
+                sharpCompressStream.StopRecording();
+                return await readerFactory.OpenAsyncReader(
+                    sharpCompressStream,
+                    options,
+                    cancellationToken
+                );
             }
         }
 

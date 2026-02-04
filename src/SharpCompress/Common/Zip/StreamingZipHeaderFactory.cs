@@ -22,10 +22,10 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
     {
         // Use EnsureSeekable to avoid double-wrapping if stream is already a SharpCompressStream,
         // and to preserve seekability for DataDescriptorStream which needs to seek backward
-        var rewindableStream = SharpCompressStream.EnsureSeekable(stream);
+        var sharpCompressStream = SharpCompressStream.EnsureSeekable(stream);
         while (true)
         {
-            var reader = new BinaryReader(rewindableStream);
+            var reader = new BinaryReader(sharpCompressStream);
             uint headerBytes = 0;
             if (
                 _lastEntryHeader != null
@@ -39,7 +39,7 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
 
                 // removed requirement for FixStreamedFileLocation()
 
-                var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
+                var pos = sharpCompressStream.CanSeek ? (long?)sharpCompressStream.Position : null;
 
                 var crc = reader.ReadUInt32();
                 if (crc == POST_DATA_DESCRIPTOR)
@@ -87,10 +87,10 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                 }
 
                 //reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
-                //    ref rewindableStream
+                //    ref sharpCompressStream
                 //);
 
-                var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
+                var pos = sharpCompressStream.CanSeek ? (long?)sharpCompressStream.Position : null;
 
                 headerBytes = reader.ReadUInt32();
 
@@ -132,7 +132,7 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                     _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
 
                     // 4 = First 4 bytes of the entry header (i.e. 50 4B 03 04)
-                    rewindableStream.Position = pos.Value + 4;
+                    sharpCompressStream.Position = pos.Value + 4;
                 }
             }
             else
@@ -176,7 +176,7 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                     // Peek ahead to check if next data is a header or file data.
                     // Use the IStreamStack.Rewind mechanism to give back the peeked bytes.
                     var nextHeaderBytes = reader.ReadUInt32();
-                    ((IStreamStack)rewindableStream).Rewind(sizeof(uint));
+                    ((IStreamStack)sharpCompressStream).Rewind(sizeof(uint));
 
                     // Check if next data is PostDataDescriptor, streamed file with 0 length
                     header.HasData = !IsHeader(nextHeaderBytes);

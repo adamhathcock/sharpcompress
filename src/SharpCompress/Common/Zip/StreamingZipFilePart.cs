@@ -31,11 +31,11 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
         return _decompressionStream;
     }
 
-    internal BinaryReader FixStreamedFileLocation(ref Stream rewindableStream)
+    internal BinaryReader FixStreamedFileLocation(ref Stream stream)
     {
         if (Header.IsDirectory)
         {
-            return new BinaryReader(rewindableStream);
+            return new BinaryReader(stream);
         }
 
         if (Header.HasData && !Skipped)
@@ -49,12 +49,12 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
 
             if (_decompressionStream is DeflateStream deflateStream)
             {
-                rewindableStream.Position = 0;
+                stream.Position = 0;
             }
 
             Skipped = true;
         }
-        var reader = new BinaryReader(rewindableStream);
+        var reader = new BinaryReader(stream);
         _decompressionStream = null;
         return reader;
     }

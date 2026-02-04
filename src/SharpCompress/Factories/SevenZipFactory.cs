@@ -94,7 +94,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     #region reader
 
     internal override bool TryOpenReader(
-        SharpCompressStream rewindableStream,
+        SharpCompressStream sharpCompressStream,
         ReaderOptions options,
         out IReader? reader
     )

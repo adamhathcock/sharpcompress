@@ -56,17 +56,17 @@ public static class StreamStackExtensions
 
         while (current != null)
         {
-            if (current is SharpCompressStream rewindableStream)
+            if (current is SharpCompressStream sharpCompressStream)
             {
                 // Try to rewind within the buffer. If the position is outside the buffered
                 // region, silently ignore (matching release behavior where streams without
                 // buffering simply didn't rewind).
-                var targetPosition = rewindableStream.Position - count;
+                var targetPosition = sharpCompressStream.Position - count;
                 if (targetPosition >= 0)
                 {
                     try
                     {
-                        rewindableStream.Position = targetPosition;
+                        sharpCompressStream.Position = targetPosition;
                     }
                     catch (NotSupportedException)
                     {
