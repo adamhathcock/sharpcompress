@@ -51,7 +51,7 @@ public sealed partial class LZipStream : Stream
             WriteHeaderSize(stream);
 
             _countingWritableSubStream = new CountingStream(
-                RewindableStream.CreateNonDisposing(stream)
+                SharpCompressStream.CreateNonDisposing(stream)
             );
             _stream = new Crc32Stream(
                 LzmaStream.Create(

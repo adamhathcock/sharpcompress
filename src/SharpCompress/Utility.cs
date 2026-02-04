@@ -153,7 +153,7 @@ internal static partial class Utility
             CancellationToken cancellationToken = default
         )
         {
-            if (source.CanSeek && source is not RewindableStream)
+            if (source.CanSeek && source is not SharpCompressStream)
             {
                 source.Position += advanceAmount;
                 return;

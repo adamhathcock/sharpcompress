@@ -29,7 +29,7 @@ public partial class TarWriter : AbstractWriter
         }
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = RewindableStream.CreateNonDisposing(destination);
+            destination = SharpCompressStream.CreateNonDisposing(destination);
         }
         switch (options.CompressionType)
         {

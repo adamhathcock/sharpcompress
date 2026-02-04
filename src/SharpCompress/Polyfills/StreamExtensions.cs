@@ -13,7 +13,7 @@ public static class StreamExtensions
     {
         public void Skip(long advanceAmount)
         {
-            if (stream.CanSeek && stream is not RewindableStream)
+            if (stream.CanSeek && stream is not SharpCompressStream)
             {
                 stream.Position += advanceAmount;
                 return;

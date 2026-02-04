@@ -34,7 +34,7 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var bStream = RewindableStream.EnsureSeekable(stream);
+        var bStream = SharpCompressStream.EnsureSeekable(stream);
         bStream.StartRecording();
 
         var factories = Factories.Factory.Factories.OfType<Factories.Factory>();

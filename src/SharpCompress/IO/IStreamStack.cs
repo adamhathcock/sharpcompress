@@ -56,7 +56,7 @@ public static class StreamStackExtensions
 
         while (current != null)
         {
-            if (current is RewindableStream rewindableStream)
+            if (current is SharpCompressStream rewindableStream)
             {
                 // Try to rewind within the buffer. If the position is outside the buffered
                 // region, silently ignore (matching release behavior where streams without

@@ -26,7 +26,7 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
         );
         if (LeaveStreamOpen)
         {
-            return RewindableStream.CreateNonDisposing(_decompressionStream);
+            return SharpCompressStream.CreateNonDisposing(_decompressionStream);
         }
         return _decompressionStream;
     }

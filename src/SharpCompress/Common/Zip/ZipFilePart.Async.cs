@@ -39,7 +39,7 @@ internal abstract partial class ZipFilePart
             .ConfigureAwait(false);
         if (LeaveStreamOpen)
         {
-            return RewindableStream.CreateNonDisposing(decompressionStream);
+            return SharpCompressStream.CreateNonDisposing(decompressionStream);
         }
         return decompressionStream;
     }
@@ -63,7 +63,7 @@ internal abstract partial class ZipFilePart
             ) || Header.IsZip64
         )
         {
-            plainStream = RewindableStream.CreateNonDisposing(plainStream); //make sure AES doesn't close
+            plainStream = SharpCompressStream.CreateNonDisposing(plainStream); //make sure AES doesn't close
         }
         else
         {

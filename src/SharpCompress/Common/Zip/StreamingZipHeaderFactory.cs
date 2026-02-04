@@ -20,9 +20,9 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
-        // Use EnsureSeekable to avoid double-wrapping if stream is already a RewindableStream,
+        // Use EnsureSeekable to avoid double-wrapping if stream is already a SharpCompressStream,
         // and to preserve seekability for DataDescriptorStream which needs to seek backward
-        var rewindableStream = RewindableStream.EnsureSeekable(stream);
+        var rewindableStream = SharpCompressStream.EnsureSeekable(stream);
         while (true)
         {
             var reader = new BinaryReader(rewindableStream);

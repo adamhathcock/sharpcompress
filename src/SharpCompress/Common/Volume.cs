@@ -17,14 +17,14 @@ public abstract partial class Volume : IVolume, IAsyncDisposable
         ReaderOptions = readerOptions ?? new ReaderOptions();
         _baseStream = stream;
 
-        // Only rewind if it's a buffered RewindableStream (not passthrough)
-        if (stream is RewindableStream ss && !ss.IsPassthrough)
+        // Only rewind if it's a buffered SharpCompressStream (not passthrough)
+        if (stream is SharpCompressStream ss && !ss.IsPassthrough)
         {
             ss.Rewind();
         }
         if (ReaderOptions.LeaveStreamOpen)
         {
-            stream = RewindableStream.CreateNonDisposing(stream);
+            stream = SharpCompressStream.CreateNonDisposing(stream);
         }
 
         _actualStream = stream;

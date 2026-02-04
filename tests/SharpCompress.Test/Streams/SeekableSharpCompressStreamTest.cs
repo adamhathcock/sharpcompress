@@ -7,26 +7,26 @@ using Xunit;
 
 namespace SharpCompress.Test.Streams;
 
-public class SeekableRewindableStreamTest
+public class SeekableSharpCompressStreamTest
 {
     [Fact]
     public void Constructor_ThrowsOnNullStream()
     {
-        Assert.Throws<ArgumentNullException>(() => new SeekableRewindableStream(null!));
+        Assert.Throws<ArgumentNullException>(() => new SeekableSharpCompressStream(null!));
     }
 
     [Fact]
     public void Constructor_ThrowsOnNonSeekableStream()
     {
         var nonSeekable = new ForwardOnlyStream(new MemoryStream());
-        Assert.Throws<ArgumentException>(() => new SeekableRewindableStream(nonSeekable));
+        Assert.Throws<ArgumentException>(() => new SeekableSharpCompressStream(nonSeekable));
     }
 
     [Fact]
     public void Constructor_AcceptsSeekableStream()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         Assert.NotNull(stream);
     }
 
@@ -34,7 +34,7 @@ public class SeekableRewindableStreamTest
     public void CanRead_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         Assert.Equal(ms.CanRead, stream.CanRead);
     }
 
@@ -42,7 +42,7 @@ public class SeekableRewindableStreamTest
     public void CanSeek_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         Assert.Equal(ms.CanSeek, stream.CanSeek);
     }
 
@@ -50,7 +50,7 @@ public class SeekableRewindableStreamTest
     public void CanWrite_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         Assert.Equal(ms.CanWrite, stream.CanWrite);
     }
 
@@ -58,7 +58,7 @@ public class SeekableRewindableStreamTest
     public void Length_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         Assert.Equal(5, stream.Length);
     }
 
@@ -67,7 +67,7 @@ public class SeekableRewindableStreamTest
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         ms.Position = 2;
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         Assert.Equal(2, stream.Position);
     }
 
@@ -75,7 +75,7 @@ public class SeekableRewindableStreamTest
     public void Position_Setter_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         stream.Position = 3;
         Assert.Equal(3, ms.Position);
         Assert.Equal(3, stream.Position);
@@ -85,7 +85,7 @@ public class SeekableRewindableStreamTest
     public void IsRecording_AlwaysFalse()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         Assert.False(stream.IsRecording);
     }
 
@@ -93,7 +93,7 @@ public class SeekableRewindableStreamTest
     public void Read_Buffers()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         var buffer = new byte[5];
         int bytesRead = stream.Read(buffer, 0, buffer.Length);
         Assert.Equal(5, bytesRead);
@@ -104,7 +104,7 @@ public class SeekableRewindableStreamTest
     public void Seek_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         long result = stream.Seek(3, SeekOrigin.Begin);
         Assert.Equal(3, result);
         Assert.Equal(3, ms.Position);
@@ -114,7 +114,7 @@ public class SeekableRewindableStreamTest
     public void SetLength_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         stream.SetLength(20);
         Assert.Equal(20, stream.Length);
         Assert.Equal(20, ms.Length);
@@ -124,7 +124,7 @@ public class SeekableRewindableStreamTest
     public void Write_DelegatesToUnderlyingStream()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         var data = new byte[] { 1, 2, 3, 4, 5 };
         stream.Write(data, 0, data.Length);
         Assert.Equal(data, ms.ToArray());
@@ -134,7 +134,7 @@ public class SeekableRewindableStreamTest
     public void Rewind_IsNoOp()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         stream.Rewind();
         Assert.Equal(0, stream.Position);
         ms.Position = 2;
@@ -146,7 +146,7 @@ public class SeekableRewindableStreamTest
     public void StartRecording_IsNotNoOp()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         stream.StartRecording();
         Assert.True(stream.IsRecording);
     }
@@ -155,7 +155,7 @@ public class SeekableRewindableStreamTest
     public void StopRecording_IsNoOp()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         stream.StopRecording();
         Assert.False(stream.IsRecording);
     }
@@ -164,7 +164,7 @@ public class SeekableRewindableStreamTest
     public void Dispose_DisposesUnderlyingStream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         stream.Dispose();
         Assert.Throws<ObjectDisposedException>(() => ms.Read(new byte[1], 0, 1));
     }
@@ -173,7 +173,7 @@ public class SeekableRewindableStreamTest
     public void ReadAndSeek_MultipleOperations()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
 
         var buffer = new byte[3];
         stream.Read(buffer, 0, 3);
@@ -193,7 +193,7 @@ public class SeekableRewindableStreamTest
     public void SeekWithDifferentOrigins()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
 
         stream.Seek(3, SeekOrigin.Begin);
         Assert.Equal(3, stream.Position);
@@ -209,7 +209,7 @@ public class SeekableRewindableStreamTest
     public void WriteAndRead_WrittenDataIsReadable()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
 
         var writeData = new byte[] { 1, 2, 3, 4, 5 };
         stream.Write(writeData, 0, writeData.Length);
@@ -224,7 +224,7 @@ public class SeekableRewindableStreamTest
     public void RecordingOperationsDoAffectStream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
 
         stream.StartRecording();
         var buffer = new byte[3];
@@ -249,7 +249,7 @@ public partial class SeekableRewindableSpanTest
     public void Read_Span()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         var buffer = new byte[5];
         int bytesRead = stream.Read(buffer);
         Assert.Equal(5, bytesRead);
@@ -260,7 +260,7 @@ public partial class SeekableRewindableSpanTest
     public void Write_Span()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
         var data = new byte[] { 1, 2, 3, 4, 5 };
         stream.Write(data);
         Assert.Equal(data, ms.ToArray());
@@ -270,7 +270,7 @@ public partial class SeekableRewindableSpanTest
     public void ReadAndWrite_SpanOperations()
     {
         var ms = new MemoryStream();
-        var stream = new SeekableRewindableStream(ms);
+        var stream = new SeekableSharpCompressStream(ms);
 
         var writeData = new byte[] { 1, 2, 3, 4, 5 };
         stream.Write(writeData);

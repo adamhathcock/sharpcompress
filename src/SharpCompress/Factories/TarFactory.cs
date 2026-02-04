@@ -49,7 +49,7 @@ public class TarFactory
     /// <inheritdoc/>
     public override bool IsArchive(Stream stream, string? password = null)
     {
-        var rewindableStream = new RewindableStream(stream);
+        var rewindableStream = new SharpCompressStream(stream);
         rewindableStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -76,7 +76,7 @@ public class TarFactory
         CancellationToken cancellationToken = default
     )
     {
-        var rewindableStream = new RewindableStream(stream);
+        var rewindableStream = new SharpCompressStream(stream);
         rewindableStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -160,7 +160,7 @@ public class TarFactory
     public IReader OpenReader(Stream stream, ReaderOptions? options)
     {
         options ??= new ReaderOptions();
-        var rewindableStream = new RewindableStream(stream);
+        var rewindableStream = new SharpCompressStream(stream);
         rewindableStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -188,7 +188,7 @@ public class TarFactory
     {
         cancellationToken.ThrowIfCancellationRequested();
         options ??= new ReaderOptions();
-        var rewindableStream = new RewindableStream(stream);
+        var rewindableStream = new SharpCompressStream(stream);
         rewindableStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {

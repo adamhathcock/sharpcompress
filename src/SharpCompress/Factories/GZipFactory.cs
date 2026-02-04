@@ -107,7 +107,7 @@ public class GZipFactory
 
     /// <inheritdoc/>
     internal override bool TryOpenReader(
-        RewindableStream rewindableStream,
+        SharpCompressStream rewindableStream,
         ReaderOptions options,
         out IReader? reader
     )

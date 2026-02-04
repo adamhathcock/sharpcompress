@@ -54,7 +54,7 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var bStream = new RewindableStream(stream);
+        var bStream = new SharpCompressStream(stream);
         bStream.StartRecording();
 
         var factories = Factory.Factories.OfType<Factory>();

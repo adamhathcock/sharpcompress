@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-internal partial class RewindableStream
+internal partial class SharpCompressStream
 {
     public override Task<int> ReadAsync(
         byte[] buffer,
@@ -371,7 +371,7 @@ internal partial class RewindableStream
             if (ThrowOnDispose)
             {
                 throw new InvalidOperationException(
-                    $"Attempt to dispose of a {nameof(RewindableStream)} when {nameof(ThrowOnDispose)} is true"
+                    $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is true"
                 );
             }
             isDisposed = true;

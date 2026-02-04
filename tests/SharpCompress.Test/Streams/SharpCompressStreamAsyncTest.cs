@@ -10,7 +10,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Streams;
 
-public class RewindableStreamAsyncTest
+public class SharpCompressStreamAsyncTest
 {
     [Fact]
     public async ValueTask TestRewindAsync()
@@ -26,7 +26,7 @@ public class RewindableStreamAsyncTest
         bw.Write(7);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
@@ -57,7 +57,7 @@ public class RewindableStreamAsyncTest
         bw.Write(7);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
@@ -85,7 +85,7 @@ public class RewindableStreamAsyncTest
         bw.Write(4);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
@@ -111,13 +111,13 @@ public class RewindableStreamAsyncTest
         byte[] asyncResult;
 
         var ms1 = new MemoryStream(testData);
-        using (var stream = new RewindableStream(ms1))
+        using (var stream = new SharpCompressStream(ms1))
         {
             syncResult = ReadAllSync(stream);
         }
 
         var ms2 = new MemoryStream(testData);
-        using (var stream = new RewindableStream(ms2))
+        using (var stream = new SharpCompressStream(ms2))
         {
             asyncResult = await ReadAllAsync(stream).ConfigureAwait(false);
         }
@@ -136,7 +136,7 @@ public class RewindableStreamAsyncTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         var buffer = new byte[8];
@@ -159,7 +159,7 @@ public class RewindableStreamAsyncTest
     {
         var ms = new MemoryStream(new byte[10000]);
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
 
         var cts = new CancellationTokenSource();
         var buffer = new byte[4096];
@@ -176,7 +176,7 @@ public class RewindableStreamAsyncTest
     {
         var ms = new MemoryStream();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
 
         var buffer = new byte[0];
         int bytesRead = await stream.ReadAsync(buffer, 0, 0).ConfigureAwait(false);
@@ -194,7 +194,7 @@ public class RewindableStreamAsyncTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
 
         var totalData = new byte[50 * 4];
         var buffer = new byte[8];
@@ -223,7 +223,7 @@ public class RewindableStreamAsyncTest
         bw.Write(2);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
 
         var buffer = new byte[4096];
 
@@ -249,7 +249,7 @@ public class RewindableStreamAsyncTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
         Assert.Equal(0, stream.Position);
 
         var buffer = new byte[4];
@@ -270,7 +270,7 @@ public class RewindableStreamAsyncTest
     {
         var ms = new MemoryStream(new byte[10000]);
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
 
         var cts = new CancellationTokenSource();
         var buffer = new byte[4096];
@@ -285,7 +285,7 @@ public class RewindableStreamAsyncTest
     {
         var ms = new MemoryStream();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
 
         var buffer = Memory<byte>.Empty;
         int bytesRead = await stream.ReadAsync(buffer).ConfigureAwait(false);
@@ -303,7 +303,7 @@ public class RewindableStreamAsyncTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
 
         var totalData = new byte[50 * 4];
         var buffer = new byte[8];
@@ -346,7 +346,7 @@ public class RewindableStreamAsyncTest
     }
 #endif
 
-    private static byte[] ReadAllSync(RewindableStream stream)
+    private static byte[] ReadAllSync(SharpCompressStream stream)
     {
         var result = new List<byte>();
         var buffer = new byte[4096];
@@ -363,7 +363,7 @@ public class RewindableStreamAsyncTest
         return result.ToArray();
     }
 
-    private static async Task<byte[]> ReadAllAsync(RewindableStream stream)
+    private static async Task<byte[]> ReadAllAsync(SharpCompressStream stream)
     {
         var result = new List<byte>();
         var buffer = new byte[4096];
@@ -383,7 +383,7 @@ public class RewindableStreamAsyncTest
     }
 
 #if !LEGACY_DOTNET
-    private static async ValueTask<byte[]> ReadAllAsyncMemory(RewindableStream stream)
+    private static async ValueTask<byte[]> ReadAllAsyncMemory(SharpCompressStream stream)
     {
         var result = new List<byte>();
         var buffer = new byte[4096];
@@ -416,7 +416,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
@@ -449,7 +449,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         var buffer = new byte[8];
@@ -483,7 +483,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         // Read first 4 values (gets buffered)
@@ -528,7 +528,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         // Read first 4 values (gets buffered)
@@ -579,7 +579,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         Assert.Equal(1, await ReadInt32Async(stream).ConfigureAwait(false));
@@ -616,7 +616,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Simulate factory detection: record first 512 bytes
         stream.StartRecording();
@@ -663,7 +663,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 512 bytes
         stream.StartRecording();
@@ -698,7 +698,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 512 bytes
         stream.StartRecording();
@@ -733,7 +733,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 512 bytes
         stream.StartRecording();
@@ -775,7 +775,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 100 bytes
         stream.StartRecording();
@@ -828,7 +828,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Simulate factory detection: record first 512 bytes
         stream.StartRecording();
@@ -875,7 +875,7 @@ public class RewindableStreamAsyncTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 512 bytes
         stream.StartRecording();

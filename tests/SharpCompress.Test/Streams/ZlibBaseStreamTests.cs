@@ -80,7 +80,7 @@ public class ZLibBaseStreamTests
     private void Compress(Stream input, Stream output, int compressionLevel)
     {
         using var zlibStream = new ZlibStream(
-            RewindableStream.CreateNonDisposing(output),
+            SharpCompressStream.CreateNonDisposing(output),
             CompressionMode.Compress,
             (CompressionLevel)compressionLevel
         );
@@ -91,7 +91,7 @@ public class ZLibBaseStreamTests
     private void Decompress(Stream input, Stream output)
     {
         using var zlibStream = new ZlibStream(
-            RewindableStream.CreateNonDisposing(input),
+            SharpCompressStream.CreateNonDisposing(input),
             CompressionMode.Decompress
         );
         zlibStream.CopyTo(output);

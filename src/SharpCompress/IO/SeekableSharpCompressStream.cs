@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal sealed partial class SeekableRewindableStream : RewindableStream
+internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
 {
     public override Stream BaseStream() => _underlyingStream;
 
@@ -22,7 +22,7 @@ internal sealed partial class SeekableRewindableStream : RewindableStream
     /// </summary>
     public new bool ThrowOnDispose { get; set; }
 
-    public SeekableRewindableStream(Stream stream)
+    public SeekableSharpCompressStream(Stream stream)
         : base(new NullStream())
     {
         if (stream is null)
@@ -106,7 +106,7 @@ internal sealed partial class SeekableRewindableStream : RewindableStream
         if (ThrowOnDispose)
         {
             throw new InvalidOperationException(
-                $"Attempt to dispose of a {nameof(SeekableRewindableStream)} when {nameof(ThrowOnDispose)} is true"
+                $"Attempt to dispose of a {nameof(SeekableSharpCompressStream)} when {nameof(ThrowOnDispose)} is true"
             );
         }
         _isDisposed = true;

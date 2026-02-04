@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal partial class RewindableStream : Stream, IStreamStack
+internal partial class SharpCompressStream : Stream, IStreamStack
 {
     public virtual Stream BaseStream() => stream;
 
@@ -41,18 +41,18 @@ internal partial class RewindableStream : Stream, IStreamStack
     /// </summary>
     public bool ThrowOnDispose { get; set; }
 
-    public RewindableStream(Stream stream)
+    public SharpCompressStream(Stream stream)
     {
         this.stream = stream;
         _logicalPosition = 0;
     }
 
     /// <summary>
-    /// Creates a RewindableStream with a rolling buffer that enables limited backward seeking.
+    /// Creates a SharpCompressStream with a rolling buffer that enables limited backward seeking.
     /// </summary>
     /// <param name="stream">The underlying stream to wrap.</param>
     /// <param name="rollingBufferSize">Size of the rolling buffer in bytes.</param>
-    public RewindableStream(Stream stream, int rollingBufferSize)
+    public SharpCompressStream(Stream stream, int rollingBufferSize)
         : this(stream)
     {
         if (rollingBufferSize > 0)
@@ -64,7 +64,7 @@ internal partial class RewindableStream : Stream, IStreamStack
     /// <summary>
     /// Private constructor for passthrough mode.
     /// </summary>
-    private RewindableStream(Stream stream, bool leaveStreamOpen, bool passthrough)
+    private SharpCompressStream(Stream stream, bool leaveStreamOpen, bool passthrough)
     {
         this.stream = stream;
         LeaveStreamOpen = leaveStreamOpen;
@@ -73,11 +73,11 @@ internal partial class RewindableStream : Stream, IStreamStack
     }
 
     /// <summary>
-    /// Creates a RewindableStream that acts as a passthrough wrapper.
+    /// Creates a SharpCompressStream that acts as a passthrough wrapper.
     /// No buffering is performed; CanSeek delegates to the underlying stream.
     /// The underlying stream will not be disposed when this stream is disposed.
     /// </summary>
-    public static RewindableStream CreateNonDisposing(Stream stream) =>
+    public static SharpCompressStream CreateNonDisposing(Stream stream) =>
         new(stream, leaveStreamOpen: true, passthrough: true);
 
     internal virtual bool IsRecording { get; private set; }
@@ -91,7 +91,7 @@ internal partial class RewindableStream : Stream, IStreamStack
         if (ThrowOnDispose)
         {
             throw new InvalidOperationException(
-                $"Attempt to dispose of a {nameof(RewindableStream)} when {nameof(ThrowOnDispose)} is true"
+                $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is true"
             );
         }
         isDisposed = true;
@@ -141,37 +141,37 @@ internal partial class RewindableStream : Stream, IStreamStack
         bufferStream.Position = 0;
     }
 
-    public static RewindableStream EnsureSeekable(Stream stream)
+    public static SharpCompressStream EnsureSeekable(Stream stream)
     {
-        // If it's a passthrough RewindableStream, unwrap it and create proper seekable wrapper
-        if (stream is RewindableStream rewindableStream)
+        // If it's a passthrough SharpCompressStream, unwrap it and create proper seekable wrapper
+        if (stream is SharpCompressStream sharpCompressStream)
         {
-            if (rewindableStream._isPassthrough)
+            if (sharpCompressStream._isPassthrough)
             {
                 // Unwrap the passthrough and create appropriate wrapper
-                var underlying = rewindableStream.stream;
+                var underlying = sharpCompressStream.stream;
                 if (underlying.CanSeek)
                 {
-                    // Create SeekableRewindableStream that preserves LeaveStreamOpen
-                    return new SeekableRewindableStream(underlying)
+                    // Create SeekableSharpCompressStream that preserves LeaveStreamOpen
+                    return new SeekableSharpCompressStream(underlying)
                     {
                         LeaveStreamOpen = true, // Preserve non-disposing behavior
                     };
                 }
                 // Non-seekable underlying stream - wrap with rolling buffer
-                return new RewindableStream(underlying, DefaultRollingBufferSize)
+                return new SharpCompressStream(underlying, DefaultRollingBufferSize)
                 {
                     LeaveStreamOpen = true,
                 };
             }
             // Not passthrough - return as-is
-            return rewindableStream;
+            return sharpCompressStream;
         }
 
-        // Check if stream is wrapping a RewindableStream (e.g., via IStreamStack)
+        // Check if stream is wrapping a SharpCompressStream (e.g., via IStreamStack)
         if (stream is IStreamStack streamStack)
         {
-            var underlying = streamStack.GetStream<RewindableStream>();
+            var underlying = streamStack.GetStream<SharpCompressStream>();
             if (underlying is not null)
             {
                 return underlying;
@@ -180,12 +180,12 @@ internal partial class RewindableStream : Stream, IStreamStack
 
         if (stream.CanSeek)
         {
-            return new SeekableRewindableStream(stream);
+            return new SeekableSharpCompressStream(stream);
         }
 
-        // For non-seekable streams, create a RewindableStream with rolling buffer
+        // For non-seekable streams, create a SharpCompressStream with rolling buffer
         // to allow limited backward seeking (required by decompressors that over-read)
-        return new RewindableStream(stream, DefaultRollingBufferSize);
+        return new SharpCompressStream(stream, DefaultRollingBufferSize);
     }
 
     public virtual void StartRecording()
