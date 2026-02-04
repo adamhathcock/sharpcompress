@@ -178,11 +178,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             .Parts.First()
             .GetCompressedStreamAsync(cancellationToken)
             .ConfigureAwait(false);
-        var useSyncOverAsync = false;
-#if LEGACY_DOTNET
-        useSyncOverAsync = true;
-#endif
-        return CreateEntryStream(stream, useSyncOverAsync);
+        return CreateEntryStream(stream);
     }
 
     internal virtual ValueTask<bool> NextEntryForCurrentStreamAsync() =>

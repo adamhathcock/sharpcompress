@@ -14,13 +14,11 @@ public partial class EntryStream : Stream
     private readonly Stream _stream;
     private bool _completed;
     private bool _isDisposed;
-    private readonly bool _useSyncOverAsyncDispose;
 
-    internal EntryStream(IReader reader, Stream stream, bool useSyncOverAsyncDispose)
+    internal EntryStream(IReader reader, Stream stream)
     {
         _reader = reader;
         _stream = stream;
-        _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
     }
 
     /// <summary>
@@ -41,7 +39,7 @@ public partial class EntryStream : Stream
         _isDisposed = true;
         if (!(_completed || _reader.Cancelled))
         {
-            if (_useSyncOverAsyncDispose)
+            if (Utility.UseSyncOverAsyncDispose())
             {
                 SkipEntryAsync().GetAwaiter().GetResult();
             }

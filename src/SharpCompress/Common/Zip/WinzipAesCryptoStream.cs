@@ -19,18 +19,15 @@ internal partial class WinzipAesCryptoStream : Stream
     private bool _isFinalBlock;
     private long _totalBytesLeftToRead;
     private bool _isDisposed;
-    private bool _useSyncOverAsyncDispose;
 
     internal WinzipAesCryptoStream(
         Stream stream,
         WinzipAesEncryptionData winzipAesEncryptionData,
-        long length,
-        bool useSyncOverAsyncDispose
+        long length
     )
     {
         _stream = stream;
         _totalBytesLeftToRead = length;
-        _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
 
         _cipher = CreateCipher(winzipAesEncryptionData);
 
@@ -72,7 +69,7 @@ internal partial class WinzipAesCryptoStream : Stream
         if (disposing)
         {
             // Read out last 10 auth bytes - catch exceptions for async-only streams
-            if (_useSyncOverAsyncDispose)
+            if (Utility.UseSyncOverAsyncDispose())
             {
                 var ten = ArrayPool<byte>.Shared.Rent(10);
                 try

@@ -253,7 +253,11 @@ public class TarArchiveAsyncTests : ArchiveTests
             {
                 ++numberOfEntries;
 
+#if LEGACY_DOTNET
                 using var tarEntryStream = await entry.OpenEntryStreamAsync();
+#else
+                await using var tarEntryStream = await entry.OpenEntryStreamAsync();
+#endif
                 using var testFileStream = new MemoryStream();
                 await tarEntryStream.CopyToAsync(testFileStream);
                 Assert.Equal(testBytes.Length, testFileStream.Length);

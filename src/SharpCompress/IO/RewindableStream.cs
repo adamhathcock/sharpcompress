@@ -77,8 +77,8 @@ internal partial class RewindableStream : Stream, IStreamStack
     /// No buffering is performed; CanSeek delegates to the underlying stream.
     /// The underlying stream will not be disposed when this stream is disposed.
     /// </summary>
-    public static RewindableStream CreateNonDisposing(Stream stream)
-        => new(stream, leaveStreamOpen: true, passthrough: true);
+    public static RewindableStream CreateNonDisposing(Stream stream) =>
+        new(stream, leaveStreamOpen: true, passthrough: true);
 
     internal virtual bool IsRecording { get; private set; }
 
@@ -155,13 +155,13 @@ internal partial class RewindableStream : Stream, IStreamStack
                     // Create SeekableRewindableStream that preserves LeaveStreamOpen
                     return new SeekableRewindableStream(underlying)
                     {
-                        LeaveStreamOpen = true // Preserve non-disposing behavior
+                        LeaveStreamOpen = true, // Preserve non-disposing behavior
                     };
                 }
                 // Non-seekable underlying stream - wrap with rolling buffer
                 return new RewindableStream(underlying, DefaultRollingBufferSize)
                 {
-                    LeaveStreamOpen = true
+                    LeaveStreamOpen = true,
                 };
             }
             // Not passthrough - return as-is
@@ -231,7 +231,8 @@ internal partial class RewindableStream : Stream, IStreamStack
         throw new NotSupportedException();
     }
 
-    public override long Length => _isPassthrough ? stream.Length : throw new NotSupportedException();
+    public override long Length =>
+        _isPassthrough ? stream.Length : throw new NotSupportedException();
 
     public override long Position
     {

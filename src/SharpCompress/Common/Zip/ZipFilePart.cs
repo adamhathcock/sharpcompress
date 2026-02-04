@@ -270,8 +270,7 @@ internal abstract partial class ZipFilePart : FilePart
                         return new WinzipAesCryptoStream(
                             plainStream,
                             Header.WinzipAesEncryptionData,
-                            Header.CompressedSize - 10,
-                            false
+                            Header.CompressedSize - 10
                         );
                     }
                     return plainStream;

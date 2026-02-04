@@ -246,7 +246,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
         {
             throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
-        var stream = GetEntryStream(false);
+        var stream = GetEntryStream();
         _wroteCurrentEntry = true;
         return stream;
     }
@@ -254,11 +254,11 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     /// <summary>
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>
-    protected EntryStream CreateEntryStream(Stream? decompressed, bool useSyncOverAsyncDispose) =>
-        new(this, decompressed.NotNull(), useSyncOverAsyncDispose);
+    protected EntryStream CreateEntryStream(Stream? decompressed) =>
+        new(this, decompressed.NotNull());
 
-    protected virtual EntryStream GetEntryStream(bool useSyncOverAsyncDispose) =>
-        CreateEntryStream(Entry.Parts.First().GetCompressedStream(), useSyncOverAsyncDispose);
+    protected virtual EntryStream GetEntryStream() =>
+        CreateEntryStream(Entry.Parts.First().GetCompressedStream());
 
     #endregion
 
