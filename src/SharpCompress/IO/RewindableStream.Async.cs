@@ -26,10 +26,10 @@ internal partial class RewindableStream
                 .ConfigureAwait(false);
         }
 
-        // If rolling buffer is enabled (and not recording), use rolling buffer logic
-        if (_rollingBuffer is not null)
+        // If ring buffer is enabled (and not recording), use ring buffer logic
+        if (_ringBuffer is not null)
         {
-            return await ReadWithRollingBufferAsync(buffer, offset, count, cancellationToken)
+            return await ReadWithRingBufferAsync(buffer, offset, count, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -70,11 +70,11 @@ internal partial class RewindableStream
                         .WriteAsync(buffer, offset + read, tempRead, cancellationToken)
                         .ConfigureAwait(false);
                 }
-                else if (_rollingBuffer is not null && tempRead > 0)
+                else if (_ringBuffer is not null && tempRead > 0)
                 {
-                    // When transitioning out of recording mode, add to rolling buffer
+                    // When transitioning out of recording mode, add to ring buffer
                     // so that future rewinds will work
-                    AddToRollingBuffer(buffer, offset + read, tempRead);
+                    _ringBuffer.Write(buffer, offset + read, tempRead);
                 }
                 streamPosition += tempRead;
                 _logicalPosition = streamPosition;
@@ -102,9 +102,9 @@ internal partial class RewindableStream
     }
 
     /// <summary>
-    /// Async version of ReadWithRollingBuffer.
+    /// Async version of ReadWithRingBuffer.
     /// </summary>
-    private async Task<int> ReadWithRollingBufferAsync(
+    private async Task<int> ReadWithRingBufferAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -113,39 +113,15 @@ internal partial class RewindableStream
     {
         int totalRead = 0;
 
-        // If logical position is behind stream position, read from rolling buffer first
+        // If logical position is behind stream position, read from ring buffer first
         while (count > 0 && _logicalPosition < streamPosition)
         {
             long bytesFromEnd = streamPosition - _logicalPosition;
-            if (bytesFromEnd > _rollingBufferLength)
-            {
-                throw new InvalidOperationException(
-                    "Logical position is outside rolling buffer range."
-                );
-            }
-
-            int bufferIndex = (int)(
-                (_rollingBufferWritePos - bytesFromEnd + _rollingBufferSize) % _rollingBufferSize
-            );
-            int availableFromBuffer = (int)Math.Min(bytesFromEnd, count);
-
-            int firstPart = Math.Min(availableFromBuffer, _rollingBufferSize - bufferIndex);
-            Array.Copy(_rollingBuffer!, bufferIndex, buffer, offset, firstPart);
-            if (firstPart < availableFromBuffer)
-            {
-                Array.Copy(
-                    _rollingBuffer!,
-                    0,
-                    buffer,
-                    offset + firstPart,
-                    availableFromBuffer - firstPart
-                );
-            }
-
-            totalRead += availableFromBuffer;
-            offset += availableFromBuffer;
-            count -= availableFromBuffer;
-            _logicalPosition += availableFromBuffer;
+            int available = _ringBuffer!.ReadFromEnd(bytesFromEnd, buffer, offset, count);
+            totalRead += available;
+            offset += available;
+            count -= available;
+            _logicalPosition += available;
         }
 
         // If more data needed, read from underlying stream
@@ -156,7 +132,7 @@ internal partial class RewindableStream
                 .ConfigureAwait(false);
             if (read > 0)
             {
-                AddToRollingBuffer(buffer, offset, read);
+                _ringBuffer!.Write(buffer, offset, read);
                 streamPosition += read;
                 _logicalPosition += read;
                 totalRead += read;
@@ -183,11 +159,10 @@ internal partial class RewindableStream
             return await ReadWithRecordingAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
 
-        // If rolling buffer is enabled (and not recording), use rolling buffer logic
-        if (_rollingBuffer is not null)
+        // If ring buffer is enabled (and not recording), use ring buffer logic
+        if (_ringBuffer is not null)
         {
-            return await ReadWithRollingBufferAsync(buffer, cancellationToken)
-                .ConfigureAwait(false);
+            return await ReadWithRingBufferAsync(buffer, cancellationToken).ConfigureAwait(false);
         }
 
         // No buffering - read directly from stream
@@ -224,12 +199,12 @@ internal partial class RewindableStream
                         .WriteAsync(buffer.Slice(read, tempRead), cancellationToken)
                         .ConfigureAwait(false);
                 }
-                else if (_rollingBuffer is not null && tempRead > 0)
+                else if (_ringBuffer is not null && tempRead > 0)
                 {
-                    // When transitioning out of recording mode, add to rolling buffer
+                    // When transitioning out of recording mode, add to ring buffer
                     // so that future rewinds will work
                     var tempBuffer = buffer.Slice(read, tempRead).ToArray();
-                    AddToRollingBuffer(tempBuffer, 0, tempRead);
+                    _ringBuffer.Write(tempBuffer, 0, tempRead);
                 }
                 streamPosition += tempRead;
                 _logicalPosition = streamPosition;
@@ -255,9 +230,9 @@ internal partial class RewindableStream
     }
 
     /// <summary>
-    /// Async version of ReadWithRollingBuffer for Memory&lt;byte&gt;.
+    /// Async version of ReadWithRingBuffer for Memory&lt;byte&gt;.
     /// </summary>
-    private async ValueTask<int> ReadWithRollingBufferAsync(
+    private async ValueTask<int> ReadWithRingBufferAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken
     )
@@ -266,35 +241,24 @@ internal partial class RewindableStream
         int count = buffer.Length;
         int offset = 0;
 
-        // If logical position is behind stream position, read from rolling buffer first
+        // If logical position is behind stream position, read from ring buffer first
+        // Note: We need to use a temporary byte array because RingBuffer.ReadFromEnd expects byte[]
         while (count > 0 && _logicalPosition < streamPosition)
         {
             long bytesFromEnd = streamPosition - _logicalPosition;
-            if (bytesFromEnd > _rollingBufferLength)
-            {
-                throw new InvalidOperationException(
-                    "Logical position is outside rolling buffer range."
-                );
-            }
-
-            int bufferIndex = (int)(
-                (_rollingBufferWritePos - bytesFromEnd + _rollingBufferSize) % _rollingBufferSize
+            var tempBuffer = new byte[Math.Min(count, (int)bytesFromEnd)];
+            int available = _ringBuffer!.ReadFromEnd(
+                bytesFromEnd,
+                tempBuffer,
+                0,
+                tempBuffer.Length
             );
-            int availableFromBuffer = (int)Math.Min(bytesFromEnd, count);
+            tempBuffer.AsSpan(0, available).CopyTo(buffer.Span.Slice(offset));
 
-            int firstPart = Math.Min(availableFromBuffer, _rollingBufferSize - bufferIndex);
-            _rollingBuffer.AsSpan(bufferIndex, firstPart).CopyTo(buffer.Span.Slice(offset));
-            if (firstPart < availableFromBuffer)
-            {
-                _rollingBuffer
-                    .AsSpan(0, availableFromBuffer - firstPart)
-                    .CopyTo(buffer.Span.Slice(offset + firstPart));
-            }
-
-            totalRead += availableFromBuffer;
-            offset += availableFromBuffer;
-            count -= availableFromBuffer;
-            _logicalPosition += availableFromBuffer;
+            totalRead += available;
+            offset += available;
+            count -= available;
+            _logicalPosition += available;
         }
 
         // If more data needed, read from underlying stream
@@ -305,9 +269,9 @@ internal partial class RewindableStream
                 .ConfigureAwait(false);
             if (read > 0)
             {
-                // AddToRollingBuffer expects byte[], so we need to copy
+                // RingBuffer.Write expects byte[], so we need to copy
                 var tempBuffer = buffer.Slice(offset, read).ToArray();
-                AddToRollingBuffer(tempBuffer, 0, read);
+                _ringBuffer!.Write(tempBuffer, 0, read);
                 streamPosition += read;
                 _logicalPosition += read;
                 totalRead += read;
@@ -356,11 +320,8 @@ internal partial class RewindableStream
         {
             isDisposed = true;
             await stream.DisposeAsync();
-            if (_rollingBuffer is not null)
-            {
-                System.Buffers.ArrayPool<byte>.Shared.Return(_rollingBuffer);
-                _rollingBuffer = null;
-            }
+            _ringBuffer?.Dispose();
+            _ringBuffer = null;
         }
     }
 #endif

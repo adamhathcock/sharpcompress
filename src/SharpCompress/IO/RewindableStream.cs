@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.IO;
 
 namespace SharpCompress.IO;
@@ -15,11 +14,7 @@ internal partial class RewindableStream : Stream, IStreamStack
     private long streamPosition;
 
     // Rolling buffer for limited backward seeking without unbounded memory growth.
-    // This is a circular buffer that keeps the last N bytes read from the stream.
-    private byte[]? _rollingBuffer;
-    private int _rollingBufferSize;
-    private int _rollingBufferWritePos; // Next write position in circular buffer
-    private int _rollingBufferLength; // Number of valid bytes in rolling buffer (0 to _rollingBufferSize)
+    private RingBuffer? _ringBuffer;
     private long _logicalPosition; // The current logical read position (can be behind streamPosition)
 
     /// <summary>
@@ -43,10 +38,7 @@ internal partial class RewindableStream : Stream, IStreamStack
     {
         if (rollingBufferSize > 0)
         {
-            _rollingBuffer = ArrayPool<byte>.Shared.Rent(rollingBufferSize);
-            _rollingBufferSize = rollingBufferSize;
-            _rollingBufferWritePos = 0;
-            _rollingBufferLength = 0;
+            _ringBuffer = new RingBuffer(rollingBufferSize);
         }
     }
 
@@ -63,11 +55,8 @@ internal partial class RewindableStream : Stream, IStreamStack
         if (disposing)
         {
             stream.Dispose();
-            if (_rollingBuffer is not null)
-            {
-                ArrayPool<byte>.Shared.Return(_rollingBuffer);
-                _rollingBuffer = null;
-            }
+            _ringBuffer?.Dispose();
+            _ringBuffer = null;
         }
     }
 
@@ -160,8 +149,8 @@ internal partial class RewindableStream : Stream, IStreamStack
             {
                 return streamPosition - bufferStream.Length + bufferStream.Position;
             }
-            // If rolling buffer is active (and not recording), use logical position
-            if (_rollingBuffer is not null)
+            // If ring buffer is active (and not recording), use logical position
+            if (_ringBuffer is not null)
             {
                 return _logicalPosition;
             }
@@ -187,18 +176,18 @@ internal partial class RewindableStream : Stream, IStreamStack
             throw new NotSupportedException("Cannot seek outside recorded region.");
         }
 
-        // If rolling buffer is enabled, check if we can seek within it
-        if (_rollingBuffer is not null)
+        // If ring buffer is enabled, check if we can seek within it
+        if (_ringBuffer is not null)
         {
-            long rollingBufferStart = streamPosition - _rollingBufferLength;
-            if (targetPosition >= rollingBufferStart && targetPosition <= streamPosition)
+            long ringBufferStart = streamPosition - _ringBuffer.Length;
+            if (targetPosition >= ringBufferStart && targetPosition <= streamPosition)
             {
                 _logicalPosition = targetPosition;
                 return;
             }
-            // Can't seek outside rolling buffer range
+            // Can't seek outside ring buffer range
             throw new NotSupportedException(
-                $"Cannot seek to position {targetPosition}. Valid range with rolling buffer: [{rollingBufferStart}, {streamPosition}]"
+                $"Cannot seek to position {targetPosition}. Valid range with ring buffer: [{ringBufferStart}, {streamPosition}]"
             );
         }
 
@@ -220,10 +209,10 @@ internal partial class RewindableStream : Stream, IStreamStack
             return ReadWithRecording(buffer, offset, count);
         }
 
-        // If rolling buffer is enabled (and not recording), use rolling buffer logic
-        if (_rollingBuffer is not null)
+        // If ring buffer is enabled (and not recording), use ring buffer logic
+        if (_ringBuffer is not null)
         {
-            return ReadWithRollingBuffer(buffer, offset, count);
+            return ReadWithRingBuffer(buffer, offset, count);
         }
 
         // No buffering - read directly from stream
@@ -250,11 +239,11 @@ internal partial class RewindableStream : Stream, IStreamStack
                 {
                     bufferStream.Write(buffer, offset + read, tempRead);
                 }
-                else if (_rollingBuffer is not null && tempRead > 0)
+                else if (_ringBuffer is not null && tempRead > 0)
                 {
-                    // When transitioning out of recording mode, add to rolling buffer
+                    // When transitioning out of recording mode, add to ring buffer
                     // so that future rewinds will work
-                    AddToRollingBuffer(buffer, offset + read, tempRead);
+                    _ringBuffer.Write(buffer, offset + read, tempRead);
                 }
                 streamPosition += tempRead;
                 _logicalPosition = streamPosition;
@@ -278,53 +267,22 @@ internal partial class RewindableStream : Stream, IStreamStack
     }
 
     /// <summary>
-    /// Reads data using the rolling buffer. If logical position is behind stream position,
-    /// serves data from the rolling buffer first.
+    /// Reads data using the ring buffer. If logical position is behind stream position,
+    /// serves data from the ring buffer first.
     /// </summary>
-    private int ReadWithRollingBuffer(byte[] buffer, int offset, int count)
+    private int ReadWithRingBuffer(byte[] buffer, int offset, int count)
     {
         int totalRead = 0;
 
-        // If logical position is behind stream position, read from rolling buffer first
+        // If logical position is behind stream position, read from ring buffer first
         while (count > 0 && _logicalPosition < streamPosition)
         {
-            // Calculate offset in rolling buffer
             long bytesFromEnd = streamPosition - _logicalPosition;
-            if (bytesFromEnd > _rollingBufferLength)
-            {
-                // This shouldn't happen if SeekToPosition validated correctly
-                throw new InvalidOperationException(
-                    "Logical position is outside rolling buffer range."
-                );
-            }
-
-            // Find the index in the circular buffer
-            // _rollingBufferWritePos is where next byte would be written (one past last valid byte)
-            // So the byte at _logicalPosition is at: (_rollingBufferWritePos - bytesFromEnd + _rollingBufferSize) % _rollingBufferSize
-            int bufferIndex = (int)(
-                (_rollingBufferWritePos - bytesFromEnd + _rollingBufferSize) % _rollingBufferSize
-            );
-            int availableFromBuffer = (int)Math.Min(bytesFromEnd, count);
-
-            // Read from rolling buffer (may wrap around)
-            int firstPart = Math.Min(availableFromBuffer, _rollingBufferSize - bufferIndex);
-            Array.Copy(_rollingBuffer!, bufferIndex, buffer, offset, firstPart);
-            if (firstPart < availableFromBuffer)
-            {
-                // Wrap around
-                Array.Copy(
-                    _rollingBuffer!,
-                    0,
-                    buffer,
-                    offset + firstPart,
-                    availableFromBuffer - firstPart
-                );
-            }
-
-            totalRead += availableFromBuffer;
-            offset += availableFromBuffer;
-            count -= availableFromBuffer;
-            _logicalPosition += availableFromBuffer;
+            int available = _ringBuffer!.ReadFromEnd(bytesFromEnd, buffer, offset, count);
+            totalRead += available;
+            offset += available;
+            count -= available;
+            _logicalPosition += available;
         }
 
         // If more data needed, read from underlying stream
@@ -333,8 +291,7 @@ internal partial class RewindableStream : Stream, IStreamStack
             int read = stream.Read(buffer, offset, count);
             if (read > 0)
             {
-                // Add to rolling buffer
-                AddToRollingBuffer(buffer, offset, read);
+                _ringBuffer!.Write(buffer, offset, read);
                 streamPosition += read;
                 _logicalPosition += read;
                 totalRead += read;
@@ -342,44 +299,6 @@ internal partial class RewindableStream : Stream, IStreamStack
         }
 
         return totalRead;
-    }
-
-    /// <summary>
-    /// Adds data to the rolling buffer (circular).
-    /// </summary>
-    private void AddToRollingBuffer(byte[] data, int offset, int count)
-    {
-        if (_rollingBuffer is null || count == 0)
-        {
-            return;
-        }
-
-        // If data is larger than buffer, only keep the last _rollingBufferSize bytes
-        if (count >= _rollingBufferSize)
-        {
-            Array.Copy(
-                data,
-                offset + count - _rollingBufferSize,
-                _rollingBuffer,
-                0,
-                _rollingBufferSize
-            );
-            _rollingBufferWritePos = 0;
-            _rollingBufferLength = _rollingBufferSize;
-            return;
-        }
-
-        // Write data to circular buffer
-        int firstPart = Math.Min(count, _rollingBufferSize - _rollingBufferWritePos);
-        Array.Copy(data, offset, _rollingBuffer, _rollingBufferWritePos, firstPart);
-        if (firstPart < count)
-        {
-            // Wrap around
-            Array.Copy(data, offset + firstPart, _rollingBuffer, 0, count - firstPart);
-        }
-
-        _rollingBufferWritePos = (_rollingBufferWritePos + count) % _rollingBufferSize;
-        _rollingBufferLength = Math.Min(_rollingBufferLength + count, _rollingBufferSize);
     }
 
     public override long Seek(long offset, SeekOrigin origin)
