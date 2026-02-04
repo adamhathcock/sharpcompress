@@ -94,9 +94,6 @@ public partial class LzwStream : Stream
     public LzwStream(Stream baseInputStream)
     {
         this.baseInputStream = baseInputStream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(LzwStream));
-#endif
     }
 
     /// <summary>
@@ -557,9 +554,6 @@ public partial class LzwStream : Stream
         if (!isClosed)
         {
             isClosed = true;
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(LzwStream));
-#endif
             if (IsStreamOwner)
             {
                 baseInputStream.Dispose();

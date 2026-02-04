@@ -19,9 +19,6 @@ public partial class EntryStream : Stream
     {
         _reader = reader;
         _stream = stream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(EntryStream));
-#endif
     }
 
     /// <summary>
@@ -63,9 +60,6 @@ public partial class EntryStream : Stream
                 lzmaStream.Flush(); //Lzma over reads. Knock it back
             }
         }
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(EntryStream));
-#endif
         base.Dispose(disposing);
         _stream.Dispose();
     }

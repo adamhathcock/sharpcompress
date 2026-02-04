@@ -12,16 +12,10 @@ public abstract class XZReadOnlyStream : ReadOnlyStream
         {
             throw new InvalidFormatException("Must be able to read from stream");
         }
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(XZReadOnlyStream));
-#endif
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(XZReadOnlyStream));
-#endif
         base.Dispose(disposing);
     }
 }

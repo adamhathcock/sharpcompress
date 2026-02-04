@@ -76,9 +76,6 @@ public sealed partial class ADCStream : Stream
         }
 
         _stream = stream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ADCStream));
-#endif
     }
 
     public override bool CanRead => _stream.CanRead;
@@ -104,9 +101,6 @@ public sealed partial class ADCStream : Stream
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ADCStream));
-#endif
         base.Dispose(disposing);
     }
 

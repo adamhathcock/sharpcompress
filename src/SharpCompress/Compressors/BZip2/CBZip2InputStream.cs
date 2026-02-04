@@ -189,9 +189,6 @@ internal partial class CBZip2InputStream : Stream
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(CBZip2InputStream));
-#endif
         base.Dispose(disposing);
         bsStream?.Dispose();
     }

@@ -19,10 +19,6 @@ public partial class SqueezeStream
             .BuildDecodedStreamAsync(cancellationToken)
             .ConfigureAwait(false);
 
-#if DEBUG_STREAMS
-        squeezeStream.DebugConstruct(typeof(SqueezeStream));
-#endif
-
         return squeezeStream;
     }
 

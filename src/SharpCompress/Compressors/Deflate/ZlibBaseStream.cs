@@ -104,10 +104,6 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
         _encoding = encoding;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ZlibBaseStream));
-#endif
-
         // workitem 7159
         if (flavor == ZlibStreamFlavor.GZIP)
         {
@@ -523,9 +519,6 @@ internal class ZlibBaseStream : Stream, IStreamStack
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ZlibBaseStream));
-#endif
         base.Dispose(disposing);
         if (disposing)
         {
@@ -557,9 +550,6 @@ internal class ZlibBaseStream : Stream, IStreamStack
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ZlibBaseStream));
-#endif
         await base.DisposeAsync().ConfigureAwait(false);
         if (_stream is null)
         {

@@ -25,9 +25,6 @@ public sealed partial class BZip2Stream
     {
         var bZip2Stream = new BZip2Stream();
         bZip2Stream.leaveOpen = leaveOpen;
-#if DEBUG_STREAMS
-        bZip2Stream.DebugConstruct(typeof(BZip2Stream));
-#endif
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {

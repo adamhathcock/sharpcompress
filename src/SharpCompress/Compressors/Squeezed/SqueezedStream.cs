@@ -27,18 +27,11 @@ public partial class SqueezeStream : Stream
         var squeezeStream = new SqueezeStream(stream, compressedSize);
         squeezeStream._decodedStream = squeezeStream.BuildDecodedStream();
 
-#if DEBUG_STREAMS
-        squeezeStream.DebugConstruct(typeof(SqueezeStream));
-#endif
-
         return squeezeStream;
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(SqueezeStream));
-#endif
         _decodedStream?.Dispose();
         base.Dispose(disposing);
     }

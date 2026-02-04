@@ -33,10 +33,6 @@ internal sealed partial class AesDecoderStream : DecoderStream2
         mStream = input;
         mLimit = limit;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(AesDecoderStream));
-#endif
-
         if (((uint)input.Length & 15) != 0)
         {
             throw new NotSupportedException("AES decoder does not support padding.");
@@ -70,9 +66,6 @@ internal sealed partial class AesDecoderStream : DecoderStream2
                 return;
             }
             isDisposed = true;
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(AesDecoderStream));
-#endif
             if (disposing)
             {
                 mStream.Dispose();

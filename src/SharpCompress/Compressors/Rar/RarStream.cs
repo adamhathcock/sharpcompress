@@ -31,10 +31,6 @@ internal partial class RarStream : Stream
         this.unpack = unpack;
         this.fileHeader = fileHeader;
         this.readStream = readStream;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(RarStream));
-#endif
     }
 
     public void Initialize()
@@ -51,9 +47,6 @@ internal partial class RarStream : Stream
         {
             if (disposing)
             {
-#if DEBUG_STREAMS
-                this.DebugDispose(typeof(RarStream));
-#endif
                 ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
                 readStream.Dispose();

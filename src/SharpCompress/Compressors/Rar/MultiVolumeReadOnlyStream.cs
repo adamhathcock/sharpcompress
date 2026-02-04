@@ -19,9 +19,6 @@ internal sealed partial class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStr
         filePartEnumerator = parts.GetEnumerator();
         filePartEnumerator.MoveNext();
         InitializeNextFilePart();
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(MultiVolumeReadOnlyStream));
-#endif
     }
 
     protected override void Dispose(bool disposing)
@@ -29,10 +26,6 @@ internal sealed partial class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStr
         base.Dispose(disposing);
         if (disposing)
         {
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(MultiVolumeReadOnlyStream));
-#endif
-
             filePartEnumerator.Dispose();
 
             currentStream = null;

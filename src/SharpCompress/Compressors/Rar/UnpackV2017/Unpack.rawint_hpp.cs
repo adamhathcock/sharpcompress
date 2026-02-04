@@ -1,6 +1,5 @@
 ﻿using uint32 = System.UInt32;
 
-
 namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack

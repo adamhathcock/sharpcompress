@@ -24,16 +24,10 @@ public partial class RunLength90Stream : Stream
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         _compressedSize = compressedSize;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(RunLength90Stream));
-#endif
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(RunLength90Stream));
-#endif
         base.Dispose(disposing);
     }
 

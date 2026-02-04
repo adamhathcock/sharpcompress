@@ -250,9 +250,6 @@ public partial class DeflateStream : Stream, IStreamStack
         {
             if (!_disposed)
             {
-#if DEBUG_STREAMS
-                this.DebugDispose(typeof(DeflateStream));
-#endif
                 if (disposing && !_leaveOpen)
                 {
                     _baseStream?.Dispose();

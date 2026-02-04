@@ -15,9 +15,6 @@ internal partial class CrcBuilderStream : Stream
     public CrcBuilderStream(Stream target)
     {
         _mTarget = target;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(CrcBuilderStream));
-#endif
         _mCrc = Crc.INIT_CRC;
     }
 
@@ -28,9 +25,6 @@ internal partial class CrcBuilderStream : Stream
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(CrcBuilderStream));
-#endif
         _mTarget.Dispose();
         base.Dispose(disposing);
     }

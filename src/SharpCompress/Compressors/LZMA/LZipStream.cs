@@ -59,9 +59,6 @@ public sealed partial class LZipStream : Stream
                     _countingWritableSubStream
                 )
             );
-#if DEBUG_STREAMS
-            this.DebugConstruct(typeof(LZipStream));
-#endif
         }
     }
 
@@ -103,9 +100,6 @@ public sealed partial class LZipStream : Stream
             return;
         }
         _disposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(LZipStream));
-#endif
         if (disposing)
         {
             Finish();

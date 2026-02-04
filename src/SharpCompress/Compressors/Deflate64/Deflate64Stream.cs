@@ -49,9 +49,6 @@ public sealed partial class Deflate64Stream : Stream
 
         _stream = stream;
         _buffer = new byte[DEFAULT_BUFFER_SIZE];
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(Deflate64Stream));
-#endif
     }
 
     public override bool CanRead => _stream.CanRead;
@@ -195,9 +192,6 @@ public sealed partial class Deflate64Stream : Stream
             // In this case, we still need to clean up internal resources, hence the inner finally blocks.
             try
             {
-#if DEBUG_STREAMS
-                this.DebugDispose(typeof(Deflate64Stream));
-#endif
                 if (disposing)
                 {
                     _stream.Dispose();

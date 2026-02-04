@@ -28,10 +28,6 @@ internal partial class WinzipAesCryptoStream : Stream
         _stream = stream;
         _totalBytesLeftToRead = length;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(WinzipAesCryptoStream));
-#endif
-
         _cipher = CreateCipher(winzipAesEncryptionData);
 
         var iv = new byte[BLOCK_SIZE_IN_BYTES];
@@ -69,9 +65,6 @@ internal partial class WinzipAesCryptoStream : Stream
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(WinzipAesCryptoStream));
-#endif
         if (disposing)
         {
             // Read out last 10 auth bytes - catch exceptions for async-only streams

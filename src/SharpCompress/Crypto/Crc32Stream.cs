@@ -25,16 +25,10 @@ public sealed class Crc32Stream : Stream
         this.stream = stream;
         _table = InitializeTable(polynomial);
         this.seed = seed;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(Crc32Stream));
-#endif
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(Crc32Stream));
-#endif
         base.Dispose(disposing);
     }
 
