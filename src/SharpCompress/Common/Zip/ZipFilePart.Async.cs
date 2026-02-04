@@ -99,10 +99,15 @@ internal abstract partial class ZipFilePart
                 {
                     if (Header.WinzipAesEncryptionData != null)
                     {
+                        var useSyncOverAsync = false;
+#if LEGACY_DOTNET
+                        useSyncOverAsync = true;
+#endif
                         return new WinzipAesCryptoStream(
                             plainStream,
                             Header.WinzipAesEncryptionData,
-                            Header.CompressedSize - 10
+                            Header.CompressedSize - 10,
+                            useSyncOverAsync
                         );
                     }
                     return plainStream;

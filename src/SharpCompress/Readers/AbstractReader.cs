@@ -35,8 +35,6 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
 
     public ArchiveType ArchiveType { get; }
 
-    protected bool IsAsync => _entriesForCurrentReadStreamAsync is not null;
-
     /// <summary>
     /// Current volume that the current entry resides in
     /// </summary>
@@ -248,7 +246,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
         {
             throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
-        var stream = GetEntryStream();
+        var stream = GetEntryStream(false);
         _wroteCurrentEntry = true;
         return stream;
     }
@@ -256,11 +254,11 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     /// <summary>
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>
-    protected EntryStream CreateEntryStream(Stream? decompressed) =>
-        new(this, decompressed.NotNull());
+    protected EntryStream CreateEntryStream(Stream? decompressed, bool useSyncOverAsyncDispose) =>
+        new(this, decompressed.NotNull(), useSyncOverAsyncDispose);
 
-    protected virtual EntryStream GetEntryStream() =>
-        CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+    protected virtual EntryStream GetEntryStream(bool useSyncOverAsyncDispose) =>
+        CreateEntryStream(Entry.Parts.First().GetCompressedStream(), useSyncOverAsyncDispose);
 
     #endregion
 

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -252,14 +253,14 @@ public class ZipReaderAsyncTests : ReaderTests
                 File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"))
             )
         )
-        using (
-            IReader baseReader = ZipReader.OpenReader(
+
+        await using (
+            var reader = await ReaderFactory.OpenAsyncReader(
                 stream,
                 new ReaderOptions { Password = "test" }
             )
         )
         {
-            IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
@@ -284,14 +285,13 @@ public class ZipReaderAsyncTests : ReaderTests
                 File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip"))
             )
         )
-        using (
-            IReader baseReader = ZipReader.OpenReader(
+        await using (
+            var reader = await ReaderFactory.OpenAsyncReader(
                 stream,
                 new ReaderOptions { Password = "test" }
             )
         )
         {
-            IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)

@@ -153,12 +153,12 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             }
         }
 
-        protected override EntryStream GetEntryStream()
+        protected override EntryStream GetEntryStream(bool useSyncOverAsyncDispose)
         {
             var entry = _currentEntry.NotNull("currentEntry is not null");
             if (entry.IsDirectory)
             {
-                return CreateEntryStream(Stream.Null);
+                return CreateEntryStream(Stream.Null, false);
             }
 
             var folder = entry.FilePart.Folder;
@@ -186,7 +186,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             return CreateEntryStream(
                 new SyncOnlyStream(
                     new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
-                )
+                ),
+                useSyncOverAsyncDispose
             );
         }
 

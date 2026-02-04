@@ -36,7 +36,15 @@ internal static partial class TarHeaderFactory
                         break;
                     case StreamingMode.Streaming:
                         {
-                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                            var useSyncOverAsync = false;
+#if LEGACY_DOTNET
+                            useSyncOverAsync = true;
+#endif
+                            header.PackedStream = new TarReadOnlySubStream(
+                                stream,
+                                header.Size,
+                                useSyncOverAsync
+                            );
                         }
                         break;
                     default:

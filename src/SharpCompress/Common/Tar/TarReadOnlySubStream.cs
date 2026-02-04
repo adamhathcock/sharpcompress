@@ -6,13 +6,15 @@ namespace SharpCompress.Common.Tar;
 internal class TarReadOnlySubStream : Stream
 {
     private readonly Stream _stream;
+    private readonly bool _useSyncOverAsyncDispose;
 
     private bool _isDisposed;
     private long _amountRead;
 
-    public TarReadOnlySubStream(Stream stream, long bytesToRead)
+    public TarReadOnlySubStream(Stream stream, long bytesToRead, bool useSyncOverAsyncDispose)
     {
         _stream = stream;
+        _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
         BytesLeftToRead = bytesToRead;
     }
 
@@ -35,7 +37,14 @@ internal class TarReadOnlySubStream : Stream
 
             if (bytesInLastBlock != 0)
             {
-                _stream.Skip(512 - bytesInLastBlock);
+                if (_useSyncOverAsyncDispose)
+                {
+                    _stream.SkipAsync(512 - bytesInLastBlock).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    _stream.Skip(512 - bytesInLastBlock);
+                }
             }
         }
     }
