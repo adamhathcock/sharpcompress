@@ -2,33 +2,12 @@
 
 using System;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Crypto;
 
 [CLSCompliant(false)]
-public sealed class Crc32Stream : Stream, IStreamStack
+public sealed class Crc32Stream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly Stream stream;
     private readonly uint[] _table;
     private uint seed;

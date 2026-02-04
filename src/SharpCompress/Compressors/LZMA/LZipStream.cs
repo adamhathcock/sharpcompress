@@ -17,30 +17,10 @@ namespace SharpCompress.Compressors.LZMA;
 /// <summary>
 /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
 /// </summary>
-public sealed partial class LZipStream : Stream, IStreamStack
+public sealed partial class LZipStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly Stream _stream;
-    private readonly SharpCompressStream? _countingWritableSubStream;
+    private readonly CountingStream? _countingWritableSubStream;
     private bool _disposed;
     private bool _finished;
 
@@ -70,7 +50,7 @@ public sealed partial class LZipStream : Stream, IStreamStack
             var dSize = 104 * 1024;
             WriteHeaderSize(stream);
 
-            _countingWritableSubStream = new SharpCompressStream(stream, leaveOpen: true);
+            _countingWritableSubStream = new CountingStream(new NonDisposingStream(stream));
             _stream = new Crc32Stream(
                 LzmaStream.Create(
                     new LzmaEncoderProperties(true, dSize),
@@ -94,7 +74,7 @@ public sealed partial class LZipStream : Stream, IStreamStack
                 var crc32Stream = (Crc32Stream)_stream;
                 crc32Stream.WrappedStream.Dispose();
                 crc32Stream.Dispose();
-                var compressedCount = _countingWritableSubStream.NotNull().InternalPosition;
+                var compressedCount = _countingWritableSubStream.NotNull().BytesWritten;
 
                 Span<byte> intBuf = stackalloc byte[8];
                 BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);

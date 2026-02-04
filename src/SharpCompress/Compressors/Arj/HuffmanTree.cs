@@ -47,7 +47,7 @@ namespace SharpCompress.Compressors.Arj
     }
 
     [CLSCompliant(true)]
-    public sealed class HuffTree
+    public sealed partial class HuffTree
     {
         private readonly List<TreeEntry> _tree;
 

@@ -45,7 +45,7 @@ internal abstract partial class ZipFilePart : FilePart
         );
         if (LeaveStreamOpen)
         {
-            return SharpCompressStream.Create(decompressionStream, leaveOpen: true);
+            return new NonDisposingStream(decompressionStream);
         }
         return decompressionStream;
     }
@@ -88,19 +88,39 @@ internal abstract partial class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.Reduce1:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 1);
+                return ReduceStream.Create(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    1
+                );
             }
             case ZipCompressionMethod.Reduce2:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 2);
+                return ReduceStream.Create(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    2
+                );
             }
             case ZipCompressionMethod.Reduce3:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 3);
+                return ReduceStream.Create(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    3
+                );
             }
             case ZipCompressionMethod.Reduce4:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 4);
+                return ReduceStream.Create(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    4
+                );
             }
             case ZipCompressionMethod.Explode:
             {
@@ -155,7 +175,7 @@ internal abstract partial class ZipFilePart : FilePart
             {
                 Span<byte> props = stackalloc byte[2];
                 stream.ReadFully(props);
-                return new PpmdStream(new PpmdProperties(props), stream, false);
+                return PpmdStream.Create(new PpmdProperties(props), stream, false);
             }
             case ZipCompressionMethod.WinzipAes:
             {
@@ -213,7 +233,7 @@ internal abstract partial class ZipFilePart : FilePart
             ) || Header.IsZip64
         )
         {
-            plainStream = SharpCompressStream.Create(plainStream, leaveOpen: true); //make sure AES doesn't close
+            plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close
         }
         else
         {
@@ -250,7 +270,8 @@ internal abstract partial class ZipFilePart : FilePart
                         return new WinzipAesCryptoStream(
                             plainStream,
                             Header.WinzipAesEncryptionData,
-                            Header.CompressedSize - 10
+                            Header.CompressedSize - 10,
+                            false
                         );
                     }
                     return plainStream;

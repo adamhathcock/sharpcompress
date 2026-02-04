@@ -1,33 +1,14 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
-using SharpCompress.IO;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip;
 
-internal class WinzipAesCryptoStream : Stream, IStreamStack
+internal partial class WinzipAesCryptoStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private const int BLOCK_SIZE_IN_BYTES = 16;
     private readonly SymmetricAlgorithm _cipher;
     private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
@@ -38,15 +19,18 @@ internal class WinzipAesCryptoStream : Stream, IStreamStack
     private bool _isFinalBlock;
     private long _totalBytesLeftToRead;
     private bool _isDisposed;
+    private bool _useSyncOverAsyncDispose;
 
     internal WinzipAesCryptoStream(
         Stream stream,
         WinzipAesEncryptionData winzipAesEncryptionData,
-        long length
+        long length,
+        bool useSyncOverAsyncDispose
     )
     {
         _stream = stream;
         _totalBytesLeftToRead = length;
+        _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
 
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(WinzipAesCryptoStream));
@@ -94,11 +78,32 @@ internal class WinzipAesCryptoStream : Stream, IStreamStack
 #endif
         if (disposing)
         {
-            //read out last 10 auth bytes
-            Span<byte> ten = stackalloc byte[10];
-            _stream.ReadFully(ten);
+            // Read out last 10 auth bytes - catch exceptions for async-only streams
+            if (_useSyncOverAsyncDispose)
+            {
+                var ten = ArrayPool<byte>.Shared.Rent(10);
+                try
+                {
+                    _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(ten);
+                }
+            }
+            else
+            {
+                Span<byte> ten = stackalloc byte[10];
+                _stream.ReadFully(ten);
+            }
             _stream.Dispose();
         }
+    }
+
+    private async Task ReadAuthBytesAsync()
+    {
+        byte[] authBytes = new byte[10];
+        await _stream.ReadFullyAsync(authBytes, 0, 10).ConfigureAwait(false);
     }
 
     public override void Flush() { }

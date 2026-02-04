@@ -5,6 +5,14 @@ namespace SharpCompress.Readers;
 
 public class ReaderOptions : OptionsBase
 {
+    /// <summary>
+    /// The default buffer size for stream operations.
+    /// This value (65536 bytes) is preserved for backward compatibility.
+    /// New code should use Constants.BufferSize instead (81920 bytes), which matches .NET's Stream.CopyTo default.
+    /// </summary>
+    [Obsolete(
+        "Use Constants.BufferSize instead. This constant will be removed in a future version."
+    )]
     public const int DefaultBufferSize = 0x10000;
 
     /// <summary>
@@ -16,7 +24,7 @@ public class ReaderOptions : OptionsBase
 
     public bool DisableCheckIncomplete { get; set; }
 
-    public int BufferSize { get; set; } = DefaultBufferSize;
+    public int BufferSize { get; set; } = Constants.BufferSize;
 
     /// <summary>
     /// Provide a hint for the extension of the archive being read, can speed up finding the correct decoder.  Should be without the leading period in the form like: tar.gz or zip

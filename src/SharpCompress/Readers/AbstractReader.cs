@@ -18,18 +18,22 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     private IEnumerator<TEntry>? _entriesForCurrentReadStream;
     private IAsyncEnumerator<TEntry>? _entriesForCurrentReadStreamAsync;
     private bool _wroteCurrentEntry;
+    private readonly bool _disposeVolume;
 
-    internal AbstractReader(ReaderOptions options, ArchiveType archiveType)
+    internal AbstractReader(
+        ReaderOptions options,
+        ArchiveType archiveType,
+        bool disposeVolume = true
+    )
     {
         ArchiveType = archiveType;
+        _disposeVolume = disposeVolume;
         Options = options;
     }
 
     internal ReaderOptions Options { get; }
 
     public ArchiveType ArchiveType { get; }
-
-    protected bool IsAsync => _entriesForCurrentReadStreamAsync is not null;
 
     /// <summary>
     /// Current volume that the current entry resides in
@@ -56,7 +60,10 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     public virtual void Dispose()
     {
         _entriesForCurrentReadStream?.Dispose();
-        Volume?.Dispose();
+        if (_disposeVolume)
+        {
+            Volume?.Dispose();
+        }
     }
 
     #endregion
@@ -196,7 +203,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     {
         using Stream s = OpenEntryStream();
         var sourceStream = WrapWithProgress(s, Entry);
-        sourceStream.CopyTo(writeStream, 81920);
+        sourceStream.CopyTo(writeStream, Constants.BufferSize);
     }
 
     private Stream WrapWithProgress(Stream source, Entry entry)
@@ -239,7 +246,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
         {
             throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
-        var stream = GetEntryStream();
+        var stream = GetEntryStream(false);
         _wroteCurrentEntry = true;
         return stream;
     }
@@ -247,11 +254,11 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     /// <summary>
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>
-    protected EntryStream CreateEntryStream(Stream? decompressed) =>
-        new(this, decompressed.NotNull());
+    protected EntryStream CreateEntryStream(Stream? decompressed, bool useSyncOverAsyncDispose) =>
+        new(this, decompressed.NotNull(), useSyncOverAsyncDispose);
 
-    protected virtual EntryStream GetEntryStream() =>
-        CreateEntryStream(Entry.Parts.First().GetCompressedStream());
+    protected virtual EntryStream GetEntryStream(bool useSyncOverAsyncDispose) =>
+        CreateEntryStream(Entry.Parts.First().GetCompressedStream(), useSyncOverAsyncDispose);
 
     #endregion
 

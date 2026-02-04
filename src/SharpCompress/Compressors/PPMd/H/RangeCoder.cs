@@ -2,7 +2,10 @@
 
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.Rar;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.PPMd.H;
 
@@ -31,6 +34,8 @@ internal class RangeCoder
         Init();
     }
 
+    internal RangeCoder() { }
+
     private void Init()
     {
         SubRange = new SubRange();
@@ -40,6 +45,22 @@ internal class RangeCoder
         for (var i = 0; i < 4; i++)
         {
             _code = ((_code << 8) | Char) & UINT_MASK;
+        }
+    }
+
+    internal async ValueTask InitAsync(Stream stream, CancellationToken cancellationToken = default)
+    {
+        SubRange = new SubRange();
+
+        _low = _code = 0L;
+        _range = 0xFFFFffffL;
+
+        byte[] buffer = new byte[4];
+        await stream.ReadFullyAsync(buffer, 0, 4, cancellationToken).ConfigureAwait(false);
+
+        for (var i = 0; i < 4; i++)
+        {
+            _code = ((_code << 8) | buffer[i]) & UINT_MASK;
         }
     }
 
@@ -101,6 +122,39 @@ internal class RangeCoder
                 c2 = false;
             }
             _code = ((_code << 8) | Char) & UINT_MASK;
+            _range = (_range << 8) & UINT_MASK;
+            _low = (_low << 8) & UINT_MASK;
+        }
+    }
+
+    private async ValueTask<long> ReadCharAsync(CancellationToken cancellationToken = default)
+    {
+        if (_unpackRead != null)
+        {
+            return _unpackRead.Char;
+        }
+        if (_stream != null)
+        {
+            byte[] buffer = new byte[1];
+            await _stream.ReadFullyAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            return buffer[0];
+        }
+        return -1;
+    }
+
+    internal async ValueTask AriDecNormalizeAsync(CancellationToken cancellationToken = default)
+    {
+        var c2 = false;
+        while ((_low ^ (_low + _range)) < TOP || (c2 = _range < BOT))
+        {
+            if (c2)
+            {
+                _range = (-_low & (BOT - 1)) & UINT_MASK;
+                c2 = false;
+            }
+            _code =
+                ((_code << 8) | await ReadCharAsync(cancellationToken).ConfigureAwait(false))
+                & UINT_MASK;
             _range = (_range << 8) & UINT_MASK;
             _low = (_low << 8) & UINT_MASK;
         }

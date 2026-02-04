@@ -1,31 +1,10 @@
 using System;
 using System.IO;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Reduce;
 
-public class ReduceStream : Stream, IStreamStack
+public partial class ReduceStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => inStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly long unCompressedSize;
     private readonly long compressedSize;
     private readonly Stream inStream;
@@ -44,7 +23,7 @@ public class ReduceStream : Stream, IStreamStack
     private int length;
     private int distance;
 
-    public ReduceStream(Stream inStr, long compsize, long unCompSize, int factor)
+    private ReduceStream(Stream inStr, long compsize, long unCompSize, int factor)
     {
         inStream = inStr;
         compressedSize = compsize;
@@ -69,7 +48,13 @@ public class ReduceStream : Stream, IStreamStack
         outByte = 0;
 
         LoadBitLengthTable();
-        LoadNextByteTable();
+    }
+
+    public static ReduceStream Create(Stream inStr, long compsize, long unCompSize, int factor)
+    {
+        var stream = new ReduceStream(inStr, compsize, unCompSize, factor);
+        stream.LoadNextByteTable();
+        return stream;
     }
 
     protected override void Dispose(bool disposing)

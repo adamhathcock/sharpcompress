@@ -47,25 +47,7 @@ internal enum ZlibStreamFlavor
 
 internal class ZlibBaseStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
     Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     protected internal ZlibCodec _z; // deferred init... new ZlibCodec();
 
@@ -611,9 +593,16 @@ internal class ZlibBaseStream : Stream, IStreamStack
         {
             _stream.Flush();
         }
-        //rewind the buffer
-        ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
-        z.AvailableBytesIn = 0;
+        else if (z.AvailableBytesIn > 0)
+        {
+            // Rewind the underlying stream by the number of unconsumed bytes in the buffer
+            // This handles the case where the decompressor over-read past the end of the entry
+            if (_stream is IStreamStack stack)
+            {
+                stack.Rewind(z.AvailableBytesIn);
+            }
+            z.AvailableBytesIn = 0;
+        }
     }
 
     public override async Task FlushAsync(CancellationToken cancellationToken)
@@ -625,9 +614,16 @@ internal class ZlibBaseStream : Stream, IStreamStack
         {
             await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
-        //rewind the buffer
-        ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
-        z.AvailableBytesIn = 0;
+        else if (z.AvailableBytesIn > 0)
+        {
+            // Rewind the underlying stream by the number of unconsumed bytes in the buffer
+            // This handles the case where the decompressor over-read past the end of the entry
+            if (_stream is IStreamStack stack)
+            {
+                stack.Rewind(z.AvailableBytesIn);
+            }
+            z.AvailableBytesIn = 0;
+        }
     }
 
     public override Int64 Seek(Int64 offset, SeekOrigin origin) =>
@@ -1002,7 +998,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+            this.Rewind(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 
@@ -1194,7 +1190,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+            this.Rewind(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 

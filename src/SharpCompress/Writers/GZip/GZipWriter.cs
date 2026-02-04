@@ -16,7 +16,7 @@ public sealed partial class GZipWriter : AbstractWriter
     {
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = SharpCompressStream.Create(destination, leaveOpen: true);
+            destination = new NonDisposingStream(destination);
         }
         InitializeStream(
             new GZipStream(
@@ -48,7 +48,7 @@ public sealed partial class GZipWriter : AbstractWriter
         stream.FileName = filename;
         stream.LastModified = modificationTime;
         var progressStream = WrapWithProgress(source, filename);
-        progressStream.CopyTo(stream);
+        progressStream.CopyTo(stream, Constants.BufferSize);
         _wroteToStream = true;
     }
 

@@ -2,6 +2,8 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 // This is a port of Dmitry Shkarin's PPMd Variant I Revision 1.
 // Ported by Michael Bone (mjbone03@yahoo.com.au).
@@ -267,6 +269,21 @@ internal partial class Model
         return _coder;
     }
 
+    internal async ValueTask<Coder> DecodeStartAsync(
+        Stream source,
+        PpmdProperties properties,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _allocator = properties._allocator;
+        _coder = new Coder();
+        await _coder.RangeDecoderInitializeAsync(source, cancellationToken).ConfigureAwait(false);
+        StartModel(properties.ModelOrder, properties.RestorationMethod);
+        _minimumContext = _maximumContext;
+        _numberStatistics = _minimumContext.NumberStatistics;
+        return _coder;
+    }
+
     internal int DecodeBlock(Stream source, byte[] buffer, int offset, int count)
     {
         if (_minimumContext == PpmContext.ZERO)
@@ -324,6 +341,81 @@ internal partial class Model
             _minimumContext = _maximumContext;
             _numberStatistics = _minimumContext.NumberStatistics;
             _coder.RangeDecoderNormalize(source);
+        }
+
+        StopDecoding:
+        return total;
+    }
+
+    internal async ValueTask<int> DecodeBlockAsync(
+        Stream source,
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_minimumContext == PpmContext.ZERO)
+        {
+            return 0;
+        }
+
+        var total = 0;
+        while (total < count)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_numberStatistics != 0)
+            {
+                DecodeSymbol1(_minimumContext);
+            }
+            else
+            {
+                DecodeBinarySymbol(_minimumContext);
+            }
+
+            _coder.RangeRemoveSubrange();
+
+            while (_foundState == PpmState.ZERO)
+            {
+                await _coder
+                    .RangeDecoderNormalizeAsync(source, cancellationToken)
+                    .ConfigureAwait(false);
+                do
+                {
+                    _orderFall++;
+                    _minimumContext = _minimumContext.Suffix;
+                    if (_minimumContext == PpmContext.ZERO)
+                    {
+                        goto StopDecoding;
+                    }
+                } while (_minimumContext.NumberStatistics == _numberMasked);
+                DecodeSymbol2(_minimumContext);
+                _coder.RangeRemoveSubrange();
+            }
+
+            buffer[offset] = _foundState.Symbol;
+            offset++;
+            total++;
+
+            if (_orderFall == 0 && (Pointer)_foundState.Successor >= _allocator._baseUnit)
+            {
+                _maximumContext = _foundState.Successor;
+            }
+            else
+            {
+                UpdateModel(_minimumContext);
+                if (_escapeCount == 0)
+                {
+                    ClearMask();
+                }
+            }
+
+            _minimumContext = _maximumContext;
+            _numberStatistics = _minimumContext.NumberStatistics;
+            await _coder
+                .RangeDecoderNormalizeAsync(source, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         StopDecoding:

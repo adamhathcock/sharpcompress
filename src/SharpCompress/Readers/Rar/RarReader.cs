@@ -97,10 +97,20 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         }
     }
 
+    protected override async IAsyncEnumerable<RarReaderEntry> GetEntriesAsync(Stream stream)
+    {
+        volume = new RarReaderVolume(stream, Options, 0);
+        await foreach (var fp in volume.ReadFilePartsAsync())
+        {
+            ValidateArchive(volume);
+            yield return new RarReaderEntry(volume.IsSolidArchive, fp);
+        }
+    }
+
     protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
         Entry.Parts;
 
-    protected override EntryStream GetEntryStream()
+    protected override EntryStream GetEntryStream(bool useSyncOverAsyncDispose)
     {
         if (Entry.IsRedir)
         {
@@ -112,17 +122,24 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         );
         if (Entry.IsRarV3)
         {
-            return CreateEntryStream(RarCrcStream.Create(UnpackV1.Value, Entry.FileHeader, stream));
+            return CreateEntryStream(
+                RarCrcStream.Create(UnpackV1.Value, Entry.FileHeader, stream),
+                useSyncOverAsyncDispose
+            );
         }
 
         if (Entry.FileHeader.FileCrc?.Length > 5)
         {
             return CreateEntryStream(
-                RarBLAKE2spStream.Create(UnpackV2017.Value, Entry.FileHeader, stream)
+                RarBLAKE2spStream.Create(UnpackV2017.Value, Entry.FileHeader, stream),
+                useSyncOverAsyncDispose
             );
         }
 
-        return CreateEntryStream(RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream));
+        return CreateEntryStream(
+            RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream),
+            useSyncOverAsyncDispose
+        );
     }
 
     // GetEntryStreamAsync moved to RarReader.Async.cs

@@ -191,7 +191,7 @@ public class TestBase : IAsyncDisposable
             .EnumerateFiles(ORIGINAL_FILES_PATH, "*.*", SearchOption.AllDirectories)
             .ToLookup(path => Path.GetExtension(path));
 
-        Assert.Equal(extracted.Count, original.Count);
+        Assert.Equal(original.Count, extracted.Count);
 
         foreach (var orig in original)
         {

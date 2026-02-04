@@ -275,7 +275,7 @@ namespace SharpCompress.Compressors.Shrink
             if (dstPos == dstCap)
             {
                 srcUsed = stream.BytesRead;
-                dstUsed = 0;
+                dstUsed = dstPos;
                 return UnshrnkStatus.Full;
             }
 
@@ -297,7 +297,7 @@ namespace SharpCompress.Compressors.Shrink
                 if (dstPos == dstCap)
                 {
                     srcUsed = stream.BytesRead;
-                    dstUsed = 0;
+                    dstUsed = dstPos;
                     return UnshrnkStatus.Full;
                 }
 

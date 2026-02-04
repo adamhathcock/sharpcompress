@@ -39,7 +39,7 @@ internal abstract partial class ZipFilePart
             .ConfigureAwait(false);
         if (LeaveStreamOpen)
         {
-            return SharpCompressStream.Create(decompressionStream, leaveOpen: true);
+            return new NonDisposingStream(decompressionStream);
         }
         return decompressionStream;
     }
@@ -63,7 +63,7 @@ internal abstract partial class ZipFilePart
             ) || Header.IsZip64
         )
         {
-            plainStream = SharpCompressStream.Create(plainStream, leaveOpen: true); //make sure AES doesn't close
+            plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close
         }
         else
         {
@@ -99,10 +99,15 @@ internal abstract partial class ZipFilePart
                 {
                     if (Header.WinzipAesEncryptionData != null)
                     {
+                        var useSyncOverAsync = false;
+#if LEGACY_DOTNET
+                        useSyncOverAsync = true;
+#endif
                         return new WinzipAesCryptoStream(
                             plainStream,
                             Header.WinzipAesEncryptionData,
-                            Header.CompressedSize - 10
+                            Header.CompressedSize - 10,
+                            useSyncOverAsync
                         );
                     }
                     return plainStream;
@@ -136,28 +141,55 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.Shrink:
             {
-                return new ShrinkStream(
-                    stream,
-                    CompressionMode.Decompress,
-                    Header.CompressedSize,
-                    Header.UncompressedSize
-                );
+                return await ShrinkStream
+                    .CreateAsync(
+                        stream,
+                        CompressionMode.Decompress,
+                        Header.CompressedSize,
+                        Header.UncompressedSize,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Reduce1:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 1);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    1,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Reduce2:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 2);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    2,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Reduce3:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 3);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    3,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Reduce4:
             {
-                return new ReduceStream(stream, Header.CompressedSize, Header.UncompressedSize, 4);
+                return await ReduceStream.CreateAsync(
+                    stream,
+                    Header.CompressedSize,
+                    Header.UncompressedSize,
+                    4,
+                    cancellationToken
+                );
             }
             case ZipCompressionMethod.Explode:
             {
@@ -201,7 +233,7 @@ internal abstract partial class ZipFilePart
                 await stream
                     .ReadFullyAsync(props, 0, propsSize, cancellationToken)
                     .ConfigureAwait(false);
-                return LzmaStream.Create(
+                return await LzmaStream.CreateAsync(
                     props,
                     stream,
                     Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
@@ -222,7 +254,9 @@ internal abstract partial class ZipFilePart
             {
                 var props = new byte[2];
                 await stream.ReadFullyAsync(props, 0, 2, cancellationToken).ConfigureAwait(false);
-                return new PpmdStream(new PpmdProperties(props), stream, false);
+                return await PpmdStream
+                    .CreateAsync(new PpmdProperties(props), stream, false, cancellationToken)
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.WinzipAes:
             {

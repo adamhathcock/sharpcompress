@@ -60,7 +60,7 @@ internal sealed partial class StreamingZipHeaderFactory
     private sealed class StreamHeaderAsyncEnumerator : IAsyncEnumerator<ZipHeader>, IDisposable
     {
         private readonly StreamingZipHeaderFactory _headerFactory;
-        private readonly SharpCompressStream _rewindableStream;
+        private readonly RewindableStream _rewindableStream;
         private readonly AsyncBinaryReader _reader;
         private readonly CancellationToken _cancellationToken;
         private bool _completed;
@@ -72,7 +72,9 @@ internal sealed partial class StreamingZipHeaderFactory
         )
         {
             _headerFactory = headerFactory;
-            _rewindableStream = EnsureSharpCompressStream(stream);
+            // Use EnsureSeekable to avoid double-wrapping if stream is already a RewindableStream,
+            // and to preserve seekability for DataDescriptorStream which needs to seek backward
+            _rewindableStream = RewindableStream.EnsureSeekable(stream);
             _reader = new AsyncBinaryReader(_rewindableStream, leaveOpen: true);
             _cancellationToken = cancellationToken;
         }
@@ -234,8 +236,13 @@ internal sealed partial class StreamingZipHeaderFactory
                     {
                         lastEntryHeader.DataStartPosition = pos - lastEntryHeader.CompressedSize;
 
+                        // For SeekableRewindableStream, seek back to just after the local header signature.
+                        // Plain RewindableStream cannot seek to arbitrary positions, so we skip this.
                         // 4 = First 4 bytes of the entry header (i.e. 50 4B 03 04)
-                        _rewindableStream.Position = pos.Value + 4;
+                        if (_rewindableStream is SeekableRewindableStream)
+                        {
+                            _rewindableStream.Position = pos.Value + 4;
+                        }
                     }
                 }
                 else
@@ -281,6 +288,8 @@ internal sealed partial class StreamingZipHeaderFactory
                     } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
                     else if (localHeader.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                     {
+                        // Peek ahead to check if next data is a header or file data.
+                        // Use the IStreamStack.Rewind mechanism to give back the peeked bytes.
                         var nextHeaderBytes = await _reader
                             .ReadUInt32Async(_cancellationToken)
                             .ConfigureAwait(false);
@@ -312,30 +321,6 @@ internal sealed partial class StreamingZipHeaderFactory
         public void Dispose()
         {
             _reader.Dispose();
-        }
-
-        /// <summary>
-        /// Ensures the stream is a <see cref="SharpCompressStream"/> so header parsing can use rewind/buffer helpers.
-        /// </summary>
-        private static SharpCompressStream EnsureSharpCompressStream(Stream stream)
-        {
-            if (stream is SharpCompressStream sharpCompressStream)
-            {
-                return sharpCompressStream;
-            }
-
-            // Ensure the stream is already a SharpCompressStream so the buffer/size is set.
-            // The original code wrapped this with RewindableStream; use SharpCompressStream so we can get the buffer size.
-            if (stream is SourceStream src)
-            {
-                return new SharpCompressStream(
-                    stream,
-                    src.ReaderOptions.LeaveStreamOpen,
-                    bufferSize: src.ReaderOptions.BufferSize
-                );
-            }
-
-            throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
         }
     }
 }

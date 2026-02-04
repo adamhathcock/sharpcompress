@@ -5,31 +5,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal partial class RarBLAKE2spStream : RarStream, IStreamStack
+internal partial class RarBLAKE2spStream : RarStream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
-    Stream IStreamStack.BaseStream() => readStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly MultiVolumeReadOnlyStreamBase readStream;
     private readonly bool disableCRCCheck;
 

@@ -143,11 +143,15 @@ public abstract partial class AbstractReader<TEntry, TVolume>
 #if LEGACY_DOTNET
         using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
-        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
+        await sourceStream
+            .CopyToAsync(writeStream, Constants.BufferSize, cancellationToken)
+            .ConfigureAwait(false);
 #else
         await using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
-        await sourceStream.CopyToAsync(writeStream, 81920, cancellationToken).ConfigureAwait(false);
+        await sourceStream
+            .CopyToAsync(writeStream, Constants.BufferSize, cancellationToken)
+            .ConfigureAwait(false);
 #endif
     }
 
@@ -174,7 +178,11 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             .Parts.First()
             .GetCompressedStreamAsync(cancellationToken)
             .ConfigureAwait(false);
-        return CreateEntryStream(stream);
+        var useSyncOverAsync = false;
+#if LEGACY_DOTNET
+        useSyncOverAsync = true;
+#endif
+        return CreateEntryStream(stream, useSyncOverAsync);
     }
 
     internal virtual ValueTask<bool> NextEntryForCurrentStreamAsync() =>

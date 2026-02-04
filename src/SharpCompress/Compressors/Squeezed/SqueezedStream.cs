@@ -3,49 +3,35 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using SharpCompress.Compressors.RLE90;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Squeezed
 {
     [CLSCompliant(true)]
-    public class SqueezeStream : Stream, IStreamStack
+    public partial class SqueezeStream : Stream
     {
-#if DEBUG_STREAMS
-        long IStreamStack.InstanceId { get; set; }
-#endif
-        int IStreamStack.DefaultBufferSize { get; set; }
-
-        Stream IStreamStack.BaseStream() => _stream;
-
-        int IStreamStack.BufferSize
-        {
-            get => 0;
-            set { }
-        }
-        int IStreamStack.BufferPosition
-        {
-            get => 0;
-            set { }
-        }
-
-        void IStreamStack.SetPosition(long position) { }
-
         private readonly Stream _stream;
         private readonly int _compressedSize;
         private const int NUMVALS = 257;
         private const int SPEOF = 256;
 
-        private Stream _decodedStream;
+        private Stream _decodedStream = null!;
 
-        public SqueezeStream(Stream stream, int compressedSize)
+        private SqueezeStream(Stream stream, int compressedSize)
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
             _compressedSize = compressedSize;
-            _decodedStream = BuildDecodedStream();
+        }
+
+        public static SqueezeStream Create(Stream stream, int compressedSize)
+        {
+            var squeezeStream = new SqueezeStream(stream, compressedSize);
+            squeezeStream._decodedStream = squeezeStream.BuildDecodedStream();
 
 #if DEBUG_STREAMS
-            this.DebugConstruct(typeof(SqueezeStream));
+            squeezeStream.DebugConstruct(typeof(SqueezeStream));
 #endif
+
+            return squeezeStream;
         }
 
         protected override void Dispose(bool disposing)

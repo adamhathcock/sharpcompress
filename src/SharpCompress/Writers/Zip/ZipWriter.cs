@@ -15,6 +15,7 @@ using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Writers.Zip;
 
@@ -43,7 +44,7 @@ public partial class ZipWriter : AbstractWriter
 
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = SharpCompressStream.Create(destination, leaveOpen: true);
+            destination = new NonDisposingStream(destination);
         }
         InitializeStream(destination);
     }
@@ -87,7 +88,7 @@ public partial class ZipWriter : AbstractWriter
     {
         using var output = WriteToStream(entryPath, zipWriterEntryOptions);
         var progressStream = WrapWithProgress(source, entryPath);
-        progressStream.CopyTo(output);
+        progressStream.CopyTo(output, Constants.BufferSize);
     }
 
     public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
@@ -376,7 +377,7 @@ public partial class ZipWriter : AbstractWriter
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
         private readonly int compressionLevel;
-        private SharpCompressStream? counting;
+        private CountingStream? counting;
         private ulong decompressed;
 
         // Flag to prevent throwing exceptions on Dispose
@@ -416,7 +417,7 @@ public partial class ZipWriter : AbstractWriter
 
         private Stream GetWriteStream(Stream writeStream)
         {
-            counting = new SharpCompressStream(writeStream, leaveOpen: true);
+            counting = new CountingStream(new NonDisposingStream(writeStream));
             Stream output = counting;
             switch (zipCompressionMethod)
             {
@@ -454,7 +455,7 @@ public partial class ZipWriter : AbstractWriter
                 case ZipCompressionMethod.PPMd:
                 {
                     counting.Write(writer.PpmdProperties.Properties, 0, 2);
-                    return new PpmdStream(writer.PpmdProperties, counting, true);
+                    return PpmdStream.Create(writer.PpmdProperties, counting, true);
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
@@ -490,7 +491,7 @@ public partial class ZipWriter : AbstractWriter
                     return;
                 }
 
-                var countingCount = counting?.InternalPosition ?? 0;
+                var countingCount = counting?.BytesWritten ?? 0;
                 entry.Crc = (uint)crc.Crc32Result;
                 entry.Compressed = (ulong)countingCount;
                 entry.Decompressed = decompressed;
@@ -592,7 +593,7 @@ public partial class ZipWriter : AbstractWriter
             // if we can prevent the writes from happening
             if (entry.Zip64HeaderOffset == 0)
             {
-                var countingCount = counting?.InternalPosition ?? 0;
+                var countingCount = counting?.BytesWritten ?? 0;
                 // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
                 if (
                     limitsExceeded
@@ -612,7 +613,7 @@ public partial class ZipWriter : AbstractWriter
 
             if (entry.Zip64HeaderOffset == 0)
             {
-                var countingCount = counting?.InternalPosition ?? 0;
+                var countingCount = counting?.BytesWritten ?? 0;
                 // Post-check, this is accurate
                 if ((decompressed > uint.MaxValue) || countingCount > uint.MaxValue)
                 {

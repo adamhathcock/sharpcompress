@@ -211,6 +211,40 @@ public partial class ExplodeStream
         }
     }
 
+    private async Task<(int returnCode, huftNode huftPointer, int e)> DecodeHuftAsync(
+        huftNode[] htab,
+        int bits,
+        uint mask,
+        CancellationToken cancellationToken
+    )
+    {
+        await NeedBitsAsync(bits, cancellationToken).ConfigureAwait(false);
+
+        int tabOffset = (int)(~bitBuffer & mask);
+        var huftPointer = htab[tabOffset];
+
+        while (true)
+        {
+            DumpBits(huftPointer.NumberOfBitsUsed);
+            int e = huftPointer.NumberOfExtraBits;
+            if (e <= 32)
+            {
+                return (0, huftPointer, e);
+            }
+
+            if (e == INVALID_CODE)
+            {
+                return (1, huftPointer, e);
+            }
+
+            e &= 31;
+            await NeedBitsAsync(e, cancellationToken).ConfigureAwait(false);
+
+            tabOffset = (int)(~bitBuffer & mask_bits[e]);
+            huftPointer = huftPointer.ChildNodes[tabOffset];
+        }
+    }
+
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -228,24 +262,26 @@ public partial class ExplodeStream
                 DumpBits(1);
 
                 huftNode huftPointer;
+                int extraBitLength;
                 if (literal)
                 {
                     byte nextByte;
                     if (hufLiteralCodeTable != null)
                     {
-                        if (
-                            DecodeHuft(
+                        var literalResult = await DecodeHuftAsync(
                                 hufLiteralCodeTable,
                                 bitsForLiteralCodeTable,
                                 maskForLiteralCodeTable,
-                                out huftPointer,
-                                out _
-                            ) != 0
-                        )
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false);
+
+                        if (literalResult.returnCode != 0)
                         {
                             throw new Exception("Error decoding literal value");
                         }
 
+                        huftPointer = literalResult.huftPointer;
                         nextByte = (byte)huftPointer.Value;
                     }
                     else
@@ -272,34 +308,37 @@ public partial class ExplodeStream
                 distance = (int)(bitBuffer & maskForDistanceLowBits);
                 DumpBits(numOfUncodedLowerDistanceBits);
 
-                if (
-                    DecodeHuft(
+                var distanceResult = await DecodeHuftAsync(
                         hufDistanceCodeTable,
                         bitsForDistanceCodeTable,
                         maskForDistanceCodeTable,
-                        out huftPointer,
-                        out _
-                    ) != 0
-                )
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+
+                if (distanceResult.returnCode != 0)
                 {
                     throw new Exception("Error decoding distance high bits");
                 }
 
+                huftPointer = distanceResult.huftPointer;
                 distance = windowIndex - (distance + huftPointer.Value);
 
-                if (
-                    DecodeHuft(
+                var lengthResult = await DecodeHuftAsync(
                         hufLengthCodeTable,
                         bitsForLengthCodeTable,
                         maskForLengthCodeTable,
-                        out huftPointer,
-                        out int extraBitLength
-                    ) != 0
-                )
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+
+                if (lengthResult.returnCode != 0)
                 {
                     throw new Exception("Error decoding coded length");
                 }
 
+                huftPointer = lengthResult.huftPointer;
+                extraBitLength = lengthResult.e;
                 length = huftPointer.Value;
 
                 if (extraBitLength != 0)

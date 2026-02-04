@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Lzw
 {
@@ -45,28 +44,8 @@ namespace SharpCompress.Compressors.Lzw
     /// }
     /// </code>
     /// </example>
-    public partial class LzwStream : Stream, IStreamStack
+    public partial class LzwStream : Stream
     {
-#if DEBUG_STREAMS
-        long IStreamStack.InstanceId { get; set; }
-#endif
-        int IStreamStack.DefaultBufferSize { get; set; }
-
-        Stream IStreamStack.BaseStream() => baseInputStream;
-
-        int IStreamStack.BufferSize
-        {
-            get => 0;
-            set { }
-        }
-        int IStreamStack.BufferPosition
-        {
-            get => 0;
-            set { }
-        }
-
-        void IStreamStack.SetPosition(long position) { }
-
         public static bool IsLzwStream(Stream stream)
         {
             try

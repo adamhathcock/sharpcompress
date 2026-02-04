@@ -1,31 +1,11 @@
 using System;
 using System.IO;
-using SharpCompress.IO;
+using SharpCompress;
 
 namespace SharpCompress.Compressors.Shrink;
 
-internal class ShrinkStream : Stream, IStreamStack
+internal partial class ShrinkStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => inStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private Stream inStream;
     private CompressionMode _compressionMode;
 
@@ -33,6 +13,8 @@ internal class ShrinkStream : Stream, IStreamStack
     private long _uncompressedSize;
     private byte[] _byteOut;
     private long _outBytesCount;
+    private bool _decompressed;
+    private long _position;
 
     public ShrinkStream(
         Stream stream,
@@ -72,7 +54,7 @@ internal class ShrinkStream : Stream, IStreamStack
 
     public override long Position
     {
-        get => _outBytesCount;
+        get => _position;
         set => throw new NotImplementedException();
     }
 
@@ -80,32 +62,36 @@ internal class ShrinkStream : Stream, IStreamStack
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (inStream.Position == (long)_compressedSize)
+        if (!_decompressed)
+        {
+            var src = new byte[_compressedSize];
+            inStream.ReadExact(src, 0, (int)_compressedSize);
+            var srcUsed = 0;
+            var dstUsed = 0;
+
+            HwUnshrink.Unshrink(
+                src,
+                (int)_compressedSize,
+                out srcUsed,
+                _byteOut,
+                (int)_uncompressedSize,
+                out dstUsed
+            );
+            _outBytesCount = dstUsed;
+            _decompressed = true;
+            _position = 0;
+        }
+
+        long remaining = _outBytesCount - _position;
+        if (remaining <= 0)
         {
             return 0;
         }
-        var src = new byte[_compressedSize];
-        inStream.Read(src, offset, (int)_compressedSize);
-        var srcUsed = 0;
-        var dstUsed = 0;
 
-        HwUnshrink.Unshrink(
-            src,
-            (int)_compressedSize,
-            out srcUsed,
-            _byteOut,
-            (int)_uncompressedSize,
-            out dstUsed
-        );
-        _outBytesCount = _byteOut.Length;
-
-        for (var index = 0; index < _outBytesCount; ++index)
-        {
-            buffer[offset + index] = _byteOut[index];
-        }
-        var tmp = _outBytesCount;
-        _outBytesCount = 0;
-        return (int)tmp;
+        int toCopy = (int)Math.Min(count, remaining);
+        Buffer.BlockCopy(_byteOut, (int)_position, buffer, offset, toCopy);
+        _position += toCopy;
+        return toCopy;
     }
 
     public override long Seek(long offset, SeekOrigin origin) =>

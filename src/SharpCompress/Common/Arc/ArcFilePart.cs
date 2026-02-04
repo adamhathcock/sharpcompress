@@ -15,7 +15,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Arc
 {
-    public class ArcFilePart : FilePart
+    public partial class ArcFilePart : FilePart
     {
         private readonly Stream? _stream;
 
@@ -51,7 +51,10 @@ namespace SharpCompress.Common.Arc
                         );
                         break;
                     case CompressionType.Squeezed:
-                        compressedStream = new SqueezeStream(_stream, (int)Header.CompressedSize);
+                        compressedStream = SqueezeStream.Create(
+                            _stream,
+                            (int)Header.CompressedSize
+                        );
                         break;
                     case CompressionType.Crunched:
                         if (Header.OriginalSize > 128 * 1024)

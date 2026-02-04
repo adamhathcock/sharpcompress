@@ -96,10 +96,11 @@ public class LzwStreamAsyncTests : TestBase
         var cts = new CancellationTokenSource();
         var buffer = new byte[4096];
 
-        var readTask = lzwStream.ReadAsync(buffer, 0, buffer.Length, cts.Token);
         cts.Cancel();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () => await readTask);
+        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            await lzwStream.ReadAsync(buffer, 0, buffer.Length, cts.Token)
+        );
     }
 
     [Fact]

@@ -131,7 +131,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
         await using (var entryStream = await archiveEntry.OpenEntryStreamAsync())
 #endif
         {
-            var result = TarArchive.IsTarFile(entryStream);
+            var result = await TarArchive.IsTarFileAsync(entryStream);
             Assert.True(result);
         }
         Assert.Equal(size, tarStream.Length);

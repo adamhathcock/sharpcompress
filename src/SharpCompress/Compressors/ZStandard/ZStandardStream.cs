@@ -5,38 +5,23 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ZStandard;
 
-internal partial class ZStandardStream : DecompressionStream, IStreamStack
+internal partial class ZStandardStream : DecompressionStream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
-    public int DefaultBufferSize { get; set; }
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
     private readonly Stream stream;
-
-    Stream IStreamStack.BaseStream() => stream;
-
-    void IStreamStack.SetPosition(long position) { }
 
     internal static bool IsZStandard(Stream stream)
     {
-        var br = new BinaryReader(stream);
-        var magic = br.ReadUInt32();
+        var buffer = new byte[4];
+        var bytesRead = stream.Read(buffer, 0, 4);
+        if (bytesRead < 4)
+        {
+            return false;
+        }
+
+        var magic = BitConverter.ToUInt32(buffer, 0);
         if (ZstandardConstants.MAGIC != magic)
         {
             return false;

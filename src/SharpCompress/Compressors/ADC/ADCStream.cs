@@ -30,35 +30,14 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ADC;
 
 /// <summary>
 /// Provides a forward readable only stream that decompresses ADC data
 /// </summary>
-public sealed partial class ADCStream : Stream, IStreamStack
+public sealed partial class ADCStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     /// <summary>
     /// This stream holds the compressed data
     /// </summary>

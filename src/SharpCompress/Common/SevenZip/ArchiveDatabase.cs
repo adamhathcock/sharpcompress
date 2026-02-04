@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using SharpCompress.Compressors.LZMA.Utilites;
 
 namespace SharpCompress.Common.SevenZip;
 
-internal class ArchiveDatabase
+internal partial class ArchiveDatabase
 {
     internal byte _majorVersion;
     internal byte _minorVersion;

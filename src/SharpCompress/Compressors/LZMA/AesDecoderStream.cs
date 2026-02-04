@@ -5,32 +5,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.Utilites;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
-internal sealed partial class AesDecoderStream : DecoderStream2, IStreamStack
+internal sealed partial class AesDecoderStream : DecoderStream2
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => mStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly Stream mStream;
     private readonly ICryptoTransform mDecoder;
     private readonly byte[] mBuffer;

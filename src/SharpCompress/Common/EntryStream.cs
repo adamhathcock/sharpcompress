@@ -8,37 +8,19 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public partial class EntryStream : Stream, IStreamStack
+public partial class EntryStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly IReader _reader;
     private readonly Stream _stream;
     private bool _completed;
     private bool _isDisposed;
+    private readonly bool _useSyncOverAsyncDispose;
 
-    internal EntryStream(IReader reader, Stream stream)
+    internal EntryStream(IReader reader, Stream stream, bool useSyncOverAsyncDispose)
     {
         _reader = reader;
         _stream = stream;
+        _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(EntryStream));
 #endif
@@ -62,17 +44,30 @@ public partial class EntryStream : Stream, IStreamStack
         _isDisposed = true;
         if (!(_completed || _reader.Cancelled))
         {
-            SkipEntry();
+            if (_useSyncOverAsyncDispose)
+            {
+                SkipEntryAsync().GetAwaiter().GetResult();
+            }
+            else
+            {
+                SkipEntry();
+            }
         }
 
         //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
         if (_stream is IStreamStack ss)
         {
-            if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
+            if (
+                ss.GetStream<SharpCompress.Compressors.Deflate.DeflateStream>()
+                is SharpCompress.Compressors.Deflate.DeflateStream deflateStream
+            )
             {
                 deflateStream.Flush(); //Deflate over reads. Knock it back
             }
-            else if (ss.BaseStream() is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream)
+            else if (
+                ss.GetStream<SharpCompress.Compressors.LZMA.LzmaStream>()
+                is SharpCompress.Compressors.LZMA.LzmaStream lzmaStream
+            )
             {
                 lzmaStream.Flush(); //Lzma over reads. Knock it back
             }

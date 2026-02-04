@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using SharpCompress.Common;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
-internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
+internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
 {
     private IEnumerable<ZipEntry>? _entries;
 
@@ -23,24 +20,9 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
-        if (stream is not SharpCompressStream) //ensure the stream is already a SharpCompressStream. So the buffer/size will already be set
-        {
-            //the original code wrapped this with RewindableStream. Wrap with SharpCompressStream as we can get the buffer size
-            if (stream is SourceStream src)
-            {
-                stream = new SharpCompressStream(
-                    stream,
-                    src.ReaderOptions.LeaveStreamOpen,
-                    bufferSize: src.ReaderOptions.BufferSize
-                );
-            }
-            else
-            {
-                throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
-            }
-        }
-        var rewindableStream = (SharpCompressStream)stream;
-
+        // Use EnsureSeekable to avoid double-wrapping if stream is already a RewindableStream,
+        // and to preserve seekability for DataDescriptorStream which needs to seek backward
+        var rewindableStream = RewindableStream.EnsureSeekable(stream);
         while (true)
         {
             var reader = new BinaryReader(rewindableStream);
@@ -191,6 +173,8 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
                 } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
                 else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                 {
+                    // Peek ahead to check if next data is a header or file data.
+                    // Use the IStreamStack.Rewind mechanism to give back the peeked bytes.
                     var nextHeaderBytes = reader.ReadUInt32();
                     ((IStreamStack)rewindableStream).Rewind(sizeof(uint));
 
@@ -204,26 +188,5 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
             }
             yield return header;
         }
-    }
-
-    private static SharpCompressStream EnsureSharpCompressStream(Stream stream)
-    {
-        if (stream is SharpCompressStream sharpCompressStream)
-        {
-            return sharpCompressStream;
-        }
-
-        // Ensure the stream is already a SharpCompressStream so the buffer/size is set.
-        // The original code wrapped this with RewindableStream; use SharpCompressStream so we can get the buffer size.
-        if (stream is SourceStream src)
-        {
-            return new SharpCompressStream(
-                stream,
-                src.ReaderOptions.LeaveStreamOpen,
-                bufferSize: src.ReaderOptions.BufferSize
-            );
-        }
-
-        throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
     }
 }

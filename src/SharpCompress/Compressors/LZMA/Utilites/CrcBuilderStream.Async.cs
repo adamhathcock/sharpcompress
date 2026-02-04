@@ -2,11 +2,10 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA.Utilites;
 
-internal partial class CrcBuilderStream : Stream, IStreamStack
+internal partial class CrcBuilderStream : Stream
 {
     public override async Task WriteAsync(
         byte[] buffer,

@@ -5,13 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal sealed partial class MultiVolumeReadOnlyStream
-    : MultiVolumeReadOnlyStreamBase,
-        IStreamStack
+internal sealed partial class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStreamBase
 {
     public override async Task<int> ReadAsync(
         byte[] buffer,

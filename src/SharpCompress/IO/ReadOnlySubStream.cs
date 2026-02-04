@@ -4,22 +4,26 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal partial class ReadOnlySubStream : SharpCompressStream, IStreamStack
+internal partial class ReadOnlySubStream : Stream, IStreamStack
 {
 #if DEBUG_STREAMS
     long IStreamStack.InstanceId { get; set; }
 #endif
 
-    Stream IStreamStack.BaseStream() => base.Stream;
+    Stream IStreamStack.BaseStream() => _stream;
 
+    private readonly Stream _stream;
+    private readonly bool _leaveOpen;
     private long _position;
 
     public ReadOnlySubStream(Stream stream, long bytesToRead, bool leaveOpen = true)
         : this(stream, null, bytesToRead, leaveOpen) { }
 
     public ReadOnlySubStream(Stream stream, long? origin, long bytesToRead, bool leaveOpen = true)
-        : base(stream, leaveOpen, throwOnDispose: false)
     {
+        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        _leaveOpen = leaveOpen;
+
         if (origin != null && stream.Position != origin.Value)
         {
             stream.Position = origin.Value;
@@ -41,7 +45,7 @@ internal partial class ReadOnlySubStream : SharpCompressStream, IStreamStack
 
     public override void Flush() { }
 
-    public override long Length => base.Length;
+    public override long Length => throw new NotSupportedException();
 
     public override long Position
     {
@@ -55,7 +59,7 @@ internal partial class ReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             count = (int)BytesLeftToRead;
         }
-        var read = Stream.Read(buffer, offset, count);
+        var read = _stream.Read(buffer, offset, count);
         if (read > 0)
         {
             BytesLeftToRead -= read;
@@ -70,7 +74,7 @@ internal partial class ReadOnlySubStream : SharpCompressStream, IStreamStack
         {
             return -1;
         }
-        var value = Stream.ReadByte();
+        var value = _stream.ReadByte();
         if (value != -1)
         {
             --BytesLeftToRead;
@@ -83,7 +87,7 @@ internal partial class ReadOnlySubStream : SharpCompressStream, IStreamStack
     public override int Read(Span<byte> buffer)
     {
         var sliceLen = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;
-        var read = Stream.Read(buffer.Slice(0, (int)sliceLen));
+        var read = _stream.Read(buffer.Slice(0, (int)sliceLen));
         if (read > 0)
         {
             BytesLeftToRead -= read;
@@ -105,6 +109,10 @@ internal partial class ReadOnlySubStream : SharpCompressStream, IStreamStack
 #if DEBUG_STREAMS
         this.DebugDispose(typeof(ReadOnlySubStream));
 #endif
+        if (disposing && !_leaveOpen)
+        {
+            _stream.Dispose();
+        }
         base.Dispose(disposing);
     }
 }

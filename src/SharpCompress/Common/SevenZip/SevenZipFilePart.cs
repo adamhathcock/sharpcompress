@@ -1,5 +1,7 @@
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip;
@@ -54,6 +56,35 @@ internal class SevenZipFilePart : FilePart
         if (skipSize > 0)
         {
             folderStream.Skip(skipSize);
+        }
+        return new ReadOnlySubStream(folderStream, Header.Size, leaveOpen: false);
+    }
+
+    internal override async ValueTask<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!Header.HasStream)
+        {
+            return Stream.Null;
+        }
+        var folderStream = await _database.GetFolderStreamAsync(
+            _stream,
+            Folder!,
+            _database.PasswordProvider,
+            cancellationToken
+        );
+
+        var firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
+        var skipCount = Index - firstFileIndex;
+        long skipSize = 0;
+        for (var i = 0; i < skipCount; i++)
+        {
+            skipSize += _database._files[firstFileIndex + i].Size;
+        }
+        if (skipSize > 0)
+        {
+            await folderStream.SkipAsync(skipSize, cancellationToken);
         }
         return new ReadOnlySubStream(folderStream, Header.Size, leaveOpen: false);
     }

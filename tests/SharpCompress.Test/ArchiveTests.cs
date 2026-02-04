@@ -43,13 +43,7 @@ public class ArchiveTests : ReaderTests
     {
         foreach (var path in testArchives)
         {
-            using (
-                var stream = SharpCompressStream.Create(
-                    File.OpenRead(path),
-                    leaveOpen: true,
-                    throwOnDispose: true
-                )
-            )
+            using (var stream = new NonDisposingStream(File.OpenRead(path)))
             {
                 try
                 {
@@ -150,13 +144,7 @@ public class ArchiveTests : ReaderTests
         ExtensionTest(extension, archiveFactory);
         foreach (var path in testArchives)
         {
-            using (
-                var stream = SharpCompressStream.Create(
-                    File.OpenRead(path),
-                    leaveOpen: true,
-                    throwOnDispose: true
-                )
-            )
+            using (var stream = new NonDisposingStream(File.OpenRead(path)))
             using (var archive = archiveFactory.OpenArchive(stream, readerOptions))
             {
                 try
@@ -653,13 +641,7 @@ public class ArchiveTests : ReaderTests
     {
         foreach (var path in testArchives)
         {
-            using (
-                var stream = SharpCompressStream.Create(
-                    File.OpenRead(path),
-                    leaveOpen: true,
-                    throwOnDispose: true
-                )
-            )
+            using (var stream = new NonDisposingStream(File.OpenRead(path)))
             await using (
                 var archive = archiveFactory.OpenAsyncArchive(
                     new AsyncOnlyStream(stream),

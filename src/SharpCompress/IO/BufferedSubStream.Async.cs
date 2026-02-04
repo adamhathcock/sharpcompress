@@ -24,11 +24,11 @@ internal partial class BufferedSubStream
         }
         // Only seek if we're not already at the correct position
         // This avoids expensive seek operations when reading sequentially
-        if (Stream.CanSeek && Stream.Position != origin)
+        if (_stream.CanSeek && _stream.Position != origin)
         {
-            Stream.Position = origin;
+            _stream.Position = origin;
         }
-        _cacheLength = await Stream
+        _cacheLength = await _stream
             .ReadAsync(_cache, 0, count, cancellationToken)
             .ConfigureAwait(false);
         origin += _cacheLength;

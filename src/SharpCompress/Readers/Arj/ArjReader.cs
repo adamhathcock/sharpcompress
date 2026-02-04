@@ -83,6 +83,15 @@ namespace SharpCompress.Readers.Arj
                     break;
                 }
 
+                // Skip non-file headers (like CommentHeader)
+                if (
+                    localHeader.FileType != FileType.Binary
+                    && localHeader.FileType != FileType.Text7Bit
+                )
+                {
+                    continue;
+                }
+
                 yield return new ArjEntry(new ArjFilePart((ArjLocalHeader)localHeader, stream));
             }
         }
@@ -119,6 +128,15 @@ namespace SharpCompress.Readers.Arj
                 if (localHeader == null)
                 {
                     break;
+                }
+
+                // Skip non-file headers (like CommentHeader)
+                if (
+                    localHeader.FileType != FileType.Binary
+                    && localHeader.FileType != FileType.Text7Bit
+                )
+                {
+                    continue;
                 }
 
                 yield return new ArjEntry(new ArjFilePart((ArjLocalHeader)localHeader, stream));

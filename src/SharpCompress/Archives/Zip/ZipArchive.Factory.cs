@@ -135,40 +135,24 @@ public partial class ZipArchive
         return (IWritableAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
-    public static bool IsZipFile(
-        string filePath,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => IsZipFile(new FileInfo(filePath), password, bufferSize);
+    public static bool IsZipFile(string filePath, string? password = null) =>
+        IsZipFile(new FileInfo(filePath), password);
 
-    public static bool IsZipFile(
-        FileInfo fileInfo,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipFile(FileInfo fileInfo, string? password = null)
     {
         if (!fileInfo.Exists)
         {
             return false;
         }
         using Stream stream = fileInfo.OpenRead();
-        return IsZipFile(stream, password, bufferSize);
+        return IsZipFile(stream, password);
     }
 
-    public static bool IsZipFile(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipFile(Stream stream, string? password = null)
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
@@ -188,20 +172,11 @@ public partial class ZipArchive
         }
     }
 
-    public static bool IsZipMulti(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipMulti(Stream stream, string? password = null)
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
@@ -233,7 +208,6 @@ public partial class ZipArchive
     public static async ValueTask<bool> IsZipFileAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
         CancellationToken cancellationToken = default
     )
     {
@@ -241,11 +215,6 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
             var header = await headerFactory
                 .ReadStreamHeaderAsync(stream)
                 .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
@@ -273,7 +242,6 @@ public partial class ZipArchive
     public static async ValueTask<bool> IsZipMultiAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
         CancellationToken cancellationToken = default
     )
     {
@@ -281,11 +249,6 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);

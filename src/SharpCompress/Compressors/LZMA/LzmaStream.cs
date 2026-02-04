@@ -10,26 +10,6 @@ namespace SharpCompress.Compressors.LZMA;
 
 public partial class LzmaStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _inputStream!;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly Stream? _inputStream;
     private readonly long _inputSize;
     private readonly long _outputSize;
@@ -210,6 +190,8 @@ public partial class LzmaStream : Stream, IStreamStack
     public override bool CanWrite => _encoder != null;
 
     public override void Flush() { }
+
+    Stream IStreamStack.BaseStream() => _inputStream!;
 
     protected override void Dispose(bool disposing)
     {

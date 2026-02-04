@@ -16,7 +16,6 @@ public static partial class ArchiveFactory
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
         readerOptions ??= new ReaderOptions();
-        stream = SharpCompressStream.Create(stream, bufferSize: readerOptions.BufferSize);
         return FindFactory<IArchiveFactory>(stream).OpenArchive(stream, readerOptions);
     }
 
@@ -150,24 +149,14 @@ public static partial class ArchiveFactory
         );
     }
 
-    // Async methods moved to ArchiveFactory.Async.cs
-
-    public static bool IsArchive(
-        string filePath,
-        out ArchiveType? type,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsArchive(string filePath, out ArchiveType? type)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream s = File.OpenRead(filePath);
-        return IsArchive(s, out type, bufferSize);
+        return IsArchive(s, out type);
     }
 
-    public static bool IsArchive(
-        Stream stream,
-        out ArchiveType? type,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsArchive(Stream stream, out ArchiveType? type)
     {
         type = null;
         stream.NotNull(nameof(stream));

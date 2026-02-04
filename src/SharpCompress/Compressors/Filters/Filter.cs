@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SharpCompress.Compressors.Filters;
 
-internal abstract class Filter : Stream
+internal abstract partial class Filter : Stream
 {
     protected bool _isEncoder;
     protected Stream _baseStream;

@@ -4,35 +4,11 @@ using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal sealed partial class MultiVolumeReadOnlyAsyncStream
-    : MultiVolumeReadOnlyStreamBase,
-        IStreamStack
+internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOnlyStreamBase
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => currentStream.NotNull();
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private long currentPosition;
     private long maxPosition;
 

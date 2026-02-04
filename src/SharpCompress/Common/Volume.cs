@@ -16,14 +16,14 @@ public abstract partial class Volume : IVolume, IAsyncDisposable
         Index = index;
         ReaderOptions = readerOptions ?? new ReaderOptions();
         _baseStream = stream;
+
+        if (stream is RewindableStream ss)
+        {
+            ss.Rewind();
+        }
         if (ReaderOptions.LeaveStreamOpen)
         {
-            stream = SharpCompressStream.Create(stream, leaveOpen: true);
-        }
-
-        if (stream is IStreamStack ss)
-        {
-            ss.SetBuffer(ReaderOptions.BufferSize, true);
+            stream = new NonDisposingStream(stream);
         }
 
         _actualStream = stream;
