@@ -6,77 +6,76 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace SharpCompress.IO
+namespace SharpCompress.IO;
+
+public interface IStreamStack
 {
-    public interface IStreamStack
+    /// <summary>
+    /// Returns the immediate underlying stream in the stack.
+    /// </summary>
+    Stream BaseStream();
+}
+
+public static class StreamStackExtensions
+{
+    public static T? GetStream<T>(this IStreamStack stack)
+        where T : Stream
     {
-        /// <summary>
-        /// Returns the immediate underlying stream in the stack.
-        /// </summary>
-        Stream BaseStream();
+        var baseStream = stack.BaseStream();
+        if (baseStream is T tStream)
+        {
+            return tStream;
+        }
+        else if (baseStream is IStreamStack innerStack)
+        {
+            return innerStack.GetStream<T>();
+        }
+        else
+        {
+            return null;
+        }
     }
 
-    public static class StreamStackExtensions
+    /// <summary>
+    /// Gets the root underlying stream at the bottom of the stack.
+    /// This is useful for seeking when the intermediate streams don't support it.
+    /// </summary>
+    public static Stream GetRootStream(this IStreamStack stack)
     {
-        public static T? GetStream<T>(this IStreamStack stack)
-            where T : Stream
+        var current = stack.BaseStream();
+        while (current is IStreamStack streamStack)
         {
-            var baseStream = stack.BaseStream();
-            if (baseStream is T tStream)
-            {
-                return tStream;
-            }
-            else if (baseStream is IStreamStack innerStack)
-            {
-                return innerStack.GetStream<T>();
-            }
-            else
-            {
-                return null;
-            }
+            current = streamStack.BaseStream();
         }
+        return current;
+    }
 
-        /// <summary>
-        /// Gets the root underlying stream at the bottom of the stack.
-        /// This is useful for seeking when the intermediate streams don't support it.
-        /// </summary>
-        public static Stream GetRootStream(this IStreamStack stack)
+    internal static void Rewind(this IStreamStack stream, int count)
+    {
+        IStreamStack? current = stream;
+
+        while (current != null)
         {
-            var current = stack.BaseStream();
-            while (current is IStreamStack streamStack)
+            if (current is RewindableStream rewindableStream)
             {
-                current = streamStack.BaseStream();
-            }
-            return current;
-        }
-
-        internal static void Rewind(this IStreamStack stream, int count)
-        {
-            IStreamStack? current = stream;
-
-            while (current != null)
-            {
-                if (current is RewindableStream rewindableStream)
+                // Try to rewind within the buffer. If the position is outside the buffered
+                // region, silently ignore (matching release behavior where streams without
+                // buffering simply didn't rewind).
+                var targetPosition = rewindableStream.Position - count;
+                if (targetPosition >= 0)
                 {
-                    // Try to rewind within the buffer. If the position is outside the buffered
-                    // region, silently ignore (matching release behavior where streams without
-                    // buffering simply didn't rewind).
-                    var targetPosition = rewindableStream.Position - count;
-                    if (targetPosition >= 0)
+                    try
                     {
-                        try
-                        {
-                            rewindableStream.Position = targetPosition;
-                        }
-                        catch (NotSupportedException)
-                        {
-                            // Cannot seek outside buffered region - silently ignore
-                        }
+                        rewindableStream.Position = targetPosition;
                     }
-                    return;
+                    catch (NotSupportedException)
+                    {
+                        // Cannot seek outside buffered region - silently ignore
+                    }
                 }
-                current = current.BaseStream() as IStreamStack;
+                return;
             }
+            current = current.BaseStream() as IStreamStack;
         }
     }
 }
