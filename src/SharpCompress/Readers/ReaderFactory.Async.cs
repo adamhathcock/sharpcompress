@@ -54,7 +54,7 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var sharpCompressStream = SharpCompressStream.EnsureSeekable(
+        var sharpCompressStream = SharpCompressStream.Create(
             stream,
             options.RewindableBufferSize
         );

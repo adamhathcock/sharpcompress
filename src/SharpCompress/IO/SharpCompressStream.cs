@@ -77,14 +77,6 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     }
 
     /// <summary>
-    /// Creates a SharpCompressStream that acts as a passthrough wrapper.
-    /// No buffering is performed; CanSeek delegates to the underlying stream.
-    /// The underlying stream will not be disposed when this stream is disposed.
-    /// </summary>
-    public static SharpCompressStream CreateNonDisposing(Stream stream) =>
-        new(stream, leaveStreamOpen: true, passthrough: true);
-
-    /// <summary>
     /// Gets whether the stream is actively recording reads to the ring buffer.
     /// </summary>
     internal virtual bool IsRecording => _isRecording;
@@ -121,7 +113,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         if (_isPassthrough)
         {
             throw new InvalidOperationException(
-                "Rewind cannot be called on a passthrough stream. Use EnsureSeekable() first."
+                "Rewind cannot be called on a passthrough stream. Use Create() first."
             );
         }
 
@@ -160,7 +152,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         if (_isPassthrough)
         {
             throw new InvalidOperationException(
-                "StopRecording cannot be called on a passthrough stream. Use EnsureSeekable() first."
+                "StopRecording cannot be called on a passthrough stream. Use Create() first."
             );
         }
         if (!IsRecording)
@@ -180,61 +172,12 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         // (frozen recording mode) until Rewind(stopRecording: true) is called
     }
 
-    public static SharpCompressStream EnsureSeekable(
-        Stream stream,
-        int? rewindableBufferSize = null
-    )
-    {
-        int bufferSize = rewindableBufferSize ?? Constants.RewindableBufferSize;
-
-        // If it's a passthrough SharpCompressStream, unwrap it and create proper seekable wrapper
-        if (stream is SharpCompressStream sharpCompressStream)
-        {
-            if (sharpCompressStream._isPassthrough)
-            {
-                // Unwrap the passthrough and create appropriate wrapper
-                var underlying = sharpCompressStream.stream;
-                if (underlying.CanSeek)
-                {
-                    // Create SeekableSharpCompressStream that preserves LeaveStreamOpen
-                    return new SeekableSharpCompressStream(underlying)
-                    {
-                        LeaveStreamOpen = true, // Preserve non-disposing behavior
-                    };
-                }
-                // Non-seekable underlying stream - wrap with rolling buffer
-                return new SharpCompressStream(underlying, bufferSize) { LeaveStreamOpen = true };
-            }
-            // Not passthrough - return as-is
-            return sharpCompressStream;
-        }
-
-        // Check if stream is wrapping a SharpCompressStream (e.g., via IStreamStack)
-        if (stream is IStreamStack streamStack)
-        {
-            var underlying = streamStack.GetStream<SharpCompressStream>();
-            if (underlying is not null)
-            {
-                return underlying;
-            }
-        }
-
-        if (stream.CanSeek)
-        {
-            return new SeekableSharpCompressStream(stream);
-        }
-
-        // For non-seekable streams, create a SharpCompressStream with rolling buffer
-        // to allow limited backward seeking (required by decompressors that over-read)
-        return new SharpCompressStream(stream, bufferSize);
-    }
-
     public virtual void StartRecording()
     {
         if (_isPassthrough)
         {
             throw new InvalidOperationException(
-                "StartRecording cannot be called on a passthrough stream. Use EnsureSeekable() first."
+                "StartRecording cannot be called on a passthrough stream. Use Create() first."
             );
         }
         if (IsRecording)

@@ -72,9 +72,9 @@ internal sealed partial class StreamingZipHeaderFactory
         )
         {
             _headerFactory = headerFactory;
-            // Use EnsureSeekable to avoid double-wrapping if stream is already a SharpCompressStream,
+            // Use Create to avoid double-wrapping if stream is already a SharpCompressStream,
             // and to preserve seekability for DataDescriptorStream which needs to seek backward
-            _sharpCompressStream = SharpCompressStream.EnsureSeekable(stream);
+            _sharpCompressStream = SharpCompressStream.Create(stream);
             _reader = new AsyncBinaryReader(_sharpCompressStream, leaveOpen: true);
             _cancellationToken = cancellationToken;
         }
