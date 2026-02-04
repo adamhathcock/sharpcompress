@@ -14,11 +14,13 @@ public partial class EntryStream : Stream
     private readonly Stream _stream;
     private bool _completed;
     private bool _isDisposed;
+    private readonly bool _useSyncOverAsyncDispose;
 
-    internal EntryStream(IReader reader, Stream stream)
+    internal EntryStream(IReader reader, Stream stream, bool useSyncOverAsyncDispose)
     {
         _reader = reader;
         _stream = stream;
+        _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
 #if DEBUG_STREAMS
         this.DebugConstruct(typeof(EntryStream));
 #endif
@@ -42,7 +44,14 @@ public partial class EntryStream : Stream
         _isDisposed = true;
         if (!(_completed || _reader.Cancelled))
         {
-            SkipEntry();
+            if (_useSyncOverAsyncDispose)
+            {
+                SkipEntryAsync().GetAwaiter().GetResult();
+            }
+            else
+            {
+                SkipEntry();
+            }
         }
 
         //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
