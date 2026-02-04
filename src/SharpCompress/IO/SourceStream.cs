@@ -217,7 +217,7 @@ public partial class SourceStream : Stream, IStreamStack
 
                 // Safety check: if we have a zero-length stream and we're still not
                 // making progress toward the target position, we're in an invalid state
-                if (currentLength == 0 && Current.Length == 0)
+                if (currentLength <= 0 && Current.Length <= 0)
                 {
                     // Both old and new stream have zero length - cannot make progress
                     throw new InvalidOperationException(
