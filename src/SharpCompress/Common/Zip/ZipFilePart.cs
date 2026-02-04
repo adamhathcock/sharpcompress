@@ -150,18 +150,26 @@ internal abstract partial class ZipFilePart : FilePart
                 {
                     throw new NotSupportedException("LZMA with pkware encryption.");
                 }
-                var reader = new BinaryReader(stream);
-                reader.ReadUInt16(); //LZMA version
-                var props = new byte[reader.ReadUInt16()];
-                reader.Read(props, 0, props.Length);
-                return LzmaStream.Create(
-                    props,
-                    stream,
-                    Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
-                    FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
-                        ? -1
-                        : Header.UncompressedSize
-                );
+                using (
+                    var reader = new BinaryReader(
+                        stream,
+                        System.Text.Encoding.Default,
+                        leaveOpen: true
+                    )
+                )
+                {
+                    reader.ReadUInt16(); //LZMA version
+                    var props = new byte[reader.ReadUInt16()];
+                    reader.Read(props, 0, props.Length);
+                    return LzmaStream.Create(
+                        props,
+                        stream,
+                        Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
+                        FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                            ? -1
+                            : Header.UncompressedSize
+                    );
+                }
             }
             case ZipCompressionMethod.Xz:
             {

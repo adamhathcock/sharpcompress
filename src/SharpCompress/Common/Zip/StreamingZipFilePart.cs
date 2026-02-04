@@ -35,7 +35,7 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
     {
         if (Header.IsDirectory)
         {
-            return new BinaryReader(stream);
+            return new BinaryReader(stream, System.Text.Encoding.Default, leaveOpen: true);
         }
 
         if (Header.HasData && !Skipped)
@@ -54,7 +54,7 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
 
             Skipped = true;
         }
-        var reader = new BinaryReader(stream);
+        var reader = new BinaryReader(stream, System.Text.Encoding.Default, leaveOpen: true);
         _decompressionStream = null;
         return reader;
     }

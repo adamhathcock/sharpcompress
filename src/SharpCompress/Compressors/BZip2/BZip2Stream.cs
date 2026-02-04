@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -105,7 +106,7 @@ public sealed partial class BZip2Stream : Stream
     /// <returns></returns>
     public static bool IsBZip2(Stream stream)
     {
-        var br = new BinaryReader(stream);
+        using var br = new BinaryReader(stream, Encoding.Default, leaveOpen: true);
         var chars = br.ReadBytes(2);
         if (chars.Length < 2 || chars[0] != 'B' || chars[1] != 'Z')
         {
