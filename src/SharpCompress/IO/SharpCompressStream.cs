@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
@@ -8,14 +9,17 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     public virtual Stream BaseStream() => stream;
 
     private readonly Stream stream;
-    private MemoryStream bufferStream = new MemoryStream();
-    private bool isRewound;
     private bool isDisposed;
     private long streamPosition;
 
-    // Rolling buffer for limited backward seeking without unbounded memory growth.
+    // Ring buffer for recording mode and over-read protection.
+    // Single unified buffering mechanism for both use cases.
     private RingBuffer? _ringBuffer;
     private long _logicalPosition; // The current logical read position (can be behind streamPosition)
+
+    // Recording state: anchor position when StartRecording was called
+    private long? _recordingStartPosition;
+    private bool _isRecording;
 
     // Passthrough mode - no buffering, delegates CanSeek to underlying stream
     private readonly bool _isPassthrough;
@@ -80,7 +84,10 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     public static SharpCompressStream CreateNonDisposing(Stream stream) =>
         new(stream, leaveStreamOpen: true, passthrough: true);
 
-    internal virtual bool IsRecording { get; private set; }
+    /// <summary>
+    /// Gets whether the stream is actively recording reads to the ring buffer.
+    /// </summary>
+    internal virtual bool IsRecording => _isRecording;
 
     protected override void Dispose(bool disposing)
     {
@@ -117,9 +124,35 @@ internal partial class SharpCompressStream : Stream, IStreamStack
                 "Rewind cannot be called on a passthrough stream. Use EnsureSeekable() first."
             );
         }
-        isRewound = true;
-        IsRecording = !stopRecording;
-        bufferStream.Position = 0;
+
+        if (_recordingStartPosition is null)
+        {
+            throw new InvalidOperationException(
+                "Rewind can only be called after StartRecording() has been called."
+            );
+        }
+
+        // Verify recording anchor is within ring buffer range
+        long anchorAge = streamPosition - _recordingStartPosition.Value;
+        if (anchorAge > _ringBuffer!.Length)
+        {
+            throw new InvalidOperationException(
+                $"Cannot rewind: recording anchor is {anchorAge} bytes behind current position, "
+                    + $"but ring buffer only holds {_ringBuffer.Length} bytes. "
+                    + $"Recording buffer overflow - increase DefaultRollingBufferSize or reduce format detection reads."
+            );
+        }
+
+        // Rewind logical position to recording anchor
+        _logicalPosition = _recordingStartPosition.Value;
+
+        if (stopRecording)
+        {
+            _isRecording = false;
+            // Note: We keep _recordingStartPosition so Rewind() can be called again
+            // (frozen recording mode). The anchor is only cleared when a new recording
+            // starts or the stream is disposed.
+        }
     }
 
     public virtual void StopRecording()
@@ -136,13 +169,24 @@ internal partial class SharpCompressStream : Stream, IStreamStack
                 "StopRecording can only be called when recording is active."
             );
         }
-        isRewound = true;
-        IsRecording = false;
-        bufferStream.Position = 0;
+
+        // Mark that we're no longer actively recording
+        _isRecording = false;
+
+        // Rewind to recording anchor position
+        _logicalPosition = _recordingStartPosition!.Value;
+
+        // Note: We keep _recordingStartPosition so future Rewind() calls still work
+        // (frozen recording mode) until Rewind(stopRecording: true) is called
     }
 
-    public static SharpCompressStream EnsureSeekable(Stream stream)
+    public static SharpCompressStream EnsureSeekable(
+        Stream stream,
+        int? rewindableBufferSize = null
+    )
     {
+        int bufferSize = rewindableBufferSize ?? Constants.RewindableBufferSize;
+
         // If it's a passthrough SharpCompressStream, unwrap it and create proper seekable wrapper
         if (stream is SharpCompressStream sharpCompressStream)
         {
@@ -159,10 +203,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
                     };
                 }
                 // Non-seekable underlying stream - wrap with rolling buffer
-                return new SharpCompressStream(underlying, DefaultRollingBufferSize)
-                {
-                    LeaveStreamOpen = true,
-                };
+                return new SharpCompressStream(underlying, bufferSize) { LeaveStreamOpen = true };
             }
             // Not passthrough - return as-is
             return sharpCompressStream;
@@ -185,7 +226,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
 
         // For non-seekable streams, create a SharpCompressStream with rolling buffer
         // to allow limited backward seeking (required by decompressors that over-read)
-        return new SharpCompressStream(stream, DefaultRollingBufferSize);
+        return new SharpCompressStream(stream, bufferSize);
     }
 
     public virtual void StartRecording()
@@ -202,17 +243,17 @@ internal partial class SharpCompressStream : Stream, IStreamStack
                 "StartRecording can only be called when not already recording."
             );
         }
-        //if (isRewound && bufferStream.Position != 0)
-        //   throw new System.NotImplementedException();
-        if (bufferStream.Position != 0)
+
+        // Ensure ring buffer exists
+        if (_ringBuffer is null)
         {
-            var data = bufferStream.ToArray();
-            var position = bufferStream.Position;
-            bufferStream.SetLength(0);
-            bufferStream.Write(data, (int)position, data.Length - (int)position);
-            bufferStream.Position = 0;
+            _ringBuffer = new RingBuffer(DefaultRollingBufferSize);
         }
-        IsRecording = true;
+
+        // Mark current position as recording anchor
+        _recordingStartPosition = streamPosition;
+        _logicalPosition = streamPosition;
+        _isRecording = true;
     }
 
     public override bool CanRead => true;
@@ -243,17 +284,8 @@ internal partial class SharpCompressStream : Stream, IStreamStack
             {
                 return stream.Position;
             }
-            // If recording is active or rewound from recording, use recording buffer position
-            if (IsRecording || (isRewound && bufferStream.Position < bufferStream.Length))
-            {
-                return streamPosition - bufferStream.Length + bufferStream.Position;
-            }
-            // If ring buffer is active (and not recording), use logical position
-            if (_ringBuffer is not null)
-            {
-                return _logicalPosition;
-            }
-            return streamPosition;
+            // Use logical position (same for both recording and ring buffer modes)
+            return _logicalPosition;
         }
         set
         {
@@ -269,22 +301,21 @@ internal partial class SharpCompressStream : Stream, IStreamStack
 
     private void SeekToPosition(long targetPosition)
     {
-        // If recording is active, use recording buffer for seeking
-        if (IsRecording || isRewound)
+        // If we have a recording anchor, allow seeking within the recorded range
+        if (_recordingStartPosition is not null)
         {
-            long bufferStart = streamPosition - bufferStream.Length;
-            long bufferEnd = streamPosition;
-
-            if (targetPosition >= bufferStart && targetPosition <= bufferEnd)
+            if (targetPosition >= _recordingStartPosition.Value && targetPosition <= streamPosition)
             {
-                isRewound = true;
-                bufferStream.Position = targetPosition - bufferStart;
+                _logicalPosition = targetPosition;
                 return;
             }
-            throw new NotSupportedException("Cannot seek outside recorded region.");
+            throw new NotSupportedException(
+                $"Cannot seek to position {targetPosition}. Valid recorded range: "
+                    + $"[{_recordingStartPosition.Value}, {streamPosition}]"
+            );
         }
 
-        // If ring buffer is enabled, check if we can seek within it
+        // If ring buffer is enabled (and not recording), check if we can seek within it
         if (_ringBuffer is not null)
         {
             long ringBufferStart = streamPosition - _ringBuffer.Length;
@@ -293,9 +324,9 @@ internal partial class SharpCompressStream : Stream, IStreamStack
                 _logicalPosition = targetPosition;
                 return;
             }
-            // Can't seek outside ring buffer range
             throw new NotSupportedException(
-                $"Cannot seek to position {targetPosition}. Valid range with ring buffer: [{ringBufferStart}, {streamPosition}]"
+                $"Cannot seek to position {targetPosition}. Valid ring buffer range: "
+                    + $"[{ringBufferStart}, {streamPosition}]"
             );
         }
 
@@ -316,14 +347,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
             return stream.Read(buffer, offset, count);
         }
 
-        // If recording is active or we're reading from the recording buffer, use legacy behavior
-        // Recording takes precedence over rolling buffer for format detection
-        if (IsRecording || (isRewound && bufferStream.Position != bufferStream.Length))
-        {
-            return ReadWithRecording(buffer, offset, count);
-        }
-
-        // If ring buffer is enabled (and not recording), use ring buffer logic
+        // If ring buffer exists, use unified buffered read logic
         if (_ringBuffer is not null)
         {
             return ReadWithRingBuffer(buffer, offset, count);
@@ -337,52 +361,9 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     }
 
     /// <summary>
-    /// Reads data using the recording buffer (legacy behavior for format detection).
-    /// </summary>
-    private int ReadWithRecording(byte[] buffer, int offset, int count)
-    {
-        int read;
-        if (isRewound && bufferStream.Position != bufferStream.Length)
-        {
-            var readCount = Math.Min(count, (int)(bufferStream.Length - bufferStream.Position));
-            read = bufferStream.Read(buffer, offset, readCount);
-            if (read < count)
-            {
-                var tempRead = stream.Read(buffer, offset + read, count - read);
-                if (IsRecording)
-                {
-                    bufferStream.Write(buffer, offset + read, tempRead);
-                }
-                else if (_ringBuffer is not null && tempRead > 0)
-                {
-                    // When transitioning out of recording mode, add to ring buffer
-                    // so that future rewinds will work
-                    _ringBuffer.Write(buffer, offset + read, tempRead);
-                }
-                streamPosition += tempRead;
-                _logicalPosition = streamPosition;
-                read += tempRead;
-            }
-            if (bufferStream.Position == bufferStream.Length)
-            {
-                isRewound = false;
-            }
-            return read;
-        }
-
-        read = stream.Read(buffer, offset, count);
-        if (IsRecording)
-        {
-            bufferStream.Write(buffer, offset, read);
-        }
-        streamPosition += read;
-        _logicalPosition = streamPosition;
-        return read;
-    }
-
-    /// <summary>
     /// Reads data using the ring buffer. If logical position is behind stream position,
-    /// serves data from the ring buffer first.
+    /// serves data from the ring buffer first. Handles both recording mode and
+    /// over-read protection uniformly.
     /// </summary>
     private int ReadWithRingBuffer(byte[] buffer, int offset, int count)
     {
@@ -392,16 +373,27 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         while (count > 0 && _logicalPosition < streamPosition)
         {
             long bytesFromEnd = streamPosition - _logicalPosition;
-            int available = _ringBuffer!.ReadFromEnd(bytesFromEnd, buffer, offset, count);
+
+            // Verify data is available in ring buffer
+            if (!_ringBuffer!.CanReadFromEnd(bytesFromEnd))
+            {
+                throw new InvalidOperationException(
+                    $"Ring buffer underflow: trying to read {bytesFromEnd} bytes back, "
+                        + $"but buffer only holds {_ringBuffer.Length} bytes."
+                );
+            }
+
+            int available = _ringBuffer.ReadFromEnd(bytesFromEnd, buffer, offset, count);
             totalRead += available;
             offset += available;
             count -= available;
             _logicalPosition += available;
         }
 
-        // If more data needed, read from underlying stream
-        if (count > 0)
+        // If more data needed and we're caught up, read from underlying stream
+        if (count > 0 && _logicalPosition == streamPosition)
         {
+            // Use async read if stream doesn't support sync reads (e.g., AsyncOnlyStream)
             int read = stream.Read(buffer, offset, count);
             if (read > 0)
             {

@@ -54,7 +54,10 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var sharpCompressStream = new SharpCompressStream(stream);
+        var sharpCompressStream = SharpCompressStream.EnsureSeekable(
+            stream,
+            options.RewindableBufferSize
+        );
         sharpCompressStream.StartRecording();
 
         var factories = Factory.Factories.OfType<Factory>();

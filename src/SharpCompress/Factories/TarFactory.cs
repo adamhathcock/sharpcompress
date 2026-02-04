@@ -196,7 +196,10 @@ public class TarFactory
             if (await wrapper.IsMatchAsync(sharpCompressStream, cancellationToken))
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = wrapper.CreateStream(sharpCompressStream);
+                var decompressedStream = await wrapper.CreateStreamAsync(
+                    sharpCompressStream,
+                    cancellationToken
+                );
                 if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
                 {
                     sharpCompressStream.Rewind();
