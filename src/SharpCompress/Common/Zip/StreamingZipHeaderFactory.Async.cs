@@ -297,7 +297,7 @@ internal sealed partial class StreamingZipHeaderFactory
                         var nextHeaderBytes = await _reader
                             .ReadUInt32Async(_cancellationToken)
                             .ConfigureAwait(false);
-                        ((IStreamStack)_sharpCompressStream).Rewind(sizeof(uint));
+                        _sharpCompressStream.Rewind(sizeof(uint));
 
                         // Check if next data is PostDataDescriptor, streamed file with 0 length
                         header.HasData = !IsHeader(nextHeaderBytes);
