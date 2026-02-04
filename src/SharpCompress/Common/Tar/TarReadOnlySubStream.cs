@@ -43,14 +43,14 @@ internal class TarReadOnlySubStream : Stream
 
             if (bytesInLastBlock != 0)
             {
-               if (_useSyncOverAsyncDispose)
-               {
-                   _stream.SkipAsync(512 - bytesInLastBlock).GetAwaiter().GetResult();
-               }
-               else
-               {
-                   _stream.Skip(512 - bytesInLastBlock);
-               }
+                if (_useSyncOverAsyncDispose)
+                {
+                    _stream.SkipAsync(512 - bytesInLastBlock).GetAwaiter().GetResult();
+                }
+                else
+                {
+                    _stream.Skip(512 - bytesInLastBlock);
+                }
             }
         }
     }

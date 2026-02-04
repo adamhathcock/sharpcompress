@@ -30,7 +30,9 @@ internal sealed class TarFilePart : FilePart
         return Header.PackedStream.NotNull();
     }
 
-    internal override ValueTask<Stream?> GetCompressedStreamAsync(CancellationToken cancellationToken = default)
+    internal override ValueTask<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         if (_seekableStream != null)
         {
@@ -39,7 +41,9 @@ internal sealed class TarFilePart : FilePart
             useSyncOverAsync = true;
 #endif
             _seekableStream.Position = Header.DataStartPosition ?? 0;
-            return new ValueTask<Stream?>(new TarReadOnlySubStream(_seekableStream, Header.Size, useSyncOverAsync));
+            return new ValueTask<Stream?>(
+                new TarReadOnlySubStream(_seekableStream, Header.Size, useSyncOverAsync)
+            );
         }
         return new ValueTask<Stream?>(Header.PackedStream.NotNull());
     }

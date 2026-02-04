@@ -186,7 +186,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             return CreateEntryStream(
                 new SyncOnlyStream(
                     new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
-                ), useSyncOverAsyncDispose
+                ),
+                useSyncOverAsyncDispose
             );
         }
 

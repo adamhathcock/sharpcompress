@@ -251,7 +251,6 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
         return stream;
     }
 
-
     /// <summary>
     /// Retains a reference to the entry stream, so we can check whether it completed later.
     /// </summary>

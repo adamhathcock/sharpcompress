@@ -25,7 +25,8 @@ internal partial class WinzipAesCryptoStream : Stream
         Stream stream,
         WinzipAesEncryptionData winzipAesEncryptionData,
         long length,
-        bool useSyncOverAsyncDispose)
+        bool useSyncOverAsyncDispose
+    )
     {
         _stream = stream;
         _totalBytesLeftToRead = length;
@@ -78,20 +79,23 @@ internal partial class WinzipAesCryptoStream : Stream
         if (disposing)
         {
             // Read out last 10 auth bytes - catch exceptions for async-only streams
-                if (_useSyncOverAsyncDispose)
+            if (_useSyncOverAsyncDispose)
+            {
+                var ten = ArrayPool<byte>.Shared.Rent(10);
+                try
                 {
-                    var ten = ArrayPool<byte>.Shared.Rent(10);
-                    try {
                     _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
-                    } finally {
-                        ArrayPool<byte>.Shared.Return(ten);
-                    }
                 }
-                else
+                finally
                 {
-                    Span<byte> ten = stackalloc byte[10];
-                    _stream.ReadFully(ten);
+                    ArrayPool<byte>.Shared.Return(ten);
                 }
+            }
+            else
+            {
+                Span<byte> ten = stackalloc byte[10];
+                _stream.ReadFully(ten);
+            }
             _stream.Dispose();
         }
     }

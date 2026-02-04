@@ -27,7 +27,6 @@ public abstract partial class RarReader
         CancellationToken cancellationToken = default
     )
     {
-
         var useSyncOverAsync = false;
 #if LEGACY_DOTNET
         useSyncOverAsync = true;
