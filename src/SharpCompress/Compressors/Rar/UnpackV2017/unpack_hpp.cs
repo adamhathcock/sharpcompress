@@ -3,13 +3,7 @@ using System.Collections.Generic;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 using int64 = System.Int64;
-#if !Rar2017_64bit
 using size_t = System.UInt32;
-#else
-using nint = System.Int64;
-using nuint = System.UInt64;
-using size_t = System.UInt64;
-#endif
 
 // TODO: REMOVE THIS... WIP
 #pragma warning disable 169
@@ -257,7 +251,7 @@ internal partial class Unpack
     void InitMT();
     bool UnpackLargeBlock(UnpackThreadData &D);
     bool ProcessDecoded(UnpackThreadData &D);
-    
+
     ThreadPool *UnpThreadPool;
     UnpackThreadData *UnpThreadData;
     uint MaxUserThreads;
@@ -409,7 +403,7 @@ internal partial class Unpack
     // More than 8 threads are unlikely to provide a noticeable gain
     // for unpacking, but would use the additional memory.
     void SetThreads(uint Threads) {MaxUserThreads=Min(Threads,8);}
-    
+
     void UnpackDecode(UnpackThreadData &D);
     #endif*/
 

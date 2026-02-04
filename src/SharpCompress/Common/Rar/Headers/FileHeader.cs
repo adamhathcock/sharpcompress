@@ -6,13 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Rar;
 using SharpCompress.IO;
-#if !Rar2017_64bit
 using size_t = System.UInt32;
-#else
-using nint = System.Int64;
-using nuint = System.UInt64;
-using size_t = System.UInt64;
-#endif
 
 namespace SharpCompress.Common.Rar.Headers;
 

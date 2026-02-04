@@ -42,9 +42,6 @@ public partial class EntryStream
                 await lzmaStream.FlushAsync().ConfigureAwait(false);
             }
         }
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(EntryStream));
-#endif
         await base.DisposeAsync().ConfigureAwait(false);
         await _stream.DisposeAsync().ConfigureAwait(false);
     }
