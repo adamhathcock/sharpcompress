@@ -44,7 +44,7 @@ public partial class ZipWriter : AbstractWriter
 
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = new NonDisposingStream(destination);
+            destination = RewindableStream.CreateNonDisposing(destination);
         }
         InitializeStream(destination);
     }
@@ -417,7 +417,7 @@ public partial class ZipWriter : AbstractWriter
 
         private Stream GetWriteStream(Stream writeStream)
         {
-            counting = new CountingStream(new NonDisposingStream(writeStream));
+            counting = new CountingStream(RewindableStream.CreateNonDisposing(writeStream));
             Stream output = counting;
             switch (zipCompressionMethod)
             {

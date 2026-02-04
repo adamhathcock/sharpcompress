@@ -7,7 +7,7 @@ namespace SharpCompress.IO;
 
 internal partial class RewindableStream
 {
-    public override async Task<int> ReadAsync(
+    public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -16,9 +16,25 @@ internal partial class RewindableStream
     {
         if (count == 0)
         {
-            return 0;
+            return Task.FromResult(0);
         }
 
+        // In passthrough mode, delegate directly to underlying stream
+        if (_isPassthrough)
+        {
+            return stream.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
+        return ReadAsyncCore(buffer, offset, count, cancellationToken);
+    }
+
+    private async Task<int> ReadAsyncCore(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
         // If recording is active or we're reading from the recording buffer, use legacy behavior
         if (IsRecording || (isRewound && bufferStream.Position != bufferStream.Length))
         {
@@ -143,16 +159,30 @@ internal partial class RewindableStream
     }
 
 #if !LEGACY_DOTNET
-    public override async ValueTask<int> ReadAsync(
+    public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
     )
     {
         if (buffer.Length == 0)
         {
-            return 0;
+            return ValueTask.FromResult(0);
         }
 
+        // In passthrough mode, delegate directly to underlying stream
+        if (_isPassthrough)
+        {
+            return stream.ReadAsync(buffer, cancellationToken);
+        }
+
+        return ReadAsyncCore(buffer, cancellationToken);
+    }
+
+    private async ValueTask<int> ReadAsyncCore(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken
+    )
+    {
         // If recording is active or we're reading from the recording buffer, use legacy behavior
         if (IsRecording || (isRewound && bufferStream.Position != bufferStream.Length))
         {
@@ -287,17 +317,37 @@ internal partial class RewindableStream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => throw new NotSupportedException();
+    )
+    {
+        if (_isPassthrough)
+        {
+            return stream.WriteAsync(buffer, offset, count, cancellationToken);
+        }
+        throw new NotSupportedException();
+    }
 
 #if !LEGACY_DOTNET
     public override ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => throw new NotSupportedException();
+    )
+    {
+        if (_isPassthrough)
+        {
+            return stream.WriteAsync(buffer, cancellationToken);
+        }
+        throw new NotSupportedException();
+    }
 #endif
 
-    public override Task FlushAsync(CancellationToken cancellationToken) =>
+    public override Task FlushAsync(CancellationToken cancellationToken)
+    {
+        if (_isPassthrough)
+        {
+            return stream.FlushAsync(cancellationToken);
+        }
         throw new NotSupportedException();
+    }
 
     public override async Task CopyToAsync(
         Stream destination,
@@ -318,8 +368,17 @@ internal partial class RewindableStream
     {
         if (!isDisposed)
         {
+            if (ThrowOnDispose)
+            {
+                throw new InvalidOperationException(
+                    $"Attempt to dispose of a {nameof(RewindableStream)} when {nameof(ThrowOnDispose)} is true"
+                );
+            }
             isDisposed = true;
-            await stream.DisposeAsync();
+            if (!LeaveStreamOpen)
+            {
+                await stream.DisposeAsync();
+            }
             _ringBuffer?.Dispose();
             _ringBuffer = null;
         }

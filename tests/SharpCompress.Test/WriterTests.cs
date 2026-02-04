@@ -44,7 +44,7 @@ public class WriterTests : TestBase
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
             using var reader = ReaderFactory.OpenReader(
-                new NonDisposingStream(stream),
+                RewindableStream.CreateNonDisposing(stream),
                 readerOptions
             );
             reader.WriteAllToDirectory(
@@ -93,7 +93,7 @@ public class WriterTests : TestBase
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
             await using var reader = await ReaderFactory.OpenAsyncReader(
-                new AsyncOnlyStream(new NonDisposingStream(stream)),
+                new AsyncOnlyStream(RewindableStream.CreateNonDisposing(stream)),
                 readerOptions,
                 cancellationToken
             );

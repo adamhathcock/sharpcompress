@@ -67,7 +67,7 @@ public abstract class ReaderTests : TestBase
     private void ReadImplCore(string testArchive, ReaderOptions options, Action<IReader> useReader)
     {
         using var file = File.OpenRead(testArchive);
-        using var protectedStream = new NonDisposingStream(
+        using var protectedStream = RewindableStream.CreateNonDisposing(
             new ForwardOnlyStream(file, options.BufferSize)
         );
         using var testStream = new TestStream(protectedStream);
@@ -160,13 +160,13 @@ public abstract class ReaderTests : TestBase
         using var file = File.OpenRead(testArchive);
 
 #if !LEGACY_DOTNET
-        await using var protectedStream = new NonDisposingStream(
+        await using var protectedStream = RewindableStream.CreateNonDisposing(
             new ForwardOnlyStream(file, options.BufferSize)
         );
         await using var testStream = new TestStream(protectedStream);
 #else
 
-        using var protectedStream = new NonDisposingStream(
+        using var protectedStream = RewindableStream.CreateNonDisposing(
             new ForwardOnlyStream(file, options.BufferSize)
         );
         using var testStream = new TestStream(protectedStream);

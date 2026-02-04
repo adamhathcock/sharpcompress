@@ -27,7 +27,21 @@ internal sealed partial class SeekableRewindableStream
 
     public override ValueTask DisposeAsync()
     {
-        _underlyingStream.Dispose();
+        if (_isDisposed)
+        {
+            return base.DisposeAsync();
+        }
+        if (ThrowOnDispose)
+        {
+            throw new InvalidOperationException(
+                $"Attempt to dispose of a {nameof(SeekableRewindableStream)} when {nameof(ThrowOnDispose)} is true"
+            );
+        }
+        _isDisposed = true;
+        if (!LeaveStreamOpen)
+        {
+            _underlyingStream.Dispose();
+        }
         return base.DisposeAsync();
     }
 #endif

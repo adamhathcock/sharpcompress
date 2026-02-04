@@ -17,10 +17,29 @@ internal partial class RewindableStream : Stream, IStreamStack
     private RingBuffer? _ringBuffer;
     private long _logicalPosition; // The current logical read position (can be behind streamPosition)
 
+    // Passthrough mode - no buffering, delegates CanSeek to underlying stream
+    private readonly bool _isPassthrough;
+
+    /// <summary>
+    /// Gets whether this stream is in passthrough mode (no buffering, delegates to underlying stream).
+    /// </summary>
+    internal bool IsPassthrough => _isPassthrough;
+
     /// <summary>
     /// Default size for rolling buffer (same as .NET Stream.CopyTo default)
     /// </summary>
     public const int DefaultRollingBufferSize = 81920;
+
+    /// <summary>
+    /// Gets or sets whether to leave the underlying stream open when disposed.
+    /// </summary>
+    public bool LeaveStreamOpen { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to throw an exception when Dispose is called.
+    /// Useful for testing to ensure streams are not disposed prematurely.
+    /// </summary>
+    public bool ThrowOnDispose { get; set; }
 
     public RewindableStream(Stream stream)
     {
@@ -42,6 +61,25 @@ internal partial class RewindableStream : Stream, IStreamStack
         }
     }
 
+    /// <summary>
+    /// Private constructor for passthrough mode.
+    /// </summary>
+    private RewindableStream(Stream stream, bool leaveStreamOpen, bool passthrough)
+    {
+        this.stream = stream;
+        LeaveStreamOpen = leaveStreamOpen;
+        _isPassthrough = passthrough;
+        _logicalPosition = 0;
+    }
+
+    /// <summary>
+    /// Creates a RewindableStream that acts as a passthrough wrapper.
+    /// No buffering is performed; CanSeek delegates to the underlying stream.
+    /// The underlying stream will not be disposed when this stream is disposed.
+    /// </summary>
+    public static RewindableStream CreateNonDisposing(Stream stream)
+        => new(stream, leaveStreamOpen: true, passthrough: true);
+
     internal virtual bool IsRecording { get; private set; }
 
     protected override void Dispose(bool disposing)
@@ -50,11 +88,20 @@ internal partial class RewindableStream : Stream, IStreamStack
         {
             return;
         }
+        if (ThrowOnDispose)
+        {
+            throw new InvalidOperationException(
+                $"Attempt to dispose of a {nameof(RewindableStream)} when {nameof(ThrowOnDispose)} is true"
+            );
+        }
         isDisposed = true;
         base.Dispose(disposing);
         if (disposing)
         {
-            stream.Dispose();
+            if (!LeaveStreamOpen)
+            {
+                stream.Dispose();
+            }
             _ringBuffer?.Dispose();
             _ringBuffer = null;
         }
@@ -64,6 +111,12 @@ internal partial class RewindableStream : Stream, IStreamStack
 
     public virtual void Rewind(bool stopRecording)
     {
+        if (_isPassthrough)
+        {
+            throw new InvalidOperationException(
+                "Rewind cannot be called on a passthrough stream. Use EnsureSeekable() first."
+            );
+        }
         isRewound = true;
         IsRecording = !stopRecording;
         bufferStream.Position = 0;
@@ -71,6 +124,12 @@ internal partial class RewindableStream : Stream, IStreamStack
 
     public virtual void StopRecording()
     {
+        if (_isPassthrough)
+        {
+            throw new InvalidOperationException(
+                "StopRecording cannot be called on a passthrough stream. Use EnsureSeekable() first."
+            );
+        }
         if (!IsRecording)
         {
             throw new InvalidOperationException(
@@ -84,12 +143,32 @@ internal partial class RewindableStream : Stream, IStreamStack
 
     public static RewindableStream EnsureSeekable(Stream stream)
     {
+        // If it's a passthrough RewindableStream, unwrap it and create proper seekable wrapper
         if (stream is RewindableStream rewindableStream)
         {
+            if (rewindableStream._isPassthrough)
+            {
+                // Unwrap the passthrough and create appropriate wrapper
+                var underlying = rewindableStream.stream;
+                if (underlying.CanSeek)
+                {
+                    // Create SeekableRewindableStream that preserves LeaveStreamOpen
+                    return new SeekableRewindableStream(underlying)
+                    {
+                        LeaveStreamOpen = true // Preserve non-disposing behavior
+                    };
+                }
+                // Non-seekable underlying stream - wrap with rolling buffer
+                return new RewindableStream(underlying, DefaultRollingBufferSize)
+                {
+                    LeaveStreamOpen = true
+                };
+            }
+            // Not passthrough - return as-is
             return rewindableStream;
         }
 
-        // Check if stream is wrapping a RewindableStream (e.g., NonDisposingStream)
+        // Check if stream is wrapping a RewindableStream (e.g., via IStreamStack)
         if (stream is IStreamStack streamStack)
         {
             var underlying = streamStack.GetStream<RewindableStream>();
@@ -111,6 +190,12 @@ internal partial class RewindableStream : Stream, IStreamStack
 
     public virtual void StartRecording()
     {
+        if (_isPassthrough)
+        {
+            throw new InvalidOperationException(
+                "StartRecording cannot be called on a passthrough stream. Use EnsureSeekable() first."
+            );
+        }
         if (IsRecording)
         {
             throw new InvalidOperationException(
@@ -132,18 +217,31 @@ internal partial class RewindableStream : Stream, IStreamStack
 
     public override bool CanRead => true;
 
-    public override bool CanSeek => true;
+    public override bool CanSeek => _isPassthrough ? stream.CanSeek : true;
 
-    public override bool CanWrite => false;
+    public override bool CanWrite => _isPassthrough && stream.CanWrite;
 
-    public override void Flush() => throw new NotSupportedException();
+    public override void Flush()
+    {
+        if (_isPassthrough)
+        {
+            stream.Flush();
+            return;
+        }
+        throw new NotSupportedException();
+    }
 
-    public override long Length => throw new NotSupportedException();
+    public override long Length => _isPassthrough ? stream.Length : throw new NotSupportedException();
 
     public override long Position
     {
         get
         {
+            // In passthrough mode, delegate to underlying stream
+            if (_isPassthrough)
+            {
+                return stream.Position;
+            }
             // If recording is active or rewound from recording, use recording buffer position
             if (IsRecording || (isRewound && bufferStream.Position < bufferStream.Length))
             {
@@ -156,7 +254,16 @@ internal partial class RewindableStream : Stream, IStreamStack
             }
             return streamPosition;
         }
-        set => SeekToPosition(value);
+        set
+        {
+            // In passthrough mode, delegate to underlying stream
+            if (_isPassthrough)
+            {
+                stream.Position = value;
+                return;
+            }
+            SeekToPosition(value);
+        }
     }
 
     private void SeekToPosition(long targetPosition)
@@ -200,6 +307,12 @@ internal partial class RewindableStream : Stream, IStreamStack
         if (count == 0)
         {
             return 0;
+        }
+
+        // In passthrough mode, delegate directly to underlying stream
+        if (_isPassthrough)
+        {
+            return stream.Read(buffer, offset, count);
         }
 
         // If recording is active or we're reading from the recording buffer, use legacy behavior
@@ -303,6 +416,12 @@ internal partial class RewindableStream : Stream, IStreamStack
 
     public override long Seek(long offset, SeekOrigin origin)
     {
+        // In passthrough mode, delegate to underlying stream
+        if (_isPassthrough)
+        {
+            return stream.Seek(offset, origin);
+        }
+
         long targetPosition = origin switch
         {
             SeekOrigin.Begin => offset,
@@ -315,8 +434,45 @@ internal partial class RewindableStream : Stream, IStreamStack
         return targetPosition;
     }
 
-    public override void SetLength(long value) => throw new NotSupportedException();
-
-    public override void Write(byte[] buffer, int offset, int count) =>
+    public override void SetLength(long value)
+    {
+        if (_isPassthrough)
+        {
+            stream.SetLength(value);
+            return;
+        }
         throw new NotSupportedException();
+    }
+
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        if (_isPassthrough)
+        {
+            stream.Write(buffer, offset, count);
+            return;
+        }
+        throw new NotSupportedException();
+    }
+
+#if !LEGACY_DOTNET
+    public override int Read(Span<byte> buffer)
+    {
+        if (_isPassthrough)
+        {
+            return stream.Read(buffer);
+        }
+        // Fall back to base implementation for buffered modes
+        return base.Read(buffer);
+    }
+
+    public override void Write(ReadOnlySpan<byte> buffer)
+    {
+        if (_isPassthrough)
+        {
+            stream.Write(buffer);
+            return;
+        }
+        throw new NotSupportedException();
+    }
+#endif
 }

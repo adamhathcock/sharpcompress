@@ -297,7 +297,7 @@ public class ZipReaderTests : ReaderTests
         stream = new MemoryStream(memory.ToArray());
         File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), memory.ToArray());
 
-        using IReader zipReader = ZipReader.OpenReader(new NonDisposingStream(stream));
+        using IReader zipReader = ZipReader.OpenReader(RewindableStream.CreateNonDisposing(stream));
         var i = 0;
         while (zipReader.MoveToNextEntry())
         {
