@@ -289,43 +289,14 @@ internal sealed partial class StreamingZipHeaderFactory
                     else if (localHeader.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                     {
                         // Peek ahead to check if next data is a header or file data.
-                        // For SeekableRewindableStream, use direct position save/restore to avoid
-                        // interfering with any recording state set by the caller (e.g., ReaderFactory).
-                        // Plain RewindableStream can use StartRecording/Rewind safely since it was
-                        // created fresh by EnsureSeekable and isn't shared with the caller.
-                        if (_rewindableStream is SeekableRewindableStream)
-                        {
-                            var savedPosition = _rewindableStream.Position;
-                            var nextHeaderBytes = await _reader
-                                .ReadUInt32Async(_cancellationToken)
-                                .ConfigureAwait(false);
-                            _rewindableStream.Position = savedPosition;
-                            header.HasData = !IsHeader(nextHeaderBytes);
-                        }
-                        else
-                        {
-                            // Only start recording if not already recording.
-                            // The stream may already be recording if it was created by ReaderFactory.
-                            if (!_rewindableStream.IsRecording)
-                            {
-                                _rewindableStream.StartRecording();
-                                var nextHeaderBytes = await _reader
-                                    .ReadUInt32Async(_cancellationToken)
-                                    .ConfigureAwait(false);
-                                _rewindableStream.Rewind(true);
-                                header.HasData = !IsHeader(nextHeaderBytes);
-                            }
-                            else
-                            {
-                                // If already recording, save position and restore after peek
-                                var savedPosition = _rewindableStream.Position;
-                                var nextHeaderBytes = await _reader
-                                    .ReadUInt32Async(_cancellationToken)
-                                    .ConfigureAwait(false);
-                                _rewindableStream.Position = savedPosition;
-                                header.HasData = !IsHeader(nextHeaderBytes);
-                            }
-                        }
+                        // Use the IStreamStack.Rewind mechanism to give back the peeked bytes.
+                        var nextHeaderBytes = await _reader
+                            .ReadUInt32Async(_cancellationToken)
+                            .ConfigureAwait(false);
+                        ((IStreamStack)_rewindableStream).Rewind(sizeof(uint));
+
+                        // Check if next data is PostDataDescriptor, streamed file with 0 length
+                        header.HasData = !IsHeader(nextHeaderBytes);
                     }
                     else // We are not streaming and compressed size is 0, we have no data
                     {

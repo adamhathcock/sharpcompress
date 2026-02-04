@@ -52,19 +52,31 @@ namespace SharpCompress.IO
 
         internal static void Rewind(this IStreamStack stream, int count)
         {
-            IStreamStack? buffStream = null;
             IStreamStack? current = stream;
 
-            while (buffStream == null && current != null)
+            while (current != null)
             {
                 if (current is RewindableStream rewindableStream)
                 {
-                    buffStream = current;
-                    rewindableStream.Position -= Math.Min(rewindableStream.Position, count);
+                    // Try to rewind within the buffer. If the position is outside the buffered
+                    // region, silently ignore (matching release behavior where streams without
+                    // buffering simply didn't rewind).
+                    var targetPosition = rewindableStream.Position - count;
+                    if (targetPosition >= 0)
+                    {
+                        try
+                        {
+                            rewindableStream.Position = targetPosition;
+                        }
+                        catch (NotSupportedException)
+                        {
+                            // Cannot seek outside buffered region - silently ignore
+                        }
+                    }
+                    return;
                 }
                 current = current.BaseStream() as IStreamStack;
             }
         }
-
     }
 }
