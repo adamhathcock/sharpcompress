@@ -10,9 +10,12 @@ public sealed partial class BZip2Stream : Stream
 {
     private Stream stream = default!;
     private bool isDisposed;
-    private bool leaveOpen;
+    private readonly bool leaveOpen;
 
-    private BZip2Stream() { }
+    private BZip2Stream(bool leaveOpen)
+    {
+        this.leaveOpen = leaveOpen;
+    }
 
     /// <summary>
     /// Create a BZip2Stream
@@ -27,8 +30,7 @@ public sealed partial class BZip2Stream : Stream
         bool leaveOpen = false
     )
     {
-        var bZip2Stream = new BZip2Stream();
-        bZip2Stream.leaveOpen = leaveOpen;
+        var bZip2Stream = new BZip2Stream(leaveOpen);
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {

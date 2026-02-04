@@ -8,7 +8,7 @@ namespace SharpCompress.IO;
 
 public sealed class AsyncBinaryReader : IDisposable
 #if NET8_0_OR_GREATER
-, IAsyncDisposable
+        , IAsyncDisposable
 #endif
 {
     private readonly Stream _stream;

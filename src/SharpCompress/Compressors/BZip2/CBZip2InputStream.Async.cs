@@ -857,11 +857,11 @@ internal partial class CBZip2InputStream
     public static async ValueTask<CBZip2InputStream> CreateAsync(
         Stream zStream,
         bool decompressConcatenated,
+        bool leaveOpen = false,
         CancellationToken cancellationToken = default
     )
     {
-        var cbZip2InputStream = new CBZip2InputStream();
-        cbZip2InputStream.decompressConcatenated = decompressConcatenated;
+        var cbZip2InputStream = new CBZip2InputStream(decompressConcatenated, leaveOpen);
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         await cbZip2InputStream.BsSetStreamAsync(zStream, cancellationToken);
