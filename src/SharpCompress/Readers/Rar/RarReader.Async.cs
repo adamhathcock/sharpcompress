@@ -27,10 +27,6 @@ public abstract partial class RarReader
         CancellationToken cancellationToken = default
     )
     {
-        var useSyncOverAsync = false;
-#if LEGACY_DOTNET
-        useSyncOverAsync = true;
-#endif
         if (Entry.IsRedir)
         {
             throw new InvalidOperationException("no stream for redirect entry");
@@ -44,8 +40,7 @@ public abstract partial class RarReader
             return CreateEntryStream(
                 await RarCrcStream
                     .CreateAsync(UnpackV1.Value, Entry.FileHeader, stream, cancellationToken)
-                    .ConfigureAwait(false),
-                useSyncOverAsync
+                    .ConfigureAwait(false)
             );
         }
 
@@ -54,16 +49,14 @@ public abstract partial class RarReader
             return CreateEntryStream(
                 await RarBLAKE2spStream
                     .CreateAsync(UnpackV2017.Value, Entry.FileHeader, stream, cancellationToken)
-                    .ConfigureAwait(false),
-                useSyncOverAsync
+                    .ConfigureAwait(false)
             );
         }
 
         return CreateEntryStream(
             await RarCrcStream
                 .CreateAsync(UnpackV2017.Value, Entry.FileHeader, stream, cancellationToken)
-                .ConfigureAwait(false),
-            useSyncOverAsync
+                .ConfigureAwait(false)
         );
     }
 }

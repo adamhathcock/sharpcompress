@@ -36,4 +36,47 @@ public class ReaderOptions : OptionsBase
     /// When set, progress updates will be reported as entries are extracted.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; set; }
+
+    /// <summary>
+    /// Size of the rewindable buffer for non-seekable streams.
+    /// Used during format detection to enable multiple rewinds.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When opening archives from non-seekable streams (network streams, pipes,
+    /// compressed streams), SharpCompress uses a ring buffer to enable format
+    /// auto-detection. This buffer allows the library to try multiple decoders
+    /// by rewinding and re-reading the same data.
+    /// </para>
+    /// <para>
+    /// <b>Default:</b> Constants.RewindableBufferSize (81920 bytes / 81KB)
+    /// </para>
+    /// <para>
+    /// <b>Typical usage:</b> 500-1000 bytes for most archives
+    /// </para>
+    /// <para>
+    /// <b>Increase if:</b>
+    /// <list type="bullet">
+    /// <item>Opening self-extracting RAR archives (may need 512KB+)</item>
+    /// <item>Format detection fails with "recording anchor" errors</item>
+    /// <item>Using custom formats with large headers</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <b>Memory impact:</b> Buffer is allocated for non-seekable streams only.
+    /// Seekable streams (FileStream, MemoryStream) use zero-copy seeking instead.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // For self-extracting archives, use larger buffer
+    /// var options = new ReaderOptions
+    /// {
+    ///     RewindableBufferSize = 1_048_576, // 1MB
+    ///     LookForHeader = true
+    /// };
+    /// using var reader = ReaderFactory.OpenReader(networkStream, options);
+    /// </code>
+    /// </example>
+    public int? RewindableBufferSize { get; set; }
 }

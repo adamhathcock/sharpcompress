@@ -57,61 +57,64 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
     {
         stream.NotNull(nameof(stream));
         options = options ?? new ReaderOptions();
-        var rewindableStream = RewindableStream.EnsureSeekable(stream);
-        long pos = rewindableStream.Position;
-        if (GZipArchive.IsGZipFile(rewindableStream))
+        var sharpCompressStream = SharpCompressStream.EnsureSeekable(
+            stream,
+            options.RewindableBufferSize
+        );
+        long pos = sharpCompressStream.Position;
+        if (GZipArchive.IsGZipFile(sharpCompressStream))
         {
-            rewindableStream.Position = pos;
-            var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
+            sharpCompressStream.Position = pos;
+            var testStream = new GZipStream(sharpCompressStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Position = pos;
-                return new TarReader(rewindableStream, options, CompressionType.GZip);
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.GZip);
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-        rewindableStream.Position = pos;
-        if (BZip2Stream.IsBZip2(rewindableStream))
+        sharpCompressStream.Position = pos;
+        if (BZip2Stream.IsBZip2(sharpCompressStream))
         {
-            rewindableStream.Position = pos;
+            sharpCompressStream.Position = pos;
             var testStream = BZip2Stream.Create(
-                rewindableStream,
+                sharpCompressStream,
                 CompressionMode.Decompress,
                 false
             );
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Position = pos;
-                return new TarReader(rewindableStream, options, CompressionType.BZip2);
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.BZip2);
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-        rewindableStream.Position = pos;
-        if (ZStandardStream.IsZStandard(rewindableStream))
+        sharpCompressStream.Position = pos;
+        if (ZStandardStream.IsZStandard(sharpCompressStream))
         {
-            rewindableStream.Position = pos;
-            var testStream = new ZStandardStream(rewindableStream);
+            sharpCompressStream.Position = pos;
+            var testStream = new ZStandardStream(sharpCompressStream);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Position = pos;
-                return new TarReader(rewindableStream, options, CompressionType.ZStandard);
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.ZStandard);
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-        rewindableStream.Position = pos;
-        if (LZipStream.IsLZipFile(rewindableStream))
+        sharpCompressStream.Position = pos;
+        if (LZipStream.IsLZipFile(sharpCompressStream))
         {
-            rewindableStream.Position = pos;
-            var testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
+            sharpCompressStream.Position = pos;
+            var testStream = new LZipStream(sharpCompressStream, CompressionMode.Decompress);
             if (TarArchive.IsTarFile(testStream))
             {
-                rewindableStream.Position = pos;
-                return new TarReader(rewindableStream, options, CompressionType.LZip);
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.LZip);
             }
             throw new InvalidFormatException("Not a tar file.");
         }
-        rewindableStream.Position = pos;
-        return new TarReader(rewindableStream, options, CompressionType.None);
+        sharpCompressStream.Position = pos;
+        return new TarReader(sharpCompressStream, options, CompressionType.None);
     }
 
     #endregion OpenReader

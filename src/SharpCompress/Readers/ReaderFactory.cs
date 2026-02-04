@@ -34,8 +34,11 @@ public static partial class ReaderFactory
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions() { LeaveStreamOpen = false };
 
-        var bStream = RewindableStream.EnsureSeekable(stream);
-        bStream.StartRecording();
+        var sharpCompressStream = SharpCompressStream.EnsureSeekable(
+            stream,
+            options.RewindableBufferSize
+        );
+        sharpCompressStream.StartRecording();
 
         var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
 
@@ -48,11 +51,11 @@ public static partial class ReaderFactory
                     .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
             );
             if (
-                testedFactory?.TryOpenReader(bStream, options, out var reader) == true
+                testedFactory?.TryOpenReader(sharpCompressStream, options, out var reader) == true
                 && reader != null
             )
             {
-                bStream.Rewind(true);
+                sharpCompressStream.Rewind(true);
                 return reader;
             }
         }
@@ -63,8 +66,11 @@ public static partial class ReaderFactory
             {
                 continue; // Already tested above
             }
-            bStream.Rewind();
-            if (factory.TryOpenReader(bStream, options, out var reader) && reader != null)
+            sharpCompressStream.Rewind();
+            if (
+                factory.TryOpenReader(sharpCompressStream, options, out var reader)
+                && reader != null
+            )
             {
                 return reader;
             }

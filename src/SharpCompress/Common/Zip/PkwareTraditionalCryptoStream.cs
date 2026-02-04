@@ -25,10 +25,6 @@ internal partial class PkwareTraditionalCryptoStream : Stream
         _encryptor = encryptor;
         _stream = stream;
         _mode = mode;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(PkwareTraditionalCryptoStream));
-#endif
     }
 
     public override bool CanRead => (_mode == CryptoMode.Decrypt);
@@ -104,9 +100,6 @@ internal partial class PkwareTraditionalCryptoStream : Stream
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(PkwareTraditionalCryptoStream));
-#endif
         base.Dispose(disposing);
         _stream.Dispose();
     }

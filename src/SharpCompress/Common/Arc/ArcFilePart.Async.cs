@@ -7,62 +7,52 @@ using SharpCompress.Compressors.RLE90;
 using SharpCompress.Compressors.Squeezed;
 using SharpCompress.IO;
 
-namespace SharpCompress.Common.Arc
+namespace SharpCompress.Common.Arc;
+
+public partial class ArcFilePart
 {
-    public partial class ArcFilePart
+    internal override async ValueTask<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        internal override async ValueTask<Stream?> GetCompressedStreamAsync(
-            CancellationToken cancellationToken = default
-        )
+        if (_stream != null)
         {
-            if (_stream != null)
+            Stream compressedStream;
+            switch (Header.CompressionMethod)
             {
-                Stream compressedStream;
-                switch (Header.CompressionMethod)
-                {
-                    case CompressionType.None:
-                        compressedStream = new ReadOnlySubStream(
-                            _stream,
-                            Header.DataStartPosition,
-                            Header.CompressedSize
-                        );
-                        break;
-                    case CompressionType.Packed:
-                        compressedStream = new RunLength90Stream(
-                            _stream,
-                            (int)Header.CompressedSize
-                        );
-                        break;
-                    case CompressionType.Squeezed:
-                        compressedStream = await SqueezeStream.CreateAsync(
-                            _stream,
-                            (int)Header.CompressedSize,
-                            cancellationToken
-                        );
-                        break;
-                    case CompressionType.Crunched:
-                        if (Header.OriginalSize > 128 * 1024)
-                        {
-                            throw new NotSupportedException(
-                                "CompressionMethod: "
-                                    + Header.CompressionMethod
-                                    + " with size > 128KB"
-                            );
-                        }
-                        compressedStream = new ArcLzwStream(
-                            _stream,
-                            (int)Header.CompressedSize,
-                            true
-                        );
-                        break;
-                    default:
+                case CompressionType.None:
+                    compressedStream = new ReadOnlySubStream(
+                        _stream,
+                        Header.DataStartPosition,
+                        Header.CompressedSize
+                    );
+                    break;
+                case CompressionType.Packed:
+                    compressedStream = new RunLength90Stream(_stream, (int)Header.CompressedSize);
+                    break;
+                case CompressionType.Squeezed:
+                    compressedStream = await SqueezeStream.CreateAsync(
+                        _stream,
+                        (int)Header.CompressedSize,
+                        cancellationToken
+                    );
+                    break;
+                case CompressionType.Crunched:
+                    if (Header.OriginalSize > 128 * 1024)
+                    {
                         throw new NotSupportedException(
-                            "CompressionMethod: " + Header.CompressionMethod
+                            "CompressionMethod: " + Header.CompressionMethod + " with size > 128KB"
                         );
-                }
-                return compressedStream;
+                    }
+                    compressedStream = new ArcLzwStream(_stream, (int)Header.CompressedSize, true);
+                    break;
+                default:
+                    throw new NotSupportedException(
+                        "CompressionMethod: " + Header.CompressionMethod
+                    );
             }
-            return _stream;
+            return compressedStream;
         }
+        return _stream;
     }
 }

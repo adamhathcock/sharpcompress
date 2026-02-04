@@ -49,18 +49,18 @@ public class TarFactory
     /// <inheritdoc/>
     public override bool IsArchive(Stream stream, string? password = null)
     {
-        var rewindableStream = new RewindableStream(stream);
-        rewindableStream.StartRecording();
+        var sharpCompressStream = new SharpCompressStream(stream);
+        sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
-            rewindableStream.Rewind();
-            if (wrapper.IsMatch(rewindableStream))
+            sharpCompressStream.Rewind();
+            if (wrapper.IsMatch(sharpCompressStream))
             {
-                rewindableStream.Rewind();
-                var decompressedStream = wrapper.CreateStream(rewindableStream);
+                sharpCompressStream.Rewind();
+                var decompressedStream = wrapper.CreateStream(sharpCompressStream);
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
-                    rewindableStream.Rewind();
+                    sharpCompressStream.Rewind();
                     return true;
                 }
             }
@@ -76,21 +76,21 @@ public class TarFactory
         CancellationToken cancellationToken = default
     )
     {
-        var rewindableStream = new RewindableStream(stream);
-        rewindableStream.StartRecording();
+        var sharpCompressStream = new SharpCompressStream(stream);
+        sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
-            rewindableStream.Rewind();
-            if (await wrapper.IsMatchAsync(rewindableStream, cancellationToken))
+            sharpCompressStream.Rewind();
+            if (await wrapper.IsMatchAsync(sharpCompressStream, cancellationToken))
             {
-                rewindableStream.Rewind();
+                sharpCompressStream.Rewind();
                 var decompressedStream = await wrapper.CreateStreamAsync(
-                    rewindableStream,
+                    sharpCompressStream,
                     cancellationToken
                 );
                 if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
                 {
-                    rewindableStream.Rewind();
+                    sharpCompressStream.Rewind();
                     return true;
                 }
             }
@@ -160,19 +160,19 @@ public class TarFactory
     public IReader OpenReader(Stream stream, ReaderOptions? options)
     {
         options ??= new ReaderOptions();
-        var rewindableStream = new RewindableStream(stream);
-        rewindableStream.StartRecording();
+        var sharpCompressStream = new SharpCompressStream(stream);
+        sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
-            rewindableStream.Rewind();
-            if (wrapper.IsMatch(rewindableStream))
+            sharpCompressStream.Rewind();
+            if (wrapper.IsMatch(sharpCompressStream))
             {
-                rewindableStream.Rewind();
-                var decompressedStream = wrapper.CreateStream(rewindableStream);
+                sharpCompressStream.Rewind();
+                var decompressedStream = wrapper.CreateStream(sharpCompressStream);
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
-                    rewindableStream.StopRecording();
-                    return new TarReader(rewindableStream, options, wrapper.CompressionType);
+                    sharpCompressStream.StopRecording();
+                    return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
                 }
             }
         }
@@ -188,20 +188,23 @@ public class TarFactory
     {
         cancellationToken.ThrowIfCancellationRequested();
         options ??= new ReaderOptions();
-        var rewindableStream = new RewindableStream(stream);
-        rewindableStream.StartRecording();
+        var sharpCompressStream = new SharpCompressStream(stream);
+        sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
-            rewindableStream.Rewind();
-            if (await wrapper.IsMatchAsync(rewindableStream, cancellationToken))
+            sharpCompressStream.Rewind();
+            if (await wrapper.IsMatchAsync(sharpCompressStream, cancellationToken))
             {
-                rewindableStream.Rewind();
-                var decompressedStream = wrapper.CreateStream(rewindableStream);
+                sharpCompressStream.Rewind();
+                var decompressedStream = await wrapper.CreateStreamAsync(
+                    sharpCompressStream,
+                    cancellationToken
+                );
                 if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
                 {
-                    rewindableStream.Rewind();
-                    rewindableStream.StopRecording();
-                    return new TarReader(rewindableStream, options, wrapper.CompressionType);
+                    sharpCompressStream.Rewind();
+                    sharpCompressStream.StopRecording();
+                    return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
                 }
             }
         }

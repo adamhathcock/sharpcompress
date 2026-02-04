@@ -33,9 +33,6 @@ internal partial class ZStandardStream : DecompressionStream
         : base(baseInputStream)
     {
         this.stream = baseInputStream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ZStandardStream));
-#endif
     }
 
     /// <summary>

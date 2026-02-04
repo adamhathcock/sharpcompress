@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Streams;
 
-public class RewindableStreamTest
+public class SharpCompressStreamTest
 {
     [Fact]
     public void TestRewind()
@@ -23,7 +23,7 @@ public class RewindableStreamTest
         bw.Write(7);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
         var br = new BinaryReader(stream);
         Assert.Equal(1, br.ReadInt32());
@@ -54,7 +54,7 @@ public class RewindableStreamTest
         bw.Write(7);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
         var br = new BinaryReader(stream);
         Assert.Equal(1, br.ReadInt32());
@@ -82,7 +82,7 @@ public class RewindableStreamTest
         bw.Write(4);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
         var br = new BinaryReader(stream);
         Assert.Equal(1, br.ReadInt32());
@@ -105,7 +105,7 @@ public class RewindableStreamTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
         Assert.Equal(0, stream.Position);
 
         var buffer = new byte[4];
@@ -131,7 +131,7 @@ public class RewindableStreamTest
         }
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -152,7 +152,7 @@ public class RewindableStreamTest
         bw.Write(2);
         bw.Flush();
         ms.Position = 0;
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
         stream.Dispose();
         Assert.Throws<ObjectDisposedException>(() => stream.Read(new byte[4], 0, 4));
     }
@@ -172,7 +172,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -206,7 +206,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
         stream.StartRecording();
 
         var buffer = new byte[8];
@@ -240,7 +240,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         var buffer = new byte[8];
@@ -275,7 +275,7 @@ public class RewindableStreamTest
         ms.Position = 0;
 
         var nonSeekableStream = new NonSeekableStreamWrapper(ms);
-        var stream = new RewindableStream(nonSeekableStream);
+        var stream = new SharpCompressStream(nonSeekableStream);
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -306,7 +306,7 @@ public class RewindableStreamTest
         ms.Position = 0;
 
         var nonSeekableStream = new NonSeekableStreamWrapper(ms);
-        var stream = new RewindableStream(nonSeekableStream);
+        var stream = new SharpCompressStream(nonSeekableStream);
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -332,7 +332,7 @@ public class RewindableStreamTest
         ms.Position = 0;
 
         var nonSeekableStream = new NonSeekableStreamWrapper(ms);
-        var stream = new RewindableStream(nonSeekableStream);
+        var stream = new SharpCompressStream(nonSeekableStream);
         Assert.Equal(0, stream.Position);
         Assert.True(stream.CanSeek);
 
@@ -361,7 +361,7 @@ public class RewindableStreamTest
         ms.Position = 0;
 
         var nonSeekableStream = new NonSeekableStreamWrapper(ms);
-        var stream = new RewindableStream(nonSeekableStream);
+        var stream = new SharpCompressStream(nonSeekableStream);
         stream.StartRecording();
 
         var buffer = new byte[4];
@@ -394,7 +394,7 @@ public class RewindableStreamTest
         ms.Position = 0;
 
         var nonSeekableStream = new NonSeekableStreamWrapper(ms);
-        var stream = new RewindableStream(nonSeekableStream);
+        var stream = new SharpCompressStream(nonSeekableStream);
         stream.StartRecording();
 
         var buffer = new byte[4];
@@ -419,7 +419,7 @@ public class RewindableStreamTest
         ms.Position = 0;
 
         var nonSeekableStream = new NonSeekableStreamWrapper(ms);
-        var stream = new RewindableStream(nonSeekableStream);
+        var stream = new SharpCompressStream(nonSeekableStream);
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -457,7 +457,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
         var br = new BinaryReader(new ForwardOnlyStream(stream));
 
@@ -511,7 +511,7 @@ public class RewindableStreamTest
         ms.Position = 0;
 
         var nonSeekableStream = new NonSeekableStreamWrapper(ms);
-        var stream = new RewindableStream(nonSeekableStream);
+        var stream = new SharpCompressStream(nonSeekableStream);
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -557,7 +557,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
         var br = new BinaryReader(stream);
 
@@ -609,7 +609,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(ms);
+        var stream = new SharpCompressStream(ms);
         stream.StartRecording();
 
         var br = new BinaryReader(stream);
@@ -647,7 +647,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Simulate factory detection: record first 512 bytes
         stream.StartRecording();
@@ -694,7 +694,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 512 bytes
         stream.StartRecording();
@@ -729,7 +729,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 512 bytes
         stream.StartRecording();
@@ -764,7 +764,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 512 bytes
         stream.StartRecording();
@@ -806,7 +806,7 @@ public class RewindableStreamTest
         bw.Flush();
         ms.Position = 0;
 
-        var stream = new RewindableStream(new ForwardOnlyStream(ms));
+        var stream = new SharpCompressStream(new ForwardOnlyStream(ms));
 
         // Record first 100 bytes
         stream.StartRecording();

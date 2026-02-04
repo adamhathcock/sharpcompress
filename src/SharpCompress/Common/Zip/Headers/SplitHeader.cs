@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip.Headers;
 

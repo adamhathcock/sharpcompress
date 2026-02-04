@@ -50,7 +50,9 @@ public sealed partial class LZipStream : Stream
             var dSize = 104 * 1024;
             WriteHeaderSize(stream);
 
-            _countingWritableSubStream = new CountingStream(new NonDisposingStream(stream));
+            _countingWritableSubStream = new CountingStream(
+                SharpCompressStream.CreateNonDisposing(stream)
+            );
             _stream = new Crc32Stream(
                 LzmaStream.Create(
                     new LzmaEncoderProperties(true, dSize),
@@ -59,9 +61,6 @@ public sealed partial class LZipStream : Stream
                     _countingWritableSubStream
                 )
             );
-#if DEBUG_STREAMS
-            this.DebugConstruct(typeof(LZipStream));
-#endif
         }
     }
 
@@ -103,9 +102,6 @@ public sealed partial class LZipStream : Stream
             return;
         }
         _disposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(LZipStream));
-#endif
         if (disposing)
         {
             Finish();

@@ -110,7 +110,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     protected virtual IEnumerable<FilePart> CreateFilePartEnumerableForCurrentEntry() =>
         Entry.Parts;
 
-    protected override EntryStream GetEntryStream(bool useSyncOverAsyncDispose)
+    protected override EntryStream GetEntryStream()
     {
         if (Entry.IsRedir)
         {
@@ -122,24 +122,17 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         );
         if (Entry.IsRarV3)
         {
-            return CreateEntryStream(
-                RarCrcStream.Create(UnpackV1.Value, Entry.FileHeader, stream),
-                useSyncOverAsyncDispose
-            );
+            return CreateEntryStream(RarCrcStream.Create(UnpackV1.Value, Entry.FileHeader, stream));
         }
 
         if (Entry.FileHeader.FileCrc?.Length > 5)
         {
             return CreateEntryStream(
-                RarBLAKE2spStream.Create(UnpackV2017.Value, Entry.FileHeader, stream),
-                useSyncOverAsyncDispose
+                RarBLAKE2spStream.Create(UnpackV2017.Value, Entry.FileHeader, stream)
             );
         }
 
-        return CreateEntryStream(
-            RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream),
-            useSyncOverAsyncDispose
-        );
+        return CreateEntryStream(RarCrcStream.Create(UnpackV2017.Value, Entry.FileHeader, stream));
     }
 
     // GetEntryStreamAsync moved to RarReader.Async.cs

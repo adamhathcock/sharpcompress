@@ -6,10 +6,6 @@ namespace SharpCompress.IO;
 
 internal partial class ReadOnlySubStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-
     Stream IStreamStack.BaseStream() => _stream;
 
     private readonly Stream _stream;
@@ -30,9 +26,6 @@ internal partial class ReadOnlySubStream : Stream, IStreamStack
         }
         BytesLeftToRead = bytesToRead;
         _position = 0;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ReadOnlySubStream));
-#endif
     }
 
     private long BytesLeftToRead { get; set; }
@@ -106,9 +99,6 @@ internal partial class ReadOnlySubStream : Stream, IStreamStack
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ReadOnlySubStream));
-#endif
         if (disposing && !_leaveOpen)
         {
             _stream.Dispose();

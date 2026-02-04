@@ -26,10 +26,6 @@ internal partial class ShrinkStream : Stream
         inStream = stream;
         _compressionMode = compressionMode;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ShrinkStream));
-#endif
-
         _compressedSize = (ulong)compressedSize;
         _uncompressedSize = uncompressedSize;
         _byteOut = new byte[_uncompressedSize];
@@ -38,9 +34,6 @@ internal partial class ShrinkStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ShrinkStream));
-#endif
         base.Dispose(disposing);
     }
 

@@ -337,10 +337,6 @@ internal sealed class CBZip2OutputStream : Stream
 
         BsSetStream(inStream);
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(CBZip2OutputStream));
-#endif
-
         workFactor = 50;
         if (inBlockSize > 9)
         {
@@ -457,9 +453,6 @@ internal sealed class CBZip2OutputStream : Stream
             Finish();
 
             disposed = true;
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(CBZip2OutputStream));
-#endif
             Dispose();
             if (!leaveOpen)
             {

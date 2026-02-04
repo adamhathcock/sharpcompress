@@ -147,8 +147,8 @@ internal partial class CBZip2InputStream : Stream
         storedCombinedCRC;
     private int computedBlockCRC,
         computedCombinedCRC;
-    private bool decompressConcatenated;
-    private bool leaveOpen;
+    private readonly bool decompressConcatenated;
+    private readonly bool leaveOpen;
 
     private int i2,
         count,
@@ -162,7 +162,11 @@ internal partial class CBZip2InputStream : Stream
     private char z;
     private bool isDisposed;
 
-    private CBZip2InputStream() { }
+    private CBZip2InputStream(bool decompressConcatenated, bool leaveOpen)
+    {
+        this.decompressConcatenated = decompressConcatenated;
+        this.leaveOpen = leaveOpen;
+    }
 
     public static CBZip2InputStream Create(
         Stream zStream,
@@ -170,9 +174,7 @@ internal partial class CBZip2InputStream : Stream
         bool leaveOpen
     )
     {
-        var cbZip2InputStream = new CBZip2InputStream();
-        cbZip2InputStream.decompressConcatenated = decompressConcatenated;
-        cbZip2InputStream.leaveOpen = leaveOpen;
+        var cbZip2InputStream = new CBZip2InputStream(decompressConcatenated, leaveOpen);
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         cbZip2InputStream.BsSetStream(zStream);
@@ -189,9 +191,6 @@ internal partial class CBZip2InputStream : Stream
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(CBZip2InputStream));
-#endif
         base.Dispose(disposing);
         bsStream?.Dispose();
     }

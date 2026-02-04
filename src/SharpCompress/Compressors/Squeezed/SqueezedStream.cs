@@ -4,74 +4,67 @@ using System.IO;
 using System.Text;
 using SharpCompress.Compressors.RLE90;
 
-namespace SharpCompress.Compressors.Squeezed
+namespace SharpCompress.Compressors.Squeezed;
+
+[CLSCompliant(true)]
+public partial class SqueezeStream : Stream
 {
-    [CLSCompliant(true)]
-    public partial class SqueezeStream : Stream
+    private readonly Stream _stream;
+    private readonly int _compressedSize;
+    private const int NUMVALS = 257;
+    private const int SPEOF = 256;
+
+    private Stream _decodedStream = null!;
+
+    private SqueezeStream(Stream stream, int compressedSize)
     {
-        private readonly Stream _stream;
-        private readonly int _compressedSize;
-        private const int NUMVALS = 257;
-        private const int SPEOF = 256;
+        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        _compressedSize = compressedSize;
+    }
 
-        private Stream _decodedStream = null!;
+    public static SqueezeStream Create(Stream stream, int compressedSize)
+    {
+        var squeezeStream = new SqueezeStream(stream, compressedSize);
+        squeezeStream._decodedStream = squeezeStream.BuildDecodedStream();
 
-        private SqueezeStream(Stream stream, int compressedSize)
+        return squeezeStream;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        _decodedStream?.Dispose();
+        base.Dispose(disposing);
+    }
+
+    public override bool CanRead => true;
+    public override bool CanSeek => false;
+    public override bool CanWrite => false;
+
+    public override long Length => throw new NotSupportedException();
+    public override long Position
+    {
+        get => throw new NotSupportedException();
+        set => throw new NotSupportedException();
+    }
+
+    public override void Flush() => throw new NotSupportedException();
+
+    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+    public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void Write(byte[] buffer, int offset, int count) =>
+        throw new NotSupportedException();
+
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        return _decodedStream.Read(buffer, offset, count);
+    }
+
+    private Stream BuildDecodedStream()
+    {
+        using (var binaryReader = new BinaryReader(_stream, Encoding.Default, leaveOpen: true))
         {
-            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-            _compressedSize = compressedSize;
-        }
-
-        public static SqueezeStream Create(Stream stream, int compressedSize)
-        {
-            var squeezeStream = new SqueezeStream(stream, compressedSize);
-            squeezeStream._decodedStream = squeezeStream.BuildDecodedStream();
-
-#if DEBUG_STREAMS
-            squeezeStream.DebugConstruct(typeof(SqueezeStream));
-#endif
-
-            return squeezeStream;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(SqueezeStream));
-#endif
-            _decodedStream?.Dispose();
-            base.Dispose(disposing);
-        }
-
-        public override bool CanRead => true;
-        public override bool CanSeek => false;
-        public override bool CanWrite => false;
-
-        public override long Length => throw new NotSupportedException();
-        public override long Position
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
-        }
-
-        public override void Flush() => throw new NotSupportedException();
-
-        public override long Seek(long offset, SeekOrigin origin) =>
-            throw new NotSupportedException();
-
-        public override void SetLength(long value) => throw new NotSupportedException();
-
-        public override void Write(byte[] buffer, int offset, int count) =>
-            throw new NotSupportedException();
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return _decodedStream.Read(buffer, offset, count);
-        }
-
-        private Stream BuildDecodedStream()
-        {
-            var binaryReader = new BinaryReader(_stream, Encoding.Default, leaveOpen: true);
             int numnodes = binaryReader.ReadUInt16();
 
             if (numnodes >= NUMVALS || numnodes == 0)

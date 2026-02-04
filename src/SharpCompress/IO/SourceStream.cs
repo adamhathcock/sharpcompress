@@ -58,10 +58,6 @@ public partial class SourceStream : Stream, IStreamStack
         }
         _stream = 0;
         _prevSize = 0;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(SourceStream));
-#endif
     }
 
     public void LoadAllParts()
@@ -262,9 +258,6 @@ public partial class SourceStream : Stream, IStreamStack
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(SourceStream));
-#endif
         Close();
         base.Dispose(disposing);
     }

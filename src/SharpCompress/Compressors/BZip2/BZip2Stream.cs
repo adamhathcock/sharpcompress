@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,9 +10,12 @@ public sealed partial class BZip2Stream : Stream
 {
     private Stream stream = default!;
     private bool isDisposed;
-    private bool leaveOpen;
+    private readonly bool leaveOpen;
 
-    private BZip2Stream() { }
+    private BZip2Stream(bool leaveOpen)
+    {
+        this.leaveOpen = leaveOpen;
+    }
 
     /// <summary>
     /// Create a BZip2Stream
@@ -26,11 +30,7 @@ public sealed partial class BZip2Stream : Stream
         bool leaveOpen = false
     )
     {
-        var bZip2Stream = new BZip2Stream();
-        bZip2Stream.leaveOpen = leaveOpen;
-#if DEBUG_STREAMS
-        bZip2Stream.DebugConstruct(typeof(BZip2Stream));
-#endif
+        var bZip2Stream = new BZip2Stream(leaveOpen);
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {
@@ -57,9 +57,6 @@ public sealed partial class BZip2Stream : Stream
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(BZip2Stream));
-#endif
         if (disposing)
         {
             stream.Dispose();
@@ -111,7 +108,7 @@ public sealed partial class BZip2Stream : Stream
     /// <returns></returns>
     public static bool IsBZip2(Stream stream)
     {
-        var br = new BinaryReader(stream);
+        using var br = new BinaryReader(stream, Encoding.Default, leaveOpen: true);
         var chars = br.ReadBytes(2);
         if (chars.Length < 2 || chars[0] != 'B' || chars[1] != 'Z')
         {

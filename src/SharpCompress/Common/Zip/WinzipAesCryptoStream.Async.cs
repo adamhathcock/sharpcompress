@@ -16,9 +16,6 @@ internal partial class WinzipAesCryptoStream
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(WinzipAesCryptoStream));
-#endif
         // Read out last 10 auth bytes asynchronously
         byte[] authBytes = ArrayPool<byte>.Shared.Rent(10);
         try

@@ -23,11 +23,7 @@ public sealed partial class BZip2Stream
         CancellationToken cancellationToken = default
     )
     {
-        var bZip2Stream = new BZip2Stream();
-        bZip2Stream.leaveOpen = leaveOpen;
-#if DEBUG_STREAMS
-        bZip2Stream.DebugConstruct(typeof(BZip2Stream));
-#endif
+        var bZip2Stream = new BZip2Stream(leaveOpen);
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {
@@ -38,6 +34,7 @@ public sealed partial class BZip2Stream
             bZip2Stream.stream = await CBZip2InputStream.CreateAsync(
                 stream,
                 decompressConcatenated,
+                leaveOpen,
                 cancellationToken
             );
         }

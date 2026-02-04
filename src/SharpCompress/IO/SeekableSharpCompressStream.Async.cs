@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-internal sealed partial class SeekableRewindableStream
+internal sealed partial class SeekableSharpCompressStream
 {
     public override Task<int> ReadAsync(
         byte[] buffer,
@@ -27,7 +27,21 @@ internal sealed partial class SeekableRewindableStream
 
     public override ValueTask DisposeAsync()
     {
-        _underlyingStream.Dispose();
+        if (_isDisposed)
+        {
+            return base.DisposeAsync();
+        }
+        if (ThrowOnDispose)
+        {
+            throw new InvalidOperationException(
+                $"Attempt to dispose of a {nameof(SeekableSharpCompressStream)} when {nameof(ThrowOnDispose)} is true"
+            );
+        }
+        _isDisposed = true;
+        if (!LeaveStreamOpen)
+        {
+            _underlyingStream.Dispose();
+        }
         return base.DisposeAsync();
     }
 #endif

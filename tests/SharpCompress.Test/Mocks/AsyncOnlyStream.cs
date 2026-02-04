@@ -12,9 +12,6 @@ public class AsyncOnlyStream : Stream
     public AsyncOnlyStream(Stream stream)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(AsyncOnlyStream));
-#endif
     }
 
     public override bool CanRead => _stream.CanRead;
@@ -69,9 +66,6 @@ public class AsyncOnlyStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(AsyncOnlyStream));
-#endif
         if (disposing)
         {
             _stream.Dispose();

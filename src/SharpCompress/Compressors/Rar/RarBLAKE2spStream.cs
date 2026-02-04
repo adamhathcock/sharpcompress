@@ -94,9 +94,6 @@ internal partial class RarBLAKE2spStream : RarStream
     {
         this.readStream = readStream;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(RarBLAKE2spStream));
-#endif
         disableCRCCheck = fileHeader.IsEncrypted;
         _hash = fileHeader.FileCrc.NotNull();
         _blake2sp = new BLAKE2SP();
@@ -118,9 +115,6 @@ internal partial class RarBLAKE2spStream : RarStream
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(RarBLAKE2spStream));
-#endif
         base.Dispose(disposing);
     }
 

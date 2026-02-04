@@ -3,216 +3,212 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace SharpCompress.Compressors.Arj
+namespace SharpCompress.Compressors.Arj;
+
+[CLSCompliant(true)]
+public enum NodeType
 {
-    [CLSCompliant(true)]
-    public enum NodeType
+    Leaf,
+    Branch,
+}
+
+[CLSCompliant(true)]
+public sealed class TreeEntry
+{
+    public readonly NodeType Type;
+    public readonly int LeafValue;
+    public readonly int BranchIndex;
+
+    public const int MAX_INDEX = 4096;
+
+    private TreeEntry(NodeType type, int leafValue, int branchIndex)
     {
-        Leaf,
-        Branch,
+        Type = type;
+        LeafValue = leafValue;
+        BranchIndex = branchIndex;
     }
 
-    [CLSCompliant(true)]
-    public sealed class TreeEntry
+    public static TreeEntry Leaf(int value)
     {
-        public readonly NodeType Type;
-        public readonly int LeafValue;
-        public readonly int BranchIndex;
+        return new TreeEntry(NodeType.Leaf, value, -1);
+    }
 
-        public const int MAX_INDEX = 4096;
-
-        private TreeEntry(NodeType type, int leafValue, int branchIndex)
+    public static TreeEntry Branch(int index)
+    {
+        if (index >= MAX_INDEX)
         {
-            Type = type;
-            LeafValue = leafValue;
-            BranchIndex = branchIndex;
+            throw new ArgumentOutOfRangeException(nameof(index), "Branch index exceeds MAX_INDEX");
+        }
+        return new TreeEntry(NodeType.Branch, 0, index);
+    }
+}
+
+[CLSCompliant(true)]
+public sealed partial class HuffTree
+{
+    private readonly List<TreeEntry> _tree;
+
+    public HuffTree(int capacity = 0)
+    {
+        _tree = new List<TreeEntry>(capacity);
+    }
+
+    public void SetSingle(int value)
+    {
+        _tree.Clear();
+        _tree.Add(TreeEntry.Leaf(value));
+    }
+
+    public void BuildTree(byte[] lengths, int count)
+    {
+        if (lengths == null)
+        {
+            throw new ArgumentNullException(nameof(lengths));
         }
 
-        public static TreeEntry Leaf(int value)
+        if (count < 0 || count > lengths.Length)
         {
-            return new TreeEntry(NodeType.Leaf, value, -1);
+            throw new ArgumentOutOfRangeException(nameof(count));
         }
 
-        public static TreeEntry Branch(int index)
+        if (count > TreeEntry.MAX_INDEX / 2)
         {
-            if (index >= MAX_INDEX)
+            throw new ArgumentException(
+                $"Count exceeds maximum allowed: {TreeEntry.MAX_INDEX / 2}"
+            );
+        }
+        byte[] slice = new byte[count];
+        Array.Copy(lengths, slice, count);
+
+        BuildTree(slice);
+    }
+
+    public void BuildTree(byte[] valueLengths)
+    {
+        if (valueLengths == null)
+        {
+            throw new ArgumentNullException(nameof(valueLengths));
+        }
+
+        if (valueLengths.Length > TreeEntry.MAX_INDEX / 2)
+        {
+            throw new InvalidOperationException("Too many code lengths");
+        }
+
+        _tree.Clear();
+
+        int maxAllocated = 1; // start with a single (root) node
+
+        for (byte currentLen = 1; ; currentLen++)
+        {
+            // add missing branches up to current limit
+            int maxLimit = maxAllocated;
+
+            for (int i = _tree.Count; i < maxLimit; i++)
             {
-                throw new ArgumentOutOfRangeException(
-                    nameof(index),
-                    "Branch index exceeds MAX_INDEX"
-                );
+                // TreeEntry.Branch may throw if index too large
+                try
+                {
+                    _tree.Add(TreeEntry.Branch(maxAllocated));
+                }
+                catch (ArgumentOutOfRangeException e)
+                {
+                    _tree.Clear();
+                    throw new InvalidOperationException("Branch index exceeds limit", e);
+                }
+
+                // each branch node allocates two children
+                maxAllocated += 2;
             }
-            return new TreeEntry(NodeType.Branch, 0, index);
+
+            // fill tree with leaves found in the lengths table at the current length
+            bool moreLeaves = false;
+
+            for (int value = 0; value < valueLengths.Length; value++)
+            {
+                byte len = valueLengths[value];
+                if (len == currentLen)
+                {
+                    _tree.Add(TreeEntry.Leaf(value));
+                }
+                else if (len > currentLen)
+                {
+                    moreLeaves = true; // there are more leaves to process
+                }
+            }
+
+            // sanity check (too many leaves)
+            if (_tree.Count > maxAllocated)
+            {
+                throw new InvalidOperationException("Too many leaves");
+            }
+
+            // stop when no longer finding longer codes
+            if (!moreLeaves)
+            {
+                break;
+            }
+        }
+
+        // ensure tree is complete
+        if (_tree.Count != maxAllocated)
+        {
+            throw new InvalidOperationException(
+                $"Missing some leaves: tree count = {_tree.Count}, expected = {maxAllocated}"
+            );
         }
     }
 
-    [CLSCompliant(true)]
-    public sealed partial class HuffTree
+    public int ReadEntry(BitReader reader)
     {
-        private readonly List<TreeEntry> _tree;
-
-        public HuffTree(int capacity = 0)
+        if (_tree.Count == 0)
         {
-            _tree = new List<TreeEntry>(capacity);
+            throw new InvalidOperationException("Tree not initialized");
         }
 
-        public void SetSingle(int value)
+        TreeEntry node = _tree[0];
+        while (true)
         {
-            _tree.Clear();
-            _tree.Add(TreeEntry.Leaf(value));
+            if (node.Type == NodeType.Leaf)
+            {
+                return node.LeafValue;
+            }
+
+            int bit = reader.ReadBit();
+            int index = node.BranchIndex + bit;
+
+            if (index >= _tree.Count)
+            {
+                throw new InvalidOperationException("Invalid branch index during read");
+            }
+
+            node = _tree[index];
         }
+    }
 
-        public void BuildTree(byte[] lengths, int count)
+    public override string ToString()
+    {
+        var result = new StringBuilder();
+
+        void FormatStep(int index, string prefix)
         {
-            if (lengths == null)
+            var node = _tree[index];
+            if (node.Type == NodeType.Leaf)
             {
-                throw new ArgumentNullException(nameof(lengths));
+                result.AppendLine($"{prefix} -> {node.LeafValue}");
             }
-
-            if (count < 0 || count > lengths.Length)
+            else
             {
-                throw new ArgumentOutOfRangeException(nameof(count));
-            }
-
-            if (count > TreeEntry.MAX_INDEX / 2)
-            {
-                throw new ArgumentException(
-                    $"Count exceeds maximum allowed: {TreeEntry.MAX_INDEX / 2}"
-                );
-            }
-            byte[] slice = new byte[count];
-            Array.Copy(lengths, slice, count);
-
-            BuildTree(slice);
-        }
-
-        public void BuildTree(byte[] valueLengths)
-        {
-            if (valueLengths == null)
-            {
-                throw new ArgumentNullException(nameof(valueLengths));
-            }
-
-            if (valueLengths.Length > TreeEntry.MAX_INDEX / 2)
-            {
-                throw new InvalidOperationException("Too many code lengths");
-            }
-
-            _tree.Clear();
-
-            int maxAllocated = 1; // start with a single (root) node
-
-            for (byte currentLen = 1; ; currentLen++)
-            {
-                // add missing branches up to current limit
-                int maxLimit = maxAllocated;
-
-                for (int i = _tree.Count; i < maxLimit; i++)
-                {
-                    // TreeEntry.Branch may throw if index too large
-                    try
-                    {
-                        _tree.Add(TreeEntry.Branch(maxAllocated));
-                    }
-                    catch (ArgumentOutOfRangeException e)
-                    {
-                        _tree.Clear();
-                        throw new InvalidOperationException("Branch index exceeds limit", e);
-                    }
-
-                    // each branch node allocates two children
-                    maxAllocated += 2;
-                }
-
-                // fill tree with leaves found in the lengths table at the current length
-                bool moreLeaves = false;
-
-                for (int value = 0; value < valueLengths.Length; value++)
-                {
-                    byte len = valueLengths[value];
-                    if (len == currentLen)
-                    {
-                        _tree.Add(TreeEntry.Leaf(value));
-                    }
-                    else if (len > currentLen)
-                    {
-                        moreLeaves = true; // there are more leaves to process
-                    }
-                }
-
-                // sanity check (too many leaves)
-                if (_tree.Count > maxAllocated)
-                {
-                    throw new InvalidOperationException("Too many leaves");
-                }
-
-                // stop when no longer finding longer codes
-                if (!moreLeaves)
-                {
-                    break;
-                }
-            }
-
-            // ensure tree is complete
-            if (_tree.Count != maxAllocated)
-            {
-                throw new InvalidOperationException(
-                    $"Missing some leaves: tree count = {_tree.Count}, expected = {maxAllocated}"
-                );
+                FormatStep(node.BranchIndex, prefix + "0");
+                FormatStep(node.BranchIndex + 1, prefix + "1");
             }
         }
 
-        public int ReadEntry(BitReader reader)
+        if (_tree.Count > 0)
         {
-            if (_tree.Count == 0)
-            {
-                throw new InvalidOperationException("Tree not initialized");
-            }
-
-            TreeEntry node = _tree[0];
-            while (true)
-            {
-                if (node.Type == NodeType.Leaf)
-                {
-                    return node.LeafValue;
-                }
-
-                int bit = reader.ReadBit();
-                int index = node.BranchIndex + bit;
-
-                if (index >= _tree.Count)
-                {
-                    throw new InvalidOperationException("Invalid branch index during read");
-                }
-
-                node = _tree[index];
-            }
+            FormatStep(0, "");
         }
 
-        public override string ToString()
-        {
-            var result = new StringBuilder();
-
-            void FormatStep(int index, string prefix)
-            {
-                var node = _tree[index];
-                if (node.Type == NodeType.Leaf)
-                {
-                    result.AppendLine($"{prefix} -> {node.LeafValue}");
-                }
-                else
-                {
-                    FormatStep(node.BranchIndex, prefix + "0");
-                    FormatStep(node.BranchIndex + 1, prefix + "1");
-                }
-            }
-
-            if (_tree.Count > 0)
-            {
-                FormatStep(0, "");
-            }
-
-            return result.ToString();
-        }
+        return result.ToString();
     }
 }

@@ -31,10 +31,6 @@ public partial class ReduceStream : Stream
         inByteCount = 0;
         outBytesCount = 0;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ReduceStream));
-#endif
-
         this.factor = factor;
         distanceMask = (int)mask_bits[factor] << 8;
         lengthMask = 0xff >> factor;
@@ -59,9 +55,6 @@ public partial class ReduceStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ReduceStream));
-#endif
         base.Dispose(disposing);
     }
 

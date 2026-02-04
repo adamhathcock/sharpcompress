@@ -200,9 +200,6 @@ public partial class LzmaStream : Stream, IStreamStack
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(LzmaStream));
-#endif
         if (disposing)
         {
             if (_encoder != null)

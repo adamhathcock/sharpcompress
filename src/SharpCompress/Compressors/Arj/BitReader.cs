@@ -1,72 +1,68 @@
 using System;
 using System.IO;
 
-namespace SharpCompress.Compressors.Arj
+namespace SharpCompress.Compressors.Arj;
+
+[CLSCompliant(true)]
+public partial class BitReader
 {
-    [CLSCompliant(true)]
-    public partial class BitReader
+    private readonly Stream _input;
+    private int _bitBuffer; // currently buffered bits
+    private int _bitCount; // number of bits in buffer
+
+    public BitReader(Stream input)
     {
-        private readonly Stream _input;
-        private int _bitBuffer; // currently buffered bits
-        private int _bitCount; // number of bits in buffer
+        _input = input ?? throw new ArgumentNullException(nameof(input));
+        _bitBuffer = 0;
+        _bitCount = 0;
+    }
 
-        public BitReader(Stream input)
+    /// <summary>
+    /// Reads a single bit from the stream. Returns 0 or 1.
+    /// </summary>
+    public int ReadBit()
+    {
+        if (_bitCount == 0)
         {
-            _input = input ?? throw new ArgumentNullException(nameof(input));
-            _bitBuffer = 0;
-            _bitCount = 0;
-        }
-
-        /// <summary>
-        /// Reads a single bit from the stream. Returns 0 or 1.
-        /// </summary>
-        public int ReadBit()
-        {
-            if (_bitCount == 0)
+            int nextByte = _input.ReadByte();
+            if (nextByte < 0)
             {
-                int nextByte = _input.ReadByte();
-                if (nextByte < 0)
-                {
-                    throw new EndOfStreamException("No more data available in BitReader.");
-                }
-
-                _bitBuffer = nextByte;
-                _bitCount = 8;
+                throw new EndOfStreamException("No more data available in BitReader.");
             }
 
-            int bit = (_bitBuffer >> (_bitCount - 1)) & 1;
-            _bitCount--;
-            return bit;
+            _bitBuffer = nextByte;
+            _bitCount = 8;
         }
 
-        /// <summary>
-        /// Reads n bits (up to 32) from the stream.
-        /// </summary>
-        public int ReadBits(int count)
+        int bit = (_bitBuffer >> (_bitCount - 1)) & 1;
+        _bitCount--;
+        return bit;
+    }
+
+    /// <summary>
+    /// Reads n bits (up to 32) from the stream.
+    /// </summary>
+    public int ReadBits(int count)
+    {
+        if (count < 0 || count > 32)
         {
-            if (count < 0 || count > 32)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(count),
-                    "Count must be between 0 and 32."
-                );
-            }
-
-            int result = 0;
-            for (int i = 0; i < count; i++)
-            {
-                result = (result << 1) | ReadBit();
-            }
-            return result;
+            throw new ArgumentOutOfRangeException(nameof(count), "Count must be between 0 and 32.");
         }
 
-        /// <summary>
-        /// Resets any buffered bits.
-        /// </summary>
-        public void AlignToByte()
+        int result = 0;
+        for (int i = 0; i < count; i++)
         {
-            _bitCount = 0;
-            _bitBuffer = 0;
+            result = (result << 1) | ReadBit();
         }
+        return result;
+    }
+
+    /// <summary>
+    /// Resets any buffered bits.
+    /// </summary>
+    public void AlignToByte()
+    {
+        _bitCount = 0;
+        _bitBuffer = 0;
     }
 }

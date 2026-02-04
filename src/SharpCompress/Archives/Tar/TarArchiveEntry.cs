@@ -14,8 +14,9 @@ public class TarArchiveEntry : TarEntry, IArchiveEntry
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
 
-    public ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default) =>
-        new(OpenEntryStream());
+    public async ValueTask<Stream> OpenEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    ) => (await Parts.Single().GetCompressedStreamAsync(cancellationToken)).NotNull();
 
     #region IArchiveEntry Members
 

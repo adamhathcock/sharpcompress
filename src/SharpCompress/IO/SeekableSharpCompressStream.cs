@@ -3,14 +3,26 @@ using System.IO;
 
 namespace SharpCompress.IO;
 
-internal sealed partial class SeekableRewindableStream : RewindableStream
+internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
 {
     public override Stream BaseStream() => _underlyingStream;
 
     private readonly Stream _underlyingStream;
     private long? _recordedPosition;
+    private bool _isDisposed;
 
-    public SeekableRewindableStream(Stream stream)
+    /// <summary>
+    /// Gets or sets whether to leave the underlying stream open when disposed.
+    /// </summary>
+    public new bool LeaveStreamOpen { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether to throw an exception when Dispose is called.
+    /// Useful for testing to ensure streams are not disposed prematurely.
+    /// </summary>
+    public new bool ThrowOnDispose { get; set; }
+
+    public SeekableSharpCompressStream(Stream stream)
         : base(new NullStream())
     {
         if (stream is null)
@@ -87,7 +99,18 @@ internal sealed partial class SeekableRewindableStream : RewindableStream
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        if (_isDisposed)
+        {
+            return;
+        }
+        if (ThrowOnDispose)
+        {
+            throw new InvalidOperationException(
+                $"Attempt to dispose of a {nameof(SeekableSharpCompressStream)} when {nameof(ThrowOnDispose)} is true"
+            );
+        }
+        _isDisposed = true;
+        if (disposing && !LeaveStreamOpen)
         {
             _underlyingStream.Dispose();
         }

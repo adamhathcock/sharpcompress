@@ -39,7 +39,7 @@ internal abstract partial class ZipFilePart
             .ConfigureAwait(false);
         if (LeaveStreamOpen)
         {
-            return new NonDisposingStream(decompressionStream);
+            return SharpCompressStream.CreateNonDisposing(decompressionStream);
         }
         return decompressionStream;
     }
@@ -63,7 +63,7 @@ internal abstract partial class ZipFilePart
             ) || Header.IsZip64
         )
         {
-            plainStream = new NonDisposingStream(plainStream); //make sure AES doesn't close
+            plainStream = SharpCompressStream.CreateNonDisposing(plainStream); //make sure AES doesn't close
         }
         else
         {
@@ -99,15 +99,10 @@ internal abstract partial class ZipFilePart
                 {
                     if (Header.WinzipAesEncryptionData != null)
                     {
-                        var useSyncOverAsync = false;
-#if LEGACY_DOTNET
-                        useSyncOverAsync = true;
-#endif
                         return new WinzipAesCryptoStream(
                             plainStream,
                             Header.WinzipAesEncryptionData,
-                            Header.CompressedSize - 10,
-                            useSyncOverAsync
+                            Header.CompressedSize - 10
                         );
                     }
                     return plainStream;

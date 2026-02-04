@@ -64,9 +64,6 @@ public partial class GZipStream : Stream
     )
     {
         BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, encoding);
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(GZipStream));
-#endif
         _encoding = encoding;
     }
 
@@ -215,9 +212,6 @@ public partial class GZipStream : Stream
                     Crc32 = BaseStream.Crc32;
                 }
                 _disposed = true;
-#if DEBUG_STREAMS
-                this.DebugDispose(typeof(GZipStream));
-#endif
             }
         }
         finally

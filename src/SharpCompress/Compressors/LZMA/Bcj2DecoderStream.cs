@@ -111,10 +111,6 @@ internal class Bcj2DecoderStream : DecoderStream2
             _mStatusDecoder[i] = new StatusDecoder();
         }
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(Bcj2DecoderStream));
-#endif
-
         _mIter = Run().GetEnumerator();
     }
 
@@ -125,9 +121,6 @@ internal class Bcj2DecoderStream : DecoderStream2
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(Bcj2DecoderStream));
-#endif
         base.Dispose(disposing);
         _mMainStream.Dispose();
         _mCallStream.Dispose();

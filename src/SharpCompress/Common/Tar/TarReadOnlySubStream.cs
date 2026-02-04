@@ -16,9 +16,6 @@ internal class TarReadOnlySubStream : Stream
         _stream = stream;
         _useSyncOverAsyncDispose = useSyncOverAsyncDispose;
         BytesLeftToRead = bytesToRead;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(TarReadOnlySubStream));
-#endif
     }
 
     protected override void Dispose(bool disposing)
@@ -29,9 +26,6 @@ internal class TarReadOnlySubStream : Stream
         }
 
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(TarReadOnlySubStream));
-#endif
         if (disposing)
         {
             // Ensure we read all remaining blocks for this entry.
@@ -43,7 +37,7 @@ internal class TarReadOnlySubStream : Stream
 
             if (bytesInLastBlock != 0)
             {
-                if (_useSyncOverAsyncDispose)
+                if (Utility.UseSyncOverAsyncDispose())
                 {
                     _stream.SkipAsync(512 - bytesInLastBlock).GetAwaiter().GetResult();
                 }
@@ -64,9 +58,6 @@ internal class TarReadOnlySubStream : Stream
         }
 
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(TarReadOnlySubStream));
-#endif
         // Ensure we read all remaining blocks for this entry.
         await _stream.SkipAsync(BytesLeftToRead).ConfigureAwait(false);
         _amountRead += BytesLeftToRead;

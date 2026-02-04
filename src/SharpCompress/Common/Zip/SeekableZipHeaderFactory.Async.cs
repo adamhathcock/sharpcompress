@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
@@ -11,7 +12,11 @@ internal sealed partial class SeekableZipHeaderFactory
 {
     internal async IAsyncEnumerable<ZipHeader> ReadSeekableHeaderAsync(Stream stream)
     {
-        var reader = new AsyncBinaryReader(stream);
+#if NET8_0_OR_GREATER
+        await using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#else
+        using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#endif
 
         await SeekBackToHeaderAsync(stream, reader);
 
@@ -127,7 +132,11 @@ internal sealed partial class SeekableZipHeaderFactory
     )
     {
         stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
-        var reader = new AsyncBinaryReader(stream);
+#if NET8_0_OR_GREATER
+        await using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#else
+        using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#endif
         var signature = await reader.ReadUInt32Async();
         if (await ReadHeader(signature, reader, _zip64) is not LocalEntryHeader localEntryHeader)
         {

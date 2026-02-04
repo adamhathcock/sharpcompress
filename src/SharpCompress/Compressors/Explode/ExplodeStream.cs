@@ -45,9 +45,6 @@ public partial class ExplodeStream : Stream
     )
     {
         inStream = inStr;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ExplodeStream));
-#endif
         this.compressedSize = (int)compressedSize;
         unCompressedSize = (long)uncompressedSize;
         this.generalPurposeBitFlag = generalPurposeBitFlag;
@@ -69,9 +66,6 @@ public partial class ExplodeStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ExplodeStream));
-#endif
         base.Dispose(disposing);
     }
 

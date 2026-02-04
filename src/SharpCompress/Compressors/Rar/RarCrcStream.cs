@@ -21,9 +21,6 @@ internal partial class RarCrcStream : RarStream
         : base(unpack, fileHeader, readStream)
     {
         this.readStream = readStream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(RarCrcStream));
-#endif
         disableCRC = fileHeader.IsEncrypted;
         ResetCrc();
     }
@@ -43,9 +40,6 @@ internal partial class RarCrcStream : RarStream
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(RarCrcStream));
-#endif
         base.Dispose(disposing);
     }
 

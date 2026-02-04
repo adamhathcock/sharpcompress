@@ -33,9 +33,6 @@ public partial class ArcLzwStream : Stream
     public ArcLzwStream(Stream stream, int compressedSize, bool useCrunched = true)
     {
         _stream = stream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ArcLzwStream));
-#endif
         _useCrunched = useCrunched;
         _compressedSize = compressedSize;
 
@@ -202,9 +199,6 @@ public partial class ArcLzwStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ArcLzwStream));
-#endif
         base.Dispose(disposing);
     }
 }

@@ -27,10 +27,6 @@ public class PpmdStream : Stream
         _stream = stream;
         _compress = compress;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(PpmdStream));
-#endif
-
         InitializeSync(stream, compress);
     }
 
@@ -44,10 +40,6 @@ public class PpmdStream : Stream
         _properties = properties;
         _stream = stream;
         _compress = compress;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(PpmdStream));
-#endif
 
         // Skip initialization - used by CreateAsync
     }
@@ -182,9 +174,6 @@ public class PpmdStream : Stream
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(PpmdStream));
-#endif
         if (isDisposing)
         {
             if (_compress)

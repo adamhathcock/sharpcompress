@@ -176,7 +176,11 @@ public partial class TarArchive
         try
         {
             var tarHeader = new TarHeader(new ArchiveEncoding());
-            var reader = new AsyncBinaryReader(stream, false);
+#if NET8_0_OR_GREATER
+            await using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#else
+            using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#endif
             var readSucceeded = await tarHeader.ReadAsync(reader);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0

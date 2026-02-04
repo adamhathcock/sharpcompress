@@ -52,9 +52,6 @@ public partial class ZlibStream : Stream
     )
     {
         _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, encoding);
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ZlibStream));
-#endif
     }
 
     #region Zlib properties
@@ -224,9 +221,6 @@ public partial class ZlibStream : Stream
                     _baseStream?.Dispose();
                 }
                 _disposed = true;
-#if DEBUG_STREAMS
-                this.DebugDispose(typeof(ZlibStream));
-#endif
             }
         }
         finally

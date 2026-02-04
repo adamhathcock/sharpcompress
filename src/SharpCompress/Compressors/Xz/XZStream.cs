@@ -15,16 +15,10 @@ public sealed partial class XZStream : XZReadOnlyStream
         : base(baseStream)
     {
         _baseStream = baseStream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(XZStream));
-#endif
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(XZStream));
-#endif
         base.Dispose(disposing);
     }
 

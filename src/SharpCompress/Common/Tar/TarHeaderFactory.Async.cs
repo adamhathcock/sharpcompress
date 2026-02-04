@@ -13,12 +13,17 @@ internal static partial class TarHeaderFactory
         IArchiveEncoding archiveEncoding
     )
     {
+#if NET8_0_OR_GREATER
+        await using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#else
+        using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#endif
+
         while (true)
         {
             TarHeader? header = null;
             try
             {
-                var reader = new AsyncBinaryReader(stream, false);
                 header = new TarHeader(archiveEncoding);
                 if (!await header.ReadAsync(reader))
                 {
