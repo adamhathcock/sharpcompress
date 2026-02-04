@@ -3,7 +3,7 @@
     <PackageVersion Include="Bullseye" Version="6.1.0" />
     <PackageVersion Include="AwesomeAssertions" Version="9.3.0" />
     <PackageVersion Include="Glob" Version="1.1.9" />
-    <PackageVersion Include="JetBrains.Profiler.SelfApi" Version="2.5.15" />
+    <PackageVersion Include="JetBrains.Profiler.SelfApi" Version="2.5.16" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageVersion Include="Mono.Posix.NETStandard" Version="1.0.0" />
@@ -11,7 +11,7 @@
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="10.0.0" />
     <PackageVersion Include="System.Buffers" Version="4.6.1" />
     <PackageVersion Include="System.Memory" Version="4.6.3" />
-    <PackageVersion Include="xunit.v3" Version="3.2.1" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.102" />
     <GlobalPackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />

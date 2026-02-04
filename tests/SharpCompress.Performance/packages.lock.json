@@ -4,12 +4,12 @@
     "net10.0": {
       "JetBrains.Profiler.SelfApi": {
         "type": "Direct",
-        "requested": "[2.5.15, )",
-        "resolved": "2.5.15",
-        "contentHash": "Uc+GU4Mqwzw6i6C6wPWe2g9UwReUJzrWghCSN9818tSmNI7SJtqKQ1mgfuRylpJam+ED4Cbg2BNJE/LSVpokkg==",
+        "requested": "[2.5.16, )",
+        "resolved": "2.5.16",
+        "contentHash": "F8Tczi426PmDNZu0d88d60jVEQ/Tnvdi7LKnVLikTQ9hPqdzW7WOjj79S4XA2awbpTfCCU+eHL9MrUk6Yj90Zw==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.4.5",
-          "JetBrains.Profiler.Api": "1.4.10"
+          "JetBrains.HabitatDetector": "1.4.6",
+          "JetBrains.Profiler.Api": "1.4.11"
         }
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
@@ -44,18 +44,18 @@
       },
       "JetBrains.HabitatDetector": {
         "type": "Transitive",
-        "resolved": "1.4.5",
-        "contentHash": "5kb1G32O8fmlS2QnJLycEnHbq9ukuDUHQll4mqOAPLEE1JEJcz12W6cTt1CMpQY3n/6R0jZAhmBvaJm2zixvow==",
+        "resolved": "1.4.6",
+        "contentHash": "kNN79C3hIt+1AzPNKbddouXXGaL84bi2T42Zsa2A0nXyatg1V5q+WLI9NddCtWjMdb9CLkDem2VIc/5lHWaXJQ==",
         "dependencies": {
           "JetBrains.FormatRipper": "2.4.0"
         }
       },
       "JetBrains.Profiler.Api": {
         "type": "Transitive",
-        "resolved": "1.4.10",
-        "contentHash": "XBynPGDiWB6uWoiVwkki3uUsXqc66lRC1YX8LWYWc579ioJSB5OzZ8KsRK2q+eawj3OxrkeCsgXlb6mwBkCebQ==",
+        "resolved": "1.4.11",
+        "contentHash": "4XOA72p49dmzT9k2NyhSVYnLxjw+OPJpXen2gNFsbWquZPjnpoPqXJosVfeONDOST52cgAg3c1q/cBa6/R3NLQ==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.4.5"
+          "JetBrains.HabitatDetector": "1.4.6"
         }
       },
       "Microsoft.Build.Tasks.Git": {
