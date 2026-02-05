@@ -37,12 +37,21 @@ public class LzmaStream : Stream, IStreamStack
     private readonly long _outputSize;
     private readonly bool _leaveOpen;
 
-    // Maximum dictionary size to prevent OutOfMemoryException: 256MB
+    // Maximum dictionary size to prevent OutOfMemoryException: 512MB
     // This is a reasonable limit that balances memory usage with decompression capabilities.
     // The LZMA spec allows up to 4GB, but such large dictionaries are rarely necessary and
     // can cause OutOfMemoryException in memory-constrained environments (e.g., containers).
-    // Archives with larger dictionary sizes should be recreated with a smaller setting.
-    private const int MaxDictionarySize = 256 * 1024 * 1024; // 256MB
+    //
+    // Most 7z archives use much smaller dictionary sizes:
+    // - Default: 32MB for solid archives, 1MB for non-solid
+    // - Common maximum: 64-128MB
+    // - Archives requiring >512MB dictionary are extremely rare
+    //
+    // If you encounter this limit with a legitimate archive, consider:
+    // - Recreating the archive with a smaller dictionary size (if you control creation)
+    // - Increasing available memory for the application
+    // - Filing an issue to request a configurable limit option
+    private const int MaxDictionarySize = 512 * 1024 * 1024; // 512MB
 
     private readonly int _dictionarySize;
     private readonly OutWindow _outWindow = new();
@@ -63,6 +72,27 @@ public class LzmaStream : Stream, IStreamStack
 
     private readonly Encoder _encoder;
     private bool _isDisposed;
+
+    private static void ValidateDictionarySize(int dictionarySize)
+    {
+        // Validate dictionary size
+        if (dictionarySize < 0)
+        {
+            throw new InvalidOperationException(
+                $"Invalid dictionary size ({dictionarySize}). The archive may be corrupted or use an unsupported format."
+            );
+        }
+
+        // Cap dictionary size to prevent OutOfMemoryException
+        if (dictionarySize > MaxDictionarySize)
+        {
+            throw new InvalidOperationException(
+                $"Dictionary size ({dictionarySize} bytes, {dictionarySize / (1024.0 * 1024.0):F2} MB) exceeds maximum allowed size ({MaxDictionarySize} bytes, {MaxDictionarySize / (1024.0 * 1024.0):F2} MB). "
+                    + "This archive may have been created with an extremely large dictionary size setting. "
+                    + "Consider recreating the archive with a smaller dictionary size."
+            );
+        }
+    }
 
     public LzmaStream(byte[] properties, Stream inputStream, bool leaveOpen = false)
         : this(properties, inputStream, -1, -1, null, properties.Length < 5, leaveOpen) { }
@@ -110,24 +140,7 @@ public class LzmaStream : Stream, IStreamStack
         if (!isLzma2)
         {
             _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
-
-            // Validate dictionary size
-            if (_dictionarySize < 0)
-            {
-                throw new InvalidOperationException(
-                    $"Invalid dictionary size ({_dictionarySize}). The archive may be corrupted or use an unsupported format."
-                );
-            }
-
-            // Cap dictionary size to prevent OutOfMemoryException
-            if (_dictionarySize > MaxDictionarySize)
-            {
-                throw new InvalidOperationException(
-                    $"Dictionary size ({_dictionarySize} bytes, {_dictionarySize / (1024.0 * 1024.0):F2} MB) exceeds maximum allowed size ({MaxDictionarySize} bytes, {MaxDictionarySize / (1024.0 * 1024.0):F2} MB). "
-                        + "This archive may have been created with an extremely large dictionary size setting. "
-                        + "Consider recreating the archive with a smaller dictionary size."
-                );
-            }
+            ValidateDictionarySize(_dictionarySize);
 
             _outWindow.Create(_dictionarySize);
             if (presetDictionary != null)
@@ -148,24 +161,7 @@ public class LzmaStream : Stream, IStreamStack
         {
             _dictionarySize = 2 | (properties[0] & 1);
             _dictionarySize <<= (properties[0] >> 1) + 11;
-
-            // Validate dictionary size (check for overflow to negative)
-            if (_dictionarySize < 0)
-            {
-                throw new InvalidOperationException(
-                    $"Invalid dictionary size ({_dictionarySize}). The archive may be corrupted or use an unsupported format."
-                );
-            }
-
-            // Cap dictionary size to prevent OutOfMemoryException
-            if (_dictionarySize > MaxDictionarySize)
-            {
-                throw new InvalidOperationException(
-                    $"Dictionary size ({_dictionarySize} bytes, {_dictionarySize / (1024.0 * 1024.0):F2} MB) exceeds maximum allowed size ({MaxDictionarySize} bytes, {MaxDictionarySize / (1024.0 * 1024.0):F2} MB). "
-                        + "This archive may have been created with an extremely large dictionary size setting. "
-                        + "Consider recreating the archive with a smaller dictionary size."
-                );
-            }
+            ValidateDictionarySize(_dictionarySize);
 
             _outWindow.Create(_dictionarySize);
             if (presetDictionary != null)
