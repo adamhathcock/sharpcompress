@@ -30,7 +30,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     internal bool IsPassthrough => _isPassthrough;
 
     /// <summary>
-    /// Gets or sets whether to leave the underlying stream open when disposed.
+    /// Gets whether to leave the underlying stream open when disposed.
     /// </summary>
     public virtual bool LeaveStreamOpen { get; }
 
