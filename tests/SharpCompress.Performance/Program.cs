@@ -1,54 +1,25 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using SharpCompress.Archives;
-using SharpCompress.Performance;
-using SharpCompress.Readers;
-using SharpCompress.Test;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Toolchains.InProcess.Emit;
 
-var index = AppDomain.CurrentDomain.BaseDirectory.IndexOf(
-    "SharpCompress.Performance",
-    StringComparison.OrdinalIgnoreCase
-);
-var path = AppDomain.CurrentDomain.BaseDirectory.Substring(0, index);
-var SOLUTION_BASE_PATH = Path.GetDirectoryName(path) ?? throw new ArgumentNullException();
+namespace SharpCompress.Performance;
 
-var TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
-
-//using var _ = JetbrainsProfiler.Memory($"/Users/adam/temp/");
-using (var __ = JetbrainsProfiler.Cpu($"/Users/adam/temp/"))
+public class Program
 {
-    var testArchives = new[]
+    public static void Main(string[] args)
     {
-        "Rar.Audio_program.rar",
+        var config = DefaultConfig
+            .Instance.AddJob(
+                Job.Default
+                    .WithToolchain(InProcessEmitToolchain.Instance)
+                    .WithWarmupCount(1) // Minimal warmup iterations for CI
+                    .WithIterationCount(3) // Minimal measurement iterations for CI
+                    .WithInvocationCount(1)
+                    .WithUnrollFactor(1)
+            );
 
-        //"64bitstream.zip.7z",
-        //"TarWithSymlink.tar.gz"
-    };
-    var arcs = testArchives.Select(a => Path.Combine(TEST_ARCHIVES_PATH, a)).ToArray();
-
-    for (int i = 0; i < 50; i++)
-    {
-        using var found = ArchiveFactory.OpenArchive(arcs[0]);
-        foreach (var entry in found.Entries.Where(entry => !entry.IsDirectory))
-        {
-            Console.WriteLine($"Extracting {entry.Key}");
-            using var entryStream = entry.OpenEntryStream();
-            entryStream.CopyTo(Stream.Null);
-        }
-        /*using var found = ReaderFactory.OpenReader(arcs[0]);
-        while (found.MoveToNextEntry())
-        {
-            var entry = found.Entry;
-            if (entry.IsDirectory)
-                continue;
-
-            Console.WriteLine($"Extracting {entry.Key}");
-            found.WriteEntryTo(Stream.Null);
-        }*/
+        BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
     }
-
-    Console.WriteLine("Still running...");
 }
-await Task.Delay(500);
+

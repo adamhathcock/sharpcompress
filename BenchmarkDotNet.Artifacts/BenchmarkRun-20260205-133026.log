@@ -1,0 +1,1826 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 26 benchmark(s) in total *****
+// ***** Building 2 exe(s) in Parallel: Start   *****
+// ***** Done, took 00:00:17 (17.57 sec)   *****
+// Found 4 benchmarks:
+//   GZipBenchmarks.'GZip: Compress 100KB': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   GZipBenchmarks.'GZip: Decompress 100KB': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   GZipBenchmarks.'GZip: Compress 100KB': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   GZipBenchmarks.'GZip: Decompress 100KB': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// **************************
+// Benchmark: GZipBenchmarks.'GZip: Compress 100KB': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 209935.00 ns, 209.9350 us/op
+WorkloadJitting  1: 1 op, 6638821.00 ns, 6.6388 ms/op
+
+OverheadWarmup   1: 1 op, 3502.00 ns, 3.5020 us/op
+OverheadWarmup   2: 1 op, 879.00 ns, 879.0000 ns/op
+OverheadWarmup   3: 1 op, 695.00 ns, 695.0000 ns/op
+OverheadWarmup   4: 1 op, 655.00 ns, 655.0000 ns/op
+OverheadWarmup   5: 1 op, 694.00 ns, 694.0000 ns/op
+OverheadWarmup   6: 1 op, 688.00 ns, 688.0000 ns/op
+OverheadWarmup   7: 1 op, 2096.00 ns, 2.0960 us/op
+OverheadWarmup   8: 1 op, 707.00 ns, 707.0000 ns/op
+
+OverheadActual   1: 1 op, 2210.00 ns, 2.2100 us/op
+OverheadActual   2: 1 op, 678.00 ns, 678.0000 ns/op
+OverheadActual   3: 1 op, 3259.00 ns, 3.2590 us/op
+OverheadActual   4: 1 op, 698.00 ns, 698.0000 ns/op
+OverheadActual   5: 1 op, 667.00 ns, 667.0000 ns/op
+OverheadActual   6: 1 op, 689.00 ns, 689.0000 ns/op
+OverheadActual   7: 1 op, 715.00 ns, 715.0000 ns/op
+OverheadActual   8: 1 op, 2201.00 ns, 2.2010 us/op
+OverheadActual   9: 1 op, 2185.00 ns, 2.1850 us/op
+OverheadActual  10: 1 op, 2083.00 ns, 2.0830 us/op
+OverheadActual  11: 1 op, 610.00 ns, 610.0000 ns/op
+OverheadActual  12: 1 op, 644.00 ns, 644.0000 ns/op
+OverheadActual  13: 1 op, 2193.00 ns, 2.1930 us/op
+OverheadActual  14: 1 op, 18017.00 ns, 18.0170 us/op
+OverheadActual  15: 1 op, 615.00 ns, 615.0000 ns/op
+OverheadActual  16: 1 op, 693.00 ns, 693.0000 ns/op
+OverheadActual  17: 1 op, 675.00 ns, 675.0000 ns/op
+OverheadActual  18: 1 op, 2162.00 ns, 2.1620 us/op
+OverheadActual  19: 1 op, 576.00 ns, 576.0000 ns/op
+OverheadActual  20: 1 op, 654.00 ns, 654.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 6422375.00 ns, 6.4224 ms/op
+
+WorkloadActual   1: 1 op, 6202937.00 ns, 6.2029 ms/op
+WorkloadActual   2: 1 op, 6040176.00 ns, 6.0402 ms/op
+WorkloadActual   3: 1 op, 6001583.00 ns, 6.0016 ms/op
+
+WorkloadResult   1: 1 op, 6202241.50 ns, 6.2022 ms/op
+WorkloadResult   2: 1 op, 6039480.50 ns, 6.0395 ms/op
+WorkloadResult   3: 1 op, 6000887.50 ns, 6.0009 ms/op
+// GC:  0 0 0 536552 1
+// Threading:  0 0 1
+
+
+Mean = 6.081 ms, StdErr = 0.062 ms (1.01%), N = 3, StdDev = 0.107 ms
+Min = 6.001 ms, Q1 = 6.020 ms, Median = 6.039 ms, Q3 = 6.121 ms, Max = 6.202 ms
+IQR = 0.101 ms, LowerFence = 5.869 ms, UpperFence = 6.272 ms
+ConfidenceInterval = [4.131 ms; 8.031 ms] (CI 99.9%), Margin = 1.950 ms (32.06% of Mean)
+Skewness = 0.33, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 25 (96.2 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: GZipBenchmarks.'GZip: Decompress 100KB': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 197474.00 ns, 197.4740 us/op
+WorkloadJitting  1: 1 op, 5825949.00 ns, 5.8259 ms/op
+
+OverheadWarmup   1: 1 op, 2241.00 ns, 2.2410 us/op
+OverheadWarmup   2: 1 op, 560.00 ns, 560.0000 ns/op
+OverheadWarmup   3: 1 op, 575.00 ns, 575.0000 ns/op
+OverheadWarmup   4: 1 op, 592.00 ns, 592.0000 ns/op
+OverheadWarmup   5: 1 op, 607.00 ns, 607.0000 ns/op
+OverheadWarmup   6: 1 op, 571.00 ns, 571.0000 ns/op
+OverheadWarmup   7: 1 op, 563.00 ns, 563.0000 ns/op
+OverheadWarmup   8: 1 op, 602.00 ns, 602.0000 ns/op
+OverheadWarmup   9: 1 op, 570.00 ns, 570.0000 ns/op
+
+OverheadActual   1: 1 op, 599.00 ns, 599.0000 ns/op
+OverheadActual   2: 1 op, 582.00 ns, 582.0000 ns/op
+OverheadActual   3: 1 op, 571.00 ns, 571.0000 ns/op
+OverheadActual   4: 1 op, 544.00 ns, 544.0000 ns/op
+OverheadActual   5: 1 op, 596.00 ns, 596.0000 ns/op
+OverheadActual   6: 1 op, 589.00 ns, 589.0000 ns/op
+OverheadActual   7: 1 op, 586.00 ns, 586.0000 ns/op
+OverheadActual   8: 1 op, 598.00 ns, 598.0000 ns/op
+OverheadActual   9: 1 op, 555.00 ns, 555.0000 ns/op
+OverheadActual  10: 1 op, 594.00 ns, 594.0000 ns/op
+OverheadActual  11: 1 op, 552.00 ns, 552.0000 ns/op
+OverheadActual  12: 1 op, 623.00 ns, 623.0000 ns/op
+OverheadActual  13: 1 op, 651.00 ns, 651.0000 ns/op
+OverheadActual  14: 1 op, 671.00 ns, 671.0000 ns/op
+OverheadActual  15: 1 op, 602.00 ns, 602.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 487479.00 ns, 487.4790 us/op
+
+WorkloadActual   1: 1 op, 451965.00 ns, 451.9650 us/op
+WorkloadActual   2: 1 op, 419599.00 ns, 419.5990 us/op
+WorkloadActual   3: 1 op, 415524.00 ns, 415.5240 us/op
+
+WorkloadResult   1: 1 op, 451371.00 ns, 451.3710 us/op
+WorkloadResult   2: 1 op, 419005.00 ns, 419.0050 us/op
+WorkloadResult   3: 1 op, 414930.00 ns, 414.9300 us/op
+// GC:  0 0 0 38648 1
+// Threading:  0 0 1
+
+
+Mean = 428.435 μs, StdErr = 11.528 μs (2.69%), N = 3, StdDev = 19.967 μs
+Min = 414.930 μs, Q1 = 416.967 μs, Median = 419.005 μs, Q3 = 435.188 μs, Max = 451.371 μs
+IQR = 18.221 μs, LowerFence = 389.637 μs, UpperFence = 462.519 μs
+ConfidenceInterval = [64.161 μs; 792.710 μs] (CI 99.9%), Margin = 364.274 μs (85.02% of Mean)
+Skewness = 0.37, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 24 (92.3 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: GZipBenchmarks.'GZip: Compress 100KB': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 115 122 --benchmarkName SharpCompress.Performance.Benchmarks.GZipBenchmarks.GZipCompress --job Dry --benchmarkId 0 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 6951497.00 ns, 6.9515 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 6951497.00 ns, 6.9515 ms/op
+// GC:  0 0 0 533576 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3721 has exited with code 0.
+
+Mean = 6.951 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 6.951 ms, Q1 = 6.951 ms, Median = 6.951 ms, Q3 = 6.951 ms, Max = 6.951 ms
+IQR = 0.000 ms, LowerFence = 6.951 ms, UpperFence = 6.951 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 23 (88.5 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: GZipBenchmarks.'GZip: Decompress 100KB': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 115 122 --benchmarkName SharpCompress.Performance.Benchmarks.GZipBenchmarks.GZipDecompress --job Dry --benchmarkId 1 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 6179471.00 ns, 6.1795 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 6179471.00 ns, 6.1795 ms/op
+// GC:  0 0 0 35336 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3732 has exited with code 0.
+
+Mean = 6.179 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 6.179 ms, Q1 = 6.179 ms, Median = 6.179 ms, Q3 = 6.179 ms, Max = 6.179 ms
+IQR = 0.000 ms, LowerFence = 6.179 ms, UpperFence = 6.179 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 22 (84.6 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.GZipBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.GZipBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.GZipBenchmarks-report.html
+
+// * Detailed results *
+GZipBenchmarks.'GZip: Compress 100KB': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 6.081 ms, StdErr = 0.062 ms (1.01%), N = 3, StdDev = 0.107 ms
+Min = 6.001 ms, Q1 = 6.020 ms, Median = 6.039 ms, Q3 = 6.121 ms, Max = 6.202 ms
+IQR = 0.101 ms, LowerFence = 5.869 ms, UpperFence = 6.272 ms
+ConfidenceInterval = [4.131 ms; 8.031 ms] (CI 99.9%), Margin = 1.950 ms (32.06% of Mean)
+Skewness = 0.33, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[5.904 ms ; 6.117 ms) | @@
+[6.117 ms ; 6.299 ms) | @
+---------------------------------------------------
+
+GZipBenchmarks.'GZip: Decompress 100KB': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 428.435 μs, StdErr = 11.528 μs (2.69%), N = 3, StdDev = 19.967 μs
+Min = 414.930 μs, Q1 = 416.967 μs, Median = 419.005 μs, Q3 = 435.188 μs, Max = 451.371 μs
+IQR = 18.221 μs, LowerFence = 389.637 μs, UpperFence = 462.519 μs
+ConfidenceInterval = [64.161 μs; 792.710 μs] (CI 99.9%), Margin = 364.274 μs (85.02% of Mean)
+Skewness = 0.37, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[396.759 μs ; 435.138 μs) | @@
+[435.138 μs ; 469.542 μs) | @
+---------------------------------------------------
+
+GZipBenchmarks.'GZip: Compress 100KB': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 6.951 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 6.951 ms, Q1 = 6.951 ms, Median = 6.951 ms, Q3 = 6.951 ms, Max = 6.951 ms
+IQR = 0.000 ms, LowerFence = 6.951 ms, UpperFence = 6.951 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[6.951 ms ; 6.951 ms) | @
+---------------------------------------------------
+
+GZipBenchmarks.'GZip: Decompress 100KB': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 6.179 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 6.179 ms, Q1 = 6.179 ms, Median = 6.179 ms, Q3 = 6.179 ms, Max = 6.179 ms
+IQR = 0.000 ms, LowerFence = 6.179 ms, UpperFence = 6.179 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[6.179 ms ; 6.179 ms) | @
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.14.0, Ubuntu 24.04.3 LTS (Noble Numbat)
+Intel Xeon Platinum 8370C CPU 2.80GHz, 1 CPU, 4 logical and 2 physical cores
+.NET SDK 10.0.102
+  [Host] : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+  Dry    : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+
+UnrollFactor=1  WarmupCount=1  
+
+| Method                   | Job        | Toolchain              | InvocationCount | IterationCount | LaunchCount | RunStrategy | Mean       | Error      | StdDev    | Allocated |
+|------------------------- |----------- |----------------------- |---------------- |--------------- |------------ |------------ |-----------:|-----------:|----------:|----------:|
+| 'GZip: Compress 100KB'   | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     | 6,080.9 μs | 1,949.7 μs | 106.87 μs | 523.98 KB |
+| 'GZip: Decompress 100KB' | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |   428.4 μs |   364.3 μs |  19.97 μs |  37.74 KB |
+| 'GZip: Compress 100KB'   | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 6,951.5 μs |         NA |   0.00 μs | 521.07 KB |
+| 'GZip: Decompress 100KB' | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 6,179.5 μs |         NA |   0.00 μs |  34.51 KB |
+
+// * Warnings *
+MinIterationTime
+  GZipBenchmarks.'GZip: Compress 100KB': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1   -> The minimum observed iteration time is 6.002ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  GZipBenchmarks.'GZip: Decompress 100KB': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1 -> The minimum observed iteration time is 415.524μs which is very small. It's recommended to increase it to at least 100ms using more operations.
+  GZipBenchmarks.'GZip: Compress 100KB': Dry                                                                                                    -> The minimum observed iteration time is 6.951ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  GZipBenchmarks.'GZip: Decompress 100KB': Dry                                                                                                  -> The minimum observed iteration time is 6.179ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 μs      : 1 Microsecond (0.000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:00 (0.61 sec), executed benchmarks: 4
+
+// Found 4 benchmarks:
+//   RarBenchmarks.'Rar: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   RarBenchmarks.'Rar: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   RarBenchmarks.'Rar: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   RarBenchmarks.'Rar: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// **************************
+// Benchmark: RarBenchmarks.'Rar: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 177396.00 ns, 177.3960 us/op
+WorkloadJitting  1: 1 op, 41249549.00 ns, 41.2495 ms/op
+
+OverheadWarmup   1: 1 op, 2494.00 ns, 2.4940 us/op
+OverheadWarmup   2: 1 op, 635.00 ns, 635.0000 ns/op
+OverheadWarmup   3: 1 op, 528.00 ns, 528.0000 ns/op
+OverheadWarmup   4: 1 op, 513.00 ns, 513.0000 ns/op
+OverheadWarmup   5: 1 op, 431.00 ns, 431.0000 ns/op
+OverheadWarmup   6: 1 op, 451.00 ns, 451.0000 ns/op
+OverheadWarmup   7: 1 op, 407.00 ns, 407.0000 ns/op
+OverheadWarmup   8: 1 op, 319.00 ns, 319.0000 ns/op
+OverheadWarmup   9: 1 op, 409.00 ns, 409.0000 ns/op
+OverheadWarmup  10: 1 op, 427.00 ns, 427.0000 ns/op
+
+OverheadActual   1: 1 op, 492.00 ns, 492.0000 ns/op
+OverheadActual   2: 1 op, 520.00 ns, 520.0000 ns/op
+OverheadActual   3: 1 op, 487.00 ns, 487.0000 ns/op
+OverheadActual   4: 1 op, 441.00 ns, 441.0000 ns/op
+OverheadActual   5: 1 op, 492.00 ns, 492.0000 ns/op
+OverheadActual   6: 1 op, 519.00 ns, 519.0000 ns/op
+OverheadActual   7: 1 op, 446.00 ns, 446.0000 ns/op
+OverheadActual   8: 1 op, 458.00 ns, 458.0000 ns/op
+OverheadActual   9: 1 op, 542.00 ns, 542.0000 ns/op
+OverheadActual  10: 1 op, 530.00 ns, 530.0000 ns/op
+OverheadActual  11: 1 op, 537.00 ns, 537.0000 ns/op
+OverheadActual  12: 1 op, 499.00 ns, 499.0000 ns/op
+OverheadActual  13: 1 op, 554.00 ns, 554.0000 ns/op
+OverheadActual  14: 1 op, 474.00 ns, 474.0000 ns/op
+OverheadActual  15: 1 op, 502.00 ns, 502.0000 ns/op
+OverheadActual  16: 1 op, 505.00 ns, 505.0000 ns/op
+OverheadActual  17: 1 op, 455.00 ns, 455.0000 ns/op
+OverheadActual  18: 1 op, 984.00 ns, 984.0000 ns/op
+OverheadActual  19: 1 op, 559.00 ns, 559.0000 ns/op
+OverheadActual  20: 1 op, 407.00 ns, 407.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 2715149.00 ns, 2.7151 ms/op
+
+WorkloadActual   1: 1 op, 2050167.00 ns, 2.0502 ms/op
+WorkloadActual   2: 1 op, 1971405.00 ns, 1.9714 ms/op
+WorkloadActual   3: 1 op, 1938095.00 ns, 1.9381 ms/op
+
+WorkloadResult   1: 1 op, 2049666.50 ns, 2.0497 ms/op
+WorkloadResult   2: 1 op, 1970904.50 ns, 1.9709 ms/op
+WorkloadResult   3: 1 op, 1937594.50 ns, 1.9376 ms/op
+// GC:  0 0 0 98072 1
+// Threading:  0 0 1
+
+
+Mean = 1.986 ms, StdErr = 0.033 ms (1.67%), N = 3, StdDev = 0.058 ms
+Min = 1.938 ms, Q1 = 1.954 ms, Median = 1.971 ms, Q3 = 2.010 ms, Max = 2.050 ms
+IQR = 0.056 ms, LowerFence = 1.870 ms, UpperFence = 2.094 ms
+ConfidenceInterval = [0.936 ms; 3.036 ms] (CI 99.9%), Margin = 1.050 ms (52.87% of Mean)
+Skewness = 0.25, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 21 (80.8 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: RarBenchmarks.'Rar: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 211497.00 ns, 211.4970 us/op
+WorkloadJitting  1: 1 op, 15744964.00 ns, 15.7450 ms/op
+
+OverheadWarmup   1: 1 op, 2861.00 ns, 2.8610 us/op
+OverheadWarmup   2: 1 op, 2248.00 ns, 2.2480 us/op
+OverheadWarmup   3: 1 op, 2050.00 ns, 2.0500 us/op
+OverheadWarmup   4: 1 op, 2176.00 ns, 2.1760 us/op
+OverheadWarmup   5: 1 op, 2068.00 ns, 2.0680 us/op
+OverheadWarmup   6: 1 op, 1945.00 ns, 1.9450 us/op
+OverheadWarmup   7: 1 op, 2339.00 ns, 2.3390 us/op
+OverheadWarmup   8: 1 op, 2250.00 ns, 2.2500 us/op
+
+OverheadActual   1: 1 op, 564.00 ns, 564.0000 ns/op
+OverheadActual   2: 1 op, 2291.00 ns, 2.2910 us/op
+OverheadActual   3: 1 op, 2134.00 ns, 2.1340 us/op
+OverheadActual   4: 1 op, 654.00 ns, 654.0000 ns/op
+OverheadActual   5: 1 op, 2109.00 ns, 2.1090 us/op
+OverheadActual   6: 1 op, 2037.00 ns, 2.0370 us/op
+OverheadActual   7: 1 op, 2210.00 ns, 2.2100 us/op
+OverheadActual   8: 1 op, 613.00 ns, 613.0000 ns/op
+OverheadActual   9: 1 op, 2268.00 ns, 2.2680 us/op
+OverheadActual  10: 1 op, 573.00 ns, 573.0000 ns/op
+OverheadActual  11: 1 op, 2559.00 ns, 2.5590 us/op
+OverheadActual  12: 1 op, 2129.00 ns, 2.1290 us/op
+OverheadActual  13: 1 op, 2118.00 ns, 2.1180 us/op
+OverheadActual  14: 1 op, 2030.00 ns, 2.0300 us/op
+OverheadActual  15: 1 op, 2013.00 ns, 2.0130 us/op
+OverheadActual  16: 1 op, 2055.00 ns, 2.0550 us/op
+OverheadActual  17: 1 op, 2205.00 ns, 2.2050 us/op
+OverheadActual  18: 1 op, 2103.00 ns, 2.1030 us/op
+OverheadActual  19: 1 op, 2067.00 ns, 2.0670 us/op
+OverheadActual  20: 1 op, 2121.00 ns, 2.1210 us/op
+
+WorkloadWarmup   1: 1 op, 2955041.00 ns, 2.9550 ms/op
+
+WorkloadActual   1: 1 op, 2425340.00 ns, 2.4253 ms/op
+WorkloadActual   2: 1 op, 2292208.00 ns, 2.2922 ms/op
+WorkloadActual   3: 1 op, 2263401.00 ns, 2.2634 ms/op
+
+WorkloadResult   1: 1 op, 2423234.00 ns, 2.4232 ms/op
+WorkloadResult   2: 1 op, 2290102.00 ns, 2.2901 ms/op
+WorkloadResult   3: 1 op, 2261295.00 ns, 2.2613 ms/op
+// GC:  0 0 0 157880 1
+// Threading:  0 0 1
+// Exceptions:  1
+
+
+Mean = 2.325 ms, StdErr = 0.050 ms (2.15%), N = 3, StdDev = 0.086 ms
+Min = 2.261 ms, Q1 = 2.276 ms, Median = 2.290 ms, Q3 = 2.357 ms, Max = 2.423 ms
+IQR = 0.081 ms, LowerFence = 2.154 ms, UpperFence = 2.478 ms
+ConfidenceInterval = [0.749 ms; 3.901 ms] (CI 99.9%), Margin = 1.576 ms (67.79% of Mean)
+Skewness = 0.34, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 20 (76.9 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: RarBenchmarks.'Rar: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 127 128 --benchmarkName SharpCompress.Performance.Benchmarks.RarBenchmarks.RarExtractArchiveApi --job Dry --benchmarkId 2 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 44015778.00 ns, 44.0158 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 44015778.00 ns, 44.0158 ms/op
+// GC:  0 0 0 94088 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3746 has exited with code 0.
+
+Mean = 44.016 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 44.016 ms, Q1 = 44.016 ms, Median = 44.016 ms, Q3 = 44.016 ms, Max = 44.016 ms
+IQR = 0.000 ms, LowerFence = 44.016 ms, UpperFence = 44.016 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 19 (73.1 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: RarBenchmarks.'Rar: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 127 128 --benchmarkName SharpCompress.Performance.Benchmarks.RarBenchmarks.RarExtractReaderApi --job Dry --benchmarkId 3 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 48894280.00 ns, 48.8943 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 48894280.00 ns, 48.8943 ms/op
+// GC:  0 0 0 153896 1
+// Threading:  0 0 1
+// Exceptions:  1
+
+// AfterAll
+// Benchmark Process 3754 has exited with code 0.
+
+Mean = 48.894 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 48.894 ms, Q1 = 48.894 ms, Median = 48.894 ms, Q3 = 48.894 ms, Max = 48.894 ms
+IQR = 0.000 ms, LowerFence = 48.894 ms, UpperFence = 48.894 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 18 (69.2 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.RarBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.RarBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.RarBenchmarks-report.html
+
+// * Detailed results *
+RarBenchmarks.'Rar: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 1.986 ms, StdErr = 0.033 ms (1.67%), N = 3, StdDev = 0.058 ms
+Min = 1.938 ms, Q1 = 1.954 ms, Median = 1.971 ms, Q3 = 2.010 ms, Max = 2.050 ms
+IQR = 0.056 ms, LowerFence = 1.870 ms, UpperFence = 2.094 ms
+ConfidenceInterval = [0.936 ms; 3.036 ms] (CI 99.9%), Margin = 1.050 ms (52.87% of Mean)
+Skewness = 0.25, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[1.902 ms ; 2.007 ms) | @@
+[2.007 ms ; 2.102 ms) | @
+---------------------------------------------------
+
+RarBenchmarks.'Rar: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 2.325 ms, StdErr = 0.050 ms (2.15%), N = 3, StdDev = 0.086 ms
+Min = 2.261 ms, Q1 = 2.276 ms, Median = 2.290 ms, Q3 = 2.357 ms, Max = 2.423 ms
+IQR = 0.081 ms, LowerFence = 2.154 ms, UpperFence = 2.478 ms
+ConfidenceInterval = [0.749 ms; 3.901 ms] (CI 99.9%), Margin = 1.576 ms (67.79% of Mean)
+Skewness = 0.34, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[2.183 ms ; 2.354 ms) | @@
+[2.354 ms ; 2.502 ms) | @
+---------------------------------------------------
+
+RarBenchmarks.'Rar: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 44.016 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 44.016 ms, Q1 = 44.016 ms, Median = 44.016 ms, Q3 = 44.016 ms, Max = 44.016 ms
+IQR = 0.000 ms, LowerFence = 44.016 ms, UpperFence = 44.016 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[44.016 ms ; 44.016 ms) | @
+---------------------------------------------------
+
+RarBenchmarks.'Rar: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 48.894 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 48.894 ms, Q1 = 48.894 ms, Median = 48.894 ms, Q3 = 48.894 ms, Max = 48.894 ms
+IQR = 0.000 ms, LowerFence = 48.894 ms, UpperFence = 48.894 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[48.894 ms ; 48.894 ms) | @
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.14.0, Ubuntu 24.04.3 LTS (Noble Numbat)
+Intel Xeon Platinum 8370C CPU 2.80GHz, 1 CPU, 4 logical and 2 physical cores
+.NET SDK 10.0.102
+  [Host] : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+  Dry    : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+
+UnrollFactor=1  WarmupCount=1  
+
+| Method                                   | Job        | Toolchain              | InvocationCount | IterationCount | LaunchCount | RunStrategy | Mean      | Error    | StdDev    | Allocated |
+|----------------------------------------- |----------- |----------------------- |---------------- |--------------- |------------ |------------ |----------:|---------:|----------:|----------:|
+| 'Rar: Extract all entries (Archive API)' | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |  1.986 ms | 1.050 ms | 0.0576 ms |  95.77 KB |
+| 'Rar: Extract all entries (Reader API)'  | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |  2.325 ms | 1.576 ms | 0.0864 ms | 154.18 KB |
+| 'Rar: Extract all entries (Archive API)' | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 44.016 ms |       NA | 0.0000 ms |  91.88 KB |
+| 'Rar: Extract all entries (Reader API)'  | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 48.894 ms |       NA | 0.0000 ms | 150.29 KB |
+
+// * Warnings *
+MinIterationTime
+  RarBenchmarks.'Rar: Extract all entries (Archive API)': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1 -> The minimum observed iteration time is 1.938ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  RarBenchmarks.'Rar: Extract all entries (Reader API)': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1  -> The minimum observed iteration time is 2.263ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  RarBenchmarks.'Rar: Extract all entries (Archive API)': Dry                                                                                                  -> The minimum observed iteration time is 44.016ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  RarBenchmarks.'Rar: Extract all entries (Reader API)': Dry                                                                                                   -> The minimum observed iteration time is 48.894ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 ms      : 1 Millisecond (0.001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:00 (0.57 sec), executed benchmarks: 4
+
+// Found 4 benchmarks:
+//   SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// **************************
+// Benchmark: SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 207251.00 ns, 207.2510 us/op
+WorkloadJitting  1: 1 op, 40537784.00 ns, 40.5378 ms/op
+
+OverheadWarmup   1: 1 op, 2186.00 ns, 2.1860 us/op
+OverheadWarmup   2: 1 op, 438.00 ns, 438.0000 ns/op
+OverheadWarmup   3: 1 op, 316.00 ns, 316.0000 ns/op
+OverheadWarmup   4: 1 op, 431.00 ns, 431.0000 ns/op
+OverheadWarmup   5: 1 op, 400.00 ns, 400.0000 ns/op
+OverheadWarmup   6: 1 op, 416.00 ns, 416.0000 ns/op
+OverheadWarmup   7: 1 op, 273.00 ns, 273.0000 ns/op
+
+OverheadActual   1: 1 op, 371.00 ns, 371.0000 ns/op
+OverheadActual   2: 1 op, 364.00 ns, 364.0000 ns/op
+OverheadActual   3: 1 op, 393.00 ns, 393.0000 ns/op
+OverheadActual   4: 1 op, 369.00 ns, 369.0000 ns/op
+OverheadActual   5: 1 op, 457.00 ns, 457.0000 ns/op
+OverheadActual   6: 1 op, 377.00 ns, 377.0000 ns/op
+OverheadActual   7: 1 op, 380.00 ns, 380.0000 ns/op
+OverheadActual   8: 1 op, 401.00 ns, 401.0000 ns/op
+OverheadActual   9: 1 op, 355.00 ns, 355.0000 ns/op
+OverheadActual  10: 1 op, 355.00 ns, 355.0000 ns/op
+OverheadActual  11: 1 op, 357.00 ns, 357.0000 ns/op
+OverheadActual  12: 1 op, 347.00 ns, 347.0000 ns/op
+OverheadActual  13: 1 op, 349.00 ns, 349.0000 ns/op
+OverheadActual  14: 1 op, 368.00 ns, 368.0000 ns/op
+OverheadActual  15: 1 op, 385.00 ns, 385.0000 ns/op
+OverheadActual  16: 1 op, 364.00 ns, 364.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 10623163.00 ns, 10.6232 ms/op
+
+WorkloadActual   1: 1 op, 11675600.00 ns, 11.6756 ms/op
+WorkloadActual   2: 1 op, 10254373.00 ns, 10.2544 ms/op
+WorkloadActual   3: 1 op, 10346172.00 ns, 10.3462 ms/op
+
+WorkloadResult   1: 1 op, 11675231.50 ns, 11.6752 ms/op
+WorkloadResult   2: 1 op, 10254004.50 ns, 10.2540 ms/op
+WorkloadResult   3: 1 op, 10345803.50 ns, 10.3458 ms/op
+// GC:  0 0 0 284600 1
+// Threading:  0 0 1
+
+
+Mean = 10.758 ms, StdErr = 0.459 ms (4.27%), N = 3, StdDev = 0.795 ms
+Min = 10.254 ms, Q1 = 10.300 ms, Median = 10.346 ms, Q3 = 11.011 ms, Max = 11.675 ms
+IQR = 0.711 ms, LowerFence = 9.234 ms, UpperFence = 12.076 ms
+ConfidenceInterval = [-3.752 ms; 25.269 ms] (CI 99.9%), Margin = 14.511 ms (134.88% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 17 (65.4 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 182837.00 ns, 182.8370 us/op
+WorkloadJitting  1: 1 op, 11045389.00 ns, 11.0454 ms/op
+
+OverheadWarmup   1: 1 op, 2700.00 ns, 2.7000 us/op
+OverheadWarmup   2: 1 op, 459.00 ns, 459.0000 ns/op
+OverheadWarmup   3: 1 op, 472.00 ns, 472.0000 ns/op
+OverheadWarmup   4: 1 op, 379.00 ns, 379.0000 ns/op
+OverheadWarmup   5: 1 op, 414.00 ns, 414.0000 ns/op
+OverheadWarmup   6: 1 op, 381.00 ns, 381.0000 ns/op
+
+OverheadActual   1: 1 op, 433.00 ns, 433.0000 ns/op
+OverheadActual   2: 1 op, 419.00 ns, 419.0000 ns/op
+OverheadActual   3: 1 op, 407.00 ns, 407.0000 ns/op
+OverheadActual   4: 1 op, 430.00 ns, 430.0000 ns/op
+OverheadActual   5: 1 op, 439.00 ns, 439.0000 ns/op
+OverheadActual   6: 1 op, 452.00 ns, 452.0000 ns/op
+OverheadActual   7: 1 op, 434.00 ns, 434.0000 ns/op
+OverheadActual   8: 1 op, 426.00 ns, 426.0000 ns/op
+OverheadActual   9: 1 op, 508.00 ns, 508.0000 ns/op
+OverheadActual  10: 1 op, 428.00 ns, 428.0000 ns/op
+OverheadActual  11: 1 op, 407.00 ns, 407.0000 ns/op
+OverheadActual  12: 1 op, 386.00 ns, 386.0000 ns/op
+OverheadActual  13: 1 op, 361.00 ns, 361.0000 ns/op
+OverheadActual  14: 1 op, 401.00 ns, 401.0000 ns/op
+OverheadActual  15: 1 op, 364.00 ns, 364.0000 ns/op
+OverheadActual  16: 1 op, 381.00 ns, 381.0000 ns/op
+OverheadActual  17: 1 op, 391.00 ns, 391.0000 ns/op
+OverheadActual  18: 1 op, 387.00 ns, 387.0000 ns/op
+OverheadActual  19: 1 op, 390.00 ns, 390.0000 ns/op
+OverheadActual  20: 1 op, 379.00 ns, 379.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 10166949.00 ns, 10.1669 ms/op
+
+WorkloadActual   1: 1 op, 10144084.00 ns, 10.1441 ms/op
+WorkloadActual   2: 1 op, 10189067.00 ns, 10.1891 ms/op
+WorkloadActual   3: 1 op, 9984653.00 ns, 9.9847 ms/op
+
+WorkloadResult   1: 1 op, 10143677.00 ns, 10.1437 ms/op
+WorkloadResult   2: 1 op, 10188660.00 ns, 10.1887 ms/op
+WorkloadResult   3: 1 op, 9984246.00 ns, 9.9842 ms/op
+// GC:  0 0 0 284376 1
+// Threading:  0 0 1
+
+
+Mean = 10.106 ms, StdErr = 0.062 ms (0.61%), N = 3, StdDev = 0.107 ms
+Min = 9.984 ms, Q1 = 10.064 ms, Median = 10.144 ms, Q3 = 10.166 ms, Max = 10.189 ms
+IQR = 0.102 ms, LowerFence = 9.911 ms, UpperFence = 10.319 ms
+ConfidenceInterval = [8.146 ms; 12.065 ms] (CI 99.9%), Margin = 1.960 ms (19.39% of Mean)
+Skewness = -0.31, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 16 (61.5 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 127 128 --benchmarkName SharpCompress.Performance.Benchmarks.SevenZipBenchmarks.SevenZipLzmaExtract --job Dry --benchmarkId 4 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 51592754.00 ns, 51.5928 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 51592754.00 ns, 51.5928 ms/op
+// GC:  0 0 0 280616 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3765 has exited with code 0.
+
+Mean = 51.593 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 51.593 ms, Q1 = 51.593 ms, Median = 51.593 ms, Q3 = 51.593 ms, Max = 51.593 ms
+IQR = 0.000 ms, LowerFence = 51.593 ms, UpperFence = 51.593 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 15 (57.7 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 129 130 --benchmarkName SharpCompress.Performance.Benchmarks.SevenZipBenchmarks.SevenZipLzma2Extract --job Dry --benchmarkId 5 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 51681335.00 ns, 51.6813 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 51681335.00 ns, 51.6813 ms/op
+// GC:  0 0 0 280392 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3772 has exited with code 0.
+
+Mean = 51.681 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 51.681 ms, Q1 = 51.681 ms, Median = 51.681 ms, Q3 = 51.681 ms, Max = 51.681 ms
+IQR = 0.000 ms, LowerFence = 51.681 ms, UpperFence = 51.681 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 14 (53.8 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.SevenZipBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.SevenZipBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.SevenZipBenchmarks-report.html
+
+// * Detailed results *
+SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 10.758 ms, StdErr = 0.459 ms (4.27%), N = 3, StdDev = 0.795 ms
+Min = 10.254 ms, Q1 = 10.300 ms, Median = 10.346 ms, Q3 = 11.011 ms, Max = 11.675 ms
+IQR = 0.711 ms, LowerFence = 9.234 ms, UpperFence = 12.076 ms
+ConfidenceInterval = [-3.752 ms; 25.269 ms] (CI 99.9%), Margin = 14.511 ms (134.88% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[10.241 ms ; 11.688 ms) | @@@
+---------------------------------------------------
+
+SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 10.106 ms, StdErr = 0.062 ms (0.61%), N = 3, StdDev = 0.107 ms
+Min = 9.984 ms, Q1 = 10.064 ms, Median = 10.144 ms, Q3 = 10.166 ms, Max = 10.189 ms
+IQR = 0.102 ms, LowerFence = 9.911 ms, UpperFence = 10.319 ms
+ConfidenceInterval = [8.146 ms; 12.065 ms] (CI 99.9%), Margin = 1.960 ms (19.39% of Mean)
+Skewness = -0.31, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[9.886 ms ; 10.286 ms) | @@@
+---------------------------------------------------
+
+SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 51.593 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 51.593 ms, Q1 = 51.593 ms, Median = 51.593 ms, Q3 = 51.593 ms, Max = 51.593 ms
+IQR = 0.000 ms, LowerFence = 51.593 ms, UpperFence = 51.593 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[51.593 ms ; 51.593 ms) | @
+---------------------------------------------------
+
+SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 51.681 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 51.681 ms, Q1 = 51.681 ms, Median = 51.681 ms, Q3 = 51.681 ms, Max = 51.681 ms
+IQR = 0.000 ms, LowerFence = 51.681 ms, UpperFence = 51.681 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[51.681 ms ; 51.681 ms) | @
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.14.0, Ubuntu 24.04.3 LTS (Noble Numbat)
+Intel Xeon Platinum 8370C CPU 2.80GHz, 1 CPU, 4 logical and 2 physical cores
+.NET SDK 10.0.102
+  [Host] : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+  Dry    : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+
+UnrollFactor=1  WarmupCount=1  
+
+| Method                            | Job        | Toolchain              | InvocationCount | IterationCount | LaunchCount | RunStrategy | Mean     | Error     | StdDev   | Allocated |
+|---------------------------------- |----------- |----------------------- |---------------- |--------------- |------------ |------------ |---------:|----------:|---------:|----------:|
+| '7Zip LZMA: Extract all entries'  | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     | 10.76 ms | 14.511 ms | 0.795 ms | 277.93 KB |
+| '7Zip LZMA2: Extract all entries' | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     | 10.11 ms |  1.960 ms | 0.107 ms | 277.71 KB |
+| '7Zip LZMA: Extract all entries'  | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 51.59 ms |        NA | 0.000 ms | 274.04 KB |
+| '7Zip LZMA2: Extract all entries' | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 51.68 ms |        NA | 0.000 ms | 273.82 KB |
+
+// * Warnings *
+MinIterationTime
+  SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1  -> The minimum observed iteration time is 10.254ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1 -> The minimum observed iteration time is 9.985ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  SevenZipBenchmarks.'7Zip LZMA: Extract all entries': Dry                                                                                                   -> The minimum observed iteration time is 51.593ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  SevenZipBenchmarks.'7Zip LZMA2: Extract all entries': Dry                                                                                                  -> The minimum observed iteration time is 51.681ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 ms      : 1 Millisecond (0.001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:00 (0.66 sec), executed benchmarks: 4
+
+// Found 8 benchmarks:
+//   TarBenchmarks.'Tar: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   TarBenchmarks.'Tar: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   TarBenchmarks.'Tar.GZip: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   TarBenchmarks.'Tar: Create archive with small files': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   TarBenchmarks.'Tar: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   TarBenchmarks.'Tar: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   TarBenchmarks.'Tar.GZip: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   TarBenchmarks.'Tar: Create archive with small files': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// **************************
+// Benchmark: TarBenchmarks.'Tar: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 185245.00 ns, 185.2450 us/op
+WorkloadJitting  1: 1 op, 5834765.00 ns, 5.8348 ms/op
+
+OverheadWarmup   1: 1 op, 2285.00 ns, 2.2850 us/op
+OverheadWarmup   2: 1 op, 774.00 ns, 774.0000 ns/op
+OverheadWarmup   3: 1 op, 685.00 ns, 685.0000 ns/op
+OverheadWarmup   4: 1 op, 610.00 ns, 610.0000 ns/op
+OverheadWarmup   5: 1 op, 536.00 ns, 536.0000 ns/op
+OverheadWarmup   6: 1 op, 569.00 ns, 569.0000 ns/op
+OverheadWarmup   7: 1 op, 588.00 ns, 588.0000 ns/op
+OverheadWarmup   8: 1 op, 548.00 ns, 548.0000 ns/op
+OverheadWarmup   9: 1 op, 617.00 ns, 617.0000 ns/op
+OverheadWarmup  10: 1 op, 600.00 ns, 600.0000 ns/op
+
+OverheadActual   1: 1 op, 2232.00 ns, 2.2320 us/op
+OverheadActual   2: 1 op, 540.00 ns, 540.0000 ns/op
+OverheadActual   3: 1 op, 610.00 ns, 610.0000 ns/op
+OverheadActual   4: 1 op, 596.00 ns, 596.0000 ns/op
+OverheadActual   5: 1 op, 552.00 ns, 552.0000 ns/op
+OverheadActual   6: 1 op, 514.00 ns, 514.0000 ns/op
+OverheadActual   7: 1 op, 589.00 ns, 589.0000 ns/op
+OverheadActual   8: 1 op, 563.00 ns, 563.0000 ns/op
+OverheadActual   9: 1 op, 523.00 ns, 523.0000 ns/op
+OverheadActual  10: 1 op, 531.00 ns, 531.0000 ns/op
+OverheadActual  11: 1 op, 524.00 ns, 524.0000 ns/op
+OverheadActual  12: 1 op, 532.00 ns, 532.0000 ns/op
+OverheadActual  13: 1 op, 512.00 ns, 512.0000 ns/op
+OverheadActual  14: 1 op, 511.00 ns, 511.0000 ns/op
+OverheadActual  15: 1 op, 2064.00 ns, 2.0640 us/op
+OverheadActual  16: 1 op, 544.00 ns, 544.0000 ns/op
+OverheadActual  17: 1 op, 518.00 ns, 518.0000 ns/op
+OverheadActual  18: 1 op, 554.00 ns, 554.0000 ns/op
+OverheadActual  19: 1 op, 525.00 ns, 525.0000 ns/op
+OverheadActual  20: 1 op, 577.00 ns, 577.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 296607.00 ns, 296.6070 us/op
+
+WorkloadActual   1: 1 op, 157491.00 ns, 157.4910 us/op
+WorkloadActual   2: 1 op, 116938.00 ns, 116.9380 us/op
+WorkloadActual   3: 1 op, 112502.00 ns, 112.5020 us/op
+
+WorkloadResult   1: 1 op, 156949.00 ns, 156.9490 us/op
+WorkloadResult   2: 1 op, 116396.00 ns, 116.3960 us/op
+WorkloadResult   3: 1 op, 111960.00 ns, 111.9600 us/op
+// GC:  0 0 0 21232 1
+// Threading:  0 0 1
+
+
+Mean = 128.435 μs, StdErr = 14.314 μs (11.15%), N = 3, StdDev = 24.793 μs
+Min = 111.960 μs, Q1 = 114.178 μs, Median = 116.396 μs, Q3 = 136.673 μs, Max = 156.949 μs
+IQR = 22.494 μs, LowerFence = 80.436 μs, UpperFence = 170.414 μs
+ConfidenceInterval = [-323.886 μs; 580.756 μs] (CI 99.9%), Margin = 452.321 μs (352.18% of Mean)
+Skewness = 0.37, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 13 (50.0 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: TarBenchmarks.'Tar: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 191113.00 ns, 191.1130 us/op
+WorkloadJitting  1: 1 op, 5234520.00 ns, 5.2345 ms/op
+
+OverheadWarmup   1: 1 op, 2443.00 ns, 2.4430 us/op
+OverheadWarmup   2: 1 op, 524.00 ns, 524.0000 ns/op
+OverheadWarmup   3: 1 op, 538.00 ns, 538.0000 ns/op
+OverheadWarmup   4: 1 op, 620.00 ns, 620.0000 ns/op
+OverheadWarmup   5: 1 op, 535.00 ns, 535.0000 ns/op
+OverheadWarmup   6: 1 op, 525.00 ns, 525.0000 ns/op
+OverheadWarmup   7: 1 op, 467.00 ns, 467.0000 ns/op
+OverheadWarmup   8: 1 op, 480.00 ns, 480.0000 ns/op
+OverheadWarmup   9: 1 op, 593.00 ns, 593.0000 ns/op
+OverheadWarmup  10: 1 op, 583.00 ns, 583.0000 ns/op
+
+OverheadActual   1: 1 op, 570.00 ns, 570.0000 ns/op
+OverheadActual   2: 1 op, 554.00 ns, 554.0000 ns/op
+OverheadActual   3: 1 op, 543.00 ns, 543.0000 ns/op
+OverheadActual   4: 1 op, 500.00 ns, 500.0000 ns/op
+OverheadActual   5: 1 op, 461.00 ns, 461.0000 ns/op
+OverheadActual   6: 1 op, 494.00 ns, 494.0000 ns/op
+OverheadActual   7: 1 op, 505.00 ns, 505.0000 ns/op
+OverheadActual   8: 1 op, 512.00 ns, 512.0000 ns/op
+OverheadActual   9: 1 op, 536.00 ns, 536.0000 ns/op
+OverheadActual  10: 1 op, 492.00 ns, 492.0000 ns/op
+OverheadActual  11: 1 op, 504.00 ns, 504.0000 ns/op
+OverheadActual  12: 1 op, 499.00 ns, 499.0000 ns/op
+OverheadActual  13: 1 op, 452.00 ns, 452.0000 ns/op
+OverheadActual  14: 1 op, 440.00 ns, 440.0000 ns/op
+OverheadActual  15: 1 op, 543.00 ns, 543.0000 ns/op
+OverheadActual  16: 1 op, 513.00 ns, 513.0000 ns/op
+OverheadActual  17: 1 op, 517.00 ns, 517.0000 ns/op
+OverheadActual  18: 1 op, 510.00 ns, 510.0000 ns/op
+OverheadActual  19: 1 op, 544.00 ns, 544.0000 ns/op
+OverheadActual  20: 1 op, 564.00 ns, 564.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 456577.00 ns, 456.5770 us/op
+
+WorkloadActual   1: 1 op, 311954.00 ns, 311.9540 us/op
+WorkloadActual   2: 1 op, 274243.00 ns, 274.2430 us/op
+WorkloadActual   3: 1 op, 275584.00 ns, 275.5840 us/op
+
+WorkloadResult   1: 1 op, 311443.00 ns, 311.4430 us/op
+WorkloadResult   2: 1 op, 273732.00 ns, 273.7320 us/op
+WorkloadResult   3: 1 op, 275073.00 ns, 275.0730 us/op
+// GC:  0 0 0 222688 1
+// Threading:  0 0 1
+// Exceptions:  2
+
+
+Mean = 286.749 μs, StdErr = 12.353 μs (4.31%), N = 3, StdDev = 21.396 μs
+Min = 273.732 μs, Q1 = 274.402 μs, Median = 275.073 μs, Q3 = 293.258 μs, Max = 311.443 μs
+IQR = 18.855 μs, LowerFence = 246.119 μs, UpperFence = 321.541 μs
+ConfidenceInterval = [-103.591 μs; 677.089 μs] (CI 99.9%), Margin = 390.340 μs (136.13% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 12 (46.2 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: TarBenchmarks.'Tar.GZip: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 170768.00 ns, 170.7680 us/op
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> SharpCompress.Common.IncompleteArchiveException: Failed to read TAR header
+   at SharpCompress.Archives.Tar.TarArchive.LoadEntries(IEnumerable`1 volumes)+MoveNext() in /home/runner/work/sharpcompress/sharpcompress/src/SharpCompress/Archives/Tar/TarArchive.cs:line 89
+   at SharpCompress.LazyReadOnlyCollection`1.LazyLoader.MoveNext() in /home/runner/work/sharpcompress/sharpcompress/src/SharpCompress/LazyReadOnlyCollection.cs:line 55
+   at System.Linq.Enumerable.IEnumerableWhereIterator`1.MoveNext()
+   at SharpCompress.Performance.Benchmarks.TarBenchmarks.TarGzipExtract() in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/Benchmarks/TarBenchmarks.cs:line 56
+   at BenchmarkDotNet.Autogenerated.Runnable_8.WorkloadActionUnroll(Int64 invokeCount)
+   at BenchmarkDotNet.Engines.Engine.Measure(Action`1 action, Int64 invokeCount)
+   at BenchmarkDotNet.Engines.Engine.RunIteration(IterationData data)
+   at BenchmarkDotNet.Engines.EngineFactory.Jit(Engine engine, Int32 jitIndex, Int32 invokeCount, Int32 unrollFactor)
+   at BenchmarkDotNet.Engines.EngineFactory.CreateReadyToRun(EngineParameters engineParameters)
+   at BenchmarkDotNet.Autogenerated.Runnable_8.Run(BenchmarkCase benchmarkCase, IHost host)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Toolchains.InProcess.Emit.Implementation.RunnableProgram.Run(BenchmarkId benchmarkId, Assembly partitionAssembly, BenchmarkCase benchmarkCase, IHost host)
+Executable /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/ada1d3c7-6402-4155-bc3f-20b8c92d7ab2Emitted.dll not found
+ExitCode != 0 and no results reported
+No Workload Results were obtained from the run.
+
+// ** Remained 11 (42.3 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: TarBenchmarks.'Tar: Create archive with small files': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 164888.00 ns, 164.8880 us/op
+WorkloadJitting  1: 1 op, 3391173.00 ns, 3.3912 ms/op
+
+OverheadWarmup   1: 1 op, 2439.00 ns, 2.4390 us/op
+OverheadWarmup   2: 1 op, 589.00 ns, 589.0000 ns/op
+OverheadWarmup   3: 1 op, 467.00 ns, 467.0000 ns/op
+OverheadWarmup   4: 1 op, 626.00 ns, 626.0000 ns/op
+OverheadWarmup   5: 1 op, 509.00 ns, 509.0000 ns/op
+OverheadWarmup   6: 1 op, 551.00 ns, 551.0000 ns/op
+OverheadWarmup   7: 1 op, 496.00 ns, 496.0000 ns/op
+
+OverheadActual   1: 1 op, 532.00 ns, 532.0000 ns/op
+OverheadActual   2: 1 op, 512.00 ns, 512.0000 ns/op
+OverheadActual   3: 1 op, 517.00 ns, 517.0000 ns/op
+OverheadActual   4: 1 op, 533.00 ns, 533.0000 ns/op
+OverheadActual   5: 1 op, 520.00 ns, 520.0000 ns/op
+OverheadActual   6: 1 op, 538.00 ns, 538.0000 ns/op
+OverheadActual   7: 1 op, 492.00 ns, 492.0000 ns/op
+OverheadActual   8: 1 op, 488.00 ns, 488.0000 ns/op
+OverheadActual   9: 1 op, 494.00 ns, 494.0000 ns/op
+OverheadActual  10: 1 op, 512.00 ns, 512.0000 ns/op
+OverheadActual  11: 1 op, 553.00 ns, 553.0000 ns/op
+OverheadActual  12: 1 op, 480.00 ns, 480.0000 ns/op
+OverheadActual  13: 1 op, 516.00 ns, 516.0000 ns/op
+OverheadActual  14: 1 op, 498.00 ns, 498.0000 ns/op
+OverheadActual  15: 1 op, 525.00 ns, 525.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 247401.00 ns, 247.4010 us/op
+
+WorkloadActual   1: 1 op, 147335.00 ns, 147.3350 us/op
+WorkloadActual   2: 1 op, 112730.00 ns, 112.7300 us/op
+WorkloadActual   3: 1 op, 95063.00 ns, 95.0630 us/op
+
+WorkloadResult   1: 1 op, 146819.00 ns, 146.8190 us/op
+WorkloadResult   2: 1 op, 112214.00 ns, 112.2140 us/op
+WorkloadResult   3: 1 op, 94547.00 ns, 94.5470 us/op
+// GC:  0 0 0 74296 1
+// Threading:  0 0 1
+
+
+Mean = 117.860 μs, StdErr = 15.351 μs (13.03%), N = 3, StdDev = 26.589 μs
+Min = 94.547 μs, Q1 = 103.380 μs, Median = 112.214 μs, Q3 = 129.517 μs, Max = 146.819 μs
+IQR = 26.136 μs, LowerFence = 64.177 μs, UpperFence = 168.720 μs
+ConfidenceInterval = [-367.230 μs; 602.950 μs] (CI 99.9%), Margin = 485.090 μs (411.58% of Mean)
+Skewness = 0.2, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 10 (38.5 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: TarBenchmarks.'Tar: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 134 135 --benchmarkName SharpCompress.Performance.Benchmarks.TarBenchmarks.TarExtractArchiveApi --job Dry --benchmarkId 6 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 16228514.00 ns, 16.2285 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 16228514.00 ns, 16.2285 ms/op
+// GC:  0 0 0 17248 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3783 has exited with code 0.
+
+Mean = 16.229 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 16.229 ms, Q1 = 16.229 ms, Median = 16.229 ms, Q3 = 16.229 ms, Max = 16.229 ms
+IQR = 0.000 ms, LowerFence = 16.229 ms, UpperFence = 16.229 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 9 (34.6 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: TarBenchmarks.'Tar: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 134 135 --benchmarkName SharpCompress.Performance.Benchmarks.TarBenchmarks.TarExtractReaderApi --job Dry --benchmarkId 7 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 24382981.00 ns, 24.3830 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 24382981.00 ns, 24.3830 ms/op
+// GC:  0 0 0 218704 1
+// Threading:  0 0 1
+// Exceptions:  2
+
+// AfterAll
+// Benchmark Process 3790 has exited with code 0.
+
+Mean = 24.383 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 24.383 ms, Q1 = 24.383 ms, Median = 24.383 ms, Q3 = 24.383 ms, Max = 24.383 ms
+IQR = 0.000 ms, LowerFence = 24.383 ms, UpperFence = 24.383 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 8 (30.8 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: TarBenchmarks.'Tar.GZip: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 134 135 --benchmarkName SharpCompress.Performance.Benchmarks.TarBenchmarks.TarGzipExtract --job Dry --benchmarkId 8 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.
+ ---> SharpCompress.Common.IncompleteArchiveException: Failed to read TAR header
+   at SharpCompress.Archives.Tar.TarArchive.LoadEntries(IEnumerable`1 volumes)+MoveNext() in /home/runner/work/sharpcompress/sharpcompress/src/SharpCompress/Archives/Tar/TarArchive.cs:line 89
+   at SharpCompress.LazyReadOnlyCollection`1.LazyLoader.MoveNext() in /home/runner/work/sharpcompress/sharpcompress/src/SharpCompress/LazyReadOnlyCollection.cs:line 55
+   at System.Linq.Enumerable.IEnumerableWhereIterator`1.MoveNext()
+   at SharpCompress.Performance.Benchmarks.TarBenchmarks.TarGzipExtract() in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/Benchmarks/TarBenchmarks.cs:line 56
+   at BenchmarkDotNet.Autogenerated.Runnable_8.WorkloadActionUnroll(Int64 invokeCount) in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/049fb6de-087d-4acd-af24-151f82ab6bba.notcs:line 1612
+   at BenchmarkDotNet.Engines.Engine.Measure(Action`1 action, Int64 invokeCount)
+   at BenchmarkDotNet.Engines.Engine.RunIteration(IterationData data)
+   at BenchmarkDotNet.Engines.EngineStage.RunIteration(IterationMode mode, IterationStage stage, Int32 index, Int64 invokeCount, Int32 unrollFactor)
+   at BenchmarkDotNet.Engines.EngineActualStage.RunSpecific(Int64 invokeCount, IterationMode iterationMode, Int32 iterationCount, Int32 unrollFactor)
+   at BenchmarkDotNet.Engines.EngineActualStage.Run(Int64 invokeCount, IterationMode iterationMode, Boolean runAuto, Int32 unrollFactor, Boolean forceSpecific)
+   at BenchmarkDotNet.Engines.EngineActualStage.RunWorkload(Int64 invokeCount, Int32 unrollFactor, Boolean forceSpecific)
+   at BenchmarkDotNet.Engines.Engine.Run()
+   at BenchmarkDotNet.Autogenerated.Runnable_8.Run(IHost host, String benchmarkName) in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/049fb6de-087d-4acd-af24-151f82ab6bba.notcs:line 1519
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   --- End of inner exception stack trace ---
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at BenchmarkDotNet.Autogenerated.UniqueProgramName.AfterAssemblyLoadingAttached(String[] args) in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/049fb6de-087d-4acd-af24-151f82ab6bba.notcs:line 57
+// AfterAll
+No Workload Results were obtained from the run.
+// Benchmark Process 3797 has exited with code 255.
+
+// ** Remained 7 (26.9 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: TarBenchmarks.'Tar: Create archive with small files': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 134 135 --benchmarkName SharpCompress.Performance.Benchmarks.TarBenchmarks.TarCreateSmallFiles --job Dry --benchmarkId 9 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 8466092.00 ns, 8.4661 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 8466092.00 ns, 8.4661 ms/op
+// GC:  0 0 0 70024 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3804 has exited with code 0.
+
+Mean = 8.466 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 8.466 ms, Q1 = 8.466 ms, Median = 8.466 ms, Q3 = 8.466 ms, Max = 8.466 ms
+IQR = 0.000 ms, LowerFence = 8.466 ms, UpperFence = 8.466 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 6 (23.1 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.TarBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.TarBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.TarBenchmarks-report.html
+
+// * Detailed results *
+TarBenchmarks.'Tar: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 128.435 μs, StdErr = 14.314 μs (11.15%), N = 3, StdDev = 24.793 μs
+Min = 111.960 μs, Q1 = 114.178 μs, Median = 116.396 μs, Q3 = 136.673 μs, Max = 156.949 μs
+IQR = 22.494 μs, LowerFence = 80.436 μs, UpperFence = 170.414 μs
+ConfidenceInterval = [-323.886 μs; 580.756 μs] (CI 99.9%), Margin = 452.321 μs (352.18% of Mean)
+Skewness = 0.37, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[111.892 μs ; 157.017 μs) | @@@
+---------------------------------------------------
+
+TarBenchmarks.'Tar: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 286.749 μs, StdErr = 12.353 μs (4.31%), N = 3, StdDev = 21.396 μs
+Min = 273.732 μs, Q1 = 274.402 μs, Median = 275.073 μs, Q3 = 293.258 μs, Max = 311.443 μs
+IQR = 18.855 μs, LowerFence = 246.119 μs, UpperFence = 321.541 μs
+ConfidenceInterval = [-103.591 μs; 677.089 μs] (CI 99.9%), Margin = 390.340 μs (136.13% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[273.116 μs ; 312.059 μs) | @@@
+---------------------------------------------------
+
+TarBenchmarks.'Tar.GZip: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+There are not any results runs
+
+TarBenchmarks.'Tar: Create archive with small files': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 117.860 μs, StdErr = 15.351 μs (13.03%), N = 3, StdDev = 26.589 μs
+Min = 94.547 μs, Q1 = 103.380 μs, Median = 112.214 μs, Q3 = 129.517 μs, Max = 146.819 μs
+IQR = 26.136 μs, LowerFence = 64.177 μs, UpperFence = 168.720 μs
+ConfidenceInterval = [-367.230 μs; 602.950 μs] (CI 99.9%), Margin = 485.090 μs (411.58% of Mean)
+Skewness = 0.2, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[ 79.183 μs ; 127.578 μs) | @@
+[127.578 μs ; 171.016 μs) | @
+---------------------------------------------------
+
+TarBenchmarks.'Tar: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 16.229 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 16.229 ms, Q1 = 16.229 ms, Median = 16.229 ms, Q3 = 16.229 ms, Max = 16.229 ms
+IQR = 0.000 ms, LowerFence = 16.229 ms, UpperFence = 16.229 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[16.229 ms ; 16.229 ms) | @
+---------------------------------------------------
+
+TarBenchmarks.'Tar: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 24.383 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 24.383 ms, Q1 = 24.383 ms, Median = 24.383 ms, Q3 = 24.383 ms, Max = 24.383 ms
+IQR = 0.000 ms, LowerFence = 24.383 ms, UpperFence = 24.383 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[24.383 ms ; 24.383 ms) | @
+---------------------------------------------------
+
+TarBenchmarks.'Tar.GZip: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+There are not any results runs
+
+TarBenchmarks.'Tar: Create archive with small files': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 8.466 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 8.466 ms, Q1 = 8.466 ms, Median = 8.466 ms, Q3 = 8.466 ms, Max = 8.466 ms
+IQR = 0.000 ms, LowerFence = 8.466 ms, UpperFence = 8.466 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[8.466 ms ; 8.466 ms) | @
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.14.0, Ubuntu 24.04.3 LTS (Noble Numbat)
+Intel Xeon Platinum 8370C CPU 2.80GHz, 1 CPU, 4 logical and 2 physical cores
+.NET SDK 10.0.102
+  [Host] : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+  Dry    : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+
+UnrollFactor=1  WarmupCount=1  
+
+| Method                                   | Job        | Toolchain              | InvocationCount | IterationCount | LaunchCount | RunStrategy | Mean        | Error    | StdDev   | Allocated |
+|----------------------------------------- |----------- |----------------------- |---------------- |--------------- |------------ |------------ |------------:|---------:|---------:|----------:|
+| 'Tar: Extract all entries (Archive API)' | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |    128.4 μs | 452.3 μs | 24.79 μs |  20.73 KB |
+| 'Tar: Extract all entries (Reader API)'  | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |    286.7 μs | 390.3 μs | 21.40 μs | 217.47 KB |
+| 'Tar.GZip: Extract all entries'          | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |          NA |       NA |       NA |        NA |
+| 'Tar: Create archive with small files'   | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |    117.9 μs | 485.1 μs | 26.59 μs |  72.55 KB |
+| 'Tar: Extract all entries (Archive API)' | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 16,228.5 μs |       NA |  0.00 μs |  16.84 KB |
+| 'Tar: Extract all entries (Reader API)'  | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 24,383.0 μs |       NA |  0.00 μs | 213.58 KB |
+| 'Tar.GZip: Extract all entries'          | Dry        | Default                | Default         | 1              | 1           | ColdStart   |          NA |       NA |       NA |        NA |
+| 'Tar: Create archive with small files'   | Dry        | Default                | Default         | 1              | 1           | ColdStart   |  8,466.1 μs |       NA |  0.00 μs |  68.38 KB |
+
+Benchmarks with issues:
+  TarBenchmarks.'Tar.GZip: Extract all entries': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+  TarBenchmarks.'Tar.GZip: Extract all entries': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// * Warnings *
+MinIterationTime
+  TarBenchmarks.'Tar: Extract all entries (Archive API)': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1 -> The minimum observed iteration time is 112.502μs which is very small. It's recommended to increase it to at least 100ms using more operations.
+  TarBenchmarks.'Tar: Extract all entries (Reader API)': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1  -> The minimum observed iteration time is 274.243μs which is very small. It's recommended to increase it to at least 100ms using more operations.
+  TarBenchmarks.'Tar: Create archive with small files': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1   -> The minimum observed iteration time is 95.063μs which is very small. It's recommended to increase it to at least 100ms using more operations.
+  TarBenchmarks.'Tar: Extract all entries (Archive API)': Dry                                                                                                  -> The minimum observed iteration time is 16.229ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  TarBenchmarks.'Tar: Extract all entries (Reader API)': Dry                                                                                                   -> The minimum observed iteration time is 24.383ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  TarBenchmarks.'Tar: Create archive with small files': Dry                                                                                                    -> The minimum observed iteration time is 8.466ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 μs      : 1 Microsecond (0.000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:00 (0.81 sec), executed benchmarks: 7
+
+// Found 6 benchmarks:
+//   ZipBenchmarks.'Zip: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   ZipBenchmarks.'Zip: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   ZipBenchmarks.'Zip: Create archive with small files': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+//   ZipBenchmarks.'Zip: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   ZipBenchmarks.'Zip: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+//   ZipBenchmarks.'Zip: Create archive with small files': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// **************************
+// Benchmark: ZipBenchmarks.'Zip: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 177708.00 ns, 177.7080 us/op
+WorkloadJitting  1: 1 op, 22112461.00 ns, 22.1125 ms/op
+
+OverheadWarmup   1: 1 op, 3816.00 ns, 3.8160 us/op
+OverheadWarmup   2: 1 op, 1054.00 ns, 1.0540 us/op
+OverheadWarmup   3: 1 op, 842.00 ns, 842.0000 ns/op
+OverheadWarmup   4: 1 op, 976.00 ns, 976.0000 ns/op
+OverheadWarmup   5: 1 op, 953.00 ns, 953.0000 ns/op
+OverheadWarmup   6: 1 op, 776.00 ns, 776.0000 ns/op
+OverheadWarmup   7: 1 op, 883.00 ns, 883.0000 ns/op
+OverheadWarmup   8: 1 op, 987.00 ns, 987.0000 ns/op
+OverheadWarmup   9: 1 op, 740.00 ns, 740.0000 ns/op
+
+OverheadActual   1: 1 op, 708.00 ns, 708.0000 ns/op
+OverheadActual   2: 1 op, 622.00 ns, 622.0000 ns/op
+OverheadActual   3: 1 op, 827.00 ns, 827.0000 ns/op
+OverheadActual   4: 1 op, 920.00 ns, 920.0000 ns/op
+OverheadActual   5: 1 op, 749.00 ns, 749.0000 ns/op
+OverheadActual   6: 1 op, 850.00 ns, 850.0000 ns/op
+OverheadActual   7: 1 op, 834.00 ns, 834.0000 ns/op
+OverheadActual   8: 1 op, 687.00 ns, 687.0000 ns/op
+OverheadActual   9: 1 op, 698.00 ns, 698.0000 ns/op
+OverheadActual  10: 1 op, 712.00 ns, 712.0000 ns/op
+OverheadActual  11: 1 op, 682.00 ns, 682.0000 ns/op
+OverheadActual  12: 1 op, 668.00 ns, 668.0000 ns/op
+OverheadActual  13: 1 op, 877.00 ns, 877.0000 ns/op
+OverheadActual  14: 1 op, 654.00 ns, 654.0000 ns/op
+OverheadActual  15: 1 op, 760.00 ns, 760.0000 ns/op
+OverheadActual  16: 1 op, 830.00 ns, 830.0000 ns/op
+OverheadActual  17: 1 op, 867.00 ns, 867.0000 ns/op
+OverheadActual  18: 1 op, 821.00 ns, 821.0000 ns/op
+OverheadActual  19: 1 op, 1153.00 ns, 1.1530 us/op
+OverheadActual  20: 1 op, 811.00 ns, 811.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 12553795.00 ns, 12.5538 ms/op
+
+WorkloadActual   1: 1 op, 8607747.00 ns, 8.6077 ms/op
+WorkloadActual   2: 1 op, 1494161.00 ns, 1.4942 ms/op
+WorkloadActual   3: 1 op, 7386839.00 ns, 7.3868 ms/op
+
+WorkloadResult   1: 1 op, 8606961.50 ns, 8.6070 ms/op
+WorkloadResult   2: 1 op, 1493375.50 ns, 1.4934 ms/op
+WorkloadResult   3: 1 op, 7386053.50 ns, 7.3861 ms/op
+// GC:  0 0 0 191024 1
+// Threading:  0 0 1
+
+
+Mean = 5.829 ms, StdErr = 2.196 ms (37.68%), N = 3, StdDev = 3.804 ms
+Min = 1.493 ms, Q1 = 4.440 ms, Median = 7.386 ms, Q3 = 7.997 ms, Max = 8.607 ms
+IQR = 3.557 ms, LowerFence = -0.895 ms, UpperFence = 13.332 ms
+ConfidenceInterval = [-63.568 ms; 75.226 ms] (CI 99.9%), Margin = 69.397 ms (1190.59% of Mean)
+Skewness = -0.34, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 5 (19.2 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: ZipBenchmarks.'Zip: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 172498.00 ns, 172.4980 us/op
+WorkloadJitting  1: 1 op, 3351351.00 ns, 3.3514 ms/op
+
+OverheadWarmup   1: 1 op, 2460.00 ns, 2.4600 us/op
+OverheadWarmup   2: 1 op, 915.00 ns, 915.0000 ns/op
+OverheadWarmup   3: 1 op, 506.00 ns, 506.0000 ns/op
+OverheadWarmup   4: 1 op, 703.00 ns, 703.0000 ns/op
+OverheadWarmup   5: 1 op, 542.00 ns, 542.0000 ns/op
+OverheadWarmup   6: 1 op, 918.00 ns, 918.0000 ns/op
+OverheadWarmup   7: 1 op, 811.00 ns, 811.0000 ns/op
+
+OverheadActual   1: 1 op, 808.00 ns, 808.0000 ns/op
+OverheadActual   2: 1 op, 894.00 ns, 894.0000 ns/op
+OverheadActual   3: 1 op, 570.00 ns, 570.0000 ns/op
+OverheadActual   4: 1 op, 787.00 ns, 787.0000 ns/op
+OverheadActual   5: 1 op, 595.00 ns, 595.0000 ns/op
+OverheadActual   6: 1 op, 610.00 ns, 610.0000 ns/op
+OverheadActual   7: 1 op, 768.00 ns, 768.0000 ns/op
+OverheadActual   8: 1 op, 560.00 ns, 560.0000 ns/op
+OverheadActual   9: 1 op, 725.00 ns, 725.0000 ns/op
+OverheadActual  10: 1 op, 814.00 ns, 814.0000 ns/op
+OverheadActual  11: 1 op, 551.00 ns, 551.0000 ns/op
+OverheadActual  12: 1 op, 583.00 ns, 583.0000 ns/op
+OverheadActual  13: 1 op, 577.00 ns, 577.0000 ns/op
+OverheadActual  14: 1 op, 524.00 ns, 524.0000 ns/op
+OverheadActual  15: 1 op, 632.00 ns, 632.0000 ns/op
+OverheadActual  16: 1 op, 561.00 ns, 561.0000 ns/op
+OverheadActual  17: 1 op, 531.00 ns, 531.0000 ns/op
+OverheadActual  18: 1 op, 522.00 ns, 522.0000 ns/op
+OverheadActual  19: 1 op, 835.00 ns, 835.0000 ns/op
+OverheadActual  20: 1 op, 740.00 ns, 740.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 1556754.00 ns, 1.5568 ms/op
+
+WorkloadActual   1: 1 op, 1403856.00 ns, 1.4039 ms/op
+WorkloadActual   2: 1 op, 12194741.00 ns, 12.1947 ms/op
+WorkloadActual   3: 1 op, 1336858.00 ns, 1.3369 ms/op
+
+WorkloadResult   1: 1 op, 1403253.50 ns, 1.4033 ms/op
+WorkloadResult   2: 1 op, 12194138.50 ns, 12.1941 ms/op
+WorkloadResult   3: 1 op, 1336255.50 ns, 1.3363 ms/op
+// GC:  0 0 0 131120 1
+// Threading:  0 0 1
+
+
+Mean = 4.978 ms, StdErr = 3.608 ms (72.48%), N = 3, StdDev = 6.250 ms
+Min = 1.336 ms, Q1 = 1.370 ms, Median = 1.403 ms, Q3 = 6.799 ms, Max = 12.194 ms
+IQR = 5.429 ms, LowerFence = -6.774 ms, UpperFence = 14.942 ms
+ConfidenceInterval = [-109.037 ms; 118.993 ms] (CI 99.9%), Margin = 114.015 ms (2290.43% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 4 (15.4 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: ZipBenchmarks.'Zip: Create archive with small files': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// ! Failed to set up priority High for process System.Diagnostics.Process (SharpCompress.Performance). Make sure you have the right permissions. Message: Permission denied
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+
+OverheadJitting  1: 1 op, 225554.00 ns, 225.5540 us/op
+WorkloadJitting  1: 1 op, 7425115.00 ns, 7.4251 ms/op
+
+OverheadWarmup   1: 1 op, 2693.00 ns, 2.6930 us/op
+OverheadWarmup   2: 1 op, 783.00 ns, 783.0000 ns/op
+OverheadWarmup   3: 1 op, 696.00 ns, 696.0000 ns/op
+OverheadWarmup   4: 1 op, 694.00 ns, 694.0000 ns/op
+OverheadWarmup   5: 1 op, 709.00 ns, 709.0000 ns/op
+OverheadWarmup   6: 1 op, 541.00 ns, 541.0000 ns/op
+OverheadWarmup   7: 1 op, 733.00 ns, 733.0000 ns/op
+OverheadWarmup   8: 1 op, 509.00 ns, 509.0000 ns/op
+
+OverheadActual   1: 1 op, 767.00 ns, 767.0000 ns/op
+OverheadActual   2: 1 op, 703.00 ns, 703.0000 ns/op
+OverheadActual   3: 1 op, 566.00 ns, 566.0000 ns/op
+OverheadActual   4: 1 op, 749.00 ns, 749.0000 ns/op
+OverheadActual   5: 1 op, 788.00 ns, 788.0000 ns/op
+OverheadActual   6: 1 op, 692.00 ns, 692.0000 ns/op
+OverheadActual   7: 1 op, 554.00 ns, 554.0000 ns/op
+OverheadActual   8: 1 op, 745.00 ns, 745.0000 ns/op
+OverheadActual   9: 1 op, 731.00 ns, 731.0000 ns/op
+OverheadActual  10: 1 op, 572.00 ns, 572.0000 ns/op
+OverheadActual  11: 1 op, 552.00 ns, 552.0000 ns/op
+OverheadActual  12: 1 op, 544.00 ns, 544.0000 ns/op
+OverheadActual  13: 1 op, 547.00 ns, 547.0000 ns/op
+OverheadActual  14: 1 op, 928.00 ns, 928.0000 ns/op
+OverheadActual  15: 1 op, 644.00 ns, 644.0000 ns/op
+OverheadActual  16: 1 op, 706.00 ns, 706.0000 ns/op
+OverheadActual  17: 1 op, 726.00 ns, 726.0000 ns/op
+OverheadActual  18: 1 op, 776.00 ns, 776.0000 ns/op
+OverheadActual  19: 1 op, 593.00 ns, 593.0000 ns/op
+OverheadActual  20: 1 op, 621.00 ns, 621.0000 ns/op
+
+WorkloadWarmup   1: 1 op, 2058827.00 ns, 2.0588 ms/op
+
+WorkloadActual   1: 1 op, 1890019.00 ns, 1.8900 ms/op
+WorkloadActual   2: 1 op, 864212.00 ns, 864.2120 us/op
+WorkloadActual   3: 1 op, 771494.00 ns, 771.4940 us/op
+
+WorkloadResult   1: 1 op, 1889321.50 ns, 1.8893 ms/op
+WorkloadResult   2: 1 op, 863514.50 ns, 863.5145 us/op
+WorkloadResult   3: 1 op, 770796.50 ns, 770.7965 us/op
+// GC:  0 0 0 2879928 1
+// Threading:  0 0 1
+
+
+Mean = 1.175 ms, StdErr = 0.358 ms (30.51%), N = 3, StdDev = 0.621 ms
+Min = 0.771 ms, Q1 = 0.817 ms, Median = 0.864 ms, Q3 = 1.376 ms, Max = 1.889 ms
+IQR = 0.559 ms, LowerFence = -0.022 ms, UpperFence = 2.215 ms
+ConfidenceInterval = [-10.150 ms; 12.499 ms] (CI 99.9%), Margin = 11.325 ms (964.18% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 3 (11.5 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: ZipBenchmarks.'Zip: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 134 135 --benchmarkName SharpCompress.Performance.Benchmarks.ZipBenchmarks.ZipExtractArchiveApi --job Dry --benchmarkId 10 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 43780735.00 ns, 43.7807 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 43780735.00 ns, 43.7807 ms/op
+// GC:  0 0 0 187040 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3814 has exited with code 0.
+
+Mean = 43.781 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 43.781 ms, Q1 = 43.781 ms, Median = 43.781 ms, Q3 = 43.781 ms, Max = 43.781 ms
+IQR = 0.000 ms, LowerFence = 43.781 ms, UpperFence = 43.781 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 2 (7.7 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: ZipBenchmarks.'Zip: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 134 135 --benchmarkName SharpCompress.Performance.Benchmarks.ZipBenchmarks.ZipExtractReaderApi --job Dry --benchmarkId 11 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 38884810.00 ns, 38.8848 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 38884810.00 ns, 38.8848 ms/op
+// GC:  0 0 0 126848 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3821 has exited with code 0.
+
+Mean = 38.885 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 38.885 ms, Q1 = 38.885 ms, Median = 38.885 ms, Q3 = 38.885 ms, Max = 38.885 ms
+IQR = 0.000 ms, LowerFence = 38.885 ms, UpperFence = 38.885 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 1 (3.8 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: ZipBenchmarks.'Zip: Create archive with small files': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet 049fb6de-087d-4acd-af24-151f82ab6bba.dll --anonymousPipes 134 135 --benchmarkName SharpCompress.Performance.Benchmarks.ZipBenchmarks.ZipCreateSmallFiles --job Dry --benchmarkId 12 in /home/runner/work/sharpcompress/sharpcompress/tests/SharpCompress.Performance/bin/Release/net10.0/049fb6de-087d-4acd-af24-151f82ab6bba/bin/Release/net10.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.14.0
+// Runtime=.NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX-512F+CD+BW+DQ+VL+VBMI,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+
+// BeforeActualRun
+WorkloadActual   1: 1 op, 23152750.00 ns, 23.1528 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 1 op, 23152750.00 ns, 23.1528 ms/op
+// GC:  0 0 0 2875944 1
+// Threading:  0 0 1
+
+// AfterAll
+// Benchmark Process 3828 has exited with code 0.
+
+Mean = 23.153 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 23.153 ms, Q1 = 23.153 ms, Median = 23.153 ms, Q3 = 23.153 ms, Max = 23.153 ms
+IQR = 0.000 ms, LowerFence = 23.153 ms, UpperFence = 23.153 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+
+// ** Remained 0 (0.0 %) benchmark(s) to run. Estimated finish 2026-02-05 13:30 (0h 0m from now) **
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.ZipBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.ZipBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts/results/SharpCompress.Performance.Benchmarks.ZipBenchmarks-report.html
+
+// * Detailed results *
+ZipBenchmarks.'Zip: Extract all entries (Archive API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 5.829 ms, StdErr = 2.196 ms (37.68%), N = 3, StdDev = 3.804 ms
+Min = 1.493 ms, Q1 = 4.440 ms, Median = 7.386 ms, Q3 = 7.997 ms, Max = 8.607 ms
+IQR = 3.557 ms, LowerFence = -0.895 ms, UpperFence = 13.332 ms
+ConfidenceInterval = [-63.568 ms; 75.226 ms] (CI 99.9%), Margin = 69.397 ms (1190.59% of Mean)
+Skewness = -0.34, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[-1.968 ms ;  4.535 ms) | @
+[ 4.535 ms ; 12.069 ms) | @@
+---------------------------------------------------
+
+ZipBenchmarks.'Zip: Extract all entries (Reader API)': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 4.978 ms, StdErr = 3.608 ms (72.48%), N = 3, StdDev = 6.250 ms
+Min = 1.336 ms, Q1 = 1.370 ms, Median = 1.403 ms, Q3 = 6.799 ms, Max = 12.194 ms
+IQR = 5.429 ms, LowerFence = -6.774 ms, UpperFence = 14.942 ms
+ConfidenceInterval = [-109.037 ms; 118.993 ms] (CI 99.9%), Margin = 114.015 ms (2290.43% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[1.078 ms ; 12.453 ms) | @@@
+---------------------------------------------------
+
+ZipBenchmarks.'Zip: Create archive with small files': Job-QHCVAS(Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1)
+Runtime = ; GC = 
+Mean = 1.175 ms, StdErr = 0.358 ms (30.51%), N = 3, StdDev = 0.621 ms
+Min = 0.771 ms, Q1 = 0.817 ms, Median = 0.864 ms, Q3 = 1.376 ms, Max = 1.889 ms
+IQR = 0.559 ms, LowerFence = -0.022 ms, UpperFence = 2.215 ms
+ConfidenceInterval = [-10.150 ms; 12.499 ms] (CI 99.9%), Margin = 11.325 ms (964.18% of Mean)
+Skewness = 0.38, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[0.765 ms ; 1.895 ms) | @@@
+---------------------------------------------------
+
+ZipBenchmarks.'Zip: Extract all entries (Archive API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 43.781 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 43.781 ms, Q1 = 43.781 ms, Median = 43.781 ms, Q3 = 43.781 ms, Max = 43.781 ms
+IQR = 0.000 ms, LowerFence = 43.781 ms, UpperFence = 43.781 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[43.781 ms ; 43.781 ms) | @
+---------------------------------------------------
+
+ZipBenchmarks.'Zip: Extract all entries (Reader API)': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 38.885 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 38.885 ms, Q1 = 38.885 ms, Median = 38.885 ms, Q3 = 38.885 ms, Max = 38.885 ms
+IQR = 0.000 ms, LowerFence = 38.885 ms, UpperFence = 38.885 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[38.885 ms ; 38.885 ms) | @
+---------------------------------------------------
+
+ZipBenchmarks.'Zip: Create archive with small files': Dry(IterationCount=1, LaunchCount=1, RunStrategy=ColdStart, UnrollFactor=1, WarmupCount=1)
+Runtime = .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI; GC = Concurrent Workstation
+Mean = 23.153 ms, StdErr = 0.000 ms (0.00%), N = 1, StdDev = 0.000 ms
+Min = 23.153 ms, Q1 = 23.153 ms, Median = 23.153 ms, Q3 = 23.153 ms, Max = 23.153 ms
+IQR = 0.000 ms, LowerFence = 23.153 ms, UpperFence = 23.153 ms
+ConfidenceInterval = [NaN ms; NaN ms] (CI 99.9%), Margin = NaN ms (NaN% of Mean)
+Skewness = NaN, Kurtosis = NaN, MValue = 2
+-------------------- Histogram --------------------
+[23.153 ms ; 23.153 ms) | @
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.14.0, Ubuntu 24.04.3 LTS (Noble Numbat)
+Intel Xeon Platinum 8370C CPU 2.80GHz, 1 CPU, 4 logical and 2 physical cores
+.NET SDK 10.0.102
+  [Host] : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+  Dry    : .NET 10.0.2 (10.0.225.61305), X64 RyuJIT AVX-512F+CD+BW+DQ+VL+VBMI
+
+UnrollFactor=1  WarmupCount=1  
+
+| Method                                   | Job        | Toolchain              | InvocationCount | IterationCount | LaunchCount | RunStrategy | Mean      | Error      | StdDev    | Median     | Allocated  |
+|----------------------------------------- |----------- |----------------------- |---------------- |--------------- |------------ |------------ |----------:|-----------:|----------:|-----------:|-----------:|
+| 'Zip: Extract all entries (Archive API)' | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |  5.829 ms |  69.397 ms | 3.8039 ms |  7.3861 ms |  186.55 KB |
+| 'Zip: Extract all entries (Reader API)'  | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |  4.978 ms | 114.015 ms | 6.2496 ms |  1.4033 ms |  128.05 KB |
+| 'Zip: Create archive with small files'   | Job-QHCVAS | InProcessEmitToolchain | 1               | 3              | Default     | Default     |  1.175 ms |  11.325 ms | 0.6207 ms |  0.8635 ms | 2812.43 KB |
+| 'Zip: Extract all entries (Archive API)' | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 43.781 ms |         NA | 0.0000 ms | 43.7807 ms |  182.66 KB |
+| 'Zip: Extract all entries (Reader API)'  | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 38.885 ms |         NA | 0.0000 ms | 38.8848 ms |  123.88 KB |
+| 'Zip: Create archive with small files'   | Dry        | Default                | Default         | 1              | 1           | ColdStart   | 23.153 ms |         NA | 0.0000 ms | 23.1528 ms | 2808.54 KB |
+
+// * Warnings *
+MinIterationTime
+  ZipBenchmarks.'Zip: Extract all entries (Archive API)': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1 -> The minimum observed iteration time is 1.494ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  ZipBenchmarks.'Zip: Extract all entries (Reader API)': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1  -> The minimum observed iteration time is 1.337ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  ZipBenchmarks.'Zip: Create archive with small files': Toolchain=InProcessEmitToolchain, InvocationCount=1, IterationCount=3, UnrollFactor=1, WarmupCount=1   -> The minimum observed iteration time is 771.494μs which is very small. It's recommended to increase it to at least 100ms using more operations.
+  ZipBenchmarks.'Zip: Extract all entries (Archive API)': Dry                                                                                                  -> The minimum observed iteration time is 43.781ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  ZipBenchmarks.'Zip: Extract all entries (Reader API)': Dry                                                                                                   -> The minimum observed iteration time is 38.885ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+  ZipBenchmarks.'Zip: Create archive with small files': Dry                                                                                                    -> The minimum observed iteration time is 23.153ms which is very small. It's recommended to increase it to at least 100ms using more operations.
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Median    : Value separating the higher half of all measurements (50th percentile)
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 ms      : 1 Millisecond (0.001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:00 (0.81 sec), executed benchmarks: 6
+
+Global total time: 00:00:21 (21.38 sec), executed benchmarks: 25
+// * Artifacts cleanup *
+Artifacts cleanup is finished
