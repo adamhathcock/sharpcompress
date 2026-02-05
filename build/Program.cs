@@ -270,42 +270,133 @@ Target(
     {
         var githubStepSummary = Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY");
         var baselinePath = "tests/SharpCompress.Performance/baseline-results.md";
+        var resultsDir = "benchmark-results/results";
 
-        var output = new List<string>
-        {
-            "## Comparison with Baseline",
-            "",
-            "Baseline results are stored in tests/SharpCompress.Performance/baseline-results.md",
-            "",
-            "### Baseline Results",
-        };
+        var output = new List<string> { "## Comparison with Baseline", "" };
 
-        if (File.Exists(baselinePath))
-        {
-            Console.WriteLine($"Reading baseline from {baselinePath}");
-            var baselineContent = File.ReadAllLines(baselinePath);
-            output.AddRange(baselineContent);
-        }
-        else
+        if (!File.Exists(baselinePath))
         {
             Console.WriteLine("Baseline file not found");
-            output.Add("Baseline file not found");
+            output.Add("⚠️ Baseline file not found. Run `generate-baseline` to create it.");
+            WriteOutput(output, githubStepSummary);
+            return;
         }
 
-        // Write to GitHub Step Summary if available
-        if (!string.IsNullOrEmpty(githubStepSummary))
+        if (!Directory.Exists(resultsDir))
         {
-            File.AppendAllLines(githubStepSummary, output);
-            Console.WriteLine("Baseline comparison written to GitHub Step Summary");
+            Console.WriteLine("No current benchmark results found.");
+            output.Add("⚠️ No current benchmark results found. Showing baseline only.");
+            output.Add("");
+            output.Add("### Baseline Results");
+            output.AddRange(File.ReadAllLines(baselinePath));
+            WriteOutput(output, githubStepSummary);
+            return;
+        }
+
+        var markdownFiles = Directory
+            .GetFiles(resultsDir, "*-report-github.md")
+            .OrderBy(f => f)
+            .ToList();
+
+        if (markdownFiles.Count == 0)
+        {
+            Console.WriteLine("No current benchmark markdown reports found.");
+            output.Add("⚠️ No current benchmark results found. Showing baseline only.");
+            output.Add("");
+            output.Add("### Baseline Results");
+            output.AddRange(File.ReadAllLines(baselinePath));
+            WriteOutput(output, githubStepSummary);
+            return;
+        }
+
+        Console.WriteLine("Parsing baseline results...");
+        var baselineMetrics = ParseBenchmarkResults(File.ReadAllText(baselinePath));
+
+        Console.WriteLine("Parsing current results...");
+        var currentText = string.Join("\n", markdownFiles.Select(f => File.ReadAllText(f)));
+        var currentMetrics = ParseBenchmarkResults(currentText);
+
+        Console.WriteLine("Comparing results...");
+        output.Add("### Performance Comparison");
+        output.Add("");
+        output.Add(
+            "| Benchmark | Baseline Mean | Current Mean | Change | Baseline Memory | Current Memory | Change |"
+        );
+        output.Add(
+            "|-----------|---------------|--------------|--------|-----------------|----------------|--------|"
+        );
+
+        var hasRegressions = false;
+        var hasImprovements = false;
+
+        foreach (var method in currentMetrics.Keys.Union(baselineMetrics.Keys).OrderBy(k => k))
+        {
+            var hasCurrent = currentMetrics.TryGetValue(method, out var current);
+            var hasBaseline = baselineMetrics.TryGetValue(method, out var baseline);
+
+            if (!hasCurrent)
+            {
+                output.Add(
+                    $"| {method} | {baseline!.Mean} | ❌ Missing | N/A | {baseline.Memory} | N/A | N/A |"
+                );
+                continue;
+            }
+
+            if (!hasBaseline)
+            {
+                output.Add(
+                    $"| {method} | ❌ New | {current!.Mean} | N/A | N/A | {current.Memory} | N/A |"
+                );
+                continue;
+            }
+
+            var timeChange = CalculateChange(baseline!.MeanValue, current!.MeanValue);
+            var memChange = CalculateChange(baseline.MemoryValue, current.MemoryValue);
+
+            var timeIcon =
+                timeChange > 10 ? "🔴"
+                : timeChange < -10 ? "🟢"
+                : "⚪";
+            var memIcon =
+                memChange > 10 ? "🔴"
+                : memChange < -10 ? "🟢"
+                : "⚪";
+
+            if (timeChange > 10 || memChange > 10)
+                hasRegressions = true;
+            if (timeChange < -10 || memChange < -10)
+                hasImprovements = true;
+
+            output.Add(
+                $"| {method} | {baseline.Mean} | {current.Mean} | {timeIcon} {timeChange:+0.0;-0.0;0}% | {baseline.Memory} | {current.Memory} | {memIcon} {memChange:+0.0;-0.0;0}% |"
+            );
+        }
+
+        output.Add("");
+        output.Add("**Legend:**");
+        output.Add("- 🔴 Regression (>10% slower/more memory)");
+        output.Add("- 🟢 Improvement (>10% faster/less memory)");
+        output.Add("- ⚪ No significant change");
+
+        if (hasRegressions)
+        {
+            output.Add("");
+            output.Add(
+                "⚠️ **Warning**: Performance regressions detected. Review the changes carefully."
+            );
+        }
+        else if (hasImprovements)
+        {
+            output.Add("");
+            output.Add("✅ Performance improvements detected!");
         }
         else
         {
-            // Write to console if not in GitHub Actions
-            foreach (var line in output)
-            {
-                Console.WriteLine(line);
-            }
+            output.Add("");
+            output.Add("✅ Performance is stable compared to baseline.");
         }
+
+        WriteOutput(output, githubStepSummary);
     }
 );
 
@@ -456,4 +547,143 @@ static async Task<string> GetGitOutput(string command, string args)
     {
         throw new Exception($"Git command failed: git {command} {args}\n{ex.Message}", ex);
     }
+}
+
+static void WriteOutput(List<string> output, string? githubStepSummary)
+{
+    if (!string.IsNullOrEmpty(githubStepSummary))
+    {
+        File.AppendAllLines(githubStepSummary, output);
+        Console.WriteLine("Comparison written to GitHub Step Summary");
+    }
+    else
+    {
+        foreach (var line in output)
+        {
+            Console.WriteLine(line);
+        }
+    }
+}
+
+static Dictionary<string, BenchmarkMetric> ParseBenchmarkResults(string markdown)
+{
+    var metrics = new Dictionary<string, BenchmarkMetric>();
+    var lines = markdown.Split('\n');
+
+    for (int i = 0; i < lines.Length; i++)
+    {
+        var line = lines[i].Trim();
+
+        // Look for table rows with benchmark data
+        if (line.StartsWith("|") && line.Contains("&#39;") && i > 0)
+        {
+            var parts = line.Split('|', StringSplitOptions.TrimEntries);
+            if (parts.Length >= 5)
+            {
+                var method = parts[1].Replace("&#39;", "'");
+                var meanStr = parts[2];
+
+                // Find Allocated column - it's usually the last column or labeled "Allocated"
+                string memoryStr = "N/A";
+                for (int j = parts.Length - 2; j >= 2; j--)
+                {
+                    if (
+                        parts[j].Contains("KB")
+                        || parts[j].Contains("MB")
+                        || parts[j].Contains("GB")
+                        || parts[j].Contains("B")
+                    )
+                    {
+                        memoryStr = parts[j];
+                        break;
+                    }
+                }
+
+                if (
+                    !method.Equals("Method", StringComparison.OrdinalIgnoreCase)
+                    && !string.IsNullOrWhiteSpace(method)
+                )
+                {
+                    var metric = new BenchmarkMetric
+                    {
+                        Method = method,
+                        Mean = meanStr,
+                        MeanValue = ParseTimeValue(meanStr),
+                        Memory = memoryStr,
+                        MemoryValue = ParseMemoryValue(memoryStr),
+                    };
+                    metrics[method] = metric;
+                }
+            }
+        }
+    }
+
+    return metrics;
+}
+
+static double ParseTimeValue(string timeStr)
+{
+    if (string.IsNullOrWhiteSpace(timeStr) || timeStr == "N/A" || timeStr == "NA")
+        return 0;
+
+    // Remove thousands separators and parse
+    timeStr = timeStr.Replace(",", "").Trim();
+
+    var match = Regex.Match(timeStr, @"([\d.]+)\s*(\w+)");
+    if (!match.Success)
+        return 0;
+
+    var value = double.Parse(match.Groups[1].Value);
+    var unit = match.Groups[2].Value.ToLower();
+
+    // Convert to microseconds for comparison
+    return unit switch
+    {
+        "s" => value * 1_000_000,
+        "ms" => value * 1_000,
+        "μs" or "us" => value,
+        "ns" => value / 1_000,
+        _ => value,
+    };
+}
+
+static double ParseMemoryValue(string memStr)
+{
+    if (string.IsNullOrWhiteSpace(memStr) || memStr == "N/A" || memStr == "NA")
+        return 0;
+
+    memStr = memStr.Replace(",", "").Trim();
+
+    var match = Regex.Match(memStr, @"([\d.]+)\s*(\w+)");
+    if (!match.Success)
+        return 0;
+
+    var value = double.Parse(match.Groups[1].Value);
+    var unit = match.Groups[2].Value.ToUpper();
+
+    // Convert to KB for comparison
+    return unit switch
+    {
+        "GB" => value * 1_024 * 1_024,
+        "MB" => value * 1_024,
+        "KB" => value,
+        "B" => value / 1_024,
+        _ => value,
+    };
+}
+
+static double CalculateChange(double baseline, double current)
+{
+    if (baseline == 0)
+        return 0;
+    return ((current - baseline) / baseline) * 100;
+}
+
+record BenchmarkMetric
+{
+    public string Method { get; init; } = "";
+    public string Mean { get; init; } = "";
+    public double MeanValue { get; init; }
+    public string Memory { get; init; } = "";
+    public double MemoryValue { get; init; }
 }
