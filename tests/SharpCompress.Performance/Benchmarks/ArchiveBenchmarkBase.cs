@@ -23,8 +23,7 @@ public abstract class ArchiveBenchmarkBase
         }
 
         var path = baseDirectory.Substring(0, index);
-        var solutionBasePath =
-            Path.GetDirectoryName(path) ?? throw new InvalidOperationException();
+        var solutionBasePath = Path.GetDirectoryName(path) ?? throw new InvalidOperationException();
         TEST_ARCHIVES_PATH = Path.Combine(solutionBasePath, "TestArchives", "Archives");
 
         if (!Directory.Exists(TEST_ARCHIVES_PATH))

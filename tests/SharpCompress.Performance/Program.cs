@@ -9,17 +9,14 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var config = DefaultConfig
-            .Instance.AddJob(
-                Job.Default
-                    .WithToolchain(InProcessEmitToolchain.Instance)
-                    .WithWarmupCount(1) // Minimal warmup iterations for CI
-                    .WithIterationCount(3) // Minimal measurement iterations for CI
-                    .WithInvocationCount(1)
-                    .WithUnrollFactor(1)
-            );
+        var config = DefaultConfig.Instance.AddJob(
+            Job.Default.WithToolchain(InProcessEmitToolchain.Instance)
+                .WithWarmupCount(3) // Minimal warmup iterations for CI
+                .WithIterationCount(10) // Minimal measurement iterations for CI
+                .WithInvocationCount(10)
+                .WithUnrollFactor(1)
+        );
 
         BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
     }
 }
-
