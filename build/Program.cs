@@ -21,6 +21,7 @@ const string UpdateVersion = "update-version";
 const string PushToNuGet = "push-to-nuget";
 const string DisplayBenchmarkResults = "display-benchmark-results";
 const string CompareBenchmarkResults = "compare-benchmark-results";
+const string GenerateBaseline = "generate-baseline";
 
 Target(
     Clean,
@@ -304,6 +305,62 @@ Target(
             {
                 Console.WriteLine(line);
             }
+        }
+    }
+);
+
+Target(
+    GenerateBaseline,
+    () =>
+    {
+        var perfProject = "tests/SharpCompress.Performance/SharpCompress.Performance.csproj";
+        var baselinePath = "tests/SharpCompress.Performance/baseline-results.md";
+        var artifactsDir = "baseline-artifacts";
+
+        Console.WriteLine("Building performance project...");
+        Run("dotnet", $"build {perfProject} --configuration Release");
+
+        Console.WriteLine("Running benchmarks to generate baseline...");
+        Run(
+            "dotnet",
+            $"run --project {perfProject} --configuration Release --no-build -- --filter \"*\" --exporters markdown --artifacts {artifactsDir}"
+        );
+
+        var resultsDir = Path.Combine(artifactsDir, "results");
+        if (!Directory.Exists(resultsDir))
+        {
+            Console.WriteLine("ERROR: No benchmark results generated.");
+            return;
+        }
+
+        var markdownFiles = Directory
+            .GetFiles(resultsDir, "*-report-github.md")
+            .OrderBy(f => f)
+            .ToList();
+
+        if (markdownFiles.Count == 0)
+        {
+            Console.WriteLine("ERROR: No markdown reports found.");
+            return;
+        }
+
+        Console.WriteLine($"Combining {markdownFiles.Count} benchmark reports...");
+        var baselineContent = new List<string>();
+
+        foreach (var file in markdownFiles)
+        {
+            var content = File.ReadAllText(file);
+            baselineContent.Add(content);
+        }
+
+        File.WriteAllText(baselinePath, string.Join(Environment.NewLine, baselineContent));
+        Console.WriteLine($"Baseline written to {baselinePath}");
+
+        // Clean up artifacts directory
+        if (Directory.Exists(artifactsDir))
+        {
+            Directory.Delete(artifactsDir, true);
+            Console.WriteLine("Cleaned up artifacts directory.");
         }
     }
 );

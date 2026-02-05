@@ -18,6 +18,8 @@ tools
 .idea/
 artifacts/
 BenchmarkDotNet.Artifacts/
+baseline-artifacts/
+profiler-snapshots/
 
 .DS_Store
 *.snupkg

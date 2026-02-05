@@ -53,10 +53,50 @@ dotnet run --project tests/SharpCompress.Performance/SharpCompress.Performance.c
 
 The baseline results are stored in `baseline-results.md` and represent the expected performance characteristics of the library. These results are used in CI to detect significant performance regressions.
 
-To update the baseline:
+### Generate Baseline (Automated)
+
+Use the build target to generate baseline results:
+```bash
+dotnet run --project build/build.csproj -- generate-baseline
+```
+
+This will:
+1. Build the performance project
+2. Run all benchmarks
+3. Combine the markdown reports into `baseline-results.md`
+4. Clean up temporary artifacts
+
+### Generate Baseline (Manual)
+
+To manually update the baseline:
 1. Run the benchmarks: `dotnet run --project tests/SharpCompress.Performance/SharpCompress.Performance.csproj --configuration Release -- --exporters markdown --artifacts baseline-output`
 2. Combine the results: `cat baseline-output/results/*-report-github.md > baseline-results.md`
 3. Review the changes and commit if appropriate
+
+## JetBrains Profiler Integration
+
+The performance project supports JetBrains profiler for detailed CPU and memory profiling during local development.
+
+### Prerequisites
+
+Install JetBrains profiler tools from: https://www.jetbrains.com/profiler/
+
+### Run with CPU Profiling
+```bash
+dotnet run --project tests/SharpCompress.Performance/SharpCompress.Performance.csproj --configuration Release -- --profile --type cpu --output ./my-cpu-snapshots
+```
+
+### Run with Memory Profiling
+```bash
+dotnet run --project tests/SharpCompress.Performance/SharpCompress.Performance.csproj --configuration Release -- --profile --type memory --output ./my-memory-snapshots
+```
+
+### Profiler Options
+- `--profile`: Enable profiler mode
+- `--type cpu|memory`: Choose profiling type (default: cpu)
+- `--output <path>`: Specify snapshot output directory (default: ./profiler-snapshots)
+
+The profiler will run a sample benchmark and save snapshots that can be opened in JetBrains profiler tools for detailed analysis.
 
 ## CI Integration
 
