@@ -14,10 +14,7 @@ internal partial class SharpCompressStream
     public static SharpCompressStream CreateNonDisposing(Stream stream) =>
         new(stream, leaveStreamOpen: true, passthrough: true, bufferSize: null);
 
-    public static SharpCompressStream Create(
-        Stream stream,
-        int? bufferSize = null
-    )
+    public static SharpCompressStream Create(Stream stream, int? bufferSize = null)
     {
         var rewindableBufferSize = bufferSize ?? Constants.RewindableBufferSize;
 
@@ -57,6 +54,6 @@ internal partial class SharpCompressStream
 
         // For non-seekable streams, create a SharpCompressStream with rolling buffer
         // to allow limited backward seeking (required by decompressors that over-read)
-        return new SharpCompressStream(stream, false,false, bufferSize);
+        return new SharpCompressStream(stream, false, false, bufferSize);
     }
 }

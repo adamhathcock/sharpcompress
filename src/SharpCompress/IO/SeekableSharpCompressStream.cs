@@ -61,8 +61,7 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
     public override int Read(Span<byte> buffer) => _stream.Read(buffer);
 #endif
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        _stream.Seek(offset, origin);
+    public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
 
     public override void SetLength(long value) => _stream.SetLength(value);
 

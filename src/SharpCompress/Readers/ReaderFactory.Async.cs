@@ -56,7 +56,7 @@ public static partial class ReaderFactory
 
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            bufferSize:options.RewindableBufferSize
+            bufferSize: options.RewindableBufferSize
         );
         sharpCompressStream.StartRecording();
 

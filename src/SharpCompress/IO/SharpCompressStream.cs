@@ -46,11 +46,15 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         _logicalPosition = 0;
     }
 
-
     /// <summary>
     /// Private constructor for passthrough mode.
     /// </summary>
-    protected SharpCompressStream(Stream stream, bool leaveStreamOpen, bool passthrough, int? bufferSize)
+    protected SharpCompressStream(
+        Stream stream,
+        bool leaveStreamOpen,
+        bool passthrough,
+        int? bufferSize
+    )
     {
         this.stream = stream;
         LeaveStreamOpen = leaveStreamOpen;
