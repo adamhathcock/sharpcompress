@@ -36,27 +36,11 @@ jobs:
     
     - name: Display Benchmark Results
       if: always()
-      run: |
-        echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        if [ -d "benchmark-results/results" ]; then
-          for file in benchmark-results/results/*-report-github.md; do
-            if [ -f "$file" ]; then
-              cat "$file" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-        fi
+      run: dotnet run --project build/build.csproj -- display-benchmark-results
     
     - name: Compare with Baseline
       if: always()
-      run: |
-        echo "## Comparison with Baseline" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Baseline results are stored in tests/SharpCompress.Performance/baseline-results.md" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### Baseline Results" >> $GITHUB_STEP_SUMMARY
-        cat tests/SharpCompress.Performance/baseline-results.md >> $GITHUB_STEP_SUMMARY || echo "Baseline file not found" >> $GITHUB_STEP_SUMMARY
+      run: dotnet run --project build/build.csproj -- compare-benchmark-results
     
     - name: Upload Benchmark Results
       if: always()

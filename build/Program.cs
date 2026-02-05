@@ -19,6 +19,8 @@ const string Publish = "publish";
 const string DetermineVersion = "determine-version";
 const string UpdateVersion = "update-version";
 const string PushToNuGet = "push-to-nuget";
+const string DisplayBenchmarkResults = "display-benchmark-results";
+const string CompareBenchmarkResults = "compare-benchmark-results";
 
 Target(
     Clean,
@@ -205,6 +207,102 @@ Target(
             {
                 Console.WriteLine($"Failed to push {package}: {ex.Message}");
                 throw;
+            }
+        }
+    }
+);
+
+Target(
+    DisplayBenchmarkResults,
+    () =>
+    {
+        var githubStepSummary = Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY");
+        var resultsDir = "benchmark-results/results";
+
+        if (!Directory.Exists(resultsDir))
+        {
+            Console.WriteLine("No benchmark results found.");
+            return;
+        }
+
+        var markdownFiles = Directory
+            .GetFiles(resultsDir, "*-report-github.md")
+            .OrderBy(f => f)
+            .ToList();
+
+        if (markdownFiles.Count == 0)
+        {
+            Console.WriteLine("No benchmark markdown reports found.");
+            return;
+        }
+
+        var output = new List<string> { "## Benchmark Results", "" };
+
+        foreach (var file in markdownFiles)
+        {
+            Console.WriteLine($"Processing {Path.GetFileName(file)}");
+            var content = File.ReadAllText(file);
+            output.Add(content);
+            output.Add("");
+        }
+
+        // Write to GitHub Step Summary if available
+        if (!string.IsNullOrEmpty(githubStepSummary))
+        {
+            File.AppendAllLines(githubStepSummary, output);
+            Console.WriteLine($"Benchmark results written to GitHub Step Summary");
+        }
+        else
+        {
+            // Write to console if not in GitHub Actions
+            foreach (var line in output)
+            {
+                Console.WriteLine(line);
+            }
+        }
+    }
+);
+
+Target(
+    CompareBenchmarkResults,
+    () =>
+    {
+        var githubStepSummary = Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY");
+        var baselinePath = "tests/SharpCompress.Performance/baseline-results.md";
+
+        var output = new List<string>
+        {
+            "## Comparison with Baseline",
+            "",
+            "Baseline results are stored in tests/SharpCompress.Performance/baseline-results.md",
+            "",
+            "### Baseline Results",
+        };
+
+        if (File.Exists(baselinePath))
+        {
+            Console.WriteLine($"Reading baseline from {baselinePath}");
+            var baselineContent = File.ReadAllLines(baselinePath);
+            output.AddRange(baselineContent);
+        }
+        else
+        {
+            Console.WriteLine("Baseline file not found");
+            output.Add("Baseline file not found");
+        }
+
+        // Write to GitHub Step Summary if available
+        if (!string.IsNullOrEmpty(githubStepSummary))
+        {
+            File.AppendAllLines(githubStepSummary, output);
+            Console.WriteLine("Baseline comparison written to GitHub Step Summary");
+        }
+        else
+        {
+            // Write to console if not in GitHub Actions
+            foreach (var line in output)
+            {
+                Console.WriteLine(line);
             }
         }
     }
