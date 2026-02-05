@@ -51,29 +51,21 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         _logicalPosition = 0;
     }
 
-    /// <summary>
-    /// Creates a SharpCompressStream with a rolling buffer that enables limited backward seeking.
-    /// </summary>
-    /// <param name="stream">The underlying stream to wrap.</param>
-    /// <param name="rollingBufferSize">Size of the rolling buffer in bytes.</param>
-    public SharpCompressStream(Stream stream, int rollingBufferSize)
-        : this(stream)
-    {
-        if (rollingBufferSize > 0)
-        {
-            _ringBuffer = new RingBuffer(rollingBufferSize);
-        }
-    }
 
     /// <summary>
     /// Private constructor for passthrough mode.
     /// </summary>
-    private SharpCompressStream(Stream stream, bool leaveStreamOpen, bool passthrough)
+    private SharpCompressStream(Stream stream, bool leaveStreamOpen, bool passthrough, int? bufferSize)
     {
         this.stream = stream;
         LeaveStreamOpen = leaveStreamOpen;
         _isPassthrough = passthrough;
         _logicalPosition = 0;
+
+        if (bufferSize.HasValue && bufferSize.Value > 0)
+        {
+            _ringBuffer = new RingBuffer(bufferSize.Value);
+        }
     }
 
     /// <summary>

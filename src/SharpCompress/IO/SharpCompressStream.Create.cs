@@ -12,14 +12,14 @@ internal partial class SharpCompressStream
     /// The underlying stream will not be disposed when this stream is disposed.
     /// </summary>
     public static SharpCompressStream CreateNonDisposing(Stream stream) =>
-        new(stream, leaveStreamOpen: true, passthrough: true);
+        new(stream, leaveStreamOpen: true, passthrough: true, bufferSize: null);
 
     public static SharpCompressStream Create(
         Stream stream,
-        int? rewindableBufferSize = null
+        int? bufferSize = null
     )
     {
-        int bufferSize = rewindableBufferSize ?? Constants.RewindableBufferSize;
+        int rewindableBufferSize = bufferSize ?? Constants.RewindableBufferSize;
 
         // If it's a passthrough SharpCompressStream, unwrap it and create proper seekable wrapper
         if (stream is SharpCompressStream sharpCompressStream)
@@ -37,7 +37,7 @@ internal partial class SharpCompressStream
                     };
                 }
                 // Non-seekable underlying stream - wrap with rolling buffer
-                return new SharpCompressStream(underlying, bufferSize) { LeaveStreamOpen = true };
+                return new SharpCompressStream(underlying, true, false, rewindableBufferSize);
             }
             // Not passthrough - return as-is
             return sharpCompressStream;
@@ -60,6 +60,6 @@ internal partial class SharpCompressStream
 
         // For non-seekable streams, create a SharpCompressStream with rolling buffer
         // to allow limited backward seeking (required by decompressors that over-read)
-        return new SharpCompressStream(stream, bufferSize);
+        return new SharpCompressStream(stream, false,false, bufferSize);
     }
 }

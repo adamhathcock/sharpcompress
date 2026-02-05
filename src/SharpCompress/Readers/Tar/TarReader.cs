@@ -59,7 +59,7 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
         options = options ?? new ReaderOptions();
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            options.RewindableBufferSize
+            bufferSize:options.RewindableBufferSize
         );
         long pos = sharpCompressStream.Position;
         if (GZipArchive.IsGZipFile(sharpCompressStream))
