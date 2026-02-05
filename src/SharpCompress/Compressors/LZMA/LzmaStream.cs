@@ -37,6 +37,13 @@ public class LzmaStream : Stream, IStreamStack
     private readonly long _outputSize;
     private readonly bool _leaveOpen;
 
+    // Maximum dictionary size to prevent OutOfMemoryException: 256MB
+    // This is a reasonable limit that balances memory usage with decompression capabilities.
+    // The LZMA spec allows up to 4GB, but such large dictionaries are rarely necessary and
+    // can cause OutOfMemoryException in memory-constrained environments (e.g., containers).
+    // Archives with larger dictionary sizes should be recreated with a smaller setting.
+    private const int MaxDictionarySize = 256 * 1024 * 1024; // 256MB
+
     private readonly int _dictionarySize;
     private readonly OutWindow _outWindow = new();
     private readonly RangeCoder.Decoder _rangeDecoder = new();
@@ -103,6 +110,25 @@ public class LzmaStream : Stream, IStreamStack
         if (!isLzma2)
         {
             _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
+
+            // Validate dictionary size
+            if (_dictionarySize < 0)
+            {
+                throw new InvalidOperationException(
+                    $"Invalid dictionary size ({_dictionarySize}). The archive may be corrupted or use an unsupported format."
+                );
+            }
+
+            // Cap dictionary size to prevent OutOfMemoryException
+            if (_dictionarySize > MaxDictionarySize)
+            {
+                throw new InvalidOperationException(
+                    $"Dictionary size ({_dictionarySize} bytes, {_dictionarySize / (1024.0 * 1024.0):F2} MB) exceeds maximum allowed size ({MaxDictionarySize} bytes, {MaxDictionarySize / (1024.0 * 1024.0):F2} MB). "
+                        + "This archive may have been created with an extremely large dictionary size setting. "
+                        + "Consider recreating the archive with a smaller dictionary size."
+                );
+            }
+
             _outWindow.Create(_dictionarySize);
             if (presetDictionary != null)
             {
@@ -122,6 +148,24 @@ public class LzmaStream : Stream, IStreamStack
         {
             _dictionarySize = 2 | (properties[0] & 1);
             _dictionarySize <<= (properties[0] >> 1) + 11;
+
+            // Validate dictionary size (check for overflow to negative)
+            if (_dictionarySize < 0)
+            {
+                throw new InvalidOperationException(
+                    $"Invalid dictionary size ({_dictionarySize}). The archive may be corrupted or use an unsupported format."
+                );
+            }
+
+            // Cap dictionary size to prevent OutOfMemoryException
+            if (_dictionarySize > MaxDictionarySize)
+            {
+                throw new InvalidOperationException(
+                    $"Dictionary size ({_dictionarySize} bytes, {_dictionarySize / (1024.0 * 1024.0):F2} MB) exceeds maximum allowed size ({MaxDictionarySize} bytes, {MaxDictionarySize / (1024.0 * 1024.0):F2} MB). "
+                        + "This archive may have been created with an extremely large dictionary size setting. "
+                        + "Consider recreating the archive with a smaller dictionary size."
+                );
+            }
 
             _outWindow.Create(_dictionarySize);
             if (presetDictionary != null)
