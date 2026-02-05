@@ -17,6 +17,7 @@ tests/TestArchives/*/Scratch2
 tools
 .idea/
 artifacts/
+BenchmarkDotNet.Artifacts/
 
 .DS_Store
 *.snupkg
