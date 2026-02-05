@@ -32,13 +32,13 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     /// <summary>
     /// Gets or sets whether to leave the underlying stream open when disposed.
     /// </summary>
-    public bool LeaveStreamOpen { get; }
+    public virtual bool LeaveStreamOpen { get; }
 
     /// <summary>
     /// Gets or sets whether to throw an exception when Dispose is called.
     /// Useful for testing to ensure streams are not disposed prematurely.
     /// </summary>
-    public bool ThrowOnDispose { get; set; }
+    public virtual bool ThrowOnDispose { get; set; }
 
     public SharpCompressStream(Stream stream)
     {

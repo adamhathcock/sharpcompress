@@ -14,13 +14,13 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
     /// <summary>
     /// Gets or sets whether to leave the underlying stream open when disposed.
     /// </summary>
-    public new bool LeaveStreamOpen { get; set; }
+    public override bool LeaveStreamOpen { get; }
 
     /// <summary>
     /// Gets or sets whether to throw an exception when Dispose is called.
     /// Useful for testing to ensure streams are not disposed prematurely.
     /// </summary>
-    public new bool ThrowOnDispose { get; set; }
+    public override bool ThrowOnDispose { get; set; }
 
     public SeekableSharpCompressStream(Stream stream)
         : base(Null, true, false, null)
