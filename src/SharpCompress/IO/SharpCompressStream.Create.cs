@@ -19,7 +19,7 @@ internal partial class SharpCompressStream
         int? bufferSize = null
     )
     {
-        int rewindableBufferSize = bufferSize ?? Constants.RewindableBufferSize;
+        var rewindableBufferSize = bufferSize ?? Constants.RewindableBufferSize;
 
         // If it's a passthrough SharpCompressStream, unwrap it and create proper seekable wrapper
         if (stream is SharpCompressStream sharpCompressStream)
@@ -31,10 +31,7 @@ internal partial class SharpCompressStream
                 if (underlying.CanSeek)
                 {
                     // Create SeekableSharpCompressStream that preserves LeaveStreamOpen
-                    return new SeekableSharpCompressStream(underlying)
-                    {
-                        LeaveStreamOpen = true, // Preserve non-disposing behavior
-                    };
+                    return new SeekableSharpCompressStream(underlying);
                 }
                 // Non-seekable underlying stream - wrap with rolling buffer
                 return new SharpCompressStream(underlying, true, false, rewindableBufferSize);

@@ -30,14 +30,9 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     internal bool IsPassthrough => _isPassthrough;
 
     /// <summary>
-    /// Default size for rolling buffer (same as .NET Stream.CopyTo default)
-    /// </summary>
-    public const int DefaultRollingBufferSize = 81920;
-
-    /// <summary>
     /// Gets or sets whether to leave the underlying stream open when disposed.
     /// </summary>
-    public bool LeaveStreamOpen { get; set; }
+    public bool LeaveStreamOpen { get; }
 
     /// <summary>
     /// Gets or sets whether to throw an exception when Dispose is called.
@@ -55,7 +50,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     /// <summary>
     /// Private constructor for passthrough mode.
     /// </summary>
-    private SharpCompressStream(Stream stream, bool leaveStreamOpen, bool passthrough, int? bufferSize)
+    protected SharpCompressStream(Stream stream, bool leaveStreamOpen, bool passthrough, int? bufferSize)
     {
         this.stream = stream;
         LeaveStreamOpen = leaveStreamOpen;
@@ -182,7 +177,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         // Ensure ring buffer exists
         if (_ringBuffer is null)
         {
-            _ringBuffer = new RingBuffer(DefaultRollingBufferSize);
+            _ringBuffer = new RingBuffer(Constants.BufferSize);
         }
 
         // Mark current position as recording anchor
@@ -193,7 +188,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
 
     public override bool CanRead => true;
 
-    public override bool CanSeek => _isPassthrough ? stream.CanSeek : true;
+    public override bool CanSeek => !_isPassthrough || stream.CanSeek;
 
     public override bool CanWrite => _isPassthrough && stream.CanWrite;
 
