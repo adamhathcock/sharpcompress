@@ -440,8 +440,8 @@ Target(
 
         foreach (var file in markdownFiles)
         {
-            var content = File.ReadAllText(file);
-            baselineContent.Add(content);
+            var lines = File.ReadAllLines(file);
+            baselineContent.AddRange(lines.Select(l => l.Trim()).Where(l => l.StartsWith('|')));
         }
 
         File.WriteAllText(baselinePath, string.Join(Environment.NewLine, baselineContent));
