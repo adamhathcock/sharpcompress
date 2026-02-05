@@ -22,7 +22,7 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
     /// </summary>
     public override bool ThrowOnDispose { get; set; }
 
-    public SeekableSharpCompressStream(Stream stream)
+    public SeekableSharpCompressStream(Stream stream, bool leaveStreamOpen = false)
         : base(Null, true, false, null)
     {
         if (stream is null)
@@ -33,6 +33,8 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
         {
             throw new ArgumentException("Stream must be seekable", nameof(stream));
         }
+
+        LeaveStreamOpen = leaveStreamOpen;
         _stream = stream;
     }
 

@@ -28,10 +28,18 @@ internal partial class SharpCompressStream
                 if (underlying.CanSeek)
                 {
                     // Create SeekableSharpCompressStream that preserves LeaveStreamOpen
-                    return new SeekableSharpCompressStream(underlying);
+                    return new SeekableSharpCompressStream(
+                        underlying,
+                        sharpCompressStream.LeaveStreamOpen
+                    );
                 }
                 // Non-seekable underlying stream - wrap with rolling buffer
-                return new SharpCompressStream(underlying, true, false, rewindableBufferSize);
+                return new SharpCompressStream(
+                    underlying,
+                    sharpCompressStream.LeaveStreamOpen,
+                    false,
+                    rewindableBufferSize
+                );
             }
             // Not passthrough - return as-is
             return sharpCompressStream;
