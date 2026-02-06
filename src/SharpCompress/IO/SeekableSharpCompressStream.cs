@@ -5,25 +5,25 @@ namespace SharpCompress.IO;
 
 internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
 {
-    public override Stream BaseStream() => _underlyingStream;
+    public override Stream BaseStream() => _stream;
 
-    private readonly Stream _underlyingStream;
+    private readonly Stream _stream;
     private long? _recordedPosition;
     private bool _isDisposed;
 
     /// <summary>
     /// Gets or sets whether to leave the underlying stream open when disposed.
     /// </summary>
-    public new bool LeaveStreamOpen { get; set; }
+    public override bool LeaveStreamOpen { get; }
 
     /// <summary>
     /// Gets or sets whether to throw an exception when Dispose is called.
     /// Useful for testing to ensure streams are not disposed prematurely.
     /// </summary>
-    public new bool ThrowOnDispose { get; set; }
+    public override bool ThrowOnDispose { get; set; }
 
-    public SeekableSharpCompressStream(Stream stream)
-        : base(new NullStream())
+    public SeekableSharpCompressStream(Stream stream, bool leaveStreamOpen = false)
+        : base(Null, true, false, null)
     {
         if (stream is null)
         {
@@ -33,44 +33,45 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
         {
             throw new ArgumentException("Stream must be seekable", nameof(stream));
         }
-        _underlyingStream = stream;
+
+        LeaveStreamOpen = leaveStreamOpen;
+        _stream = stream;
     }
 
-    public override bool CanRead => _underlyingStream.CanRead;
+    public override bool CanRead => _stream.CanRead;
 
-    public override bool CanSeek => _underlyingStream.CanSeek;
+    public override bool CanSeek => _stream.CanSeek;
 
-    public override bool CanWrite => _underlyingStream.CanWrite;
+    public override bool CanWrite => _stream.CanWrite;
 
-    public override long Length => _underlyingStream.Length;
+    public override long Length => _stream.Length;
 
     public override long Position
     {
-        get => _underlyingStream.Position;
-        set => _underlyingStream.Position = value;
+        get => _stream.Position;
+        set => _stream.Position = value;
     }
 
     internal override bool IsRecording => _recordedPosition.HasValue;
 
-    public override void Flush() => _underlyingStream.Flush();
+    public override void Flush() => _stream.Flush();
 
     public override int Read(byte[] buffer, int offset, int count) =>
-        _underlyingStream.Read(buffer, offset, count);
+        _stream.Read(buffer, offset, count);
 
 #if !LEGACY_DOTNET
-    public override int Read(Span<byte> buffer) => _underlyingStream.Read(buffer);
+    public override int Read(Span<byte> buffer) => _stream.Read(buffer);
 #endif
 
-    public override long Seek(long offset, SeekOrigin origin) =>
-        _underlyingStream.Seek(offset, origin);
+    public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
 
-    public override void SetLength(long value) => _underlyingStream.SetLength(value);
+    public override void SetLength(long value) => _stream.SetLength(value);
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        _underlyingStream.Write(buffer, offset, count);
+        _stream.Write(buffer, offset, count);
 
 #if !LEGACY_DOTNET
-    public override void Write(ReadOnlySpan<byte> buffer) => _underlyingStream.Write(buffer);
+    public override void Write(ReadOnlySpan<byte> buffer) => _stream.Write(buffer);
 #endif
 
     public override void Rewind(bool stopRecording = false)
@@ -80,22 +81,16 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
             return;
         }
 
-        _underlyingStream.Seek(_recordedPosition.Value, SeekOrigin.Begin);
+        _stream.Seek(_recordedPosition.Value, SeekOrigin.Begin);
         if (stopRecording)
         {
             _recordedPosition = null;
         }
     }
 
-    public override void StartRecording()
-    {
-        _recordedPosition = _underlyingStream.Position;
-    }
+    public override void StartRecording() => _recordedPosition = _stream.Position;
 
-    public override void StopRecording()
-    {
-        _recordedPosition = null;
-    }
+    public override void StopRecording() => _recordedPosition = null;
 
     protected override void Dispose(bool disposing)
     {
@@ -112,45 +107,8 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
         _isDisposed = true;
         if (disposing && !LeaveStreamOpen)
         {
-            _underlyingStream.Dispose();
+            _stream.Dispose();
         }
         base.Dispose(disposing);
-    }
-
-    private sealed class NullStream : Stream
-    {
-        public override bool CanRead => true;
-
-        public override bool CanSeek => false;
-
-        public override bool CanWrite => false;
-
-        public override long Length => throw new NotSupportedException();
-
-        public override long Position
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
-        }
-
-        public override void Flush() { }
-
-        public override int Read(byte[] buffer, int offset, int count) => 0;
-
-#if !LEGACY_DOTNET
-        public override int Read(Span<byte> buffer) => 0;
-#endif
-
-        public override long Seek(long offset, SeekOrigin origin) =>
-            throw new NotSupportedException();
-
-        public override void SetLength(long value) => throw new NotSupportedException();
-
-        public override void Write(byte[] buffer, int offset, int count) =>
-            throw new NotSupportedException();
-
-#if !LEGACY_DOTNET
-        public override void Write(ReadOnlySpan<byte> buffer) => throw new NotSupportedException();
-#endif
     }
 }
