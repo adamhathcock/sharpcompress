@@ -12,18 +12,18 @@ internal sealed partial class SeekableSharpCompressStream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => _underlyingStream.ReadAsync(buffer, offset, count, cancellationToken);
+    ) => _stream.ReadAsync(buffer, offset, count, cancellationToken);
 
 #if !LEGACY_DOTNET
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => _underlyingStream.ReadAsync(buffer, cancellationToken);
+    ) => _stream.ReadAsync(buffer, cancellationToken);
 
     public override ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => _underlyingStream.WriteAsync(buffer, cancellationToken);
+    ) => _stream.WriteAsync(buffer, cancellationToken);
 
     public override ValueTask DisposeAsync()
     {
@@ -40,7 +40,7 @@ internal sealed partial class SeekableSharpCompressStream
         _isDisposed = true;
         if (!LeaveStreamOpen)
         {
-            _underlyingStream.Dispose();
+            _stream.Dispose();
         }
         return base.DisposeAsync();
     }
@@ -51,14 +51,14 @@ internal sealed partial class SeekableSharpCompressStream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => _underlyingStream.WriteAsync(buffer, offset, count, cancellationToken);
+    ) => _stream.WriteAsync(buffer, offset, count, cancellationToken);
 
     public override Task FlushAsync(CancellationToken cancellationToken) =>
-        _underlyingStream.FlushAsync(cancellationToken);
+        _stream.FlushAsync(cancellationToken);
 
     public override Task CopyToAsync(
         Stream destination,
         int bufferSize,
         CancellationToken cancellationToken
-    ) => _underlyingStream.CopyToAsync(destination, bufferSize, cancellationToken);
+    ) => _stream.CopyToAsync(destination, bufferSize, cancellationToken);
 }
