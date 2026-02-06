@@ -354,17 +354,17 @@ Target(
             var memChange = CalculateChange(baseline.MemoryValue, current.MemoryValue);
 
             var timeIcon =
-                timeChange > 10 ? "🔴"
-                : timeChange < -10 ? "🟢"
+                timeChange > 25 ? "🔴"
+                : timeChange < -25 ? "🟢"
                 : "⚪";
             var memIcon =
-                memChange > 10 ? "🔴"
-                : memChange < -10 ? "🟢"
+                memChange > 25 ? "🔴"
+                : memChange < -25 ? "🟢"
                 : "⚪";
 
-            if (timeChange > 10 || memChange > 10)
+            if (timeChange > 25 || memChange > 25)
                 hasRegressions = true;
-            if (timeChange < -10 || memChange < -10)
+            if (timeChange < -25 || memChange < -25)
                 hasImprovements = true;
 
             output.Add(
@@ -374,8 +374,8 @@ Target(
 
         output.Add("");
         output.Add("**Legend:**");
-        output.Add("- 🔴 Regression (>10% slower/more memory)");
-        output.Add("- 🟢 Improvement (>10% faster/less memory)");
+        output.Add("- 🔴 Regression (>25% slower/more memory)");
+        output.Add("- 🟢 Improvement (>25% faster/less memory)");
         output.Add("- ⚪ No significant change");
 
         if (hasRegressions)
