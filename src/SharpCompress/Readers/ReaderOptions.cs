@@ -1,9 +1,20 @@
 using System;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Readers;
 
-public class ReaderOptions : OptionsBase
+/// <summary>
+/// Options for configuring reader behavior when opening archives.
+/// </summary>
+/// <remarks>
+/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// <code>
+/// var options = new ReaderOptions { Password = "secret" };
+/// options = options with { LeaveStreamOpen = false };
+/// </code>
+/// </remarks>
+public sealed record ReaderOptions : IReaderOptions
 {
     /// <summary>
     /// The default buffer size for stream operations.
@@ -16,26 +27,45 @@ public class ReaderOptions : OptionsBase
     public const int DefaultBufferSize = 0x10000;
 
     /// <summary>
+    /// SharpCompress will keep the supplied streams open.  Default is true.
+    /// </summary>
+    public bool LeaveStreamOpen { get; init; } = true;
+
+    /// <summary>
+    /// Encoding to use for archive entry names.
+    /// </summary>
+    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+
+    /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)
     /// </summary>
-    public bool LookForHeader { get; set; }
+    public bool LookForHeader { get; init; }
 
-    public string? Password { get; set; }
+    /// <summary>
+    /// Password for encrypted archives.
+    /// </summary>
+    public string? Password { get; init; }
 
-    public bool DisableCheckIncomplete { get; set; }
+    /// <summary>
+    /// Disable checking for incomplete archives.
+    /// </summary>
+    public bool DisableCheckIncomplete { get; init; }
 
-    public int BufferSize { get; set; } = Constants.BufferSize;
+    /// <summary>
+    /// Buffer size for stream operations.
+    /// </summary>
+    public int BufferSize { get; init; } = Constants.BufferSize;
 
     /// <summary>
     /// Provide a hint for the extension of the archive being read, can speed up finding the correct decoder.  Should be without the leading period in the form like: tar.gz or zip
     /// </summary>
-    public string? ExtensionHint { get; set; }
+    public string? ExtensionHint { get; init; }
 
     /// <summary>
     /// An optional progress reporter for tracking extraction operations.
     /// When set, progress updates will be reported as entries are extracted.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; set; }
+    public IProgress<ProgressReport>? Progress { get; init; }
 
     /// <summary>
     /// Size of the rewindable buffer for non-seekable streams.
@@ -78,5 +108,73 @@ public class ReaderOptions : OptionsBase
     /// using var reader = ReaderFactory.OpenReader(networkStream, options);
     /// </code>
     /// </example>
-    public int? RewindableBufferSize { get; set; }
+    public int? RewindableBufferSize { get; init; }
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with default values.
+    /// </summary>
+    public ReaderOptions() { }
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with the specified password.
+    /// </summary>
+    /// <param name="password">The password for encrypted archives.</param>
+    public ReaderOptions(string? password) => Password = password;
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with the specified password and header search option.
+    /// </summary>
+    /// <param name="password">The password for encrypted archives.</param>
+    /// <param name="lookForHeader">Whether to search for the archive header.</param>
+    public ReaderOptions(string? password, bool lookForHeader)
+    {
+        Password = password;
+        LookForHeader = lookForHeader;
+    }
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with the specified encoding.
+    /// </summary>
+    /// <param name="encoding">The encoding for archive entry names.</param>
+    public ReaderOptions(IArchiveEncoding encoding) => ArchiveEncoding = encoding;
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with the specified password and encoding.
+    /// </summary>
+    /// <param name="password">The password for encrypted archives.</param>
+    /// <param name="encoding">The encoding for archive entry names.</param>
+    public ReaderOptions(string? password, IArchiveEncoding encoding)
+    {
+        Password = password;
+        ArchiveEncoding = encoding;
+    }
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with the specified stream open behavior.
+    /// </summary>
+    /// <param name="leaveStreamOpen">Whether to leave the stream open after reading.</param>
+    public ReaderOptions(bool leaveStreamOpen)
+    {
+        LeaveStreamOpen = leaveStreamOpen;
+    }
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with the specified stream open behavior and password.
+    /// </summary>
+    /// <param name="leaveStreamOpen">Whether to leave the stream open after reading.</param>
+    /// <param name="password">The password for encrypted archives.</param>
+    public ReaderOptions(bool leaveStreamOpen, string? password)
+    {
+        LeaveStreamOpen = leaveStreamOpen;
+        Password = password;
+    }
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with the specified buffer size.
+    /// </summary>
+    /// <param name="bufferSize">The buffer size for stream operations.</param>
+    public ReaderOptions(int bufferSize)
+    {
+        BufferSize = bufferSize;
+    }
 }

@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 
 namespace SharpCompress.Writers;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-public abstract partial class AbstractWriter(ArchiveType type, WriterOptions writerOptions)
+public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions writerOptions)
     : IWriter,
         IAsyncWriter
 {
@@ -23,7 +24,7 @@ public abstract partial class AbstractWriter(ArchiveType type, WriterOptions wri
 
     public ArchiveType WriterType { get; } = type;
 
-    protected WriterOptions WriterOptions { get; } = writerOptions;
+    protected IWriterOptions WriterOptions { get; } = writerOptions;
 
     /// <summary>
     /// Wraps the source stream with a progress-reporting stream if progress reporting is enabled.

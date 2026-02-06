@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
@@ -58,7 +59,7 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
 
     protected override void SaveTo(
         Stream stream,
-        WriterOptions options,
+        IWriterOptions options,
         IEnumerable<GZipArchiveEntry> oldEntries,
         IEnumerable<GZipArchiveEntry> newEntries
     )
@@ -67,7 +68,10 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
+        using var writer = new GZipWriter(
+            stream,
+            options as GZipWriterOptions ?? new GZipWriterOptions(options)
+        );
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();

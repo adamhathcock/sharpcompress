@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common.Options;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
@@ -30,7 +31,7 @@ public interface IWritableArchive : IArchive, IWritableArchiveCommon
     /// <summary>
     /// Saves the archive to the specified stream using the given writer options.
     /// </summary>
-    void SaveTo(Stream stream, WriterOptions options);
+    void SaveTo(Stream stream, IWriterOptions options);
 
     /// <summary>
     /// Removes the specified entry from the archive.
@@ -45,7 +46,7 @@ public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
     /// </summary>
     ValueTask SaveToAsync(
         Stream stream,
-        WriterOptions options,
+        IWriterOptions options,
         CancellationToken cancellationToken = default
     );
 

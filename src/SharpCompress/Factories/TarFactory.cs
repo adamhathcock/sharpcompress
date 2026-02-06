@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -216,13 +217,24 @@ public class TarFactory
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions) =>
-        new TarWriter(stream, new TarWriterOptions(writerOptions));
+    public IWriter OpenWriter(Stream stream, IWriterOptions writerOptions)
+    {
+        TarWriterOptions tarOptions = writerOptions switch
+        {
+            TarWriterOptions two => two,
+            WriterOptions wo => new TarWriterOptions(wo),
+            _ => throw new ArgumentException(
+                $"Expected WriterOptions or TarWriterOptions, got {writerOptions.GetType().Name}",
+                nameof(writerOptions)
+            ),
+        };
+        return new TarWriter(stream, tarOptions);
+    }
 
     /// <inheritdoc/>
     public IAsyncWriter OpenAsyncWriter(
         Stream stream,
-        WriterOptions writerOptions,
+        IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {

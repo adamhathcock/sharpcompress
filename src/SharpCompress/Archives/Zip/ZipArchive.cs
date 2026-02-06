@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
@@ -113,12 +114,15 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
 
     protected override void SaveTo(
         Stream stream,
-        WriterOptions options,
+        IWriterOptions options,
         IEnumerable<ZipArchiveEntry> oldEntries,
         IEnumerable<ZipArchiveEntry> newEntries
     )
     {
-        using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
+        using var writer = new ZipWriter(
+            stream,
+            options as ZipWriterOptions ?? new ZipWriterOptions(options)
+        );
         foreach (var entry in oldEntries.Concat(newEntries))
         {
             if (entry.IsDirectory)

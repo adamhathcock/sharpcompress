@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common.GZip;
 
@@ -38,7 +39,7 @@ public partial class GZipEntry : Entry
 
     internal override IEnumerable<FilePart> Parts => _filePart.Empty();
 
-    internal static IEnumerable<GZipEntry> GetEntries(Stream stream, OptionsBase options)
+    internal static IEnumerable<GZipEntry> GetEntries(Stream stream, ReaderOptions options)
     {
         yield return new GZipEntry(GZipFilePart.Create(stream, options.ArchiveEncoding));
     }

@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Writers;
 
@@ -11,7 +12,7 @@ public static class WriterFactory
     public static IWriter OpenWriter(
         string filePath,
         ArchiveType archiveType,
-        WriterOptions writerOptions
+        IWriterOptions writerOptions
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
@@ -21,7 +22,7 @@ public static class WriterFactory
     public static IWriter OpenWriter(
         FileInfo fileInfo,
         ArchiveType archiveType,
-        WriterOptions writerOptions
+        IWriterOptions writerOptions
     )
     {
         fileInfo.NotNull(nameof(fileInfo));
@@ -31,7 +32,7 @@ public static class WriterFactory
     public static IAsyncWriter OpenAsyncWriter(
         string filePath,
         ArchiveType archiveType,
-        WriterOptions writerOptions,
+        IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
@@ -47,7 +48,7 @@ public static class WriterFactory
     public static IAsyncWriter OpenAsyncWriter(
         FileInfo fileInfo,
         ArchiveType archiveType,
-        WriterOptions writerOptions,
+        IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
@@ -63,7 +64,7 @@ public static class WriterFactory
     public static IWriter OpenWriter(
         Stream stream,
         ArchiveType archiveType,
-        WriterOptions writerOptions
+        IWriterOptions writerOptions
     )
     {
         var factory = Factories
@@ -89,7 +90,7 @@ public static class WriterFactory
     public static IAsyncWriter OpenAsyncWriter(
         Stream stream,
         ArchiveType archiveType,
-        WriterOptions writerOptions,
+        IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {

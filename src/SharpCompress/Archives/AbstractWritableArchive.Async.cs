@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
@@ -111,7 +112,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
 
     public async ValueTask SaveToAsync(
         Stream stream,
-        WriterOptions options,
+        IWriterOptions options,
         CancellationToken cancellationToken = default
     )
     {

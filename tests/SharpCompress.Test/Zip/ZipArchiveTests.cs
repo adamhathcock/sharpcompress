@@ -242,8 +242,10 @@ public class ZipArchiveTests : ArchiveTests
             );
             archive.RemoveEntry(entry);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
 
             archive.SaveTo(scratchPath, writerOptions);
         }
@@ -262,8 +264,10 @@ public class ZipArchiveTests : ArchiveTests
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
 
             archive.SaveTo(scratchPath, writerOptions);
         }
@@ -281,8 +285,8 @@ public class ZipArchiveTests : ArchiveTests
             var str = "test.txt";
             var source = new MemoryStream(Encoding.UTF8.GetBytes(str));
             arc.AddEntry("test.txt", source, true, source.Length);
-            arc.SaveTo(scratchPath1, CompressionType.Deflate);
-            arc.SaveTo(scratchPath2, CompressionType.Deflate);
+            arc.SaveTo(scratchPath1, new WriterOptions(CompressionType.Deflate));
+            arc.SaveTo(scratchPath2, new WriterOptions(CompressionType.Deflate));
         }
 
         Assert.Equal(new FileInfo(scratchPath1).Length, new FileInfo(scratchPath2).Length);
@@ -330,8 +334,8 @@ public class ZipArchiveTests : ArchiveTests
             {
                 arc.AddEntry("1.txt", stream, false, stream.Length);
                 arc.AddEntry("2.txt", stream, false, stream.Length);
-                arc.SaveTo(scratchPath1, CompressionType.Deflate);
-                arc.SaveTo(scratchPath2, CompressionType.Deflate);
+                arc.SaveTo(scratchPath1, new WriterOptions(CompressionType.Deflate));
+                arc.SaveTo(scratchPath2, new WriterOptions(CompressionType.Deflate));
             }
         }
 
@@ -374,8 +378,10 @@ public class ZipArchiveTests : ArchiveTests
         {
             archive.AddAllFromDirectory(SCRATCH_FILES_PATH);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
 
             archive.SaveTo(scratchPath, writerOptions);
         }
@@ -393,7 +399,7 @@ public class ZipArchiveTests : ArchiveTests
 
         var archiveStream = new MemoryStream();
 
-        archive.SaveTo(archiveStream, CompressionType.LZMA);
+        archive.SaveTo(archiveStream, new WriterOptions(CompressionType.LZMA));
 
         archiveStream.Position = 0;
 
@@ -622,7 +628,7 @@ public class ZipArchiveTests : ArchiveTests
             var zipWriter = WriterFactory.OpenWriter(
                 stream,
                 ArchiveType.Zip,
-                CompressionType.Deflate
+                new WriterOptions(CompressionType.Deflate)
             )
         )
         {

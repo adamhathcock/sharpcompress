@@ -401,11 +401,9 @@ public class ArchiveTests : ReaderTests
         int? compressionLevel = null
     )
     {
-        var writerOptions = new ZipWriterOptions(compressionType);
-        if (compressionLevel.HasValue)
-        {
-            writerOptions.CompressionLevel = compressionLevel.Value;
-        }
+        var writerOptions = compressionLevel.HasValue
+            ? new WriterOptions(compressionType, compressionLevel.Value)
+            : new WriterOptions(compressionType);
         return WriterFactory.OpenWriter(stream, ArchiveType.Zip, writerOptions);
     }
 
@@ -415,12 +413,9 @@ public class ArchiveTests : ReaderTests
         int? compressionLevel = null
     )
     {
-        var writerOptions = new ZipWriterOptions(compressionType);
-        if (compressionLevel.HasValue)
-        {
-            writerOptions.CompressionLevel = compressionLevel.Value;
-            writerOptions.LeaveStreamOpen = true;
-        }
+        var writerOptions = compressionLevel.HasValue
+            ? new WriterOptions(compressionType, compressionLevel.Value, leaveStreamOpen: true)
+            : new WriterOptions(compressionType) { LeaveStreamOpen = true };
         return WriterFactory.OpenAsyncWriter(
             new AsyncOnlyStream(stream),
             ArchiveType.Zip,

@@ -133,8 +133,10 @@ public class ZipArchiveAsyncTests : ArchiveTests
             );
             await archive.RemoveEntryAsync(entry);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
 
             await archive.SaveToAsync(scratchPath, writerOptions);
         }
@@ -153,8 +155,10 @@ public class ZipArchiveAsyncTests : ArchiveTests
         {
             await archive.AddEntryAsync("jpg\\test.jpg", jpg);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
 
             await archive.SaveToAsync(scratchPath, writerOptions);
         }
@@ -172,8 +176,10 @@ public class ZipArchiveAsyncTests : ArchiveTests
             archive.DeflateCompressionLevel = CompressionLevel.BestSpeed;
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.UTF8;
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 },
+            };
 
             await archive.SaveToAsync(scratchPath, writerOptions);
         }

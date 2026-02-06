@@ -148,8 +148,10 @@ public class TarArchiveAsyncTests : ArchiveTests
         await using (var archive = TarArchive.CreateAsyncArchive())
         {
             await archive.AddAllFromDirectoryAsync(ORIGINAL_FILES_PATH);
-            var twopt = new TarWriterOptions(CompressionType.None, true);
-            twopt.ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) };
+            var twopt = new TarWriterOptions(CompressionType.None, true)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
             await archive.SaveToAsync(scratchPath, twopt);
         }
         CompareArchivesByPath(unmodified, scratchPath);
@@ -196,8 +198,7 @@ public class TarArchiveAsyncTests : ArchiveTests
     {
         using var mstm = new MemoryStream();
         var enc = new ArchiveEncoding { Default = Encoding.UTF8 };
-        var twopt = new TarWriterOptions(CompressionType.None, true);
-        twopt.ArchiveEncoding = enc;
+        var twopt = new TarWriterOptions(CompressionType.None, true) { ArchiveEncoding = enc };
         var fname = new string((char)0x3042, length);
         using (var tw = new TarWriter(mstm, twopt))
         using (var input = new MemoryStream(new byte[32]))

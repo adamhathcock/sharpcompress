@@ -41,11 +41,11 @@ public abstract class ReaderTests : TestBase
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         options ??= new ReaderOptions { BufferSize = 0x20000 };
 
-        options.LeaveStreamOpen = true;
-        readImpl(testArchive, options);
+        var optionsWithStreamOpen = options with { LeaveStreamOpen = true };
+        readImpl(testArchive, optionsWithStreamOpen);
 
-        options.LeaveStreamOpen = false;
-        readImpl(testArchive, options);
+        var optionsWithStreamClosed = options with { LeaveStreamOpen = false };
+        readImpl(testArchive, optionsWithStreamClosed);
 
         VerifyFiles();
     }
@@ -141,11 +141,21 @@ public abstract class ReaderTests : TestBase
 
         options ??= new ReaderOptions() { BufferSize = 0x20000 };
 
-        options.LeaveStreamOpen = true;
-        await ReadImplAsync(testArchive, expectedCompression, options, cancellationToken);
+        var optionsWithStreamOpen = options with { LeaveStreamOpen = true };
+        await ReadImplAsync(
+            testArchive,
+            expectedCompression,
+            optionsWithStreamOpen,
+            cancellationToken
+        );
 
-        options.LeaveStreamOpen = false;
-        await ReadImplAsync(testArchive, expectedCompression, options, cancellationToken);
+        var optionsWithStreamClosed = options with { LeaveStreamOpen = false };
+        await ReadImplAsync(
+            testArchive,
+            expectedCompression,
+            optionsWithStreamClosed,
+            cancellationToken
+        );
 
         VerifyFiles();
     }

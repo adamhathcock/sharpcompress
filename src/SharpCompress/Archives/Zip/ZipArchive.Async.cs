@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
@@ -71,13 +72,16 @@ public partial class ZipArchive
 
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        WriterOptions options,
+        IWriterOptions options,
         IAsyncEnumerable<ZipArchiveEntry> oldEntries,
         IEnumerable<ZipArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
     )
     {
-        using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
+        using var writer = new ZipWriter(
+            stream,
+            options as ZipWriterOptions ?? new ZipWriterOptions(options)
+        );
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )

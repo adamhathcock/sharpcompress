@@ -101,13 +101,15 @@ internal static partial class ExtractionMethods
     {
         if (entry.LinkTarget != null)
         {
-            if (options?.WriteSymbolicLink is null)
+            if (options?.SymbolicLinkHandler is not null)
             {
-                throw new ExtractionException(
-                    "Entry is a symbolic link but ExtractionOptions.WriteSymbolicLink delegate is null"
-                );
+                options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
-            options.WriteSymbolicLink(destinationFileName, entry.LinkTarget);
+            else
+            {
+                ExtractionOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+            }
+            return;
         }
         else
         {

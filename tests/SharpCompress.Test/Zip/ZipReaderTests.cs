@@ -286,7 +286,7 @@ public class ZipReaderTests : ReaderTests
             var zipWriter = WriterFactory.OpenWriter(
                 stream,
                 ArchiveType.Zip,
-                CompressionType.Deflate
+                new WriterOptions(CompressionType.Deflate)
             )
         )
         {

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
@@ -30,7 +31,7 @@ public partial class GZipArchive
 
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        WriterOptions options,
+        IWriterOptions options,
         IAsyncEnumerable<GZipArchiveEntry> oldEntries,
         IEnumerable<GZipArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
@@ -40,7 +41,10 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
+        using var writer = new GZipWriter(
+            stream,
+            options as GZipWriterOptions ?? new GZipWriterOptions(options)
+        );
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )

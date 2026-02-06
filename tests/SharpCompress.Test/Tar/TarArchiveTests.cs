@@ -34,7 +34,13 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.Tar,
+                new WriterOptions(CompressionType.None)
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -94,7 +100,13 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.Tar,
+                new WriterOptions(CompressionType.None)
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -162,8 +174,10 @@ public class TarArchiveTests : ArchiveTests
         using (var archive = TarArchive.CreateArchive())
         {
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
-            var twopt = new TarWriterOptions(CompressionType.None, true);
-            twopt.ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) };
+            var twopt = new TarWriterOptions(CompressionType.None, true)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
             archive.SaveTo(scratchPath, twopt);
         }
         CompareArchivesByPath(unmodified, scratchPath);
@@ -180,7 +194,7 @@ public class TarArchiveTests : ArchiveTests
         using (var archive = TarArchive.OpenArchive(unmodified))
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
-            archive.SaveTo(scratchPath, CompressionType.None);
+            archive.SaveTo(scratchPath, new WriterOptions(CompressionType.None));
         }
         CompareArchivesByPath(modified, scratchPath);
     }
@@ -198,7 +212,7 @@ public class TarArchiveTests : ArchiveTests
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             archive.RemoveEntry(entry);
-            archive.SaveTo(scratchPath, CompressionType.None);
+            archive.SaveTo(scratchPath, new WriterOptions(CompressionType.None));
         }
         CompareArchivesByPath(modified, scratchPath);
     }
@@ -228,8 +242,7 @@ public class TarArchiveTests : ArchiveTests
     {
         using var mstm = new MemoryStream();
         var enc = new ArchiveEncoding { Default = Encoding.UTF8 };
-        var twopt = new TarWriterOptions(CompressionType.None, true);
-        twopt.ArchiveEncoding = enc;
+        var twopt = new TarWriterOptions(CompressionType.None, true) { ArchiveEncoding = enc };
         var fname = new string((char)0x3042, length);
         using (var tw = new TarWriter(mstm, twopt))
         using (var input = new MemoryStream(new byte[32]))

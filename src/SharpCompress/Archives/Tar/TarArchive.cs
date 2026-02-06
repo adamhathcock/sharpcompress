@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
@@ -115,12 +116,15 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
 
     protected override void SaveTo(
         Stream stream,
-        WriterOptions options,
+        IWriterOptions options,
         IEnumerable<TarArchiveEntry> oldEntries,
         IEnumerable<TarArchiveEntry> newEntries
     )
     {
-        using var writer = new TarWriter(stream, new TarWriterOptions(options));
+        using var writer = new TarWriter(
+            stream,
+            options as TarWriterOptions ?? new TarWriterOptions(options)
+        );
         foreach (var entry in oldEntries.Concat(newEntries))
         {
             if (entry.IsDirectory)
