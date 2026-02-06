@@ -1,6 +1,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers;
@@ -47,6 +48,14 @@ public sealed record WriterOptions : IWriterOptions
     /// When set, progress updates will be reported as entries are written.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; init; }
+
+    /// <summary>
+    /// Optional registry of compression providers.
+    /// If null, the default registry (SharpCompress internal implementations) will be used.
+    /// Use this to provide alternative compression implementations, such as
+    /// System.IO.Compression for Deflate/GZip on modern .NET.
+    /// </summary>
+    public CompressionProviderRegistry? CompressionProviders { get; init; }
 
     /// <summary>
     /// Creates a new WriterOptions instance with the specified compression type.

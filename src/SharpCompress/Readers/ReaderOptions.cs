@@ -1,6 +1,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
 
 namespace SharpCompress.Readers;
 
@@ -109,6 +110,14 @@ public sealed record ReaderOptions : IReaderOptions
     /// </code>
     /// </example>
     public int? RewindableBufferSize { get; init; }
+
+    /// <summary>
+    /// Optional registry of compression providers.
+    /// If null, the default registry (SharpCompress internal implementations) will be used.
+    /// Use this to provide alternative decompression implementations, such as
+    /// System.IO.Compression for Deflate/GZip on modern .NET.
+    /// </summary>
+    public CompressionProviderRegistry? CompressionProviders { get; init; }
 
     /// <summary>
     /// Creates a new ReaderOptions instance with default values.

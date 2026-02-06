@@ -419,6 +419,11 @@ public partial class ZipWriter : AbstractWriter
         {
             counting = new CountingStream(SharpCompressStream.CreateNonDisposing(writeStream));
             Stream output = counting;
+
+            // Get compression providers from writer options, falling back to default
+            var providers =
+                writer.WriterOptions.CompressionProviders ?? CompressionProviderRegistry.Default;
+
             switch (zipCompressionMethod)
             {
                 case ZipCompressionMethod.None:
@@ -427,18 +432,23 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.Deflate:
                 {
-                    return new DeflateStream(
+                    return providers.CreateCompressStream(
+                        CompressionType.Deflate,
                         counting,
-                        CompressionMode.Compress,
-                        (CompressionLevel)compressionLevel
+                        compressionLevel
                     );
                 }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return BZip2Stream.Create(counting, CompressionMode.Compress, false);
+                    return providers.CreateCompressStream(
+                        CompressionType.BZip2,
+                        counting,
+                        compressionLevel
+                    );
                 }
                 case ZipCompressionMethod.LZMA:
                 {
+                    // LZMA has complex initialization that doesn't fit the provider pattern
                     counting.WriteByte(9);
                     counting.WriteByte(20);
                     counting.WriteByte(5);
@@ -454,12 +464,17 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.PPMd:
                 {
+                    // PPMd has complex initialization that doesn't fit the provider pattern
                     counting.Write(writer.PpmdProperties.Properties, 0, 2);
                     return PpmdStream.Create(writer.PpmdProperties, counting, true);
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
-                    return new CompressionStream(counting, compressionLevel);
+                    return providers.CreateCompressStream(
+                        CompressionType.ZStandard,
+                        counting,
+                        compressionLevel
+                    );
                 }
                 default:
                 {

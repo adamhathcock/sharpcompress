@@ -1,6 +1,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using D = SharpCompress.Compressors.Deflate;
 
@@ -42,6 +43,13 @@ public sealed record ZipWriterOptions : IWriterOptions
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; init; }
+
+    /// <summary>
+    /// Optional registry of compression providers.
+    /// If null, the default registry (SharpCompress internal implementations) will be used.
+    /// Use this to provide alternative compression implementations.
+    /// </summary>
+    public CompressionProviderRegistry? CompressionProviders { get; init; }
 
     /// <summary>
     /// Optional comment for the archive.

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.BZip2;
 
-public sealed partial class BZip2Stream : Stream
+public sealed partial class BZip2Stream : Stream, IFinishable
 {
     private Stream stream = default!;
     private bool isDisposed;

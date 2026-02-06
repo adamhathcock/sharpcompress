@@ -32,14 +32,24 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
     protected override Stream RequestInitialStream()
     {
         var stream = base.RequestInitialStream();
+
+        // Get compression providers from options, falling back to default
+        var providers = Options.CompressionProviders ?? CompressionProviderRegistry.Default;
+
         return compressionType switch
         {
-            CompressionType.BZip2 => BZip2Stream.Create(stream, CompressionMode.Decompress, false),
-            CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
-            CompressionType.ZStandard => new ZStandardStream(stream),
-            CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
-            CompressionType.Xz => new XZStream(stream),
-            CompressionType.Lzw => new LzwStream(stream),
+            CompressionType.BZip2 => providers.CreateDecompressStream(
+                CompressionType.BZip2,
+                stream
+            ),
+            CompressionType.GZip => providers.CreateDecompressStream(CompressionType.GZip, stream),
+            CompressionType.ZStandard => providers.CreateDecompressStream(
+                CompressionType.ZStandard,
+                stream
+            ),
+            CompressionType.LZip => providers.CreateDecompressStream(CompressionType.LZip, stream),
+            CompressionType.Xz => providers.CreateDecompressStream(CompressionType.Xz, stream),
+            CompressionType.Lzw => providers.CreateDecompressStream(CompressionType.Lzw, stream),
             CompressionType.None => stream,
             _ => throw new NotSupportedException("Invalid compression type: " + compressionType),
         };

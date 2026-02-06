@@ -18,14 +18,24 @@ public sealed partial class GZipWriter : AbstractWriter
         {
             destination = SharpCompressStream.CreateNonDisposing(destination);
         }
-        InitializeStream(
-            new GZipStream(
-                destination,
-                CompressionMode.Compress,
-                (CompressionLevel)(options?.CompressionLevel ?? (int)CompressionLevel.Default),
-                WriterOptions.ArchiveEncoding.GetEncoding()
-            )
+
+        // Get compression providers from options, falling back to default
+        var providers = options?.CompressionProviders ?? CompressionProviderRegistry.Default;
+
+        // Create the GZip stream using the provider
+        var compressionStream = providers.CreateCompressStream(
+            CompressionType.GZip,
+            destination,
+            options?.CompressionLevel ?? (int)CompressionLevel.Default
         );
+
+        // If using internal GZipStream, set the encoding for header filename
+        if (compressionStream is GZipStream gzipStream)
+        {
+            // Note: FileName and LastModified will be set in Write()
+        }
+
+        InitializeStream(compressionStream);
     }
 
     protected override void Dispose(bool isDisposing)
@@ -44,11 +54,16 @@ public sealed partial class GZipWriter : AbstractWriter
         {
             throw new ArgumentException("Can only write a single stream to a GZip file.");
         }
-        var stream = (GZipStream)OutputStream;
-        stream.FileName = filename;
-        stream.LastModified = modificationTime;
+
+        // Set metadata on the stream if it's the internal GZipStream
+        if (OutputStream is GZipStream gzipStream)
+        {
+            gzipStream.FileName = filename;
+            gzipStream.LastModified = modificationTime;
+        }
+
         var progressStream = WrapWithProgress(source, filename);
-        progressStream.CopyTo(stream, Constants.BufferSize);
+        progressStream.CopyTo(OutputStream, Constants.BufferSize);
         _wroteToStream = true;
     }
 

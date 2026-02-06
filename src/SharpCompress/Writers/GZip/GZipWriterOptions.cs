@@ -1,6 +1,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.GZip;
@@ -41,6 +42,14 @@ public sealed record GZipWriterOptions : IWriterOptions
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; init; }
+
+    /// <summary>
+    /// Optional registry of compression providers.
+    /// If null, the default registry (SharpCompress internal implementations) will be used.
+    /// Use this to provide alternative compression implementations, such as
+    /// System.IO.Compression for GZip on modern .NET.
+    /// </summary>
+    public CompressionProviderRegistry? CompressionProviders { get; init; }
 
     /// <summary>
     /// Creates a new GZipWriterOptions instance with default values.

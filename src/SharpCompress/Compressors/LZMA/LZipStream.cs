@@ -17,7 +17,7 @@ namespace SharpCompress.Compressors.LZMA;
 /// <summary>
 /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
 /// </summary>
-public sealed partial class LZipStream : Stream
+public sealed partial class LZipStream : Stream, IFinishable
 {
     private readonly Stream _stream;
     private readonly CountingStream? _countingWritableSubStream;
