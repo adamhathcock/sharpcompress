@@ -31,7 +31,10 @@ public class LzwReaderTests : ReaderTests
     public void Lzw_Reader_Factory_Detects_Format()
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.Z"));
-        using var reader = ReaderFactory.OpenReader(stream, new ReaderOptions { LeaveStreamOpen = false });
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { LeaveStreamOpen = false }
+        );
         Assert.True(reader.MoveToNextEntry());
         Assert.NotNull(reader.Entry);
     }
