@@ -13,5 +13,5 @@ public class LzwVolume : Volume
 
     public override bool IsFirstVolume => true;
 
-    public override bool IsMultiVolume => true;
+    public override bool IsMultiVolume => false;
 }

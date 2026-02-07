@@ -26,7 +26,7 @@ public class LzwFactory : Factory, IReaderFactory
     /// <inheritdoc/>
     public override IEnumerable<string> GetSupportedExtensions()
     {
-        yield return "Z";
+        yield return "z";
     }
 
     /// <inheritdoc/>
