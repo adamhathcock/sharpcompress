@@ -758,9 +758,9 @@ public class RarArchiveTests : ArchiveTests
             "File should be in HeadBraid subdirectory"
         );
 
-        // Verify the file size of 766832.tr11dtp (should be ~4.8MB, not 5MB)
+        // Verify the exact file size of 766832.tr11dtp matches the archive entry size
         var fileInfo = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp"));
-        Assert.Equal(4867620, fileInfo.Length); // Expected size from the archive
+        Assert.Equal(4867620, fileInfo.Length); // Expected: 4,867,620 bytes
     }
 
     /// <summary>
