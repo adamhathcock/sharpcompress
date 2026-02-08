@@ -718,6 +718,47 @@ public class RarArchiveAsyncTests : ArchiveTests
         VerifyFiles();
     }
 
+    /// <summary>
+    /// Tests for Issue #1050 - RAR extraction with WriteToDirectoryAsync creates folders
+    /// but places all files at the top level instead of in their subdirectories.
+    /// </summary>
+    [Fact]
+    public async ValueTask Rar_Issue1050_WriteToDirectoryAsync_ExtractsToSubdirectories()
+    {
+        var testFile = "Rar.issue1050.rar";
+        using var fileStream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, testFile), FileMode.Open);
+        await using var archive = RarArchive.OpenAsyncArchive(fileStream);
+
+        // Extract using archive.WriteToDirectoryAsync without explicit options
+        await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
+
+        // Verify files are in their subdirectories, not at the root
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "PhysicsBraid", "263825.tr11dtp")),
+            "File should be in PhysicsBraid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Animations", "15441.tr11anim")),
+            "File should be in Animations subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766728.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "HeadBraid", "321353.tr11modeldata")),
+            "File should be in HeadBraid subdirectory"
+        );
+
+        // NOTE: The file size check is omitted because there's a separate pre-existing bug
+        // in the async RAR stream implementation that causes incorrect file sizes.
+        // This test only verifies the directory structure fix.
+    }
+
     private async ValueTask ArchiveOpenStreamReadAsync(
         ReaderOptions? readerOptions,
         params string[] testArchives
