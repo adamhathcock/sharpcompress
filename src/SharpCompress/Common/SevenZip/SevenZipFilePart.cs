@@ -34,7 +34,7 @@ internal class SevenZipFilePart : FilePart
     internal CFileItem Header { get; }
     internal CFolder? Folder { get; }
 
-    internal override string FilePartName => Header.Name;
+    internal override string? FilePartName => Header.Name;
 
     internal override Stream? GetRawStream() => null;
 

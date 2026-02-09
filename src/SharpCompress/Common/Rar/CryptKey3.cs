@@ -1,5 +1,3 @@
-#nullable disable
-
 using System.Security.Cryptography;
 using System.Text;
 using SharpCompress.Common.Rar.Headers;

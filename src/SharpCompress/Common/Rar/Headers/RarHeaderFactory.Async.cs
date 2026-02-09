@@ -189,7 +189,7 @@ public partial class RarHeaderFactory
                                             Options.Password,
                                             fh.Rar5CryptoInfo.NotNull()
                                         )
-                                        : new CryptKey3(Options.Password)
+                                        : new CryptKey3(Options.Password.NotNull())
                                 );
                             }
                         }
