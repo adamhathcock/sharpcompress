@@ -58,12 +58,14 @@ public class LzwFactory : Factory, IReaderFactory
         if (LzwStream.IsLzwStream(sharpCompressStream))
         {
             sharpCompressStream.Rewind();
-            var testStream = new LzwStream(sharpCompressStream) { IsStreamOwner = false };
-            if (TarArchive.IsTarFile(testStream))
+            using (var testStream = new LzwStream(sharpCompressStream) { IsStreamOwner = false })
             {
-                sharpCompressStream.StopRecording();
-                reader = new TarReader(sharpCompressStream, options, CompressionType.Lzw);
-                return true;
+                if (TarArchive.IsTarFile(testStream))
+                {
+                    sharpCompressStream.StopRecording();
+                    reader = new TarReader(sharpCompressStream, options, CompressionType.Lzw);
+                    return true;
+                }
             }
             sharpCompressStream.StopRecording();
             reader = OpenReader(sharpCompressStream, options);
