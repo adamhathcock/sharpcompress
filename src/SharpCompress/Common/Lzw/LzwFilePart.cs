@@ -50,7 +50,7 @@ internal sealed partial class LzwFilePart : FilePart
             // Strip .Z extension if present
             if (fileName.EndsWith(".Z", System.StringComparison.OrdinalIgnoreCase))
             {
-                return fileName[..^2];
+                return fileName.Substring(0, fileName.Length - 2);
             }
             return fileName;
         }
