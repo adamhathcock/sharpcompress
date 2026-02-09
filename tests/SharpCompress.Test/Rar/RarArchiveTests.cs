@@ -730,7 +730,7 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_Issue1050_WriteToDirectory_ExtractsToSubdirectories()
     {
         var testFile = "Rar.issue1050.rar";
-        using var fileStream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, testFile), FileMode.Open);
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
         using var archive = RarArchive.OpenArchive(fileStream);
 
         // Extract using archive.WriteToDirectory without explicit options
