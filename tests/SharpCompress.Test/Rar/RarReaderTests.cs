@@ -46,10 +46,7 @@ public class RarReaderTests : ReaderTests
         {
             while (reader.MoveToNextEntry())
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -80,10 +77,7 @@ public class RarReaderTests : ReaderTests
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
             VerifyFiles();
@@ -128,10 +122,7 @@ public class RarReaderTests : ReaderTests
         {
             while (reader.MoveToNextEntry())
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         foreach (var stream in streams)
@@ -236,10 +227,7 @@ public class RarReaderTests : ReaderTests
             while (reader.MoveToNextEntry())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         CompareFilesByPath(
@@ -259,10 +247,7 @@ public class RarReaderTests : ReaderTests
             while (reader.MoveToNextEntry())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -298,10 +283,7 @@ public class RarReaderTests : ReaderTests
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -324,10 +306,7 @@ public class RarReaderTests : ReaderTests
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
     }

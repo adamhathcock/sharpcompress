@@ -196,10 +196,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
             {
                 await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
                 {
-                    await entry.WriteToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
             finally
@@ -218,10 +215,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
             IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
             try
             {
-                await archive.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
             }
             finally
             {
@@ -248,11 +242,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
             await using IAsyncArchive archive = ZipArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(stream)
             );
-            await archive.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-                progress
-            );
+            await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, progress);
         }
 
         await Task.Delay(1000);

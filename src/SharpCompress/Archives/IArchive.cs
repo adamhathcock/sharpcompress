@@ -13,6 +13,11 @@ public interface IArchive : IDisposable
     ArchiveType Type { get; }
 
     /// <summary>
+    /// The options used when opening this archive, including extraction behavior settings.
+    /// </summary>
+    ReaderOptions ReaderOptions { get; }
+
+    /// <summary>
     /// Use this method to extract all entries in an archive in order.
     /// This is primarily for SOLID Rar Archives or 7Zip Archives as they need to be
     /// extracted sequentially for the best performance.

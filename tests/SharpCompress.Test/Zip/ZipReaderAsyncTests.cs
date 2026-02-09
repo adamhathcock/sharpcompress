@@ -75,10 +75,7 @@ public class ZipReaderAsyncTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -99,10 +96,7 @@ public class ZipReaderAsyncTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -159,10 +153,7 @@ public class ZipReaderAsyncTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -181,10 +172,7 @@ public class ZipReaderAsyncTests : ReaderTests
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -204,10 +192,7 @@ public class ZipReaderAsyncTests : ReaderTests
         {
             if (!reader.Entry.IsDirectory)
             {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         Assert.False(stream.IsDisposed);
@@ -235,10 +220,7 @@ public class ZipReaderAsyncTests : ReaderTests
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                        await reader.WriteEntryToDirectoryAsync(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
+                        await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                     }
                 }
             }
@@ -266,10 +248,7 @@ public class ZipReaderAsyncTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -297,10 +276,7 @@ public class ZipReaderAsyncTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                     count++;
                 }
             }

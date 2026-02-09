@@ -1,6 +1,6 @@
 namespace SharpCompress.Common.Options;
 
-public interface IReaderOptions : IStreamOptions, IEncodingOptions, IProgressOptions
+public interface IReaderOptions : IStreamOptions, IEncodingOptions, IProgressOptions, IExtractionOptions
 {
     bool LookForHeader { get; init; }
     string? Password { get; init; }

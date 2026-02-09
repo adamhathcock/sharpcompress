@@ -14,15 +14,15 @@ public static class IAsyncReaderExtensions
         /// </summary>
         public async ValueTask WriteEntryToDirectoryAsync(
             string destinationDirectory,
-            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await ExtractionMethods
                 .WriteEntryToDirectoryAsync(
                     reader.Entry,
                     destinationDirectory,
-                    options,
-                    reader.WriteEntryToFileAsync,
+                    null,
+                    async (path, options, ct) =>
+                        await reader.WriteEntryToFileAsync(path, ct).ConfigureAwait(false),
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -32,14 +32,13 @@ public static class IAsyncReaderExtensions
         /// </summary>
         public async ValueTask WriteEntryToFileAsync(
             string destinationFileName,
-            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await ExtractionMethods
                 .WriteEntryToFileAsync(
                     reader.Entry,
                     destinationFileName,
-                    options,
+                    null,
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(destinationFileName, fm);
@@ -54,28 +53,26 @@ public static class IAsyncReaderExtensions
         /// </summary>
         public async ValueTask WriteAllToDirectoryAsync(
             string destinationDirectory,
-            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         )
         {
             while (await reader.MoveToNextEntryAsync(cancellationToken))
             {
                 await reader
-                    .WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                    .WriteEntryToDirectoryAsync(destinationDirectory, cancellationToken)
                     .ConfigureAwait(false);
             }
         }
 
         public async ValueTask WriteEntryToAsync(
             string destinationFileName,
-            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await ExtractionMethods
                 .WriteEntryToFileAsync(
                     reader.Entry,
                     destinationFileName,
-                    options,
+                    null,
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(destinationFileName, fm);
@@ -87,11 +84,10 @@ public static class IAsyncReaderExtensions
 
         public async ValueTask WriteEntryToAsync(
             FileInfo destinationFileInfo,
-            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await reader
-                .WriteEntryToAsync(destinationFileInfo.FullName, options, cancellationToken)
+                .WriteEntryToAsync(destinationFileInfo.FullName, cancellationToken)
                 .ConfigureAwait(false);
     }
 }

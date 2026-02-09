@@ -89,10 +89,7 @@ public abstract class ReaderTests : TestBase
             if (!reader.Entry.IsDirectory)
             {
                 Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -103,10 +100,7 @@ public abstract class ReaderTests : TestBase
         {
             if (!reader.Entry.IsDirectory)
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -213,11 +207,7 @@ public abstract class ReaderTests : TestBase
                     Assert.Equal(expectedCompression, reader.Entry.CompressionType);
                 }
 
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-                    cancellationToken
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH, cancellationToken);
             }
         }
     }
@@ -234,10 +224,7 @@ public abstract class ReaderTests : TestBase
         {
             Assert.Equal(compressionType, reader.Entry.CompressionType);
 
-            reader.WriteEntryToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
         }
 
         CompareFilesByPath(
@@ -281,10 +268,7 @@ public abstract class ReaderTests : TestBase
 
         while (reader.MoveToNextEntry())
         {
-            reader.WriteEntryToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
         }
 
         VerifyFiles();

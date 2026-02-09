@@ -79,10 +79,7 @@ public class RarArchiveTests : ArchiveTests
                 if (!entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.Rar, entry.CompressionType);
-                    entry.WriteToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -106,10 +103,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -137,10 +131,7 @@ public class RarArchiveTests : ArchiveTests
         using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            entry.WriteToDirectory(SCRATCH_FILES_PATH);
         }
     }
 
@@ -154,10 +145,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -177,10 +165,7 @@ public class RarArchiveTests : ArchiveTests
             Assert.False(archive.IsSolid);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -266,10 +251,7 @@ public class RarArchiveTests : ArchiveTests
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            entry.WriteToDirectory(SCRATCH_FILES_PATH);
         }
     }
 
@@ -327,10 +309,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();

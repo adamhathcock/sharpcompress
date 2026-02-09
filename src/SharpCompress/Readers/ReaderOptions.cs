@@ -111,9 +111,63 @@ public sealed record ReaderOptions : IReaderOptions
     public int? RewindableBufferSize { get; init; }
 
     /// <summary>
+    /// Overwrite target if it exists.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
+    /// </summary>
+    public bool Overwrite { get; init; } = true;
+
+    /// <summary>
+    /// Extract with internal directory structure.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
+    /// </summary>
+    public bool ExtractFullPath { get; init; } = true;
+
+    /// <summary>
+    /// Preserve file time.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
+    /// </summary>
+    public bool PreserveFileTime { get; init; } = true;
+
+    /// <summary>
+    /// Preserve windows file attributes.
+    /// </summary>
+    public bool PreserveAttributes { get; init; }
+
+    /// <summary>
+    /// Delegate for writing symbolic links to disk.
+    /// The first parameter is the source path (where the symlink is created).
+    /// The second parameter is the target path (what the symlink refers to).
+    /// </summary>
+    /// <remarks>
+    /// <b>Breaking change:</b> Changed from field to init-only property in version 0.40.0.
+    /// The default handler logs a warning message.
+    /// </remarks>
+    public Action<string, string>? SymbolicLinkHandler { get; init; }
+
+    /// <summary>
     /// Creates a new ReaderOptions instance with default values.
     /// </summary>
     public ReaderOptions() { }
+
+    /// <summary>
+    /// Gets a ReaderOptions instance configured for safe extraction (no overwrite).
+    /// </summary>
+    public static ReaderOptions SafeExtract => new() { Overwrite = false };
+
+    /// <summary>
+    /// Gets a ReaderOptions instance configured for flat extraction (no directory structure).
+    /// </summary>
+    public static ReaderOptions FlatExtract => new() { ExtractFullPath = false, Overwrite = true };
+
+    /// <summary>
+    /// Default symbolic link handler that logs a warning message.
+    /// </summary>
+    public static void DefaultSymbolicLinkHandler(string sourcePath, string targetPath)
+    {
+        Console.WriteLine(
+            $"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271"
+        );
+    }
 
     /// <summary>
     /// Creates a new ReaderOptions instance with the specified password.

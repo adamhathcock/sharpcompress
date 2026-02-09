@@ -80,10 +80,7 @@ public class AceReaderAsyncTests : ReaderTests
             if (!reader.Entry.IsDirectory)
             {
                 Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -105,10 +102,7 @@ public class AceReaderAsyncTests : ReaderTests
             if (!reader.Entry.IsDirectory)
             {
                 Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         CompareFilesByPath(
@@ -130,10 +124,7 @@ public class AceReaderAsyncTests : ReaderTests
         {
             if (!reader.Entry.IsDirectory)
             {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
     }

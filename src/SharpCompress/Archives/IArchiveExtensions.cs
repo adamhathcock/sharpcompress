@@ -14,28 +14,25 @@ public static class IArchiveExtensions
         /// Extract to specific directory with progress reporting
         /// </summary>
         /// <param name="destinationDirectory">The folder to extract into.</param>
-        /// <param name="options">Extraction options.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
         public void WriteToDirectory(
             string destinationDirectory,
-            ExtractionOptions? options = null,
             IProgress<ProgressReport>? progress = null
         )
         {
             if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
             {
                 using var reader = archive.ExtractAllEntries();
-                reader.WriteAllToDirectory(destinationDirectory, options);
+                reader.WriteAllToDirectory(destinationDirectory);
             }
             else
             {
-                archive.WriteToDirectoryInternal(destinationDirectory, options, progress);
+                archive.WriteToDirectoryInternal(destinationDirectory, progress);
             }
         }
 
         private void WriteToDirectoryInternal(
             string destinationDirectory,
-            ExtractionOptions? options,
             IProgress<ProgressReport>? progress
         )
         {
@@ -61,7 +58,7 @@ public static class IArchiveExtensions
                     continue;
                 }
 
-                entry.WriteToDirectory(destinationDirectory, options);
+                entry.WriteToDirectory(destinationDirectory);
 
                 bytesRead += entry.Size;
                 progress?.Report(

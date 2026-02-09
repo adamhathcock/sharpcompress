@@ -469,10 +469,7 @@ public class ZipArchiveTests : ArchiveTests
         {
             foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -521,10 +518,7 @@ public class ZipArchiveTests : ArchiveTests
         {
             foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -605,10 +599,7 @@ public class ZipArchiveTests : ArchiveTests
             using var archive = ZipArchive.OpenArchive(zipFile);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         });
     }
