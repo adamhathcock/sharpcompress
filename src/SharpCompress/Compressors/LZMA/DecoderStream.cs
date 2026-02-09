@@ -176,7 +176,7 @@ internal static class DecoderStreamHelper
         return DecoderRegistry.CreateDecoderStream(
             coderInfo._methodId,
             inStreams,
-            coderInfo._props,
+            coderInfo._props.NotNull(),
             pass,
             unpackSize
         );
@@ -268,7 +268,7 @@ internal static class DecoderStreamHelper
             .CreateDecoderStreamAsync(
                 coderInfo._methodId,
                 inStreams,
-                coderInfo._props,
+                coderInfo._props.NotNull(),
                 pass,
                 unpackSize,
                 cancellationToken
