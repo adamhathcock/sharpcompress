@@ -40,9 +40,6 @@ public static class IArchiveExtensions
             var bytesRead = 0L;
             var seenDirectories = new HashSet<string>();
 
-            // When extracting an entire archive, default to extracting with full paths
-            options ??= new ExtractionOptions { ExtractFullPath = true, Overwrite = true };
-
             foreach (var entry in archive.Entries)
             {
                 if (entry.IsDirectory)
