@@ -28,14 +28,22 @@ public class LzwReaderTests : ReaderTests
     }
 
     [Fact]
-    public void Lzw_Reader_Factory_Detects_Format()
+    public void Lzw_Reader_Factory_Detects_Tar_Wrapper()
     {
+        // Note: Testing with Tar.tar.Z because:
+        // 1. LzwStream only supports decompression, not compression
+        // 2. This tests the important tar wrapper detection code path in LzwFactory.TryOpenReader
+        // 3. Verifies that tar.Z files correctly return TarReader with CompressionType.Lzw
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.Z"));
         using var reader = ReaderFactory.OpenReader(
             stream,
             new ReaderOptions { LeaveStreamOpen = false }
         );
+
+        // Should detect as Tar archive with Lzw compression
+        Assert.Equal(ArchiveType.Tar, reader.ArchiveType);
         Assert.True(reader.MoveToNextEntry());
         Assert.NotNull(reader.Entry);
+        Assert.Equal(CompressionType.Lzw, reader.Entry.CompressionType);
     }
 }
