@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -15,8 +13,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
     {
         private BitDecoder _choice = new();
         private BitDecoder _choice2 = new();
-        private readonly BitTreeDecoder[] _lowCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
-        private readonly BitTreeDecoder[] _midCoder = new BitTreeDecoder[Base.K_NUM_POS_STATES_MAX];
+        private readonly BitTreeDecoder?[] _lowCoder = new BitTreeDecoder?[Base.K_NUM_POS_STATES_MAX];
+        private readonly BitTreeDecoder?[] _midCoder = new BitTreeDecoder?[Base.K_NUM_POS_STATES_MAX];
         private BitTreeDecoder _highCoder = new(Base.K_NUM_HIGH_LEN_BITS);
         private uint _numPosStates;
 
@@ -35,8 +33,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
             _choice.Init();
             for (uint posState = 0; posState < _numPosStates; posState++)
             {
-                _lowCoder[posState].Init();
-                _midCoder[posState].Init();
+                _lowCoder[posState].NotNull().Init();
+                _midCoder[posState].NotNull().Init();
             }
             _choice2.Init();
             _highCoder.Init();
@@ -46,12 +44,12 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
         {
             if (_choice.Decode(rangeDecoder) == 0)
             {
-                return _lowCoder[posState].Decode(rangeDecoder);
+                return _lowCoder[posState].NotNull().Decode(rangeDecoder);
             }
             var symbol = Base.K_NUM_LOW_LEN_SYMBOLS;
             if (_choice2.Decode(rangeDecoder) == 0)
             {
-                symbol += _midCoder[posState].Decode(rangeDecoder);
+                symbol += _midCoder[posState].NotNull().Decode(rangeDecoder);
             }
             else
             {
@@ -110,7 +108,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
             }
         }
 
-        private Decoder2[] _coders;
+        private Decoder2[]? _coders;
         private int _numPrevBits;
         private int _numPosBits;
         private uint _posMask;
@@ -134,10 +132,11 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
 
         public void Init()
         {
+            var coders = _coders.NotNull();
             var numStates = (uint)1 << (_numPrevBits + _numPosBits);
             for (uint i = 0; i < numStates; i++)
             {
-                _coders[i].Init();
+                coders[i].Init();
             }
         }
 
@@ -145,17 +144,17 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
             ((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits));
 
         public byte DecodeNormal(RangeCoder.Decoder rangeDecoder, uint pos, byte prevByte) =>
-            _coders[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
+            _coders.NotNull()[GetState(pos, prevByte)].DecodeNormal(rangeDecoder);
 
         public byte DecodeWithMatchByte(
             RangeCoder.Decoder rangeDecoder,
             uint pos,
             byte prevByte,
             byte matchByte
-        ) => _coders[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
+        ) => _coders.NotNull()[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
     }
 
-    private OutWindow _outWindow;
+    private OutWindow? _outWindow;
 
     private readonly BitDecoder[] _isMatchDecoders = new BitDecoder[
         Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX
@@ -292,25 +291,25 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
         {
             CreateDictionary();
         }
-        _outWindow.Init(outStream);
+        _outWindow.NotNull().Init(outStream);
         if (outSize > 0)
         {
-            _outWindow.SetLimit(outSize);
+            _outWindow.NotNull().SetLimit(outSize);
         }
         else
         {
-            _outWindow.SetLimit(long.MaxValue - _outWindow.Total);
+            _outWindow.NotNull().SetLimit(long.MaxValue - _outWindow.NotNull().Total);
         }
 
         var rangeDecoder = new RangeCoder.Decoder();
         rangeDecoder.Init(inStream);
 
-        Code(_dictionarySize, _outWindow, rangeDecoder);
+        Code(_dictionarySize, _outWindow.NotNull(), rangeDecoder);
 
-        _outWindow.ReleaseStream();
+        _outWindow.NotNull().ReleaseStream();
         rangeDecoder.ReleaseStream();
 
-        _outWindow.Dispose();
+        _outWindow.NotNull().Dispose();
         _outWindow = null;
     }
 
@@ -473,6 +472,6 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
         {
             CreateDictionary();
         }
-        _outWindow.Train(stream);
+        _outWindow.NotNull().Train(stream);
     }
 }

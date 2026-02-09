@@ -1,5 +1,3 @@
-#nullable disable
-
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -9,7 +7,7 @@ internal partial class Encoder
 {
     public const uint K_TOP_VALUE = (1 << 24);
 
-    private Stream _stream;
+    private Stream? _stream;
 
     public ulong _low;
     public uint _range;
@@ -21,6 +19,8 @@ internal partial class Encoder
     public void SetStream(Stream stream) => _stream = stream;
 
     public void ReleaseStream() => _stream = null;
+
+    private Stream Stream => _stream.NotNull();
 
     public void Init()
     {
@@ -40,9 +40,9 @@ internal partial class Encoder
         }
     }
 
-    public void FlushStream() => _stream.Flush();
+    public void FlushStream() => Stream.Flush();
 
-    public void CloseStream() => _stream.Dispose();
+    public void CloseStream() => Stream.Dispose();
 
     public void ShiftLow()
     {
@@ -51,7 +51,7 @@ internal partial class Encoder
             var temp = _cache;
             do
             {
-                _stream.WriteByte((byte)(temp + (_low >> 32)));
+                Stream.WriteByte((byte)(temp + (_low >> 32)));
                 temp = 0xFF;
             } while (--_cacheSize != 0);
             _cache = (byte)(((uint)_low) >> 24);
@@ -86,7 +86,7 @@ internal partial class Decoder
     public uint _range;
     public uint _code;
 
-    public Stream _stream;
+    public Stream? _stream;
     public long _total;
 
     public void Init(Stream stream)
@@ -97,7 +97,7 @@ internal partial class Decoder
         _range = 0xFFFFFFFF;
         for (var i = 0; i < 5; i++)
         {
-            _code = (_code << 8) | (byte)_stream.ReadByte();
+            _code = (_code << 8) | (byte)stream.ReadByte();
         }
         _total = 5;
     }
@@ -106,11 +106,13 @@ internal partial class Decoder
         // Stream.ReleaseStream();
         _stream = null;
 
+    private Stream Stream => _stream.NotNull();
+
     public void Normalize()
     {
         while (_range < K_TOP_VALUE)
         {
-            _code = (_code << 8) | (byte)_stream.ReadByte();
+            _code = (_code << 8) | (byte)Stream.ReadByte();
             _range <<= 8;
             _total++;
         }
@@ -121,7 +123,7 @@ internal partial class Decoder
     {
         if (_range < K_TOP_VALUE)
         {
-            _code = (_code << 8) | (byte)_stream.ReadByte();
+            _code = (_code << 8) | (byte)Stream.ReadByte();
             _range <<= 8;
             _total++;
         }
@@ -150,7 +152,7 @@ internal partial class Decoder
 
             if (range < K_TOP_VALUE)
             {
-                code = (code << 8) | (byte)_stream.ReadByte();
+                code = (code << 8) | (byte)Stream.ReadByte();
                 range <<= 8;
                 _total++;
             }

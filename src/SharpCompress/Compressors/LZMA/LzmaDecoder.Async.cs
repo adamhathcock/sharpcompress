@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 using System.Threading;
@@ -24,7 +22,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                 == 0
             )
             {
-                return await _lowCoder[posState]
+                return await _lowCoder[posState].NotNull()
                     .DecodeAsync(rangeDecoder, cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -34,7 +32,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                 == 0
             )
             {
-                symbol += await _midCoder[posState]
+                symbol += await _midCoder[posState].NotNull()
                     .DecodeAsync(rangeDecoder, cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -108,7 +106,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             byte prevByte,
             CancellationToken cancellationToken = default
         ) =>
-            await _coders[GetState(pos, prevByte)]
+            await _coders.NotNull()[GetState(pos, prevByte)]
                 .DecodeNormalAsync(rangeDecoder, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -119,7 +117,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             byte matchByte,
             CancellationToken cancellationToken = default
         ) =>
-            await _coders[GetState(pos, prevByte)]
+            await _coders.NotNull()[GetState(pos, prevByte)]
                 .DecodeWithMatchByteAsync(rangeDecoder, matchByte, cancellationToken)
                 .ConfigureAwait(false);
     }
@@ -137,26 +135,26 @@ public partial class Decoder : ICoder, ISetDecoderProperties
         {
             CreateDictionary();
         }
-        await _outWindow.InitAsync(outStream);
+        await _outWindow.NotNull().InitAsync(outStream);
         if (outSize > 0)
         {
-            _outWindow.SetLimit(outSize);
+            _outWindow.NotNull().SetLimit(outSize);
         }
         else
         {
-            _outWindow.SetLimit(long.MaxValue - _outWindow.Total);
+            _outWindow.NotNull().SetLimit(long.MaxValue - _outWindow.NotNull().Total);
         }
 
         var rangeDecoder = new RangeCoder.Decoder();
         await rangeDecoder.InitAsync(inStream, cancellationToken).ConfigureAwait(false);
 
-        await CodeAsync(_dictionarySize, _outWindow, rangeDecoder, cancellationToken)
+        await CodeAsync(_dictionarySize, _outWindow.NotNull(), rangeDecoder, cancellationToken)
             .ConfigureAwait(false);
 
-        await _outWindow.ReleaseStreamAsync(cancellationToken).ConfigureAwait(false);
+        await _outWindow.NotNull().ReleaseStreamAsync(cancellationToken).ConfigureAwait(false);
         rangeDecoder.ReleaseStream();
 
-        await _outWindow.DisposeAsync().ConfigureAwait(false);
+        await _outWindow.NotNull().DisposeAsync().ConfigureAwait(false);
         _outWindow = null;
     }
 
@@ -339,6 +337,6 @@ public partial class Decoder : ICoder, ISetDecoderProperties
         {
             CreateDictionary();
         }
-        await _outWindow.TrainAsync(stream);
+        await _outWindow.NotNull().TrainAsync(stream);
     }
 }
