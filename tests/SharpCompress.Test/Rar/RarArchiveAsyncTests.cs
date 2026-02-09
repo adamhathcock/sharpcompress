@@ -726,7 +726,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     public async ValueTask Rar_Issue1050_WriteToDirectoryAsync_ExtractsToSubdirectories()
     {
         var testFile = "Rar.issue1050.rar";
-        using var fileStream = File.Open(Path.Combine(TEST_ARCHIVES_PATH, testFile), FileMode.Open);
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
         await using var archive = RarArchive.OpenAsyncArchive(fileStream);
 
         // Extract using archive.WriteToDirectoryAsync without explicit options
