@@ -22,14 +22,12 @@ public interface IMultiArchiveOpenable<TSync, TASync>
 
     public static abstract TASync OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 
     public static abstract TASync OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 }
 #endif

@@ -153,11 +153,9 @@ public class ZipFactory
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
@@ -189,13 +187,8 @@ public class ZipFactory
         new ZipWriter(stream, new ZipWriterOptions(writerOptions));
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsyncWriter(
-        Stream stream,
-        WriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public IAsyncWriter OpenAsyncWriter(Stream stream, WriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 

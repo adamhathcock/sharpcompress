@@ -1,6 +1,5 @@
 #if NET8_0_OR_GREATER
 using System.IO;
-using System.Threading;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers.GZip;
@@ -25,33 +24,18 @@ public partial class GZipWriter : IWriterOpenable<GZipWriterOptions>
         return new GZipWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        string path,
-        GZipWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(string path, GZipWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(path, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        Stream stream,
-        GZipWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(Stream stream, GZipWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        FileInfo fileInfo,
-        GZipWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(FileInfo fileInfo, GZipWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(fileInfo, writerOptions);
     }
 }

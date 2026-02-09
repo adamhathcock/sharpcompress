@@ -1,6 +1,5 @@
 #if NET8_0_OR_GREATER
 using System.IO;
-using System.Threading;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers.Zip;
@@ -25,33 +24,18 @@ public partial class ZipWriter : IWriterOpenable<ZipWriterOptions>
         return new ZipWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        string path,
-        ZipWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(string path, ZipWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(path, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        Stream stream,
-        ZipWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(Stream stream, ZipWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        FileInfo fileInfo,
-        ZipWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(FileInfo fileInfo, ZipWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(fileInfo, writerOptions);
     }
 }

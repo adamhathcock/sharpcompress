@@ -94,8 +94,7 @@ public class WriterTests : TestBase
 
             await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(SharpCompressStream.CreateNonDisposing(stream)),
-                readerOptions,
-                cancellationToken
+                readerOptions
             );
             await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,

@@ -69,7 +69,7 @@ public static partial class ArchiveFactory
         options ??= new ReaderOptions { LeaveStreamOpen = false };
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken);
-        return factory.OpenAsyncArchive(filesArray, options, cancellationToken);
+        return factory.OpenAsyncArchive(filesArray, options);
     }
 
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(

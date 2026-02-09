@@ -23,11 +23,9 @@ public partial class GZipArchive
 {
     public static IWritableAsyncArchive OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
         return (IWritableAsyncArchive)OpenArchive(
             new FileInfo(path),
@@ -104,41 +102,33 @@ public partial class GZipArchive
 
     public static IWritableAsyncArchive OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IWritableAsyncArchive)OpenArchive(stream, readerOptions);
     }
 
     public static IWritableAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IWritableAsyncArchive)OpenArchive(fileInfo, readerOptions);
     }
 
     public static IWritableAsyncArchive OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IWritableAsyncArchive)OpenArchive(streams, readerOptions);
     }
 
     public static IWritableAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IWritableAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 

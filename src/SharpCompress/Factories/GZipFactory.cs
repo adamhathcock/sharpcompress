@@ -93,11 +93,9 @@ public class GZipFactory
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
@@ -166,13 +164,8 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsyncWriter(
-        Stream stream,
-        WriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public IAsyncWriter OpenAsyncWriter(Stream stream, WriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         if (writerOptions.CompressionType != CompressionType.GZip)
         {
             throw new InvalidFormatException("GZip archives only support GZip compression type.");

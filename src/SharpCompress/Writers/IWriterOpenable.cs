@@ -18,24 +18,20 @@ public interface IWriterOpenable<TWriterOptions>
     /// <param name="stream">The stream to write to.</param>
     /// <param name="archiveType">The archive type.</param>
     /// <param name="writerOptions">Writer options.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task that returns an IWriter.</returns>
     public static abstract IAsyncWriter OpenAsyncWriter(
         Stream stream,
-        TWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
+        TWriterOptions writerOptions
     );
 
     public static abstract IAsyncWriter OpenAsyncWriter(
         string filePath,
-        TWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
+        TWriterOptions writerOptions
     );
 
     public static abstract IAsyncWriter OpenAsyncWriter(
         FileInfo fileInfo,
-        TWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
+        TWriterOptions writerOptions
     );
 }
 #endif
