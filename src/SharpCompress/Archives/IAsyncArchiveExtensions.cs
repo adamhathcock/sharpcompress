@@ -52,6 +52,9 @@ public static class IAsyncArchiveExtensions
             var bytesRead = 0L;
             var seenDirectories = new HashSet<string>();
 
+            // When extracting an entire archive, default to extracting with full paths
+            options ??= new ExtractionOptions { ExtractFullPath = true, Overwrite = true };
+
             await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
             {
                 cancellationToken.ThrowIfCancellationRequested();

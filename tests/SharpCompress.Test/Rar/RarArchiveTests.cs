@@ -702,6 +702,47 @@ public class RarArchiveTests : ArchiveTests
     }
 
     /// <summary>
+    /// Tests for Issue #1050 - RAR extraction with WriteToDirectory creates folders
+    /// but places all files at the top level instead of in their subdirectories.
+    /// </summary>
+    [Fact]
+    public void Rar_Issue1050_WriteToDirectory_ExtractsToSubdirectories()
+    {
+        var testFile = "Rar.issue1050.rar";
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+        using var archive = RarArchive.OpenArchive(fileStream);
+
+        // Extract using archive.WriteToDirectory without explicit options
+        archive.WriteToDirectory(SCRATCH_FILES_PATH);
+
+        // Verify files are in their subdirectories, not at the root
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "PhysicsBraid", "263825.tr11dtp")),
+            "File should be in PhysicsBraid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Animations", "15441.tr11anim")),
+            "File should be in Animations subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766728.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "HeadBraid", "321353.tr11modeldata")),
+            "File should be in HeadBraid subdirectory"
+        );
+
+        // Verify the exact file size of 766832.tr11dtp matches the archive entry size
+        var fileInfo = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp"));
+        Assert.Equal(4867620, fileInfo.Length); // Expected: 4,867,620 bytes
+    }
+
+    /// <summary>
     /// Test case for malformed RAR archives that previously caused infinite loops.
     /// This test verifies that attempting to read entries from a potentially malformed
     /// 512-byte RAR archive throws an InvalidOperationException instead of looping infinitely.
