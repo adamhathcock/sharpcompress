@@ -1,5 +1,3 @@
-#nullable disable
-
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +15,7 @@ internal partial class Encoder
             {
                 var b = (byte)(temp + (_low >> 32));
                 var buffer = new[] { b };
-                await _stream.WriteAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+                await Stream.WriteAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
                 temp = 0xFF;
             } while (--_cacheSize != 0);
             _cache = (byte)(((uint)_low) >> 24);
@@ -72,7 +70,7 @@ internal partial class Encoder
     }
 
     public async ValueTask FlushStreamAsync(CancellationToken cancellationToken = default) =>
-        await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        await Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
 }
 
 internal partial class Decoder
@@ -103,7 +101,7 @@ internal partial class Decoder
         while (_range < K_TOP_VALUE)
         {
             var buffer = new byte[1];
-            var read = await _stream
+            var read = await Stream
                 .ReadAsync(buffer, 0, 1, cancellationToken)
                 .ConfigureAwait(false);
             if (read == 0)
@@ -121,7 +119,7 @@ internal partial class Decoder
         if (_range < K_TOP_VALUE)
         {
             var buffer = new byte[1];
-            var read = await _stream
+            var read = await Stream
                 .ReadAsync(buffer, 0, 1, cancellationToken)
                 .ConfigureAwait(false);
             if (read == 0)
@@ -152,7 +150,7 @@ internal partial class Decoder
 
             if (range < K_TOP_VALUE)
             {
-                var read = await _stream
+                var read = await Stream
                     .ReadAsync(buffer, 0, 1, cancellationToken)
                     .ConfigureAwait(false);
                 if (read == 0)

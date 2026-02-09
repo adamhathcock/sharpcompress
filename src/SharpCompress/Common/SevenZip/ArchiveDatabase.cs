@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +16,7 @@ internal partial class ArchiveDatabase
     internal List<long> _packSizes = new();
     internal List<uint?> _packCrCs = new();
     internal List<CFolder> _folders = new();
-    internal List<int> _numUnpackStreamsVector;
+    internal List<int>? _numUnpackStreamsVector;
     internal List<CFileItem> _files = new();
 
     internal List<long> _packStreamStartPositions = new();
@@ -47,7 +45,7 @@ internal partial class ArchiveDatabase
         _packSizes.Count == 0
         && _packCrCs.Count == 0
         && _folders.Count == 0
-        && _numUnpackStreamsVector.Count == 0
+        && (_numUnpackStreamsVector?.Count ?? 0) == 0
         && _files.Count == 0;
 
     private void FillStartPos()
@@ -94,7 +92,7 @@ internal partial class ArchiveDatabase
 
                     _folderStartFileIndex.Add(i); // check it
 
-                    if (_numUnpackStreamsVector![folderIndex] != 0)
+                    if (_numUnpackStreamsVector.NotNull()[folderIndex] != 0)
                     {
                         break;
                     }

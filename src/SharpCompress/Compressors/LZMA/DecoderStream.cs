@@ -1,3 +1,5 @@
+#nullable disable
+
 using System;
 using System.IO;
 using System.Threading;
@@ -176,7 +178,7 @@ internal static class DecoderStreamHelper
         return DecoderRegistry.CreateDecoderStream(
             coderInfo._methodId,
             inStreams,
-            coderInfo._props.NotNull(),
+                coderInfo._props,
             pass,
             unpackSize
         );
@@ -268,7 +270,7 @@ internal static class DecoderStreamHelper
             .CreateDecoderStreamAsync(
                 coderInfo._methodId,
                 inStreams,
-                coderInfo._props.NotNull(),
+            coderInfo._props,
                 pass,
                 unpackSize,
                 cancellationToken

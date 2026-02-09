@@ -147,7 +147,7 @@ public partial class LzmaStream
                 _decoder.SetDecoderProperties(Properties);
             }
 
-            await _rangeDecoder.InitAsync(_inputStream, cancellationToken);
+            await _rangeDecoder.InitAsync(_inputStream.NotNull(), cancellationToken);
         }
         else if (control > 0x02)
         {

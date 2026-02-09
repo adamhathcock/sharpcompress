@@ -289,7 +289,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
         Stream outStream,
         long inSize,
         long outSize,
-        ICodeProgress progress
+        ICodeProgress? progress
     )
     {
         if (_outWindow is null)
