@@ -104,8 +104,7 @@ public static class IArchiveEntryExtensions
             ExtractionMethods.WriteEntryToDirectory(
                 entry,
                 destinationDirectory,
-                entry.Archive.ReaderOptions,
-                (path, options) => entry.WriteToFile(path)
+                (path) => entry.WriteToFile(path)
             );
 
         /// <summary>
@@ -119,8 +118,7 @@ public static class IArchiveEntryExtensions
                 .WriteEntryToDirectoryAsync(
                     entry,
                     destinationDirectory,
-                    entry.Archive.ReaderOptions,
-                    async (path, options, ct) =>
+                    async (path, ct) =>
                         await entry.WriteToFileAsync(path, ct).ConfigureAwait(false),
                     cancellationToken
                 )
@@ -133,7 +131,6 @@ public static class IArchiveEntryExtensions
             ExtractionMethods.WriteEntryToFile(
                 entry,
                 destinationFileName,
-                entry.Archive.ReaderOptions,
                 (x, fm) =>
                 {
                     using var fs = File.Open(destinationFileName, fm);
@@ -152,7 +149,6 @@ public static class IArchiveEntryExtensions
                 .WriteEntryToFileAsync(
                     entry,
                     destinationFileName,
-                    entry.Archive.ReaderOptions,
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(destinationFileName, fm);

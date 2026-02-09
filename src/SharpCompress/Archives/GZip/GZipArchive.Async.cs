@@ -84,7 +84,8 @@ public partial class GZipArchive
         var stream = (await volumes.SingleAsync()).Stream;
         yield return new GZipArchiveEntry(
             this,
-            await GZipFilePart.CreateAsync(stream, ReaderOptions.ArchiveEncoding)
+            await GZipFilePart.CreateAsync(stream, ReaderOptions.ArchiveEncoding),
+            ReaderOptions
         );
     }
 }

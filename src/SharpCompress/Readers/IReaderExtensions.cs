@@ -37,8 +37,7 @@ public static class IReaderExtensions
             ExtractionMethods.WriteEntryToDirectory(
                 reader.Entry,
                 destinationDirectory,
-                null,
-                (path, options) => reader.WriteEntryToFile(path)
+                (path) => reader.WriteEntryToFile(path)
             );
 
         /// <summary>
@@ -48,7 +47,6 @@ public static class IReaderExtensions
             ExtractionMethods.WriteEntryToFile(
                 reader.Entry,
                 destinationFileName,
-                null,
                 (x, fm) =>
                 {
                     using var fs = File.Open(destinationFileName, fm);

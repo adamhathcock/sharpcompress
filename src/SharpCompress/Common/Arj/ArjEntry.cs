@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Common.Arc;
 using SharpCompress.Common.Arj.Headers;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Common.Arj;
 
@@ -12,7 +13,8 @@ public class ArjEntry : Entry
 {
     private readonly ArjFilePart _filePart;
 
-    internal ArjEntry(ArjFilePart filePart)
+    internal ArjEntry(ArjFilePart filePart, IReaderOptions readerOptions)
+        : base(readerOptions)
     {
         _filePart = filePart;
     }

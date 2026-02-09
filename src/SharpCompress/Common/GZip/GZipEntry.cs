@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Common.Options;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common.GZip;
@@ -9,7 +10,11 @@ public partial class GZipEntry : Entry
 {
     private readonly GZipFilePart? _filePart;
 
-    internal GZipEntry(GZipFilePart? filePart) => _filePart = filePart;
+    internal GZipEntry(GZipFilePart? filePart, IReaderOptions readerOptions)
+        : base(readerOptions)
+    {
+        _filePart = filePart;
+    }
 
     public override CompressionType CompressionType => CompressionType.GZip;
 
@@ -41,7 +46,7 @@ public partial class GZipEntry : Entry
 
     internal static IEnumerable<GZipEntry> GetEntries(Stream stream, ReaderOptions options)
     {
-        yield return new GZipEntry(GZipFilePart.Create(stream, options.ArchiveEncoding));
+        yield return new GZipEntry(GZipFilePart.Create(stream, options.ArchiveEncoding), options);
     }
 
     // Async methods moved to GZipEntry.Async.cs

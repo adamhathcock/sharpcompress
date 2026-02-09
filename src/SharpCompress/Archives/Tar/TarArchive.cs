@@ -59,7 +59,8 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
                         var entry = new TarArchiveEntry(
                             this,
                             new TarFilePart(previousHeader, stream),
-                            CompressionType.None
+                            CompressionType.None,
+                            ReaderOptions
                         );
 
                         var oldStreamPos = stream.Position;
@@ -81,7 +82,8 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
                     yield return new TarArchiveEntry(
                         this,
                         new TarFilePart(header, stream),
-                        CompressionType.None
+                        CompressionType.None,
+                        ReaderOptions
                     );
                 }
             }

@@ -20,8 +20,7 @@ public static class IAsyncReaderExtensions
                 .WriteEntryToDirectoryAsync(
                     reader.Entry,
                     destinationDirectory,
-                    null,
-                    async (path, options, ct) =>
+                    async (path, ct) =>
                         await reader.WriteEntryToFileAsync(path, ct).ConfigureAwait(false),
                     cancellationToken
                 )
@@ -38,7 +37,6 @@ public static class IAsyncReaderExtensions
                 .WriteEntryToFileAsync(
                     reader.Entry,
                     destinationFileName,
-                    null,
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(destinationFileName, fm);
@@ -72,7 +70,6 @@ public static class IAsyncReaderExtensions
                 .WriteEntryToFileAsync(
                     reader.Entry,
                     destinationFileName,
-                    null,
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(destinationFileName, fm);

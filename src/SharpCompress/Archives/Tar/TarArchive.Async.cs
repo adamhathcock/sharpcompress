@@ -127,7 +127,8 @@ public partial class TarArchive
                             var entry = new TarArchiveEntry(
                                 this,
                                 new TarFilePart(previousHeader, stream),
-                                CompressionType.None
+                                CompressionType.None,
+                                ReaderOptions
                             );
 
                             var oldStreamPos = stream.Position;
@@ -151,7 +152,8 @@ public partial class TarArchive
                         yield return new TarArchiveEntry(
                             this,
                             new TarFilePart(header, stream),
-                            CompressionType.None
+                            CompressionType.None,
+                            ReaderOptions
                         );
                     }
                 }

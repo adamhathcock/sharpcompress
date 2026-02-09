@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 
@@ -18,16 +19,22 @@ public partial class ZipReader
     {
         private readonly StreamingZipHeaderFactory _headerFactory;
         private readonly Stream _stream;
+        private readonly IReaderOptions _options;
 
-        public ZipEntryAsyncEnumerable(StreamingZipHeaderFactory headerFactory, Stream stream)
+        public ZipEntryAsyncEnumerable(
+            StreamingZipHeaderFactory headerFactory,
+            Stream stream,
+            IReaderOptions options
+        )
         {
             _headerFactory = headerFactory;
             _stream = stream;
+            _options = options;
         }
 
         public IAsyncEnumerator<ZipEntry> GetAsyncEnumerator(
             CancellationToken cancellationToken = default
-        ) => new ZipEntryAsyncEnumerator(_headerFactory, _stream, cancellationToken);
+        ) => new ZipEntryAsyncEnumerator(_headerFactory, _stream, _options, cancellationToken);
     }
 
     /// <summary>
@@ -37,15 +44,18 @@ public partial class ZipReader
     {
         private readonly Stream _stream;
         private readonly IAsyncEnumerator<ZipHeader> _headerEnumerator;
+        private readonly IReaderOptions _options;
         private ZipEntry? _current;
 
         public ZipEntryAsyncEnumerator(
             StreamingZipHeaderFactory headerFactory,
             Stream stream,
+            IReaderOptions options,
             CancellationToken cancellationToken
         )
         {
             _stream = stream;
+            _options = options;
             _headerEnumerator = headerFactory
                 .ReadStreamHeaderAsync(stream)
                 .GetAsyncEnumerator(cancellationToken);
@@ -67,7 +77,8 @@ public partial class ZipReader
                 {
                     case ZipHeaderType.LocalEntry:
                         _current = new ZipEntry(
-                            new StreamingZipFilePart((LocalEntryHeader)header, _stream)
+                            new StreamingZipFilePart((LocalEntryHeader)header, _stream),
+                            _options
                         );
                         return true;
                     case ZipHeaderType.DirectoryEntry:

@@ -1,17 +1,12 @@
 using System.IO;
-using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
 internal static class EntryExtensions
 {
-    internal static void PreserveExtractionOptions(
-        this IEntry entry,
-        string destinationFileName,
-        ReaderOptions options
-    )
+    internal static void PreserveExtractionOptions(this IEntry entry, string destinationFileName)
     {
-        if (options.PreserveFileTime || options.PreserveAttributes)
+        if (entry.Options.PreserveFileTime || entry.Options.PreserveAttributes)
         {
             var nf = new FileInfo(destinationFileName);
             if (!nf.Exists)
@@ -20,7 +15,7 @@ internal static class EntryExtensions
             }
 
             // update file time to original packed time
-            if (options.PreserveFileTime)
+            if (entry.Options.PreserveFileTime)
             {
                 if (entry.CreatedTime.HasValue)
                 {
@@ -38,7 +33,7 @@ internal static class EntryExtensions
                 }
             }
 
-            if (options.PreserveAttributes)
+            if (entry.Options.PreserveAttributes)
             {
                 if (entry.Attrib.HasValue)
                 {
