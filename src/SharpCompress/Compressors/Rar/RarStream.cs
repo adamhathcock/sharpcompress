@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Buffers;
 using System.IO;
@@ -15,11 +13,11 @@ internal partial class RarStream : Stream
 
     private bool fetch;
 
-    private byte[] tmpBuffer = ArrayPool<byte>.Shared.Rent(65536);
+    private byte[]? tmpBuffer = ArrayPool<byte>.Shared.Rent(65536);
     private int tmpOffset;
     private int tmpCount;
 
-    private byte[] outBuffer;
+    private byte[]? outBuffer;
     private int outOffset;
     private int outCount;
     private int outTotal;
@@ -47,8 +45,11 @@ internal partial class RarStream : Stream
         {
             if (disposing)
             {
-                ArrayPool<byte>.Shared.Return(this.tmpBuffer);
-                this.tmpBuffer = null;
+                if (this.tmpBuffer is not null)
+                {
+                    ArrayPool<byte>.Shared.Return(this.tmpBuffer);
+                    this.tmpBuffer = null;
+                }
                 readStream.Dispose();
             }
             isDisposed = true;
@@ -79,7 +80,7 @@ internal partial class RarStream : Stream
         if (tmpCount > 0)
         {
             var toCopy = tmpCount < count ? tmpCount : count;
-            Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
+            Buffer.BlockCopy(tmpBuffer.NotNull(), tmpOffset, buffer, offset, toCopy);
             tmpOffset += toCopy;
             tmpCount -= toCopy;
             offset += toCopy;
@@ -119,7 +120,7 @@ internal partial class RarStream : Stream
         if (outCount > 0)
         {
             var toCopy = outCount < count ? outCount : count;
-            Buffer.BlockCopy(buffer, offset, outBuffer, outOffset, toCopy);
+            Buffer.BlockCopy(buffer, offset, outBuffer.NotNull(), outOffset, toCopy);
             outOffset += toCopy;
             outCount -= toCopy;
             offset += toCopy;
@@ -129,7 +130,7 @@ internal partial class RarStream : Stream
         if (count > 0)
         {
             EnsureBufferCapacity(count);
-            Buffer.BlockCopy(buffer, offset, tmpBuffer, tmpCount, count);
+            Buffer.BlockCopy(buffer, offset, tmpBuffer.NotNull(), tmpCount, count);
             tmpCount += count;
             tmpOffset = 0;
             unpack.Suspended = true;
@@ -142,15 +143,16 @@ internal partial class RarStream : Stream
 
     private void EnsureBufferCapacity(int count)
     {
-        if (this.tmpBuffer.Length < this.tmpCount + count)
+        var buffer = this.tmpBuffer.NotNull();
+        if (buffer.Length < this.tmpCount + count)
         {
             var newLength =
-                this.tmpBuffer.Length * 2 > this.tmpCount + count
-                    ? this.tmpBuffer.Length * 2
+                buffer.Length * 2 > this.tmpCount + count
+                    ? buffer.Length * 2
                     : this.tmpCount + count;
             var newBuffer = ArrayPool<byte>.Shared.Rent(newLength);
-            Buffer.BlockCopy(this.tmpBuffer, 0, newBuffer, 0, this.tmpCount);
-            var oldBuffer = this.tmpBuffer;
+            Buffer.BlockCopy(buffer, 0, newBuffer, 0, this.tmpCount);
+            var oldBuffer = buffer;
             this.tmpBuffer = newBuffer;
             ArrayPool<byte>.Shared.Return(oldBuffer);
         }

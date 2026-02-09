@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 using System.Threading;
@@ -36,7 +34,7 @@ public sealed partial class XZStream : XZReadOnlyStream
 
     private void AssertBlockCheckTypeIsSupported()
     {
-        switch (Header.BlockCheckType)
+        switch (Header.NotNull().BlockCheckType)
         {
             case CheckType.NONE:
             case CheckType.CRC32:
@@ -49,11 +47,11 @@ public sealed partial class XZStream : XZReadOnlyStream
     }
 
     private readonly Stream _baseStream;
-    public XZHeader Header { get; private set; }
-    public XZIndex Index { get; private set; }
-    public XZFooter Footer { get; private set; }
+    public XZHeader? Header { get; private set; }
+    public XZIndex? Index { get; private set; }
+    public XZFooter? Footer { get; private set; }
     public bool HeaderIsRead { get; private set; }
-    private XZBlock _currentBlock;
+    private XZBlock? _currentBlock;
 
     private bool _endOfStream;
 
@@ -113,7 +111,7 @@ public sealed partial class XZStream : XZReadOnlyStream
 
                 var remaining = count - bytesRead;
                 var newOffset = offset + bytesRead;
-                var justRead = _currentBlock.Read(buffer, newOffset, remaining);
+                var justRead = _currentBlock.NotNull().Read(buffer, newOffset, remaining);
                 if (justRead < remaining)
                 {
                     NextBlock();
@@ -130,5 +128,5 @@ public sealed partial class XZStream : XZReadOnlyStream
     }
 
     private void NextBlock() =>
-        _currentBlock = new XZBlock(BaseStream, Header.BlockCheckType, Header.BlockCheckSize);
+        _currentBlock = new XZBlock(BaseStream, Header.NotNull().BlockCheckType, Header.NotNull().BlockCheckSize);
 }

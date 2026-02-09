@@ -24,9 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#nullable disable
-
-using System;
+    using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,7 +54,7 @@ public sealed partial class ADCStream : Stream
     /// <summary>
     /// Buffer with currently used chunk of decompressed data
     /// </summary>
-    private byte[] _outBuffer;
+    private byte[]? _outBuffer;
 
     /// <summary>
     /// Position in buffer of decompressed data
@@ -139,10 +137,11 @@ public sealed partial class ADCStream : Stream
         var toCopy = count;
         var copied = 0;
 
-        while (_outPosition + toCopy >= _outBuffer.Length)
+        while (_outPosition + toCopy >= _outBuffer.NotNull().Length)
         {
-            var piece = _outBuffer.Length - _outPosition;
-            Array.Copy(_outBuffer, _outPosition, buffer, inPosition, piece);
+            var outBuf = _outBuffer.NotNull();
+            var piece = outBuf.Length - _outPosition;
+            Array.Copy(outBuf, _outPosition, buffer, inPosition, piece);
             inPosition += piece;
             copied += piece;
             _position += piece;
@@ -155,7 +154,7 @@ public sealed partial class ADCStream : Stream
             }
         }
 
-        Array.Copy(_outBuffer, _outPosition, buffer, inPosition, toCopy);
+        Array.Copy(_outBuffer.NotNull(), _outPosition, buffer, inPosition, toCopy);
         _outPosition += toCopy;
         _position += toCopy;
         copied += toCopy;

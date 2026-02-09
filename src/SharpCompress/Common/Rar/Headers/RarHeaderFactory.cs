@@ -62,7 +62,7 @@ public partial class RarHeaderFactory
             if (_isRar5 && _cryptInfo != null)
             {
                 _cryptInfo.ReadInitV(new MarkingBinaryReader(stream));
-                var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
+                var _headerKey = new CryptKey5(Options.Password.NotNull(), _cryptInfo);
 
                 reader = RarCryptoBinaryReader.Create(stream, _headerKey, _cryptInfo.Salt);
             }
