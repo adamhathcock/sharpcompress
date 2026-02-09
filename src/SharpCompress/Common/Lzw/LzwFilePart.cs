@@ -36,8 +36,15 @@ internal sealed partial class LzwFilePart : FilePart
 
     private static string? DeriveFileName(Stream stream)
     {
+        // Unwrap SharpCompressStream to get to the underlying FileStream
+        var unwrappedStream = stream;
+        if (stream is SharpCompress.IO.IStreamStack streamStack)
+        {
+            unwrappedStream = streamStack.BaseStream();
+        }
+
         // Try to derive filename from FileStream
-        if (stream is FileStream fileStream && !string.IsNullOrEmpty(fileStream.Name))
+        if (unwrappedStream is FileStream fileStream && !string.IsNullOrEmpty(fileStream.Name))
         {
             var fileName = Path.GetFileName(fileStream.Name);
             // Strip .Z extension if present
