@@ -3,6 +3,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common.Options;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
@@ -23,8 +25,8 @@ internal static partial class ExtractionMethods
     public static void WriteEntryToDirectory(
         IEntry entry,
         string destinationDirectory,
-        ExtractionOptions? options,
-        Action<string, ExtractionOptions?> write
+        ReaderOptions? options,
+        Action<string, ReaderOptions?> write
     )
     {
         string destinationFileName;
@@ -46,7 +48,7 @@ internal static partial class ExtractionMethods
             );
         }
 
-        options ??= new ExtractionOptions() { Overwrite = true };
+        options ??= new ReaderOptions { Overwrite = true };
 
         var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
         file = Utility.ReplaceInvalidFileNameChars(file);
@@ -95,7 +97,7 @@ internal static partial class ExtractionMethods
     public static void WriteEntryToFile(
         IEntry entry,
         string destinationFileName,
-        ExtractionOptions? options,
+        ReaderOptions? options,
         Action<string, FileMode> openAndWrite
     )
     {
@@ -107,14 +109,14 @@ internal static partial class ExtractionMethods
             }
             else
             {
-                ExtractionOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+                ReaderOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
             return;
         }
         else
         {
             var fm = FileMode.Create;
-            options ??= new ExtractionOptions() { Overwrite = true };
+            options ??= new ReaderOptions { Overwrite = true };
 
             if (!options.Overwrite)
             {

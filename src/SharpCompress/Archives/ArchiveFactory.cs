@@ -94,11 +94,11 @@ public static partial class ArchiveFactory
     public static void WriteToDirectory(
         string sourceArchive,
         string destinationDirectory,
-        ExtractionOptions? options = null
+        ReaderOptions? options = null
     )
     {
-        using var archive = OpenArchive(sourceArchive);
-        archive.WriteToDirectory(destinationDirectory, options);
+        using var archive = OpenArchive(sourceArchive, options);
+        archive.WriteToDirectory(destinationDirectory);
     }
 
     public static T FindFactory<T>(string path)

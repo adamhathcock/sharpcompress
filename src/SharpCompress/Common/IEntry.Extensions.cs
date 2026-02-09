@@ -1,4 +1,5 @@
 using System.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
@@ -7,7 +8,7 @@ internal static class EntryExtensions
     internal static void PreserveExtractionOptions(
         this IEntry entry,
         string destinationFileName,
-        ExtractionOptions options
+        ReaderOptions options
     )
     {
         if (options.PreserveFileTime || options.PreserveAttributes)
