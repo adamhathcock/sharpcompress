@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +13,7 @@ namespace SharpCompress.Readers.Ace;
 internal class MultiVolumeAceReader : AceReader
 {
     private readonly IEnumerator<Stream> streams;
-    private Stream tempStream;
+    private Stream? tempStream;
 
     internal MultiVolumeAceReader(IEnumerable<Stream> streams, ReaderOptions options)
         : base(options) => this.streams = streams.GetEnumerator();
@@ -54,13 +52,13 @@ internal class MultiVolumeAceReader : AceReader
     {
         private readonly MultiVolumeAceReader reader;
         private readonly IEnumerator<Stream> nextReadableStreams;
-        private Stream tempStream;
+        private Stream? tempStream;
         private bool isFirst = true;
 
         internal MultiVolumeStreamEnumerator(
             MultiVolumeAceReader r,
             IEnumerator<Stream> nextReadableStreams,
-            Stream tempStream
+            Stream? tempStream
         )
         {
             reader = r;
@@ -72,7 +70,12 @@ internal class MultiVolumeAceReader : AceReader
 
         IEnumerator IEnumerable.GetEnumerator() => this;
 
-        public FilePart Current { get; private set; }
+        private FilePart? _current;
+        public FilePart Current
+        {
+            get => _current.NotNull();
+            private set => _current = value;
+        }
 
         public void Dispose() { }
 
@@ -82,7 +85,7 @@ internal class MultiVolumeAceReader : AceReader
         {
             if (isFirst)
             {
-                Current = reader.Entry.Parts.First();
+                _current = reader.Entry.Parts.First();
                 isFirst = false; //first stream already to go
                 return true;
             }
@@ -93,7 +96,7 @@ internal class MultiVolumeAceReader : AceReader
             }
             if (tempStream != null)
             {
-                reader.LoadStreamForReading(tempStream);
+                reader.LoadStreamForReading(tempStream.NotNull());
                 tempStream = null;
             }
             else if (!nextReadableStreams.MoveNext())
@@ -107,7 +110,7 @@ internal class MultiVolumeAceReader : AceReader
                 reader.LoadStreamForReading(nextReadableStreams.Current);
             }
 
-            Current = reader.Entry.Parts.First();
+            _current = reader.Entry.Parts.First();
             return true;
         }
 

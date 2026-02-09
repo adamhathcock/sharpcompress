@@ -13,8 +13,12 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
     {
         private BitDecoder _choice = new();
         private BitDecoder _choice2 = new();
-        private readonly BitTreeDecoder?[] _lowCoder = new BitTreeDecoder?[Base.K_NUM_POS_STATES_MAX];
-        private readonly BitTreeDecoder?[] _midCoder = new BitTreeDecoder?[Base.K_NUM_POS_STATES_MAX];
+        private readonly BitTreeDecoder?[] _lowCoder = new BitTreeDecoder?[
+            Base.K_NUM_POS_STATES_MAX
+        ];
+        private readonly BitTreeDecoder?[] _midCoder = new BitTreeDecoder?[
+            Base.K_NUM_POS_STATES_MAX
+        ];
         private BitTreeDecoder _highCoder = new(Base.K_NUM_HIGH_LEN_BITS);
         private uint _numPosStates;
 
@@ -151,7 +155,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Strea
             uint pos,
             byte prevByte,
             byte matchByte
-        ) => _coders.NotNull()[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
+        ) =>
+            _coders.NotNull()[GetState(pos, prevByte)].DecodeWithMatchByte(rangeDecoder, matchByte);
     }
 
     private OutWindow? _outWindow;

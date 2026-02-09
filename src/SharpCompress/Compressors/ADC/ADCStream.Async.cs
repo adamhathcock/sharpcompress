@@ -24,8 +24,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#nullable disable
-
 using System;
 using System.IO;
 using System.Threading;
@@ -78,11 +76,12 @@ public sealed partial class ADCStream
         var toCopy = count;
         var copied = 0;
 
-        while (_outPosition + toCopy >= _outBuffer.Length)
+        var outBuf = _outBuffer.NotNull();
+        while (_outPosition + toCopy >= outBuf.Length)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var piece = _outBuffer.Length - _outPosition;
-            Array.Copy(_outBuffer, _outPosition, buffer, inPosition, piece);
+            var piece = outBuf.Length - _outPosition;
+            Array.Copy(outBuf, _outPosition, buffer, inPosition, piece);
             inPosition += piece;
             copied += piece;
             _position += piece;
@@ -97,9 +96,10 @@ public sealed partial class ADCStream
             {
                 return copied;
             }
+            outBuf = _outBuffer;
         }
 
-        Array.Copy(_outBuffer, _outPosition, buffer, inPosition, toCopy);
+        Array.Copy(outBuf, _outPosition, buffer, inPosition, toCopy);
         _outPosition += toCopy;
         _position += toCopy;
         copied += toCopy;

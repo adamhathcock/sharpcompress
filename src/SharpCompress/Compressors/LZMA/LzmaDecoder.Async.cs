@@ -22,7 +22,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                 == 0
             )
             {
-                return await _lowCoder[posState].NotNull()
+                return await _lowCoder[posState]
+                    .NotNull()
                     .DecodeAsync(rangeDecoder, cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -32,7 +33,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                 == 0
             )
             {
-                symbol += await _midCoder[posState].NotNull()
+                symbol += await _midCoder[posState]
+                    .NotNull()
                     .DecodeAsync(rangeDecoder, cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -106,7 +108,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             byte prevByte,
             CancellationToken cancellationToken = default
         ) =>
-            await _coders.NotNull()[GetState(pos, prevByte)]
+            await _coders
+                .NotNull()[GetState(pos, prevByte)]
                 .DecodeNormalAsync(rangeDecoder, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -117,7 +120,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             byte matchByte,
             CancellationToken cancellationToken = default
         ) =>
-            await _coders.NotNull()[GetState(pos, prevByte)]
+            await _coders
+                .NotNull()[GetState(pos, prevByte)]
                 .DecodeWithMatchByteAsync(rangeDecoder, matchByte, cancellationToken)
                 .ConfigureAwait(false);
     }

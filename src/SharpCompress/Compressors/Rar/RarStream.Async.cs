@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Buffers;
 using System.IO;
@@ -47,7 +45,7 @@ internal partial class RarStream
         if (tmpCount > 0)
         {
             var toCopy = tmpCount < count ? tmpCount : count;
-            Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
+            Buffer.BlockCopy(tmpBuffer.NotNull(), tmpOffset, buffer, offset, toCopy);
             tmpOffset += toCopy;
             tmpCount -= toCopy;
             offset += toCopy;

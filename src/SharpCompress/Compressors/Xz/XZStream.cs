@@ -128,5 +128,9 @@ public sealed partial class XZStream : XZReadOnlyStream
     }
 
     private void NextBlock() =>
-        _currentBlock = new XZBlock(BaseStream, Header.NotNull().BlockCheckType, Header.NotNull().BlockCheckSize);
+        _currentBlock = new XZBlock(
+            BaseStream,
+            Header.NotNull().BlockCheckType,
+            Header.NotNull().BlockCheckSize
+        );
 }
