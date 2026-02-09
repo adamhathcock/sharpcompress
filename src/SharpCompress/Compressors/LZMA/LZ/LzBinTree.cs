@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 
@@ -11,8 +9,8 @@ internal sealed class BinTree : InWindow
     private uint _cyclicBufferSize;
     private uint _matchMaxLen;
 
-    private uint[] _son;
-    private uint[] _hash;
+    private uint[]? _son;
+    private uint[]? _hash;
 
     private uint _cutValue = 0xFF;
     private uint _hashMask;
@@ -56,9 +54,10 @@ internal sealed class BinTree : InWindow
     public new void Init()
     {
         base.Init();
+        var hash = _hash.NotNull();
         for (uint i = 0; i < _hashSizeSum; i++)
         {
-            _hash[i] = K_EMPTY_HASH_VALUE;
+            hash[i] = K_EMPTY_HASH_VALUE;
         }
         _cyclicBufferPos = 0;
         ReduceOffsets(-1);
@@ -141,6 +140,8 @@ internal sealed class BinTree : InWindow
 
     public uint GetMatches(uint[] distances)
     {
+        var son = _son.NotNull();
+        var hash = _hash.NotNull();
         uint lenLimit;
         if (_pos + _matchMaxLen <= _streamPos)
         {
@@ -164,26 +165,27 @@ internal sealed class BinTree : InWindow
             hash2Value = 0,
             hash3Value = 0;
 
+        var bufferBase = _bufferBase.NotNull();
         if (_hashArray)
         {
-            var temp = Crc.TABLE[_bufferBase[cur]] ^ _bufferBase[cur + 1];
+            var temp = Crc.TABLE[bufferBase[cur]] ^ bufferBase[cur + 1];
             hash2Value = temp & (K_HASH2_SIZE - 1);
-            temp ^= ((uint)(_bufferBase[cur + 2]) << 8);
+            temp ^= ((uint)(bufferBase[cur + 2]) << 8);
             hash3Value = temp & (K_HASH3_SIZE - 1);
-            hashValue = (temp ^ (Crc.TABLE[_bufferBase[cur + 3]] << 5)) & _hashMask;
+            hashValue = (temp ^ (Crc.TABLE[bufferBase[cur + 3]] << 5)) & _hashMask;
         }
         else
         {
-            hashValue = _bufferBase[cur] ^ ((uint)(_bufferBase[cur + 1]) << 8);
+            hashValue = bufferBase[cur] ^ ((uint)(bufferBase[cur + 1]) << 8);
         }
 
-        var curMatch = _hash[_kFixHashSize + hashValue];
+        var curMatch = hash[_kFixHashSize + hashValue];
         if (_hashArray)
         {
-            var curMatch2 = _hash[hash2Value];
-            var curMatch3 = _hash[K_HASH3_OFFSET + hash3Value];
-            _hash[hash2Value] = _pos;
-            _hash[K_HASH3_OFFSET + hash3Value] = _pos;
+            var curMatch2 = hash[hash2Value];
+            var curMatch3 = hash[K_HASH3_OFFSET + hash3Value];
+            hash[hash2Value] = _pos;
+            hash[K_HASH3_OFFSET + hash3Value] = _pos;
             if (curMatch2 > matchMinPos)
             {
                 if (_bufferBase[_bufferOffset + curMatch2] == _bufferBase[cur])
@@ -212,7 +214,7 @@ internal sealed class BinTree : InWindow
             }
         }
 
-        _hash[_kFixHashSize + hashValue] = _pos;
+        hash[_kFixHashSize + hashValue] = _pos;
 
         var ptr0 = (_cyclicBufferPos << 1) + 1;
         var ptr1 = (_cyclicBufferPos << 1);
@@ -242,7 +244,7 @@ internal sealed class BinTree : InWindow
         {
             if (curMatch <= matchMinPos || count-- == 0)
             {
-                _son[ptr0] = _son[ptr1] = K_EMPTY_HASH_VALUE;
+                son[ptr0] = son[ptr1] = K_EMPTY_HASH_VALUE;
                 break;
             }
             var delta = _pos - curMatch;
@@ -270,24 +272,24 @@ internal sealed class BinTree : InWindow
                     distances[offset++] = delta - 1;
                     if (len == lenLimit)
                     {
-                        _son[ptr1] = _son[cyclicPos];
-                        _son[ptr0] = _son[cyclicPos + 1];
+                        son[ptr1] = son[cyclicPos];
+                        son[ptr0] = son[cyclicPos + 1];
                         break;
                     }
                 }
             }
             if (_bufferBase[pby1 + len] < _bufferBase[cur + len])
             {
-                _son[ptr1] = curMatch;
+                son[ptr1] = curMatch;
                 ptr1 = cyclicPos + 1;
-                curMatch = _son[ptr1];
+                curMatch = son[ptr1];
                 len1 = len;
             }
             else
             {
-                _son[ptr0] = curMatch;
+                son[ptr0] = curMatch;
                 ptr0 = cyclicPos;
-                curMatch = _son[ptr0];
+                curMatch = son[ptr0];
                 len0 = len;
             }
         }
@@ -297,6 +299,8 @@ internal sealed class BinTree : InWindow
 
     public void Skip(uint num)
     {
+        var son = _son.NotNull();
+        var hash = _hash.NotNull();
         do
         {
             uint lenLimit;
@@ -323,10 +327,10 @@ internal sealed class BinTree : InWindow
             {
                 var temp = Crc.TABLE[_bufferBase[cur]] ^ _bufferBase[cur + 1];
                 var hash2Value = temp & (K_HASH2_SIZE - 1);
-                _hash[hash2Value] = _pos;
+                hash[hash2Value] = _pos;
                 temp ^= ((uint)(_bufferBase[cur + 2]) << 8);
                 var hash3Value = temp & (K_HASH3_SIZE - 1);
-                _hash[K_HASH3_OFFSET + hash3Value] = _pos;
+                hash[K_HASH3_OFFSET + hash3Value] = _pos;
                 hashValue = (temp ^ (Crc.TABLE[_bufferBase[cur + 3]] << 5)) & _hashMask;
             }
             else
@@ -334,8 +338,8 @@ internal sealed class BinTree : InWindow
                 hashValue = _bufferBase[cur] ^ ((uint)(_bufferBase[cur + 1]) << 8);
             }
 
-            var curMatch = _hash[_kFixHashSize + hashValue];
-            _hash[_kFixHashSize + hashValue] = _pos;
+            var curMatch = hash[_kFixHashSize + hashValue];
+            hash[_kFixHashSize + hashValue] = _pos;
 
             var ptr0 = (_cyclicBufferPos << 1) + 1;
             var ptr1 = (_cyclicBufferPos << 1);
@@ -349,7 +353,7 @@ internal sealed class BinTree : InWindow
             {
                 if (curMatch <= matchMinPos || count-- == 0)
                 {
-                    _son[ptr0] = _son[ptr1] = K_EMPTY_HASH_VALUE;
+                    son[ptr0] = son[ptr1] = K_EMPTY_HASH_VALUE;
                     break;
                 }
 
@@ -374,23 +378,23 @@ internal sealed class BinTree : InWindow
                     }
                     if (len == lenLimit)
                     {
-                        _son[ptr1] = _son[cyclicPos];
-                        _son[ptr0] = _son[cyclicPos + 1];
+                        son[ptr1] = son[cyclicPos];
+                        son[ptr0] = son[cyclicPos + 1];
                         break;
                     }
                 }
                 if (_bufferBase[pby1 + len] < _bufferBase[cur + len])
                 {
-                    _son[ptr1] = curMatch;
+                    son[ptr1] = curMatch;
                     ptr1 = cyclicPos + 1;
-                    curMatch = _son[ptr1];
+                    curMatch = son[ptr1];
                     len1 = len;
                 }
                 else
                 {
-                    _son[ptr0] = curMatch;
+                    son[ptr0] = curMatch;
                     ptr0 = cyclicPos;
-                    curMatch = _son[ptr0];
+                    curMatch = son[ptr0];
                     len0 = len;
                 }
             }
@@ -418,8 +422,8 @@ internal sealed class BinTree : InWindow
     private void Normalize()
     {
         var subValue = _pos - _cyclicBufferSize;
-        NormalizeLinks(_son, _cyclicBufferSize * 2, subValue);
-        NormalizeLinks(_hash, _hashSizeSum, subValue);
+        NormalizeLinks(_son.NotNull(), _cyclicBufferSize * 2, subValue);
+        NormalizeLinks(_hash.NotNull(), _hashSizeSum, subValue);
         ReduceOffsets((int)subValue);
     }
 
