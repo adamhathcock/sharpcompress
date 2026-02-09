@@ -448,25 +448,70 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.LZMA:
                 {
-                    // LZMA has complex initialization that doesn't fit the provider pattern
-                    counting.WriteByte(9);
-                    counting.WriteByte(20);
-                    counting.WriteByte(5);
-                    counting.WriteByte(0);
-
-                    var lzmaStream = LzmaStream.Create(
-                        new LzmaEncoderProperties(!originalStream.CanSeek),
-                        false,
-                        counting
+                    // Use ICompressingProvider for complex initialization
+                    var compressingProvider = providers.GetCompressingProvider(
+                        CompressionType.LZMA
                     );
-                    counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
+                    if (compressingProvider is null)
+                    {
+                        throw new InvalidOperationException("LZMA compression provider not found.");
+                    }
+
+                    var context = new CompressionContext { CanSeek = originalStream.CanSeek };
+
+                    // Write pre-compression data (magic bytes)
+                    var preData = compressingProvider.GetPreCompressionData(context);
+                    if (preData != null)
+                    {
+                        counting.Write(preData, 0, preData.Length);
+                    }
+
+                    // Create compression stream
+                    var lzmaStream = compressingProvider.CreateCompressStream(
+                        counting,
+                        compressionLevel,
+                        context
+                    );
+
+                    // Write compression properties
+                    var props = compressingProvider.GetCompressionProperties(lzmaStream, context);
+                    if (props != null)
+                    {
+                        counting.Write(props, 0, props.Length);
+                    }
+
                     return lzmaStream;
                 }
                 case ZipCompressionMethod.PPMd:
                 {
-                    // PPMd has complex initialization that doesn't fit the provider pattern
-                    counting.Write(writer.PpmdProperties.Properties, 0, 2);
-                    return PpmdStream.Create(writer.PpmdProperties, counting, true);
+                    // Use ICompressingProvider for complex initialization
+                    var compressingProvider = providers.GetCompressingProvider(
+                        CompressionType.PPMd
+                    );
+                    if (compressingProvider is null)
+                    {
+                        throw new InvalidOperationException("PPMd compression provider not found.");
+                    }
+
+                    var context = new CompressionContext
+                    {
+                        CanSeek = originalStream.CanSeek,
+                        FormatOptions = writer.PpmdProperties,
+                    };
+
+                    // Write pre-compression data (properties)
+                    var preData = compressingProvider.GetPreCompressionData(context);
+                    if (preData != null)
+                    {
+                        counting.Write(preData, 0, preData.Length);
+                    }
+
+                    // Create compression stream
+                    return compressingProvider.CreateCompressStream(
+                        counting,
+                        compressionLevel,
+                        context
+                    );
                 }
                 case ZipCompressionMethod.ZStandard:
                 {

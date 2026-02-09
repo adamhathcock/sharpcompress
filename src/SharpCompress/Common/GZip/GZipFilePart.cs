@@ -12,10 +12,37 @@ internal sealed partial class GZipFilePart : FilePart
 {
     private string? _name;
     private readonly Stream _stream;
+    private readonly CompressionProviderRegistry? _compressionProviders;
 
     internal static GZipFilePart Create(Stream stream, IArchiveEncoding archiveEncoding)
     {
-        var part = new GZipFilePart(stream, archiveEncoding);
+        var part = new GZipFilePart(stream, archiveEncoding, null);
+
+        part.ReadAndValidateGzipHeader();
+        if (stream.CanSeek)
+        {
+            var position = stream.Position;
+            stream.Position = stream.Length - 8;
+            part.ReadTrailer();
+            stream.Position = position;
+            part.EntryStartPosition = position;
+        }
+        else
+        {
+            // For non-seekable streams, we can't read the trailer or track position.
+            // Set to 0 since the stream will be read sequentially from its current position.
+            part.EntryStartPosition = 0;
+        }
+        return part;
+    }
+
+    internal static GZipFilePart Create(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CompressionProviderRegistry? compressionProviders
+    )
+    {
+        var part = new GZipFilePart(stream, archiveEncoding, compressionProviders);
 
         part.ReadAndValidateGzipHeader();
         if (stream.CanSeek)
@@ -38,6 +65,17 @@ internal sealed partial class GZipFilePart : FilePart
     private GZipFilePart(Stream stream, IArchiveEncoding archiveEncoding)
         : base(archiveEncoding) => _stream = stream;
 
+    private GZipFilePart(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CompressionProviderRegistry? compressionProviders
+    )
+        : base(archiveEncoding)
+    {
+        _stream = stream;
+        _compressionProviders = compressionProviders;
+    }
+
     internal long EntryStartPosition { get; private set; }
 
     internal DateTime? DateModified { get; private set; }
@@ -46,13 +84,11 @@ internal sealed partial class GZipFilePart : FilePart
 
     internal override string? FilePartName => _name;
 
-    internal override Stream GetCompressedStream() =>
-        new DeflateStream(
-            _stream,
-            CompressionMode.Decompress,
-            CompressionLevel.Default,
-            leaveOpen: true
-        );
+    internal override Stream GetCompressedStream()
+    {
+        var providers = _compressionProviders ?? CompressionProviderRegistry.Default;
+        return providers.CreateDecompressStream(CompressionType.Deflate, _stream);
+    }
 
     internal override Stream GetRawStream() => _stream;
 

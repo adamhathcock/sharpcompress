@@ -19,8 +19,24 @@ public sealed class DeflateCompressionProvider : ICompressionProvider
         return new DeflateStream(destination, CompressionMode.Compress, level);
     }
 
+    public Stream CreateCompressStream(
+        Stream destination,
+        int compressionLevel,
+        CompressionContext context
+    )
+    {
+        // Context not used for simple Deflate compression
+        return CreateCompressStream(destination, compressionLevel);
+    }
+
     public Stream CreateDecompressStream(Stream source)
     {
         return new DeflateStream(source, CompressionMode.Decompress);
+    }
+
+    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    {
+        // Context not used for simple Deflate decompression
+        return CreateDecompressStream(source);
     }
 }

@@ -74,7 +74,11 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
                     case ZipHeaderType.LocalEntry:
                         {
                             yield return new ZipEntry(
-                                new StreamingZipFilePart((LocalEntryHeader)h, stream)
+                                new StreamingZipFilePart(
+                                    (LocalEntryHeader)h,
+                                    stream,
+                                    Options.CompressionProviders
+                                )
                             );
                         }
                         break;
@@ -99,7 +103,7 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     /// Returns entries asynchronously for streams that only support async reads.
     /// </summary>
     protected override IAsyncEnumerable<ZipEntry> GetEntriesAsync(Stream stream) =>
-        new ZipEntryAsyncEnumerable(_headerFactory, stream);
+        new ZipEntryAsyncEnumerable(_headerFactory, stream, Options.CompressionProviders);
 
     // Async nested classes moved to ZipReader.Async.cs
 }

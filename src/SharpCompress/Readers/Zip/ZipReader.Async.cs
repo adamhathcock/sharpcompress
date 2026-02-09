@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Compressors;
 
 namespace SharpCompress.Readers.Zip;
 
@@ -18,16 +19,28 @@ public partial class ZipReader
     {
         private readonly StreamingZipHeaderFactory _headerFactory;
         private readonly Stream _stream;
+        private readonly CompressionProviderRegistry? _compressionProviders;
 
-        public ZipEntryAsyncEnumerable(StreamingZipHeaderFactory headerFactory, Stream stream)
+        public ZipEntryAsyncEnumerable(
+            StreamingZipHeaderFactory headerFactory,
+            Stream stream,
+            CompressionProviderRegistry? compressionProviders
+        )
         {
             _headerFactory = headerFactory;
             _stream = stream;
+            _compressionProviders = compressionProviders;
         }
 
         public IAsyncEnumerator<ZipEntry> GetAsyncEnumerator(
             CancellationToken cancellationToken = default
-        ) => new ZipEntryAsyncEnumerator(_headerFactory, _stream, cancellationToken);
+        ) =>
+            new ZipEntryAsyncEnumerator(
+                _headerFactory,
+                _stream,
+                _compressionProviders,
+                cancellationToken
+            );
     }
 
     /// <summary>
@@ -37,15 +50,18 @@ public partial class ZipReader
     {
         private readonly Stream _stream;
         private readonly IAsyncEnumerator<ZipHeader> _headerEnumerator;
+        private readonly CompressionProviderRegistry? _compressionProviders;
         private ZipEntry? _current;
 
         public ZipEntryAsyncEnumerator(
             StreamingZipHeaderFactory headerFactory,
             Stream stream,
+            CompressionProviderRegistry? compressionProviders,
             CancellationToken cancellationToken
         )
         {
             _stream = stream;
+            _compressionProviders = compressionProviders;
             _headerEnumerator = headerFactory
                 .ReadStreamHeaderAsync(stream)
                 .GetAsyncEnumerator(cancellationToken);
@@ -67,7 +83,11 @@ public partial class ZipReader
                 {
                     case ZipHeaderType.LocalEntry:
                         _current = new ZipEntry(
-                            new StreamingZipFilePart((LocalEntryHeader)header, _stream)
+                            new StreamingZipFilePart(
+                                (LocalEntryHeader)header,
+                                _stream,
+                                _compressionProviders
+                            )
                         );
                         return true;
                     case ZipHeaderType.DirectoryEntry:

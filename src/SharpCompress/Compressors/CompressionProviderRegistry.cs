@@ -91,6 +91,69 @@ public sealed class CompressionProviderRegistry
     }
 
     /// <summary>
+    /// Creates a compression stream for the specified type with context.
+    /// </summary>
+    /// <param name="type">The compression type.</param>
+    /// <param name="destination">The destination stream.</param>
+    /// <param name="level">The compression level.</param>
+    /// <param name="context">Context information for the compression.</param>
+    /// <returns>A compression stream.</returns>
+    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
+    public Stream CreateCompressStream(
+        CompressionType type,
+        Stream destination,
+        int level,
+        CompressionContext context
+    )
+    {
+        var provider = GetProvider(type);
+        if (provider is null)
+        {
+            throw new InvalidOperationException(
+                $"No compression provider registered for type: {type}"
+            );
+        }
+        return provider.CreateCompressStream(destination, level, context);
+    }
+
+    /// <summary>
+    /// Creates a decompression stream for the specified type with context.
+    /// </summary>
+    /// <param name="type">The compression type.</param>
+    /// <param name="source">The source stream.</param>
+    /// <param name="context">Context information for the decompression.</param>
+    /// <returns>A decompression stream.</returns>
+    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
+    public Stream CreateDecompressStream(
+        CompressionType type,
+        Stream source,
+        CompressionContext context
+    )
+    {
+        var provider = GetProvider(type);
+        if (provider is null)
+        {
+            throw new InvalidOperationException(
+                $"No compression provider registered for type: {type}"
+            );
+        }
+        return provider.CreateDecompressStream(source, context);
+    }
+
+    /// <summary>
+    /// Gets the provider as an ICompressingProvider if it supports complex initialization.
+    /// </summary>
+    /// <param name="type">The compression type.</param>
+    /// <returns>The compressing provider, or null if the provider doesn't support complex initialization.</returns>
+    public ICompressingProvider? GetCompressingProvider(CompressionType type)
+    {
+        var provider = GetProvider(type);
+        return provider as ICompressingProvider;
+    }
+
+    /// <summary>
     /// Creates a new registry with the specified provider added or replaced.
     /// </summary>
     /// <param name="provider">The provider to add or replace.</param>
@@ -122,6 +185,15 @@ public sealed class CompressionProviderRegistry
             [CompressionType.LZip] = new LZipCompressionProvider(),
             [CompressionType.Xz] = new XzCompressionProvider(),
             [CompressionType.Lzw] = new LzwCompressionProvider(),
+            [CompressionType.Deflate64] = new Deflate64CompressionProvider(),
+            [CompressionType.Shrink] = new ShrinkCompressionProvider(),
+            [CompressionType.Reduce1] = new Reduce1CompressionProvider(),
+            [CompressionType.Reduce2] = new Reduce2CompressionProvider(),
+            [CompressionType.Reduce3] = new Reduce3CompressionProvider(),
+            [CompressionType.Reduce4] = new Reduce4CompressionProvider(),
+            [CompressionType.Explode] = new ExplodeCompressionProvider(),
+            [CompressionType.LZMA] = new LzmaCompressingProvider(),
+            [CompressionType.PPMd] = new PpmdCompressingProvider(),
         };
 
         return new CompressionProviderRegistry(providers);

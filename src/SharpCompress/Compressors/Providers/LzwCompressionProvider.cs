@@ -22,8 +22,25 @@ public sealed class LzwCompressionProvider : ICompressionProvider
         );
     }
 
+    public Stream CreateCompressStream(
+        Stream destination,
+        int compressionLevel,
+        CompressionContext context
+    )
+    {
+        throw new NotSupportedException(
+            "LZW compression is not supported by SharpCompress's internal implementation."
+        );
+    }
+
     public Stream CreateDecompressStream(Stream source)
     {
         return new LzwStream(source);
+    }
+
+    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    {
+        // Context not used for LZW decompression
+        return CreateDecompressStream(source);
     }
 }

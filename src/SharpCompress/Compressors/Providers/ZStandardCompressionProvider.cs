@@ -18,8 +18,24 @@ public sealed class ZStandardCompressionProvider : ICompressionProvider
         return new ZStd.CompressionStream(destination, compressionLevel);
     }
 
+    public Stream CreateCompressStream(
+        Stream destination,
+        int compressionLevel,
+        CompressionContext context
+    )
+    {
+        // Context not used for ZStandard compression
+        return CreateCompressStream(destination, compressionLevel);
+    }
+
     public Stream CreateDecompressStream(Stream source)
     {
         return new ZStd.DecompressionStream(source);
+    }
+
+    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    {
+        // Context not used for ZStandard decompression
+        return CreateDecompressStream(source);
     }
 }

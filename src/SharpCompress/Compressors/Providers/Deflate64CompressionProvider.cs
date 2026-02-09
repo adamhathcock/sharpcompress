@@ -1,24 +1,24 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors.Xz;
+using SharpCompress.Compressors.Deflate64;
 
 namespace SharpCompress.Compressors.Providers;
 
 /// <summary>
-/// Provides XZ compression decompression using SharpCompress's internal implementation.
-/// Note: Compression is not supported by this provider.
+/// Provides Deflate64 decompression using SharpCompress's internal implementation.
+/// Note: Deflate64 compression is not supported; this provider is decompression-only.
 /// </summary>
-public sealed class XzCompressionProvider : ICompressionProvider
+public sealed class Deflate64CompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.Xz;
+    public CompressionType CompressionType => CompressionType.Deflate64;
     public bool SupportsCompression => false;
     public bool SupportsDecompression => true;
 
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         throw new NotSupportedException(
-            "XZ compression is not supported by SharpCompress's internal implementation."
+            "Deflate64 compression is not supported by SharpCompress's internal implementation."
         );
     }
 
@@ -29,18 +29,18 @@ public sealed class XzCompressionProvider : ICompressionProvider
     )
     {
         throw new NotSupportedException(
-            "XZ compression is not supported by SharpCompress's internal implementation."
+            "Deflate64 compression is not supported by SharpCompress's internal implementation."
         );
     }
 
     public Stream CreateDecompressStream(Stream source)
     {
-        return new XZStream(source);
+        return new Deflate64Stream(source, CompressionMode.Decompress);
     }
 
     public Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
-        // Context not used for XZ decompression
+        // Context not used for Deflate64 decompression
         return CreateDecompressStream(source);
     }
 }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Common.GZip;
@@ -17,7 +18,17 @@ internal sealed partial class GZipFilePart
         CancellationToken cancellationToken = default
     )
     {
-        var part = new GZipFilePart(stream, archiveEncoding);
+        return await CreateAsync(stream, archiveEncoding, null, cancellationToken);
+    }
+
+    internal static async ValueTask<GZipFilePart> CreateAsync(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CompressionProviderRegistry? compressionProviders,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var part = new GZipFilePart(stream, archiveEncoding, compressionProviders);
 
         await part.ReadAndValidateGzipHeaderAsync(cancellationToken);
         if (stream.CanSeek)

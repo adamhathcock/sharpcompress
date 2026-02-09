@@ -95,7 +95,12 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
+                                new SeekableZipFilePart(
+                                    headerFactory.NotNull(),
+                                    deh,
+                                    s,
+                                    ReaderOptions.CompressionProviders
+                                )
                             );
                         }
                         break;

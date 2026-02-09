@@ -24,6 +24,16 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
         return new GZipStream(destination, bclLevel, leaveOpen: true);
     }
 
+    public Stream CreateCompressStream(
+        Stream destination,
+        int compressionLevel,
+        CompressionContext context
+    )
+    {
+        // Context not used for simple GZip compression
+        return CreateCompressStream(destination, compressionLevel);
+    }
+
     public Stream CreateDecompressStream(Stream source)
     {
         return new GZipStream(
@@ -31,6 +41,12 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
             System.IO.Compression.CompressionMode.Decompress,
             leaveOpen: true
         );
+    }
+
+    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    {
+        // Context not used for simple GZip decompression
+        return CreateDecompressStream(source);
     }
 
     /// <summary>

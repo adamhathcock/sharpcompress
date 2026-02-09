@@ -1,6 +1,6 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors.Deflate;
+using SharpCompress.Compressors;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
@@ -11,6 +11,13 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
 
     internal StreamingZipFilePart(ZipFileEntry header, Stream stream)
         : base(header, stream) { }
+
+    internal StreamingZipFilePart(
+        ZipFileEntry header,
+        Stream stream,
+        CompressionProviderRegistry? compressionProviders
+    )
+        : base(header, stream, compressionProviders) { }
 
     protected override Stream CreateBaseStream() => Header.PackedStream.NotNull();
 
@@ -46,11 +53,6 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
 
             // If we had TotalIn / TotalOut we could have used them
             Header.CompressedSize = _decompressionStream.Position;
-
-            if (_decompressionStream is DeflateStream deflateStream)
-            {
-                stream.Position = 0;
-            }
 
             Skipped = true;
         }

@@ -19,8 +19,24 @@ public sealed class GZipCompressionProvider : ICompressionProvider
         return new GZipStream(destination, CompressionMode.Compress, level);
     }
 
+    public Stream CreateCompressStream(
+        Stream destination,
+        int compressionLevel,
+        CompressionContext context
+    )
+    {
+        // Context not used for simple GZip compression
+        return CreateCompressStream(destination, compressionLevel);
+    }
+
     public Stream CreateDecompressStream(Stream source)
     {
         return new GZipStream(source, CompressionMode.Decompress);
+    }
+
+    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    {
+        // Context not used for simple GZip decompression
+        return CreateDecompressStream(source);
     }
 }

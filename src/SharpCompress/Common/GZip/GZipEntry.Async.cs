@@ -11,6 +11,12 @@ public partial class GZipEntry
         ReaderOptions options
     )
     {
-        yield return new GZipEntry(await GZipFilePart.CreateAsync(stream, options.ArchiveEncoding));
+        yield return new GZipEntry(
+            await GZipFilePart.CreateAsync(
+                stream,
+                options.ArchiveEncoding,
+                options.CompressionProviders
+            )
+        );
     }
 }

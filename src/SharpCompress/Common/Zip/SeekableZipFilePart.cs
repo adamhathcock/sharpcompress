@@ -1,5 +1,6 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Compressors;
 
 namespace SharpCompress.Common.Zip;
 
@@ -14,6 +15,14 @@ internal partial class SeekableZipFilePart : ZipFilePart
         Stream stream
     )
         : base(header, stream) => _headerFactory = headerFactory;
+
+    internal SeekableZipFilePart(
+        SeekableZipHeaderFactory headerFactory,
+        DirectoryEntryHeader header,
+        Stream stream,
+        CompressionProviderRegistry? compressionProviders
+    )
+        : base(header, stream, compressionProviders) => _headerFactory = headerFactory;
 
     internal override Stream GetCompressedStream()
     {

@@ -47,10 +47,33 @@ public interface ICompressionProvider
     Stream CreateCompressStream(Stream destination, int compressionLevel);
 
     /// <summary>
+    /// Creates a compression stream with context information.
+    /// </summary>
+    /// <param name="destination">The destination stream.</param>
+    /// <param name="compressionLevel">The compression level.</param>
+    /// <param name="context">Context information about the compression.</param>
+    /// <returns>A compression stream.</returns>
+    /// <exception cref="NotSupportedException">Thrown if SupportsCompression is false.</exception>
+    Stream CreateCompressStream(
+        Stream destination,
+        int compressionLevel,
+        CompressionContext context
+    );
+
+    /// <summary>
     /// Creates a decompression stream that decompresses data read from it.
     /// </summary>
     /// <param name="source">The source stream to read compressed data from.</param>
     /// <returns>A stream that decompresses data read from it.</returns>
     /// <exception cref="NotSupportedException">Thrown if SupportsDecompression is false.</exception>
     Stream CreateDecompressStream(Stream source);
+
+    /// <summary>
+    /// Creates a decompression stream with context information.
+    /// </summary>
+    /// <param name="source">The source stream.</param>
+    /// <param name="context">Context information about the decompression.</param>
+    /// <returns>A decompression stream.</returns>
+    /// <exception cref="NotSupportedException">Thrown if SupportsDecompression is false.</exception>
+    Stream CreateDecompressStream(Stream source, CompressionContext context);
 }
