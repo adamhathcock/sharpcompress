@@ -166,7 +166,12 @@ public class ZipReaderAsyncTests : ReaderTests
         using var stream = new TestStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        await using (var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream)))
+        await using (
+            var reader = await ReaderFactory.OpenAsyncReader(
+                new AsyncOnlyStream(stream),
+                new ReaderOptions().WithLeaveStreamOpen(false)
+            )
+        )
         {
             while (await reader.MoveToNextEntryAsync())
             {
