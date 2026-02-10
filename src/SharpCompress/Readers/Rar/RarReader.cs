@@ -93,7 +93,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         foreach (var fp in volume.ReadFileParts())
         {
             ValidateArchive(volume);
-            yield return new RarReaderEntry(volume.IsSolidArchive, fp);
+            yield return new RarReaderEntry(volume.IsSolidArchive, fp, Options);
         }
     }
 
@@ -103,7 +103,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
         await foreach (var fp in volume.ReadFilePartsAsync())
         {
             ValidateArchive(volume);
-            yield return new RarReaderEntry(volume.IsSolidArchive, fp);
+            yield return new RarReaderEntry(volume.IsSolidArchive, fp, Options);
         }
     }
 

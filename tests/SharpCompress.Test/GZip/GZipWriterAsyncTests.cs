@@ -27,7 +27,7 @@ public class GZipWriterAsyncTests : WriterTests
             var writer = WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
-                CompressionType.GZip
+                new WriterOptions(CompressionType.GZip)
             )
         )
         {
@@ -67,7 +67,7 @@ public class GZipWriterAsyncTests : WriterTests
             using var writer = WriterFactory.OpenWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
-                CompressionType.BZip2
+                new WriterOptions(CompressionType.BZip2)
             );
         });
 

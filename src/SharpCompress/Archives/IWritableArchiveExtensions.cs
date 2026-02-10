@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
@@ -57,14 +58,23 @@ public static class IWritableArchiveExtensions
                 fileInfo.LastWriteTime
             );
         }
+    }
 
-        public void SaveTo(string filePath, WriterOptions? options = null) =>
-            writableArchive.SaveTo(new FileInfo(filePath), options ?? new(CompressionType.Deflate));
+    public static void SaveTo<TOptions>(
+        this IWritableArchive<TOptions> writableArchive,
+        string filePath,
+        TOptions options
+    )
+        where TOptions : IWriterOptions => writableArchive.SaveTo(new FileInfo(filePath), options);
 
-        public void SaveTo(FileInfo fileInfo, WriterOptions? options = null)
-        {
-            using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-            writableArchive.SaveTo(stream, options ?? new(CompressionType.Deflate));
-        }
+    public static void SaveTo<TOptions>(
+        this IWritableArchive<TOptions> writableArchive,
+        FileInfo fileInfo,
+        TOptions options
+    )
+        where TOptions : IWriterOptions
+    {
+        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        writableArchive.SaveTo(stream, options);
     }
 }

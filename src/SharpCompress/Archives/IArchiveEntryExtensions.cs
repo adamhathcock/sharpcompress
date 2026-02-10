@@ -100,15 +100,11 @@ public static class IArchiveEntryExtensions
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public void WriteToDirectory(
-            string destinationDirectory,
-            ExtractionOptions? options = null
-        ) =>
+        public void WriteToDirectory(string destinationDirectory) =>
             ExtractionMethods.WriteEntryToDirectory(
                 entry,
                 destinationDirectory,
-                options,
-                entry.WriteToFile
+                (path) => entry.WriteToFile(path)
             );
 
         /// <summary>
@@ -116,15 +112,14 @@ public static class IArchiveEntryExtensions
         /// </summary>
         public async ValueTask WriteToDirectoryAsync(
             string destinationDirectory,
-            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await ExtractionMethods
                 .WriteEntryToDirectoryAsync(
                     entry,
                     destinationDirectory,
-                    options,
-                    entry.WriteToFileAsync,
+                    async (path, ct) =>
+                        await entry.WriteToFileAsync(path, ct).ConfigureAwait(false),
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -132,11 +127,10 @@ public static class IArchiveEntryExtensions
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public void WriteToFile(string destinationFileName, ExtractionOptions? options = null) =>
+        public void WriteToFile(string destinationFileName) =>
             ExtractionMethods.WriteEntryToFile(
                 entry,
                 destinationFileName,
-                options,
                 (x, fm) =>
                 {
                     using var fs = File.Open(destinationFileName, fm);
@@ -149,14 +143,12 @@ public static class IArchiveEntryExtensions
         /// </summary>
         public async ValueTask WriteToFileAsync(
             string destinationFileName,
-            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await ExtractionMethods
                 .WriteEntryToFileAsync(
                     entry,
                     destinationFileName,
-                    options,
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(destinationFileName, fm);

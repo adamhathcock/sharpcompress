@@ -79,10 +79,7 @@ public class RarArchiveTests : ArchiveTests
                 if (!entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.Rar, entry.CompressionType);
-                    entry.WriteToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -106,10 +103,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -137,10 +131,7 @@ public class RarArchiveTests : ArchiveTests
         using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            entry.WriteToDirectory(SCRATCH_FILES_PATH);
         }
     }
 
@@ -154,10 +145,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -177,10 +165,7 @@ public class RarArchiveTests : ArchiveTests
             Assert.False(archive.IsSolid);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -266,10 +251,7 @@ public class RarArchiveTests : ArchiveTests
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            entry.WriteToDirectory(SCRATCH_FILES_PATH);
         }
     }
 
@@ -327,10 +309,7 @@ public class RarArchiveTests : ArchiveTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -720,6 +699,47 @@ public class RarArchiveTests : ArchiveTests
 
         // Verify the exception message matches our expectation
         Assert.Contains("unpacked file size does not match header", exception.Message);
+    }
+
+    /// <summary>
+    /// Tests for Issue #1050 - RAR extraction with WriteToDirectory creates folders
+    /// but places all files at the top level instead of in their subdirectories.
+    /// </summary>
+    [Fact]
+    public void Rar_Issue1050_WriteToDirectory_ExtractsToSubdirectories()
+    {
+        var testFile = "Rar.issue1050.rar";
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+        using var archive = RarArchive.OpenArchive(fileStream);
+
+        // Extract using archive.WriteToDirectory without explicit options
+        archive.WriteToDirectory(SCRATCH_FILES_PATH);
+
+        // Verify files are in their subdirectories, not at the root
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "PhysicsBraid", "263825.tr11dtp")),
+            "File should be in PhysicsBraid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Animations", "15441.tr11anim")),
+            "File should be in Animations subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766728.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "HeadBraid", "321353.tr11modeldata")),
+            "File should be in HeadBraid subdirectory"
+        );
+
+        // Verify the exact file size of 766832.tr11dtp matches the archive entry size
+        var fileInfo = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp"));
+        Assert.Equal(4867620, fileInfo.Length); // Expected: 4,867,620 bytes
     }
 
     /// <summary>

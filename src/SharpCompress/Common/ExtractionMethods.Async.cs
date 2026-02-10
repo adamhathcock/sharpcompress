@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
@@ -10,8 +11,7 @@ internal static partial class ExtractionMethods
     public static async ValueTask WriteEntryToDirectoryAsync(
         IEntry entry,
         string destinationDirectory,
-        ExtractionOptions? options,
-        Func<string, ExtractionOptions?, CancellationToken, ValueTask> writeAsync,
+        Func<string, CancellationToken, ValueTask> writeAsync,
         CancellationToken cancellationToken = default
     )
     {
@@ -34,11 +34,9 @@ internal static partial class ExtractionMethods
             );
         }
 
-        options ??= new ExtractionOptions() { Overwrite = true };
-
         var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
         file = Utility.ReplaceInvalidFileNameChars(file);
-        if (options.ExtractFullPath)
+        if (entry.Options.ExtractFullPath)
         {
             var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
                 .NotNull("Directory is null");
@@ -72,9 +70,9 @@ internal static partial class ExtractionMethods
                     "Entry is trying to write a file outside of the destination directory."
                 );
             }
-            await writeAsync(destinationFileName, options, cancellationToken).ConfigureAwait(false);
+            await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
         }
-        else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
+        else if (entry.Options.ExtractFullPath && !Directory.Exists(destinationFileName))
         {
             Directory.CreateDirectory(destinationFileName);
         }
@@ -83,34 +81,34 @@ internal static partial class ExtractionMethods
     public static async ValueTask WriteEntryToFileAsync(
         IEntry entry,
         string destinationFileName,
-        ExtractionOptions? options,
         Func<string, FileMode, CancellationToken, ValueTask> openAndWriteAsync,
         CancellationToken cancellationToken = default
     )
     {
         if (entry.LinkTarget != null)
         {
-            if (options?.WriteSymbolicLink is null)
+            if (entry.Options.SymbolicLinkHandler is not null)
             {
-                throw new ExtractionException(
-                    "Entry is a symbolic link but ExtractionOptions.WriteSymbolicLink delegate is null"
-                );
+                entry.Options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
-            options.WriteSymbolicLink(destinationFileName, entry.LinkTarget);
+            else
+            {
+                ReaderOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+            }
+            return;
         }
         else
         {
             var fm = FileMode.Create;
-            options ??= new ExtractionOptions() { Overwrite = true };
 
-            if (!options.Overwrite)
+            if (!entry.Options.Overwrite)
             {
                 fm = FileMode.CreateNew;
             }
 
             await openAndWriteAsync(destinationFileName, fm, cancellationToken)
                 .ConfigureAwait(false);
-            entry.PreserveExtractionOptions(destinationFileName, options);
+            entry.PreserveExtractionOptions(destinationFileName);
         }
     }
 }

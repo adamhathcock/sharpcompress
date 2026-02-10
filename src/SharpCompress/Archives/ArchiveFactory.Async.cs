@@ -19,7 +19,7 @@ public static partial class ArchiveFactory
         CancellationToken cancellationToken = default
     )
     {
-        readerOptions ??= new ReaderOptions();
+        readerOptions ??= ReaderOptions.ForExternalStream;
         var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken);
         return factory.OpenAsyncArchive(stream, readerOptions);
     }
@@ -40,7 +40,7 @@ public static partial class ArchiveFactory
         CancellationToken cancellationToken = default
     )
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForOwnedFile;
 
         var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken);
         return factory.OpenAsyncArchive(fileInfo, options);
@@ -66,7 +66,7 @@ public static partial class ArchiveFactory
         }
 
         fileInfo.NotNull(nameof(fileInfo));
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForOwnedFile;
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken);
         return factory.OpenAsyncArchive(filesArray, options);
@@ -93,7 +93,7 @@ public static partial class ArchiveFactory
         }
 
         firstStream.NotNull(nameof(firstStream));
-        options ??= new ReaderOptions();
+        options ??= ReaderOptions.ForExternalStream;
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(firstStream, cancellationToken);
         return factory.OpenAsyncArchive(streamsArray, options);

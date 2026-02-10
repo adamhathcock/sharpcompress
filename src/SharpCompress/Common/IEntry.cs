@@ -1,4 +1,5 @@
 using System;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Common;
 
@@ -21,4 +22,9 @@ public interface IEntry
     DateTime? LastModifiedTime { get; }
     long Size { get; }
     int? Attrib { get; }
+
+    /// <summary>
+    /// The options used when opening this entry's source (reader or archive).
+    /// </summary>
+    IReaderOptions Options { get; }
 }

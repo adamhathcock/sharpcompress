@@ -21,7 +21,7 @@ internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
         DateTime? lastModified,
         bool closeStream
     )
-        : base(archive, null)
+        : base(archive, null, archive.ReaderOptions)
     {
         this.stream = stream;
         Key = path;
@@ -36,7 +36,7 @@ internal class ZipWritableArchiveEntry : ZipArchiveEntry, IWritableArchiveEntry
         string directoryPath,
         DateTime? lastModified
     )
-        : base(archive, null)
+        : base(archive, null, archive.ReaderOptions)
     {
         stream = null;
         Key = directoryPath;

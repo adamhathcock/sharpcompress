@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
@@ -23,8 +24,7 @@ internal static partial class ExtractionMethods
     public static void WriteEntryToDirectory(
         IEntry entry,
         string destinationDirectory,
-        ExtractionOptions? options,
-        Action<string, ExtractionOptions?> write
+        Action<string> write
     )
     {
         string destinationFileName;
@@ -46,11 +46,9 @@ internal static partial class ExtractionMethods
             );
         }
 
-        options ??= new ExtractionOptions() { Overwrite = true };
-
         var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
         file = Utility.ReplaceInvalidFileNameChars(file);
-        if (options.ExtractFullPath)
+        if (entry.Options.ExtractFullPath)
         {
             var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
                 .NotNull("Directory is null");
@@ -84,9 +82,9 @@ internal static partial class ExtractionMethods
                     "Entry is trying to write a file outside of the destination directory."
                 );
             }
-            write(destinationFileName, options);
+            write(destinationFileName);
         }
-        else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
+        else if (entry.Options.ExtractFullPath && !Directory.Exists(destinationFileName))
         {
             Directory.CreateDirectory(destinationFileName);
         }
@@ -95,32 +93,32 @@ internal static partial class ExtractionMethods
     public static void WriteEntryToFile(
         IEntry entry,
         string destinationFileName,
-        ExtractionOptions? options,
         Action<string, FileMode> openAndWrite
     )
     {
         if (entry.LinkTarget != null)
         {
-            if (options?.WriteSymbolicLink is null)
+            if (entry.Options.SymbolicLinkHandler is not null)
             {
-                throw new ExtractionException(
-                    "Entry is a symbolic link but ExtractionOptions.WriteSymbolicLink delegate is null"
-                );
+                entry.Options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
-            options.WriteSymbolicLink(destinationFileName, entry.LinkTarget);
+            else
+            {
+                ReaderOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+            }
+            return;
         }
         else
         {
             var fm = FileMode.Create;
-            options ??= new ExtractionOptions() { Overwrite = true };
 
-            if (!options.Overwrite)
+            if (!entry.Options.Overwrite)
             {
                 fm = FileMode.CreateNew;
             }
 
             openAndWrite(destinationFileName, fm);
-            entry.PreserveExtractionOptions(destinationFileName, options);
+            entry.PreserveExtractionOptions(destinationFileName);
         }
     }
 }

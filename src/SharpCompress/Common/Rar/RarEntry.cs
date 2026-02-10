@@ -1,4 +1,5 @@
 using System;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Common.Rar;
@@ -6,6 +7,9 @@ namespace SharpCompress.Common.Rar;
 public abstract class RarEntry : Entry
 {
     internal abstract FileHeader FileHeader { get; }
+
+    protected RarEntry(IReaderOptions readerOptions)
+        : base(readerOptions) { }
 
     /// <summary>
     /// As the V2017 port isn't complete, add this check to use the legacy Rar code.

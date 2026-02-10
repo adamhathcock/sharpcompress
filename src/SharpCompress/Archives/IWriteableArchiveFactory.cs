@@ -1,3 +1,5 @@
+using SharpCompress.Common.Options;
+
 namespace SharpCompress.Archives;
 
 /// <summary>
@@ -10,11 +12,12 @@ namespace SharpCompress.Archives;
 /// <item><see cref="Factories.ZipFactory"/></item>
 /// <item><see cref="Factories.GZipFactory"/></item>
 /// </list>
-public interface IWriteableArchiveFactory : Factories.IFactory
+public interface IWriteableArchiveFactory<TOptions> : Factories.IFactory
+    where TOptions : IWriterOptions
 {
     /// <summary>
     /// Creates a new, empty archive, ready to be written.
     /// </summary>
     /// <returns></returns>
-    IWritableArchive CreateArchive();
+    IWritableArchive<TOptions> CreateArchive();
 }

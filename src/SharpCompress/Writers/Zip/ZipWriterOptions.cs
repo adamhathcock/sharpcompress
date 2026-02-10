@@ -1,78 +1,68 @@
 using System;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Writers;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.Zip;
 
-public class ZipWriterOptions : WriterOptions
+/// <summary>
+/// Options for configuring Zip writer behavior.
+/// </summary>
+/// <remarks>
+/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// <code>
+/// var options = new ZipWriterOptions(CompressionType.Zip);
+/// options = options with { UseZip64 = true };
+/// </code>
+/// </remarks>
+public sealed record ZipWriterOptions : IWriterOptions
 {
-    public ZipWriterOptions(
-        CompressionType compressionType,
-        CompressionLevel compressionLevel = D.CompressionLevel.Default
-    )
-        : base(compressionType, (int)compressionLevel) { }
+    private CompressionType _compressionType;
+    private int _compressionLevel;
 
-    internal ZipWriterOptions(WriterOptions options)
-        : base(options.CompressionType)
+    /// <summary>
+    /// The compression type to use for the archive.
+    /// </summary>
+    public CompressionType CompressionType
     {
-        LeaveStreamOpen = options.LeaveStreamOpen;
-        ArchiveEncoding = options.ArchiveEncoding;
-        CompressionLevel = options.CompressionLevel;
+        get => _compressionType;
+        init => _compressionType = value;
+    }
 
-        if (options is ZipWriterOptions writerOptions)
+    /// <summary>
+    /// The compression level to be used when the compression type supports variable levels.
+    /// </summary>
+    public int CompressionLevel
+    {
+        get => _compressionLevel;
+        init
         {
-            UseZip64 = writerOptions.UseZip64;
-            ArchiveComment = writerOptions.ArchiveComment;
+            CompressionLevelValidation.Validate(CompressionType, value);
+            _compressionLevel = value;
         }
     }
 
     /// <summary>
-    /// Sets the compression level for Deflate compression (0-9).
-    /// This is a convenience method that sets the CompressionLevel property for Deflate compression.
+    /// SharpCompress will keep the supplied streams open.  Default is true.
     /// </summary>
-    /// <param name="level">Deflate compression level (0=no compression, 6=default, 9=best compression)</param>
-    public void SetDeflateCompressionLevel(CompressionLevel level)
-    {
-        CompressionLevel = (int)level;
-    }
+    public bool LeaveStreamOpen { get; init; } = true;
 
     /// <summary>
-    /// Sets the compression level for ZStandard compression (1-22).
-    /// This is a convenience method that sets the CompressionLevel property for ZStandard compression.
+    /// Encoding to use for archive entry names.
     /// </summary>
-    /// <param name="level">ZStandard compression level (1=fastest, 3=default, 22=best compression)</param>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when level is not between 1 and 22</exception>
-    public void SetZStandardCompressionLevel(int level)
-    {
-        if (level < 1 || level > 22)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(level),
-                "ZStandard compression level must be between 1 and 22"
-            );
-        }
-
-        CompressionLevel = level;
-    }
+    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
 
     /// <summary>
-    /// Legacy property for Deflate compression levels.
-    /// Valid range: 0-9 (0=no compression, 6=default, 9=best compression).
+    /// An optional progress reporter for tracking compression operations.
     /// </summary>
-    /// <remarks>
-    /// This property is deprecated. Use <see cref="WriterOptions.CompressionLevel"/> or <see cref="SetDeflateCompressionLevel"/> instead.
-    /// </remarks>
-    [Obsolete(
-        "Use CompressionLevel property or SetDeflateCompressionLevel method instead. This property will be removed in a future version."
-    )]
-    public CompressionLevel DeflateCompressionLevel
-    {
-        get => (CompressionLevel)Math.Min(CompressionLevel, 9);
-        set => CompressionLevel = (int)value;
-    }
+    public IProgress<ProgressReport>? Progress { get; init; }
 
-    public string? ArchiveComment { get; set; }
+    /// <summary>
+    /// Optional comment for the archive.
+    /// </summary>
+    public string? ArchiveComment { get; init; }
 
     /// <summary>
     /// Sets a value indicating if zip64 support is enabled.
@@ -81,5 +71,72 @@ public class ZipWriterOptions : WriterOptions
     /// Archives larger than 4GiB are supported as long as all streams
     /// are less than 4GiB in length.
     /// </summary>
-    public bool UseZip64 { get; set; }
+    public bool UseZip64 { get; init; }
+
+    /// <summary>
+    /// Creates a new ZipWriterOptions instance with the specified compression type.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive.</param>
+    public ZipWriterOptions(CompressionType compressionType)
+    {
+        CompressionType = compressionType;
+        CompressionLevel = compressionType switch
+        {
+            CompressionType.ZStandard => 3,
+            CompressionType.Deflate => (int)D.CompressionLevel.Default,
+            CompressionType.Deflate64 => (int)D.CompressionLevel.Default,
+            CompressionType.GZip => (int)D.CompressionLevel.Default,
+            _ => 0,
+        };
+    }
+
+    /// <summary>
+    /// Creates a new ZipWriterOptions instance with the specified compression type and level.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive.</param>
+    /// <param name="compressionLevel">The compression level (algorithm-specific).</param>
+    public ZipWriterOptions(CompressionType compressionType, int compressionLevel)
+    {
+        CompressionType = compressionType;
+        CompressionLevel = compressionLevel;
+    }
+
+    /// <summary>
+    /// Creates a new ZipWriterOptions instance with the specified compression type and Deflate compression level.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive.</param>
+    /// <param name="compressionLevel">The Deflate compression level.</param>
+    public ZipWriterOptions(CompressionType compressionType, D.CompressionLevel compressionLevel)
+        : this(compressionType, (int)compressionLevel) { }
+
+    /// <summary>
+    /// Creates a new ZipWriterOptions instance from an existing WriterOptions instance.
+    /// </summary>
+    /// <param name="options">The WriterOptions to copy values from.</param>
+    public ZipWriterOptions(WriterOptions options)
+        : this(options.CompressionType, options.CompressionLevel)
+    {
+        LeaveStreamOpen = options.LeaveStreamOpen;
+        ArchiveEncoding = options.ArchiveEncoding;
+        Progress = options.Progress;
+    }
+
+    /// <summary>
+    /// Creates a new ZipWriterOptions instance from an existing IWriterOptions instance.
+    /// </summary>
+    /// <param name="options">The IWriterOptions to copy values from.</param>
+    public ZipWriterOptions(IWriterOptions options)
+        : this(options.CompressionType, options.CompressionLevel)
+    {
+        LeaveStreamOpen = options.LeaveStreamOpen;
+        ArchiveEncoding = options.ArchiveEncoding;
+        Progress = options.Progress;
+    }
+
+    /// <summary>
+    /// Implicit conversion from CompressionType to ZipWriterOptions.
+    /// </summary>
+    /// <param name="compressionType">The compression type.</param>
+    public static implicit operator ZipWriterOptions(CompressionType compressionType) =>
+        new(compressionType);
 }

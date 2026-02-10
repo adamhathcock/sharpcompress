@@ -26,6 +26,7 @@ public partial class TarReader
             StreamingMode.Streaming,
             stream,
             compressionType,
-            Options.ArchiveEncoding
+            Options.ArchiveEncoding,
+            Options
         );
 }

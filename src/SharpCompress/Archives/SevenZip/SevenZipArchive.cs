@@ -55,7 +55,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                         i,
                         file,
                         ReaderOptions.ArchiveEncoding
-                    )
+                    ),
+                    ReaderOptions
                 );
             }
             foreach (

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
@@ -18,13 +19,16 @@ public partial class TarArchive
 {
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        WriterOptions options,
+        TarWriterOptions options,
         IAsyncEnumerable<TarArchiveEntry> oldEntries,
         IEnumerable<TarArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
     )
     {
-        using var writer = new TarWriter(stream, new TarWriterOptions(options));
+        using var writer = new TarWriter(
+            stream,
+            options as TarWriterOptions ?? new TarWriterOptions(options)
+        );
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
@@ -123,7 +127,8 @@ public partial class TarArchive
                             var entry = new TarArchiveEntry(
                                 this,
                                 new TarFilePart(previousHeader, stream),
-                                CompressionType.None
+                                CompressionType.None,
+                                ReaderOptions
                             );
 
                             var oldStreamPos = stream.Position;
@@ -147,7 +152,8 @@ public partial class TarArchive
                         yield return new TarArchiveEntry(
                             this,
                             new TarFilePart(header, stream),
-                            CompressionType.None
+                            CompressionType.None,
+                            ReaderOptions
                         );
                     }
                 }

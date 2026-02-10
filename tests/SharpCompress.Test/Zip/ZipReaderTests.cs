@@ -71,10 +71,7 @@ public class ZipReaderTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -95,10 +92,7 @@ public class ZipReaderTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -142,10 +136,7 @@ public class ZipReaderTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -158,16 +149,18 @@ public class ZipReaderTests : ReaderTests
         using var stream = new TestStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        using (var reader = ReaderFactory.OpenReader(stream))
+        using (
+            var reader = ReaderFactory.OpenReader(
+                stream,
+                new ReaderOptions().WithLeaveStreamOpen(false)
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -185,10 +178,7 @@ public class ZipReaderTests : ReaderTests
         {
             if (!reader.Entry.IsDirectory)
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         Assert.False(stream.IsDisposed);
@@ -212,10 +202,7 @@ public class ZipReaderTests : ReaderTests
                     if (!reader.Entry.IsDirectory)
                     {
                         Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                     }
                 }
             }
@@ -237,10 +224,7 @@ public class ZipReaderTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -259,10 +243,7 @@ public class ZipReaderTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                     count++;
                 }
             }
@@ -286,7 +267,7 @@ public class ZipReaderTests : ReaderTests
             var zipWriter = WriterFactory.OpenWriter(
                 stream,
                 ArchiveType.Zip,
-                CompressionType.Deflate
+                new WriterOptions(CompressionType.Deflate)
             )
         )
         {

@@ -1,10 +1,13 @@
+using SharpCompress.Common.Options;
+
 #if NET8_0_OR_GREATER
 namespace SharpCompress.Archives;
 
-public interface IWritableArchiveOpenable
-    : IArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+public interface IWritableArchiveOpenable<TOptions>
+    : IArchiveOpenable<IWritableArchive<TOptions>, IWritableAsyncArchive<TOptions>>
+    where TOptions : IWriterOptions
 {
-    public static abstract IWritableArchive CreateArchive();
-    public static abstract IWritableAsyncArchive CreateAsyncArchive();
+    public static abstract IWritableArchive<TOptions> CreateArchive();
+    public static abstract IWritableAsyncArchive<TOptions> CreateAsyncArchive();
 }
 #endif

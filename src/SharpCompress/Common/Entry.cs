@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Common;
 
@@ -87,4 +88,14 @@ public abstract class Entry : IEntry
     /// Entry file attribute.
     /// </summary>
     public virtual int? Attrib => throw new NotImplementedException();
+
+    /// <summary>
+    /// The options used when opening this entry's source (reader or archive).
+    /// </summary>
+    public IReaderOptions Options { get; protected set; }
+
+    protected Entry(IReaderOptions readerOptions)
+    {
+        Options = readerOptions;
+    }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
@@ -15,7 +16,8 @@ using SharpCompress.Writers.Tar;
 
 namespace SharpCompress.Archives.Tar;
 
-public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
+public partial class TarArchive
+    : AbstractWritableArchive<TarArchiveEntry, TarVolume, TarWriterOptions>
 {
     protected override IEnumerable<TarVolume> LoadVolumes(SourceStream sourceStream)
     {
@@ -58,7 +60,8 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
                         var entry = new TarArchiveEntry(
                             this,
                             new TarFilePart(previousHeader, stream),
-                            CompressionType.None
+                            CompressionType.None,
+                            ReaderOptions
                         );
 
                         var oldStreamPos = stream.Position;
@@ -80,7 +83,8 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
                     yield return new TarArchiveEntry(
                         this,
                         new TarFilePart(header, stream),
-                        CompressionType.None
+                        CompressionType.None,
+                        ReaderOptions
                     );
                 }
             }
@@ -115,12 +119,15 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
 
     protected override void SaveTo(
         Stream stream,
-        WriterOptions options,
+        TarWriterOptions options,
         IEnumerable<TarArchiveEntry> oldEntries,
         IEnumerable<TarArchiveEntry> newEntries
     )
     {
-        using var writer = new TarWriter(stream, new TarWriterOptions(options));
+        using var writer = new TarWriter(
+            stream,
+            options as TarWriterOptions ?? new TarWriterOptions(options)
+        );
         foreach (var entry in oldEntries.Concat(newEntries))
         {
             if (entry.IsDirectory)

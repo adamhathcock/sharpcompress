@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -24,7 +25,7 @@ public class TarFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWriteableArchiveFactory<TarWriterOptions>
 {
     #region IFactory
 
@@ -144,9 +145,11 @@ public class TarFactory
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
@@ -214,12 +217,28 @@ public class TarFactory
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions) =>
-        new TarWriter(stream, new TarWriterOptions(writerOptions));
+    public IWriter OpenWriter(Stream stream, IWriterOptions writerOptions)
+    {
+        TarWriterOptions tarOptions = writerOptions switch
+        {
+            TarWriterOptions two => two,
+            WriterOptions wo => new TarWriterOptions(wo),
+            _ => throw new ArgumentException(
+                $"Expected WriterOptions or TarWriterOptions, got {writerOptions.GetType().Name}",
+                nameof(writerOptions)
+            ),
+        };
+        return new TarWriter(stream, tarOptions);
+    }
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsyncWriter(Stream stream, WriterOptions writerOptions)
+    public IAsyncWriter OpenAsyncWriter(
+        Stream stream,
+        IWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
@@ -228,7 +247,7 @@ public class TarFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => TarArchive.CreateArchive();
+    public IWritableArchive<TarWriterOptions> CreateArchive() => TarArchive.CreateArchive();
 
     #endregion
 }

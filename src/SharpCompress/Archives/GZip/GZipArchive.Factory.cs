@@ -5,41 +5,43 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common;
-using SharpCompress.Common.GZip;
 using SharpCompress.IO;
 using SharpCompress.Readers;
-using SharpCompress.Readers.GZip;
-using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Archives.GZip;
 
 public partial class GZipArchive
 #if NET8_0_OR_GREATER
-    : IWritableArchiveOpenable,
-        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+    : IWritableArchiveOpenable<GZipWriterOptions>,
+        IMultiArchiveOpenable<
+            IWritableArchive<GZipWriterOptions>,
+            IWritableAsyncArchive<GZipWriterOptions>
+        >
 #endif
 {
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<GZipWriterOptions> OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return (IWritableAsyncArchive)OpenArchive(
-            new FileInfo(path),
-            readerOptions ?? new ReaderOptions()
-        );
+        return (IWritableAsyncArchive<GZipWriterOptions>)
+            OpenArchive(new FileInfo(path), readerOptions ?? new ReaderOptions());
     }
 
-    public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        string filePath,
+        ReaderOptions? readerOptions = null
+    )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null
     )
@@ -54,7 +56,7 @@ public partial class GZipArchive
         );
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -70,7 +72,7 @@ public partial class GZipArchive
         );
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
         IEnumerable<Stream> streams,
         ReaderOptions? readerOptions = null
     )
@@ -86,7 +88,10 @@ public partial class GZipArchive
         );
     }
 
-    public static IWritableArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null
+    )
     {
         stream.NotNull(nameof(stream));
 
@@ -100,41 +105,50 @@ public partial class GZipArchive
         );
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<GZipWriterOptions> OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IWritableAsyncArchive)OpenArchive(stream, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(stream, readerOptions);
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<GZipWriterOptions> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IWritableAsyncArchive)OpenArchive(fileInfo, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(fileInfo, readerOptions);
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<GZipWriterOptions> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IWritableAsyncArchive)OpenArchive(streams, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(streams, readerOptions);
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<GZipWriterOptions> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IWritableAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return (IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(fileInfos, readerOptions);
     }
 
-    public static IWritableArchive CreateArchive() => new GZipArchive();
+    public static IWritableArchive<GZipWriterOptions> CreateArchive() => new GZipArchive();
 
-    public static IWritableAsyncArchive CreateAsyncArchive() => new GZipArchive();
+    public static IWritableAsyncArchive<GZipWriterOptions> CreateAsyncArchive() =>
+        new GZipArchive();
 
     public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));
 

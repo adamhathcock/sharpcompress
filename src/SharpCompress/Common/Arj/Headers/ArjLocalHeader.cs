@@ -27,8 +27,8 @@ public partial class ArjLocalHeader : ArjHeader
     public byte FirstChapter { get; set; }
     public byte LastChapter { get; set; }
     public long ExtendedFilePosition { get; set; }
-    public DosDateTime DateTimeAccessed { get; set; } = new DosDateTime(0);
-    public DosDateTime DateTimeCreated { get; set; } = new DosDateTime(0);
+    public DosDateTime? DateTimeAccessed { get; set; }
+    public DosDateTime? DateTimeCreated { get; set; }
     public long OriginalSizeEvenForVolumes { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Comment { get; set; } = string.Empty;
@@ -119,11 +119,9 @@ public partial class ArjLocalHeader : ArjHeader
             if (headerSize >= R9HdrSize)
             {
                 rawTimestamp = ReadInt32();
-                DateTimeAccessed =
-                    rawTimestamp != 0 ? new DosDateTime(rawTimestamp) : new DosDateTime(0);
+                DateTimeAccessed = rawTimestamp != 0 ? new DosDateTime(rawTimestamp) : null;
                 rawTimestamp = ReadInt32();
-                DateTimeCreated =
-                    rawTimestamp != 0 ? new DosDateTime(rawTimestamp) : new DosDateTime(0);
+                DateTimeCreated = rawTimestamp != 0 ? new DosDateTime(rawTimestamp) : null;
                 OriginalSizeEvenForVolumes = ReadInt32();
             }
         }

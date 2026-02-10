@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
@@ -14,7 +13,8 @@ using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Archives.GZip;
 
-public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume>
+public partial class GZipArchive
+    : AbstractWritableArchive<GZipArchiveEntry, GZipVolume, GZipWriterOptions>
 {
     private GZipArchive(SourceStream sourceStream)
         : base(ArchiveType.GZip, sourceStream) { }
@@ -33,7 +33,7 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
     public void SaveTo(FileInfo fileInfo)
     {
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        SaveTo(stream, new WriterOptions(CompressionType.GZip));
+        SaveTo(stream, new GZipWriterOptions(CompressionType.GZip));
     }
 
     protected override GZipArchiveEntry CreateEntryInternal(
@@ -58,7 +58,7 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
 
     protected override void SaveTo(
         Stream stream,
-        WriterOptions options,
+        GZipWriterOptions options,
         IEnumerable<GZipArchiveEntry> oldEntries,
         IEnumerable<GZipArchiveEntry> newEntries
     )
@@ -67,7 +67,10 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        using var writer = new GZipWriter(stream, new GZipWriterOptions(options));
+        using var writer = new GZipWriter(
+            stream,
+            options as GZipWriterOptions ?? new GZipWriterOptions(options)
+        );
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
@@ -84,7 +87,8 @@ public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZi
         var stream = volumes.Single().Stream;
         yield return new GZipArchiveEntry(
             this,
-            GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding)
+            GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding),
+            ReaderOptions
         );
     }
 

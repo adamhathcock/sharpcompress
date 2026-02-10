@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
@@ -59,28 +60,26 @@ public static class IWritableAsyncArchiveExtensions
                 fileInfo.LastWriteTime
             );
         }
+    }
 
-        public ValueTask SaveToAsync(
-            string filePath,
-            WriterOptions? options = null,
-            CancellationToken cancellationToken = default
-        ) =>
-            writableArchive.SaveToAsync(
-                new FileInfo(filePath),
-                options ?? new(CompressionType.Deflate),
-                cancellationToken
-            );
+    public static ValueTask SaveToAsync<TOptions>(
+        this IWritableAsyncArchive<TOptions> writableArchive,
+        string filePath,
+        TOptions options,
+        CancellationToken cancellationToken = default
+    )
+        where TOptions : IWriterOptions =>
+        writableArchive.SaveToAsync(new FileInfo(filePath), options, cancellationToken);
 
-        public async ValueTask SaveToAsync(
-            FileInfo fileInfo,
-            WriterOptions? options = null,
-            CancellationToken cancellationToken = default
-        )
-        {
-            using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-            await writableArchive
-                .SaveToAsync(stream, options ?? new(CompressionType.Deflate), cancellationToken)
-                .ConfigureAwait(false);
-        }
+    public static async ValueTask SaveToAsync<TOptions>(
+        this IWritableAsyncArchive<TOptions> writableArchive,
+        FileInfo fileInfo,
+        TOptions options,
+        CancellationToken cancellationToken = default
+    )
+        where TOptions : IWriterOptions
+    {
+        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        await writableArchive.SaveToAsync(stream, options, cancellationToken).ConfigureAwait(false);
     }
 }

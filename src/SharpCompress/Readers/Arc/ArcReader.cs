@@ -34,7 +34,7 @@ public partial class ArcReader : AbstractReader<ArcEntry, ArcVolume>
         ArcEntryHeader? header;
         while ((header = headerReader.ReadHeader(stream)) != null)
         {
-            yield return new ArcEntry(new ArcFilePart(header, stream));
+            yield return new ArcEntry(new ArcFilePart(header, stream), Options);
         }
     }
 }
