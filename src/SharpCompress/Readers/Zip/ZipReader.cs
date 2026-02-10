@@ -100,7 +100,7 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     /// Returns entries asynchronously for streams that only support async reads.
     /// </summary>
     protected override IAsyncEnumerable<ZipEntry> GetEntriesAsync(Stream stream) =>
-        new ZipEntryAsyncEnumerable(_headerFactory, stream, Options);
+        new ZipEntryAsyncEnumerable(_headerFactory, stream, Options, Options.CompressionProviders);
 
     // Async nested classes moved to ZipReader.Async.cs
 }

@@ -26,7 +26,7 @@ public partial class ZipReader
         public ZipEntryAsyncEnumerable(
             StreamingZipHeaderFactory headerFactory,
             Stream stream,
-            IReaderOptions options
+            IReaderOptions options,
             CompressionProviderRegistry? compressionProviders
         )
         {
@@ -38,7 +38,7 @@ public partial class ZipReader
 
         public IAsyncEnumerator<ZipEntry> GetAsyncEnumerator(
             CancellationToken cancellationToken = default
-        ) => new ZipEntryAsyncEnumerator(_headerFactory, _stream, _options, cancellationToken);
+        ) => new ZipEntryAsyncEnumerator(_headerFactory, _stream, _options, _compressionProviders, cancellationToken);
     }
 
     /// <summary>
