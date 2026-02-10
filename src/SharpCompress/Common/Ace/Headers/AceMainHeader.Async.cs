@@ -19,7 +19,7 @@ public sealed partial class AceMainHeader
         CancellationToken cancellationToken = default
     )
     {
-        var headerData = await ReadHeaderAsync(stream, cancellationToken);
+        var headerData = await ReadHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
         if (headerData.Length == 0)
         {
             return null;

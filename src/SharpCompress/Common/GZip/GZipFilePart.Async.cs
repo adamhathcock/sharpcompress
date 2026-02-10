@@ -19,12 +19,12 @@ internal sealed partial class GZipFilePart
     {
         var part = new GZipFilePart(stream, archiveEncoding);
 
-        await part.ReadAndValidateGzipHeaderAsync(cancellationToken);
+        await part.ReadAndValidateGzipHeaderAsync(cancellationToken).ConfigureAwait(false);
         if (stream.CanSeek)
         {
             var position = stream.Position;
             stream.Position = stream.Length - 8;
-            await part.ReadTrailerAsync(cancellationToken);
+            await part.ReadTrailerAsync(cancellationToken).ConfigureAwait(false);
             stream.Position = position;
             part.EntryStartPosition = position;
         }
@@ -41,7 +41,7 @@ internal sealed partial class GZipFilePart
     {
         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
         var trailer = new byte[8];
-        _ = await _stream.ReadFullyAsync(trailer, 0, 8, cancellationToken);
+        _ = await _stream.ReadFullyAsync(trailer, 0, 8, cancellationToken).ConfigureAwait(false);
 
         Crc = BinaryPrimitives.ReadUInt32LittleEndian(trailer);
         UncompressedSize = BinaryPrimitives.ReadUInt32LittleEndian(trailer.AsSpan().Slice(4));
@@ -53,7 +53,7 @@ internal sealed partial class GZipFilePart
     {
         // read the header on the first read
         var header = new byte[10];
-        var n = await _stream.ReadAsync(header, 0, 10, cancellationToken);
+        var n = await _stream.ReadAsync(header, 0, 10, cancellationToken).ConfigureAwait(false);
 
         // workitem 8501: handle edge case (decompress empty stream)
         if (n == 0)
@@ -77,28 +77,29 @@ internal sealed partial class GZipFilePart
         {
             // read and discard extra field
             var lengthField = new byte[2];
-            _ = await _stream.ReadAsync(lengthField, 0, 2, cancellationToken);
+            _ = await _stream.ReadAsync(lengthField, 0, 2, cancellationToken).ConfigureAwait(false);
 
             var extraLength = (short)(lengthField[0] + (lengthField[1] * 256));
             var extra = new byte[extraLength];
 
-            if (!await _stream.ReadFullyAsync(extra, cancellationToken))
+            if (!await _stream.ReadFullyAsync(extra, cancellationToken).ConfigureAwait(false))
             {
                 throw new ZlibException("Unexpected end-of-file reading GZIP header.");
             }
         }
         if ((header[3] & 0x08) == 0x08)
         {
-            _name = await ReadZeroTerminatedStringAsync(_stream, cancellationToken);
+            _name = await ReadZeroTerminatedStringAsync(_stream, cancellationToken)
+                .ConfigureAwait(false);
         }
         if ((header[3] & 0x10) == 0x010)
         {
-            await ReadZeroTerminatedStringAsync(_stream, cancellationToken);
+            await ReadZeroTerminatedStringAsync(_stream, cancellationToken).ConfigureAwait(false);
         }
         if ((header[3] & 0x02) == 0x02)
         {
             var buf = new byte[1];
-            _ = await _stream.ReadAsync(buf, 0, 1, cancellationToken); // CRC16, ignore
+            _ = await _stream.ReadAsync(buf, 0, 1, cancellationToken).ConfigureAwait(false); // CRC16, ignore
         }
     }
 
@@ -113,7 +114,7 @@ internal sealed partial class GZipFilePart
         do
         {
             // workitem 7740
-            var n = await stream.ReadAsync(buf1, 0, 1, cancellationToken);
+            var n = await stream.ReadAsync(buf1, 0, 1, cancellationToken).ConfigureAwait(false);
             if (n != 1)
             {
                 throw new ZlibException("Unexpected EOF reading GZIP header.");

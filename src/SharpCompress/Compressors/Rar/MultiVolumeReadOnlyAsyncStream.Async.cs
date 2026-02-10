@@ -15,7 +15,7 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOn
     )
     {
         var stream = new MultiVolumeReadOnlyAsyncStream(parts);
-        await stream.filePartEnumerator.MoveNextAsync();
+        await stream.filePartEnumerator.MoveNextAsync().ConfigureAwait(false);
         stream.InitializeNextFilePart();
         return stream;
     }
@@ -23,10 +23,10 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOn
 #if NET8_0_OR_GREATER
     public override async ValueTask DisposeAsync()
     {
-        await base.DisposeAsync();
+        await base.DisposeAsync().ConfigureAwait(false);
         if (filePartEnumerator != null)
         {
-            await filePartEnumerator.DisposeAsync();
+            await filePartEnumerator.DisposeAsync().ConfigureAwait(false);
         }
         currentStream = null;
     }
@@ -85,7 +85,7 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOn
                 }
 
                 var fileName = filePartEnumerator.Current.FileHeader.FileName;
-                if (!await filePartEnumerator.MoveNextAsync())
+                if (!await filePartEnumerator.MoveNextAsync().ConfigureAwait(false))
                 {
                     throw new InvalidFormatException(
                         "Multi-part rar file is incomplete.  Entry expects a new volume: "
@@ -146,7 +146,7 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOn
                     );
                 }
                 var fileName = filePartEnumerator.Current.FileHeader.FileName;
-                if (!await filePartEnumerator.MoveNextAsync())
+                if (!await filePartEnumerator.MoveNextAsync().ConfigureAwait(false))
                 {
                     throw new InvalidFormatException(
                         "Multi-part rar file is incomplete.  Entry expects a new volume: "

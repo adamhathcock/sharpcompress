@@ -22,7 +22,10 @@ public class TarArchiveEntry : TarEntry, IArchiveEntry
 
     public async ValueTask<Stream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
-    ) => (await Parts.Single().GetCompressedStreamAsync(cancellationToken)).NotNull();
+    ) =>
+        (
+            await Parts.Single().GetCompressedStreamAsync(cancellationToken).ConfigureAwait(false)
+        ).NotNull();
 
     #region IArchiveEntry Members
 

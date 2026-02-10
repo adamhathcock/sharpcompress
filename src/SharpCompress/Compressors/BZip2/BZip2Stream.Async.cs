@@ -31,12 +31,9 @@ public sealed partial class BZip2Stream
         }
         else
         {
-            bZip2Stream.stream = await CBZip2InputStream.CreateAsync(
-                stream,
-                decompressConcatenated,
-                leaveOpen,
-                cancellationToken
-            );
+            bZip2Stream.stream = await CBZip2InputStream
+                .CreateAsync(stream, decompressConcatenated, leaveOpen, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         return bZip2Stream;
@@ -55,7 +52,9 @@ public sealed partial class BZip2Stream
     {
         cancellationToken.ThrowIfCancellationRequested();
         var buffer = new byte[2];
-        var bytesRead = await stream.ReadAsync(buffer, 0, 2, cancellationToken);
+        var bytesRead = await stream
+            .ReadAsync(buffer, 0, 2, cancellationToken)
+            .ConfigureAwait(false);
         if (bytesRead < 2 || buffer[0] != 'B' || buffer[1] != 'Z')
         {
             return false;

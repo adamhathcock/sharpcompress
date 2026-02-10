@@ -66,10 +66,9 @@ public sealed partial class ADCStream
 
         if (_outBuffer is null)
         {
-            var result = await ADCBase.DecompressAsync(
-                _stream,
-                cancellationToken: cancellationToken
-            );
+            var result = await ADCBase
+                .DecompressAsync(_stream, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
             _outBuffer = result.Output;
             _outPosition = 0;
         }
@@ -87,10 +86,9 @@ public sealed partial class ADCStream
             copied += piece;
             _position += piece;
             toCopy -= piece;
-            var result = await ADCBase.DecompressAsync(
-                _stream,
-                cancellationToken: cancellationToken
-            );
+            var result = await ADCBase
+                .DecompressAsync(_stream, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
             _outBuffer = result.Output;
             _outPosition = 0;
             if (result.BytesRead == 0 || _outBuffer is null || _outBuffer.Length == 0)

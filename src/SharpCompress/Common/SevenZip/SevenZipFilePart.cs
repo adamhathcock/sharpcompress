@@ -68,12 +68,9 @@ internal class SevenZipFilePart : FilePart
         {
             return Stream.Null;
         }
-        var folderStream = await _database.GetFolderStreamAsync(
-            _stream,
-            Folder!,
-            _database.PasswordProvider,
-            cancellationToken
-        );
+        var folderStream = await _database
+            .GetFolderStreamAsync(_stream, Folder!, _database.PasswordProvider, cancellationToken)
+            .ConfigureAwait(false);
 
         var firstFileIndex = _database._folderStartFileIndex[_database._folders.IndexOf(Folder!)];
         var skipCount = Index - firstFileIndex;
@@ -84,7 +81,7 @@ internal class SevenZipFilePart : FilePart
         }
         if (skipSize > 0)
         {
-            await folderStream.SkipAsync(skipSize, cancellationToken);
+            await folderStream.SkipAsync(skipSize, cancellationToken).ConfigureAwait(false);
         }
         return new ReadOnlySubStream(folderStream, Header.Size, leaveOpen: false);
     }

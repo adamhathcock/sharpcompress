@@ -39,7 +39,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         if (!removedEntries.Contains(entry))
         {
             removedEntries.Add(entry);
-            await RebuildModifiedCollectionAsync();
+            await RebuildModifiedCollectionAsync().ConfigureAwait(false);
         }
     }
 
@@ -86,7 +86,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         }
         var entry = CreateEntry(key, source, size, modified, closeStream);
         newEntries.Add(entry);
-        await RebuildModifiedCollectionAsync();
+        await RebuildModifiedCollectionAsync().ConfigureAwait(false);
         return entry;
     }
 
@@ -106,7 +106,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         }
         var entry = CreateDirectoryEntry(key, modified);
         newEntries.Add(entry);
-        await RebuildModifiedCollectionAsync();
+        await RebuildModifiedCollectionAsync().ConfigureAwait(false);
         return entry;
     }
 

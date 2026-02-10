@@ -118,7 +118,8 @@ public abstract class RarVolume : Volume
                             var buffer = new byte[fh.CompressedSize];
                             await fh
                                 .PackedStream.NotNull()
-                                .ReadFullyAsync(buffer, cancellationToken);
+                                .ReadFullyAsync(buffer, cancellationToken)
+                                .ConfigureAwait(false);
                             Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
                         }
                     }
@@ -184,7 +185,7 @@ public abstract class RarVolume : Volume
 
     public async ValueTask<bool> IsSolidArchiveAsync(CancellationToken cancellationToken = default)
     {
-        await EnsureArchiveHeaderLoadedAsync(cancellationToken);
+        await EnsureArchiveHeaderLoadedAsync(cancellationToken).ConfigureAwait(false);
         return ArchiveHeader?.IsSolid ?? false;
     }
 
@@ -248,7 +249,7 @@ public abstract class RarVolume : Volume
             }
 
             // we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
-            await GetVolumeFilePartsAsync(cancellationToken).FirstAsync();
+            await GetVolumeFilePartsAsync(cancellationToken).FirstAsync().ConfigureAwait(false);
             Stream.Position = 0;
         }
     }

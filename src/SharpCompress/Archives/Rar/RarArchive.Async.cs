@@ -25,13 +25,13 @@ public partial class RarArchive
             }
 
             _disposed = true;
-            await base.DisposeAsync();
+            await base.DisposeAsync().ConfigureAwait(false);
         }
     }
 
     protected override async ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync()
     {
-        if (await this.IsMultipartVolumeAsync())
+        if (await this.IsMultipartVolumeAsync().ConfigureAwait(false))
         {
             var streams = await VolumesAsync
                 .Select(volume =>
@@ -39,15 +39,18 @@ public partial class RarArchive
                     volume.Stream.Position = 0;
                     return volume.Stream;
                 })
-                .ToListAsync();
+                .ToListAsync()
+                .ConfigureAwait(false);
             return (RarReader)RarReader.OpenReader(streams, ReaderOptions);
         }
 
-        var stream = (await VolumesAsync.FirstAsync()).Stream;
+        var stream = (await VolumesAsync.FirstAsync().ConfigureAwait(false)).Stream;
         stream.Position = 0;
         return (RarReader)RarReader.OpenReader(stream, ReaderOptions);
     }
 
     public override async ValueTask<bool> IsSolidAsync() =>
-        await (await VolumesAsync.CastAsync<RarVolume>().FirstAsync()).IsSolidArchiveAsync();
+        await (await VolumesAsync.CastAsync<RarVolume>().FirstAsync().ConfigureAwait(false))
+            .IsSolidArchiveAsync()
+            .ConfigureAwait(false);
 }

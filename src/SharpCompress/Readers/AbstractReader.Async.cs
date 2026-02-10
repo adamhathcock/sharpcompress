@@ -17,13 +17,13 @@ public abstract partial class AbstractReader<TEntry, TVolume>
     {
         if (_entriesForCurrentReadStreamAsync is not null)
         {
-            await _entriesForCurrentReadStreamAsync.DisposeAsync();
+            await _entriesForCurrentReadStreamAsync.DisposeAsync().ConfigureAwait(false);
         }
 
         // If Volume implements IAsyncDisposable, use async disposal
         if (Volume is IAsyncDisposable asyncDisposable)
         {
-            await asyncDisposable.DisposeAsync();
+            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
         }
         else
         {
@@ -43,14 +43,14 @@ public abstract partial class AbstractReader<TEntry, TVolume>
         }
         if (_entriesForCurrentReadStreamAsync is null)
         {
-            return await LoadStreamForReadingAsync(RequestInitialStream());
+            return await LoadStreamForReadingAsync(RequestInitialStream()).ConfigureAwait(false);
         }
         if (!_wroteCurrentEntry)
         {
             await SkipEntryAsync(cancellationToken).ConfigureAwait(false);
         }
         _wroteCurrentEntry = false;
-        if (await NextEntryForCurrentStreamAsync(cancellationToken))
+        if (await NextEntryForCurrentStreamAsync(cancellationToken).ConfigureAwait(false))
         {
             return true;
         }
@@ -62,7 +62,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
     {
         if (_entriesForCurrentReadStreamAsync is not null)
         {
-            await _entriesForCurrentReadStreamAsync.DisposeAsync();
+            await _entriesForCurrentReadStreamAsync.DisposeAsync().ConfigureAwait(false);
         }
         if (stream is null || !stream.CanRead)
         {
@@ -73,7 +73,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             );
         }
         _entriesForCurrentReadStreamAsync = GetEntriesAsync(stream).GetAsyncEnumerator();
-        return await _entriesForCurrentReadStreamAsync.MoveNextAsync();
+        return await _entriesForCurrentReadStreamAsync.MoveNextAsync().ConfigureAwait(false);
     }
 
     private async ValueTask SkipEntryAsync(CancellationToken cancellationToken)
@@ -202,7 +202,6 @@ public abstract partial class AbstractReader<TEntry, TVolume>
     // Async iterator method
     protected virtual async IAsyncEnumerable<TEntry> GetEntriesAsync(Stream stream)
     {
-        await Task.CompletedTask;
         foreach (var entry in GetEntries(stream))
         {
             yield return entry;

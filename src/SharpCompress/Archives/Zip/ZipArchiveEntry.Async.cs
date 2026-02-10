@@ -15,7 +15,9 @@ public partial class ZipArchiveEntry
         var part = Parts.Single();
         if (part is SeekableZipFilePart seekablePart)
         {
-            return (await seekablePart.GetCompressedStreamAsync(cancellationToken)).NotNull();
+            return (
+                await seekablePart.GetCompressedStreamAsync(cancellationToken).ConfigureAwait(false)
+            ).NotNull();
         }
         return OpenEntryStream();
     }

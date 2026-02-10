@@ -12,7 +12,7 @@ public partial class GZipEntry
     )
     {
         yield return new GZipEntry(
-            await GZipFilePart.CreateAsync(stream, options.ArchiveEncoding),
+            await GZipFilePart.CreateAsync(stream, options.ArchiveEncoding).ConfigureAwait(false),
             options
         );
     }

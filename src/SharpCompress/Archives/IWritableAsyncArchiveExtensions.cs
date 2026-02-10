@@ -25,13 +25,15 @@ public static class IWritableAsyncArchiveExtensions
                 )
                 {
                     var fileInfo = new FileInfo(path);
-                    await writableArchive.AddEntryAsync(
-                        path.Substring(filePath.Length),
-                        fileInfo.OpenRead(),
-                        true,
-                        fileInfo.Length,
-                        fileInfo.LastWriteTime
-                    );
+                    await writableArchive
+                        .AddEntryAsync(
+                            path.Substring(filePath.Length),
+                            fileInfo.OpenRead(),
+                            true,
+                            fileInfo.Length,
+                            fileInfo.LastWriteTime
+                        )
+                        .ConfigureAwait(false);
                 }
             }
         }

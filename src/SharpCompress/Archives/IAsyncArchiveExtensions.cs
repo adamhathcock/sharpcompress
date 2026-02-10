@@ -25,20 +25,27 @@ public static class IAsyncArchiveExtensions
             CancellationToken cancellationToken = default
         )
         {
-            if (await archive.IsSolidAsync() || archive.Type == ArchiveType.SevenZip)
+            if (
+                await archive.IsSolidAsync().ConfigureAwait(false)
+                || archive.Type == ArchiveType.SevenZip
+            )
             {
-                await using var reader = await archive.ExtractAllEntriesAsync();
+                await using var reader = await archive
+                    .ExtractAllEntriesAsync()
+                    .ConfigureAwait(false);
                 await reader
                     .WriteAllToDirectoryAsync(destinationDirectory, cancellationToken)
                     .ConfigureAwait(false);
             }
             else
             {
-                await archive.WriteToDirectoryAsyncInternal(
-                    destinationDirectory,
-                    progress,
-                    cancellationToken
-                );
+                await archive
+                    .WriteToDirectoryAsyncInternal(
+                        destinationDirectory,
+                        progress,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
         }
 
@@ -48,7 +55,7 @@ public static class IAsyncArchiveExtensions
             CancellationToken cancellationToken
         )
         {
-            var totalBytes = await archive.TotalUncompressedSizeAsync();
+            var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
             var bytesRead = 0L;
             var seenDirectories = new HashSet<string>();
 

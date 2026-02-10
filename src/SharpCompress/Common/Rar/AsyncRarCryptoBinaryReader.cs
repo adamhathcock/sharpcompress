@@ -26,7 +26,9 @@ internal sealed class AsyncRarCryptoBinaryReader : AsyncRarCrcBinaryReader
         var binary = new AsyncRarCryptoBinaryReader(stream);
         if (salt == null)
         {
-            salt = await binary.ReadBytesAsyncBase(EncryptionConstV5.SIZE_SALT30);
+            salt = await binary
+                .ReadBytesAsyncBase(EncryptionConstV5.SIZE_SALT30)
+                .ConfigureAwait(false);
             binary._readCount += EncryptionConstV5.SIZE_SALT30;
         }
         binary._rijndael = new BlockTransformer(cryptKey.Transformer(salt));

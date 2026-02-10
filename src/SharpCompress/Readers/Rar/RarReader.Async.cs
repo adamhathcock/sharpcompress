@@ -32,9 +32,9 @@ public abstract partial class RarReader
             throw new InvalidOperationException("no stream for redirect entry");
         }
 
-        var stream = await MultiVolumeReadOnlyAsyncStream.Create(
-            CreateFilePartEnumerableForCurrentEntryAsync().CastAsync<RarFilePart>()
-        );
+        var stream = await MultiVolumeReadOnlyAsyncStream
+            .Create(CreateFilePartEnumerableForCurrentEntryAsync().CastAsync<RarFilePart>())
+            .ConfigureAwait(false);
         if (Entry.IsRarV3)
         {
             return CreateEntryStream(

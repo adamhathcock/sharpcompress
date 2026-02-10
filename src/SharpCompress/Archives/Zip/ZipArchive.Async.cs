@@ -21,7 +21,7 @@ public partial class ZipArchive
         IAsyncEnumerable<ZipVolume> volumes
     )
     {
-        var vols = await volumes.ToListAsync();
+        var vols = await volumes.ToListAsync().ConfigureAwait(false);
         var volsArray = vols.ToArray();
 
         await foreach (

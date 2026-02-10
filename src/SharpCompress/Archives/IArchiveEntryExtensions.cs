@@ -47,11 +47,13 @@ public static class IArchiveEntryExtensions
             }
 
 #if LEGACY_DOTNET
-            using var entryStream = await archiveEntry.OpenEntryStreamAsync(cancellationToken);
+            using var entryStream = await archiveEntry
+                .OpenEntryStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
 #else
-            await using var entryStream = await archiveEntry.OpenEntryStreamAsync(
-                cancellationToken
-            );
+            await using var entryStream = await archiveEntry
+                .OpenEntryStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
 #endif
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
             await sourceStream
