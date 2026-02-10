@@ -298,11 +298,12 @@ internal abstract partial class ZipFilePart
                 }
 
                 return await CreateDecompressionStreamAsync(
-                    stream,
-                    (ZipCompressionMethod)
-                        BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)),
-                    cancellationToken
-                );
+                        stream,
+                        (ZipCompressionMethod)
+                            BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)),
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             default:
             {

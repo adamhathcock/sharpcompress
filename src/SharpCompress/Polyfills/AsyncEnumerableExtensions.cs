@@ -47,7 +47,7 @@ public static class AsyncEnumerableExtensions
             await using var e = source.GetAsyncEnumerator(cancellationToken);
 
             var count = 0;
-            while (await e.MoveNextAsync())
+            while (await e.MoveNextAsync().ConfigureAwait(false))
             {
                 checked
                 {
@@ -117,12 +117,12 @@ public static class AsyncEnumerableExtensions
                 enumerator = source.Where(predicate).GetAsyncEnumerator();
             }
 
-            if (!await enumerator.MoveNextAsync())
+            if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
                 throw new InvalidOperationException("The source sequence is empty.");
             }
             var value = enumerator.Current;
-            if (await enumerator.MoveNextAsync())
+            if (await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
                 throw new InvalidOperationException(
                     "The source sequence contains more than one element."

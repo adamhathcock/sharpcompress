@@ -29,7 +29,7 @@ internal sealed partial class ArchiveReader
         {
             // TODO: Check Signature!
             _header = new byte[0x20];
-            await stream.ReadExactAsync(_header, 0, 0x20, cancellationToken);
+            await stream.ReadExactAsync(_header, 0, 0x20, cancellationToken).ConfigureAwait(false);
 
             if (
                 !lookForHeader
@@ -107,7 +107,9 @@ internal sealed partial class ArchiveReader
         _stream.Seek(nextHeaderOffset, SeekOrigin.Current);
 
         var header = new byte[nextHeaderSize];
-        await _stream.ReadExactAsync(header, 0, header.Length, cancellationToken);
+        await _stream
+            .ReadExactAsync(header, 0, header.Length, cancellationToken)
+            .ConfigureAwait(false);
 
         if (Crc.Finish(Crc.Update(Crc.INIT_CRC, header, 0, header.Length)) != nextHeaderCrc)
         {

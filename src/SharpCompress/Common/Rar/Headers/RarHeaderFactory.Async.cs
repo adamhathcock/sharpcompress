@@ -64,19 +64,19 @@ public partial class RarHeaderFactory
 
             if (_isRar5 && _cryptInfo != null)
             {
-                await _cryptInfo.ReadInitVAsync(new AsyncMarkingBinaryReader(stream));
+                await _cryptInfo
+                    .ReadInitVAsync(new AsyncMarkingBinaryReader(stream))
+                    .ConfigureAwait(false);
                 var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
 
-                reader = await AsyncRarCryptoBinaryReader.Create(
-                    stream,
-                    _headerKey,
-                    _cryptInfo.Salt
-                );
+                reader = await AsyncRarCryptoBinaryReader
+                    .Create(stream, _headerKey, _cryptInfo.Salt)
+                    .ConfigureAwait(false);
             }
             else
             {
                 var key = new CryptKey3(Options.Password);
-                reader = await AsyncRarCryptoBinaryReader.Create(stream, key);
+                reader = await AsyncRarCryptoBinaryReader.Create(stream, key).ConfigureAwait(false);
             }
         }
 

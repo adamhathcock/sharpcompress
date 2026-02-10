@@ -818,7 +818,7 @@ internal partial class CBZip2InputStream
             var b = ArrayPool<byte>.Shared.Rent(1);
             try
             {
-                await bsStream.ReadExactAsync(b, 0, 1, cancellationToken);
+                await bsStream.ReadExactAsync(b, 0, 1, cancellationToken).ConfigureAwait(false);
                 thech = (char)b[0];
             }
             catch (IOException)
@@ -844,15 +844,15 @@ internal partial class CBZip2InputStream
     }
 
     private async ValueTask<char> BsGetUCharAsync(CancellationToken cancellationToken) =>
-        (char)await BsRAsync(8, cancellationToken);
+        (char)await BsRAsync(8, cancellationToken).ConfigureAwait(false);
 
     private async ValueTask<int> BsGetIntVSAsync(
         int numBits,
         CancellationToken cancellationToken
-    ) => await BsRAsync(numBits, cancellationToken);
+    ) => await BsRAsync(numBits, cancellationToken).ConfigureAwait(false);
 
     private async ValueTask<int> BsGetInt32Async(CancellationToken cancellationToken) =>
-        await BsGetintAsync(cancellationToken);
+        await BsGetintAsync(cancellationToken).ConfigureAwait(false);
 
     public static async ValueTask<CBZip2InputStream> CreateAsync(
         Stream zStream,
@@ -864,10 +864,10 @@ internal partial class CBZip2InputStream
         var cbZip2InputStream = new CBZip2InputStream(decompressConcatenated, leaveOpen);
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
-        await cbZip2InputStream.BsSetStreamAsync(zStream, cancellationToken);
-        await cbZip2InputStream.InitializeAsync(true, cancellationToken);
-        await cbZip2InputStream.InitBlockAsync(cancellationToken);
-        await cbZip2InputStream.SetupBlockAsync(cancellationToken);
+        await cbZip2InputStream.BsSetStreamAsync(zStream, cancellationToken).ConfigureAwait(false);
+        await cbZip2InputStream.InitializeAsync(true, cancellationToken).ConfigureAwait(false);
+        await cbZip2InputStream.InitBlockAsync(cancellationToken).ConfigureAwait(false);
+        await cbZip2InputStream.SetupBlockAsync(cancellationToken).ConfigureAwait(false);
         return cbZip2InputStream;
     }
 }
