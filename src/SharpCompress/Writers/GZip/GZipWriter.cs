@@ -19,14 +19,14 @@ public sealed partial class GZipWriter : AbstractWriter
             destination = SharpCompressStream.CreateNonDisposing(destination);
         }
 
-        // Get compression providers from options, falling back to default
-        var providers = options?.CompressionProviders ?? CompressionProviderRegistry.Default;
+        // Use the configured compression providers
+        var providers = WriterOptions.CompressionProviders;
 
         // Create the GZip stream using the provider
         var compressionStream = providers.CreateCompressStream(
             CompressionType.GZip,
             destination,
-            options?.CompressionLevel ?? (int)CompressionLevel.Default
+            WriterOptions.CompressionLevel
         );
 
         // If using internal GZipStream, set the encoding for header filename

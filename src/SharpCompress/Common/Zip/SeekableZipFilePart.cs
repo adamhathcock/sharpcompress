@@ -12,15 +12,8 @@ internal partial class SeekableZipFilePart : ZipFilePart
     internal SeekableZipFilePart(
         SeekableZipHeaderFactory headerFactory,
         DirectoryEntryHeader header,
-        Stream stream
-    )
-        : base(header, stream) => _headerFactory = headerFactory;
-
-    internal SeekableZipFilePart(
-        SeekableZipHeaderFactory headerFactory,
-        DirectoryEntryHeader header,
         Stream stream,
-        CompressionProviderRegistry? compressionProviders
+        CompressionProviderRegistry compressionProviders
     )
         : base(header, stream, compressionProviders) => _headerFactory = headerFactory;
 

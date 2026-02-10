@@ -21,24 +21,21 @@ public partial class ZipReader
         private readonly StreamingZipHeaderFactory _headerFactory;
         private readonly Stream _stream;
         private readonly IReaderOptions _options;
-        private readonly CompressionProviderRegistry? _compressionProviders;
 
         public ZipEntryAsyncEnumerable(
             StreamingZipHeaderFactory headerFactory,
             Stream stream,
-            IReaderOptions options,
-            CompressionProviderRegistry? compressionProviders
+            IReaderOptions options
         )
         {
             _headerFactory = headerFactory;
             _stream = stream;
             _options = options;
-            _compressionProviders = compressionProviders;
         }
 
         public IAsyncEnumerator<ZipEntry> GetAsyncEnumerator(
             CancellationToken cancellationToken = default
-        ) => new ZipEntryAsyncEnumerator(_headerFactory, _stream, _options, _compressionProviders, cancellationToken);
+        ) => new ZipEntryAsyncEnumerator(_headerFactory, _stream, _options, cancellationToken);
     }
 
     /// <summary>
@@ -49,20 +46,17 @@ public partial class ZipReader
         private readonly Stream _stream;
         private readonly IAsyncEnumerator<ZipHeader> _headerEnumerator;
         private readonly IReaderOptions _options;
-        private readonly CompressionProviderRegistry? _compressionProviders;
         private ZipEntry? _current;
 
         public ZipEntryAsyncEnumerator(
             StreamingZipHeaderFactory headerFactory,
             Stream stream,
             IReaderOptions options,
-            CompressionProviderRegistry? compressionProviders,
             CancellationToken cancellationToken
         )
         {
             _stream = stream;
             _options = options;
-            _compressionProviders = compressionProviders;
             _headerEnumerator = headerFactory
                 .ReadStreamHeaderAsync(stream)
                 .GetAsyncEnumerator(cancellationToken);
@@ -84,7 +78,11 @@ public partial class ZipReader
                 {
                     case ZipHeaderType.LocalEntry:
                         _current = new ZipEntry(
-                            new StreamingZipFilePart((LocalEntryHeader)header, _stream),
+                            new StreamingZipFilePart(
+                                (LocalEntryHeader)header,
+                                _stream,
+                                _options.CompressionProviders
+                            ),
                             _options
                         );
                         return true;

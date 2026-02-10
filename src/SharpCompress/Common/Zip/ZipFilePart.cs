@@ -20,38 +20,23 @@ namespace SharpCompress.Common.Zip;
 
 internal abstract partial class ZipFilePart : FilePart
 {
-    private CompressionProviderRegistry? _compressionProviders;
+    private readonly CompressionProviderRegistry _compressionProviders;
 
-    internal ZipFilePart(ZipFileEntry header, Stream stream)
+    internal ZipFilePart(
+        ZipFileEntry header,
+        Stream stream,
+        CompressionProviderRegistry compressionProviders
+    )
         : base(header.ArchiveEncoding)
     {
         Header = header;
         header.Part = this;
         BaseStream = stream;
-    }
-
-    internal ZipFilePart(
-        ZipFileEntry header,
-        Stream stream,
-        CompressionProviderRegistry? compressionProviders
-    )
-        : this(header, stream)
-    {
         _compressionProviders = compressionProviders;
     }
 
     internal Stream BaseStream { get; }
     internal ZipFileEntry Header { get; set; }
-
-    /// <summary>
-    /// Gets or sets the compression provider registry.
-    /// If null, uses the default registry.
-    /// </summary>
-    internal CompressionProviderRegistry? CompressionProviders
-    {
-        get => _compressionProviders;
-        set => _compressionProviders = value;
-    }
 
     internal override string? FilePartName => Header.Name;
 
@@ -89,8 +74,7 @@ internal abstract partial class ZipFilePart : FilePart
     /// <summary>
     /// Gets the compression provider registry, falling back to default if not set.
     /// </summary>
-    protected CompressionProviderRegistry GetProviders() =>
-        _compressionProviders ?? CompressionProviderRegistry.Default;
+    protected CompressionProviderRegistry GetProviders() => _compressionProviders;
 
     /// <summary>
     /// Converts ZipCompressionMethod to CompressionType.

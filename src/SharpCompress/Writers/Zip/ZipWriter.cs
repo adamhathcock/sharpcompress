@@ -421,9 +421,7 @@ public partial class ZipWriter : AbstractWriter
             counting = new CountingStream(SharpCompressStream.CreateNonDisposing(writeStream));
             Stream output = counting;
 
-            // Get compression providers from writer options, falling back to default
-            var providers =
-                writer.WriterOptions.CompressionProviders ?? CompressionProviderRegistry.Default;
+            var providers = writer.WriterOptions.CompressionProviders;
 
             switch (zipCompressionMethod)
             {

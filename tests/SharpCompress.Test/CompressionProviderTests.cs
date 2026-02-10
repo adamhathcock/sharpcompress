@@ -134,13 +134,10 @@ public class CompressionProviderTests
     }
 
     [Fact]
-    public void TarWriter_WithNullProvider_UsesDefault()
+    public void TarWriter_WithoutCustomProvider_UsesDefault()
     {
         using var stream = new MemoryStream();
-        var options = new TarWriterOptions(CompressionType.GZip, true)
-        {
-            CompressionProviders = null, // Should use default
-        };
+        var options = new TarWriterOptions(CompressionType.GZip, true);
 
         using (var writer = new TarWriter(stream, options))
         {

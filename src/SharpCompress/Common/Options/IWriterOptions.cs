@@ -19,10 +19,9 @@ public interface IWriterOptions : IStreamOptions, IEncodingOptions, IProgressOpt
     int CompressionLevel { get; init; }
 
     /// <summary>
-    /// Optional registry of compression providers.
-    /// If null, the default registry (SharpCompress internal implementations) will be used.
-    /// Use this to provide alternative compression implementations, such as
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom providers, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    CompressionProviderRegistry? CompressionProviders { get; init; }
+    CompressionProviderRegistry CompressionProviders { get; init; }
 }

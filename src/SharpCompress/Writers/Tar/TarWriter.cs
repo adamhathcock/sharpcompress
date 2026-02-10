@@ -29,8 +29,7 @@ public partial class TarWriter : AbstractWriter
             destination = SharpCompressStream.CreateNonDisposing(destination);
         }
 
-        // Get compression providers from options, falling back to default
-        var providers = options.CompressionProviders ?? CompressionProviderRegistry.Default;
+        var providers = options.CompressionProviders;
 
         destination = options.CompressionType switch
         {

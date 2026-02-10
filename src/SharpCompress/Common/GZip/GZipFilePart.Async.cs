@@ -15,16 +15,7 @@ internal sealed partial class GZipFilePart
     internal static async ValueTask<GZipFilePart> CreateAsync(
         Stream stream,
         IArchiveEncoding archiveEncoding,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await CreateAsync(stream, archiveEncoding, null, cancellationToken);
-    }
-
-    internal static async ValueTask<GZipFilePart> CreateAsync(
-        Stream stream,
-        IArchiveEncoding archiveEncoding,
-        CompressionProviderRegistry? compressionProviders,
+        CompressionProviderRegistry compressionProviders,
         CancellationToken cancellationToken = default
     )
     {

@@ -39,9 +39,9 @@ public interface IReaderOptions
     int? RewindableBufferSize { get; init; }
 
     /// <summary>
-    /// Optional registry of compression providers.
-    /// If null, the default registry (SharpCompress internal implementations) will be used.
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom providers.
     /// Use this to provide alternative decompression implementations.
     /// </summary>
-    CompressionProviderRegistry? CompressionProviders { get; init; }
+    CompressionProviderRegistry CompressionProviders { get; init; }
 }

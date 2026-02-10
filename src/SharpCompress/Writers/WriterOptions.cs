@@ -64,12 +64,12 @@ public sealed record WriterOptions : IWriterOptions
     public IProgress<ProgressReport>? Progress { get; init; }
 
     /// <summary>
-    /// Optional registry of compression providers.
-    /// If null, the default registry (SharpCompress internal implementations) will be used.
-    /// Use this to provide alternative compression implementations, such as
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry? CompressionProviders { get; init; }
+    public CompressionProviderRegistry CompressionProviders { get; init; } =
+        CompressionProviderRegistry.Default;
 
     /// <summary>
     /// Creates a new WriterOptions instance with the specified compression type.
