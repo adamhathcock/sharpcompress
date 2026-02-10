@@ -8,10 +8,15 @@ namespace SharpCompress.Readers;
 /// Options for configuring reader behavior when opening archives.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// This class is immutable. Use factory presets and fluent helpers for common configurations:
 /// <code>
-/// var options = new ReaderOptions { Password = "secret" };
-/// options = options with { LeaveStreamOpen = false };
+/// var options = ReaderOptions.ForExternalStream()
+///     .WithPassword("secret")
+///     .WithLookForHeader(true);
+/// </code>
+/// Or use object initializers for simple cases:
+/// <code>
+/// var options = new ReaderOptions { Password = "secret", LeaveStreamOpen = false };
 /// </code>
 /// </remarks>
 public sealed record ReaderOptions : IReaderOptions
@@ -170,6 +175,29 @@ public sealed record ReaderOptions : IReaderOptions
     public static ReaderOptions FlatExtract => new() { ExtractFullPath = false, Overwrite = true };
 
     /// <summary>
+    /// Creates ReaderOptions for reading encrypted archives.
+    /// </summary>
+    /// <param name="password">The password for encrypted archives.</param>
+    public static ReaderOptions ForEncryptedArchive(string? password = null) =>
+        new ReaderOptions().WithPassword(password);
+
+    /// <summary>
+    /// Creates ReaderOptions for archives with custom character encoding.
+    /// </summary>
+    /// <param name="encoding">The encoding for archive entry names.</param>
+    public static ReaderOptions ForEncoding(IArchiveEncoding encoding) =>
+        new ReaderOptions().WithArchiveEncoding(encoding);
+
+    /// <summary>
+    /// Creates ReaderOptions for self-extracting archives that require header search.
+    /// </summary>
+    public static ReaderOptions ForSelfExtractingArchive(string? password = null) =>
+        new ReaderOptions()
+            .WithLookForHeader(true)
+            .WithPassword(password)
+            .WithRewindableBufferSize(1_048_576); // 1MB for SFX archives
+
+    /// <summary>
     /// Default symbolic link handler that logs a warning message.
     /// </summary>
     public static void DefaultSymbolicLinkHandler(string sourcePath, string targetPath)
@@ -179,66 +207,9 @@ public sealed record ReaderOptions : IReaderOptions
         );
     }
 
-    /// <summary>
-    /// Creates a new ReaderOptions instance with the specified password.
-    /// </summary>
-    /// <param name="password">The password for encrypted archives.</param>
-    public ReaderOptions(string? password) => Password = password;
-
-    /// <summary>
-    /// Creates a new ReaderOptions instance with the specified password and header search option.
-    /// </summary>
-    /// <param name="password">The password for encrypted archives.</param>
-    /// <param name="lookForHeader">Whether to search for the archive header.</param>
-    public ReaderOptions(string? password, bool lookForHeader)
-    {
-        Password = password;
-        LookForHeader = lookForHeader;
-    }
-
-    /// <summary>
-    /// Creates a new ReaderOptions instance with the specified encoding.
-    /// </summary>
-    /// <param name="encoding">The encoding for archive entry names.</param>
-    public ReaderOptions(IArchiveEncoding encoding) => ArchiveEncoding = encoding;
-
-    /// <summary>
-    /// Creates a new ReaderOptions instance with the specified password and encoding.
-    /// </summary>
-    /// <param name="password">The password for encrypted archives.</param>
-    /// <param name="encoding">The encoding for archive entry names.</param>
-    public ReaderOptions(string? password, IArchiveEncoding encoding)
-    {
-        Password = password;
-        ArchiveEncoding = encoding;
-    }
-
-    /// <summary>
-    /// Creates a new ReaderOptions instance with the specified stream open behavior.
-    /// </summary>
-    /// <param name="leaveStreamOpen">Whether to leave the stream open after reading.</param>
-    public ReaderOptions(bool leaveStreamOpen)
-    {
-        LeaveStreamOpen = leaveStreamOpen;
-    }
-
-    /// <summary>
-    /// Creates a new ReaderOptions instance with the specified stream open behavior and password.
-    /// </summary>
-    /// <param name="leaveStreamOpen">Whether to leave the stream open after reading.</param>
-    /// <param name="password">The password for encrypted archives.</param>
-    public ReaderOptions(bool leaveStreamOpen, string? password)
-    {
-        LeaveStreamOpen = leaveStreamOpen;
-        Password = password;
-    }
-
-    /// <summary>
-    /// Creates a new ReaderOptions instance with the specified buffer size.
-    /// </summary>
-    /// <param name="bufferSize">The buffer size for stream operations.</param>
-    public ReaderOptions(int bufferSize)
-    {
-        BufferSize = bufferSize;
-    }
+    // Note: Parameterized constructors have been removed.
+    // Use fluent With*() helpers or object initializers instead:
+    // new ReaderOptions().WithPassword("secret").WithLookForHeader(true)
+    // or
+    // new ReaderOptions { Password = "secret", LookForHeader = true }
 }

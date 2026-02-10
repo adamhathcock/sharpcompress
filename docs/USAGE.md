@@ -94,11 +94,11 @@ Note: Extracting a solid rar or 7z file needs to be done in sequential order to 
 `ExtractAllEntries` is primarily intended for solid archives (like solid Rar) or 7Zip archives, where sequential extraction provides the best performance. For general/simple extraction with any supported archive type, use `archive.WriteToDirectory()` instead.
 
 ```C#
-using (var archive = RarArchive.OpenArchive("Test.rar", new ReaderOptions
-{
-    ExtractFullPath = true,
-    Overwrite = true
-}))
+// Using fluent factory method for extraction options
+using (var archive = RarArchive.OpenArchive("Test.rar",
+    ReaderOptions.ForOwnedFile()
+        .WithExtractFullPath(true)
+        .WithOverwrite(true)))
 {
     // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
     archive.WriteToDirectory(@"D:\temp");
@@ -130,12 +130,11 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-using (var archive = RarArchive.OpenArchive("archive.rar", new ReaderOptions
-{
-    Progress = progress,
-    ExtractFullPath = true,
-    Overwrite = true
-})) // Must be solid Rar or 7Zip
+using (var archive = RarArchive.OpenArchive("archive.rar",
+    ReaderOptions.ForOwnedFile()
+        .WithProgress(progress)
+        .WithExtractFullPath(true)
+        .WithOverwrite(true))) // Must be solid Rar or 7Zip
 {
     archive.WriteToDirectory(@"D:\output");
 }
@@ -181,10 +180,10 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 ```C#
 using (Stream stream = File.OpenWrite("C:\\temp.tgz"))
-using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)
-                                                {
-                                                    LeaveStreamOpen = true
-                                                }))
+using (var writer = WriterFactory.OpenWriter(
+    stream,
+    ArchiveType.Tar,
+    WriterOptions.ForTar(CompressionType.GZip).WithLeaveStreamOpen(true)))
 {
     writer.WriteAll("D:\\temp", "*", SearchOption.AllDirectories);
 }
@@ -193,15 +192,15 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new Writer
 ### Extract zip which has non-utf8 encoded filename(cp932)
 
 ```C#
-var opts = new SharpCompress.Readers.ReaderOptions();
 var encoding = Encoding.GetEncoding(932);
-opts.ArchiveEncoding = new SharpCompress.Common.ArchiveEncoding();
-opts.ArchiveEncoding.CustomDecoder = (data, x, y) =>
-{
-    return encoding.GetString(data);
-};
-var tr = SharpCompress.Archives.Zip.ZipArchive.OpenArchive("test.zip", opts);
-foreach(var entry in tr.Entries)
+var opts = new ReaderOptions()
+    .WithArchiveEncoding(new ArchiveEncoding
+    {
+        CustomDecoder = (data, x, y) => encoding.GetString(data)
+    });
+
+using var archive = ZipArchive.OpenArchive("test.zip", opts);
+foreach(var entry in archive.Entries)
 {
     Console.WriteLine($"{entry.Key}");
 }

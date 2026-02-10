@@ -390,7 +390,7 @@ public class ArchiveTests : ReaderTests
     )
     {
         var writerOptions = compressionLevel.HasValue
-            ? new WriterOptions(compressionType, compressionLevel.Value, leaveStreamOpen: true)
+            ? new WriterOptions(compressionType, compressionLevel.Value) { LeaveStreamOpen = true }
             : new WriterOptions(compressionType) { LeaveStreamOpen = true };
         return WriterFactory.OpenAsyncWriter(
             new AsyncOnlyStream(stream),

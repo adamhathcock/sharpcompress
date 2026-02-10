@@ -9,10 +9,9 @@ namespace SharpCompress.Writers;
 /// Options for configuring writer behavior when creating archives.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// This class is immutable. Use factory methods for creation:
 /// <code>
-/// var options = new WriterOptions(CompressionType.Zip);
-/// options = options with { LeaveStreamOpen = false };
+/// var options = WriterOptions.ForZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
 /// </code>
 /// </remarks>
 public sealed record WriterOptions : IWriterOptions
@@ -92,32 +91,11 @@ public sealed record WriterOptions : IWriterOptions
         CompressionLevel = compressionLevel;
     }
 
-    /// <summary>
-    /// Creates a new WriterOptions instance with the specified compression type and stream open behavior.
-    /// </summary>
-    /// <param name="compressionType">The compression type for the archive.</param>
-    /// <param name="leaveStreamOpen">Whether to leave the stream open after writing.</param>
-    public WriterOptions(CompressionType compressionType, bool leaveStreamOpen)
-        : this(compressionType)
-    {
-        LeaveStreamOpen = leaveStreamOpen;
-    }
-
-    /// <summary>
-    /// Creates a new WriterOptions instance with the specified compression type, level, and stream open behavior.
-    /// </summary>
-    /// <param name="compressionType">The compression type for the archive.</param>
-    /// <param name="compressionLevel">The compression level (algorithm-specific).</param>
-    /// <param name="leaveStreamOpen">Whether to leave the stream open after writing.</param>
-    public WriterOptions(
-        CompressionType compressionType,
-        int compressionLevel,
-        bool leaveStreamOpen
-    )
-        : this(compressionType, compressionLevel)
-    {
-        LeaveStreamOpen = leaveStreamOpen;
-    }
+    // Note: Constructors with boolean leaveStreamOpen parameter removed.
+    // Use the fluent WithLeaveStreamOpen() helper or object initializer instead:
+    // new WriterOptions(type) { LeaveStreamOpen = false }
+    // or
+    // WriterOptions.ForZip().WithLeaveStreamOpen(false)
 
     /// <summary>
     /// Implicit conversion from CompressionType to WriterOptions.
@@ -125,4 +103,23 @@ public sealed record WriterOptions : IWriterOptions
     /// <param name="compressionType">The compression type.</param>
     public static implicit operator WriterOptions(CompressionType compressionType) =>
         new(compressionType);
+
+    /// <summary>
+    /// Creates a new ZipWriterOptions for writing ZIP archives.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive. Defaults to Deflate.</param>
+    public static WriterOptions ForZip(CompressionType compressionType = CompressionType.Deflate) =>
+        new(compressionType);
+
+    /// <summary>
+    /// Creates a new WriterOptions for writing TAR archives.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive. Defaults to None.</param>
+    public static WriterOptions ForTar(CompressionType compressionType = CompressionType.None) =>
+        new(compressionType);
+
+    /// <summary>
+    /// Creates a new WriterOptions for writing GZip compressed files.
+    /// </summary>
+    public static WriterOptions ForGZip() => new(CompressionType.GZip);
 }

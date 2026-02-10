@@ -20,14 +20,18 @@ using (var archive = RarArchive.OpenArchive("file.rar"))
 using (var archive = SevenZipArchive.OpenArchive("file.7z"))
 using (var archive = GZipArchive.OpenArchive("file.gz"))
 
-// With options
-var options = new ReaderOptions
+// With fluent options (preferred)
+var options = ReaderOptions.ForEncryptedArchive("password")
+    .WithArchiveEncoding(new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
+using (var archive = ZipArchive.OpenArchive("encrypted.zip", options))
+
+// Alternative: object initializer
+var options2 = new ReaderOptions
 {
     Password = "password",
     LeaveStreamOpen = true,
     ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
 };
-using (var archive = ZipArchive.OpenArchive("encrypted.zip", options))
 ```
 
 ### Creating Archives
@@ -44,16 +48,21 @@ using (var archive = ZipArchive.CreateArchive())
 using (var archive = TarArchive.CreateArchive())
 using (var archive = GZipArchive.CreateArchive())
 
-// With options
-var options = new WriterOptions(CompressionType.Deflate)
-{
-    CompressionLevel = 9,
-    LeaveStreamOpen = false
-};
+// With fluent options (preferred)
+var options = WriterOptions.ForZip()
+    .WithCompressionLevel(9)
+    .WithLeaveStreamOpen(false);
 using (var archive = ZipArchive.CreateArchive())
 {
     archive.SaveTo("output.zip", options);
 }
+
+// Alternative: constructor with object initializer
+var options2 = new WriterOptions(CompressionType.Deflate)
+{
+    CompressionLevel = 9,
+    LeaveStreamOpen = false
+};
 ```
 
 ---
@@ -222,33 +231,65 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, Compressio
 
 ### ReaderOptions
 
+Use factory presets and fluent helpers for common configurations:
+
 ```csharp
-var options = new ReaderOptions
-{
-    Password = "password",                          // For encrypted archives
-    LeaveStreamOpen = true,                         // Don't close wrapped stream
-    ArchiveEncoding = new ArchiveEncoding          // Custom character encoding
-    {
-        Default = Encoding.GetEncoding(932)
-    }
-};
+// External stream with password and custom encoding
+var options = ReaderOptions.ForExternalStream()
+    .WithPassword("password")
+    .WithArchiveEncoding(new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
+
 using (var archive = ZipArchive.OpenArchive("file.zip", options))
 {
     // ...
 }
+
+// Common presets
+var safeOptions = ReaderOptions.SafeExtract;      // No overwrite
+var flatOptions = ReaderOptions.FlatExtract;      // No directory structure
 
 // Factory defaults:
 // - file path / FileInfo overloads use LeaveStreamOpen = false
 // - stream overloads use LeaveStreamOpen = true
 ```
 
+Alternative: traditional object initializer:
+
+```csharp
+var options = new ReaderOptions
+{
+    Password = "password",
+    LeaveStreamOpen = true,
+    ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
+};
+```
+
 ### WriterOptions
+
+Factory methods provide a clean, discoverable way to create writer options:
+
+```csharp
+// Factory methods for common archive types
+var zipOptions = WriterOptions.ForZip()                           // ZIP with Deflate
+    .WithCompressionLevel(9)                                      // 0-9 for Deflate
+    .WithLeaveStreamOpen(false);                                  // Close stream when done
+
+var tarOptions = WriterOptions.ForTar(CompressionType.GZip)       // TAR with GZip
+    .WithLeaveStreamOpen(false);
+
+var gzipOptions = WriterOptions.ForGZip()                         // GZip file
+    .WithCompressionLevel(6);
+
+archive.SaveTo("output.zip", zipOptions);
+```
+
+Alternative: traditional constructor with object initializer:
 
 ```csharp
 var options = new WriterOptions(CompressionType.Deflate)
 {
-    CompressionLevel = 9,                           // 0-9 for Deflate
-    LeaveStreamOpen = true,                         // Don't close stream
+    CompressionLevel = 9,
+    LeaveStreamOpen = true,
 };
 archive.SaveTo("output.zip", options);
 ```
@@ -326,7 +367,7 @@ ArchiveType.ZStandard
 try
 {
     using (var archive = ZipArchive.Open("archive.zip", 
-        new ReaderOptions { Password = "password" }))
+        ReaderOptions.ForEncryptedArchive("password")))
     {
         archive.WriteToDirectory(@"C:\output");
     }
@@ -353,7 +394,7 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-var options = new ReaderOptions { Progress = progress };
+var options = ReaderOptions.ForOwnedFile().WithProgress(progress);
 using (var archive = ZipArchive.OpenArchive("archive.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");

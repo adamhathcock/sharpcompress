@@ -149,7 +149,12 @@ public class ZipReaderTests : ReaderTests
         using var stream = new TestStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        using (var reader = ReaderFactory.OpenReader(stream))
+        using (
+            var reader = ReaderFactory.OpenReader(
+                stream,
+                new ReaderOptions().WithLeaveStreamOpen(false)
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {

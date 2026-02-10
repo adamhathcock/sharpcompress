@@ -18,14 +18,9 @@ Most archive formats store filenames and metadata as bytes. SharpCompress must c
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
-// Configure encoding before opening archive
-var options = new ReaderOptions
-{
-    ArchiveEncoding = new ArchiveEncoding 
-    { 
-        Default = Encoding.GetEncoding(932)  // cp932 for Japanese
-    }
-};
+// Configure encoding using fluent factory method (preferred)
+var options = ReaderOptions.ForEncoding(
+    new ArchiveEncoding { Default = Encoding.GetEncoding(932) });  // cp932 for Japanese
 
 using (var archive = ZipArchive.OpenArchive("japanese.zip", options))
 {
@@ -34,6 +29,12 @@ using (var archive = ZipArchive.OpenArchive("japanese.zip", options))
         Console.WriteLine(entry.Key);  // Now shows correct characters
     }
 }
+
+// Alternative: object initializer
+var options2 = new ReaderOptions
+{
+    ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
+};
 ```
 
 ### ArchiveEncoding Properties
@@ -47,10 +48,8 @@ using (var archive = ZipArchive.OpenArchive("japanese.zip", options))
 
 **Archive API:**
 ```csharp
-var options = new ReaderOptions
-{
-    ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
-};
+var options = ReaderOptions.ForEncoding(
+    new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
 using (var archive = ZipArchive.OpenArchive("file.zip", options))
 {
     // Use archive with correct encoding
@@ -59,10 +58,8 @@ using (var archive = ZipArchive.OpenArchive("file.zip", options))
 
 **Reader API:**
 ```csharp
-var options = new ReaderOptions
-{
-    ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
-};
+var options = ReaderOptions.ForEncoding(
+    new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
 using (var stream = File.OpenRead("file.zip"))
 using (var reader = ReaderFactory.OpenReader(stream, options))
 {

@@ -10,10 +10,9 @@ namespace SharpCompress.Writers.GZip;
 /// Options for configuring GZip writer behavior.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// This class is immutable. Use factory methods for creation:
 /// <code>
-/// var options = new GZipWriterOptions { CompressionLevel = 9 };
-/// options = options with { LeaveStreamOpen = false };
+/// var options = WriterOptions.ForGZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
 /// </code>
 /// </remarks>
 public sealed record GZipWriterOptions : IWriterOptions
@@ -90,14 +89,11 @@ public sealed record GZipWriterOptions : IWriterOptions
         CompressionLevel = (int)compressionLevel;
     }
 
-    /// <summary>
-    /// Creates a new GZipWriterOptions instance with the specified stream open behavior.
-    /// </summary>
-    /// <param name="leaveStreamOpen">Whether to leave the stream open after writing.</param>
-    public GZipWriterOptions(bool leaveStreamOpen)
-    {
-        LeaveStreamOpen = leaveStreamOpen;
-    }
+    // Note: Constructor with boolean leaveStreamOpen parameter removed.
+    // Use the fluent WithLeaveStreamOpen() helper or object initializer instead:
+    // new GZipWriterOptions() { LeaveStreamOpen = false }
+    // or
+    // WriterOptions.ForGZip().WithLeaveStreamOpen(false)
 
     /// <summary>
     /// Creates a new GZipWriterOptions instance from an existing WriterOptions instance.
