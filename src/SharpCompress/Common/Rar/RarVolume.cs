@@ -118,7 +118,8 @@ public abstract class RarVolume : Volume
                             var buffer = new byte[fh.CompressedSize];
                             await fh
                                 .PackedStream.NotNull()
-                                .ReadFullyAsync(buffer, cancellationToken);
+                                .ReadFullyAsync(buffer, cancellationToken)
+                                .ConfigureAwait(false);
                             Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
                         }
                     }

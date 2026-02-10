@@ -137,7 +137,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties
         {
             CreateDictionary();
         }
-        await _outWindow.InitAsync(outStream);
+        await _outWindow.InitAsync(outStream).ConfigureAwait(false);
         if (outSize > 0)
         {
             _outWindow.SetLimit(outSize);

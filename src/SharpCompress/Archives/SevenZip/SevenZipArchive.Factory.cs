@@ -163,7 +163,7 @@ public partial class SevenZipArchive
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            return await SignatureMatchAsync(stream, cancellationToken);
+            return await SignatureMatchAsync(stream, cancellationToken).ConfigureAwait(false);
         }
         catch
         {

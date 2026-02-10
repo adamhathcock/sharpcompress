@@ -54,7 +54,7 @@ public static class IAsyncReaderExtensions
             CancellationToken cancellationToken = default
         )
         {
-            while (await reader.MoveToNextEntryAsync(cancellationToken))
+            while (await reader.MoveToNextEntryAsync(cancellationToken).ConfigureAwait(false))
             {
                 await reader
                     .WriteEntryToDirectoryAsync(destinationDirectory, cancellationToken)

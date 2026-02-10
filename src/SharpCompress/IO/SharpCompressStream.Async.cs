@@ -243,9 +243,16 @@ internal partial class SharpCompressStream
     {
         byte[] buffer = new byte[bufferSize];
         int bytesRead;
-        while ((bytesRead = await ReadAsync(buffer, 0, buffer.Length, cancellationToken)) != 0)
+        while (
+            (
+                bytesRead = await ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                    .ConfigureAwait(false)
+            ) != 0
+        )
         {
-            await destination.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+            await destination
+                .WriteAsync(buffer, 0, bytesRead, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
@@ -263,7 +270,7 @@ internal partial class SharpCompressStream
             isDisposed = true;
             if (!LeaveStreamOpen)
             {
-                await stream.DisposeAsync();
+                await stream.DisposeAsync().ConfigureAwait(false);
             }
             _ringBuffer?.Dispose();
             _ringBuffer = null;

@@ -106,7 +106,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         }
         var entry = CreateDirectoryEntry(key, modified);
         newEntries.Add(entry);
-        await RebuildModifiedCollectionAsync();
+        await RebuildModifiedCollectionAsync().ConfigureAwait(false);
         return entry;
     }
 

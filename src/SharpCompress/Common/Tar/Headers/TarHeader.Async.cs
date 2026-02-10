@@ -162,13 +162,13 @@ internal sealed partial class TarHeader
 
         if (nameByteCount > 100)
         {
-            await WriteLongFilenameHeaderAsync(output, cancellationToken);
+            await WriteLongFilenameHeaderAsync(output, cancellationToken).ConfigureAwait(false);
             Name = ArchiveEncoding.Decode(
                 ArchiveEncoding.Encode(Name.NotNull("Name is null")),
                 0,
                 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
             );
-            await WriteGnuTarLongLinkAsync(output, cancellationToken);
+            await WriteGnuTarLongLinkAsync(output, cancellationToken).ConfigureAwait(false);
         }
     }
 

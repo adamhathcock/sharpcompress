@@ -21,9 +21,9 @@ public partial class RarArchiveEntry
             stream = new RarStream(
                 archive.UnpackV1.Value,
                 FileHeader,
-                await MultiVolumeReadOnlyAsyncStream.Create(
-                    Parts.ToAsyncEnumerable().CastAsync<RarFilePart>()
-                )
+                await MultiVolumeReadOnlyAsyncStream
+                    .Create(Parts.ToAsyncEnumerable().CastAsync<RarFilePart>())
+                    .ConfigureAwait(false)
             );
         }
         else
@@ -31,13 +31,13 @@ public partial class RarArchiveEntry
             stream = new RarStream(
                 archive.UnpackV2017.Value,
                 FileHeader,
-                await MultiVolumeReadOnlyAsyncStream.Create(
-                    Parts.ToAsyncEnumerable().CastAsync<RarFilePart>()
-                )
+                await MultiVolumeReadOnlyAsyncStream
+                    .Create(Parts.ToAsyncEnumerable().CastAsync<RarFilePart>())
+                    .ConfigureAwait(false)
             );
         }
 
-        await stream.InitializeAsync(cancellationToken);
+        await stream.InitializeAsync(cancellationToken).ConfigureAwait(false);
         return stream;
     }
 }
