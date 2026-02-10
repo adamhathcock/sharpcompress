@@ -50,6 +50,7 @@ public class CompressionProviderTests
 
         // Original should still have the default provider
         var originalProvider = original.GetProvider(CompressionType.Deflate);
+        originalProvider.Should().NotBeSameAs(modified);
         originalProvider.Should().NotBeSameAs(customProvider);
     }
 

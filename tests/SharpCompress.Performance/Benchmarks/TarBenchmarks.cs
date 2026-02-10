@@ -4,6 +4,8 @@ using System.Linq;
 using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 
@@ -39,6 +41,42 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     {
         using var stream = new MemoryStream(_tarBytes);
         using var reader = ReaderFactory.OpenReader(stream);
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                reader.WriteEntryTo(Stream.Null);
+            }
+        }
+    }
+
+    [Benchmark(Description = "Tar: Extract all entries (Archive API) - SystemGzip")]
+    public void SystemTarExtractArchiveApi()
+    {
+        using var stream = new MemoryStream(_tarBytes);
+        using var archive = TarArchive.OpenArchive(
+            stream,
+            new ReaderOptions().WithProviders(
+                CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider())
+            )
+        );
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            entryStream.CopyTo(Stream.Null);
+        }
+    }
+
+    [Benchmark(Description = "Tar: Extract all entries (Reader API) - SystemGzip")]
+    public void SystemTarExtractReaderApi()
+    {
+        using var stream = new MemoryStream(_tarBytes);
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions().WithProviders(
+                CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider())
+            )
+        );
         while (reader.MoveToNextEntry())
         {
             if (!reader.Entry.IsDirectory)
