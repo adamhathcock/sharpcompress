@@ -805,7 +805,6 @@ internal partial class CBZip2InputStream
         bsStream = f;
         bsLive = 0;
         bsBuff = 0;
-        await Task.CompletedTask;
     }
 
     private async ValueTask<int> BsRAsync(int n, CancellationToken cancellationToken)

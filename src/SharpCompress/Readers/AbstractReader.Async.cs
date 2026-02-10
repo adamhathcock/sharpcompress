@@ -202,7 +202,6 @@ public abstract partial class AbstractReader<TEntry, TVolume>
     // Async iterator method
     protected virtual async IAsyncEnumerable<TEntry> GetEntriesAsync(Stream stream)
     {
-        await Task.CompletedTask;
         foreach (var entry in GetEntries(stream))
         {
             yield return entry;

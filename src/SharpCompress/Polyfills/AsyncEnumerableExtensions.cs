@@ -12,7 +12,6 @@ public static class AsyncEnumerableEx
     public static async IAsyncEnumerable<T> Empty<T>()
         where T : notnull
     {
-        await Task.CompletedTask;
         yield break;
     }
 }
@@ -21,7 +20,6 @@ public static class EnumerableExtensions
 {
     public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> source)
     {
-        await Task.CompletedTask;
         foreach (var item in source)
         {
             yield return item;
