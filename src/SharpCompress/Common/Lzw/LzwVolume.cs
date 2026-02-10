@@ -9,7 +9,7 @@ public class LzwVolume : Volume
         : base(stream, options, index) { }
 
     public LzwVolume(FileInfo fileInfo, ReaderOptions options)
-        : base(fileInfo.OpenRead(), options) => options.LeaveStreamOpen = false;
+        : base(fileInfo.OpenRead(), options with { LeaveStreamOpen = false }) { }
 
     public override bool IsFirstVolume => true;
 

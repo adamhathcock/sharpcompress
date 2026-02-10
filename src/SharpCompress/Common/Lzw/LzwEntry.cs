@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Common.Options;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Common.Lzw;
 
@@ -8,7 +10,11 @@ public partial class LzwEntry : Entry
 {
     private readonly LzwFilePart? _filePart;
 
-    internal LzwEntry(LzwFilePart? filePart) => _filePart = filePart;
+    internal LzwEntry(LzwFilePart? filePart, IReaderOptions readerOptions)
+        : base(readerOptions)
+    {
+        _filePart = filePart;
+    }
 
     public override CompressionType CompressionType => CompressionType.Lzw;
 
@@ -38,9 +44,9 @@ public partial class LzwEntry : Entry
 
     internal override IEnumerable<FilePart> Parts => _filePart.Empty();
 
-    internal static IEnumerable<LzwEntry> GetEntries(Stream stream, OptionsBase options)
+    internal static IEnumerable<LzwEntry> GetEntries(Stream stream, ReaderOptions options)
     {
-        yield return new LzwEntry(LzwFilePart.Create(stream, options.ArchiveEncoding));
+        yield return new LzwEntry(LzwFilePart.Create(stream, options.ArchiveEncoding), options);
     }
 
     // Async methods moved to LzwEntry.Async.cs

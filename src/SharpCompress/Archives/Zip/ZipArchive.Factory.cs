@@ -97,53 +97,28 @@ public partial class ZipArchive
 
     public static IWritableAsyncArchive<ZipWriterOptions> OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(path, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(path, readerOptions);
 
     public static IWritableAsyncArchive<ZipWriterOptions> OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(stream, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(stream, readerOptions);
 
     public static IWritableAsyncArchive<ZipWriterOptions> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(fileInfo, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(fileInfo, readerOptions);
 
     public static IWritableAsyncArchive<ZipWriterOptions> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(streams, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(streams, readerOptions);
 
     public static IWritableAsyncArchive<ZipWriterOptions> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(fileInfos, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(fileInfos, readerOptions);
 
     public static bool IsZipFile(string filePath, string? password = null) =>
         IsZipFile(new FileInfo(filePath), password);
