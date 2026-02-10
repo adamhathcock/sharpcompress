@@ -157,18 +157,25 @@ public partial class SevenZipArchive
 
     private static ReadOnlySpan<byte> Signature => [(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C];
 
+    private readonly struct SevenZipSignatureProcessor : Utility.IBufferProcessor<bool>
+    {
+        public bool Process(ReadOnlySpan<byte> buffer) =>
+            buffer.Slice(0, 6).SequenceEqual(Signature);
+    }
+
+    private readonly struct SevenZipSignatureTryProcessor
+        : Utility.ITryBufferProcessor<(bool, bool)>
+    {
+        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) =>
+            (true, buffer.Slice(0, 6).SequenceEqual(Signature));
+
+        public (bool, bool) OnFailure() => (false, false);
+    }
+
     private static bool SignatureMatch(Stream stream)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(6);
-        try
-        {
-            stream.ReadExact(buffer, 0, 6);
-            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+        var processor = new SevenZipSignatureProcessor();
+        return stream.ReadExactRented<SevenZipSignatureProcessor, bool>(6, ref processor);
     }
 
     private static async ValueTask<bool> SignatureMatchAsync(
@@ -176,19 +183,11 @@ public partial class SevenZipArchive
         CancellationToken cancellationToken
     )
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(6);
-        try
-        {
-            if (!await stream.ReadFullyAsync(buffer, 0, 6, cancellationToken).ConfigureAwait(false))
-            {
-                return false;
-            }
-
-            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+        var processor = new SevenZipSignatureTryProcessor();
+        var result = await stream.TryReadFullyRentedAsync<
+            SevenZipSignatureTryProcessor,
+            (bool success, bool match)
+        >(6, processor, cancellationToken);
+        return result.success && result.match;
     }
 }

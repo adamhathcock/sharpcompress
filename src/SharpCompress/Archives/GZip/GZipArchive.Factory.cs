@@ -158,26 +158,24 @@ public partial class GZipArchive
         return true;
     }
 
+    private readonly struct GZipSignatureTryProcessor : Utility.ITryBufferProcessor<(bool, bool)>
+    {
+        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) =>
+            (true, buffer[0] == 0x1F && buffer[1] == 0x8B && buffer[2] == 8);
+
+        public (bool, bool) OnFailure() => (false, false);
+    }
+
     public static async ValueTask<bool> IsGZipFileAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     )
     {
-        var header = ArrayPool<byte>.Shared.Rent(10);
-        try
-        {
-            await stream.ReadFullyAsync(header, 0, 10, cancellationToken).ConfigureAwait(false);
-
-            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
-            {
-                return false;
-            }
-
-            return true;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(header);
-        }
+        var processor = new GZipSignatureTryProcessor();
+        var result = await stream.TryReadFullyRentedAsync<
+            GZipSignatureTryProcessor,
+            (bool success, bool match)
+        >(10, processor, cancellationToken);
+        return result.success && result.match;
     }
 }

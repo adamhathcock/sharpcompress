@@ -138,6 +138,118 @@ internal static partial class Utility
         return sTime.AddSeconds(unixtime);
     }
 
+    /// <summary>
+    /// Interface for struct-based buffer processors.
+    /// </summary>
+    /// <typeparam name="T">The return type of the processor</typeparam>
+    internal interface IBufferProcessor<TResult>
+    {
+        TResult Process(ReadOnlySpan<byte> buffer);
+    }
+
+    /// <summary>
+    /// Interface for struct-based try buffer processors.
+    /// </summary>
+    /// <typeparam name="T">The return type of the processor</typeparam>
+    internal interface ITryBufferProcessor<TResult>
+    {
+        TResult OnSuccess(ReadOnlySpan<byte> buffer);
+        TResult OnFailure();
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a processor with the buffer.
+    /// The buffer is automatically returned to the pool after use.
+    /// </summary>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="processor">The processor to execute with the rented buffer</param>
+    /// <returns>The result of the processor</returns>
+    public static TResult ReadFullyRented<TProcessor, TResult>(
+        this Stream stream,
+        int size,
+        ref TProcessor processor
+    )
+        where TProcessor : struct, IBufferProcessor<TResult>
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            if (!stream.ReadFully(buffer.AsSpan(0, size)))
+            {
+                throw new EndOfStreamException();
+            }
+            return processor.Process(buffer.AsSpan(0, size));
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a processor with the buffer.
+    /// The buffer is automatically returned to the pool after use. Returns failure result if end of stream is reached.
+    /// </summary>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="processor">The processor to execute with the rented buffer</param>
+    /// <returns>The result of the processor (success or failure)</returns>
+    public static TResult TryReadFullyRented<TProcessor, TResult>(
+        this Stream stream,
+        int size,
+        ref TProcessor processor
+    )
+        where TProcessor : struct, ITryBufferProcessor<TResult>
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            if (!stream.ReadFully(buffer.AsSpan(0, size)))
+            {
+                return processor.OnFailure();
+            }
+            return processor.OnSuccess(buffer.AsSpan(0, size));
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads exactly the specified amount of data, and executes a processor with the buffer.
+    /// The buffer is automatically returned to the pool after use. Throws EndOfStreamException if not enough data is available.
+    /// </summary>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="processor">The processor to execute with the rented buffer</param>
+    /// <returns>The result of the processor</returns>
+    public static TResult ReadExactRented<TProcessor, TResult>(
+        this Stream stream,
+        int size,
+        ref TProcessor processor
+    )
+        where TProcessor : struct, IBufferProcessor<TResult>
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            stream.ReadExact(buffer, 0, size);
+            return processor.Process(buffer.AsSpan(0, size));
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
     extension(Stream source)
     {
         public long TransferTo(Stream destination, long maxLength)
