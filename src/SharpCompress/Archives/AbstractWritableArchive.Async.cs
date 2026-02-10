@@ -6,13 +6,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
-using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
 
-public abstract partial class AbstractWritableArchive<TEntry, TVolume>
+public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     where TEntry : IArchiveEntry
     where TVolume : IVolume
+    where TOptions : IWriterOptions
 {
     // Async property moved from main file
     private IAsyncEnumerable<TEntry> OldEntriesAsync =>
@@ -39,7 +39,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         if (!removedEntries.Contains(entry))
         {
             removedEntries.Add(entry);
-            await RebuildModifiedCollectionAsync();
+            await RebuildModifiedCollectionAsync().ConfigureAwait(false);
         }
     }
 
@@ -86,7 +86,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         }
         var entry = CreateEntry(key, source, size, modified, closeStream);
         newEntries.Add(entry);
-        await RebuildModifiedCollectionAsync();
+        await RebuildModifiedCollectionAsync().ConfigureAwait(false);
         return entry;
     }
 
@@ -106,13 +106,13 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         }
         var entry = CreateDirectoryEntry(key, modified);
         newEntries.Add(entry);
-        await RebuildModifiedCollectionAsync();
+        await RebuildModifiedCollectionAsync().ConfigureAwait(false);
         return entry;
     }
 
     public async ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        TOptions options,
         CancellationToken cancellationToken = default
     )
     {
@@ -121,4 +121,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         await SaveToAsync(stream, options, OldEntriesAsync, newEntries, cancellationToken)
             .ConfigureAwait(false);
     }
+
+    protected abstract ValueTask SaveToAsync(
+        Stream stream,
+        TOptions options,
+        IAsyncEnumerable<TEntry> oldEntries,
+        IEnumerable<TEntry> newEntries,
+        CancellationToken cancellationToken = default
+    );
 }

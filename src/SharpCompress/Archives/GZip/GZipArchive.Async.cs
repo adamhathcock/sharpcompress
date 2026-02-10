@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 using SharpCompress.Common.Options;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
 using SharpCompress.Writers;
@@ -25,13 +24,13 @@ public partial class GZipArchive
     )
     {
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken)
+        await SaveToAsync(stream, new GZipWriterOptions(CompressionType.GZip), cancellationToken)
             .ConfigureAwait(false);
     }
 
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        GZipWriterOptions options,
         IAsyncEnumerable<GZipArchiveEntry> oldEntries,
         IEnumerable<GZipArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
@@ -41,7 +40,7 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        using var writer = new GZipWriter(
+        await using var writer = new GZipWriter(
             stream,
             options as GZipWriterOptions ?? new GZipWriterOptions(options)
         );
@@ -51,7 +50,9 @@ public partial class GZipArchive
         {
             if (!entry.IsDirectory)
             {
-                using var entryStream = entry.OpenEntryStream();
+                using var entryStream = await entry
+                    .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -63,7 +64,9 @@ public partial class GZipArchive
         }
         foreach (var entry in newEntries.Where(x => !x.IsDirectory))
         {
-            using var entryStream = entry.OpenEntryStream();
+            using var entryStream = await entry
+                .OpenEntryStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
             await writer
                 .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
                 .ConfigureAwait(false);
@@ -81,14 +84,13 @@ public partial class GZipArchive
         IAsyncEnumerable<GZipVolume> volumes
     )
     {
-        var stream = (await volumes.SingleAsync()).Stream;
+        var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
         yield return new GZipArchiveEntry(
             this,
-            await GZipFilePart.CreateAsync(
-                stream,
-                ReaderOptions.ArchiveEncoding,
-                ReaderOptions.CompressionProviders
-            )
+            await GZipFilePart
+                .CreateAsync(stream, ReaderOptions.ArchiveEncoding)
+                .ConfigureAwait(false),
+            ReaderOptions
         );
     }
 }

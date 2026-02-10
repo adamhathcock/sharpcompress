@@ -9,20 +9,25 @@ internal partial class LocalEntryHeader
 {
     internal override async ValueTask Read(AsyncBinaryReader reader)
     {
-        Version = await reader.ReadUInt16Async();
-        Flags = (HeaderFlags)await reader.ReadUInt16Async();
-        CompressionMethod = (ZipCompressionMethod)await reader.ReadUInt16Async();
-        OriginalLastModifiedTime = LastModifiedTime = await reader.ReadUInt16Async();
-        OriginalLastModifiedDate = LastModifiedDate = await reader.ReadUInt16Async();
-        Crc = await reader.ReadUInt32Async();
-        CompressedSize = await reader.ReadUInt32Async();
-        UncompressedSize = await reader.ReadUInt32Async();
-        var nameLength = await reader.ReadUInt16Async();
-        var extraLength = await reader.ReadUInt16Async();
+        Version = await reader.ReadUInt16Async().ConfigureAwait(false);
+        Flags = (HeaderFlags)await reader.ReadUInt16Async().ConfigureAwait(false);
+        CompressionMethod = (ZipCompressionMethod)
+            await reader.ReadUInt16Async().ConfigureAwait(false);
+        OriginalLastModifiedTime = LastModifiedTime = await reader
+            .ReadUInt16Async()
+            .ConfigureAwait(false);
+        OriginalLastModifiedDate = LastModifiedDate = await reader
+            .ReadUInt16Async()
+            .ConfigureAwait(false);
+        Crc = await reader.ReadUInt32Async().ConfigureAwait(false);
+        CompressedSize = await reader.ReadUInt32Async().ConfigureAwait(false);
+        UncompressedSize = await reader.ReadUInt32Async().ConfigureAwait(false);
+        var nameLength = await reader.ReadUInt16Async().ConfigureAwait(false);
+        var extraLength = await reader.ReadUInt16Async().ConfigureAwait(false);
         var name = new byte[nameLength];
         var extra = new byte[extraLength];
-        await reader.ReadBytesAsync(name, 0, nameLength);
-        await reader.ReadBytesAsync(extra, 0, extraLength);
+        await reader.ReadBytesAsync(name, 0, nameLength).ConfigureAwait(false);
+        await reader.ReadBytesAsync(extra, 0, extraLength).ConfigureAwait(false);
 
         ProcessReadData(name, extra);
     }

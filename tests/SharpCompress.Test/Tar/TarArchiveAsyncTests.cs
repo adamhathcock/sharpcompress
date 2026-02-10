@@ -168,7 +168,10 @@ public class TarArchiveAsyncTests : ArchiveTests
         await using (var archive = TarArchive.OpenAsyncArchive(unmodified))
         {
             await archive.AddEntryAsync("jpg\\test.jpg", jpg);
-            await archive.SaveToAsync(scratchPath, new WriterOptions(CompressionType.None));
+            await archive.SaveToAsync(
+                scratchPath,
+                new TarWriterOptions(CompressionType.None, true)
+            );
         }
         CompareArchivesByPath(modified, scratchPath);
     }
@@ -186,7 +189,10 @@ public class TarArchiveAsyncTests : ArchiveTests
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             await archive.RemoveEntryAsync(entry);
-            await archive.SaveToAsync(scratchPath, new WriterOptions(CompressionType.None));
+            await archive.SaveToAsync(
+                scratchPath,
+                new TarWriterOptions(CompressionType.None, true)
+            );
         }
         CompareArchivesByPath(modified, scratchPath);
     }

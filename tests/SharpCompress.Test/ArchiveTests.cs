@@ -62,10 +62,7 @@ public class ArchiveTests : ReaderTests
                     }
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH);
                     }
                     stream.ThrowOnDispose = false;
                 }
@@ -151,10 +148,7 @@ public class ArchiveTests : ReaderTests
                 {
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
-                        entry.WriteToDirectory(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
+                        entry.WriteToDirectory(SCRATCH_FILES_PATH);
                     }
                 }
                 catch (IndexOutOfRangeException)
@@ -192,10 +186,7 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -224,10 +215,7 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -299,10 +287,7 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -346,16 +331,7 @@ public class ArchiveTests : ReaderTests
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions
-                    {
-                        ExtractFullPath = true,
-                        Overwrite = true,
-                        PreserveAttributes = true,
-                        PreserveFileTime = true,
-                    }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFilesEx();
@@ -414,7 +390,7 @@ public class ArchiveTests : ReaderTests
     )
     {
         var writerOptions = compressionLevel.HasValue
-            ? new WriterOptions(compressionType, compressionLevel.Value, leaveStreamOpen: true)
+            ? new WriterOptions(compressionType, compressionLevel.Value) { LeaveStreamOpen = true }
             : new WriterOptions(compressionType) { LeaveStreamOpen = true };
         return WriterFactory.OpenAsyncWriter(
             new AsyncOnlyStream(stream),
@@ -650,10 +626,7 @@ public class ArchiveTests : ReaderTests
                         var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory)
                     )
                     {
-                        await entry.WriteToDirectoryAsync(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
+                        await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
                     }
                 }
                 catch (IndexOutOfRangeException)

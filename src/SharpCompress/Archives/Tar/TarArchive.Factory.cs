@@ -9,22 +9,29 @@ using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Writers.Tar;
 
 namespace SharpCompress.Archives.Tar;
 
 public partial class TarArchive
 #if NET8_0_OR_GREATER
-    : IWritableArchiveOpenable,
-        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+    : IWritableArchiveOpenable<TarWriterOptions>,
+        IMultiArchiveOpenable<
+            IWritableArchive<TarWriterOptions>,
+            IWritableAsyncArchive<TarWriterOptions>
+        >
 #endif
 {
-    public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<TarWriterOptions> OpenArchive(
+        string filePath,
+        ReaderOptions? readerOptions = null
+    )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return OpenArchive(new FileInfo(filePath), readerOptions);
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<TarWriterOptions> OpenArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null
     )
@@ -39,7 +46,7 @@ public partial class TarArchive
         );
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<TarWriterOptions> OpenArchive(
         IEnumerable<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
@@ -55,7 +62,7 @@ public partial class TarArchive
         );
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<TarWriterOptions> OpenArchive(
         IEnumerable<Stream> streams,
         ReaderOptions? readerOptions = null
     )
@@ -71,7 +78,10 @@ public partial class TarArchive
         );
     }
 
-    public static IWritableArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<TarWriterOptions> OpenArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null
+    )
     {
         stream.NotNull(nameof(stream));
 
@@ -85,55 +95,30 @@ public partial class TarArchive
         );
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(stream, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(stream, readerOptions);
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(new FileInfo(path), readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(new FileInfo(path), readerOptions);
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(fileInfo, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfo, readerOptions);
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(streams, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(streams, readerOptions);
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(fileInfos, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfos, readerOptions);
 
     public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
 
@@ -181,7 +166,7 @@ public partial class TarArchive
 #else
             using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
 #endif
-            var readSucceeded = await tarHeader.ReadAsync(reader);
+            var readSucceeded = await tarHeader.ReadAsync(reader).ConfigureAwait(false);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0
@@ -196,7 +181,7 @@ public partial class TarArchive
         }
     }
 
-    public static IWritableArchive CreateArchive() => new TarArchive();
+    public static IWritableArchive<TarWriterOptions> CreateArchive() => new TarArchive();
 
-    public static IWritableAsyncArchive CreateAsyncArchive() => new TarArchive();
+    public static IWritableAsyncArchive<TarWriterOptions> CreateAsyncArchive() => new TarArchive();
 }

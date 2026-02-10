@@ -148,53 +148,63 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.Reduce1:
             {
-                return await ReduceStream.CreateAsync(
-                    stream,
-                    Header.CompressedSize,
-                    Header.UncompressedSize,
-                    1,
-                    cancellationToken
-                );
+                return await ReduceStream
+                    .CreateAsync(
+                        stream,
+                        Header.CompressedSize,
+                        Header.UncompressedSize,
+                        1,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Reduce2:
             {
-                return await ReduceStream.CreateAsync(
-                    stream,
-                    Header.CompressedSize,
-                    Header.UncompressedSize,
-                    2,
-                    cancellationToken
-                );
+                return await ReduceStream
+                    .CreateAsync(
+                        stream,
+                        Header.CompressedSize,
+                        Header.UncompressedSize,
+                        2,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Reduce3:
             {
-                return await ReduceStream.CreateAsync(
-                    stream,
-                    Header.CompressedSize,
-                    Header.UncompressedSize,
-                    3,
-                    cancellationToken
-                );
+                return await ReduceStream
+                    .CreateAsync(
+                        stream,
+                        Header.CompressedSize,
+                        Header.UncompressedSize,
+                        3,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Reduce4:
             {
-                return await ReduceStream.CreateAsync(
-                    stream,
-                    Header.CompressedSize,
-                    Header.UncompressedSize,
-                    4,
-                    cancellationToken
-                );
+                return await ReduceStream
+                    .CreateAsync(
+                        stream,
+                        Header.CompressedSize,
+                        Header.UncompressedSize,
+                        4,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Explode:
             {
-                return await ExplodeStream.CreateAsync(
-                    stream,
-                    Header.CompressedSize,
-                    Header.UncompressedSize,
-                    Header.Flags,
-                    cancellationToken
-                );
+                return await ExplodeStream
+                    .CreateAsync(
+                        stream,
+                        Header.CompressedSize,
+                        Header.UncompressedSize,
+                        Header.Flags,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
 
             case ZipCompressionMethod.Deflate:
@@ -207,12 +217,14 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.BZip2:
             {
-                return await BZip2Stream.CreateAsync(
-                    stream,
-                    CompressionMode.Decompress,
-                    false,
-                    cancellationToken: cancellationToken
-                );
+                return await BZip2Stream
+                    .CreateAsync(
+                        stream,
+                        CompressionMode.Decompress,
+                        false,
+                        cancellationToken: cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.LZMA:
             {
@@ -228,14 +240,16 @@ internal abstract partial class ZipFilePart
                 await stream
                     .ReadFullyAsync(props, 0, propsSize, cancellationToken)
                     .ConfigureAwait(false);
-                return await LzmaStream.CreateAsync(
-                    props,
-                    stream,
-                    Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
-                    FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
-                        ? -1
-                        : Header.UncompressedSize
-                );
+                return await LzmaStream
+                    .CreateAsync(
+                        props,
+                        stream,
+                        Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
+                        FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                            ? -1
+                            : Header.UncompressedSize
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Xz:
             {
@@ -284,11 +298,12 @@ internal abstract partial class ZipFilePart
                 }
 
                 return await CreateDecompressionStreamAsync(
-                    stream,
-                    (ZipCompressionMethod)
-                        BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)),
-                    cancellationToken
-                );
+                        stream,
+                        (ZipCompressionMethod)
+                            BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)),
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             default:
             {

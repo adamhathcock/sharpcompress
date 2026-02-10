@@ -25,7 +25,7 @@ public class TarFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWriteableArchiveFactory<TarWriterOptions>
 {
     #region IFactory
 
@@ -82,14 +82,21 @@ public class TarFactory
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
-            if (await wrapper.IsMatchAsync(sharpCompressStream, cancellationToken))
+            if (
+                await wrapper
+                    .IsMatchAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = await wrapper.CreateStreamAsync(
-                    sharpCompressStream,
-                    cancellationToken
-                );
-                if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
+                var decompressedStream = await wrapper
+                    .CreateStreamAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false);
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
                 {
                     sharpCompressStream.Rewind();
                     return true;
@@ -145,13 +152,8 @@ public class TarFactory
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
 
     #endregion
 
@@ -194,14 +196,21 @@ public class TarFactory
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
-            if (await wrapper.IsMatchAsync(sharpCompressStream, cancellationToken))
+            if (
+                await wrapper
+                    .IsMatchAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = await wrapper.CreateStreamAsync(
-                    sharpCompressStream,
-                    cancellationToken
-                );
-                if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
+                var decompressedStream = await wrapper
+                    .CreateStreamAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false);
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
                 {
                     sharpCompressStream.Rewind();
                     sharpCompressStream.StopRecording();
@@ -247,7 +256,7 @@ public class TarFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => TarArchive.CreateArchive();
+    public IWritableArchive<TarWriterOptions> CreateArchive() => TarArchive.CreateArchive();
 
     #endregion
 }

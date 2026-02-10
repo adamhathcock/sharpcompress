@@ -17,7 +17,7 @@ internal partial class RarBLAKE2spStream : RarStream
     )
     {
         var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
-        await stream.InitializeAsync(cancellationToken);
+        await stream.InitializeAsync(cancellationToken).ConfigureAwait(false);
         return stream;
     }
 

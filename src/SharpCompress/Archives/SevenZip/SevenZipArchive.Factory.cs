@@ -16,13 +16,8 @@ public partial class SevenZipArchive
         IMultiArchiveOpenable<IArchive, IAsyncArchive>
 #endif
 {
-    public static IAsyncArchive OpenAsyncArchive(
-        string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncArchive OpenAsyncArchive(string path, ReaderOptions? readerOptions = null)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty("path");
         return (IAsyncArchive)OpenArchive(new FileInfo(path), readerOptions ?? new ReaderOptions());
     }
@@ -91,43 +86,32 @@ public partial class SevenZipArchive
         );
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(stream, readerOptions);
     }
 
     public static IAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
     }
 
     public static IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(streams, readerOptions);
     }
 
     public static IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
@@ -163,7 +147,7 @@ public partial class SevenZipArchive
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            return await SignatureMatchAsync(stream, cancellationToken);
+            return await SignatureMatchAsync(stream, cancellationToken).ConfigureAwait(false);
         }
         catch
         {

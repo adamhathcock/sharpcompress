@@ -25,7 +25,7 @@ internal static partial class TarHeaderFactory
             try
             {
                 header = new TarHeader(archiveEncoding);
-                if (!await header.ReadAsync(reader))
+                if (!await header.ReadAsync(reader).ConfigureAwait(false))
                 {
                     yield break;
                 }

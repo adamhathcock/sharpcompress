@@ -2,10 +2,11 @@ using SharpCompress.Compressors;
 
 namespace SharpCompress.Common.Options;
 
-/// <summary>
-/// Options for configuring reader behavior when opening archives.
-/// </summary>
-public interface IReaderOptions : IStreamOptions, IEncodingOptions, IProgressOptions
+public interface IReaderOptions
+    : IStreamOptions,
+        IEncodingOptions,
+        IProgressOptions,
+        IExtractionOptions
 {
     /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)

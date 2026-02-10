@@ -21,15 +21,12 @@ public partial class SevenZipArchive
         {
             stream.Position = 0;
             var reader = new ArchiveReader();
-            await reader.OpenAsync(
-                stream,
-                lookForHeader: ReaderOptions.LookForHeader,
-                cancellationToken
-            );
-            _database = await reader.ReadDatabaseAsync(
-                new PasswordProvider(ReaderOptions.Password),
-                cancellationToken
-            );
+            await reader
+                .OpenAsync(stream, lookForHeader: ReaderOptions.LookForHeader, cancellationToken)
+                .ConfigureAwait(false);
+            _database = await reader
+                .ReadDatabaseAsync(new PasswordProvider(ReaderOptions.Password), cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
@@ -37,8 +34,8 @@ public partial class SevenZipArchive
         IAsyncEnumerable<SevenZipVolume> volumes
     )
     {
-        var stream = (await volumes.SingleAsync()).Stream;
-        await LoadFactoryAsync(stream);
+        var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
+        await LoadFactoryAsync(stream).ConfigureAwait(false);
         if (_database is null)
         {
             yield break;
@@ -49,7 +46,8 @@ public partial class SevenZipArchive
             var file = _database._files[i];
             entries[i] = new SevenZipArchiveEntry(
                 this,
-                new SevenZipFilePart(stream, _database, i, file, ReaderOptions.ArchiveEncoding)
+                new SevenZipFilePart(stream, _database, i, file, ReaderOptions.ArchiveEncoding),
+                ReaderOptions
             );
         }
         foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))

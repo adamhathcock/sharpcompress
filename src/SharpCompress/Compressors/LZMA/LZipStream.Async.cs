@@ -20,7 +20,7 @@ public sealed partial class LZipStream
     public static async ValueTask<bool> IsLZipFileAsync(
         Stream stream,
         CancellationToken cancellationToken = default
-    ) => await ValidateAndReadSizeAsync(stream, cancellationToken) != 0;
+    ) => await ValidateAndReadSizeAsync(stream, cancellationToken).ConfigureAwait(false) != 0;
 
     /// <summary>
     /// Asynchronously reads the 6-byte header of the stream, and returns 0 if either the header
@@ -91,7 +91,7 @@ public sealed partial class LZipStream
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        await _stream.WriteAsync(buffer, offset, count, cancellationToken);
+        await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         _writeCount += count;
     }
 }

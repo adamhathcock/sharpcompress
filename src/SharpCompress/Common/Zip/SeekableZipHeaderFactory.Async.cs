@@ -18,11 +18,11 @@ internal sealed partial class SeekableZipHeaderFactory
         using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
 #endif
 
-        await SeekBackToHeaderAsync(stream, reader);
+        await SeekBackToHeaderAsync(stream, reader).ConfigureAwait(false);
 
         var eocd_location = stream.Position;
         var entry = new DirectoryEndHeader();
-        await entry.Read(reader);
+        await entry.Read(reader).ConfigureAwait(false);
 
         if (entry.IsZip64)
         {
@@ -30,24 +30,24 @@ internal sealed partial class SeekableZipHeaderFactory
 
             // ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR should be before the EOCD
             stream.Seek(eocd_location - ZIP64_EOCD_LENGTH - 4, SeekOrigin.Begin);
-            uint zip64_locator = await reader.ReadUInt32Async();
+            uint zip64_locator = await reader.ReadUInt32Async().ConfigureAwait(false);
             if (zip64_locator != ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR)
             {
                 throw new ArchiveException("Failed to locate the Zip64 Directory Locator");
             }
 
             var zip64Locator = new Zip64DirectoryEndLocatorHeader();
-            await zip64Locator.Read(reader);
+            await zip64Locator.Read(reader).ConfigureAwait(false);
 
             stream.Seek(zip64Locator.RelativeOffsetOfTheEndOfDirectoryRecord, SeekOrigin.Begin);
-            var zip64Signature = await reader.ReadUInt32Async();
+            var zip64Signature = await reader.ReadUInt32Async().ConfigureAwait(false);
             if (zip64Signature != ZIP64_END_OF_CENTRAL_DIRECTORY)
             {
                 throw new ArchiveException("Failed to locate the Zip64 Header");
             }
 
             var zip64Entry = new Zip64DirectoryEndHeader();
-            await zip64Entry.Read(reader);
+            await zip64Entry.Read(reader).ConfigureAwait(false);
             stream.Seek(zip64Entry.DirectoryStartOffsetRelativeToDisk, SeekOrigin.Begin);
         }
         else
@@ -59,8 +59,8 @@ internal sealed partial class SeekableZipHeaderFactory
         while (true)
         {
             stream.Position = position;
-            var signature = await reader.ReadUInt32Async();
-            var nextHeader = await ReadHeader(signature, reader, _zip64);
+            var signature = await reader.ReadUInt32Async().ConfigureAwait(false);
+            var nextHeader = await ReadHeader(signature, reader, _zip64).ConfigureAwait(false);
             position = stream.Position;
 
             if (nextHeader is null)
@@ -101,7 +101,7 @@ internal sealed partial class SeekableZipHeaderFactory
 
         try
         {
-            await reader.ReadBytesAsync(seek, 0, len, default);
+            await reader.ReadBytesAsync(seek, 0, len, default).ConfigureAwait(false);
             var memory = new Memory<byte>(seek, 0, len);
             var span = memory.Span;
             span.Reverse();
@@ -137,8 +137,11 @@ internal sealed partial class SeekableZipHeaderFactory
 #else
         using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
 #endif
-        var signature = await reader.ReadUInt32Async();
-        if (await ReadHeader(signature, reader, _zip64) is not LocalEntryHeader localEntryHeader)
+        var signature = await reader.ReadUInt32Async().ConfigureAwait(false);
+        if (
+            await ReadHeader(signature, reader, _zip64).ConfigureAwait(false)
+            is not LocalEntryHeader localEntryHeader
+        )
         {
             throw new InvalidOperationException();
         }

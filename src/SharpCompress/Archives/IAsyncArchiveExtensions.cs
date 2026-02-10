@@ -17,44 +17,45 @@ public static class IAsyncArchiveExtensions
         /// </summary>
         /// <param name="archive">The archive to extract.</param>
         /// <param name="destinationDirectory">The folder to extract into.</param>
-        /// <param name="options">Extraction options.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         public async ValueTask WriteToDirectoryAsync(
             string destinationDirectory,
-            ExtractionOptions? options = null,
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
         )
         {
-            if (await archive.IsSolidAsync() || archive.Type == ArchiveType.SevenZip)
+            if (
+                await archive.IsSolidAsync().ConfigureAwait(false)
+                || archive.Type == ArchiveType.SevenZip
+            )
             {
-                await using var reader = await archive.ExtractAllEntriesAsync();
-                await reader.WriteAllToDirectoryAsync(
-                    destinationDirectory,
-                    options,
-                    cancellationToken
-                );
+                await using var reader = await archive
+                    .ExtractAllEntriesAsync()
+                    .ConfigureAwait(false);
+                await reader
+                    .WriteAllToDirectoryAsync(destinationDirectory, cancellationToken)
+                    .ConfigureAwait(false);
             }
             else
             {
-                await archive.WriteToDirectoryAsyncInternal(
-                    destinationDirectory,
-                    options,
-                    progress,
-                    cancellationToken
-                );
+                await archive
+                    .WriteToDirectoryAsyncInternal(
+                        destinationDirectory,
+                        progress,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
         }
 
         private async ValueTask WriteToDirectoryAsyncInternal(
             string destinationDirectory,
-            ExtractionOptions? options,
             IProgress<ProgressReport>? progress,
             CancellationToken cancellationToken
         )
         {
-            var totalBytes = await archive.TotalUncompressedSizeAsync();
+            var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
             var bytesRead = 0L;
             var seenDirectories = new HashSet<string>();
 
@@ -79,7 +80,7 @@ public static class IAsyncArchiveExtensions
                 }
 
                 await entry
-                    .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                    .WriteToDirectoryAsync(destinationDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
                 bytesRead += entry.Size;

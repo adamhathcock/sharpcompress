@@ -17,20 +17,17 @@ public interface IReaderOpenable
 
     public static abstract IAsyncReader OpenAsyncReader(
         string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 
     public static abstract IAsyncReader OpenAsyncReader(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 
     public static abstract IAsyncReader OpenAsyncReader(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 }
 #endif

@@ -19,7 +19,7 @@ public static partial class ReaderFactory
 
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForOwnedFile;
         return OpenReader(fileInfo.OpenRead(), options);
     }
 
@@ -32,7 +32,7 @@ public static partial class ReaderFactory
     public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
-        options ??= new ReaderOptions() { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForExternalStream;
 
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
@@ -77,7 +77,7 @@ public static partial class ReaderFactory
         }
 
         throw new InvalidFormatException(
-            "Cannot determine compressed stream type.  Supported Reader Formats: Ace, Arc, Arj, Zip, GZip, BZip2, Tar, Rar, LZip, XZ, ZStandard"
+            "Cannot determine compressed stream type.  Supported Reader Formats: Ace, Arc, Arj, Zip, GZip, BZip2, Tar, Rar, LZip, Lzw, XZ, ZStandard"
         );
     }
 }

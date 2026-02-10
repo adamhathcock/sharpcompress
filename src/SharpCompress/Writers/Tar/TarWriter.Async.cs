@@ -40,7 +40,9 @@ public partial class TarWriter
         Stream source,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
-    ) => await WriteAsync(filename, source, modificationTime, null, cancellationToken);
+    ) =>
+        await WriteAsync(filename, source, modificationTime, null, cancellationToken)
+            .ConfigureAwait(false);
 
     /// <summary>
     /// Asynchronously writes a file entry with optional size specification.

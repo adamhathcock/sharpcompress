@@ -329,7 +329,9 @@ internal partial class FileHeader
 
         if (HasFlag(FileFlagsV4.SALT))
         {
-            R4Salt = await reader.ReadBytesAsync(EncryptionConstV5.SIZE_SALT30, cancellationToken);
+            R4Salt = await reader
+                .ReadBytesAsync(EncryptionConstV5.SIZE_SALT30, cancellationToken)
+                .ConfigureAwait(false);
         }
         if (HasFlag(FileFlagsV4.EXT_TIME))
         {

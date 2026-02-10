@@ -1,6 +1,5 @@
 #if NET8_0_OR_GREATER
 using System.IO;
-using System.Threading;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers.Tar;
@@ -25,33 +24,18 @@ public partial class TarWriter : IWriterOpenable<TarWriterOptions>
         return new TarWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        string path,
-        TarWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(string path, TarWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(path, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        Stream stream,
-        TarWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(Stream stream, TarWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        FileInfo fileInfo,
-        TarWriterOptions writerOptions,
-        CancellationToken cancellationToken = default
-    )
+    public static IAsyncWriter OpenAsyncWriter(FileInfo fileInfo, TarWriterOptions writerOptions)
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncWriter)OpenWriter(fileInfo, writerOptions);
     }
 }

@@ -16,7 +16,8 @@ using SharpCompress.Writers.Tar;
 
 namespace SharpCompress.Archives.Tar;
 
-public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVolume>
+public partial class TarArchive
+    : AbstractWritableArchive<TarArchiveEntry, TarVolume, TarWriterOptions>
 {
     protected override IEnumerable<TarVolume> LoadVolumes(SourceStream sourceStream)
     {
@@ -59,7 +60,8 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
                         var entry = new TarArchiveEntry(
                             this,
                             new TarFilePart(previousHeader, stream),
-                            CompressionType.None
+                            CompressionType.None,
+                            ReaderOptions
                         );
 
                         var oldStreamPos = stream.Position;
@@ -81,7 +83,8 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
                     yield return new TarArchiveEntry(
                         this,
                         new TarFilePart(header, stream),
-                        CompressionType.None
+                        CompressionType.None,
+                        ReaderOptions
                     );
                 }
             }
@@ -116,7 +119,7 @@ public partial class TarArchive : AbstractWritableArchive<TarArchiveEntry, TarVo
 
     protected override void SaveTo(
         Stream stream,
-        IWriterOptions options,
+        TarWriterOptions options,
         IEnumerable<TarArchiveEntry> oldEntries,
         IEnumerable<TarArchiveEntry> newEntries
     )

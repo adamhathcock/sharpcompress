@@ -1,0 +1,50 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches:
+      - 'master'
+      - 'release'
+  pull_request:
+    branches:
+      - 'master'
+      - 'release'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+    
+    - uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+    
+    - name: Build Performance Project
+      run: dotnet build tests/SharpCompress.Performance/SharpCompress.Performance.csproj --configuration Release
+    
+    - name: Run Benchmarks
+      run: dotnet run --project tests/SharpCompress.Performance/SharpCompress.Performance.csproj --configuration Release --no-build -- --filter "*" --exporters json markdown --artifacts benchmark-results
+      continue-on-error: true
+    
+    - name: Display Benchmark Results
+      if: always()
+      run: dotnet run --project build/build.csproj -- display-benchmark-results
+    
+    - name: Compare with Baseline
+      if: always()
+      run: dotnet run --project build/build.csproj -- compare-benchmark-results
+    
+    - name: Upload Benchmark Results
+      if: always()
+      uses: actions/upload-artifact@v6
+      with:
+        name: benchmark-results
+        path: benchmark-results/

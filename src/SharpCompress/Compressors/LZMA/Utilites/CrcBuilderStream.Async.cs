@@ -22,6 +22,6 @@ internal partial class CrcBuilderStream : Stream
 
         Processed += count;
         _mCrc = Crc.Update(_mCrc, buffer, offset, count);
-        await _mTarget.WriteAsync(buffer, offset, count, cancellationToken);
+        await _mTarget.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -21,7 +21,7 @@ internal partial class ZipHeaderFactory
             case ENTRY_HEADER_BYTES:
             {
                 var entryHeader = new LocalEntryHeader(_archiveEncoding);
-                await entryHeader.Read(reader);
+                await entryHeader.Read(reader).ConfigureAwait(false);
                 await LoadHeaderAsync(entryHeader, reader.BaseStream).ConfigureAwait(false);
 
                 _lastEntryHeader = entryHeader;
@@ -30,7 +30,7 @@ internal partial class ZipHeaderFactory
             case DIRECTORY_START_HEADER_BYTES:
             {
                 var entry = new DirectoryEntryHeader(_archiveEncoding);
-                await entry.Read(reader);
+                await entry.Read(reader).ConfigureAwait(false);
                 return entry;
             }
             case POST_DATA_DESCRIPTOR:
@@ -43,17 +43,17 @@ internal partial class ZipHeaderFactory
                     )
                 )
                 {
-                    _lastEntryHeader.Crc = await reader.ReadUInt32Async();
+                    _lastEntryHeader.Crc = await reader.ReadUInt32Async().ConfigureAwait(false);
                     _lastEntryHeader.CompressedSize = zip64
-                        ? (long)await reader.ReadUInt64Async()
-                        : await reader.ReadUInt32Async();
+                        ? (long)await reader.ReadUInt64Async().ConfigureAwait(false)
+                        : await reader.ReadUInt32Async().ConfigureAwait(false);
                     _lastEntryHeader.UncompressedSize = zip64
-                        ? (long)await reader.ReadUInt64Async()
-                        : await reader.ReadUInt32Async();
+                        ? (long)await reader.ReadUInt64Async().ConfigureAwait(false)
+                        : await reader.ReadUInt32Async().ConfigureAwait(false);
                 }
                 else
                 {
-                    await reader.SkipAsync(zip64 ? 20 : 12);
+                    await reader.SkipAsync(zip64 ? 20 : 12).ConfigureAwait(false);
                 }
                 return null;
             }
@@ -62,7 +62,7 @@ internal partial class ZipHeaderFactory
             case DIRECTORY_END_HEADER_BYTES:
             {
                 var entry = new DirectoryEndHeader();
-                await entry.Read(reader);
+                await entry.Read(reader).ConfigureAwait(false);
                 return entry;
             }
             case SPLIT_ARCHIVE_HEADER_BYTES:
@@ -72,13 +72,13 @@ internal partial class ZipHeaderFactory
             case ZIP64_END_OF_CENTRAL_DIRECTORY:
             {
                 var entry = new Zip64DirectoryEndHeader();
-                await entry.Read(reader);
+                await entry.Read(reader).ConfigureAwait(false);
                 return entry;
             }
             case ZIP64_END_OF_CENTRAL_DIRECTORY_LOCATOR:
             {
                 var entry = new Zip64DirectoryEndLocatorHeader();
-                await entry.Read(reader);
+                await entry.Read(reader).ConfigureAwait(false);
                 return entry;
             }
             default:

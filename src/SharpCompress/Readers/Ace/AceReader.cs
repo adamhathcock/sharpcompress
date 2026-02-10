@@ -74,7 +74,7 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
                 break;
             }
 
-            yield return new AceEntry(new AceFilePart((AceFileHeader)localHeader, stream));
+            yield return new AceEntry(new AceFilePart((AceFileHeader)localHeader, stream), Options);
         }
     }
 
@@ -88,7 +88,7 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
         }
 
         var mainHeaderReader = new AceMainHeader(_archiveEncoding);
-        var mainHeader = await mainHeaderReader.ReadAsync(stream);
+        var mainHeader = await mainHeaderReader.ReadAsync(stream).ConfigureAwait(false);
         if (mainHeader == null)
         {
             yield break;
@@ -102,7 +102,7 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
         var localHeaderReader = new AceFileHeader(_archiveEncoding);
         while (true)
         {
-            var localHeader = await localHeaderReader.ReadAsync(stream);
+            var localHeader = await localHeaderReader.ReadAsync(stream).ConfigureAwait(false);
             if (localHeader?.IsFileEncrypted == true)
             {
                 throw new CryptographicException(
@@ -114,7 +114,7 @@ public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
                 break;
             }
 
-            yield return new AceEntry(new AceFilePart((AceFileHeader)localHeader, stream));
+            yield return new AceEntry(new AceFilePart((AceFileHeader)localHeader, stream), Options);
         }
     }
 

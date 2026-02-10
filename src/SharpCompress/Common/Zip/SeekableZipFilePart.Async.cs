@@ -13,12 +13,14 @@ internal partial class SeekableZipFilePart
     {
         if (!_isLocalHeaderLoaded)
         {
-            await LoadLocalHeaderAsync(cancellationToken);
+            await LoadLocalHeaderAsync(cancellationToken).ConfigureAwait(false);
             _isLocalHeaderLoaded = true;
         }
-        return await base.GetCompressedStreamAsync(cancellationToken);
+        return await base.GetCompressedStreamAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async ValueTask LoadLocalHeaderAsync(CancellationToken cancellationToken = default) =>
-        Header = await _headerFactory.GetLocalHeaderAsync(BaseStream, (DirectoryEntryHeader)Header);
+        Header = await _headerFactory
+            .GetLocalHeaderAsync(BaseStream, (DirectoryEntryHeader)Header)
+            .ConfigureAwait(false);
 }

@@ -23,6 +23,7 @@ public partial class RarArchiveEntry : RarEntry, IArchiveEntry
         IEnumerable<RarFilePart> parts,
         ReaderOptions readerOptions
     )
+        : base(readerOptions)
     {
         this.parts = parts.ToList();
         this.archive = archive;

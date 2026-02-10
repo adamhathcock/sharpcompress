@@ -25,13 +25,15 @@ public static class IWritableAsyncArchiveExtensions
                 )
                 {
                     var fileInfo = new FileInfo(path);
-                    await writableArchive.AddEntryAsync(
-                        path.Substring(filePath.Length),
-                        fileInfo.OpenRead(),
-                        true,
-                        fileInfo.Length,
-                        fileInfo.LastWriteTime
-                    );
+                    await writableArchive
+                        .AddEntryAsync(
+                            path.Substring(filePath.Length),
+                            fileInfo.OpenRead(),
+                            true,
+                            fileInfo.Length,
+                            fileInfo.LastWriteTime
+                        )
+                        .ConfigureAwait(false);
                 }
             }
         }
@@ -60,32 +62,26 @@ public static class IWritableAsyncArchiveExtensions
                 fileInfo.LastWriteTime
             );
         }
+    }
 
-        public ValueTask SaveToAsync(
-            string filePath,
-            IWriterOptions? options = null,
-            CancellationToken cancellationToken = default
-        ) =>
-            writableArchive.SaveToAsync(
-                new FileInfo(filePath),
-                options ?? new WriterOptions(CompressionType.Deflate),
-                cancellationToken
-            );
+    public static ValueTask SaveToAsync<TOptions>(
+        this IWritableAsyncArchive<TOptions> writableArchive,
+        string filePath,
+        TOptions options,
+        CancellationToken cancellationToken = default
+    )
+        where TOptions : IWriterOptions =>
+        writableArchive.SaveToAsync(new FileInfo(filePath), options, cancellationToken);
 
-        public async ValueTask SaveToAsync(
-            FileInfo fileInfo,
-            IWriterOptions? options = null,
-            CancellationToken cancellationToken = default
-        )
-        {
-            using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-            await writableArchive
-                .SaveToAsync(
-                    stream,
-                    options ?? new WriterOptions(CompressionType.Deflate),
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
+    public static async ValueTask SaveToAsync<TOptions>(
+        this IWritableAsyncArchive<TOptions> writableArchive,
+        FileInfo fileInfo,
+        TOptions options,
+        CancellationToken cancellationToken = default
+    )
+        where TOptions : IWriterOptions
+    {
+        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        await writableArchive.SaveToAsync(stream, options, cancellationToken).ConfigureAwait(false);
     }
 }

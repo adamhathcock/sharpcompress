@@ -11,10 +11,10 @@ public partial class ArjLocalHeader
         CancellationToken cancellationToken = default
     )
     {
-        var body = await ReadHeaderAsync(stream, cancellationToken);
+        var body = await ReadHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
         if (body.Length > 0)
         {
-            await ReadExtendedHeadersAsync(stream, cancellationToken);
+            await ReadExtendedHeadersAsync(stream, cancellationToken).ConfigureAwait(false);
             var header = LoadFrom(body);
             header.DataStartPosition = stream.Position;
             return header;

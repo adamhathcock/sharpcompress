@@ -5,6 +5,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Writers.GZip;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -64,7 +65,7 @@ public class GZipArchiveTests : ArchiveTests
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.OpenArchive(stream);
         Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
-        archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
+        archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"), new GZipWriterOptions());
     }
 
     [Fact]

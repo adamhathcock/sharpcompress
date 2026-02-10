@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 
@@ -10,7 +11,8 @@ public partial class TarEntry : Entry
 {
     private readonly TarFilePart? _filePart;
 
-    internal TarEntry(TarFilePart? filePart, CompressionType type)
+    internal TarEntry(TarFilePart? filePart, CompressionType type, IReaderOptions readerOptions)
+        : base(readerOptions)
     {
         _filePart = filePart;
         CompressionType = type;
@@ -54,7 +56,8 @@ public partial class TarEntry : Entry
         StreamingMode mode,
         Stream stream,
         CompressionType compressionType,
-        IArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding,
+        IReaderOptions readerOptions
     )
     {
         foreach (var header in TarHeaderFactory.ReadHeader(mode, stream, archiveEncoding))
@@ -63,11 +66,19 @@ public partial class TarEntry : Entry
             {
                 if (mode == StreamingMode.Seekable)
                 {
-                    yield return new TarEntry(new TarFilePart(header, stream), compressionType);
+                    yield return new TarEntry(
+                        new TarFilePart(header, stream),
+                        compressionType,
+                        readerOptions
+                    );
                 }
                 else
                 {
-                    yield return new TarEntry(new TarFilePart(header, null), compressionType);
+                    yield return new TarEntry(
+                        new TarFilePart(header, null),
+                        compressionType,
+                        readerOptions
+                    );
                 }
             }
             else

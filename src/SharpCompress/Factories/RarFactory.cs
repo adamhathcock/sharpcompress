@@ -90,11 +90,9 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 

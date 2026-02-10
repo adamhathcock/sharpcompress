@@ -41,8 +41,9 @@ public class ArcEntryHeader
     {
         byte[] headerBytes = new byte[29];
         if (
-            await stream.ReadAsync(headerBytes, 0, headerBytes.Length, cancellationToken)
-            != headerBytes.Length
+            await stream
+                .ReadAsync(headerBytes, 0, headerBytes.Length, cancellationToken)
+                .ConfigureAwait(false) != headerBytes.Length
         )
         {
             return null;

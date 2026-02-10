@@ -24,7 +24,7 @@ public class ZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWriteableArchiveFactory<ZipWriterOptions>
 {
     #region IFactory
 
@@ -82,7 +82,11 @@ public class ZipFactory
         var startPosition = stream.CanSeek ? stream.Position : -1;
 
         // probe for single volume zip
-        if (await ZipArchive.IsZipFileAsync(stream, password, cancellationToken))
+        if (
+            await ZipArchive
+                .IsZipFileAsync(stream, password, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             return true;
         }
@@ -96,7 +100,11 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (await ZipArchive.IsZipMultiAsync(stream, password, cancellationToken))
+        if (
+            await ZipArchive
+                .IsZipMultiAsync(stream, password, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             return true;
         }
@@ -155,13 +163,8 @@ public class ZipFactory
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
 
     #endregion
 
@@ -217,7 +220,7 @@ public class ZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => ZipArchive.CreateArchive();
+    public IWritableArchive<ZipWriterOptions> CreateArchive() => ZipArchive.CreateArchive();
 
     #endregion
 }

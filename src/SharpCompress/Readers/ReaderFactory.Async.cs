@@ -41,7 +41,7 @@ public static partial class ReaderFactory
         CancellationToken cancellationToken = default
     )
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForOwnedFile;
         return OpenAsyncReader(fileInfo.OpenRead(), options, cancellationToken);
     }
 
@@ -52,7 +52,7 @@ public static partial class ReaderFactory
     )
     {
         stream.NotNull(nameof(stream));
-        options ??= new ReaderOptions() { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForExternalStream;
 
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
@@ -73,19 +73,16 @@ public static partial class ReaderFactory
             {
                 sharpCompressStream.Rewind();
                 if (
-                    await testedFactory.IsArchiveAsync(
-                        sharpCompressStream,
-                        cancellationToken: cancellationToken
-                    )
+                    await testedFactory
+                        .IsArchiveAsync(sharpCompressStream, cancellationToken: cancellationToken)
+                        .ConfigureAwait(false)
                 )
                 {
                     sharpCompressStream.Rewind();
                     sharpCompressStream.StopRecording();
-                    return await readerFactory.OpenAsyncReader(
-                        sharpCompressStream,
-                        options,
-                        cancellationToken
-                    );
+                    return await readerFactory
+                        .OpenAsyncReader(sharpCompressStream, options, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
             sharpCompressStream.Rewind();
@@ -100,19 +97,16 @@ public static partial class ReaderFactory
             sharpCompressStream.Rewind();
             if (
                 factory is IReaderFactory readerFactory
-                && await factory.IsArchiveAsync(
-                    sharpCompressStream,
-                    cancellationToken: cancellationToken
-                )
+                && await factory
+                    .IsArchiveAsync(sharpCompressStream, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false)
             )
             {
                 sharpCompressStream.Rewind();
                 sharpCompressStream.StopRecording();
-                return await readerFactory.OpenAsyncReader(
-                    sharpCompressStream,
-                    options,
-                    cancellationToken
-                );
+                return await readerFactory
+                    .OpenAsyncReader(sharpCompressStream, options, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 

@@ -11,18 +11,19 @@ using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
 
-public abstract partial class AbstractWritableArchive<TEntry, TVolume>
+public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     : AbstractArchive<TEntry, TVolume>,
-        IWritableArchive,
-        IWritableAsyncArchive
+        IWritableArchive<TOptions>,
+        IWritableAsyncArchive<TOptions>
     where TEntry : IArchiveEntry
     where TVolume : IVolume
+    where TOptions : IWriterOptions
 {
     private class RebuildPauseDisposable : IDisposable
     {
-        private readonly AbstractWritableArchive<TEntry, TVolume> archive;
+        private readonly AbstractWritableArchive<TEntry, TVolume, TOptions> archive;
 
-        public RebuildPauseDisposable(AbstractWritableArchive<TEntry, TVolume> archive)
+        public RebuildPauseDisposable(AbstractWritableArchive<TEntry, TVolume, TOptions> archive)
         {
             this.archive = archive;
             archive.pauseRebuilding = true;
@@ -151,13 +152,15 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         long size,
         DateTime? modified,
         CancellationToken cancellationToken
-    ) => await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
+    ) =>
+        await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken)
+            .ConfigureAwait(false);
 
     async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(
         string key,
         DateTime? modified,
         CancellationToken cancellationToken
-    ) => await AddDirectoryEntryAsync(key, modified, cancellationToken);
+    ) => await AddDirectoryEntryAsync(key, modified, cancellationToken).ConfigureAwait(false);
 
     public TEntry AddDirectoryEntry(string key, DateTime? modified = null)
     {
@@ -175,7 +178,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         return entry;
     }
 
-    public void SaveTo(Stream stream, IWriterOptions options)
+    public void SaveTo(Stream stream, TOptions options)
     {
         //reset streams of new entries
         newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
@@ -211,17 +214,9 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
 
     protected abstract void SaveTo(
         Stream stream,
-        IWriterOptions options,
+        TOptions options,
         IEnumerable<TEntry> oldEntries,
         IEnumerable<TEntry> newEntries
-    );
-
-    protected abstract ValueTask SaveToAsync(
-        Stream stream,
-        IWriterOptions options,
-        IAsyncEnumerable<TEntry> oldEntries,
-        IEnumerable<TEntry> newEntries,
-        CancellationToken cancellationToken = default
     );
 
     public override void Dispose()

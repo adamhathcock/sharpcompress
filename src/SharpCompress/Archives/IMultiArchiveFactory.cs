@@ -50,10 +50,8 @@ public interface IMultiArchiveFactory : IFactory
     /// </summary>
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions">reading options.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
     IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 }

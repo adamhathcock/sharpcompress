@@ -21,7 +21,7 @@ public partial class ZipArchive
         IAsyncEnumerable<ZipVolume> volumes
     )
     {
-        var vols = await volumes.ToListAsync();
+        var vols = await volumes.ToListAsync().ConfigureAwait(false);
         var volsArray = vols.ToArray();
 
         await foreach (
@@ -55,12 +55,8 @@ public partial class ZipArchive
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(
-                                    headerFactory.NotNull(),
-                                    deh,
-                                    s,
-                                    ReaderOptions.CompressionProviders
-                                )
+                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s),
+                                ReaderOptions
                             );
                         }
                         break;
@@ -77,7 +73,7 @@ public partial class ZipArchive
 
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        ZipWriterOptions options,
         IAsyncEnumerable<ZipArchiveEntry> oldEntries,
         IEnumerable<ZipArchiveEntry> newEntries,
         CancellationToken cancellationToken = default

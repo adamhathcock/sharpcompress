@@ -24,7 +24,9 @@ public partial class LzwStream
         {
             byte[] hdr = new byte[LzwConstants.HDR_SIZE];
 
-            int result = await stream.ReadAsync(hdr, 0, hdr.Length, cancellationToken);
+            int result = await stream
+                .ReadAsync(hdr, 0, hdr.Length, cancellationToken)
+                .ConfigureAwait(false);
 
             // Check the magic marker
             if (result < 0)

@@ -76,7 +76,7 @@ public class ArcFactory : Factory, IReaderFactory
         var buffer = ArrayPool<byte>.Shared.Rent(2);
         try
         {
-            await stream.ReadExactAsync(buffer, 0, 2, cancellationToken);
+            await stream.ReadExactAsync(buffer, 0, 2, cancellationToken).ConfigureAwait(false);
             return buffer[0] == 0x1A && buffer[1] < 10; //rather thin, but this is all we have
         }
         finally

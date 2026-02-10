@@ -47,16 +47,16 @@ public partial class LzmaStream
         {
             if (presetDictionary != null)
             {
-                await lzma._outWindow.TrainAsync(presetDictionary);
+                await lzma._outWindow.TrainAsync(presetDictionary).ConfigureAwait(false);
             }
 
-            await lzma._rangeDecoder.InitAsync(inputStream);
+            await lzma._rangeDecoder.InitAsync(inputStream).ConfigureAwait(false);
         }
         else
         {
             if (presetDictionary != null)
             {
-                await lzma._outWindow.TrainAsync(presetDictionary);
+                await lzma._outWindow.TrainAsync(presetDictionary).ConfigureAwait(false);
                 lzma._needDictReset = false;
             }
         }
@@ -147,7 +147,7 @@ public partial class LzmaStream
                 _decoder.SetDecoderProperties(Properties);
             }
 
-            await _rangeDecoder.InitAsync(_inputStream, cancellationToken);
+            await _rangeDecoder.InitAsync(_inputStream, cancellationToken).ConfigureAwait(false);
         }
         else if (control > 0x02)
         {

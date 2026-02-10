@@ -18,7 +18,9 @@ internal partial class RarStream
     public async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
     {
         fetch = true;
-        await unpack.DoUnpackAsync(fileHeader, readStream, this, cancellationToken);
+        await unpack
+            .DoUnpackAsync(fileHeader, readStream, this, cancellationToken)
+            .ConfigureAwait(false);
         fetch = false;
         _position = 0;
     }

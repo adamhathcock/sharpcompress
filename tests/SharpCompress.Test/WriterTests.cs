@@ -47,10 +47,7 @@ public class WriterTests : TestBase
                 SharpCompressStream.CreateNonDisposing(stream),
                 readerOptions
             );
-            reader.WriteAllToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true }
-            );
+            reader.WriteAllToDirectory(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -94,14 +91,9 @@ public class WriterTests : TestBase
 
             await using var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(SharpCompressStream.CreateNonDisposing(stream)),
-                readerOptions,
-                cancellationToken
+                readerOptions
             );
-            await reader.WriteAllToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true },
-                cancellationToken
-            );
+            await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH, cancellationToken);
         }
         VerifyFiles();
     }

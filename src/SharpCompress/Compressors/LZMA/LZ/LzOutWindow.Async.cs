@@ -12,7 +12,7 @@ internal partial class OutWindow : IAsyncDisposable
 {
     public async ValueTask InitAsync(Stream stream)
     {
-        await ReleaseStreamAsync();
+        await ReleaseStreamAsync().ConfigureAwait(false);
         _stream = stream;
     }
 
@@ -24,7 +24,7 @@ internal partial class OutWindow : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await ReleaseStreamAsync();
+        await ReleaseStreamAsync().ConfigureAwait(false);
         if (_buffer is null)
         {
             return;
@@ -167,7 +167,7 @@ internal partial class OutWindow : IAsyncDisposable
         _total = 0;
         _limit = size;
         _pos = _windowSize - size;
-        await CopyStreamAsync(stream, size);
+        await CopyStreamAsync(stream, size).ConfigureAwait(false);
         if (_pos == _windowSize)
         {
             _pos = 0;

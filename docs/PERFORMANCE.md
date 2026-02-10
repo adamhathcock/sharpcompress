@@ -213,11 +213,7 @@ using (var archive = RarArchive.OpenArchive("solid.rar"))
 using (var archive = RarArchive.OpenArchive("solid.rar"))
 {
     // Method 1: Use WriteToDirectory (recommended)
-    archive.WriteToDirectory(@"C:\output", new ExtractionOptions
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    archive.WriteToDirectory(@"C:\output");
     
     // Method 2: Use ExtractAllEntries
     archive.ExtractAllEntries();
@@ -337,7 +333,6 @@ using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     await archive.WriteToDirectoryAsync(
         @"C:\output",
-        new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
         cancellationToken
     );
 }
@@ -355,10 +350,7 @@ Async doesn't improve performance for:
 // Sync extraction (simpler, same performance on fast I/O)
 using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
-    archive.WriteToDirectory(
-        @"C:\output",
-        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-    );
+    archive.WriteToDirectory(@"C:\output");
 }
 // Simple and fast - no async needed
 ```
@@ -377,7 +369,6 @@ try
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",
-            new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
             cts.Token
         );
     }

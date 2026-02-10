@@ -19,7 +19,7 @@ public partial class TarArchive
 {
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        TarWriterOptions options,
         IAsyncEnumerable<TarArchiveEntry> oldEntries,
         IEnumerable<TarArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
@@ -96,7 +96,7 @@ public partial class TarArchive
         IAsyncEnumerable<TarVolume> volumes
     )
     {
-        var stream = (await volumes.SingleAsync()).Stream;
+        var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
         if (stream.CanSeek)
         {
             stream.Position = 0;
@@ -127,7 +127,8 @@ public partial class TarArchive
                             var entry = new TarArchiveEntry(
                                 this,
                                 new TarFilePart(previousHeader, stream),
-                                CompressionType.None
+                                CompressionType.None,
+                                ReaderOptions
                             );
 
                             var oldStreamPos = stream.Position;
@@ -135,7 +136,7 @@ public partial class TarArchive
                             using (var entryStream = entry.OpenEntryStream())
                             {
                                 using var memoryStream = new MemoryStream();
-                                await entryStream.CopyToAsync(memoryStream);
+                                await entryStream.CopyToAsync(memoryStream).ConfigureAwait(false);
                                 memoryStream.Position = 0;
                                 var bytes = memoryStream.ToArray();
 
@@ -151,7 +152,8 @@ public partial class TarArchive
                         yield return new TarArchiveEntry(
                             this,
                             new TarFilePart(header, stream),
-                            CompressionType.None
+                            CompressionType.None,
+                            ReaderOptions
                         );
                     }
                 }

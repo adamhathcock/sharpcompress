@@ -33,10 +33,7 @@ public class TarReaderAsyncTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }

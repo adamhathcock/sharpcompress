@@ -41,7 +41,7 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
             }
             if (
                 !lazyReadOnlyCollection._fullyLoaded
-                && await lazyReadOnlyCollection._source.MoveNextAsync()
+                && await lazyReadOnlyCollection._source.MoveNextAsync().ConfigureAwait(false)
             )
             {
                 lazyReadOnlyCollection._backing.Add(lazyReadOnlyCollection._source.Current);
@@ -76,7 +76,7 @@ internal sealed class LazyAsyncReadOnlyCollection<T>(IAsyncEnumerable<T> source)
         if (!_fullyLoaded)
         {
             var loader = new LazyLoader(this, CancellationToken.None);
-            while (await loader.MoveNextAsync())
+            while (await loader.MoveNextAsync().ConfigureAwait(false))
             {
                 // Intentionally empty
             }

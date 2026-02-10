@@ -1,7 +1,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
-using SharpCompress.Compressors;
+using SharpCompress.Writers;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.GZip;
@@ -10,23 +10,46 @@ namespace SharpCompress.Writers.GZip;
 /// Options for configuring GZip writer behavior.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// This class is immutable. Use factory methods for creation:
 /// <code>
-/// var options = new GZipWriterOptions { CompressionLevel = 9 };
-/// options = options with { LeaveStreamOpen = false };
+/// var options = WriterOptions.ForGZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
 /// </code>
 /// </remarks>
 public sealed record GZipWriterOptions : IWriterOptions
 {
+    private int _compressionLevel = (int)D.CompressionLevel.Default;
+
     /// <summary>
     /// The compression type (always GZip for this writer).
     /// </summary>
-    public CompressionType CompressionType { get; init; } = CompressionType.GZip;
+    public CompressionType CompressionType
+    {
+        get => CompressionType.GZip;
+        init
+        {
+            if (value != CompressionType.GZip)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(CompressionType),
+                    value,
+                    "GZipWriterOptions only supports CompressionType.GZip."
+                );
+            }
+        }
+    }
 
     /// <summary>
     /// The compression level to be used (0-9 for Deflate).
     /// </summary>
-    public int CompressionLevel { get; init; } = (int)D.CompressionLevel.Default;
+    public int CompressionLevel
+    {
+        get => _compressionLevel;
+        init
+        {
+            CompressionLevelValidation.Validate(CompressionType.GZip, value);
+            _compressionLevel = value;
+        }
+    }
 
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.
@@ -74,14 +97,11 @@ public sealed record GZipWriterOptions : IWriterOptions
         CompressionLevel = (int)compressionLevel;
     }
 
-    /// <summary>
-    /// Creates a new GZipWriterOptions instance with the specified stream open behavior.
-    /// </summary>
-    /// <param name="leaveStreamOpen">Whether to leave the stream open after writing.</param>
-    public GZipWriterOptions(bool leaveStreamOpen)
-    {
-        LeaveStreamOpen = leaveStreamOpen;
-    }
+    // Note: Constructor with boolean leaveStreamOpen parameter removed.
+    // Use the fluent WithLeaveStreamOpen() helper or object initializer instead:
+    // new GZipWriterOptions() { LeaveStreamOpen = false }
+    // or
+    // WriterOptions.ForGZip().WithLeaveStreamOpen(false)
 
     /// <summary>
     /// Creates a new GZipWriterOptions instance from an existing WriterOptions instance.
