@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,6 +10,7 @@ public static class AsyncEnumerableEx
     public static async IAsyncEnumerable<T> Empty<T>()
         where T : notnull
     {
+        await Task.Yield();
         yield break;
     }
 }
@@ -20,6 +19,7 @@ public static class EnumerableExtensions
 {
     public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> source)
     {
+        await Task.Yield();
         foreach (var item in source)
         {
             yield return item;

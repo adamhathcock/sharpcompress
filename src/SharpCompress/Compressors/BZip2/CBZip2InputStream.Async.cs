@@ -800,13 +800,6 @@ internal partial class CBZip2InputStream
         return k;
     }
 
-    private async ValueTask BsSetStreamAsync(Stream f, CancellationToken cancellationToken)
-    {
-        bsStream = f;
-        bsLive = 0;
-        bsBuff = 0;
-    }
-
     private async ValueTask<int> BsRAsync(int n, CancellationToken cancellationToken)
     {
         int v;
@@ -863,7 +856,7 @@ internal partial class CBZip2InputStream
         var cbZip2InputStream = new CBZip2InputStream(decompressConcatenated, leaveOpen);
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
-        await cbZip2InputStream.BsSetStreamAsync(zStream, cancellationToken).ConfigureAwait(false);
+        cbZip2InputStream.BsSetStream(zStream);
         await cbZip2InputStream.InitializeAsync(true, cancellationToken).ConfigureAwait(false);
         await cbZip2InputStream.InitBlockAsync(cancellationToken).ConfigureAwait(false);
         await cbZip2InputStream.SetupBlockAsync(cancellationToken).ConfigureAwait(false);
