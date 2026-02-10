@@ -61,6 +61,7 @@ internal sealed partial class GZipFilePart : FilePart
 
     internal override Stream GetCompressedStream()
     {
+        //GZip uses Deflate compression, at this point we need a deflate stream
         return _compressionProviders.CreateDecompressStream(CompressionType.Deflate, _stream);
     }
 
