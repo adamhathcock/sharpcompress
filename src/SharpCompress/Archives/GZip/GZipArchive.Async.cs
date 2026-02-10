@@ -50,7 +50,9 @@ public partial class GZipArchive
         {
             if (!entry.IsDirectory)
             {
-                using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
+                using var entryStream = await entry
+                    .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -62,7 +64,9 @@ public partial class GZipArchive
         }
         foreach (var entry in newEntries.Where(x => !x.IsDirectory))
         {
-            using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
+            using var entryStream = await entry
+                .OpenEntryStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
             await writer
                 .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
                 .ConfigureAwait(false);
@@ -80,10 +84,12 @@ public partial class GZipArchive
         IAsyncEnumerable<GZipVolume> volumes
     )
     {
-        var stream = (await volumes.SingleAsync()).Stream;
+        var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
         yield return new GZipArchiveEntry(
             this,
-            await GZipFilePart.CreateAsync(stream, ReaderOptions.ArchiveEncoding),
+            await GZipFilePart
+                .CreateAsync(stream, ReaderOptions.ArchiveEncoding)
+                .ConfigureAwait(false),
             ReaderOptions
         );
     }

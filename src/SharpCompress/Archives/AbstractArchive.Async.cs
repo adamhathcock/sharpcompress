@@ -21,7 +21,7 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
         IAsyncEnumerable<TVolume> volumes
     )
     {
-        foreach (var item in LoadEntries(await volumes.ToListAsync()))
+        foreach (var item in LoadEntries(await volumes.ToListAsync().ConfigureAwait(false)))
         {
             yield return item;
         }
@@ -47,8 +47,8 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     private async ValueTask EnsureEntriesLoadedAsync()
     {
-        await _lazyEntriesAsync.EnsureFullyLoaded();
-        await _lazyVolumesAsync.EnsureFullyLoaded();
+        await _lazyEntriesAsync.EnsureFullyLoaded().ConfigureAwait(false);
+        await _lazyVolumesAsync.EnsureFullyLoaded().ConfigureAwait(false);
     }
 
     private async IAsyncEnumerable<IArchiveEntry> EntriesAsyncCast()
@@ -73,29 +73,31 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     public async ValueTask<IAsyncReader> ExtractAllEntriesAsync()
     {
-        if (!await IsSolidAsync() && Type != ArchiveType.SevenZip)
+        if (!await IsSolidAsync().ConfigureAwait(false) && Type != ArchiveType.SevenZip)
         {
             throw new SharpCompressException(
                 "ExtractAllEntries can only be used on solid archives or 7Zip archives (which require random access)."
             );
         }
-        await EnsureEntriesLoadedAsync();
-        return await CreateReaderForSolidExtractionAsync();
+        await EnsureEntriesLoadedAsync().ConfigureAwait(false);
+        return await CreateReaderForSolidExtractionAsync().ConfigureAwait(false);
     }
 
     public virtual ValueTask<bool> IsSolidAsync() => new(false);
 
     public async ValueTask<bool> IsCompleteAsync()
     {
-        await EnsureEntriesLoadedAsync();
-        return await EntriesAsync.AllAsync(x => x.IsComplete);
+        await EnsureEntriesLoadedAsync().ConfigureAwait(false);
+        return await EntriesAsync.AllAsync(x => x.IsComplete).ConfigureAwait(false);
     }
 
     public async ValueTask<long> TotalSizeAsync() =>
-        await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.CompressedSize);
+        await EntriesAsync
+            .AggregateAsync(0L, (total, cf) => total + cf.CompressedSize)
+            .ConfigureAwait(false);
 
     public async ValueTask<long> TotalUncompressedSizeAsync() =>
-        await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.Size);
+        await EntriesAsync.AggregateAsync(0L, (total, cf) => total + cf.Size).ConfigureAwait(false);
 
     public ValueTask<bool> IsEncryptedAsync() => new(IsEncrypted);
 

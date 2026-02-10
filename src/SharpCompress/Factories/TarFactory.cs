@@ -82,14 +82,21 @@ public class TarFactory
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
-            if (await wrapper.IsMatchAsync(sharpCompressStream, cancellationToken))
+            if (
+                await wrapper
+                    .IsMatchAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = await wrapper.CreateStreamAsync(
-                    sharpCompressStream,
-                    cancellationToken
-                );
-                if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
+                var decompressedStream = await wrapper
+                    .CreateStreamAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false);
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
                 {
                     sharpCompressStream.Rewind();
                     return true;
@@ -194,14 +201,21 @@ public class TarFactory
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
-            if (await wrapper.IsMatchAsync(sharpCompressStream, cancellationToken))
+            if (
+                await wrapper
+                    .IsMatchAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = await wrapper.CreateStreamAsync(
-                    sharpCompressStream,
-                    cancellationToken
-                );
-                if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
+                var decompressedStream = await wrapper
+                    .CreateStreamAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false);
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
                 {
                     sharpCompressStream.Rewind();
                     sharpCompressStream.StopRecording();

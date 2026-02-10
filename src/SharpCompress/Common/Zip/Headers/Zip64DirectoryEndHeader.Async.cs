@@ -8,19 +8,20 @@ internal partial class Zip64DirectoryEndHeader
 {
     internal override async ValueTask Read(AsyncBinaryReader reader)
     {
-        SizeOfDirectoryEndRecord = (long)await reader.ReadUInt64Async();
-        VersionMadeBy = await reader.ReadUInt16Async();
-        VersionNeededToExtract = await reader.ReadUInt16Async();
-        VolumeNumber = await reader.ReadUInt32Async();
-        FirstVolumeWithDirectory = await reader.ReadUInt32Async();
-        TotalNumberOfEntriesInDisk = (long)await reader.ReadUInt64Async();
-        TotalNumberOfEntries = (long)await reader.ReadUInt64Async();
-        DirectorySize = (long)await reader.ReadUInt64Async();
-        DirectoryStartOffsetRelativeToDisk = (long)await reader.ReadUInt64Async();
+        SizeOfDirectoryEndRecord = (long)await reader.ReadUInt64Async().ConfigureAwait(false);
+        VersionMadeBy = await reader.ReadUInt16Async().ConfigureAwait(false);
+        VersionNeededToExtract = await reader.ReadUInt16Async().ConfigureAwait(false);
+        VolumeNumber = await reader.ReadUInt32Async().ConfigureAwait(false);
+        FirstVolumeWithDirectory = await reader.ReadUInt32Async().ConfigureAwait(false);
+        TotalNumberOfEntriesInDisk = (long)await reader.ReadUInt64Async().ConfigureAwait(false);
+        TotalNumberOfEntries = (long)await reader.ReadUInt64Async().ConfigureAwait(false);
+        DirectorySize = (long)await reader.ReadUInt64Async().ConfigureAwait(false);
+        DirectoryStartOffsetRelativeToDisk = (long)
+            await reader.ReadUInt64Async().ConfigureAwait(false);
         var size = (int)(
             SizeOfDirectoryEndRecord - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
         );
         DataSector = new byte[size];
-        await reader.ReadBytesAsync(DataSector, 0, size);
+        await reader.ReadBytesAsync(DataSector, 0, size).ConfigureAwait(false);
     }
 }

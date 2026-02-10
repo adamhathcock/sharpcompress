@@ -228,7 +228,8 @@ public partial class ZipArchive
             var header = await headerFactory
                 .ReadStreamHeaderAsync(stream)
                 .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
             if (header is null)
             {
                 return false;
@@ -271,6 +272,7 @@ public partial class ZipArchive
                     await foreach (
                         var h in z.ReadSeekableHeaderAsync(stream)
                             .WithCancellation(cancellationToken)
+                            .ConfigureAwait(false)
                     )
                     {
                         x = h;

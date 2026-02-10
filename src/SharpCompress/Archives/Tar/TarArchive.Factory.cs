@@ -192,7 +192,7 @@ public partial class TarArchive
 #else
             using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
 #endif
-            var readSucceeded = await tarHeader.ReadAsync(reader);
+            var readSucceeded = await tarHeader.ReadAsync(reader).ConfigureAwait(false);
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0

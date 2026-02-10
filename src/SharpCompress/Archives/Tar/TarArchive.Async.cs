@@ -96,7 +96,7 @@ public partial class TarArchive
         IAsyncEnumerable<TarVolume> volumes
     )
     {
-        var stream = (await volumes.SingleAsync()).Stream;
+        var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
         if (stream.CanSeek)
         {
             stream.Position = 0;
@@ -136,7 +136,7 @@ public partial class TarArchive
                             using (var entryStream = entry.OpenEntryStream())
                             {
                                 using var memoryStream = new MemoryStream();
-                                await entryStream.CopyToAsync(memoryStream);
+                                await entryStream.CopyToAsync(memoryStream).ConfigureAwait(false);
                                 memoryStream.Position = 0;
                                 var bytes = memoryStream.ToArray();
 

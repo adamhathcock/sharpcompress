@@ -152,13 +152,15 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         long size,
         DateTime? modified,
         CancellationToken cancellationToken
-    ) => await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
+    ) =>
+        await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken)
+            .ConfigureAwait(false);
 
     async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(
         string key,
         DateTime? modified,
         CancellationToken cancellationToken
-    ) => await AddDirectoryEntryAsync(key, modified, cancellationToken);
+    ) => await AddDirectoryEntryAsync(key, modified, cancellationToken).ConfigureAwait(false);
 
     public TEntry AddDirectoryEntry(string key, DateTime? modified = null)
     {

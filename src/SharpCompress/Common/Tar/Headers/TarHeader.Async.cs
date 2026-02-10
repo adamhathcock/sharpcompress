@@ -203,7 +203,7 @@ internal sealed partial class TarHeader
 
         do
         {
-            buffer = await ReadBlockAsync(reader);
+            buffer = await ReadBlockAsync(reader).ConfigureAwait(false);
 
             if (buffer.Length == 0)
             {
@@ -216,12 +216,12 @@ internal sealed partial class TarHeader
             // to apply to the header that follows them.
             if (entryType == EntryType.LongName)
             {
-                longName = await ReadLongNameAsync(reader, buffer);
+                longName = await ReadLongNameAsync(reader, buffer).ConfigureAwait(false);
                 continue;
             }
             else if (entryType == EntryType.LongLink)
             {
-                longLinkName = await ReadLongNameAsync(reader, buffer);
+                longLinkName = await ReadLongNameAsync(reader, buffer).ConfigureAwait(false);
                 continue;
             }
 
@@ -282,7 +282,7 @@ internal sealed partial class TarHeader
         var buffer = ArrayPool<byte>.Shared.Rent(BLOCK_SIZE);
         try
         {
-            await reader.ReadBytesAsync(buffer, 0, BLOCK_SIZE);
+            await reader.ReadBytesAsync(buffer, 0, BLOCK_SIZE).ConfigureAwait(false);
 
             if (buffer.Length != 0 && buffer.Length < BLOCK_SIZE)
             {
@@ -313,7 +313,7 @@ internal sealed partial class TarHeader
         var nameBytes = ArrayPool<byte>.Shared.Rent(nameLength);
         try
         {
-            await reader.ReadBytesAsync(nameBytes, 0, nameLength);
+            await reader.ReadBytesAsync(nameBytes, 0, nameLength).ConfigureAwait(false);
             var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
 
             // Read the rest of the block and discard the data
@@ -322,7 +322,9 @@ internal sealed partial class TarHeader
                 var remainingBytes = ArrayPool<byte>.Shared.Rent(remainingBytesToRead);
                 try
                 {
-                    await reader.ReadBytesAsync(remainingBytes, 0, remainingBytesToRead);
+                    await reader
+                        .ReadBytesAsync(remainingBytes, 0, remainingBytesToRead)
+                        .ConfigureAwait(false);
                 }
                 finally
                 {

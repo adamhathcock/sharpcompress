@@ -20,7 +20,8 @@ public static partial class ArchiveFactory
     )
     {
         readerOptions ??= ReaderOptions.ForExternalStream;
-        var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken);
+        var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken)
+            .ConfigureAwait(false);
         return factory.OpenAsyncArchive(stream, readerOptions);
     }
 
@@ -42,7 +43,8 @@ public static partial class ArchiveFactory
     {
         options ??= ReaderOptions.ForOwnedFile;
 
-        var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken);
+        var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken)
+            .ConfigureAwait(false);
         return factory.OpenAsyncArchive(fileInfo, options);
     }
 
@@ -62,13 +64,15 @@ public static partial class ArchiveFactory
         var fileInfo = filesArray[0];
         if (filesArray.Length == 1)
         {
-            return await OpenAsyncArchive(fileInfo, options, cancellationToken);
+            return await OpenAsyncArchive(fileInfo, options, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         fileInfo.NotNull(nameof(fileInfo));
         options ??= ReaderOptions.ForOwnedFile;
 
-        var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken);
+        var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken)
+            .ConfigureAwait(false);
         return factory.OpenAsyncArchive(filesArray, options, cancellationToken);
     }
 
@@ -89,13 +93,15 @@ public static partial class ArchiveFactory
         var firstStream = streamsArray[0];
         if (streamsArray.Length == 1)
         {
-            return await OpenAsyncArchive(firstStream, options, cancellationToken);
+            return await OpenAsyncArchive(firstStream, options, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         firstStream.NotNull(nameof(firstStream));
         options ??= ReaderOptions.ForExternalStream;
 
-        var factory = await FindFactoryAsync<IMultiArchiveFactory>(firstStream, cancellationToken);
+        var factory = await FindFactoryAsync<IMultiArchiveFactory>(firstStream, cancellationToken)
+            .ConfigureAwait(false);
         return factory.OpenAsyncArchive(streamsArray, options);
     }
 
@@ -117,7 +123,7 @@ public static partial class ArchiveFactory
     {
         finfo.NotNull(nameof(finfo));
         using Stream stream = finfo.OpenRead();
-        return await FindFactoryAsync<T>(stream, cancellationToken);
+        return await FindFactoryAsync<T>(stream, cancellationToken).ConfigureAwait(false);
     }
 
     private static async ValueTask<T> FindFactoryAsync<T>(
@@ -140,7 +146,11 @@ public static partial class ArchiveFactory
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
 
-            if (await factory.IsArchiveAsync(stream, cancellationToken: cancellationToken))
+            if (
+                await factory
+                    .IsArchiveAsync(stream, cancellationToken: cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
 

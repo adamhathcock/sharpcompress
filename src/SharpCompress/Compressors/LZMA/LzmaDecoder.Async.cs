@@ -178,29 +178,34 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             var posState = (uint)outWindow.Total & _posStateMask;
             if (
                 await _isMatchDecoders[(_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState]
-                    .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                    .DecodeAsync(rangeDecoder, cancellationToken)
+                    .ConfigureAwait(false) == 0
             )
             {
                 byte b;
                 var prevByte = outWindow.GetByte(0);
                 if (!_state.IsCharState())
                 {
-                    b = await _literalDecoder.DecodeWithMatchByteAsync(
-                        rangeDecoder,
-                        (uint)outWindow.Total,
-                        prevByte,
-                        outWindow.GetByte((int)_rep0),
-                        cancellationToken
-                    );
+                    b = await _literalDecoder
+                        .DecodeWithMatchByteAsync(
+                            rangeDecoder,
+                            (uint)outWindow.Total,
+                            prevByte,
+                            outWindow.GetByte((int)_rep0),
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
                 }
                 else
                 {
-                    b = await _literalDecoder.DecodeNormalAsync(
-                        rangeDecoder,
-                        (uint)outWindow.Total,
-                        prevByte,
-                        cancellationToken
-                    );
+                    b = await _literalDecoder
+                        .DecodeNormalAsync(
+                            rangeDecoder,
+                            (uint)outWindow.Total,
+                            prevByte,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
                 }
                 await outWindow.PutByteAsync(b, cancellationToken).ConfigureAwait(false);
                 _state.UpdateChar();
@@ -209,20 +214,23 @@ public partial class Decoder : ICoder, ISetDecoderProperties
             {
                 uint len;
                 if (
-                    await _isRepDecoders[_state._index].DecodeAsync(rangeDecoder, cancellationToken)
-                    == 1
+                    await _isRepDecoders[_state._index]
+                        .DecodeAsync(rangeDecoder, cancellationToken)
+                        .ConfigureAwait(false) == 1
                 )
                 {
                     if (
                         await _isRepG0Decoders[_state._index]
-                            .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                            .DecodeAsync(rangeDecoder, cancellationToken)
+                            .ConfigureAwait(false) == 0
                     )
                     {
                         if (
                             await _isRep0LongDecoders[
                                 (_state._index << Base.K_NUM_POS_STATES_BITS_MAX) + posState
                             ]
-                                .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                                .DecodeAsync(rangeDecoder, cancellationToken)
+                                .ConfigureAwait(false) == 0
                         )
                         {
                             _state.UpdateShortRep();
@@ -237,7 +245,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                         uint distance;
                         if (
                             await _isRepG1Decoders[_state._index]
-                                .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                                .DecodeAsync(rangeDecoder, cancellationToken)
+                                .ConfigureAwait(false) == 0
                         )
                         {
                             distance = _rep1;
@@ -246,7 +255,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties
                         {
                             if (
                                 await _isRepG2Decoders[_state._index]
-                                    .DecodeAsync(rangeDecoder, cancellationToken) == 0
+                                    .DecodeAsync(rangeDecoder, cancellationToken)
+                                    .ConfigureAwait(false) == 0
                             )
                             {
                                 distance = _rep2;
@@ -339,6 +349,6 @@ public partial class Decoder : ICoder, ISetDecoderProperties
         {
             CreateDictionary();
         }
-        await _outWindow.TrainAsync(stream);
+        await _outWindow.TrainAsync(stream).ConfigureAwait(false);
     }
 }
