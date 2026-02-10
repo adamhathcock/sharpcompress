@@ -20,7 +20,7 @@ public sealed partial class GZipWriter : AbstractWriter
         }
 
         // Use the configured compression providers
-        var providers = WriterOptions.CompressionProviders;
+        var providers = WriterOptions.Providers;
 
         // Create the GZip stream using the provider
         var compressionStream = providers.CreateCompressStream(

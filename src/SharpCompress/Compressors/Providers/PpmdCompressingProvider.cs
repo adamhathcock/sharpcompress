@@ -9,7 +9,7 @@ namespace SharpCompress.Compressors.Providers;
 /// Provides PPMd compression and decompression using SharpCompress's internal implementation.
 /// This is a complex provider that requires initialization data for compression.
 /// </summary>
-public sealed class PpmdCompressingProvider : ICompressingProvider
+public sealed class PpmdCompressingProvider : ICompressionProviderHooks
 {
     public CompressionType CompressionType => CompressionType.PPMd;
     public bool SupportsCompression => true;

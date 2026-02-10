@@ -43,5 +43,5 @@ public interface IReaderOptions
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom providers.
     /// Use this to provide alternative decompression implementations.
     /// </summary>
-    CompressionProviderRegistry CompressionProviders { get; init; }
+    CompressionProviderRegistry Providers { get; init; }
 }

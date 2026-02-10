@@ -77,7 +77,7 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
                                 new StreamingZipFilePart(
                                     (LocalEntryHeader)h,
                                     stream,
-                                    Options.CompressionProviders
+                                    Options.Providers
                                 ),
                                 Options
                             );

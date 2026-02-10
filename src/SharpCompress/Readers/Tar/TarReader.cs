@@ -33,7 +33,7 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
     {
         var stream = base.RequestInitialStream();
 
-        var providers = Options.CompressionProviders;
+        var providers = Options.Providers;
 
         return compressionType switch
         {

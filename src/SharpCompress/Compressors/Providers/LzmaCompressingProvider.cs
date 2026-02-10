@@ -9,7 +9,7 @@ namespace SharpCompress.Compressors.Providers;
 /// Provides LZMA compression and decompression using SharpCompress's internal implementation.
 /// This is a complex provider that requires initialization data for compression.
 /// </summary>
-public sealed class LzmaCompressingProvider : ICompressingProvider
+public sealed class LzmaCompressingProvider : ICompressionProviderHooks
 {
     public CompressionType CompressionType => CompressionType.LZMA;
     public bool SupportsCompression => true;
@@ -30,7 +30,7 @@ public sealed class LzmaCompressingProvider : ICompressingProvider
     )
     {
         // LZMA stream creation returns the encoder stream
-        // Note: Pre-compression data and properties are handled via ICompressingProvider methods
+        // Note: Pre-compression data and properties are handled via ICompressionProviderHooks methods
         var props = new LzmaEncoderProperties(!context.CanSeek);
         return LzmaStream.Create(props, false, destination);
     }

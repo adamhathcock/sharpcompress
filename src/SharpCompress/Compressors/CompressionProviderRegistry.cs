@@ -20,7 +20,7 @@ namespace SharpCompress.Compressors;
 ///     .With(new MyCustomGZipProvider());
 /// var options = new WriterOptions(CompressionType.GZip)
 /// {
-///     CompressionProviders = customRegistry
+///     Providers = customRegistry
 /// };
 /// </code>
 /// </remarks>
@@ -143,14 +143,14 @@ public sealed class CompressionProviderRegistry
     }
 
     /// <summary>
-    /// Gets the provider as an ICompressingProvider if it supports complex initialization.
+    /// Gets the provider as an ICompressionProviderHooks if it supports complex initialization.
     /// </summary>
     /// <param name="type">The compression type.</param>
     /// <returns>The compressing provider, or null if the provider doesn't support complex initialization.</returns>
-    public ICompressingProvider? GetCompressingProvider(CompressionType type)
+    public ICompressionProviderHooks? GetCompressingProvider(CompressionType type)
     {
         var provider = GetProvider(type);
-        return provider as ICompressingProvider;
+        return provider as ICompressionProviderHooks;
     }
 
     /// <summary>

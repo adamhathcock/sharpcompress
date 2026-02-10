@@ -72,7 +72,7 @@ public sealed record GZipWriterOptions : IWriterOptions
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry CompressionProviders { get; init; } =
+    public CompressionProviderRegistry Providers { get; init; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>
@@ -114,7 +114,7 @@ public sealed record GZipWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
-        CompressionProviders = options.CompressionProviders;
+        Providers = options.Providers;
     }
 
     /// <summary>
@@ -127,6 +127,6 @@ public sealed record GZipWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
-        CompressionProviders = options.CompressionProviders;
+        Providers = options.Providers;
     }
 }

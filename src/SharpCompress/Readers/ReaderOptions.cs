@@ -150,11 +150,12 @@ public sealed record ReaderOptions : IReaderOptions
     /// </remarks>
     public Action<string, string>? SymbolicLinkHandler { get; init; }
 
+    /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry CompressionProviders { get; init; } =
+    public CompressionProviderRegistry Providers { get; init; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>

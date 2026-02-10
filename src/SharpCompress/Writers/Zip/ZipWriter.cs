@@ -421,7 +421,7 @@ public partial class ZipWriter : AbstractWriter
             counting = new CountingStream(SharpCompressStream.CreateNonDisposing(writeStream));
             Stream output = counting;
 
-            var providers = writer.WriterOptions.CompressionProviders;
+            var providers = writer.WriterOptions.Providers;
 
             switch (zipCompressionMethod)
             {
@@ -447,7 +447,7 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.LZMA:
                 {
-                    // Use ICompressingProvider for complex initialization
+                    // Use ICompressionProviderHooks for complex initialization
                     var compressingProvider = providers.GetCompressingProvider(
                         CompressionType.LZMA
                     );
@@ -483,7 +483,7 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.PPMd:
                 {
-                    // Use ICompressingProvider for complex initialization
+                    // Use ICompressionProviderHooks for complex initialization
                     var compressingProvider = providers.GetCompressingProvider(
                         CompressionType.PPMd
                     );

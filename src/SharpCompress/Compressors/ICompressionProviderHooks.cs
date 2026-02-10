@@ -13,7 +13,7 @@ namespace SharpCompress.Compressors;
 /// This interface extends ICompressionProvider to support these complex initialization patterns
 /// while keeping the simple ICompressionProvider interface for formats that don't need it.
 /// </remarks>
-public interface ICompressingProvider : ICompressionProvider
+public interface ICompressionProviderHooks : ICompressionProvider
 {
     /// <summary>
     /// Gets initialization data to write before compression starts.

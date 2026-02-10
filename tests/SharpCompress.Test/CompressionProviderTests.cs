@@ -117,10 +117,7 @@ public class CompressionProviderTests
         var registry = CompressionProviderRegistry.Default.With(customProvider);
 
         using var stream = new MemoryStream();
-        var options = new TarWriterOptions(CompressionType.GZip, true)
-        {
-            CompressionProviders = registry,
-        };
+        var options = new TarWriterOptions(CompressionType.GZip, true) { Providers = registry };
 
         using (var writer = new TarWriter(stream, options))
         {
@@ -165,7 +162,7 @@ public class CompressionProviderTests
         archiveStream.Position = 0;
         var customProvider = new GZipCompressionProvider();
         var registry = CompressionProviderRegistry.Default.With(customProvider);
-        var readOptions = new ReaderOptions { CompressionProviders = registry };
+        var readOptions = new ReaderOptions { Providers = registry };
 
         using var reader = TarReader.OpenReader(archiveStream, readOptions);
         reader.MoveToNextEntry().Should().BeTrue();
@@ -185,7 +182,7 @@ public class CompressionProviderTests
 
         var original = new WriterOptions(CompressionType.GZip)
         {
-            CompressionProviders = registry,
+            Providers = registry,
             LeaveStreamOpen = false,
         };
 
@@ -197,7 +194,7 @@ public class CompressionProviderTests
 
         clone.CompressionType.Should().Be(original.CompressionType);
         clone.CompressionLevel.Should().Be(original.CompressionLevel);
-        clone.CompressionProviders.Should().BeSameAs(original.CompressionProviders);
+        clone.Providers.Should().BeSameAs(original.Providers);
         clone.LeaveStreamOpen.Should().BeTrue();
     }
 
@@ -207,11 +204,7 @@ public class CompressionProviderTests
         var customProvider = new DeflateCompressionProvider();
         var registry = CompressionProviderRegistry.Default.With(customProvider);
 
-        var original = new ReaderOptions
-        {
-            CompressionProviders = registry,
-            LeaveStreamOpen = false,
-        };
+        var original = new ReaderOptions { Providers = registry, LeaveStreamOpen = false };
 
         // Clone using 'with' expression
         var clone = original with
@@ -219,7 +212,7 @@ public class CompressionProviderTests
             LeaveStreamOpen = true,
         };
 
-        clone.CompressionProviders.Should().BeSameAs(original.CompressionProviders);
+        clone.Providers.Should().BeSameAs(original.Providers);
         clone.LeaveStreamOpen.Should().BeTrue();
     }
 
@@ -339,7 +332,7 @@ public class CompressionProviderTests
         using var archiveStream = new MemoryStream();
         var writeOptions = new TarWriterOptions(CompressionType.GZip, true)
         {
-            CompressionProviders = registry,
+            Providers = registry,
         };
 
         using (var writer = new TarWriter(archiveStream, writeOptions))

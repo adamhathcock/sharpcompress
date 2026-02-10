@@ -23,5 +23,5 @@ public interface IWriterOptions : IStreamOptions, IEncodingOptions, IProgressOpt
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom providers, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    CompressionProviderRegistry CompressionProviders { get; init; }
+    CompressionProviderRegistry Providers { get; init; }
 }

@@ -100,7 +100,7 @@ public partial class ZipArchive
                                     headerFactory.NotNull(),
                                     deh,
                                     s,
-                                    ReaderOptions.CompressionProviders
+                                    ReaderOptions.Providers
                                 ),
                                 ReaderOptions
                             );

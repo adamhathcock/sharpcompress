@@ -47,7 +47,7 @@ public sealed record TarWriterOptions : IWriterOptions
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
     /// </summary>
-    public CompressionProviderRegistry CompressionProviders { get; init; } =
+    public CompressionProviderRegistry Providers { get; init; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>
@@ -104,7 +104,7 @@ public sealed record TarWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
-        CompressionProviders = options.CompressionProviders;
+        Providers = options.Providers;
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public sealed record TarWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
-        CompressionProviders = options.CompressionProviders;
+        Providers = options.Providers;
     }
 
     /// <summary>

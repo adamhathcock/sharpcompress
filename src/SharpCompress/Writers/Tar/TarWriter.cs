@@ -29,7 +29,7 @@ public partial class TarWriter : AbstractWriter
             destination = SharpCompressStream.CreateNonDisposing(destination);
         }
 
-        var providers = options.CompressionProviders;
+        var providers = options.Providers;
 
         destination = options.CompressionType switch
         {

@@ -81,7 +81,7 @@ public partial class ZipReader
                             new StreamingZipFilePart(
                                 (LocalEntryHeader)header,
                                 _stream,
-                                _options.CompressionProviders
+                                _options.Providers
                             ),
                             _options
                         );

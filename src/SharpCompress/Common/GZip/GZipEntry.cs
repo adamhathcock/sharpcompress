@@ -47,7 +47,7 @@ public partial class GZipEntry : Entry
     internal static IEnumerable<GZipEntry> GetEntries(Stream stream, ReaderOptions options)
     {
         yield return new GZipEntry(
-            GZipFilePart.Create(stream, options.ArchiveEncoding, options.CompressionProviders),
+            GZipFilePart.Create(stream, options.ArchiveEncoding, options.Providers),
             options
         );
     }

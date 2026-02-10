@@ -68,7 +68,7 @@ public sealed record WriterOptions : IWriterOptions
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry CompressionProviders { get; init; } =
+    public CompressionProviderRegistry Providers { get; init; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>

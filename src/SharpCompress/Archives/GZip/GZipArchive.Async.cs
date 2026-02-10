@@ -88,7 +88,7 @@ public partial class GZipArchive
         yield return new GZipArchiveEntry(
             this,
             await GZipFilePart
-                .CreateAsync(stream, ReaderOptions.ArchiveEncoding)
+                .CreateAsync(stream, ReaderOptions.ArchiveEncoding, ReaderOptions.Providers)
                 .ConfigureAwait(false),
             ReaderOptions
         );
