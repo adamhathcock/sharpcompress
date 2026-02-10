@@ -390,11 +390,7 @@ var options = new ReaderOptions
 
 using (var archive = ZipArchive.OpenArchive("japanese_files.zip", options))
 {
-    archive.WriteToDirectory(@"C:\output", new ExtractionOptions
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    archive.WriteToDirectory(@"C:\output");
 }
 // Files extracted with correct Japanese names
 ```

@@ -72,16 +72,11 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
     var entry = archive.Entries.FirstOrDefault(e => e.Key == "file.txt");
 
     // Extract all
-    archive.WriteToDirectory(@"C:\output", new ExtractionOptions
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    archive.WriteToDirectory(@"C:\output");
 
     // Extract single entry
     var entry = archive.Entries.First();
     entry.WriteToFile(@"C:\output\file.txt");
-    entry.WriteToFile(@"C:\output\file.txt", new ExtractionOptions { Overwrite = true });
 
     // Get entry stream
     using (var stream = entry.OpenEntryStream())
@@ -95,7 +90,6 @@ using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
     await asyncArchive.WriteToDirectoryAsync(
         @"C:\output",
-        new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
         cancellationToken: cancellationToken
     );
 }
@@ -187,7 +181,6 @@ using (var reader = await ReaderFactory.OpenAsyncReader(stream))
     // Async extraction of all entries
     await reader.WriteAllToDirectoryAsync(
         @"C:\output",
-        new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
         cancellationToken
     );
 }
@@ -243,6 +236,10 @@ using (var archive = ZipArchive.OpenArchive("file.zip", options))
 {
     // ...
 }
+
+// Factory defaults:
+// - file path / FileInfo overloads use LeaveStreamOpen = false
+// - stream overloads use LeaveStreamOpen = true
 ```
 
 ### WriterOptions
@@ -256,16 +253,28 @@ var options = new WriterOptions(CompressionType.Deflate)
 archive.SaveTo("output.zip", options);
 ```
 
-### ExtractionOptions
+### Extraction behavior
 
 ```csharp
-var options = new ExtractionOptions
+var options = new ReaderOptions
 {
     ExtractFullPath = true,                         // Recreate directory structure
     Overwrite = true,                               // Overwrite existing files
     PreserveFileTime = true                         // Keep original timestamps
 };
-archive.WriteToDirectory(@"C:\output", options);
+
+using (var archive = ZipArchive.OpenArchive("file.zip", options))
+{
+    archive.WriteToDirectory(@"C:\output");
+}
+```
+
+### Options matrix
+
+```text
+ReaderOptions: open-time behavior (password, encoding, stream ownership, extraction defaults)
+WriterOptions: write-time behavior (compression type/level, encoding, stream ownership)
+ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, comments, zip64)
 ```
 
 ---
@@ -319,11 +328,7 @@ try
     using (var archive = ZipArchive.Open("archive.zip", 
         new ReaderOptions { Password = "password" }))
     {
-        archive.WriteToDirectory(@"C:\output", new ExtractionOptions
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        });
+        archive.WriteToDirectory(@"C:\output");
     }
 }
 catch (PasswordRequiredException)
@@ -367,7 +372,6 @@ try
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",
-            new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
             cancellationToken: cts.Token
         );
     }

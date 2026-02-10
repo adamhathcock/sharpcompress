@@ -16,7 +16,7 @@ public static partial class ArchiveFactory
 {
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        readerOptions ??= new ReaderOptions();
+        readerOptions ??= ReaderOptions.ForExternalStream;
         return FindFactory<IArchiveFactory>(stream).OpenArchive(stream, readerOptions);
     }
 
@@ -43,7 +43,7 @@ public static partial class ArchiveFactory
 
     public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? options = null)
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForOwnedFile;
 
         return FindFactory<IArchiveFactory>(fileInfo).OpenArchive(fileInfo, options);
     }
@@ -67,7 +67,7 @@ public static partial class ArchiveFactory
         }
 
         fileInfo.NotNull(nameof(fileInfo));
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForOwnedFile;
 
         return FindFactory<IMultiArchiveFactory>(fileInfo).OpenArchive(filesArray, options);
     }
@@ -88,7 +88,7 @@ public static partial class ArchiveFactory
         }
 
         firstStream.NotNull(nameof(firstStream));
-        options ??= new ReaderOptions();
+        options ??= ReaderOptions.ForExternalStream;
 
         return FindFactory<IMultiArchiveFactory>(firstStream).OpenArchive(streamsArray, options);
     }

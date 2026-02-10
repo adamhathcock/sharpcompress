@@ -41,7 +41,7 @@ public static partial class ReaderFactory
         CancellationToken cancellationToken = default
     )
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForOwnedFile;
         return OpenAsyncReader(fileInfo.OpenRead(), options, cancellationToken);
     }
 
@@ -52,7 +52,7 @@ public static partial class ReaderFactory
     )
     {
         stream.NotNull(nameof(stream));
-        options ??= new ReaderOptions() { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForExternalStream;
 
         var sharpCompressStream = SharpCompressStream.Create(
             stream,

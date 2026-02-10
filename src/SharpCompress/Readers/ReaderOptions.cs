@@ -150,6 +150,16 @@ public sealed record ReaderOptions : IReaderOptions
     public ReaderOptions() { }
 
     /// <summary>
+    /// Gets ReaderOptions configured for caller-provided streams.
+    /// </summary>
+    public static ReaderOptions ForExternalStream => new() { LeaveStreamOpen = true };
+
+    /// <summary>
+    /// Gets ReaderOptions configured for file-based overloads that open their own stream.
+    /// </summary>
+    public static ReaderOptions ForOwnedFile => new() { LeaveStreamOpen = false };
+
+    /// <summary>
     /// Gets a ReaderOptions instance configured for safe extraction (no overwrite).
     /// </summary>
     public static ReaderOptions SafeExtract => new() { Overwrite = false };

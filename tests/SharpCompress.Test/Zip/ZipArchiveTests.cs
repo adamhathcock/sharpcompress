@@ -285,8 +285,8 @@ public class ZipArchiveTests : ArchiveTests
             var str = "test.txt";
             var source = new MemoryStream(Encoding.UTF8.GetBytes(str));
             arc.AddEntry("test.txt", source, true, source.Length);
-            arc.SaveTo(scratchPath1, new WriterOptions(CompressionType.Deflate));
-            arc.SaveTo(scratchPath2, new WriterOptions(CompressionType.Deflate));
+            arc.SaveTo(scratchPath1, new ZipWriterOptions(CompressionType.Deflate));
+            arc.SaveTo(scratchPath2, new ZipWriterOptions(CompressionType.Deflate));
         }
 
         Assert.Equal(new FileInfo(scratchPath1).Length, new FileInfo(scratchPath2).Length);
@@ -334,8 +334,8 @@ public class ZipArchiveTests : ArchiveTests
             {
                 arc.AddEntry("1.txt", stream, false, stream.Length);
                 arc.AddEntry("2.txt", stream, false, stream.Length);
-                arc.SaveTo(scratchPath1, new WriterOptions(CompressionType.Deflate));
-                arc.SaveTo(scratchPath2, new WriterOptions(CompressionType.Deflate));
+                arc.SaveTo(scratchPath1, new ZipWriterOptions(CompressionType.Deflate));
+                arc.SaveTo(scratchPath2, new ZipWriterOptions(CompressionType.Deflate));
             }
         }
 
@@ -399,7 +399,7 @@ public class ZipArchiveTests : ArchiveTests
 
         var archiveStream = new MemoryStream();
 
-        archive.SaveTo(archiveStream, new WriterOptions(CompressionType.LZMA));
+        archive.SaveTo(archiveStream, new ZipWriterOptions(CompressionType.LZMA));
 
         archiveStream.Position = 0;
 
@@ -619,7 +619,7 @@ public class ZipArchiveTests : ArchiveTests
             var zipWriter = WriterFactory.OpenWriter(
                 stream,
                 ArchiveType.Zip,
-                new WriterOptions(CompressionType.Deflate)
+                new ZipWriterOptions(CompressionType.Deflate)
             )
         )
         {

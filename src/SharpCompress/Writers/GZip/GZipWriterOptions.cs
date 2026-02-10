@@ -1,6 +1,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Writers;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.GZip;
@@ -17,15 +18,39 @@ namespace SharpCompress.Writers.GZip;
 /// </remarks>
 public sealed record GZipWriterOptions : IWriterOptions
 {
+    private int _compressionLevel = (int)D.CompressionLevel.Default;
+
     /// <summary>
     /// The compression type (always GZip for this writer).
     /// </summary>
-    public CompressionType CompressionType { get; init; } = CompressionType.GZip;
+    public CompressionType CompressionType
+    {
+        get => CompressionType.GZip;
+        init
+        {
+            if (value != CompressionType.GZip)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(CompressionType),
+                    value,
+                    "GZipWriterOptions only supports CompressionType.GZip."
+                );
+            }
+        }
+    }
 
     /// <summary>
     /// The compression level to be used (0-9 for Deflate).
     /// </summary>
-    public int CompressionLevel { get; init; } = (int)D.CompressionLevel.Default;
+    public int CompressionLevel
+    {
+        get => _compressionLevel;
+        init
+        {
+            CompressionLevelValidation.Validate(CompressionType.GZip, value);
+            _compressionLevel = value;
+        }
+    }
 
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.

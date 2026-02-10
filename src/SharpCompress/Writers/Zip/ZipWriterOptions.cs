@@ -2,6 +2,7 @@ using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Writers;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers.Zip;
@@ -18,15 +19,30 @@ namespace SharpCompress.Writers.Zip;
 /// </remarks>
 public sealed record ZipWriterOptions : IWriterOptions
 {
+    private CompressionType _compressionType;
+    private int _compressionLevel;
+
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
-    public CompressionType CompressionType { get; init; }
+    public CompressionType CompressionType
+    {
+        get => _compressionType;
+        init => _compressionType = value;
+    }
 
     /// <summary>
     /// The compression level to be used when the compression type supports variable levels.
     /// </summary>
-    public int CompressionLevel { get; init; }
+    public int CompressionLevel
+    {
+        get => _compressionLevel;
+        init
+        {
+            CompressionLevelValidation.Validate(CompressionType, value);
+            _compressionLevel = value;
+        }
+    }
 
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.

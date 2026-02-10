@@ -6,7 +6,7 @@ SharpCompress now provides full async/await support for all I/O operations. All 
 
 **Key Async Methods:**
 - `reader.WriteEntryToAsync(stream, cancellationToken)` - Extract entry asynchronously  
-- `reader.WriteAllToDirectoryAsync(path, options, cancellationToken)` - Extract all asynchronously
+- `reader.WriteAllToDirectoryAsync(path, cancellationToken)` - Extract all asynchronously
 - `writer.WriteAsync(filename, stream, modTime, cancellationToken)` - Write entry asynchronously
 - `writer.WriteAllAsync(directory, pattern, searchOption, cancellationToken)` - Write directory asynchronously
 - `entry.OpenEntryStreamAsync(cancellationToken)` - Open entry stream asynchronously
@@ -39,6 +39,10 @@ using (var reader = new StreamReader(fileStream))
 To deal with the "correct" rules as well as the expectations of users, I've decided to always close wrapped streams as of 0.21.
 
 To be explicit though, consider always using the overloads that use `ReaderOptions` or `WriterOptions` and explicitly set `LeaveStreamOpen` the way you want.
+
+Default behavior in factory APIs:
+- File path / `FileInfo` overloads set `LeaveStreamOpen = false`.
+- Caller-provided `Stream` overloads set `LeaveStreamOpen = true`.
 
 If using Compression Stream classes directly and you don't want the wrapped stream to be closed.  Use the `NonDisposingStream` as a wrapper to prevent the stream being disposed.  The change in 0.21 simplified a lot even though the usage is a bit more convoluted.
 
@@ -90,14 +94,14 @@ Note: Extracting a solid rar or 7z file needs to be done in sequential order to 
 `ExtractAllEntries` is primarily intended for solid archives (like solid Rar) or 7Zip archives, where sequential extraction provides the best performance. For general/simple extraction with any supported archive type, use `archive.WriteToDirectory()` instead.
 
 ```C#
-using (var archive = RarArchive.OpenArchive("Test.rar"))
+using (var archive = RarArchive.OpenArchive("Test.rar", new ReaderOptions
+{
+    ExtractFullPath = true,
+    Overwrite = true
+}))
 {
     // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
-    archive.WriteToDirectory(@"D:\temp", new ExtractionOptions()
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    archive.WriteToDirectory(@"D:\temp");
 }
 ```
 
@@ -126,13 +130,14 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-using (var archive = RarArchive.OpenArchive("archive.rar", new ReaderOptions { Progress = progress })) // Must be solid Rar or 7Zip
+using (var archive = RarArchive.OpenArchive("archive.rar", new ReaderOptions
 {
-    archive.WriteToDirectory(@"D:\output", new ExtractionOptions()
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    Progress = progress,
+    ExtractFullPath = true,
+    Overwrite = true
+})) // Must be solid Rar or 7Zip
+{
+    archive.WriteToDirectory(@"D:\output");
 }
 ```
 
@@ -147,11 +152,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
         if (!reader.Entry.IsDirectory)
         {
             Console.WriteLine(reader.Entry.Key);
-            reader.WriteEntryToDirectory(@"C:\temp", new ExtractionOptions()
-            {
-                ExtractFullPath = true,
-                Overwrite = true
-            });
+            reader.WriteEntryToDirectory(@"C:\temp");
         }
     }
 }
@@ -182,7 +183,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 using (Stream stream = File.OpenWrite("C:\\temp.tgz"))
 using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)
                                                 {
-                                                    LeaveOpenStream = true
+                                                    LeaveStreamOpen = true
                                                 }))
 {
     writer.WriteAll("D:\\temp", "*", SearchOption.AllDirectories);
@@ -238,11 +239,6 @@ using (var reader = ReaderFactory.OpenReader(stream))
 {
     await reader.WriteAllToDirectoryAsync(
         @"D:\temp",
-        new ExtractionOptions()
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        },
         cancellationToken
     );
 }
@@ -321,7 +317,6 @@ using (var archive = ZipArchive.OpenArchive("archive.zip"))
     // Simple async extraction - works for all archive types
     await archive.WriteToDirectoryAsync(
         @"C:\output",
-        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
         cancellationToken
     );
 }

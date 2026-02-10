@@ -194,7 +194,7 @@ public class TarArchiveTests : ArchiveTests
         using (var archive = TarArchive.OpenArchive(unmodified))
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
-            archive.SaveTo(scratchPath, new WriterOptions(CompressionType.None));
+            archive.SaveTo(scratchPath, new TarWriterOptions(CompressionType.None, true));
         }
         CompareArchivesByPath(modified, scratchPath);
     }
@@ -212,7 +212,7 @@ public class TarArchiveTests : ArchiveTests
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             archive.RemoveEntry(entry);
-            archive.SaveTo(scratchPath, new WriterOptions(CompressionType.None));
+            archive.SaveTo(scratchPath, new TarWriterOptions(CompressionType.None, true));
         }
         CompareArchivesByPath(modified, scratchPath);
     }

@@ -17,10 +17,17 @@ namespace SharpCompress.Writers;
 /// </remarks>
 public sealed record WriterOptions : IWriterOptions
 {
+    private CompressionType _compressionType;
+    private int _compressionLevel;
+
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
-    public CompressionType CompressionType { get; init; }
+    public CompressionType CompressionType
+    {
+        get => _compressionType;
+        init => _compressionType = value;
+    }
 
     /// <summary>
     /// The compression level to be used when the compression type supports variable levels.
@@ -30,7 +37,15 @@ public sealed record WriterOptions : IWriterOptions
     /// Note: BZip2 and LZMA do not support compression levels in this implementation.
     /// Defaults are set automatically based on compression type in the constructor.
     /// </summary>
-    public int CompressionLevel { get; init; }
+    public int CompressionLevel
+    {
+        get => _compressionLevel;
+        init
+        {
+            CompressionLevelValidation.Validate(CompressionType, value);
+            _compressionLevel = value;
+        }
+    }
 
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.

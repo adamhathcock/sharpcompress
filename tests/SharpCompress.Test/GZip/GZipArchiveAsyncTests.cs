@@ -7,6 +7,7 @@ using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Test.Mocks;
+using SharpCompress.Writers.GZip;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -83,7 +84,10 @@ public class GZipArchiveAsyncTests : ArchiveTests
             await Assert.ThrowsAsync<NotSupportedException>(async () =>
                 await archive.AddEntryAsync("jpg\\test.jpg", File.OpenRead(jpg), closeStream: true)
             );
-            await archive.SaveToAsync(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
+            await archive.SaveToAsync(
+                Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
+                new GZipWriterOptions()
+            );
         }
     }
 
