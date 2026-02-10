@@ -73,7 +73,7 @@ public static partial class ArchiveFactory
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken)
             .ConfigureAwait(false);
-        return factory.OpenAsyncArchive(filesArray, options, cancellationToken);
+        return factory.OpenAsyncArchive(filesArray, options);
     }
 
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
