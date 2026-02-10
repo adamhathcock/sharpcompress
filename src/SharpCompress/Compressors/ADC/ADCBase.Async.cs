@@ -76,12 +76,9 @@ public static partial class ADCBase
                             break;
                         }
 
-                        var readCount = await input.ReadAsync(
-                            buffer,
-                            outPosition,
-                            chunkSize,
-                            cancellationToken
-                        );
+                        var readCount = await input
+                            .ReadAsync(buffer, outPosition, chunkSize, cancellationToken)
+                            .ConfigureAwait(false);
                         outPosition += readCount;
                         position += readCount + 1;
                         break;

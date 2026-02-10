@@ -31,11 +31,9 @@ public partial class ArcFilePart
                     compressedStream = new RunLength90Stream(_stream, (int)Header.CompressedSize);
                     break;
                 case CompressionType.Squeezed:
-                    compressedStream = await SqueezeStream.CreateAsync(
-                        _stream,
-                        (int)Header.CompressedSize,
-                        cancellationToken
-                    );
+                    compressedStream = await SqueezeStream
+                        .CreateAsync(_stream, (int)Header.CompressedSize, cancellationToken)
+                        .ConfigureAwait(false);
                     break;
                 case CompressionType.Crunched:
                     if (Header.OriginalSize > 128 * 1024)

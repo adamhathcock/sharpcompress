@@ -31,12 +31,9 @@ public sealed partial class BZip2Stream
         }
         else
         {
-            bZip2Stream.stream = await CBZip2InputStream.CreateAsync(
-                stream,
-                decompressConcatenated,
-                leaveOpen,
-                cancellationToken
-            );
+            bZip2Stream.stream = await CBZip2InputStream
+                .CreateAsync(stream, decompressConcatenated, leaveOpen, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         return bZip2Stream;
