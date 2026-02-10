@@ -1,8 +1,8 @@
 using System.IO;
 
-namespace SharpCompress.Readers.GZip;
+namespace SharpCompress.Readers.Lzw;
 
-public partial class GZipReader
+public partial class LzwReader
 #if NET8_0_OR_GREATER
     : IReaderOpenable
 #endif
@@ -41,6 +41,6 @@ public partial class GZipReader
     public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
         stream.NotNull(nameof(stream));
-        return new GZipReader(stream, options ?? new ReaderOptions());
+        return new LzwReader(stream, options ?? new ReaderOptions());
     }
 }

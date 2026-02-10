@@ -20,20 +20,17 @@ public interface IArchiveOpenable<TSync, TASync>
 
     public static abstract TASync OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 
     public static abstract TASync OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 
     public static abstract TASync OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     );
 }
 

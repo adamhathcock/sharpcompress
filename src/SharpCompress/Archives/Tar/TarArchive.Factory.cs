@@ -97,54 +97,28 @@ public partial class TarArchive
 
     public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(stream, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(stream, readerOptions);
 
     public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<TarWriterOptions>)
-            OpenArchive(new FileInfo(path), readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(new FileInfo(path), readerOptions);
 
     public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfo, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfo, readerOptions);
 
     public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(streams, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(streams, readerOptions);
 
     public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfos, readerOptions);
-    }
+        ReaderOptions? readerOptions = null
+    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfos, readerOptions);
 
     public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
 

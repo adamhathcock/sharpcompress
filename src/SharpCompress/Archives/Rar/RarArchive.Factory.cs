@@ -22,11 +22,9 @@ public partial class RarArchive
 {
     public static IRarAsyncArchive OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
         return (IRarAsyncArchive)OpenArchive(new FileInfo(path), readerOptions);
     }
@@ -102,41 +100,33 @@ public partial class RarArchive
 
     public static IRarAsyncArchive OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IRarAsyncArchive)OpenArchive(stream, readerOptions);
     }
 
     public static IRarAsyncArchive OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IRarAsyncArchive)OpenArchive(fileInfo, readerOptions);
     }
 
     public static IRarAsyncArchive OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IRarAsyncArchive)OpenArchive(streams, readerOptions);
     }
 
     public static IRarAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
+        ReaderOptions? readerOptions = null
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
         return (IRarAsyncArchive)OpenArchive(fileInfos, readerOptions);
     }
 
