@@ -43,9 +43,9 @@ public class ArjEntry : Entry
 
     public override DateTime? LastModifiedTime => _filePart.Header.DateTimeModified.DateTime;
 
-    public override DateTime? CreatedTime => _filePart.Header.DateTimeCreated.DateTime;
+    public override DateTime? CreatedTime => _filePart.Header.DateTimeCreated?.DateTime;
 
-    public override DateTime? LastAccessedTime => _filePart.Header.DateTimeAccessed.DateTime;
+    public override DateTime? LastAccessedTime => _filePart.Header.DateTimeAccessed?.DateTime;
 
     public override DateTime? ArchivedTime => null;
 
