@@ -26,11 +26,7 @@ internal partial class WinzipAesCryptoStream
             // Read out last 10 auth bytes asynchronously
             var processor = new DiscardProcessor();
             await _stream
-                .ReadFullyRentedAsync<DiscardProcessor, int>(
-                    10,
-                    processor,
-                    CancellationToken.None
-                )
+                .ReadFullyRentedAsync<DiscardProcessor, int>(10, processor, CancellationToken.None)
                 .ConfigureAwait(false);
         }
         finally

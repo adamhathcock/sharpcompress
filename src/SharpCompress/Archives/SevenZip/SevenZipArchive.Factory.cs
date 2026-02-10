@@ -175,22 +175,23 @@ public partial class SevenZipArchive
 
     private readonly struct SevenZipSignatureProcessor : Utility.IBufferProcessor<bool>
     {
-        public bool Process(ReadOnlySpan<byte> buffer) => buffer.Slice(0, 6).SequenceEqual(Signature);
+        public bool Process(ReadOnlySpan<byte> buffer) =>
+            buffer.Slice(0, 6).SequenceEqual(Signature);
     }
 
-    private readonly struct SevenZipSignatureTryProcessor : Utility.ITryBufferProcessor<(bool, bool)>
+    private readonly struct SevenZipSignatureTryProcessor
+        : Utility.ITryBufferProcessor<(bool, bool)>
     {
-        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) => (true, buffer.Slice(0, 6).SequenceEqual(Signature));
+        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) =>
+            (true, buffer.Slice(0, 6).SequenceEqual(Signature));
+
         public (bool, bool) OnFailure() => (false, false);
     }
 
     private static bool SignatureMatch(Stream stream)
     {
         var processor = new SevenZipSignatureProcessor();
-        return stream.ReadExactRented<SevenZipSignatureProcessor, bool>(
-            6,
-            ref processor
-        );
+        return stream.ReadExactRented<SevenZipSignatureProcessor, bool>(6, ref processor);
     }
 
     private static async ValueTask<bool> SignatureMatchAsync(
@@ -199,11 +200,10 @@ public partial class SevenZipArchive
     )
     {
         var processor = new SevenZipSignatureTryProcessor();
-        var result = await stream.TryReadFullyRentedAsync<SevenZipSignatureTryProcessor, (bool success, bool match)>(
-            6,
-            processor,
-            cancellationToken
-        );
+        var result = await stream.TryReadFullyRentedAsync<
+            SevenZipSignatureTryProcessor,
+            (bool success, bool match)
+        >(6, processor, cancellationToken);
         return result.success && result.match;
     }
 }

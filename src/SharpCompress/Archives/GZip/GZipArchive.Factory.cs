@@ -182,7 +182,9 @@ public partial class GZipArchive
 
     private readonly struct GZipSignatureTryProcessor : Utility.ITryBufferProcessor<(bool, bool)>
     {
-        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) => (true, buffer[0] == 0x1F && buffer[1] == 0x8B && buffer[2] == 8);
+        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) =>
+            (true, buffer[0] == 0x1F && buffer[1] == 0x8B && buffer[2] == 8);
+
         public (bool, bool) OnFailure() => (false, false);
     }
 
@@ -192,11 +194,10 @@ public partial class GZipArchive
     )
     {
         var processor = new GZipSignatureTryProcessor();
-        var result = await stream.TryReadFullyRentedAsync<GZipSignatureTryProcessor, (bool success, bool match)>(
-            10,
-            processor,
-            cancellationToken
-        );
+        var result = await stream.TryReadFullyRentedAsync<
+            GZipSignatureTryProcessor,
+            (bool success, bool match)
+        >(10, processor, cancellationToken);
         return result.success && result.match;
     }
 }
