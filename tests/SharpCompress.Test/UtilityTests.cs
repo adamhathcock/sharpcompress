@@ -797,6 +797,169 @@ public class UtilityTests
     }
 
     #endregion
+
+    #region WithRentedBufferReadFully Tests
+
+    [Fact]
+    public void WithRentedBufferReadFully_ReadsAndProcessesData()
+    {
+        var data = new byte[] { 1, 2, 3, 4, 5 };
+        using var stream = new MemoryStream(data);
+
+        var sum = stream.WithRentedBufferReadFully(
+            5,
+            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
+        );
+
+        Assert.Equal(15, sum);
+    }
+
+    [Fact]
+    public void WithRentedBufferReadFully_NotEnoughData_ThrowsEndOfStreamException()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+
+        Assert.Throws<EndOfStreamException>(() =>
+            stream.WithRentedBufferReadFully(5, buffer => buffer[0])
+        );
+    }
+
+    [Fact]
+    public void TryWithRentedBufferReadFully_SuccessfulRead_ReturnsTrue()
+    {
+        var data = new byte[] { 0x1A, 0x05 };
+        using var stream = new MemoryStream(data);
+
+        var success = stream.TryWithRentedBufferReadFully(
+            2,
+            buffer => buffer[0] == 0x1A && buffer[1] < 10,
+            out var result
+        );
+
+        Assert.True(success);
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void TryWithRentedBufferReadFully_NotEnoughData_ReturnsFalse()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+
+        var success = stream.TryWithRentedBufferReadFully(5, buffer => true, out var result);
+
+        Assert.False(success);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void WithRentedBufferReadExact_ReadsAndProcessesData()
+    {
+        var data = new byte[] { 1, 2, 3, 4, 5 };
+        using var stream = new MemoryStream(data);
+
+        var sum = stream.WithRentedBufferReadExact(
+            5,
+            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
+        );
+
+        Assert.Equal(15, sum);
+    }
+
+    [Fact]
+    public void WithRentedBufferReadExact_NotEnoughData_ThrowsEndOfStreamException()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+
+        Assert.Throws<EndOfStreamException>(() =>
+            stream.WithRentedBufferReadExact(5, buffer => buffer[0])
+        );
+    }
+
+    #endregion
+
+    #region WithRentedBufferReadFullyAsync Tests
+
+    [Fact]
+    public async ValueTask WithRentedBufferReadFullyAsync_ReadsAndProcessesData()
+    {
+        var data = new byte[] { 1, 2, 3, 4, 5 };
+        using var stream = new MemoryStream(data);
+
+        var sum = await stream.WithRentedBufferReadFullyAsync(
+            5,
+            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
+        );
+
+        Assert.Equal(15, sum);
+    }
+
+    [Fact]
+    public async ValueTask WithRentedBufferReadFullyAsync_NotEnoughData_ThrowsEndOfStreamException()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+
+        await Assert.ThrowsAsync<EndOfStreamException>(async () =>
+            await stream.WithRentedBufferReadFullyAsync(5, buffer => buffer[0])
+        );
+    }
+
+    [Fact]
+    public async ValueTask TryWithRentedBufferReadFullyAsync_SuccessfulRead_ReturnsTrue()
+    {
+        var data = new byte[] { 0x1A, 0x05 };
+        using var stream = new MemoryStream(data);
+
+        var (success, result) = await stream.TryWithRentedBufferReadFullyAsync(
+            2,
+            buffer => buffer[0] == 0x1A && buffer[1] < 10
+        );
+
+        Assert.True(success);
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async ValueTask TryWithRentedBufferReadFullyAsync_NotEnoughData_ReturnsFalse()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+
+        var (success, result) = await stream.TryWithRentedBufferReadFullyAsync(5, buffer => true);
+
+        Assert.False(success);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async ValueTask WithRentedBufferReadExactAsync_ReadsAndProcessesData()
+    {
+        var data = new byte[] { 1, 2, 3, 4, 5 };
+        using var stream = new MemoryStream(data);
+
+        var sum = await stream.WithRentedBufferReadExactAsync(
+            5,
+            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
+        );
+
+        Assert.Equal(15, sum);
+    }
+
+    [Fact]
+    public async ValueTask WithRentedBufferReadExactAsync_NotEnoughData_ThrowsEndOfStreamException()
+    {
+        var data = new byte[] { 1, 2, 3 };
+        using var stream = new MemoryStream(data);
+
+        await Assert.ThrowsAsync<EndOfStreamException>(async () =>
+            await stream.WithRentedBufferReadExactAsync(5, buffer => buffer[0])
+        );
+    }
+
+    #endregion
 }
 
 /// <summary>
