@@ -57,7 +57,7 @@ internal partial class MultiVolumeRarReader : RarReader
             }
             if (tempStream != null)
             {
-                await reader.LoadStreamForReadingAsync(tempStream);
+                await reader.LoadStreamForReadingAsync(tempStream).ConfigureAwait(false);
                 tempStream = null;
             }
             else if (!nextReadableStreams.MoveNext())
@@ -68,7 +68,9 @@ internal partial class MultiVolumeRarReader : RarReader
             }
             else
             {
-                await reader.LoadStreamForReadingAsync(nextReadableStreams.Current);
+                await reader
+                    .LoadStreamForReadingAsync(nextReadableStreams.Current)
+                    .ConfigureAwait(false);
             }
 
             Current = reader.Entry.Parts.First();

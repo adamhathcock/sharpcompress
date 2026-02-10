@@ -19,7 +19,9 @@ public static partial class ADCBase
         byte[] input,
         int bufferSize = 262144,
         CancellationToken cancellationToken = default
-    ) => await DecompressAsync(new MemoryStream(input), bufferSize, cancellationToken);
+    ) =>
+        await DecompressAsync(new MemoryStream(input), bufferSize, cancellationToken)
+            .ConfigureAwait(false);
 
     /// <summary>
     /// Decompresses a stream asynchronously that's compressed with ADC

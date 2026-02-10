@@ -185,7 +185,7 @@ public abstract class RarVolume : Volume
 
     public async ValueTask<bool> IsSolidArchiveAsync(CancellationToken cancellationToken = default)
     {
-        await EnsureArchiveHeaderLoadedAsync(cancellationToken);
+        await EnsureArchiveHeaderLoadedAsync(cancellationToken).ConfigureAwait(false);
         return ArchiveHeader?.IsSolid ?? false;
     }
 

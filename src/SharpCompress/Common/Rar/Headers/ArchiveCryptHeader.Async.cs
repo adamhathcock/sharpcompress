@@ -27,6 +27,6 @@ internal sealed partial class ArchiveCryptHeader
         CancellationToken cancellationToken = default
     )
     {
-        CryptInfo = await Rar5CryptoInfo.CreateAsync(reader, false);
+        CryptInfo = await Rar5CryptoInfo.CreateAsync(reader, false).ConfigureAwait(false);
     }
 }

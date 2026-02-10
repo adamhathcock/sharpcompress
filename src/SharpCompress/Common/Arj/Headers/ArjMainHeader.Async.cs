@@ -11,8 +11,8 @@ public partial class ArjMainHeader
         CancellationToken cancellationToken = default
     )
     {
-        var body = await ReadHeaderAsync(stream, cancellationToken);
-        await ReadExtendedHeadersAsync(stream, cancellationToken);
+        var body = await ReadHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
+        await ReadExtendedHeadersAsync(stream, cancellationToken).ConfigureAwait(false);
         return LoadFrom(body);
     }
 }

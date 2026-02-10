@@ -12,7 +12,11 @@ public partial class ArcReader
         ArcEntryHeader headerReader = new ArcEntryHeader(Options.ArchiveEncoding);
         ArcEntryHeader? header;
         while (
-            (header = await headerReader.ReadHeaderAsync(stream, CancellationToken.None)) != null
+            (
+                header = await headerReader
+                    .ReadHeaderAsync(stream, CancellationToken.None)
+                    .ConfigureAwait(false)
+            ) != null
         )
         {
             yield return new ArcEntry(new ArcFilePart(header, stream), Options);

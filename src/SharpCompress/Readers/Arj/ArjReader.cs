@@ -103,7 +103,7 @@ public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
         var mainHeaderReader = new ArjMainHeader(encoding);
         var localHeaderReader = new ArjLocalHeader(encoding);
 
-        var mainHeader = await mainHeaderReader.ReadAsync(stream);
+        var mainHeader = await mainHeaderReader.ReadAsync(stream).ConfigureAwait(false);
         if (mainHeader?.IsVolume == true)
         {
             throw new MultiVolumeExtractionException("Multi volumes are currently not supported");
@@ -123,7 +123,7 @@ public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
 
         while (true)
         {
-            var localHeader = await localHeaderReader.ReadAsync(stream);
+            var localHeader = await localHeaderReader.ReadAsync(stream).ConfigureAwait(false);
             if (localHeader == null)
             {
                 break;

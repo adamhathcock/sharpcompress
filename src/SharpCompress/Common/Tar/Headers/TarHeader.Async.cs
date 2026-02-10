@@ -20,10 +20,10 @@ internal sealed partial class TarHeader
         switch (WriteFormat)
         {
             case TarHeaderWriteFormat.GNU_TAR_LONG_LINK:
-                await WriteGnuTarLongLinkAsync(output, cancellationToken);
+                await WriteGnuTarLongLinkAsync(output, cancellationToken).ConfigureAwait(false);
                 break;
             case TarHeaderWriteFormat.USTAR:
-                await WriteUstarAsync(output, cancellationToken);
+                await WriteUstarAsync(output, cancellationToken).ConfigureAwait(false);
                 break;
             default:
                 throw new Exception("This should be impossible...");
