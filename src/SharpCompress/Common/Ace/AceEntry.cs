@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Common.Ace.Headers;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Common.Ace;
 
@@ -12,7 +13,8 @@ public class AceEntry : Entry
 {
     private readonly AceFilePart _filePart;
 
-    internal AceEntry(AceFilePart filePart)
+    internal AceEntry(AceFilePart filePart, IReaderOptions readerOptions)
+        : base(readerOptions)
     {
         _filePart = filePart;
     }

@@ -31,10 +31,7 @@ public class TarReaderTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }

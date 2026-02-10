@@ -49,10 +49,7 @@ public class RarReaderAsyncTests : ReaderTests
             IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -83,10 +80,7 @@ public class RarReaderAsyncTests : ReaderTests
                 IAsyncReader reader = (IAsyncReader)baseReader;
                 while (await reader.MoveToNextEntryAsync())
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
             VerifyFiles();
@@ -132,10 +126,7 @@ public class RarReaderAsyncTests : ReaderTests
             IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         foreach (var stream in streams)
@@ -262,10 +253,7 @@ public class RarReaderAsyncTests : ReaderTests
             while (await reader.MoveToNextEntryAsync())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         CompareFilesByPath(
@@ -289,10 +277,7 @@ public class RarReaderAsyncTests : ReaderTests
             while (await reader.MoveToNextEntryAsync())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -334,10 +319,7 @@ public class RarReaderAsyncTests : ReaderTests
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -360,10 +342,7 @@ public class RarReaderAsyncTests : ReaderTests
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -385,10 +364,7 @@ public class RarReaderAsyncTests : ReaderTests
             if (!reader.Entry.IsDirectory)
             {
                 Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();

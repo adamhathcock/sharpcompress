@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -5,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
@@ -22,7 +24,7 @@ public class ZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWriteableArchiveFactory<ZipWriterOptions>
 {
     #region IFactory
 
@@ -185,13 +187,24 @@ public class ZipFactory
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions) =>
-        new ZipWriter(stream, new ZipWriterOptions(writerOptions));
+    public IWriter OpenWriter(Stream stream, IWriterOptions writerOptions)
+    {
+        ZipWriterOptions zipOptions = writerOptions switch
+        {
+            ZipWriterOptions zwo => zwo,
+            WriterOptions wo => new ZipWriterOptions(wo),
+            _ => throw new ArgumentException(
+                $"Expected WriterOptions or ZipWriterOptions, got {writerOptions.GetType().Name}",
+                nameof(writerOptions)
+            ),
+        };
+        return new ZipWriter(stream, zipOptions);
+    }
 
     /// <inheritdoc/>
     public IAsyncWriter OpenAsyncWriter(
         Stream stream,
-        WriterOptions writerOptions,
+        IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
@@ -204,7 +217,7 @@ public class ZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => ZipArchive.CreateArchive();
+    public IWritableArchive<ZipWriterOptions> CreateArchive() => ZipArchive.CreateArchive();
 
     #endregion
 }

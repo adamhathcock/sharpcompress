@@ -15,7 +15,7 @@ public partial class ArcReader
             (header = await headerReader.ReadHeaderAsync(stream, CancellationToken.None)) != null
         )
         {
-            yield return new ArcEntry(new ArcFilePart(header, stream));
+            yield return new ArcEntry(new ArcFilePart(header, stream), Options);
         }
     }
 }

@@ -1,16 +1,22 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar;
 
 namespace SharpCompress.Archives.Tar;
 
 public class TarArchiveEntry : TarEntry, IArchiveEntry
 {
-    internal TarArchiveEntry(TarArchive archive, TarFilePart? part, CompressionType compressionType)
-        : base(part, compressionType) => Archive = archive;
+    internal TarArchiveEntry(
+        TarArchive archive,
+        TarFilePart? part,
+        CompressionType compressionType,
+        IReaderOptions readerOptions
+    )
+        : base(part, compressionType, readerOptions) => Archive = archive;
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
 

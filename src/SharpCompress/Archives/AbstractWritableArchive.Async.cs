@@ -5,13 +5,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Writers;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Archives;
 
-public abstract partial class AbstractWritableArchive<TEntry, TVolume>
+public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     where TEntry : IArchiveEntry
     where TVolume : IVolume
+    where TOptions : IWriterOptions
 {
     // Async property moved from main file
     private IAsyncEnumerable<TEntry> OldEntriesAsync =>
@@ -111,7 +112,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
 
     public async ValueTask SaveToAsync(
         Stream stream,
-        WriterOptions options,
+        TOptions options,
         CancellationToken cancellationToken = default
     )
     {
@@ -120,4 +121,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         await SaveToAsync(stream, options, OldEntriesAsync, newEntries, cancellationToken)
             .ConfigureAwait(false);
     }
+
+    protected abstract ValueTask SaveToAsync(
+        Stream stream,
+        TOptions options,
+        IAsyncEnumerable<TEntry> oldEntries,
+        IEnumerable<TEntry> newEntries,
+        CancellationToken cancellationToken = default
+    );
 }

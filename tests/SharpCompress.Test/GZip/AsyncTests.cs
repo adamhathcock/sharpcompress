@@ -29,10 +29,7 @@ public class AsyncTests : TestBase
 #endif
         await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
 
-        await reader.WriteAllToDirectoryAsync(
-            SCRATCH_FILES_PATH,
-            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-        );
+        await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH);
 
         // Just verify some files were extracted
         var extractedFiles = Directory.GetFiles(
@@ -147,11 +144,7 @@ public class AsyncTests : TestBase
             cancellationToken: cts.Token
         );
 
-        await reader.WriteAllToDirectoryAsync(
-            SCRATCH_FILES_PATH,
-            new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-            cts.Token
-        );
+        await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH, cts.Token);
 
         // Just verify some files were extracted
         var extractedFiles = Directory.GetFiles(

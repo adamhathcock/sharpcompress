@@ -124,7 +124,8 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             StreamingMode.Streaming,
             stream,
             compressionType,
-            Options.ArchiveEncoding
+            Options.ArchiveEncoding,
+            Options
         );
 
     // GetEntriesAsync moved to TarReader.Async.cs

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Common.GZip;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar;
 
 namespace SharpCompress.Common.Arc;
@@ -13,7 +14,8 @@ public class ArcEntry : Entry
 {
     private readonly ArcFilePart? _filePart;
 
-    internal ArcEntry(ArcFilePart? filePart)
+    internal ArcEntry(ArcFilePart? filePart, IReaderOptions readerOptions)
+        : base(readerOptions)
     {
         _filePart = filePart;
     }

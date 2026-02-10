@@ -20,7 +20,7 @@ public abstract partial class AbstractArchive<TEntry, TVolume> : IArchive, IAsyn
     private readonly LazyAsyncReadOnlyCollection<TVolume> _lazyVolumesAsync;
     private readonly LazyAsyncReadOnlyCollection<TEntry> _lazyEntriesAsync;
 
-    protected ReaderOptions ReaderOptions { get; }
+    public ReaderOptions ReaderOptions { get; protected set; }
 
     internal AbstractArchive(ArchiveType type, SourceStream sourceStream)
     {

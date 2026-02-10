@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers;
@@ -22,42 +22,31 @@ public static class IReaderExtensions
         /// <summary>
         /// Extract all remaining unread entries to specific directory, retaining filename
         /// </summary>
-        public void WriteAllToDirectory(
-            string destinationDirectory,
-            ExtractionOptions? options = null
-        )
+        public void WriteAllToDirectory(string destinationDirectory)
         {
             while (reader.MoveToNextEntry())
             {
-                reader.WriteEntryToDirectory(destinationDirectory, options);
+                reader.WriteEntryToDirectory(destinationDirectory);
             }
         }
 
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public void WriteEntryToDirectory(
-            string destinationDirectory,
-            ExtractionOptions? options = null
-        ) =>
+        public void WriteEntryToDirectory(string destinationDirectory) =>
             ExtractionMethods.WriteEntryToDirectory(
                 reader.Entry,
                 destinationDirectory,
-                options,
-                reader.WriteEntryToFile
+                (path) => reader.WriteEntryToFile(path)
             );
 
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public void WriteEntryToFile(
-            string destinationFileName,
-            ExtractionOptions? options = null
-        ) =>
+        public void WriteEntryToFile(string destinationFileName) =>
             ExtractionMethods.WriteEntryToFile(
                 reader.Entry,
                 destinationFileName,
-                options,
                 (x, fm) =>
                 {
                     using var fs = File.Open(destinationFileName, fm);

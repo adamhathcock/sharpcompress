@@ -268,10 +268,7 @@ public class SevenZipArchiveTests : ArchiveTests
         {
             if (!reader.Entry.IsDirectory)
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
 

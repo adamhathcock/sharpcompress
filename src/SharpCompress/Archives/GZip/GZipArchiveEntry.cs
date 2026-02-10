@@ -1,15 +1,16 @@
-﻿using System.IO;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.GZip;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Archives.GZip;
 
 public class GZipArchiveEntry : GZipEntry, IArchiveEntry
 {
-    internal GZipArchiveEntry(GZipArchive archive, GZipFilePart? part)
-        : base(part) => Archive = archive;
+    internal GZipArchiveEntry(GZipArchive archive, GZipFilePart? part, IReaderOptions readerOptions)
+        : base(part, readerOptions) => Archive = archive;
 
     public virtual Stream OpenEntryStream()
     {

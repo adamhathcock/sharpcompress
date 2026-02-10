@@ -90,7 +90,10 @@ public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
                 continue;
             }
 
-            yield return new ArjEntry(new ArjFilePart((ArjLocalHeader)localHeader, stream));
+            yield return new ArjEntry(
+                new ArjFilePart((ArjLocalHeader)localHeader, stream),
+                Options
+            );
         }
     }
 
@@ -135,7 +138,10 @@ public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
                 continue;
             }
 
-            yield return new ArjEntry(new ArjFilePart((ArjLocalHeader)localHeader, stream));
+            yield return new ArjEntry(
+                new ArjFilePart((ArjLocalHeader)localHeader, stream),
+                Options
+            );
         }
     }
 

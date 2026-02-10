@@ -43,10 +43,7 @@ public class ExtractAllEntriesTests : TestBase
         {
             if (!reader.Entry.IsDirectory)
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
 
                 completed += reader.Entry.Size;
                 var progress = completed / totalSize;

@@ -21,7 +21,7 @@ internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiv
         DateTime? lastModified,
         bool closeStream
     )
-        : base(archive, null, compressionType)
+        : base(archive, null, compressionType, archive.ReaderOptions)
     {
         this.stream = stream;
         Key = path;
@@ -36,7 +36,7 @@ internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiv
         string directoryPath,
         DateTime? lastModified
     )
-        : base(archive, null, CompressionType.None)
+        : base(archive, null, CompressionType.None, archive.ReaderOptions)
     {
         stream = null;
         Key = directoryPath;

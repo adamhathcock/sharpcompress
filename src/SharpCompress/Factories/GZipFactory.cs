@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -7,6 +8,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
@@ -25,7 +27,7 @@ public class GZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWriteableArchiveFactory<GZipWriterOptions>
 {
     #region IFactory
 
@@ -156,27 +158,33 @@ public class GZipFactory
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions)
+    public IWriter OpenWriter(Stream stream, IWriterOptions writerOptions)
     {
         if (writerOptions.CompressionType != CompressionType.GZip)
         {
             throw new InvalidFormatException("GZip archives only support GZip compression type.");
         }
-        return new GZipWriter(stream, new GZipWriterOptions(writerOptions));
+
+        GZipWriterOptions gzipOptions = writerOptions switch
+        {
+            GZipWriterOptions gwo => gwo,
+            WriterOptions wo => new GZipWriterOptions(wo),
+            _ => throw new ArgumentException(
+                $"Expected WriterOptions or GZipWriterOptions, got {writerOptions.GetType().Name}",
+                nameof(writerOptions)
+            ),
+        };
+        return new GZipWriter(stream, gzipOptions);
     }
 
     /// <inheritdoc/>
     public IAsyncWriter OpenAsyncWriter(
         Stream stream,
-        WriterOptions writerOptions,
+        IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (writerOptions.CompressionType != CompressionType.GZip)
-        {
-            throw new InvalidFormatException("GZip archives only support GZip compression type.");
-        }
         return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
@@ -185,7 +193,7 @@ public class GZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => GZipArchive.CreateArchive();
+    public IWritableArchive<GZipWriterOptions> CreateArchive() => GZipArchive.CreateArchive();
 
     #endregion
 }

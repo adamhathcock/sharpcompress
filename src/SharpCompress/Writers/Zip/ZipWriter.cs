@@ -93,6 +93,7 @@ public partial class ZipWriter : AbstractWriter
 
     public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
     {
+        options.ValidateWithFallback(compressionType, compressionLevel);
         var compression = ToZipCompressionMethod(options.CompressionType ?? compressionType);
 
         entryPath = NormalizeFilename(entryPath);

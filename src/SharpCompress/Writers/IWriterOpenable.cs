@@ -1,11 +1,12 @@
 #if NET8_0_OR_GREATER
 using System.IO;
 using System.Threading;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Writers;
 
 public interface IWriterOpenable<TWriterOptions>
-    where TWriterOptions : WriterOptions
+    where TWriterOptions : IWriterOptions
 {
     public static abstract IWriter OpenWriter(string filePath, TWriterOptions writerOptions);
 

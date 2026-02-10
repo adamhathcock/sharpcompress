@@ -1,12 +1,27 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Writers;
 
 namespace SharpCompress.Writers.Zip;
 
 public class ZipWriterEntryOptions
 {
-    public CompressionType? CompressionType { get; set; }
+    private CompressionType? compressionType;
+    private int? compressionLevel;
+
+    public CompressionType? CompressionType
+    {
+        get => compressionType;
+        set
+        {
+            if (value.HasValue && compressionLevel.HasValue)
+            {
+                CompressionLevelValidation.Validate(value.Value, compressionLevel.Value);
+            }
+            compressionType = value;
+        }
+    }
 
     /// <summary>
     /// The compression level to be used when the compression type supports variable levels.
@@ -16,7 +31,18 @@ public class ZipWriterEntryOptions
     /// When null, uses the archive's default compression level for the specified compression type.
     /// Note: BZip2 and LZMA do not support compression levels in this implementation.
     /// </summary>
-    public int? CompressionLevel { get; set; }
+    public int? CompressionLevel
+    {
+        get => compressionLevel;
+        set
+        {
+            if (value.HasValue && compressionType.HasValue)
+            {
+                CompressionLevelValidation.Validate(compressionType.Value, value.Value);
+            }
+            compressionLevel = value;
+        }
+    }
 
     /// <summary>
     /// When CompressionType.Deflate is used, this property is referenced.
@@ -49,4 +75,12 @@ public class ZipWriterEntryOptions
     /// This option is not supported with non-seekable streams.
     /// </summary>
     public bool? EnableZip64 { get; set; }
+
+    internal void ValidateWithFallback(CompressionType fallbackCompressionType, int fallbackLevel)
+    {
+        CompressionLevelValidation.Validate(
+            CompressionType ?? fallbackCompressionType,
+            CompressionLevel ?? fallbackLevel
+        );
+    }
 }

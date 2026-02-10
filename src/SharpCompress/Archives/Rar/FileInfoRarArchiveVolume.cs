@@ -24,8 +24,7 @@ internal class FileInfoRarArchiveVolume : RarVolume
     private static ReaderOptions FixOptions(ReaderOptions options)
     {
         //make sure we're closing streams with fileinfo
-        options.LeaveStreamOpen = false;
-        return options;
+        return options with { LeaveStreamOpen = false };
     }
 
     internal ReadOnlyCollection<RarFilePart> FileParts { get; }

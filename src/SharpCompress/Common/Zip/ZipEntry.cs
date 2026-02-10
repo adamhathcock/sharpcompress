@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip.Headers;
 
 namespace SharpCompress.Common.Zip;
@@ -9,7 +10,8 @@ public class ZipEntry : Entry
 {
     private readonly ZipFilePart? _filePart;
 
-    internal ZipEntry(ZipFilePart? filePart)
+    internal ZipEntry(ZipFilePart? filePart, IReaderOptions readerOptions)
+        : base(readerOptions)
     {
         if (filePart == null)
         {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
@@ -16,7 +17,8 @@ using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Archives.Zip;
 
-public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
+public partial class ZipArchive
+    : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>
 {
     private readonly SeekableZipHeaderFactory? headerFactory;
 
@@ -94,7 +96,8 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
+                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s),
+                                ReaderOptions
                             );
                         }
                         break;
@@ -109,16 +112,20 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
         }
     }
 
-    public void SaveTo(Stream stream) => SaveTo(stream, new WriterOptions(CompressionType.Deflate));
+    public void SaveTo(Stream stream) =>
+        SaveTo(stream, new ZipWriterOptions(CompressionType.Deflate));
 
     protected override void SaveTo(
         Stream stream,
-        WriterOptions options,
+        ZipWriterOptions options,
         IEnumerable<ZipArchiveEntry> oldEntries,
         IEnumerable<ZipArchiveEntry> newEntries
     )
     {
-        using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
+        using var writer = new ZipWriter(
+            stream,
+            options as ZipWriterOptions ?? new ZipWriterOptions(options)
+        );
         foreach (var entry in oldEntries.Concat(newEntries))
         {
             if (entry.IsDirectory)

@@ -1,9 +1,25 @@
 using System;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Readers;
 
-public class ReaderOptions : OptionsBase
+/// <summary>
+/// Options for configuring reader behavior when opening archives.
+/// </summary>
+/// <remarks>
+/// This class is immutable. Use factory presets and fluent helpers for common configurations:
+/// <code>
+/// var options = ReaderOptions.ForExternalStream()
+///     .WithPassword("secret")
+///     .WithLookForHeader(true);
+/// </code>
+/// Or use object initializers for simple cases:
+/// <code>
+/// var options = new ReaderOptions { Password = "secret", LeaveStreamOpen = false };
+/// </code>
+/// </remarks>
+public sealed record ReaderOptions : IReaderOptions
 {
     /// <summary>
     /// The default buffer size for stream operations.
@@ -16,26 +32,45 @@ public class ReaderOptions : OptionsBase
     public const int DefaultBufferSize = 0x10000;
 
     /// <summary>
+    /// SharpCompress will keep the supplied streams open.  Default is true.
+    /// </summary>
+    public bool LeaveStreamOpen { get; init; } = true;
+
+    /// <summary>
+    /// Encoding to use for archive entry names.
+    /// </summary>
+    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+
+    /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)
     /// </summary>
-    public bool LookForHeader { get; set; }
+    public bool LookForHeader { get; init; }
 
-    public string? Password { get; set; }
+    /// <summary>
+    /// Password for encrypted archives.
+    /// </summary>
+    public string? Password { get; init; }
 
-    public bool DisableCheckIncomplete { get; set; }
+    /// <summary>
+    /// Disable checking for incomplete archives.
+    /// </summary>
+    public bool DisableCheckIncomplete { get; init; }
 
-    public int BufferSize { get; set; } = Constants.BufferSize;
+    /// <summary>
+    /// Buffer size for stream operations.
+    /// </summary>
+    public int BufferSize { get; init; } = Constants.BufferSize;
 
     /// <summary>
     /// Provide a hint for the extension of the archive being read, can speed up finding the correct decoder.  Should be without the leading period in the form like: tar.gz or zip
     /// </summary>
-    public string? ExtensionHint { get; set; }
+    public string? ExtensionHint { get; init; }
 
     /// <summary>
     /// An optional progress reporter for tracking extraction operations.
     /// When set, progress updates will be reported as entries are extracted.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; set; }
+    public IProgress<ProgressReport>? Progress { get; init; }
 
     /// <summary>
     /// Size of the rewindable buffer for non-seekable streams.
@@ -78,5 +113,103 @@ public class ReaderOptions : OptionsBase
     /// using var reader = ReaderFactory.OpenReader(networkStream, options);
     /// </code>
     /// </example>
-    public int? RewindableBufferSize { get; set; }
+    public int? RewindableBufferSize { get; init; }
+
+    /// <summary>
+    /// Overwrite target if it exists.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
+    /// </summary>
+    public bool Overwrite { get; init; } = true;
+
+    /// <summary>
+    /// Extract with internal directory structure.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
+    /// </summary>
+    public bool ExtractFullPath { get; init; } = true;
+
+    /// <summary>
+    /// Preserve file time.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
+    /// </summary>
+    public bool PreserveFileTime { get; init; } = true;
+
+    /// <summary>
+    /// Preserve windows file attributes.
+    /// </summary>
+    public bool PreserveAttributes { get; init; }
+
+    /// <summary>
+    /// Delegate for writing symbolic links to disk.
+    /// The first parameter is the source path (where the symlink is created).
+    /// The second parameter is the target path (what the symlink refers to).
+    /// </summary>
+    /// <remarks>
+    /// <b>Breaking change:</b> Changed from field to init-only property in version 0.40.0.
+    /// The default handler logs a warning message.
+    /// </remarks>
+    public Action<string, string>? SymbolicLinkHandler { get; init; }
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with default values.
+    /// </summary>
+    public ReaderOptions() { }
+
+    /// <summary>
+    /// Gets ReaderOptions configured for caller-provided streams.
+    /// </summary>
+    public static ReaderOptions ForExternalStream => new() { LeaveStreamOpen = true };
+
+    /// <summary>
+    /// Gets ReaderOptions configured for file-based overloads that open their own stream.
+    /// </summary>
+    public static ReaderOptions ForOwnedFile => new() { LeaveStreamOpen = false };
+
+    /// <summary>
+    /// Gets a ReaderOptions instance configured for safe extraction (no overwrite).
+    /// </summary>
+    public static ReaderOptions SafeExtract => new() { Overwrite = false };
+
+    /// <summary>
+    /// Gets a ReaderOptions instance configured for flat extraction (no directory structure).
+    /// </summary>
+    public static ReaderOptions FlatExtract => new() { ExtractFullPath = false, Overwrite = true };
+
+    /// <summary>
+    /// Creates ReaderOptions for reading encrypted archives.
+    /// </summary>
+    /// <param name="password">The password for encrypted archives.</param>
+    public static ReaderOptions ForEncryptedArchive(string? password = null) =>
+        new ReaderOptions().WithPassword(password);
+
+    /// <summary>
+    /// Creates ReaderOptions for archives with custom character encoding.
+    /// </summary>
+    /// <param name="encoding">The encoding for archive entry names.</param>
+    public static ReaderOptions ForEncoding(IArchiveEncoding encoding) =>
+        new ReaderOptions().WithArchiveEncoding(encoding);
+
+    /// <summary>
+    /// Creates ReaderOptions for self-extracting archives that require header search.
+    /// </summary>
+    public static ReaderOptions ForSelfExtractingArchive(string? password = null) =>
+        new ReaderOptions()
+            .WithLookForHeader(true)
+            .WithPassword(password)
+            .WithRewindableBufferSize(1_048_576); // 1MB for SFX archives
+
+    /// <summary>
+    /// Default symbolic link handler that logs a warning message.
+    /// </summary>
+    public static void DefaultSymbolicLinkHandler(string sourcePath, string targetPath)
+    {
+        Console.WriteLine(
+            $"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271"
+        );
+    }
+
+    // Note: Parameterized constructors have been removed.
+    // Use fluent With*() helpers or object initializers instead:
+    // new ReaderOptions().WithPassword("secret").WithLookForHeader(true)
+    // or
+    // new ReaderOptions { Password = "secret", LookForHeader = true }
 }
