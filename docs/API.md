@@ -318,6 +318,24 @@ WriterOptions: write-time behavior (compression type/level, encoding, stream own
 ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, comments, zip64)
 ```
 
+### Compression Providers
+
+`ReaderOptions` and `WriterOptions` expose a `Providers` registry that controls which `ICompressionProvider` implementations are used for each `CompressionType`. The registry defaults to `CompressionProviderRegistry.Default`, so you only need to set it if you want to swap in a custom provider (for example the `SystemGZipCompressionProvider`).
+
+```csharp
+var registry = CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider());
+var readerOptions = ReaderOptions.ForOwnedFile().WithProviders(registry);
+var writerOptions = new WriterOptions(CompressionType.GZip)
+{
+    CompressionLevel = 6,
+}.WithProviders(registry);
+
+using var reader = ReaderFactory.OpenReader(input, readerOptions);
+using var writer = WriterFactory.OpenWriter(output, ArchiveType.GZip, writerOptions);
+```
+
+When a format needs additional initialization/finalization data (LZMA, PPMd, etc.) the registry exposes `GetCompressingProvider` which returns the `ICompressionProviderHooks` contract; the rest of the API continues to flow through `Providers`.
+
 ---
 
 ## Compression Types

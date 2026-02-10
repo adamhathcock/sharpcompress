@@ -1,6 +1,7 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
 
 namespace SharpCompress.Readers;
 
@@ -124,4 +125,17 @@ public static class ReaderOptionsExtensions
         this ReaderOptions options,
         Action<string, string>? handler
     ) => options with { SymbolicLinkHandler = handler };
+
+    /// <summary>
+    /// Creates a copy with the specified compression provider registry.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="providers"/> is null.</exception>
+    public static ReaderOptions WithProviders(
+        this ReaderOptions options,
+        CompressionProviderRegistry providers
+    )
+    {
+        _ = providers ?? throw new ArgumentNullException(nameof(providers));
+        return options with { Providers = providers };
+    }
 }

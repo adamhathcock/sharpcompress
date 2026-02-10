@@ -16,6 +16,10 @@ Post Issues on Github!
 
 Check the [Supported Formats](docs/FORMATS.md) and [Basic Usage.](docs/USAGE.md)
 
+## Custom Compression Providers
+
+If you need to swap out SharpCompress’s built-in codecs, the `Providers` property (and `WithProviders(...)` extensions) on `ReaderOptions` and `WriterOptions` lets you supply a `CompressionProviderRegistry`. The default registry is already wired up, so customization is only necessary when you want to plug in alternatives such as `SystemGZipCompressionProvider` or a third-party `CompressionProvider`. See [docs/USAGE.md#custom-compression-providers](docs/USAGE.md#custom-compression-providers) for guided examples.
+
 ## Recommended Formats
 
 In general, I recommend GZip (Deflate)/BZip2 (BZip)/LZip (LZMA) as the simplicity of the formats lend to better long term archival as well as the streamability. Tar is often used in conjunction for multiple files in a single archive (e.g. `.tar.gz`)
