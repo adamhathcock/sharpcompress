@@ -16,8 +16,7 @@ public interface IWritableArchiveCommon
     IDisposable PauseEntryRebuilding();
 }
 
-public interface IWritableArchive<TOptions> : IArchive, IWritableArchiveCommon
-where TOptions : IWriterOptions
+public interface IWritableArchive : IArchive, IWritableArchiveCommon
 {
     IArchiveEntry AddEntry(
         string key,
@@ -30,28 +29,22 @@ where TOptions : IWriterOptions
     IArchiveEntry AddDirectoryEntry(string key, DateTime? modified = null);
 
     /// <summary>
-    /// Saves the archive to the specified stream using the given writer options.
-    /// </summary>
-    void SaveTo(Stream stream, TOptions options);
-
-    /// <summary>
     /// Removes the specified entry from the archive.
     /// </summary>
     void RemoveEntry(IArchiveEntry entry);
 }
 
-public interface IWritableAsyncArchive<TOptions> : IAsyncArchive, IWritableArchiveCommon
+public interface IWritableArchive<TOptions> : IWritableArchive
     where TOptions : IWriterOptions
 {
     /// <summary>
-    /// Asynchronously saves the archive to the specified stream using the given writer options.
+    /// Saves the archive to the specified stream using the given writer options.
     /// </summary>
-    ValueTask SaveToAsync(
-        Stream stream,
-        TOptions options,
-        CancellationToken cancellationToken = default
-    );
+    void SaveTo(Stream stream, TOptions options);
+}
 
+public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
+{
     /// <summary>
     /// Asynchronously adds an entry to the archive with the specified key, source stream, and options.
     /// </summary>
@@ -77,4 +70,17 @@ public interface IWritableAsyncArchive<TOptions> : IAsyncArchive, IWritableArchi
     /// Removes the specified entry from the archive.
     /// </summary>
     ValueTask RemoveEntryAsync(IArchiveEntry entry);
+}
+
+public interface IWritableAsyncArchive<TOptions> : IWritableAsyncArchive
+    where TOptions : IWriterOptions
+{
+    /// <summary>
+    /// Asynchronously saves the archive to the specified stream using the given writer options.
+    /// </summary>
+    ValueTask SaveToAsync(
+        Stream stream,
+        TOptions options,
+        CancellationToken cancellationToken = default
+    );
 }

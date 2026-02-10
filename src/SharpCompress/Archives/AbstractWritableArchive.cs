@@ -86,12 +86,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         }
     }
 
-    void IWritableArchive<TOptions>.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
+    void IWritableArchive.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
 
     public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
         AddEntry(key, source, false, size, modified);
 
-    IArchiveEntry IWritableArchive<TOptions>.AddEntry(
+    IArchiveEntry IWritableArchive.AddEntry(
         string key,
         Stream source,
         bool closeStream,
@@ -99,7 +99,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         DateTime? modified
     ) => AddEntry(key, source, closeStream, size, modified);
 
-    IArchiveEntry IWritableArchive<TOptions>.AddDirectoryEntry(string key, DateTime? modified) =>
+    IArchiveEntry IWritableArchive.AddDirectoryEntry(string key, DateTime? modified) =>
         AddDirectoryEntry(key, modified);
 
     public TEntry AddEntry(
@@ -142,10 +142,10 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         return false;
     }
 
-    ValueTask IWritableAsyncArchive<TOptions>.RemoveEntryAsync(IArchiveEntry entry) =>
+    ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
         RemoveEntryAsync((TEntry)entry);
 
-    async ValueTask<IArchiveEntry> IWritableAsyncArchive<TOptions>.AddEntryAsync(
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddEntryAsync(
         string key,
         Stream source,
         bool closeStream,
@@ -154,7 +154,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         CancellationToken cancellationToken
     ) => await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
 
-    async ValueTask<IArchiveEntry> IWritableAsyncArchive<TOptions>.AddDirectoryEntryAsync(
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(
         string key,
         DateTime? modified,
         CancellationToken cancellationToken

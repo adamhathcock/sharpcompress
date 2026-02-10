@@ -40,7 +40,7 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        using var writer = new GZipWriter(
+        await using var writer = new GZipWriter(
             stream,
             options as GZipWriterOptions ?? new GZipWriterOptions(options)
         );
@@ -50,7 +50,7 @@ public partial class GZipArchive
         {
             if (!entry.IsDirectory)
             {
-                using var entryStream = entry.OpenEntryStream();
+                using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -62,7 +62,7 @@ public partial class GZipArchive
         }
         foreach (var entry in newEntries.Where(x => !x.IsDirectory))
         {
-            using var entryStream = entry.OpenEntryStream();
+            using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
             await writer
                 .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
                 .ConfigureAwait(false);

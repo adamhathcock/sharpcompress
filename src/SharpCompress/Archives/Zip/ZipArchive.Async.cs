@@ -73,7 +73,7 @@ public partial class ZipArchive
 
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        ZipWriterOptions options,
         IAsyncEnumerable<ZipArchiveEntry> oldEntries,
         IEnumerable<ZipArchiveEntry> newEntries,
         CancellationToken cancellationToken = default

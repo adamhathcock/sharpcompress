@@ -14,7 +14,10 @@ namespace SharpCompress.Archives.GZip;
 public partial class GZipArchive
 #if NET8_0_OR_GREATER
     : IWritableArchiveOpenable<GZipWriterOptions>,
-        IMultiArchiveOpenable<IWritableArchive<GZipWriterOptions>, IWritableAsyncArchive<GZipWriterOptions>>
+        IMultiArchiveOpenable<
+            IWritableArchive<GZipWriterOptions>,
+            IWritableAsyncArchive<GZipWriterOptions>
+        >
 #endif
 {
     public static IWritableAsyncArchive<GZipWriterOptions> OpenAsyncArchive(
@@ -25,13 +28,14 @@ public partial class GZipArchive
     {
         cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return (IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(
-            new FileInfo(path),
-            readerOptions ?? new ReaderOptions()
-        );
+        return (IWritableAsyncArchive<GZipWriterOptions>)
+            OpenArchive(new FileInfo(path), readerOptions ?? new ReaderOptions());
     }
 
-    public static IWritableArchive<GZipWriterOptions> OpenArchive(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        string filePath,
+        ReaderOptions? readerOptions = null
+    )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
@@ -84,7 +88,10 @@ public partial class GZipArchive
         );
     }
 
-    public static IWritableArchive<GZipWriterOptions> OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null
+    )
     {
         stream.NotNull(nameof(stream));
 
@@ -140,7 +147,8 @@ public partial class GZipArchive
 
     public static IWritableArchive<GZipWriterOptions> CreateArchive() => new GZipArchive();
 
-    public static IWritableAsyncArchive<GZipWriterOptions> CreateAsyncArchive() => new GZipArchive();
+    public static IWritableAsyncArchive<GZipWriterOptions> CreateAsyncArchive() =>
+        new GZipArchive();
 
     public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));
 

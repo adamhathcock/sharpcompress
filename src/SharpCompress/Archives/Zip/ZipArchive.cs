@@ -17,7 +17,8 @@ using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Archives.Zip;
 
-public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
+public partial class ZipArchive
+    : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>
 {
     private readonly SeekableZipHeaderFactory? headerFactory;
 
@@ -111,11 +112,12 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
         }
     }
 
-    public void SaveTo(Stream stream) => SaveTo(stream, new WriterOptions(CompressionType.Deflate));
+    public void SaveTo(Stream stream) =>
+        SaveTo(stream, new ZipWriterOptions(CompressionType.Deflate));
 
     protected override void SaveTo(
         Stream stream,
-        IWriterOptions options,
+        ZipWriterOptions options,
         IEnumerable<ZipArchiveEntry> oldEntries,
         IEnumerable<ZipArchiveEntry> newEntries
     )

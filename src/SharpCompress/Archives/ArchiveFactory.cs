@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -19,18 +20,19 @@ public static partial class ArchiveFactory
         return FindFactory<IArchiveFactory>(stream).OpenArchive(stream, readerOptions);
     }
 
-    public static IWritableArchive CreateArchive(ArchiveType type)
+    public static IWritableArchive<TOptions> CreateArchive<TOptions>()
+        where TOptions : IWriterOptions
     {
         var factory = Factory
-            .Factories.OfType<IWriteableArchiveFactory>()
-            .FirstOrDefault(item => item.KnownArchiveType == type);
+            .Factories.OfType<IWriteableArchiveFactory<TOptions>>()
+            .FirstOrDefault();
 
         if (factory != null)
         {
             return factory.CreateArchive();
         }
 
-        throw new NotSupportedException("Cannot create Archives of type: " + type);
+        throw new NotSupportedException("Cannot create Archives of type: " + typeof(TOptions));
     }
 
     public static IArchive OpenArchive(string filePath, ReaderOptions? options = null)

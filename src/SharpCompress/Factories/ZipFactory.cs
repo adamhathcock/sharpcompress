@@ -24,7 +24,7 @@ public class ZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWriteableArchiveFactory<ZipWriterOptions>
 {
     #region IFactory
 
@@ -217,7 +217,7 @@ public class ZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => ZipArchive.CreateArchive();
+    public IWritableArchive<ZipWriterOptions> CreateArchive() => ZipArchive.CreateArchive();
 
     #endregion
 }

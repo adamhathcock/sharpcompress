@@ -58,17 +58,23 @@ public static class IWritableArchiveExtensions
                 fileInfo.LastWriteTime
             );
         }
+    }
 
-        public void SaveTo(string filePath, IWriterOptions? options = null) =>
-            writableArchive.SaveTo(
-                new FileInfo(filePath),
-                options ?? new WriterOptions(CompressionType.Deflate)
-            );
+    public static void SaveTo<TOptions>(
+        this IWritableArchive<TOptions> writableArchive,
+        string filePath,
+        TOptions options
+    )
+        where TOptions : IWriterOptions => writableArchive.SaveTo(new FileInfo(filePath), options);
 
-        public void SaveTo(FileInfo fileInfo, IWriterOptions? options = null)
-        {
-            using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-            writableArchive.SaveTo(stream, options ?? new WriterOptions(CompressionType.Deflate));
-        }
+    public static void SaveTo<TOptions>(
+        this IWritableArchive<TOptions> writableArchive,
+        FileInfo fileInfo,
+        TOptions options
+    )
+        where TOptions : IWriterOptions
+    {
+        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        writableArchive.SaveTo(stream, options);
     }
 }

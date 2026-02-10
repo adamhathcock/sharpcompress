@@ -27,7 +27,7 @@ public class GZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWriteableArchiveFactory<GZipWriterOptions>
 {
     #region IFactory
 
@@ -193,7 +193,7 @@ public class GZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => GZipArchive.CreateArchive();
+    public IWritableArchive<GZipWriterOptions> CreateArchive() => GZipArchive.CreateArchive();
 
     #endregion
 }

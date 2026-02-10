@@ -13,7 +13,8 @@ using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Archives.GZip;
 
-public partial class GZipArchive : AbstractWritableArchive<GZipArchiveEntry, GZipVolume, GZipWriterOptions>
+public partial class GZipArchive
+    : AbstractWritableArchive<GZipArchiveEntry, GZipVolume, GZipWriterOptions>
 {
     private GZipArchive(SourceStream sourceStream)
         : base(ArchiveType.GZip, sourceStream) { }

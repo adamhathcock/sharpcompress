@@ -19,7 +19,7 @@ public partial class TarArchive
 {
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        TarWriterOptions options,
         IAsyncEnumerable<TarArchiveEntry> oldEntries,
         IEnumerable<TarArchiveEntry> newEntries,
         CancellationToken cancellationToken = default
