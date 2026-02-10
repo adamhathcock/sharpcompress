@@ -173,38 +173,22 @@ public partial class SevenZipArchive
 
     private static ReadOnlySpan<byte> Signature => [(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C];
 
-    private static bool SignatureMatch(Stream stream)
-    {
-        var buffer = ArrayPool<byte>.Shared.Rent(6);
-        try
-        {
-            stream.ReadExact(buffer, 0, 6);
-            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-    }
+    private static bool SignatureMatch(Stream stream) =>
+        stream.WithRentedBufferReadExact(
+            6,
+            buffer => buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature)
+        );
 
     private static async ValueTask<bool> SignatureMatchAsync(
         Stream stream,
         CancellationToken cancellationToken
     )
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(6);
-        try
-        {
-            if (!await stream.ReadFullyAsync(buffer, 0, 6, cancellationToken).ConfigureAwait(false))
-            {
-                return false;
-            }
-
-            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+        var result = await stream.TryWithRentedBufferReadFullyAsync(
+            6,
+            buffer => buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature),
+            cancellationToken
+        );
+        return result.success && result.result;
     }
 }

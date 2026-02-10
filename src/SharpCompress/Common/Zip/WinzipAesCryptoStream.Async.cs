@@ -16,15 +16,19 @@ internal partial class WinzipAesCryptoStream
             return;
         }
         _isDisposed = true;
-        // Read out last 10 auth bytes asynchronously
-        byte[] authBytes = ArrayPool<byte>.Shared.Rent(10);
         try
         {
-            await _stream.ReadFullyAsync(authBytes, 0, 10).ConfigureAwait(false);
+            // Read out last 10 auth bytes asynchronously
+            await _stream
+                .WithRentedBufferReadFullyAsync(
+                    10,
+                    _ => 0, // Just consume the bytes, don't need the result
+                    CancellationToken.None
+                )
+                .ConfigureAwait(false);
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(authBytes);
             await _stream.DisposeAsync().ConfigureAwait(false);
         }
     }

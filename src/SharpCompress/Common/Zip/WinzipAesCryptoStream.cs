@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip;
@@ -71,15 +72,14 @@ internal partial class WinzipAesCryptoStream : Stream
             // Read out last 10 auth bytes - catch exceptions for async-only streams
             if (Utility.UseSyncOverAsyncDispose())
             {
-                var ten = ArrayPool<byte>.Shared.Rent(10);
-                try
-                {
-                    _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(ten);
-                }
+                _stream
+                    .WithRentedBufferReadFullyAsync(
+                        10,
+                        _ => 0, // Just consume the bytes, don't need the result
+                        CancellationToken.None
+                    )
+                    .GetAwaiter()
+                    .GetResult();
             }
             else
             {

@@ -185,21 +185,11 @@ public partial class GZipArchive
         CancellationToken cancellationToken = default
     )
     {
-        var header = ArrayPool<byte>.Shared.Rent(10);
-        try
-        {
-            await stream.ReadFullyAsync(header, 0, 10, cancellationToken).ConfigureAwait(false);
-
-            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
-            {
-                return false;
-            }
-
-            return true;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(header);
-        }
+        var result = await stream.TryWithRentedBufferReadFullyAsync(
+            10,
+            header => header[0] == 0x1F && header[1] == 0x8B && header[2] == 8,
+            cancellationToken
+        );
+        return result.success && result.result;
     }
 }

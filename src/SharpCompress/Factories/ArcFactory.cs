@@ -33,19 +33,11 @@ public class ArcFactory : Factory, IReaderFactory
         //Hyper - archive, check the next two bytes for "HP" or "ST"(or look below for
         //"HYP").Also the ZOO archiver also does put a 01Ah at the start of the file,
         //see the ZOO entry below.
-        var buffer = ArrayPool<byte>.Shared.Rent(2);
-        try
-        {
-            if (stream.ReadFully(buffer.AsSpan(0, 2)))
-            {
-                return buffer[0] == 0x1A && buffer[1] < 10; //rather thin, but this is all we have
-            }
-            return false;
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+        return stream.TryWithRentedBufferReadFully(
+                2,
+                buffer => buffer[0] == 0x1A && buffer[1] < 10, //rather thin, but this is all we have
+                out var result
+            ) && result;
     }
 
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
@@ -73,15 +65,10 @@ public class ArcFactory : Factory, IReaderFactory
         //Hyper - archive, check the next two bytes for "HP" or "ST"(or look below for
         //"HYP").Also the ZOO archiver also does put a 01Ah at the start of the file,
         //see the ZOO entry below.
-        var buffer = ArrayPool<byte>.Shared.Rent(2);
-        try
-        {
-            await stream.ReadExactAsync(buffer, 0, 2, cancellationToken);
-            return buffer[0] == 0x1A && buffer[1] < 10; //rather thin, but this is all we have
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+        return await stream.WithRentedBufferReadExactAsync(
+            2,
+            buffer => buffer[0] == 0x1A && buffer[1] < 10, //rather thin, but this is all we have
+            cancellationToken
+        );
     }
 }

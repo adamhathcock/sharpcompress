@@ -138,6 +138,97 @@ internal static partial class Utility
         return sTime.AddSeconds(unixtime);
     }
 
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a callback with the buffer.
+    /// The buffer is automatically returned to the pool after use.
+    /// </summary>
+    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <returns>The result of the callback</returns>
+    public static T WithRentedBufferReadFully<T>(
+        this Stream stream,
+        int size,
+        Func<byte[], T> callback
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            if (!stream.ReadFully(buffer.AsSpan(0, size)))
+            {
+                throw new EndOfStreamException();
+            }
+            return callback(buffer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a callback with the buffer.
+    /// The buffer is automatically returned to the pool after use. Returns false if end of stream is reached.
+    /// </summary>
+    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <param name="result">The result of the callback, or default if read failed</param>
+    /// <returns>True if the read was successful, false if end of stream was reached</returns>
+    public static bool TryWithRentedBufferReadFully<T>(
+        this Stream stream,
+        int size,
+        Func<byte[], T> callback,
+        out T result
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            if (!stream.ReadFully(buffer.AsSpan(0, size)))
+            {
+                result = default!;
+                return false;
+            }
+            result = callback(buffer);
+            return true;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads exactly the specified amount of data, and executes a callback with the buffer.
+    /// The buffer is automatically returned to the pool after use. Throws EndOfStreamException if not enough data is available.
+    /// </summary>
+    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <returns>The result of the callback</returns>
+    public static T WithRentedBufferReadExact<T>(
+        this Stream stream,
+        int size,
+        Func<byte[], T> callback
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            stream.ReadExact(buffer, 0, size);
+            return callback(buffer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
     extension(Stream source)
     {
         public long TransferTo(Stream destination, long maxLength)

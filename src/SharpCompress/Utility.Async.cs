@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +9,107 @@ namespace SharpCompress;
 
 internal static partial class Utility
 {
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads data into it asynchronously, and executes a callback with the buffer.
+    /// The buffer is automatically returned to the pool after use.
+    /// </summary>
+    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The result of the callback</returns>
+    public static async ValueTask<T> WithRentedBufferReadFullyAsync<T>(
+        this Stream stream,
+        int size,
+        Func<byte[], T> callback,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            if (
+                !await stream
+                    .ReadFullyAsync(buffer, 0, size, cancellationToken)
+                    .ConfigureAwait(false)
+            )
+            {
+                throw new EndOfStreamException();
+            }
+            return callback(buffer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads data into it asynchronously, and executes a callback with the buffer.
+    /// The buffer is automatically returned to the pool after use. Returns false if end of stream is reached.
+    /// </summary>
+    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A tuple containing success status and the result</returns>
+    public static async ValueTask<(bool success, T result)> TryWithRentedBufferReadFullyAsync<T>(
+        this Stream stream,
+        int size,
+        Func<byte[], T> callback,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            if (
+                !await stream
+                    .ReadFullyAsync(buffer, 0, size, cancellationToken)
+                    .ConfigureAwait(false)
+            )
+            {
+                return (false, default!);
+            }
+            return (true, callback(buffer));
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads exactly the specified amount of data asynchronously, and executes a callback with the buffer.
+    /// The buffer is automatically returned to the pool after use. Throws EndOfStreamException if not enough data is available.
+    /// </summary>
+    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="size">The size of the buffer to rent and read</param>
+    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The result of the callback</returns>
+    public static async ValueTask<T> WithRentedBufferReadExactAsync<T>(
+        this Stream stream,
+        int size,
+        Func<byte[], T> callback,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(size);
+        try
+        {
+            await stream.ReadExactAsync(buffer, 0, size, cancellationToken).ConfigureAwait(false);
+            return callback(buffer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
     extension(Stream source)
     {
         /// <summary>
