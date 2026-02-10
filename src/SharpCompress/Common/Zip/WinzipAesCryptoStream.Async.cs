@@ -8,6 +8,11 @@ namespace SharpCompress.Common.Zip;
 
 internal partial class WinzipAesCryptoStream
 {
+    private readonly struct DiscardProcessor : Utility.IBufferProcessor<int>
+    {
+        public int Process(ReadOnlySpan<byte> buffer) => 0; // Just consume the bytes, don't need the result
+    }
+
 #if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
@@ -19,10 +24,11 @@ internal partial class WinzipAesCryptoStream
         try
         {
             // Read out last 10 auth bytes asynchronously
+            var processor = new DiscardProcessor();
             await _stream
-                .WithRentedBufferReadFullyAsync(
+                .ReadFullyRentedAsync<DiscardProcessor, int>(
                     10,
-                    _ => 0, // Just consume the bytes, don't need the result
+                    processor,
                     CancellationToken.None
                 )
                 .ConfigureAwait(false);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -798,164 +799,214 @@ public class UtilityTests
 
     #endregion
 
-    #region WithRentedBufferReadFully Tests
+    #region Rented Buffer Tests
+
+    private readonly struct SumProcessor : Utility.IBufferProcessor<int>
+    {
+        public int Process(ReadOnlySpan<byte> buffer)
+        {
+            int sum = 0;
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                sum += buffer[i];
+            }
+            return sum;
+        }
+    }
+
+    private readonly struct IdentityProcessor : Utility.IBufferProcessor<bool>
+    {
+        public bool Process(ReadOnlySpan<byte> buffer) => buffer.Length > 0 && buffer[0] != 0;
+    }
+
+    private readonly struct ArcLikeTryProcessor : Utility.ITryBufferProcessor<(bool, bool)>
+    {
+        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) =>
+            (true, buffer[0] == 0x1A && buffer[1] < 10);
+
+        public (bool, bool) OnFailure() => (false, false);
+    }
+
+    private readonly struct AlwaysTrueTryProcessor : Utility.ITryBufferProcessor<(bool, bool)>
+    {
+        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) => (true, true);
+
+        public (bool, bool) OnFailure() => (false, false);
+    }
 
     [Fact]
-    public void WithRentedBufferReadFully_ReadsAndProcessesData()
+    public void ReadFullyRented_ReadsAndProcessesData()
     {
         var data = new byte[] { 1, 2, 3, 4, 5 };
         using var stream = new MemoryStream(data);
 
-        var sum = stream.WithRentedBufferReadFully(
-            5,
-            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
-        );
+        var processor = new SumProcessor();
+        var sum = stream.ReadFullyRented<SumProcessor, int>(5, ref processor);
 
         Assert.Equal(15, sum);
     }
 
     [Fact]
-    public void WithRentedBufferReadFully_NotEnoughData_ThrowsEndOfStreamException()
+    public void ReadFullyRented_NotEnoughData_ThrowsEndOfStreamException()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
 
+        var processor = new IdentityProcessor();
         Assert.Throws<EndOfStreamException>(() =>
-            stream.WithRentedBufferReadFully(5, buffer => buffer[0])
+            stream.ReadFullyRented<IdentityProcessor, bool>(5, ref processor)
         );
     }
 
     [Fact]
-    public void TryWithRentedBufferReadFully_SuccessfulRead_ReturnsTrue()
+    public void TryReadFullyRented_SuccessfulRead_ReturnsTrue()
     {
         var data = new byte[] { 0x1A, 0x05 };
         using var stream = new MemoryStream(data);
 
-        var success = stream.TryWithRentedBufferReadFully(
+        var processor = new ArcLikeTryProcessor();
+        var result = stream.TryReadFullyRented<ArcLikeTryProcessor, (bool success, bool match)>(
             2,
-            buffer => buffer[0] == 0x1A && buffer[1] < 10,
-            out var result
+            ref processor
         );
 
-        Assert.True(success);
-        Assert.True(result);
+        Assert.True(result.success);
+        Assert.True(result.match);
     }
 
     [Fact]
-    public void TryWithRentedBufferReadFully_NotEnoughData_ReturnsFalse()
+    public void TryReadFullyRented_NotEnoughData_ReturnsFalse()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
 
-        var success = stream.TryWithRentedBufferReadFully(5, buffer => true, out var result);
+        var processor = new AlwaysTrueTryProcessor();
+        var result = stream.TryReadFullyRented<AlwaysTrueTryProcessor, (bool success, bool match)>(
+            5,
+            ref processor
+        );
 
-        Assert.False(success);
-        Assert.False(result);
+        Assert.False(result.success);
+        Assert.False(result.match);
     }
 
     [Fact]
-    public void WithRentedBufferReadExact_ReadsAndProcessesData()
+    public void ReadExactRented_ReadsAndProcessesData()
     {
         var data = new byte[] { 1, 2, 3, 4, 5 };
         using var stream = new MemoryStream(data);
 
-        var sum = stream.WithRentedBufferReadExact(
-            5,
-            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
-        );
+        var processor = new SumProcessor();
+        var sum = stream.ReadExactRented<SumProcessor, int>(5, ref processor);
 
         Assert.Equal(15, sum);
     }
 
     [Fact]
-    public void WithRentedBufferReadExact_NotEnoughData_ThrowsEndOfStreamException()
+    public void ReadExactRented_NotEnoughData_ThrowsEndOfStreamException()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
 
+        var processor = new IdentityProcessor();
         Assert.Throws<EndOfStreamException>(() =>
-            stream.WithRentedBufferReadExact(5, buffer => buffer[0])
+            stream.ReadExactRented<IdentityProcessor, bool>(5, ref processor)
         );
     }
 
-    #endregion
-
-    #region WithRentedBufferReadFullyAsync Tests
-
     [Fact]
-    public async ValueTask WithRentedBufferReadFullyAsync_ReadsAndProcessesData()
+    public async ValueTask ReadFullyRentedAsync_ReadsAndProcessesData()
     {
         var data = new byte[] { 1, 2, 3, 4, 5 };
         using var stream = new MemoryStream(data);
 
-        var sum = await stream.WithRentedBufferReadFullyAsync(
+        var processor = new SumProcessor();
+        var sum = await stream.ReadFullyRentedAsync<SumProcessor, int>(
             5,
-            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
+            processor,
+            CancellationToken.None
         );
 
         Assert.Equal(15, sum);
     }
 
     [Fact]
-    public async ValueTask WithRentedBufferReadFullyAsync_NotEnoughData_ThrowsEndOfStreamException()
+    public async ValueTask ReadFullyRentedAsync_NotEnoughData_ThrowsEndOfStreamException()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
 
+        var processor = new IdentityProcessor();
         await Assert.ThrowsAsync<EndOfStreamException>(async () =>
-            await stream.WithRentedBufferReadFullyAsync(5, buffer => buffer[0])
+            await stream.ReadFullyRentedAsync<IdentityProcessor, bool>(
+                5,
+                processor,
+                CancellationToken.None
+            )
         );
     }
 
     [Fact]
-    public async ValueTask TryWithRentedBufferReadFullyAsync_SuccessfulRead_ReturnsTrue()
+    public async ValueTask TryReadFullyRentedAsync_SuccessfulRead_ReturnsTrue()
     {
         var data = new byte[] { 0x1A, 0x05 };
         using var stream = new MemoryStream(data);
 
-        var (success, result) = await stream.TryWithRentedBufferReadFullyAsync(
-            2,
-            buffer => buffer[0] == 0x1A && buffer[1] < 10
-        );
+        var processor = new ArcLikeTryProcessor();
+        var result = await stream.TryReadFullyRentedAsync<
+            ArcLikeTryProcessor,
+            (bool success, bool match)
+        >(2, processor, CancellationToken.None);
 
-        Assert.True(success);
-        Assert.True(result);
+        Assert.True(result.success);
+        Assert.True(result.match);
     }
 
     [Fact]
-    public async ValueTask TryWithRentedBufferReadFullyAsync_NotEnoughData_ReturnsFalse()
+    public async ValueTask TryReadFullyRentedAsync_NotEnoughData_ReturnsFalse()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
 
-        var (success, result) = await stream.TryWithRentedBufferReadFullyAsync(5, buffer => true);
+        var processor = new AlwaysTrueTryProcessor();
+        var result = await stream.TryReadFullyRentedAsync<
+            AlwaysTrueTryProcessor,
+            (bool success, bool match)
+        >(5, processor, CancellationToken.None);
 
-        Assert.False(success);
-        Assert.False(result);
+        Assert.False(result.success);
+        Assert.False(result.match);
     }
 
     [Fact]
-    public async ValueTask WithRentedBufferReadExactAsync_ReadsAndProcessesData()
+    public async ValueTask ReadExactRentedAsync_ReadsAndProcessesData()
     {
         var data = new byte[] { 1, 2, 3, 4, 5 };
         using var stream = new MemoryStream(data);
 
-        var sum = await stream.WithRentedBufferReadExactAsync(
+        var processor = new SumProcessor();
+        var sum = await stream.ReadExactRentedAsync<SumProcessor, int>(
             5,
-            buffer => buffer[0] + buffer[1] + buffer[2] + buffer[3] + buffer[4]
+            processor,
+            CancellationToken.None
         );
 
         Assert.Equal(15, sum);
     }
 
     [Fact]
-    public async ValueTask WithRentedBufferReadExactAsync_NotEnoughData_ThrowsEndOfStreamException()
+    public async ValueTask ReadExactRentedAsync_NotEnoughData_ThrowsEndOfStreamException()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
 
+        var processor = new IdentityProcessor();
         await Assert.ThrowsAsync<EndOfStreamException>(async () =>
-            await stream.WithRentedBufferReadExactAsync(5, buffer => buffer[0])
+            await stream.ReadExactRentedAsync<IdentityProcessor, bool>(
+                5,
+                processor,
+                CancellationToken.None
+            )
         );
     }
 

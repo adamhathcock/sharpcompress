@@ -25,6 +25,18 @@ public class ArcFactory : Factory, IReaderFactory
         yield return "arc";
     }
 
+    private readonly struct ArcSignatureProcessor : Utility.IBufferProcessor<bool>
+    {
+        public bool Process(ReadOnlySpan<byte> buffer) =>
+            buffer[0] == 0x1A && buffer[1] < 10;
+    }
+
+    private readonly struct ArcSignatureTryProcessor : Utility.ITryBufferProcessor<(bool, bool)>
+    {
+        public (bool, bool) OnSuccess(ReadOnlySpan<byte> buffer) => (true, buffer[0] == 0x1A && buffer[1] < 10);
+        public (bool, bool) OnFailure() => (false, false);
+    }
+
     public override bool IsArchive(Stream stream, string? password = null)
     {
         //You may have to use some(paranoid) checks to ensure that you actually are
@@ -33,11 +45,12 @@ public class ArcFactory : Factory, IReaderFactory
         //Hyper - archive, check the next two bytes for "HP" or "ST"(or look below for
         //"HYP").Also the ZOO archiver also does put a 01Ah at the start of the file,
         //see the ZOO entry below.
-        return stream.TryWithRentedBufferReadFully(
-                2,
-                buffer => buffer[0] == 0x1A && buffer[1] < 10, //rather thin, but this is all we have
-                out var result
-            ) && result;
+        var processor = new ArcSignatureTryProcessor();
+        var result = stream.TryReadFullyRented<ArcSignatureTryProcessor, (bool success, bool match)>(
+            2,
+            ref processor
+        );
+        return result.success && result.match;
     }
 
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>
@@ -65,9 +78,10 @@ public class ArcFactory : Factory, IReaderFactory
         //Hyper - archive, check the next two bytes for "HP" or "ST"(or look below for
         //"HYP").Also the ZOO archiver also does put a 01Ah at the start of the file,
         //see the ZOO entry below.
-        return await stream.WithRentedBufferReadExactAsync(
+        var processor = new ArcSignatureProcessor();
+        return await stream.ReadExactRentedAsync<ArcSignatureProcessor, bool>(
             2,
-            buffer => buffer[0] == 0x1A && buffer[1] < 10, //rather thin, but this is all we have
+            processor,
             cancellationToken
         );
     }

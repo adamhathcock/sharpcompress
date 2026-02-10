@@ -72,10 +72,11 @@ internal partial class WinzipAesCryptoStream : Stream
             // Read out last 10 auth bytes - catch exceptions for async-only streams
             if (Utility.UseSyncOverAsyncDispose())
             {
+                var processor = new DiscardProcessor();
                 _stream
-                    .WithRentedBufferReadFullyAsync(
+                    .ReadFullyRentedAsync<DiscardProcessor, int>(
                         10,
-                        _ => 0, // Just consume the bytes, don't need the result
+                        processor,
                         CancellationToken.None
                     )
                     .GetAwaiter()

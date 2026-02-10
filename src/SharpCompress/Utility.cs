@@ -139,19 +139,40 @@ internal static partial class Utility
     }
 
     /// <summary>
-    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a callback with the buffer.
+    /// Interface for struct-based buffer processors.
+    /// </summary>
+    /// <typeparam name="T">The return type of the processor</typeparam>
+    internal interface IBufferProcessor<TResult>
+    {
+        TResult Process(ReadOnlySpan<byte> buffer);
+    }
+
+    /// <summary>
+    /// Interface for struct-based try buffer processors.
+    /// </summary>
+    /// <typeparam name="T">The return type of the processor</typeparam>
+    internal interface ITryBufferProcessor<TResult>
+    {
+        TResult OnSuccess(ReadOnlySpan<byte> buffer);
+        TResult OnFailure();
+    }
+
+    /// <summary>
+    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a processor with the buffer.
     /// The buffer is automatically returned to the pool after use.
     /// </summary>
-    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
     /// <param name="stream">The stream to read from</param>
     /// <param name="size">The size of the buffer to rent and read</param>
-    /// <param name="callback">The callback to execute with the rented buffer</param>
-    /// <returns>The result of the callback</returns>
-    public static T WithRentedBufferReadFully<T>(
+    /// <param name="processor">The processor to execute with the rented buffer</param>
+    /// <returns>The result of the processor</returns>
+    public static TResult ReadFullyRented<TProcessor, TResult>(
         this Stream stream,
         int size,
-        Func<byte[], T> callback
+        ref TProcessor processor
     )
+        where TProcessor : struct, IBufferProcessor<TResult>
     {
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         try
@@ -160,7 +181,7 @@ internal static partial class Utility
             {
                 throw new EndOfStreamException();
             }
-            return callback(buffer);
+            return processor.Process(buffer.AsSpan(0, size));
         }
         finally
         {
@@ -169,32 +190,30 @@ internal static partial class Utility
     }
 
     /// <summary>
-    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a callback with the buffer.
-    /// The buffer is automatically returned to the pool after use. Returns false if end of stream is reached.
+    /// Rents a buffer from the shared ArrayPool, reads data into it, and executes a processor with the buffer.
+    /// The buffer is automatically returned to the pool after use. Returns failure result if end of stream is reached.
     /// </summary>
-    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
     /// <param name="stream">The stream to read from</param>
     /// <param name="size">The size of the buffer to rent and read</param>
-    /// <param name="callback">The callback to execute with the rented buffer</param>
-    /// <param name="result">The result of the callback, or default if read failed</param>
-    /// <returns>True if the read was successful, false if end of stream was reached</returns>
-    public static bool TryWithRentedBufferReadFully<T>(
+    /// <param name="processor">The processor to execute with the rented buffer</param>
+    /// <returns>The result of the processor (success or failure)</returns>
+    public static TResult TryReadFullyRented<TProcessor, TResult>(
         this Stream stream,
         int size,
-        Func<byte[], T> callback,
-        out T result
+        ref TProcessor processor
     )
+        where TProcessor : struct, ITryBufferProcessor<TResult>
     {
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         try
         {
             if (!stream.ReadFully(buffer.AsSpan(0, size)))
             {
-                result = default!;
-                return false;
+                return processor.OnFailure();
             }
-            result = callback(buffer);
-            return true;
+            return processor.OnSuccess(buffer.AsSpan(0, size));
         }
         finally
         {
@@ -203,25 +222,27 @@ internal static partial class Utility
     }
 
     /// <summary>
-    /// Rents a buffer from the shared ArrayPool, reads exactly the specified amount of data, and executes a callback with the buffer.
+    /// Rents a buffer from the shared ArrayPool, reads exactly the specified amount of data, and executes a processor with the buffer.
     /// The buffer is automatically returned to the pool after use. Throws EndOfStreamException if not enough data is available.
     /// </summary>
-    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
     /// <param name="stream">The stream to read from</param>
     /// <param name="size">The size of the buffer to rent and read</param>
-    /// <param name="callback">The callback to execute with the rented buffer</param>
-    /// <returns>The result of the callback</returns>
-    public static T WithRentedBufferReadExact<T>(
+    /// <param name="processor">The processor to execute with the rented buffer</param>
+    /// <returns>The result of the processor</returns>
+    public static TResult ReadExactRented<TProcessor, TResult>(
         this Stream stream,
         int size,
-        Func<byte[], T> callback
+        ref TProcessor processor
     )
+        where TProcessor : struct, IBufferProcessor<TResult>
     {
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         try
         {
             stream.ReadExact(buffer, 0, size);
-            return callback(buffer);
+            return processor.Process(buffer.AsSpan(0, size));
         }
         finally
         {

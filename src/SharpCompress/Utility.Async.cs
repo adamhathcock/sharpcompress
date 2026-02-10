@@ -10,21 +10,23 @@ namespace SharpCompress;
 internal static partial class Utility
 {
     /// <summary>
-    /// Rents a buffer from the shared ArrayPool, reads data into it asynchronously, and executes a callback with the buffer.
+    /// Rents a buffer from the shared ArrayPool, reads data into it asynchronously, and executes a processor with the buffer.
     /// The buffer is automatically returned to the pool after use.
     /// </summary>
-    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
     /// <param name="stream">The stream to read from</param>
     /// <param name="size">The size of the buffer to rent and read</param>
-    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <param name="processor">The processor to execute with the rented buffer</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The result of the callback</returns>
-    public static async ValueTask<T> WithRentedBufferReadFullyAsync<T>(
+    /// <returns>The result of the processor</returns>
+    public static async ValueTask<TResult> ReadFullyRentedAsync<TProcessor, TResult>(
         this Stream stream,
         int size,
-        Func<byte[], T> callback,
+        TProcessor processor,
         CancellationToken cancellationToken = default
     )
+        where TProcessor : struct, IBufferProcessor<TResult>
     {
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         try
@@ -37,7 +39,7 @@ internal static partial class Utility
             {
                 throw new EndOfStreamException();
             }
-            return callback(buffer);
+            return processor.Process(buffer.AsSpan(0, size));
         }
         finally
         {
@@ -46,21 +48,23 @@ internal static partial class Utility
     }
 
     /// <summary>
-    /// Rents a buffer from the shared ArrayPool, reads data into it asynchronously, and executes a callback with the buffer.
-    /// The buffer is automatically returned to the pool after use. Returns false if end of stream is reached.
+    /// Rents a buffer from the shared ArrayPool, reads data into it asynchronously, and executes a processor with the buffer.
+    /// The buffer is automatically returned to the pool after use. Returns failure result if end of stream is reached.
     /// </summary>
-    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
     /// <param name="stream">The stream to read from</param>
     /// <param name="size">The size of the buffer to rent and read</param>
-    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <param name="processor">The processor to execute with the rented buffer</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>A tuple containing success status and the result</returns>
-    public static async ValueTask<(bool success, T result)> TryWithRentedBufferReadFullyAsync<T>(
+    /// <returns>The result of the processor (success or failure)</returns>
+    public static async ValueTask<TResult> TryReadFullyRentedAsync<TProcessor, TResult>(
         this Stream stream,
         int size,
-        Func<byte[], T> callback,
+        TProcessor processor,
         CancellationToken cancellationToken = default
     )
+        where TProcessor : struct, ITryBufferProcessor<TResult>
     {
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         try
@@ -71,9 +75,9 @@ internal static partial class Utility
                     .ConfigureAwait(false)
             )
             {
-                return (false, default!);
+                return processor.OnFailure();
             }
-            return (true, callback(buffer));
+            return processor.OnSuccess(buffer.AsSpan(0, size));
         }
         finally
         {
@@ -82,27 +86,29 @@ internal static partial class Utility
     }
 
     /// <summary>
-    /// Rents a buffer from the shared ArrayPool, reads exactly the specified amount of data asynchronously, and executes a callback with the buffer.
+    /// Rents a buffer from the shared ArrayPool, reads exactly the specified amount of data asynchronously, and executes a processor with the buffer.
     /// The buffer is automatically returned to the pool after use. Throws EndOfStreamException if not enough data is available.
     /// </summary>
-    /// <typeparam name="T">The return type of the callback</typeparam>
+    /// <typeparam name="TProcessor">The processor type (struct)</typeparam>
+    /// <typeparam name="TResult">The return type</typeparam>
     /// <param name="stream">The stream to read from</param>
     /// <param name="size">The size of the buffer to rent and read</param>
-    /// <param name="callback">The callback to execute with the rented buffer</param>
+    /// <param name="processor">The processor to execute with the rented buffer</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The result of the callback</returns>
-    public static async ValueTask<T> WithRentedBufferReadExactAsync<T>(
+    /// <returns>The result of the processor</returns>
+    public static async ValueTask<TResult> ReadExactRentedAsync<TProcessor, TResult>(
         this Stream stream,
         int size,
-        Func<byte[], T> callback,
+        TProcessor processor,
         CancellationToken cancellationToken = default
     )
+        where TProcessor : struct, IBufferProcessor<TResult>
     {
         var buffer = ArrayPool<byte>.Shared.Rent(size);
         try
         {
             await stream.ReadExactAsync(buffer, 0, size, cancellationToken).ConfigureAwait(false);
-            return callback(buffer);
+            return processor.Process(buffer.AsSpan(0, size));
         }
         finally
         {
