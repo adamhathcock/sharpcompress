@@ -17,7 +17,7 @@ internal partial class RarCrcStream : RarStream
     )
     {
         var stream = new RarCrcStream(unpack, fileHeader, readStream);
-        await stream.InitializeAsync(cancellationToken);
+        await stream.InitializeAsync(cancellationToken).ConfigureAwait(false);
         return stream;
     }
 

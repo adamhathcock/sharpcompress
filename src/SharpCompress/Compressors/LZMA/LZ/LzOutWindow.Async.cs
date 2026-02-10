@@ -12,7 +12,7 @@ internal partial class OutWindow : IAsyncDisposable
 {
     public async ValueTask InitAsync(Stream stream)
     {
-        await ReleaseStreamAsync();
+        await ReleaseStreamAsync().ConfigureAwait(false);
         _stream = stream;
     }
 
