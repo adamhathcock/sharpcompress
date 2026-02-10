@@ -1,24 +1,25 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors.Deflate64;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.Lzw;
 
-namespace SharpCompress.Compressors.Providers;
+namespace SharpCompress.Providers;
 
 /// <summary>
-/// Provides Deflate64 decompression using SharpCompress's internal implementation.
-/// Note: Deflate64 compression is not supported; this provider is decompression-only.
+/// Provides LZW compression decompression using SharpCompress's internal implementation.
+/// Note: Compression is not supported by this provider.
 /// </summary>
-public sealed class Deflate64CompressionProvider : ICompressionProvider
+public sealed class LzwCompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.Deflate64;
+    public CompressionType CompressionType => CompressionType.Lzw;
     public bool SupportsCompression => false;
     public bool SupportsDecompression => true;
 
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         throw new NotSupportedException(
-            "Deflate64 compression is not supported by SharpCompress's internal implementation."
+            "LZW compression is not supported by SharpCompress's internal implementation."
         );
     }
 
@@ -29,18 +30,18 @@ public sealed class Deflate64CompressionProvider : ICompressionProvider
     )
     {
         throw new NotSupportedException(
-            "Deflate64 compression is not supported by SharpCompress's internal implementation."
+            "LZW compression is not supported by SharpCompress's internal implementation."
         );
     }
 
     public Stream CreateDecompressStream(Stream source)
     {
-        return new Deflate64Stream(source, CompressionMode.Decompress);
+        return new LzwStream(source);
     }
 
     public Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
-        // Context not used for Deflate64 decompression
+        // Context not used for LZW decompression
         return CreateDecompressStream(source);
     }
 }

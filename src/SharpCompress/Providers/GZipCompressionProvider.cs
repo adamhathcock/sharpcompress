@@ -1,21 +1,23 @@
 using System.IO;
 using SharpCompress.Common;
-using ZStd = SharpCompress.Compressors.ZStandard;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.Deflate;
 
-namespace SharpCompress.Compressors.Providers;
+namespace SharpCompress.Providers;
 
 /// <summary>
-/// Provides ZStandard compression using SharpCompress's internal implementation.
+/// Provides GZip compression using SharpCompress's internal implementation.
 /// </summary>
-public sealed class ZStandardCompressionProvider : ICompressionProvider
+public sealed class GZipCompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.ZStandard;
+    public CompressionType CompressionType => CompressionType.GZip;
     public bool SupportsCompression => true;
     public bool SupportsDecompression => true;
 
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
-        return new ZStd.CompressionStream(destination, compressionLevel);
+        var level = (CompressionLevel)compressionLevel;
+        return new GZipStream(destination, CompressionMode.Compress, level);
     }
 
     public Stream CreateCompressStream(
@@ -24,18 +26,18 @@ public sealed class ZStandardCompressionProvider : ICompressionProvider
         CompressionContext context
     )
     {
-        // Context not used for ZStandard compression
+        // Context not used for simple GZip compression
         return CreateCompressStream(destination, compressionLevel);
     }
 
     public Stream CreateDecompressStream(Stream source)
     {
-        return new ZStd.DecompressionStream(source);
+        return new GZipStream(source, CompressionMode.Decompress);
     }
 
     public Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
-        // Context not used for ZStandard decompression
+        // Context not used for simple GZip decompression
         return CreateDecompressStream(source);
     }
 }

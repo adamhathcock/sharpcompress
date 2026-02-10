@@ -1,22 +1,22 @@
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.LZMA;
 
-namespace SharpCompress.Compressors.Providers;
+namespace SharpCompress.Providers;
 
 /// <summary>
-/// Provides BZip2 compression using SharpCompress's internal implementation.
+/// Provides LZip compression using SharpCompress's internal implementation.
 /// </summary>
-public sealed class BZip2CompressionProvider : ICompressionProvider
+public sealed class LZipCompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.BZip2;
+    public CompressionType CompressionType => CompressionType.LZip;
     public bool SupportsCompression => true;
     public bool SupportsDecompression => true;
 
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
-        // BZip2 doesn't use compressionLevel parameter in this implementation
-        return BZip2Stream.Create(destination, CompressionMode.Compress, false);
+        return new LZipStream(destination, CompressionMode.Compress);
     }
 
     public Stream CreateCompressStream(
@@ -25,18 +25,18 @@ public sealed class BZip2CompressionProvider : ICompressionProvider
         CompressionContext context
     )
     {
-        // Context not used for BZip2 compression
+        // Context not used for LZip compression
         return CreateCompressStream(destination, compressionLevel);
     }
 
     public Stream CreateDecompressStream(Stream source)
     {
-        return BZip2Stream.Create(source, CompressionMode.Decompress, false);
+        return new LZipStream(source, CompressionMode.Decompress);
     }
 
     public Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
-        // Context not used for BZip2 decompression
+        // Context not used for LZip decompression
         return CreateDecompressStream(source);
     }
 }

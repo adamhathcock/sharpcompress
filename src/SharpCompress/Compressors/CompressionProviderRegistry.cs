@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors.Providers;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Compressors;
 
@@ -30,6 +30,11 @@ public sealed class CompressionProviderRegistry
     /// The default registry using SharpCompress internal implementations.
     /// </summary>
     public static CompressionProviderRegistry Default { get; } = CreateDefault();
+
+    /// <summary>
+    /// The empty registry for tests
+    /// </summary>
+    public static CompressionProviderRegistry Empty { get; } = CreateEmpty();
 
     private readonly Dictionary<CompressionType, ICompressionProvider> _providers;
 
@@ -196,6 +201,12 @@ public sealed class CompressionProviderRegistry
             [CompressionType.PPMd] = new PpmdCompressingProvider(),
         };
 
+        return new CompressionProviderRegistry(providers);
+    }
+
+    private static CompressionProviderRegistry CreateEmpty()
+    {
+        var providers = new Dictionary<CompressionType, ICompressionProvider>();
         return new CompressionProviderRegistry(providers);
     }
 }

@@ -2,8 +2,9 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using SharpCompress.Common;
+using SharpCompress.Compressors;
 
-namespace SharpCompress.Compressors.Providers;
+namespace SharpCompress.Providers;
 
 /// <summary>
 /// Provides Deflate compression using System.IO.Compression.DeflateStream.

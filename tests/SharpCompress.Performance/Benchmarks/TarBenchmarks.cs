@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.Providers;
+using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 
@@ -57,7 +57,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         using var archive = TarArchive.OpenArchive(
             stream,
             new ReaderOptions().WithProviders(
-                CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider())
+                CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
             )
         );
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
@@ -74,7 +74,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         using var reader = ReaderFactory.OpenReader(
             stream,
             new ReaderOptions().WithProviders(
-                CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider())
+                CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
             )
         );
         while (reader.MoveToNextEntry())

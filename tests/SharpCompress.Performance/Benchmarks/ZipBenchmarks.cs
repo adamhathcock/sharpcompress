@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.Providers;
+using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 
@@ -24,14 +24,14 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
         _archiveBytes = File.ReadAllBytes(_archivePath);
     }
 
-    [Benchmark(Description = "System Zip: Extract all entries (Archive API)")]
+    [Benchmark(Description = "Zip: Extract all entries (Archive API) - SystemDeflate")]
     public void SystemZipExtractArchiveApi()
     {
         using var stream = new MemoryStream(_archiveBytes);
         using var archive = ZipArchive.OpenArchive(
             stream,
             new ReaderOptions().WithProviders(
-                CompressionProviderRegistry.Default.With(new SystemDeflateCompressionProvider())
+                CompressionProviderRegistry.Empty.With(new SystemDeflateCompressionProvider())
             )
         );
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
@@ -53,14 +53,14 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
         }
     }
 
-    [Benchmark(Description = "System Zip: Extract all entries (Reader API)")]
+    [Benchmark(Description = "Zip: Extract all entries (Reader API) - SystemDeflate")]
     public void SystemZipExtractReaderApi()
     {
         using var stream = new MemoryStream(_archiveBytes);
         using var reader = ReaderFactory.OpenReader(
             stream,
             new ReaderOptions().WithProviders(
-                CompressionProviderRegistry.Default.With(new SystemDeflateCompressionProvider())
+                CompressionProviderRegistry.Empty.With(new SystemDeflateCompressionProvider())
             )
         );
         while (reader.MoveToNextEntry())
