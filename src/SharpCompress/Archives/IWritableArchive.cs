@@ -16,7 +16,8 @@ public interface IWritableArchiveCommon
     IDisposable PauseEntryRebuilding();
 }
 
-public interface IWritableArchive : IArchive, IWritableArchiveCommon
+public interface IWritableArchive<TOptions> : IArchive, IWritableArchiveCommon
+where TOptions : IWriterOptions
 {
     IArchiveEntry AddEntry(
         string key,
@@ -31,7 +32,7 @@ public interface IWritableArchive : IArchive, IWritableArchiveCommon
     /// <summary>
     /// Saves the archive to the specified stream using the given writer options.
     /// </summary>
-    void SaveTo(Stream stream, IWriterOptions options);
+    void SaveTo(Stream stream, TOptions options);
 
     /// <summary>
     /// Removes the specified entry from the archive.
@@ -39,14 +40,15 @@ public interface IWritableArchive : IArchive, IWritableArchiveCommon
     void RemoveEntry(IArchiveEntry entry);
 }
 
-public interface IWritableAsyncArchive : IAsyncArchive, IWritableArchiveCommon
+public interface IWritableAsyncArchive<TOptions> : IAsyncArchive, IWritableArchiveCommon
+    where TOptions : IWriterOptions
 {
     /// <summary>
     /// Asynchronously saves the archive to the specified stream using the given writer options.
     /// </summary>
     ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        TOptions options,
         CancellationToken cancellationToken = default
     );
 

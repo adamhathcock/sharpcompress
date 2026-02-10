@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 using SharpCompress.Common.Options;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
 using SharpCompress.Writers;
@@ -25,13 +24,13 @@ public partial class GZipArchive
     )
     {
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        await SaveToAsync(stream, new WriterOptions(CompressionType.GZip), cancellationToken)
+        await SaveToAsync(stream, new GZipWriterOptions(CompressionType.GZip), cancellationToken)
             .ConfigureAwait(false);
     }
 
     protected override async ValueTask SaveToAsync(
         Stream stream,
-        IWriterOptions options,
+        GZipWriterOptions options,
         IAsyncEnumerable<GZipArchiveEntry> oldEntries,
         IEnumerable<GZipArchiveEntry> newEntries,
         CancellationToken cancellationToken = default

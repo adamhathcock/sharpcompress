@@ -11,18 +11,19 @@ using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
 
-public abstract partial class AbstractWritableArchive<TEntry, TVolume>
+public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     : AbstractArchive<TEntry, TVolume>,
-        IWritableArchive,
-        IWritableAsyncArchive
+        IWritableArchive<TOptions>,
+        IWritableAsyncArchive<TOptions>
     where TEntry : IArchiveEntry
     where TVolume : IVolume
+    where TOptions : IWriterOptions
 {
     private class RebuildPauseDisposable : IDisposable
     {
-        private readonly AbstractWritableArchive<TEntry, TVolume> archive;
+        private readonly AbstractWritableArchive<TEntry, TVolume, TOptions> archive;
 
-        public RebuildPauseDisposable(AbstractWritableArchive<TEntry, TVolume> archive)
+        public RebuildPauseDisposable(AbstractWritableArchive<TEntry, TVolume, TOptions> archive)
         {
             this.archive = archive;
             archive.pauseRebuilding = true;
@@ -85,12 +86,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         }
     }
 
-    void IWritableArchive.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
+    void IWritableArchive<TOptions>.RemoveEntry(IArchiveEntry entry) => RemoveEntry((TEntry)entry);
 
     public TEntry AddEntry(string key, Stream source, long size = 0, DateTime? modified = null) =>
         AddEntry(key, source, false, size, modified);
 
-    IArchiveEntry IWritableArchive.AddEntry(
+    IArchiveEntry IWritableArchive<TOptions>.AddEntry(
         string key,
         Stream source,
         bool closeStream,
@@ -98,7 +99,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         DateTime? modified
     ) => AddEntry(key, source, closeStream, size, modified);
 
-    IArchiveEntry IWritableArchive.AddDirectoryEntry(string key, DateTime? modified) =>
+    IArchiveEntry IWritableArchive<TOptions>.AddDirectoryEntry(string key, DateTime? modified) =>
         AddDirectoryEntry(key, modified);
 
     public TEntry AddEntry(
@@ -141,10 +142,10 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         return false;
     }
 
-    ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
+    ValueTask IWritableAsyncArchive<TOptions>.RemoveEntryAsync(IArchiveEntry entry) =>
         RemoveEntryAsync((TEntry)entry);
 
-    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddEntryAsync(
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive<TOptions>.AddEntryAsync(
         string key,
         Stream source,
         bool closeStream,
@@ -153,7 +154,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         CancellationToken cancellationToken
     ) => await AddEntryAsync(key, source, closeStream, size, modified, cancellationToken);
 
-    async ValueTask<IArchiveEntry> IWritableAsyncArchive.AddDirectoryEntryAsync(
+    async ValueTask<IArchiveEntry> IWritableAsyncArchive<TOptions>.AddDirectoryEntryAsync(
         string key,
         DateTime? modified,
         CancellationToken cancellationToken
@@ -175,7 +176,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
         return entry;
     }
 
-    public void SaveTo(Stream stream, IWriterOptions options)
+    public void SaveTo(Stream stream, TOptions options)
     {
         //reset streams of new entries
         newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
@@ -211,17 +212,9 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume>
 
     protected abstract void SaveTo(
         Stream stream,
-        IWriterOptions options,
+        TOptions options,
         IEnumerable<TEntry> oldEntries,
         IEnumerable<TEntry> newEntries
-    );
-
-    protected abstract ValueTask SaveToAsync(
-        Stream stream,
-        IWriterOptions options,
-        IAsyncEnumerable<TEntry> oldEntries,
-        IEnumerable<TEntry> newEntries,
-        CancellationToken cancellationToken = default
     );
 
     public override void Dispose()
