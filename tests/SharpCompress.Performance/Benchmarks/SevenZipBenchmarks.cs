@@ -36,7 +36,7 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
     public async Task SevenZipLzmaExtractAsync()
     {
         using var stream = new MemoryStream(_lzmaBytes);
-        using var archive = SevenZipArchive.OpenArchive(stream);
+        await using var archive = SevenZipArchive.OpenAsyncArchive(stream);
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
         {
             using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
