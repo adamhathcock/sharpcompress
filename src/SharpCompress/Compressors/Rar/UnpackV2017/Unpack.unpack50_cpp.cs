@@ -24,11 +24,7 @@ internal partial class Unpack
             // Check TablesRead5 to be sure that we read tables at least once
             // regardless of current block header TablePresent flag.
             // So we can safefly use these tables below.
-            if (
-                !ReadBlockHeader(Inp)
-                || !ReadTables(Inp, ref BlockHeader, ref BlockTables)
-                || !TablesRead5
-            )
+            if (!ReadBlockHeader(Inp) || !ReadTables(Inp) || !TablesRead5)
             {
                 return;
             }
@@ -55,10 +51,7 @@ internal partial class Unpack
                         FileDone = true;
                         break;
                     }
-                    if (
-                        !ReadBlockHeader(Inp, ref BlockHeader)
-                        || !ReadTables(Inp, ref BlockHeader, ref BlockTables)
-                    )
+                    if (!ReadBlockHeader(Inp) || !ReadTables(Inp))
                     {
                         return;
                     }
