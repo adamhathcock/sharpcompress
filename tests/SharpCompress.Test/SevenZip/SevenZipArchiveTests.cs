@@ -344,4 +344,21 @@ public class SevenZipArchiveTests : ArchiveTests
         // The critical check: within a single folder, the stream should NEVER be recreated
         Assert.Equal(0, streamRecreationsWithinFolder); // Folder stream should remain the same for all entries in the same folder
     }
+
+    [Fact]
+    public void SevenZipArchive_Cheat_CanBeOpenedWithArchiveFactory()
+    {
+        // Regression test for issue #1204: 7zip file couldn't be opened with ArchiveFactory.OpenArchive()
+        // due to Microsoft.Bcl.AsyncInterfaces version conflict (version 10.0.0 was too new)
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "cheat.7z");
+        
+        // Test that ArchiveFactory can open the file
+        using var archive = ArchiveFactory.OpenArchive(testArchive);
+        Assert.NotNull(archive);
+        Assert.True(archive.Entries.Any());
+        
+        // Verify we can read entries
+        var entry = archive.Entries.First();
+        Assert.NotNull(entry);
+    }
 }
