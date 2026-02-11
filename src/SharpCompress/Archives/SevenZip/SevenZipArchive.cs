@@ -182,14 +182,14 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 );
             }
 
-            // Wrap with SyncOnlyStream to work around LZMA async bugs
-            // Return a ReadOnlySubStream that reads from the shared folder stream
             return CreateEntryStream(
-                new SyncOnlyStream(
-                    new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
-                )
+                new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
             );
         }
+
+        protected override ValueTask<EntryStream> GetEntryStreamAsync(
+            CancellationToken cancellationToken = default
+        ) => new(GetEntryStream());
 
         public override void Dispose()
         {
