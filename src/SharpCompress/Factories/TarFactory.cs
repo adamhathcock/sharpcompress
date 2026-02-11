@@ -230,7 +230,6 @@ public class TarFactory
                         using var fileStream = fileInfo.OpenRead();
                         var compressedStream = new SharpCompressStream(fileStream);
                         compressedStream.StartRecording();
-                        compressedStream.Rewind();
                         var decompStream = wrapper.CreateStream(compressedStream);
 
                         var memoryStream = new MemoryStream();
