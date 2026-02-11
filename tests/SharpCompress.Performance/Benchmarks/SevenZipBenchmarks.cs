@@ -68,7 +68,6 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         }
     }
 
-
     [Benchmark(Description = "7Zip LZMA2 Reader: Extract all entries")]
     public void SevenZipLzma2Extract_Reader()
     {
@@ -88,7 +87,7 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         using var stream = new MemoryStream(_lzma2Bytes);
         await using var archive = SevenZipArchive.OpenAsyncArchive(stream);
         await using var reader = await archive.ExtractAllEntriesAsync();
-        while(await reader.MoveToNextEntryAsync().ConfigureAwait(false))
+        while (await reader.MoveToNextEntryAsync().ConfigureAwait(false))
         {
             await using var entryStream = await reader.OpenEntryStreamAsync().ConfigureAwait(false);
             await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
