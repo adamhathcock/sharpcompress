@@ -112,16 +112,150 @@ public class TarFactory
     #region IArchiveFactory
 
     /// <inheritdoc/>
-    public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
-        TarArchive.OpenArchive(stream, readerOptions);
+    public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
+    {
+        stream.NotNull(nameof(stream));
+        readerOptions ??= new ReaderOptions();
+
+        // Try to detect compressed TAR formats
+        // For async-only streams, skip detection and assume uncompressed
+        bool canDoSyncDetection = true;
+        try
+        {
+            // Test if we can do synchronous reads
+            var testBuffer = new byte[1];
+            var pos = stream.Position;
+            stream.Read(testBuffer, 0, 0); // Try a zero-length read
+            stream.Position = pos;
+        }
+        catch (NotSupportedException)
+        {
+            // Stream doesn't support synchronous reads
+            canDoSyncDetection = false;
+        }
+
+        if (!canDoSyncDetection)
+        {
+            // For async-only streams, we can't do format detection
+            // Assume it's an uncompressed TAR
+            return TarArchive.OpenArchive(stream, readerOptions);
+        }
+
+        var sharpCompressStream = new SharpCompressStream(stream);
+        sharpCompressStream.StartRecording();
+
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            sharpCompressStream.Rewind();
+            if (wrapper.IsMatch(sharpCompressStream))
+            {
+                sharpCompressStream.Rewind();
+                var decompressedStream = wrapper.CreateStream(sharpCompressStream);
+                if (TarArchive.IsTarFile(decompressedStream))
+                {
+                    sharpCompressStream.StopRecording();
+
+                    // For compressed TAR files, we need to decompress to a seekable stream
+                    // since Archive API requires seekable streams
+                    if (wrapper.CompressionType != CompressionType.None)
+                    {
+                        // Rewind and create a fresh decompression stream
+                        sharpCompressStream.Rewind();
+                        decompressedStream = wrapper.CreateStream(sharpCompressStream);
+
+                        // Decompress to a MemoryStream to make it seekable
+                        var memoryStream = new MemoryStream();
+                        decompressedStream.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+
+                        // If we shouldn't leave the stream open, close the original
+                        if (!readerOptions.LeaveStreamOpen)
+                        {
+                            stream.Dispose();
+                        }
+
+                        // Open the decompressed TAR with LeaveStreamOpen = false
+                        // so the MemoryStream gets cleaned up with the archive
+                        return TarArchive.OpenArchive(
+                            memoryStream,
+                            readerOptions with
+                            {
+                                LeaveStreamOpen = false,
+                            }
+                        );
+                    }
+
+                    // For uncompressed TAR, use the original stream directly
+                    sharpCompressStream.Rewind();
+                    return TarArchive.OpenArchive(stream, readerOptions);
+                }
+            }
+        }
+
+        // Fallback: try opening as uncompressed TAR
+        sharpCompressStream.StopRecording();
+        return TarArchive.OpenArchive(stream, readerOptions);
+    }
 
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
         (IAsyncArchive)OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        TarArchive.OpenArchive(fileInfo, readerOptions);
+    public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    {
+        fileInfo.NotNull(nameof(fileInfo));
+        readerOptions ??= new ReaderOptions();
+
+        // Open the file and check if it's compressed
+        using var testStream = fileInfo.OpenRead();
+        var sharpCompressStream = new SharpCompressStream(testStream);
+        sharpCompressStream.StartRecording();
+
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            sharpCompressStream.Rewind();
+            if (wrapper.IsMatch(sharpCompressStream))
+            {
+                sharpCompressStream.Rewind();
+                var decompressedStream = wrapper.CreateStream(sharpCompressStream);
+                if (TarArchive.IsTarFile(decompressedStream))
+                {
+                    sharpCompressStream.StopRecording();
+
+                    // For compressed TAR files, decompress to memory
+                    if (wrapper.CompressionType != CompressionType.None)
+                    {
+                        // Reopen file and decompress
+                        using var fileStream = fileInfo.OpenRead();
+                        var compressedStream = new SharpCompressStream(fileStream);
+                        compressedStream.StartRecording();
+                        compressedStream.Rewind();
+                        var decompStream = wrapper.CreateStream(compressedStream);
+
+                        var memoryStream = new MemoryStream();
+                        decompStream.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+
+                        // Open with LeaveStreamOpen = false so MemoryStream gets cleaned up
+                        return TarArchive.OpenArchive(
+                            memoryStream,
+                            readerOptions with
+                            {
+                                LeaveStreamOpen = false,
+                            }
+                        );
+                    }
+
+                    // Uncompressed, can use TarArchive's FileInfo overload directly
+                    break;
+                }
+            }
+        }
+
+        // Open as regular TAR file
+        return TarArchive.OpenArchive(fileInfo, readerOptions);
+    }
 
     /// <inheritdoc/>
     public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>

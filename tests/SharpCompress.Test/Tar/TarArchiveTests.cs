@@ -308,4 +308,39 @@ public class TarArchiveTests : ArchiveTests
 
         Assert.False(isTar);
     }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.lz")]
+    [InlineData("Tar.tar.zst")]
+    [InlineData("Tar.tar.Z")]
+    [InlineData("Tar.oldgnu.tar.gz")]
+    [InlineData("TarWithSymlink.tar.gz")]
+    public void Tar_Compressed_Archive_Factory(string filename)
+    {
+        var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, filename);
+        using Stream stream = File.OpenRead(archiveFullPath);
+        using var archive = ArchiveFactory.OpenArchive(stream);
+        Assert.True(archive.Type == ArchiveType.Tar);
+        Assert.True(archive.Entries.Any());
+    }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.lz")]
+    [InlineData("Tar.tar.zst")]
+    [InlineData("Tar.tar.Z")]
+    [InlineData("Tar.oldgnu.tar.gz")]
+    [InlineData("TarWithSymlink.tar.gz")]
+    public void Tar_Compressed_Archive_Factory_FromFile(string filename)
+    {
+        var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, filename);
+        using var archive = ArchiveFactory.OpenArchive(archiveFullPath);
+        Assert.True(archive.Type == ArchiveType.Tar);
+        Assert.True(archive.Entries.Any());
+    }
 }
