@@ -3,7 +3,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 using size_t = System.UInt32;
@@ -12,10 +11,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack
 {
-    private async Task Unpack5Async(
-        bool Solid,
-        CancellationToken cancellationToken = default
-    )
+    private async Task Unpack5Async(bool Solid, CancellationToken cancellationToken = default)
     {
         FileExtracted = true;
 
@@ -77,7 +73,7 @@ internal partial class Unpack
 
             if (((WriteBorder - UnpPtr) & MaxWinMask) < MAX_LZ_MATCH + 3 && WriteBorder != UnpPtr)
             {
-                UnpWriteBuf();
+                await UnpWriteBufAsync(cancellationToken);
                 if (WrittenFileSize > DestUnpSize)
                 {
                     return;
@@ -219,7 +215,7 @@ internal partial class Unpack
                 continue;
             }
         }
-        UnpWriteBuf();
+        await UnpWriteBufAsync(cancellationToken);
     }
 
     private async Task<bool> ReadFilterAsync(
@@ -255,9 +251,7 @@ internal partial class Unpack
         return true;
     }
 
-    private async Task<bool> UnpReadBufAsync(
-        CancellationToken cancellationToken = default
-    )
+    private async Task<bool> UnpReadBufAsync(CancellationToken cancellationToken = default)
     {
         var DataSize = ReadTop - Inp.InAddr; // Data left to process.
         if (DataSize < 0)
@@ -307,9 +301,7 @@ internal partial class Unpack
         return ReadCode != -1;
     }
 
-    private async Task UnpWriteBufAsync(
-        CancellationToken cancellationToken = default
-    )
+    private async Task UnpWriteBufAsync(CancellationToken cancellationToken = default)
     {
         var WrittenBorder = WrPtr;
         var FullWriteSize = (UnpPtr - WrittenBorder) & MaxWinMask;

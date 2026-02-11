@@ -25,7 +25,7 @@ internal partial class Unpack
             // regardless of current block header TablePresent flag.
             // So we can safefly use these tables below.
             if (
-                !ReadBlockHeader(Inp, ref BlockHeader)
+                !ReadBlockHeader(Inp)
                 || !ReadTables(Inp, ref BlockHeader, ref BlockTables)
                 || !TablesRead5
             )
@@ -684,9 +684,9 @@ internal partial class Unpack
         }
     }
 
-    private bool ReadBlockHeader(BitInput Inp, ref UnpackBlockHeader Header)
+    private bool ReadBlockHeader(BitInput Inp)
     {
-        Header.HeaderSize = 0;
+        BlockHeader.HeaderSize = 0;
 
         if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 7)
         {
@@ -707,9 +707,9 @@ internal partial class Unpack
             return false;
         }
 
-        Header.HeaderSize = (int)(2 + ByteCount);
+        BlockHeader.HeaderSize = (int)(2 + ByteCount);
 
-        Header.BlockBitSize = (BlockFlags & 7) + 1;
+        BlockHeader.BlockBitSize = (BlockFlags & 7) + 1;
 
         var SavedCheckSum = (byte)(Inp.fgetbits() >> 8);
         Inp.faddbits(8);
@@ -721,28 +721,24 @@ internal partial class Unpack
             Inp.addbits(8);
         }
 
-        Header.BlockSize = BlockSize;
+        BlockHeader.BlockSize = BlockSize;
         var CheckSum = (byte)(0x5a ^ BlockFlags ^ BlockSize ^ (BlockSize >> 8) ^ (BlockSize >> 16));
         if (CheckSum != SavedCheckSum)
         {
             return false;
         }
 
-        Header.BlockStart = Inp.InAddr;
-        ReadBorder = Math.Min(ReadBorder, Header.BlockStart + Header.BlockSize - 1);
+        BlockHeader.BlockStart = Inp.InAddr;
+        ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
 
-        Header.LastBlockInFile = (BlockFlags & 0x40) != 0;
-        Header.TablePresent = (BlockFlags & 0x80) != 0;
+        BlockHeader.LastBlockInFile = (BlockFlags & 0x40) != 0;
+        BlockHeader.TablePresent = (BlockFlags & 0x80) != 0;
         return true;
     }
 
-    private bool ReadTables(
-        BitInput Inp,
-        ref UnpackBlockHeader Header,
-        ref UnpackBlockTables Tables
-    )
+    private bool ReadTables(BitInput Inp)
     {
-        if (!Header.TablePresent)
+        if (!BlockHeader.TablePresent)
         {
             return true;
         }
@@ -785,7 +781,7 @@ internal partial class Unpack
             }
         }
 
-        MakeDecodeTables(BitLength, 0, Tables.BD, BC);
+        MakeDecodeTables(BitLength, 0, BlockTables.BD, BC);
 
         Span<byte> Table = stackalloc byte[checked((int)HUFF_TABLE_SIZE)];
         const int TableSize = checked((int)HUFF_TABLE_SIZE);
@@ -799,7 +795,7 @@ internal partial class Unpack
                 }
             }
 
-            var Number = DecodeNumber(Inp, Tables.BD);
+            var Number = DecodeNumber(Inp, BlockTables.BD);
             if (Number < 16)
             {
                 Table[I] = (byte)Number;
@@ -861,10 +857,10 @@ internal partial class Unpack
             return false;
         }
 
-        MakeDecodeTables(Table, 0, Tables.LD, NC);
-        MakeDecodeTables(Table, (int)NC, Tables.DD, DC);
-        MakeDecodeTables(Table, (int)(NC + DC), Tables.LDD, LDC);
-        MakeDecodeTables(Table, (int)(NC + DC + LDC), Tables.RD, RC);
+        MakeDecodeTables(Table, 0, BlockTables.LD, NC);
+        MakeDecodeTables(Table, (int)NC, BlockTables.DD, DC);
+        MakeDecodeTables(Table, (int)(NC + DC), BlockTables.LDD, LDC);
+        MakeDecodeTables(Table, (int)(NC + DC + LDC), BlockTables.RD, RC);
         return true;
     }
 
