@@ -92,7 +92,7 @@ public class LargeMemoryStream : Stream
 
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
         {
-            throw new ArgumentOutOfRangeException();
+            throw new ArgumentOutOfRangeException(nameof(offset));
         }
 
         long length = Length;
@@ -137,7 +137,7 @@ public class LargeMemoryStream : Stream
 
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
         {
-            throw new ArgumentOutOfRangeException();
+            throw new ArgumentOutOfRangeException(nameof(offset));
         }
 
         int bytesWritten = 0;

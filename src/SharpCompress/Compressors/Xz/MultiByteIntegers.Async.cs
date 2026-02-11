@@ -10,18 +10,18 @@ internal static partial class MultiByteIntegers
 {
     public static async ValueTask<ulong> ReadXZIntegerAsync(
         this BinaryReader reader,
-        CancellationToken cancellationToken = default,
-        int MaxBytes = 9
+        int maxBytes = 9,
+        CancellationToken cancellationToken = default
     )
     {
-        if (MaxBytes <= 0)
+        if (maxBytes <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(MaxBytes));
+            throw new ArgumentOutOfRangeException(nameof(maxBytes));
         }
 
-        if (MaxBytes > 9)
+        if (maxBytes > 9)
         {
-            MaxBytes = 9;
+            maxBytes = 9;
         }
 
         var LastByte = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
@@ -30,7 +30,7 @@ internal static partial class MultiByteIntegers
         var i = 0;
         while ((LastByte & 0x80) != 0)
         {
-            if (++i >= MaxBytes)
+            if (++i >= maxBytes)
             {
                 throw new InvalidFormatException();
             }

@@ -32,7 +32,7 @@ internal abstract unsafe class SafeZstdHandle : SafeHandle
 internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
 {
     /// <inheritdoc/>
-    private SafeCctxHandle() { }
+    internal SafeCctxHandle() { }
 
     /// <summary>
     /// Creates a new instance of <see cref="SafeCctxHandle"/>.
@@ -85,7 +85,7 @@ internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
 internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
 {
     /// <inheritdoc/>
-    private SafeDctxHandle() { }
+    internal SafeDctxHandle() { }
 
     /// <summary>
     /// Creates a new instance of <see cref="SafeDctxHandle"/>.

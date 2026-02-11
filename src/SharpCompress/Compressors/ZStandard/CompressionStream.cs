@@ -123,7 +123,8 @@ public partial class CompressionStream : Stream
 
     public override void Flush() => FlushInternal(ZSTD_EndDirective.ZSTD_e_flush);
 
-    private void FlushInternal(ZSTD_EndDirective directive) => WriteInternal(null, directive);
+    private void FlushInternal(ZSTD_EndDirective directive) =>
+        WriteInternal(ReadOnlySpan<byte>.Empty, directive);
 
     public override void Write(byte[] buffer, int offset, int count) =>
         Write(new ReadOnlySpan<byte>(buffer, offset, count));
@@ -140,11 +141,7 @@ public partial class CompressionStream : Stream
     {
         EnsureNotDisposed();
 
-        var input = new ZSTD_inBuffer_s
-        {
-            pos = 0,
-            size = buffer != null ? (nuint)buffer.Length : 0,
-        };
+        var input = new ZSTD_inBuffer_s { pos = 0, size = (nuint)buffer.Length };
         nuint remaining;
         do
         {

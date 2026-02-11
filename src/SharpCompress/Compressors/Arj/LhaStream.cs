@@ -7,8 +7,8 @@ using System.Linq;
 namespace SharpCompress.Compressors.Arj;
 
 [CLSCompliant(true)]
-public sealed partial class LhaStream<C> : Stream
-    where C : ILhaDecoderConfig, new()
+public sealed partial class LhaStream<TDecoderConfig> : Stream
+    where TDecoderConfig : ILhaDecoderConfig, new()
 {
     private readonly BitReader _bitReader;
 
@@ -17,7 +17,7 @@ public sealed partial class LhaStream<C> : Stream
     private int _remainingCommands;
     private (int offset, int count)? _copyProgress;
     private readonly RingBuffer _ringBuffer;
-    private readonly C _config = new C();
+    private readonly TDecoderConfig _config = new TDecoderConfig();
 
     private const int NUM_COMMANDS = 510;
     private const int NUM_TEMP_CODELEN = 20;

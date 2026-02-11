@@ -20,10 +20,14 @@ internal static partial class Utility
             CancellationToken cancellationToken = default
         )
         {
+#if LEGACY_DOTNET
             if (source is null)
             {
-                throw new ArgumentNullException(nameof(source));
+                throw new ArgumentNullException();
             }
+#else
+            ArgumentNullException.ThrowIfNull(source);
+#endif
 
             if (buffer is null)
             {

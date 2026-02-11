@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.Arj;
 
-public sealed partial class LhaStream<C>
+public sealed partial class LhaStream<TDecoderConfig>
 {
     public override async Task<int> ReadAsync(
         byte[] buffer,

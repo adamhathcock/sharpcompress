@@ -91,8 +91,8 @@ internal class AsyncMarkingBinaryReader
     }
 
     public async ValueTask<ulong> ReadRarVIntAsync(
-        CancellationToken cancellationToken = default,
-        int maxBytes = 10
+        int maxBytes = 10,
+        CancellationToken cancellationToken = default
     ) => await DoReadRarVIntAsync((maxBytes - 1) * 7, cancellationToken).ConfigureAwait(false);
 
     private async ValueTask<ulong> DoReadRarVIntAsync(

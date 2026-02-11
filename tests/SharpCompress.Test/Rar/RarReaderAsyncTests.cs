@@ -212,7 +212,9 @@ public class RarReaderAsyncTests : ReaderTests
                         var file = Path.GetFileName(reader.Entry.Key).NotNull();
                         var folder =
                             Path.GetDirectoryName(reader.Entry.Key)
-                            ?? throw new ArgumentNullException();
+                            ?? throw new InvalidOperationException(
+                                "Entry key must have a directory name."
+                            );
                         var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                         if (!Directory.Exists(destdir))
                         {
