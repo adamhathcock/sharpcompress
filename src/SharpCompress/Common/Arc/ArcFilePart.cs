@@ -8,6 +8,7 @@ using SharpCompress.Common.GZip;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Compressors.ArcLzw;
 using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.Compressors.Squeezed;

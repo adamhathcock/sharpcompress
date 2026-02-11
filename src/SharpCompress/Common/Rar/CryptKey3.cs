@@ -1,11 +1,17 @@
 #nullable disable
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Common.Rar;
 
+[SuppressMessage(
+    "Security",
+    "CA5350:Do Not Use Weak Cryptographic Algorithms",
+    Justification = "RAR3 key derivation is SHA-1 based by format definition."
+)]
 internal class CryptKey3 : ICryptKey
 {
     const int AES_128 = 128;
