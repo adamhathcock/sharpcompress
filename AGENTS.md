@@ -6,20 +6,24 @@ applyTo: '**/*.cs'
 # SharpCompress Development
 
 ## About SharpCompress
-SharpCompress is a pure C# compression library supporting multiple archive formats (Zip, Tar, GZip, BZip2, 7Zip, Rar, LZip, XZ, ZStandard) for .NET Framework 4.62, .NET Standard 2.1, .NET 6.0, and .NET 8.0. The library provides both seekable Archive APIs and forward-only Reader/Writer APIs for streaming scenarios.
+SharpCompress is a pure C# compression library supporting multiple archive formats (Zip, Tar, GZip, BZip2, 7Zip, Rar, LZip, XZ, ZStandard). The project currently targets .NET Framework 4.8, .NET Standard 2.0, .NET 8.0, and .NET 10.0. The library provides both seekable Archive APIs and forward-only Reader/Writer APIs for streaming scenarios.
 
 ## C# Instructions
-- Always use the latest version C#, currently C# 13 features.
-- Write clear and concise comments for each function.
+- Use language features supported by the current project toolchain (`LangVersion=latest`) and existing codebase patterns.
+- Add comments for non-obvious logic and important design decisions; avoid redundant comments.
 - Follow the existing code style and patterns in the codebase.
 
 ## General Instructions
-- **Agents should NEVER commit to git** - Agents should stage files and leave committing to the user. Only create commits when the user explicitly requests them.
+- **Do not commit or stage changes unless the user explicitly asks for it.**
 - Make only high confidence suggestions when reviewing code changes.
 - Write code with good maintainability practices, including comments on why certain design decisions were made.
 - Handle edge cases and write clear exception handling.
 - For libraries or external dependencies, mention their usage and purpose in comments.
 - Preserve backward compatibility when making changes to public APIs.
+
+### Workspace Hygiene
+- Do not edit generated or machine-local files unless required for the task (for example: `bin/`, `obj/`, `*.csproj.user`).
+- Avoid broad formatting-only diffs in unrelated files.
 
 ## Naming Conventions
 
@@ -64,7 +68,7 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 
 ## Project Setup and Structure
 
-- The project targets multiple frameworks: .NET Framework 4.62, .NET Standard 2.1, .NET 6.0, and .NET 8.0
+- The project targets multiple frameworks: .NET Framework 4.8, .NET Standard 2.0, .NET 8.0, and .NET 10.0
 - Main library is in `src/SharpCompress/`
 - Tests are in `tests/SharpCompress.Test/`
 - Performance tests are in `tests/SharpCompress.Performance/`
@@ -89,13 +93,18 @@ src/SharpCompress/
 tests/SharpCompress.Test/
   ├── Zip/, Tar/, Rar/, SevenZip/, GZip/, BZip2/  # Format-specific tests
   ├── TestBase.cs      # Base test class with helper methods
-  └── TestArchives/    # Test data (not checked into main test project)
+
+tests/
+  ├── SharpCompress.Test/         # Unit/integration tests
+  ├── SharpCompress.Performance/  # Benchmark tests
+  └── TestArchives/               # Test data archives
 ```
 
 ### Factory Pattern
-All format types implement factory interfaces (`IArchiveFactory`, `IReaderFactory`, `IWriterFactory`) for auto-detection:
-- `ReaderFactory.Open()` - Auto-detects format by probing stream
-- `WriterFactory.Open()` - Creates writer for specified `ArchiveType`
+Factory implementations can implement one or more interfaces (`IArchiveFactory`, `IReaderFactory`, `IWriterFactory`) depending on format capabilities:
+- `ArchiveFactory.OpenArchive()` - Opens archive API objects from seekable streams/files
+- `ReaderFactory.OpenReader()` - Auto-detects and opens forward-only readers
+- `WriterFactory.OpenWriter()` - Creates a writer for a specified `ArchiveType`
 - Factories located in: `src/SharpCompress/Factories/`
 
 ## Nullable Reference Types
@@ -166,11 +175,26 @@ SharpCompress supports multiple archive and compression formats:
 - Test stream disposal and `LeaveStreamOpen` behavior.
 - Test edge cases: empty archives, large files, corrupted archives, encrypted archives.
 
+### Validation Expectations
+- Run targeted tests for the changed area first.
+- Run `dotnet csharpier format .` after code edits.
+- Run `dotnet csharpier check .` before handing off changes.
+
 ### Test Organization
 - Base class: `TestBase` - Provides `TEST_ARCHIVES_PATH`, `SCRATCH_FILES_PATH`, temp directory management
 - Framework: xUnit with AwesomeAssertions
 - Test archives: `tests/TestArchives/` - Use existing archives, don't create new ones unnecessarily
 - Match naming style of nearby test files
+
+### Public API Change Checklist
+- Preserve existing public method signatures and behavior when possible.
+- If a breaking change is unavoidable, document it and provide a migration path.
+- Add or update tests that cover backward compatibility expectations.
+
+### Stream Ownership and Position Checklist
+- Verify `LeaveStreamOpen` behavior for externally owned streams.
+- Validate behavior for both seekable and non-seekable streams.
+- Ensure stream position assumptions are explicit and tested.
 
 ## Common Pitfalls
 
@@ -178,59 +202,4 @@ SharpCompress supports multiple archive and compression formats:
 2. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
 3. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
 4. **Tar + non-seekable stream** - Must provide file size or it will throw
-6. **Format detection** - Use `ReaderFactory.Open()` for auto-detection, test with actual archive files
-
-### Async Struct-Copy Bug in LZMA RangeCoder
-
-When implementing async methods on mutable `struct` types (like `BitEncoder` and `BitDecoder` in the LZMA RangeCoder), be aware that the async state machine copies the struct when `await` is encountered. This means mutations to struct fields after the `await` point may not persist back to the original struct stored in arrays or fields.
-
-**The Bug:**
-```csharp
-// BAD: async method on mutable struct
-public async ValueTask<uint> DecodeAsync(Decoder decoder, CancellationToken cancellationToken = default)
-{
-    var newBound = (decoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
-    if (decoder._code < newBound)
-    {
-        decoder._range = newBound;
-        _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;  // Mutates _prob
-        await decoder.Normalize2Async(cancellationToken).ConfigureAwait(false);  // Struct gets copied here
-        return 0;  // Original _prob update may be lost
-    }
-    // ...
-}
-```
-
-**The Fix:**
-Refactor async methods on mutable structs to perform all struct mutations synchronously before any `await`, or use a helper method to separate the await from the struct mutation:
-
-```csharp
-// GOOD: struct mutations happen synchronously, await is conditional
-public ValueTask<uint> DecodeAsync(Decoder decoder, CancellationToken cancellationToken = default)
-{
-    var newBound = (decoder._range >> K_NUM_BIT_MODEL_TOTAL_BITS) * _prob;
-    if (decoder._code < newBound)
-    {
-        decoder._range = newBound;
-        _prob += (K_BIT_MODEL_TOTAL - _prob) >> K_NUM_MOVE_BITS;  // All mutations complete
-        return DecodeAsyncHelper(decoder.Normalize2Async(cancellationToken), 0);  // Await in helper
-    }
-    decoder._range -= newBound;
-    decoder._code -= newBound;
-    _prob -= (_prob) >> K_NUM_MOVE_BITS;  // All mutations complete
-    return DecodeAsyncHelper(decoder.Normalize2Async(cancellationToken), 1);  // Await in helper
-}
-
-private static async ValueTask<uint> DecodeAsyncHelper(ValueTask normalizeTask, uint result)
-{
-    await normalizeTask.ConfigureAwait(false);
-    return result;
-}
-```
-
-**Why This Matters:**
-In LZMA, the `BitEncoder` and `BitDecoder` structs maintain adaptive probability models in their `_prob` field. When these structs are stored in arrays (e.g., `_models[m]`), the async state machine copy breaks the adaptive model, causing incorrect bit decoding and eventually `DataErrorException` exceptions.
-
-**Related Files:**
-- `src/SharpCompress/Compressors/LZMA/RangeCoder/RangeCoderBit.Async.cs` - Fixed
-- `src/SharpCompress/Compressors/LZMA/RangeCoder/RangeCoderBitTree.Async.cs` - Uses readonly structs, so this pattern doesn't apply
+5. **Format detection** - Use `ReaderFactory.OpenReader()` for auto-detection, test with actual archive files
