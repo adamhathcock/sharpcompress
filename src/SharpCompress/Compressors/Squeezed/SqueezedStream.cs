@@ -10,7 +10,6 @@ namespace SharpCompress.Compressors.Squeezed;
 public partial class SqueezeStream : Stream
 {
     private readonly Stream _stream;
-    private readonly int _compressedSize;
     private const int NUMVALS = 257;
     private const int SPEOF = 256;
 
@@ -19,7 +18,6 @@ public partial class SqueezeStream : Stream
     private SqueezeStream(Stream stream, int compressedSize)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-        _compressedSize = compressedSize;
     }
 
     public static SqueezeStream Create(Stream stream, int compressedSize)

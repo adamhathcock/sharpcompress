@@ -10,9 +10,6 @@ namespace SharpCompress.Common.Arj.Headers;
 
 public partial class ArjMainHeader : ArjHeader
 {
-    private const int FIRST_HDR_SIZE = 34;
-    private const ushort ARJ_MAGIC = 0xEA60;
-
     public ArchiveEncoding ArchiveEncoding { get; }
 
     public int ArchiverVersionNumber { get; private set; }

@@ -275,6 +275,7 @@ internal partial class SharpCompressStream
             _ringBuffer?.Dispose();
             _ringBuffer = null;
         }
+        await base.DisposeAsync().ConfigureAwait(false);
     }
 #endif
 }

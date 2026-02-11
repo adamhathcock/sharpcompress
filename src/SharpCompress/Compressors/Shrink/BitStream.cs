@@ -19,7 +19,7 @@ internal class BitStream
         31U,
         63U,
         (uint)sbyte.MaxValue,
-        (uint)byte.MaxValue,
+        byte.MaxValue,
         511U,
         1023U,
         2047U,
@@ -27,7 +27,7 @@ internal class BitStream
         8191U,
         16383U,
         (uint)short.MaxValue,
-        (uint)ushort.MaxValue,
+        ushort.MaxValue,
     };
 
     public BitStream(byte[] src, int srcLen)
@@ -62,7 +62,7 @@ internal class BitStream
                 _bitsLeft += 8;
             }
         }
-        result = (int)((long)_bitBuffer & (long)_maskBits[nbits]);
+        result = (int)(_bitBuffer & _maskBits[nbits]);
         _bitBuffer >>= nbits;
         _bitsLeft -= nbits;
         return result;

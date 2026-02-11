@@ -63,6 +63,7 @@ internal partial class WinzipAesCryptoStream : Stream
     {
         if (_isDisposed)
         {
+            base.Dispose(disposing);
             return;
         }
         _isDisposed = true;
@@ -88,6 +89,7 @@ internal partial class WinzipAesCryptoStream : Stream
             }
             _stream.Dispose();
         }
+        base.Dispose(disposing);
     }
 
     private async Task ReadAuthBytesAsync()

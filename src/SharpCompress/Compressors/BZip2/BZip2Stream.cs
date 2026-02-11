@@ -54,6 +54,7 @@ public sealed partial class BZip2Stream : Stream
     {
         if (isDisposed || leaveOpen)
         {
+            base.Dispose(disposing);
             return;
         }
         isDisposed = true;
@@ -61,6 +62,7 @@ public sealed partial class BZip2Stream : Stream
         {
             stream.Dispose();
         }
+        base.Dispose(disposing);
     }
 
     public CompressionMode Mode { get; private set; }

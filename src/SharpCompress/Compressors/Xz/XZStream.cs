@@ -12,10 +12,7 @@ namespace SharpCompress.Compressors.Xz;
 public sealed partial class XZStream : XZReadOnlyStream
 {
     public XZStream(Stream baseStream)
-        : base(baseStream)
-    {
-        _baseStream = baseStream;
-    }
+        : base(baseStream) { }
 
     protected override void Dispose(bool disposing)
     {
@@ -48,7 +45,6 @@ public sealed partial class XZStream : XZReadOnlyStream
         }
     }
 
-    private readonly Stream _baseStream;
     public XZHeader Header { get; private set; }
     public XZIndex Index { get; private set; }
     public XZFooter Footer { get; private set; }

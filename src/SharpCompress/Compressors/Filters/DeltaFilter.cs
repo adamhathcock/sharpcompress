@@ -4,7 +4,6 @@ namespace SharpCompress.Compressors.Filters;
 
 internal class DeltaFilter : Filter
 {
-    private const int DISTANCE_MIN = 1;
     private const int DISTANCE_MAX = 256;
     private const int DISTANCE_MASK = DISTANCE_MAX - 1;
 

@@ -7,7 +7,6 @@ namespace SharpCompress.Compressors.Shrink;
 internal partial class ShrinkStream : Stream
 {
     private Stream inStream;
-    private CompressionMode _compressionMode;
 
     private ulong _compressedSize;
     private long _uncompressedSize;
@@ -24,7 +23,6 @@ internal partial class ShrinkStream : Stream
     )
     {
         inStream = stream;
-        _compressionMode = compressionMode;
 
         _compressedSize = (ulong)compressedSize;
         _uncompressedSize = uncompressedSize;

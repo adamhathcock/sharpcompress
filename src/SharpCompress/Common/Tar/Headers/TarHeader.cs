@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -51,7 +52,7 @@ internal sealed partial class TarHeader
                 WriteUstar(output);
                 break;
             default:
-                throw new Exception("This should be impossible...");
+                throw new InvalidOperationException("This should be impossible...");
         }
     }
 
@@ -103,7 +104,7 @@ internal sealed partial class TarHeader
 
             if (splitIndex == -1)
             {
-                throw new Exception(
+                throw new InvalidDataException(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Directory separator not found! Try using GNU Tar format instead!"
                 );
             }
@@ -113,14 +114,14 @@ internal sealed partial class TarHeader
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
             {
-                throw new Exception(
+                throw new InvalidDataException(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
             }
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
             {
-                throw new Exception(
+                throw new InvalidDataException(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
             }

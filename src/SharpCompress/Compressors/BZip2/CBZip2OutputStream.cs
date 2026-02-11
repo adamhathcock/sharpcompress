@@ -447,6 +447,7 @@ internal sealed class CBZip2OutputStream : Stream
         {
             if (disposed)
             {
+                base.Dispose(disposing);
                 return;
             }
 
@@ -460,6 +461,7 @@ internal sealed class CBZip2OutputStream : Stream
             }
             bsStream = null;
         }
+        base.Dispose(disposing);
     }
 
     public void Finish()

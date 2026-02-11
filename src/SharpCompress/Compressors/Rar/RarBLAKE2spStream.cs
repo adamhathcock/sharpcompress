@@ -54,7 +54,6 @@ internal partial class RarBLAKE2spStream : RarStream
         internal byte[] b;
         internal int bufferPosition;
         internal UInt32 lastNodeFlag;
-        UInt32[] dummy;
 
         public BLAKE2S()
         {
@@ -62,7 +61,6 @@ internal partial class RarBLAKE2spStream : RarStream
             t = new uint[2];
             f = new uint[2];
             b = new byte[BLAKE2S_BLOCK_SIZE];
-            dummy = new uint[2];
         }
     };
 

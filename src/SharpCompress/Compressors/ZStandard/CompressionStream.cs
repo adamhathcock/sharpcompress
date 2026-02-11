@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.IO;
 using System.Threading;
@@ -84,6 +84,7 @@ public partial class CompressionStream : Stream
     {
         if (compressor == null)
         {
+            base.Dispose(disposing);
             return;
         }
 
@@ -98,6 +99,7 @@ public partial class CompressionStream : Stream
         {
             ReleaseUnmanagedResources();
         }
+        base.Dispose(disposing);
     }
 
     private void ReleaseUnmanagedResources()

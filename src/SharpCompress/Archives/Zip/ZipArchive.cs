@@ -122,10 +122,7 @@ public partial class ZipArchive
         IEnumerable<ZipArchiveEntry> newEntries
     )
     {
-        using var writer = new ZipWriter(
-            stream,
-            options as ZipWriterOptions ?? new ZipWriterOptions(options)
-        );
+        using var writer = new ZipWriter(stream, options);
         foreach (var entry in oldEntries.Concat(newEntries))
         {
             if (entry.IsDirectory)

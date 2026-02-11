@@ -281,9 +281,6 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
         }
     }
 
-    private const uint K_NUM_LEN_SPEC_SYMBOLS =
-        Base.K_NUM_LOW_LEN_SYMBOLS + Base.K_NUM_MID_LEN_SYMBOLS;
-
     private class LenPriceTableEncoder : LenEncoder
     {
         private readonly uint[] _prices = new uint[
@@ -1230,12 +1227,6 @@ internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
                 }
             }
         }
-    }
-
-    private bool ChangePair(uint smallDist, uint bigDist)
-    {
-        const int kDif = 7;
-        return (smallDist < ((uint)(1) << (32 - kDif)) && bigDist >= (smallDist << kDif));
     }
 
     private void WriteEndMarker(uint posState)

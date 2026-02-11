@@ -16,6 +16,7 @@ public partial class CompressionStream : Stream
     {
         if (compressor == null)
         {
+            await base.DisposeAsync().ConfigureAwait(false);
             return;
         }
 
@@ -28,6 +29,7 @@ public partial class CompressionStream : Stream
             ReleaseUnmanagedResources();
             GC.SuppressFinalize(this);
         }
+        await base.DisposeAsync().ConfigureAwait(false);
     }
 
     public override async Task FlushAsync(CancellationToken cancellationToken) =>

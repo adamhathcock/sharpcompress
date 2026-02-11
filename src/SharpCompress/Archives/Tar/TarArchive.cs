@@ -124,10 +124,7 @@ public partial class TarArchive
         IEnumerable<TarArchiveEntry> newEntries
     )
     {
-        using var writer = new TarWriter(
-            stream,
-            options as TarWriterOptions ?? new TarWriterOptions(options)
-        );
+        using var writer = new TarWriter(stream, options);
         foreach (var entry in oldEntries.Concat(newEntries))
         {
             if (entry.IsDirectory)
