@@ -37,9 +37,9 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
     {
         using var stream = new MemoryStream(_lzmaBytes);
         await using var archive = SevenZipArchive.OpenAsyncArchive(stream);
-        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
-            using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
             await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
         }
     }
