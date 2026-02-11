@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
@@ -36,11 +37,27 @@ public class GZipBenchmarks
         gzipStream.Write(_sourceData, 0, _sourceData.Length);
     }
 
+    [Benchmark(Description = "GZip: Compress 100KB (Async)")]
+    public async Task GZipCompressAsync()
+    {
+        using var outputStream = new MemoryStream();
+        using var gzipStream = new GZipStream(outputStream, CompressionMode.Compress);
+        await gzipStream.WriteAsync(_sourceData, 0, _sourceData.Length).ConfigureAwait(false);
+    }
+
     [Benchmark(Description = "GZip: Decompress 100KB")]
     public void GZipDecompress()
     {
         using var inputStream = new MemoryStream(_compressedData);
         using var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress);
         gzipStream.CopyTo(Stream.Null);
+    }
+
+    [Benchmark(Description = "GZip: Decompress 100KB (Async)")]
+    public async Task GZipDecompressAsync()
+    {
+        using var inputStream = new MemoryStream(_compressedData);
+        using var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress);
+        await gzipStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
     }
 }
