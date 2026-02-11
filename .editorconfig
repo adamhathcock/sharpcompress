@@ -361,6 +361,12 @@ dotnet_diagnostic.IDE0060.severity = suggestion # unused parameters
 dotnet_diagnostic.IDE0061.severity = suggestion # local expression body
 dotnet_diagnostic.IDE0062.severity = suggestion # local to static
 dotnet_diagnostic.IDE0063.severity = error # simplify using
+
+[tests/**/*.cs]
+dotnet_diagnostic.CA1861.severity = suggestion
+dotnet_diagnostic.IDE0042.severity = suggestion
+dotnet_diagnostic.IDE0051.severity = suggestion
+dotnet_diagnostic.IDE0063.severity = suggestion
 dotnet_diagnostic.IDE0066.severity = suggestion # switch expression
 dotnet_diagnostic.IDE0072.severity = suggestion # Populate switch - forces population of all cases even when default specified
 dotnet_diagnostic.IDE0078.severity = suggestion # use pattern matching
