@@ -98,7 +98,7 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
     public async Task ZipCreateSmallFilesAsync()
     {
         using var outputStream = new MemoryStream();
-        await using var writer = WriterFactory.OpenAsyncWriter(
+        await using var writer = await WriterFactory.OpenAsyncWriter(
             outputStream,
             ArchiveType.Zip,
             new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true }

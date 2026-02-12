@@ -104,7 +104,7 @@ public class AsyncTests : TestBase
         await using (var stream = File.Create(outputPath))
 #endif
         using (
-            var writer = WriterFactory.OpenAsyncWriter(
+            var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.Zip,
                 new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = false }

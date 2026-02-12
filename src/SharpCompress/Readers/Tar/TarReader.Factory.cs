@@ -121,14 +121,15 @@ public partial class TarReader
         return new TarReader(sharpCompressStream, options, CompressionType.None);
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static async ValueTask<IAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
-        return OpenAsyncReader(fileInfo.OpenRead(), readerOptions, cancellationToken);
+        var stream = fileInfo.OpenAsyncReadStream(cancellationToken);
+        return await OpenAsyncReader(stream, readerOptions, cancellationToken);
     }
 
     public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)

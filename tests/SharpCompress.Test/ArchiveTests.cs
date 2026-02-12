@@ -383,7 +383,7 @@ public class ArchiveTests : ReaderTests
         return WriterFactory.OpenWriter(stream, ArchiveType.Zip, writerOptions);
     }
 
-    protected static IAsyncWriter CreateWriterWithLevelAsync(
+    protected static async ValueTask<IAsyncWriter> CreateWriterWithLevelAsync(
         Stream stream,
         CompressionType compressionType,
         int? compressionLevel = null
@@ -392,7 +392,7 @@ public class ArchiveTests : ReaderTests
         var writerOptions = compressionLevel.HasValue
             ? new WriterOptions(compressionType, compressionLevel.Value) { LeaveStreamOpen = true }
             : new WriterOptions(compressionType) { LeaveStreamOpen = true };
-        return WriterFactory.OpenAsyncWriter(
+        return await WriterFactory.OpenAsyncWriter(
             new AsyncOnlyStream(stream),
             ArchiveType.Zip,
             writerOptions
