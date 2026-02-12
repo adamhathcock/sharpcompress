@@ -46,7 +46,10 @@ public partial class LzwEntry : Entry
 
     internal static IEnumerable<LzwEntry> GetEntries(Stream stream, ReaderOptions options)
     {
-        yield return new LzwEntry(LzwFilePart.Create(stream, options.ArchiveEncoding), options);
+        yield return new LzwEntry(
+            LzwFilePart.Create(stream, options.ArchiveEncoding, options.Providers),
+            options
+        );
     }
 
     // Async methods moved to LzwEntry.Async.cs

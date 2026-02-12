@@ -20,7 +20,7 @@ public sealed class SystemDeflateCompressionProvider : ICompressionProvider
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         var bclLevel = MapCompressionLevel(compressionLevel);
-        return new DeflateStream(destination, bclLevel, leaveOpen: true);
+        return new DeflateStream(destination, bclLevel, leaveOpen: false);
     }
 
     public Stream CreateCompressStream(
@@ -38,7 +38,7 @@ public sealed class SystemDeflateCompressionProvider : ICompressionProvider
         return new DeflateStream(
             source,
             global::System.IO.Compression.CompressionMode.Decompress,
-            leaveOpen: true
+            leaveOpen: false
         );
     }
 

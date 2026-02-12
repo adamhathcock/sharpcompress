@@ -38,7 +38,9 @@ public sealed class CompressionProviderRegistry
 
     private readonly Dictionary<CompressionType, ICompressionProvider> _providers;
 
-    private CompressionProviderRegistry(Dictionary<CompressionType, ICompressionProvider> providers) => _providers = providers;
+    private CompressionProviderRegistry(
+        Dictionary<CompressionType, ICompressionProvider> providers
+    ) => _providers = providers;
 
     /// <summary>
     /// Gets the provider for a given compression type, or null if none is registered.

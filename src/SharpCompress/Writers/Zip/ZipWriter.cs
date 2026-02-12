@@ -379,6 +379,8 @@ public partial class ZipWriter : AbstractWriter
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
         private readonly int compressionLevel;
+        private ICompressionProviderHooks? compressionProviderHooks;
+        private CompressionContext? compressionContext;
         private CountingStream? counting;
         private ulong decompressed;
 
@@ -458,6 +460,8 @@ public partial class ZipWriter : AbstractWriter
                     }
 
                     var context = new CompressionContext { CanSeek = originalStream.CanSeek };
+                    compressionProviderHooks = compressingProvider;
+                    compressionContext = context;
 
                     // Write pre-compression data (magic bytes)
                     var preData = compressingProvider.GetPreCompressionData(context);
@@ -498,6 +502,8 @@ public partial class ZipWriter : AbstractWriter
                         CanSeek = originalStream.CanSeek,
                         FormatOptions = writer.PpmdProperties,
                     };
+                    compressionProviderHooks = compressingProvider;
+                    compressionContext = context;
 
                     // Write pre-compression data (properties)
                     var preData = compressingProvider.GetPreCompressionData(context);
@@ -550,6 +556,8 @@ public partial class ZipWriter : AbstractWriter
                     originalStream.Dispose();
                     return;
                 }
+
+                WritePostCompressionData();
 
                 var countingCount = counting?.BytesWritten ?? 0;
                 entry.Crc = (uint)crc.Crc32Result;
@@ -687,6 +695,30 @@ public partial class ZipWriter : AbstractWriter
                     );
                 }
             }
+        }
+
+        private void WritePostCompressionData()
+        {
+            if (
+                compressionProviderHooks is null
+                || compressionContext is null
+                || counting is null
+                || zipCompressionMethod == ZipCompressionMethod.None
+            )
+            {
+                return;
+            }
+
+            var postData = compressionProviderHooks.GetPostCompressionData(
+                writeStream,
+                compressionContext
+            );
+            if (postData is null || postData.Length == 0)
+            {
+                return;
+            }
+
+            counting.Write(postData, 0, postData.Length);
         }
     }
 

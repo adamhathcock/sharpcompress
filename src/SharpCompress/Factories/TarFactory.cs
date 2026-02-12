@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +8,7 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Writers;
@@ -50,6 +50,7 @@ public class TarFactory
     /// <inheritdoc/>
     public override bool IsArchive(Stream stream, string? password = null)
     {
+        var providers = CompressionProviderRegistry.Default;
         var sharpCompressStream = new SharpCompressStream(stream);
         sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
@@ -58,7 +59,11 @@ public class TarFactory
             if (wrapper.IsMatch(sharpCompressStream))
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = wrapper.CreateStream(sharpCompressStream);
+                var decompressedStream = CreateProbeDecompressionStream(
+                    sharpCompressStream,
+                    wrapper.CompressionType,
+                    providers
+                );
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
                     sharpCompressStream.Rewind();
@@ -77,6 +82,7 @@ public class TarFactory
         CancellationToken cancellationToken = default
     )
     {
+        var providers = CompressionProviderRegistry.Default;
         var sharpCompressStream = new SharpCompressStream(stream);
         sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
@@ -89,9 +95,11 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = await wrapper
-                    .CreateStreamAsync(sharpCompressStream, cancellationToken)
-                    .ConfigureAwait(false);
+                var decompressedStream = CreateProbeDecompressionStream(
+                    sharpCompressStream,
+                    wrapper.CompressionType,
+                    providers
+                );
                 if (
                     await TarArchive
                         .IsTarFileAsync(decompressedStream, cancellationToken)
@@ -109,8 +117,24 @@ public class TarFactory
 
     #endregion
 
-    public static CompressionType GetCompressionType(Stream stream)
+    private static Stream CreateProbeDecompressionStream(
+        Stream stream,
+        CompressionType compressionType,
+        CompressionProviderRegistry providers
+    )
     {
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(stream);
+        return compressionType == CompressionType.None
+            ? nonDisposingStream
+            : providers.CreateDecompressStream(compressionType, nonDisposingStream);
+    }
+
+    public static CompressionType GetCompressionType(
+        Stream stream,
+        CompressionProviderRegistry? providers = null
+    )
+    {
+        providers ??= CompressionProviderRegistry.Default;
         stream.Seek(0, SeekOrigin.Begin);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -118,7 +142,11 @@ public class TarFactory
             if (wrapper.IsMatch(stream))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                var decompressedStream = wrapper.CreateStream(stream);
+                var decompressedStream = CreateProbeDecompressionStream(
+                    stream,
+                    wrapper.CompressionType,
+                    providers
+                );
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
                     return wrapper.CompressionType;
@@ -130,17 +158,23 @@ public class TarFactory
 
     public static async ValueTask<CompressionType> GetCompressionTypeAsync(
         Stream stream,
+        CompressionProviderRegistry? providers = null,
         CancellationToken cancellationToken = default
     )
     {
+        providers ??= CompressionProviderRegistry.Default;
         stream.Seek(0, SeekOrigin.Begin);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             stream.Seek(0, SeekOrigin.Begin);
-            if (wrapper.IsMatch(stream))
+            if (await wrapper.IsMatchAsync(stream, cancellationToken).ConfigureAwait(false))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                var decompressedStream = wrapper.CreateStream(stream);
+                var decompressedStream = CreateProbeDecompressionStream(
+                    stream,
+                    wrapper.CompressionType,
+                    providers
+                );
                 if (
                     await TarArchive
                         .IsTarFileAsync(decompressedStream, cancellationToken)
@@ -228,7 +262,11 @@ public class TarFactory
             if (wrapper.IsMatch(sharpCompressStream))
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = wrapper.CreateStream(sharpCompressStream);
+                var decompressedStream = CreateProbeDecompressionStream(
+                    sharpCompressStream,
+                    wrapper.CompressionType,
+                    options.Providers
+                );
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
                     sharpCompressStream.StopRecording();
@@ -260,9 +298,11 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = await wrapper
-                    .CreateStreamAsync(sharpCompressStream, cancellationToken)
-                    .ConfigureAwait(false);
+                var decompressedStream = CreateProbeDecompressionStream(
+                    sharpCompressStream,
+                    wrapper.CompressionType,
+                    options.Providers
+                );
                 if (
                     await TarArchive
                         .IsTarFileAsync(decompressedStream, cancellationToken)
@@ -275,7 +315,9 @@ public class TarFactory
                 }
             }
         }
-        return (IAsyncReader)TarReader.OpenReader(stream, options);
+
+        sharpCompressStream.Rewind();
+        return (IAsyncReader)TarReader.OpenReader(sharpCompressStream, options);
     }
 
     #endregion

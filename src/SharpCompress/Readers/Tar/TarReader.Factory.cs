@@ -1,15 +1,11 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.ZStandard;
+using SharpCompress.Factories;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Readers.Tar;
 
@@ -18,6 +14,18 @@ public partial class TarReader
     : IReaderOpenable
 #endif
 {
+    private static Stream CreateProbeDecompressionStream(
+        Stream stream,
+        CompressionType compressionType,
+        CompressionProviderRegistry providers
+    )
+    {
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(stream);
+        return compressionType == CompressionType.None
+            ? nonDisposingStream
+            : providers.CreateDecompressStream(compressionType, nonDisposingStream);
+    }
+
     public static ValueTask<IAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
@@ -42,81 +50,38 @@ public partial class TarReader
             bufferSize: options.RewindableBufferSize
         );
         long pos = sharpCompressStream.Position;
-        if (
-            await GZipArchive
-                .IsGZipFileAsync(sharpCompressStream, cancellationToken)
-                .ConfigureAwait(false)
-        )
+        foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Position = pos;
-            var testStream = new GZipStream(sharpCompressStream, CompressionMode.Decompress);
             if (
-                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
+                !await wrapper
+                    .IsMatchAsync(sharpCompressStream, cancellationToken)
+                    .ConfigureAwait(false)
             )
             {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.GZip);
+                continue;
             }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        if (
-            await BZip2Stream
-                .IsBZip2Async(sharpCompressStream, cancellationToken)
-                .ConfigureAwait(false)
-        )
-        {
+
             sharpCompressStream.Position = pos;
-            var testStream = BZip2Stream.Create(
+            var testStream = CreateProbeDecompressionStream(
                 sharpCompressStream,
-                CompressionMode.Decompress,
-                false
+                wrapper.CompressionType,
+                options.Providers
             );
             if (
                 await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
             )
             {
                 sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.BZip2);
+                return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
             }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        if (
-            await ZStandardStream
-                .IsZStandardAsync(sharpCompressStream, cancellationToken)
-                .ConfigureAwait(false)
-        )
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = new ZStandardStream(sharpCompressStream);
-            if (
-                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
-            )
+
+            if (wrapper.CompressionType != CompressionType.None)
             {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.ZStandard);
+                throw new InvalidFormatException("Not a tar file.");
             }
-            throw new InvalidFormatException("Not a tar file.");
         }
-        sharpCompressStream.Position = pos;
-        if (
-            await LZipStream
-                .IsLZipFileAsync(sharpCompressStream, cancellationToken)
-                .ConfigureAwait(false)
-        )
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = new LZipStream(sharpCompressStream, CompressionMode.Decompress);
-            if (
-                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
-            )
-            {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.LZip);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
+
         sharpCompressStream.Position = pos;
         return new TarReader(sharpCompressStream, options, CompressionType.None);
     }
@@ -159,57 +124,32 @@ public partial class TarReader
             bufferSize: options.RewindableBufferSize
         );
         long pos = sharpCompressStream.Position;
-        if (GZipArchive.IsGZipFile(sharpCompressStream))
+        foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Position = pos;
-            var testStream = new GZipStream(sharpCompressStream, CompressionMode.Decompress);
-            if (TarArchive.IsTarFile(testStream))
+            if (!wrapper.IsMatch(sharpCompressStream))
             {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.GZip);
+                continue;
             }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        if (BZip2Stream.IsBZip2(sharpCompressStream))
-        {
+
             sharpCompressStream.Position = pos;
-            var testStream = BZip2Stream.Create(
+            var testStream = CreateProbeDecompressionStream(
                 sharpCompressStream,
-                CompressionMode.Decompress,
-                false
+                wrapper.CompressionType,
+                options.Providers
             );
             if (TarArchive.IsTarFile(testStream))
             {
                 sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.BZip2);
+                return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
             }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        if (ZStandardStream.IsZStandard(sharpCompressStream))
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = new ZStandardStream(sharpCompressStream);
-            if (TarArchive.IsTarFile(testStream))
+
+            if (wrapper.CompressionType != CompressionType.None)
             {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.ZStandard);
+                throw new InvalidFormatException("Not a tar file.");
             }
-            throw new InvalidFormatException("Not a tar file.");
         }
-        sharpCompressStream.Position = pos;
-        if (LZipStream.IsLZipFile(sharpCompressStream))
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = new LZipStream(sharpCompressStream, CompressionMode.Decompress);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.LZip);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
+
         sharpCompressStream.Position = pos;
         return new TarReader(sharpCompressStream, options, CompressionType.None);
     }

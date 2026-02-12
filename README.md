@@ -18,7 +18,7 @@ Check the [Supported Formats](docs/FORMATS.md) and [Basic Usage.](docs/USAGE.md)
 
 ## Custom Compression Providers
 
-If you need to swap out SharpCompress’s built-in codecs, the `Providers` property (and `WithProviders(...)` extensions) on `ReaderOptions` and `WriterOptions` lets you supply a `CompressionProviderRegistry`. The default registry is already wired up, so customization is only necessary when you want to plug in alternatives such as `SystemGZipCompressionProvider` or a third-party `CompressionProvider`. See [docs/USAGE.md#custom-compression-providers](docs/USAGE.md#custom-compression-providers) for guided examples.
+If you need to swap out SharpCompress’s built-in codecs, the `Providers` property (and `WithProviders(...)` extensions) on `ReaderOptions` and `WriterOptions` lets you supply a `CompressionProviderRegistry`. The selected registry is used by Reader/Writer APIs, Archive APIs, and async extraction paths, so the same provider choice is applied consistently across open/read/write flows. The default registry is already wired up, so customization is only necessary when you want to plug in alternatives such as `SystemGZipCompressionProvider` or a third-party `CompressionProvider`. See [docs/USAGE.md#custom-compression-providers](docs/USAGE.md#custom-compression-providers) for guided examples.
 
 ## Recommended Formats
 

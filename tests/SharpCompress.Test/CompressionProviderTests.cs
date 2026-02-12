@@ -1,7 +1,10 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using AwesomeAssertions;
+using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.IO;
@@ -18,6 +21,102 @@ namespace SharpCompress.Test;
 
 public class CompressionProviderTests
 {
+    private sealed class TrackingCompressionProvider : ICompressionProvider
+    {
+        private readonly ICompressionProvider _inner;
+
+        public TrackingCompressionProvider(ICompressionProvider inner)
+        {
+            _inner = inner;
+        }
+
+        public int CompressionCalls { get; private set; }
+
+        public int DecompressionCalls { get; private set; }
+
+        public CompressionType CompressionType => _inner.CompressionType;
+
+        public bool SupportsCompression => _inner.SupportsCompression;
+
+        public bool SupportsDecompression => _inner.SupportsDecompression;
+
+        public Stream CreateCompressStream(Stream destination, int compressionLevel)
+        {
+            CompressionCalls++;
+            return _inner.CreateCompressStream(destination, compressionLevel);
+        }
+
+        public Stream CreateCompressStream(
+            Stream destination,
+            int compressionLevel,
+            CompressionContext context
+        )
+        {
+            CompressionCalls++;
+            return _inner.CreateCompressStream(destination, compressionLevel, context);
+        }
+
+        public Stream CreateDecompressStream(Stream source)
+        {
+            DecompressionCalls++;
+            return _inner.CreateDecompressStream(source);
+        }
+
+        public Stream CreateDecompressStream(Stream source, CompressionContext context)
+        {
+            DecompressionCalls++;
+            return _inner.CreateDecompressStream(source, context);
+        }
+    }
+
+    private sealed class TrackingLzmaHooksProvider : ICompressionProviderHooks
+    {
+        public int PreCalls { get; private set; }
+        public int PropertiesCalls { get; private set; }
+        public int PostCalls { get; private set; }
+
+        public CompressionType CompressionType => CompressionType.LZMA;
+
+        public bool SupportsCompression => true;
+
+        public bool SupportsDecompression => false;
+
+        public Stream CreateCompressStream(Stream destination, int compressionLevel)
+        {
+            CompressionContext context = new() { CanSeek = destination.CanSeek };
+            return CreateCompressStream(destination, compressionLevel, context);
+        }
+
+        public Stream CreateCompressStream(
+            Stream destination,
+            int compressionLevel,
+            CompressionContext context
+        ) => SharpCompressStream.CreateNonDisposing(destination);
+
+        public Stream CreateDecompressStream(Stream source) => throw new NotSupportedException();
+
+        public Stream CreateDecompressStream(Stream source, CompressionContext context) =>
+            throw new NotSupportedException();
+
+        public byte[]? GetPreCompressionData(CompressionContext context)
+        {
+            PreCalls++;
+            return [];
+        }
+
+        public byte[]? GetCompressionProperties(Stream stream, CompressionContext context)
+        {
+            PropertiesCalls++;
+            return [];
+        }
+
+        public byte[]? GetPostCompressionData(Stream stream, CompressionContext context)
+        {
+            PostCalls++;
+            return [1, 2, 3];
+        }
+    }
+
     [Fact]
     public void CompressionProviderRegistry_Default_ReturnsInternalProviders()
     {
@@ -52,7 +151,8 @@ public class CompressionProviderTests
 
         // Original should still have the default provider
         var originalProvider = original.GetProvider(CompressionType.Deflate);
-        originalProvider.Should().NotBeSameAs(modified);
+        var modifiedProvider = modified.GetProvider(CompressionType.Deflate);
+        originalProvider.Should().NotBeSameAs(modifiedProvider);
         originalProvider.Should().NotBeSameAs(customProvider);
     }
 
@@ -219,6 +319,146 @@ public class CompressionProviderTests
         clone.LeaveStreamOpen.Should().BeTrue();
     }
 
+    [Fact]
+    public void TarArchive_OpenArchive_UsesCustomGZipProvider()
+    {
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new TarWriter(
+                archiveStream,
+                new TarWriterOptions(CompressionType.GZip, true)
+            )
+        )
+        {
+            var data = Encoding.UTF8.GetBytes("tar archive provider usage");
+            writer.Write("test.txt", new MemoryStream(data), DateTime.Now);
+        }
+
+        var trackingProvider = new TrackingCompressionProvider(new GZipCompressionProvider());
+        var registry = CompressionProviderRegistry.Default.With(trackingProvider);
+        var readOptions = new ReaderOptions { Providers = registry };
+
+        archiveStream.Position = 0;
+        using var archive = TarArchive.OpenArchive(archiveStream, readOptions);
+        var entry = archive.Entries.First(x => !x.IsDirectory);
+        using var entryStream = entry.OpenEntryStream();
+        using var resultStream = new MemoryStream();
+        entryStream.CopyTo(resultStream);
+
+        trackingProvider.DecompressionCalls.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task TarArchive_OpenAsyncArchive_UsesCustomGZipProvider()
+    {
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new TarWriter(
+                archiveStream,
+                new TarWriterOptions(CompressionType.GZip, true)
+            )
+        )
+        {
+            var data = Encoding.UTF8.GetBytes("tar async archive provider usage");
+            writer.Write("test.txt", new MemoryStream(data), DateTime.Now);
+        }
+
+        var trackingProvider = new TrackingCompressionProvider(new GZipCompressionProvider());
+        var registry = CompressionProviderRegistry.Default.With(trackingProvider);
+        var readOptions = new ReaderOptions { Providers = registry };
+
+        archiveStream.Position = 0;
+        await using var archive = await TarArchive.OpenAsyncArchive(archiveStream, readOptions);
+        await foreach (var entry in archive.EntriesAsync)
+        {
+            if (entry.IsDirectory)
+            {
+                continue;
+            }
+
+            using var entryStream = await entry.OpenEntryStreamAsync();
+            using var resultStream = new MemoryStream();
+            await entryStream.CopyToAsync(resultStream);
+            break;
+        }
+
+        trackingProvider.DecompressionCalls.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task ZipReader_OpenEntryStreamAsync_UsesCustomDeflateProvider()
+    {
+        using var zipStream = new MemoryStream();
+        using (
+            var writer = WriterFactory.OpenWriter(
+                zipStream,
+                ArchiveType.Zip,
+                new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true }
+            )
+        )
+        {
+            var data = Encoding.UTF8.GetBytes("zip async provider usage");
+            writer.Write("test.txt", new MemoryStream(data));
+        }
+
+        var trackingProvider = new TrackingCompressionProvider(new DeflateCompressionProvider());
+        var registry = CompressionProviderRegistry.Default.With(trackingProvider);
+        var options = new ReaderOptions { Providers = registry };
+
+        zipStream.Position = 0;
+        await using var reader = await ReaderFactory.OpenAsyncReader(zipStream, options);
+        (await reader.MoveToNextEntryAsync()).Should().BeTrue();
+        using var entryStream = await reader.OpenEntryStreamAsync();
+        using var resultStream = new MemoryStream();
+        await entryStream.CopyToAsync(resultStream);
+
+        trackingProvider.DecompressionCalls.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void LzwReader_OpenReader_UsesCustomLzwProvider()
+    {
+        var archivePath = Path.Combine(TestBase.TEST_ARCHIVES_PATH, "Tar.tar.Z");
+        var trackingProvider = new TrackingCompressionProvider(new LzwCompressionProvider());
+        var registry = CompressionProviderRegistry.Default.With(trackingProvider);
+        var options = new ReaderOptions { Providers = registry };
+
+        using var stream = File.OpenRead(archivePath);
+        using var reader = ReaderFactory.OpenReader(stream, options);
+        reader.MoveToNextEntry().Should().BeTrue();
+        reader.WriteEntryTo(Stream.Null);
+
+        trackingProvider.DecompressionCalls.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void ZipWriter_LzmaProviderHook_WritesPostCompressionData()
+    {
+        var trackingProvider = new TrackingLzmaHooksProvider();
+        var registry = CompressionProviderRegistry.Default.With(trackingProvider);
+        using var zipStream = new MemoryStream();
+
+        using (
+            var writer = WriterFactory.OpenWriter(
+                zipStream,
+                ArchiveType.Zip,
+                new WriterOptions(CompressionType.LZMA)
+                {
+                    LeaveStreamOpen = true,
+                    Providers = registry,
+                }
+            )
+        )
+        {
+            var data = Encoding.UTF8.GetBytes("hook provider");
+            writer.Write("test.txt", new MemoryStream(data));
+        }
+
+        trackingProvider.PreCalls.Should().BeGreaterThan(0);
+        trackingProvider.PropertiesCalls.Should().BeGreaterThan(0);
+        trackingProvider.PostCalls.Should().BeGreaterThan(0);
+    }
+
     #region System.IO.Compression Tests
 
     [Fact]
@@ -230,8 +470,8 @@ public class CompressionProviderTests
         );
 
         using var compressedStream = new MemoryStream();
-        // System.IO.Compression streams leave the underlying stream open by default with leaveOpen: true
-        using (var compressStream = provider.CreateCompressStream(compressedStream, 6))
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(compressedStream);
+        using (var compressStream = provider.CreateCompressStream(nonDisposingStream, 6))
         {
             compressStream.Write(original, 0, original.Length);
         }
@@ -258,7 +498,8 @@ public class CompressionProviderTests
         );
 
         using var compressedStream = new MemoryStream();
-        using (var compressStream = provider.CreateCompressStream(compressedStream, level))
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(compressedStream);
+        using (var compressStream = provider.CreateCompressStream(nonDisposingStream, level))
         {
             compressStream.Write(original, 0, original.Length);
         }
@@ -282,7 +523,8 @@ public class CompressionProviderTests
         );
 
         using var compressedStream = new MemoryStream();
-        using (var compressStream = systemProvider.CreateCompressStream(compressedStream, 6))
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(compressedStream);
+        using (var compressStream = systemProvider.CreateCompressStream(nonDisposingStream, 6))
         {
             compressStream.Write(original, 0, original.Length);
         }
@@ -377,7 +619,8 @@ public class CompressionProviderTests
         );
 
         using var compressedStream = new MemoryStream();
-        using (var compressStream = provider.CreateCompressStream(compressedStream, 6))
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(compressedStream);
+        using (var compressStream = provider.CreateCompressStream(nonDisposingStream, 6))
         {
             compressStream.Write(original, 0, original.Length);
         }
@@ -401,7 +644,8 @@ public class CompressionProviderTests
         );
 
         using var compressedStream = new MemoryStream();
-        using (var compressStream = systemProvider.CreateCompressStream(compressedStream, 6))
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(compressedStream);
+        using (var compressStream = systemProvider.CreateCompressStream(nonDisposingStream, 6))
         {
             compressStream.Write(original, 0, original.Length);
         }

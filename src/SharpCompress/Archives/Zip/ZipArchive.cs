@@ -176,6 +176,6 @@ public partial class ZipArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)ZipReader.OpenReader(stream));
+        return new((IAsyncReader)ZipReader.OpenReader(stream, ReaderOptions, Entries));
     }
 }

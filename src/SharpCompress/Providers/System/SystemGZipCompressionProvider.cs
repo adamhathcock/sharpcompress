@@ -20,7 +20,7 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         var bclLevel = MapCompressionLevel(compressionLevel);
-        return new GZipStream(destination, bclLevel, leaveOpen: true);
+        return new GZipStream(destination, bclLevel, leaveOpen: false);
     }
 
     public Stream CreateCompressStream(
@@ -38,7 +38,7 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
         return new GZipStream(
             source,
             global::System.IO.Compression.CompressionMode.Decompress,
-            leaveOpen: true
+            leaveOpen: false
         );
     }
 

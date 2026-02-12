@@ -96,4 +96,28 @@ public abstract class Factory : IFactory
         stream.Rewind();
         return false;
     }
+
+    internal virtual async ValueTask<IAsyncReader?> TryOpenReaderAsync(
+        SharpCompressStream stream,
+        ReaderOptions options,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (this is IReaderFactory readerFactory)
+        {
+            stream.Rewind();
+            if (
+                await IsArchiveAsync(stream, options.Password, cancellationToken)
+                    .ConfigureAwait(false)
+            )
+            {
+                stream.Rewind(true);
+                return await readerFactory
+                    .OpenAsyncReader(stream, options, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+        stream.Rewind();
+        return null;
+    }
 }

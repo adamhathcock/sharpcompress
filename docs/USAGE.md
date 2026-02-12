@@ -210,6 +210,8 @@ foreach(var entry in archive.Entries)
 
 By default `ReaderOptions` and `WriterOptions` already include `CompressionProviderRegistry.Default` via their `Providers` property, so you can read and write without touching the registry yet still get SharpCompress’s built-in implementations.
 
+The configured registry is used consistently across Reader APIs, Writer APIs, Archive APIs, and async entry-stream extraction, including compressed TAR wrappers and ZIP async decompression.
+
 To replace a specific algorithm (for example to use `System.IO.Compression` for GZip or Deflate), create a modified registry and pass it through the same options:
 
 ```C#

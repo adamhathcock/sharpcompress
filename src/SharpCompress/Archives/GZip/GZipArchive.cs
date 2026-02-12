@@ -96,6 +96,6 @@ public partial class GZipArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return GZipReader.OpenReader(stream);
+        return GZipReader.OpenReader(stream, ReaderOptions);
     }
 }

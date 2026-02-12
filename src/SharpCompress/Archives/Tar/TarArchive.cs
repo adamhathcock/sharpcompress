@@ -5,17 +5,10 @@ using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
-using SharpCompress.Compressors.BZip2;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.Lzw;
-using SharpCompress.Compressors.Xz;
-using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Writers.Tar;
-using CompressionMode = SharpCompress.Compressors.CompressionMode;
 using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Archives.Tar;
@@ -43,12 +36,30 @@ public partial class TarArchive
     private Stream GetStream(Stream stream) =>
         _compressionType switch
         {
-            CompressionType.BZip2 => BZip2Stream.Create(stream, CompressionMode.Decompress, false),
-            CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
-            CompressionType.ZStandard => new ZStandardStream(stream),
-            CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
-            CompressionType.Xz => new XZStream(stream),
-            CompressionType.Lzw => new LzwStream(stream),
+            CompressionType.BZip2 => ReaderOptions.Providers.CreateDecompressStream(
+                CompressionType.BZip2,
+                stream
+            ),
+            CompressionType.GZip => ReaderOptions.Providers.CreateDecompressStream(
+                CompressionType.GZip,
+                stream
+            ),
+            CompressionType.ZStandard => ReaderOptions.Providers.CreateDecompressStream(
+                CompressionType.ZStandard,
+                stream
+            ),
+            CompressionType.LZip => ReaderOptions.Providers.CreateDecompressStream(
+                CompressionType.LZip,
+                stream
+            ),
+            CompressionType.Xz => ReaderOptions.Providers.CreateDecompressStream(
+                CompressionType.Xz,
+                stream
+            ),
+            CompressionType.Lzw => ReaderOptions.Providers.CreateDecompressStream(
+                CompressionType.Lzw,
+                stream
+            ),
             CompressionType.None => stream,
             _ => throw new NotSupportedException("Invalid compression type: " + _compressionType),
         };
@@ -83,7 +94,10 @@ public partial class TarArchive
                     {
                         var entry = new TarArchiveEntry(
                             this,
-                            new TarFilePart(previousHeader, stream),
+                            new TarFilePart(
+                                previousHeader,
+                                _compressionType == CompressionType.None ? stream : null
+                            ),
                             CompressionType.None,
                             ReaderOptions
                         );
@@ -106,7 +120,10 @@ public partial class TarArchive
                     }
                     yield return new TarArchiveEntry(
                         this,
-                        new TarFilePart(header, stream),
+                        new TarFilePart(
+                            header,
+                            _compressionType == CompressionType.None ? stream : null
+                        ),
                         CompressionType.None,
                         ReaderOptions
                     );
@@ -178,6 +195,6 @@ public partial class TarArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return TarReader.OpenReader(GetStream(stream));
+        return new TarReader(stream, ReaderOptions, _compressionType);
     }
 }
