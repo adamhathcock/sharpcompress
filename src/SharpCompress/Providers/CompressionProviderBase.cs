@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,17 +32,18 @@ public abstract class CompressionProviderBase : ICompressionProvider
     public abstract Stream CreateCompressStream(Stream destination, int compressionLevel);
 
     /// <inheritdoc />
-    public abstract Stream CreateCompressStream(
+    public virtual Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
-    );
+    ) => CreateCompressStream(destination, compressionLevel);
 
     /// <inheritdoc />
     public abstract Stream CreateDecompressStream(Stream source);
 
     /// <inheritdoc />
-    public abstract Stream CreateDecompressStream(Stream source, CompressionContext context);
+    public virtual Stream CreateDecompressStream(Stream source, CompressionContext context) =>
+        CreateDecompressStream(source);
 
     /// <summary>
     /// Asynchronously creates a compression stream.
@@ -68,8 +70,7 @@ public abstract class CompressionProviderBase : ICompressionProvider
         CancellationToken cancellationToken = default
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        return new ValueTask<Stream>(CreateCompressStream(destination, compressionLevel, context));
+        return CreateCompressStreamAsync(destination, compressionLevel, cancellationToken);
     }
 
     /// <summary>
@@ -95,7 +96,34 @@ public abstract class CompressionProviderBase : ICompressionProvider
         CancellationToken cancellationToken = default
     )
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        return new ValueTask<Stream>(CreateDecompressStream(source, context));
+        return CreateDecompressStreamAsync(source, cancellationToken);
+    }
+
+    protected static void ValidateRequiredSizes(CompressionContext context, string algorithmName)
+    {
+        if (context.InputSize < 0 || context.OutputSize < 0)
+        {
+            throw new ArgumentException(
+                $"{algorithmName} decompression requires InputSize and OutputSize in CompressionContext.",
+                nameof(context)
+            );
+        }
+    }
+
+    protected static T RequireFormatOption<T>(
+        CompressionContext context,
+        string algorithmName,
+        string optionName
+    )
+    {
+        if (context.FormatOptions is not T options)
+        {
+            throw new ArgumentException(
+                $"{algorithmName} decompression requires {optionName} in CompressionContext.FormatOptions.",
+                nameof(context)
+            );
+        }
+
+        return options;
     }
 }

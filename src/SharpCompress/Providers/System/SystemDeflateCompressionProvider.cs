@@ -23,16 +23,6 @@ public sealed class SystemDeflateCompressionProvider : CompressionProviderBase
         return new DeflateStream(destination, bclLevel, leaveOpen: false);
     }
 
-    public override Stream CreateCompressStream(
-        Stream destination,
-        int compressionLevel,
-        CompressionContext context
-    )
-    {
-        // Context not used for simple Deflate compression
-        return CreateCompressStream(destination, compressionLevel);
-    }
-
     public override Stream CreateDecompressStream(Stream source)
     {
         return new DeflateStream(
@@ -40,12 +30,6 @@ public sealed class SystemDeflateCompressionProvider : CompressionProviderBase
             global::System.IO.Compression.CompressionMode.Decompress,
             leaveOpen: false
         );
-    }
-
-    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
-    {
-        // Context not used for simple Deflate decompression
-        return CreateDecompressStream(source);
     }
 
     /// <summary>

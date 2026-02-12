@@ -20,24 +20,8 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
         return new GZipStream(destination, CompressionMode.Compress, level);
     }
 
-    public override Stream CreateCompressStream(
-        Stream destination,
-        int compressionLevel,
-        CompressionContext context
-    )
-    {
-        // Context not used for simple GZip compression
-        return CreateCompressStream(destination, compressionLevel);
-    }
-
     public override Stream CreateDecompressStream(Stream source)
     {
         return new GZipStream(source, CompressionMode.Decompress);
-    }
-
-    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
-    {
-        // Context not used for simple GZip decompression
-        return CreateDecompressStream(source);
     }
 }

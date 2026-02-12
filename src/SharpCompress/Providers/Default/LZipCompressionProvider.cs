@@ -19,24 +19,8 @@ public sealed class LZipCompressionProvider : CompressionProviderBase
         return new LZipStream(destination, CompressionMode.Compress);
     }
 
-    public override Stream CreateCompressStream(
-        Stream destination,
-        int compressionLevel,
-        CompressionContext context
-    )
-    {
-        // Context not used for LZip compression
-        return CreateCompressStream(destination, compressionLevel);
-    }
-
     public override Stream CreateDecompressStream(Stream source)
     {
         return new LZipStream(source, CompressionMode.Decompress);
-    }
-
-    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
-    {
-        // Context not used for LZip decompression
-        return CreateDecompressStream(source);
     }
 }
