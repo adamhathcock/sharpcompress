@@ -10,6 +10,10 @@ public class ZipEntry : Entry
 {
     private readonly ZipFilePart? _filePart;
 
+    // WinZip AES extra data constants
+    private const int MinimumWinZipAesExtraDataLength = 7;
+    private const int WinZipAesCompressionMethodOffset = 5;
+
     internal ZipEntry(ZipFilePart? filePart, IReaderOptions readerOptions)
         : base(readerOptions)
     {
@@ -70,7 +74,7 @@ public class ZipEntry : Entry
             x.Type == ExtraDataType.WinZipAes
         );
 
-        if (aesExtraData is null || aesExtraData.DataBytes.Length < 7)
+        if (aesExtraData is null || aesExtraData.DataBytes.Length < MinimumWinZipAesExtraDataLength)
         {
             return ZipCompressionMethod.WinzipAes;
         }
@@ -78,7 +82,7 @@ public class ZipEntry : Entry
         // The compression method is at offset 5 in the extra data
         return (ZipCompressionMethod)
             System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(
-                aesExtraData.DataBytes.AsSpan(5)
+                aesExtraData.DataBytes.AsSpan(WinZipAesCompressionMethodOffset)
             );
     }
 
