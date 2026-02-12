@@ -33,24 +33,54 @@ public class ZipEntry : Entry
         CreatedTime = times?.UnicodeTimes.Item3;
     }
 
-    public override CompressionType CompressionType =>
-        _filePart?.Header.CompressionMethod switch
+    public override CompressionType CompressionType
+    {
+        get
         {
-            ZipCompressionMethod.BZip2 => CompressionType.BZip2,
-            ZipCompressionMethod.Deflate => CompressionType.Deflate,
-            ZipCompressionMethod.Deflate64 => CompressionType.Deflate64,
-            ZipCompressionMethod.LZMA => CompressionType.LZMA,
-            ZipCompressionMethod.PPMd => CompressionType.PPMd,
-            ZipCompressionMethod.None => CompressionType.None,
-            ZipCompressionMethod.Shrink => CompressionType.Shrink,
-            ZipCompressionMethod.Reduce1 => CompressionType.Reduce1,
-            ZipCompressionMethod.Reduce2 => CompressionType.Reduce2,
-            ZipCompressionMethod.Reduce3 => CompressionType.Reduce3,
-            ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
-            ZipCompressionMethod.Explode => CompressionType.Explode,
-            ZipCompressionMethod.ZStandard => CompressionType.ZStandard,
-            _ => CompressionType.Unknown,
-        };
+            var compressionMethod = GetActualCompressionMethod();
+            return compressionMethod switch
+            {
+                ZipCompressionMethod.BZip2 => CompressionType.BZip2,
+                ZipCompressionMethod.Deflate => CompressionType.Deflate,
+                ZipCompressionMethod.Deflate64 => CompressionType.Deflate64,
+                ZipCompressionMethod.LZMA => CompressionType.LZMA,
+                ZipCompressionMethod.PPMd => CompressionType.PPMd,
+                ZipCompressionMethod.None => CompressionType.None,
+                ZipCompressionMethod.Shrink => CompressionType.Shrink,
+                ZipCompressionMethod.Reduce1 => CompressionType.Reduce1,
+                ZipCompressionMethod.Reduce2 => CompressionType.Reduce2,
+                ZipCompressionMethod.Reduce3 => CompressionType.Reduce3,
+                ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
+                ZipCompressionMethod.Explode => CompressionType.Explode,
+                ZipCompressionMethod.ZStandard => CompressionType.ZStandard,
+                _ => CompressionType.Unknown,
+            };
+        }
+    }
+
+    private ZipCompressionMethod GetActualCompressionMethod()
+    {
+        if (_filePart?.Header.CompressionMethod != ZipCompressionMethod.WinzipAes)
+        {
+            return _filePart?.Header.CompressionMethod ?? ZipCompressionMethod.None;
+        }
+
+        // For WinZip AES, the actual compression method is stored in the extra data
+        var aesExtraData = _filePart.Header.Extra.FirstOrDefault(x =>
+            x.Type == ExtraDataType.WinZipAes
+        );
+
+        if (aesExtraData is null || aesExtraData.DataBytes.Length < 7)
+        {
+            return ZipCompressionMethod.WinzipAes;
+        }
+
+        // The compression method is at offset 5 in the extra data
+        return (ZipCompressionMethod)
+            System.Buffers.Binary.BinaryPrimitives.ReadUInt16LittleEndian(
+                aesExtraData.DataBytes.AsSpan(5)
+            );
+    }
 
     public override long Crc => _filePart?.Header.Crc ?? 0;
 

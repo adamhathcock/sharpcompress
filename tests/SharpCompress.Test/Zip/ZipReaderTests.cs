@@ -201,7 +201,7 @@ public class ZipReaderTests : ReaderTests
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
+                        Assert.Equal(CompressionType.LZMA, reader.Entry.CompressionType);
                         reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                     }
                 }
@@ -223,7 +223,7 @@ public class ZipReaderTests : ReaderTests
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
+                    Assert.Equal(CompressionType.Deflate, reader.Entry.CompressionType);
                     reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
