@@ -34,6 +34,7 @@ public partial class TarReader
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         stream.NotNull(nameof(stream));
         options ??= new ReaderOptions();
         var sharpCompressStream = SharpCompressStream.Create(
@@ -41,11 +42,17 @@ public partial class TarReader
             bufferSize: options.RewindableBufferSize
         );
         long pos = sharpCompressStream.Position;
-        if (await GZipArchive.IsGZipFileAsync(sharpCompressStream, cancellationToken))
+        if (
+            await GZipArchive
+                .IsGZipFileAsync(sharpCompressStream, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             sharpCompressStream.Position = pos;
             var testStream = new GZipStream(sharpCompressStream, CompressionMode.Decompress);
-            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            if (
+                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Position = pos;
                 return new TarReader(sharpCompressStream, options, CompressionType.GZip);
@@ -53,7 +60,11 @@ public partial class TarReader
             throw new InvalidFormatException("Not a tar file.");
         }
         sharpCompressStream.Position = pos;
-        if (await BZip2Stream.IsBZip2Async(sharpCompressStream, cancellationToken))
+        if (
+            await BZip2Stream
+                .IsBZip2Async(sharpCompressStream, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             sharpCompressStream.Position = pos;
             var testStream = BZip2Stream.Create(
@@ -61,7 +72,9 @@ public partial class TarReader
                 CompressionMode.Decompress,
                 false
             );
-            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            if (
+                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Position = pos;
                 return new TarReader(sharpCompressStream, options, CompressionType.BZip2);
@@ -69,11 +82,17 @@ public partial class TarReader
             throw new InvalidFormatException("Not a tar file.");
         }
         sharpCompressStream.Position = pos;
-        if (await ZStandardStream.IsZStandardAsync(sharpCompressStream, cancellationToken))
+        if (
+            await ZStandardStream
+                .IsZStandardAsync(sharpCompressStream, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             sharpCompressStream.Position = pos;
             var testStream = new ZStandardStream(sharpCompressStream);
-            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            if (
+                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Position = pos;
                 return new TarReader(sharpCompressStream, options, CompressionType.ZStandard);
@@ -81,11 +100,17 @@ public partial class TarReader
             throw new InvalidFormatException("Not a tar file.");
         }
         sharpCompressStream.Position = pos;
-        if (await LZipStream.IsLZipFileAsync(sharpCompressStream, cancellationToken))
+        if (
+            await LZipStream
+                .IsLZipFileAsync(sharpCompressStream, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             sharpCompressStream.Position = pos;
             var testStream = new LZipStream(sharpCompressStream, CompressionMode.Decompress);
-            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            if (
+                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
+            )
             {
                 sharpCompressStream.Position = pos;
                 return new TarReader(sharpCompressStream, options, CompressionType.LZip);

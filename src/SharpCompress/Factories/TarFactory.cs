@@ -141,7 +141,11 @@ public class TarFactory
             {
                 stream.Seek(0, SeekOrigin.Begin);
                 var decompressedStream = wrapper.CreateStream(stream);
-                if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
                 {
                     return wrapper.CompressionType;
                 }
@@ -161,7 +165,10 @@ public class TarFactory
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => await TarArchive.OpenAsyncArchive(stream, readerOptions, cancellationToken);
+    ) =>
+        await TarArchive
+            .OpenAsyncArchive(stream, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
 
     /// <inheritdoc/>
     public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
@@ -172,7 +179,10 @@ public class TarFactory
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => await TarArchive.OpenAsyncArchive(fileInfo, readerOptions, cancellationToken);
+    ) =>
+        await TarArchive
+            .OpenAsyncArchive(fileInfo, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
 
     #endregion
 
