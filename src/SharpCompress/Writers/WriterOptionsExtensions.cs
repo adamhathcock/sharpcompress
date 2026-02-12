@@ -1,6 +1,9 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Writers.GZip;
+using SharpCompress.Writers.Tar;
+using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Writers;
 
@@ -19,6 +22,29 @@ public static class WriterOptionsExtensions
         this WriterOptions options,
         bool leaveStreamOpen
     ) => options with { LeaveStreamOpen = leaveStreamOpen };
+
+    /// <summary>
+    /// Creates a copy with the specified LeaveStreamOpen value.
+    /// Works with any IWriterOptions implementation.
+    /// </summary>
+    /// <param name="options">The source options.</param>
+    /// <param name="leaveStreamOpen">Whether to leave the stream open.</param>
+    /// <returns>A new options instance with the specified LeaveStreamOpen value.</returns>
+    public static IWriterOptions WithLeaveStreamOpen(
+        this IWriterOptions options,
+        bool leaveStreamOpen
+    ) =>
+        options switch
+        {
+            WriterOptions writerOptions => writerOptions with { LeaveStreamOpen = leaveStreamOpen },
+            ZipWriterOptions zipOptions => zipOptions with { LeaveStreamOpen = leaveStreamOpen },
+            TarWriterOptions tarOptions => tarOptions with { LeaveStreamOpen = leaveStreamOpen },
+            GZipWriterOptions gzipOptions => gzipOptions with { LeaveStreamOpen = leaveStreamOpen },
+            _ => throw new NotSupportedException(
+                $"Cannot set LeaveStreamOpen on options of type {options.GetType().Name}. "
+                    + "Options must be a record type implementing IWriterOptions."
+            ),
+        };
 
     /// <summary>
     /// Creates a copy with the specified compression level.

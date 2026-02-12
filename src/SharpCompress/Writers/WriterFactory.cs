@@ -27,7 +27,11 @@ public static class WriterFactory
     )
     {
         fileInfo.NotNull(nameof(fileInfo));
-        return OpenWriter(fileInfo.OpenWrite(), archiveType, writerOptions);
+        return OpenWriter(
+            fileInfo.OpenWrite(),
+            archiveType,
+            writerOptions.WithLeaveStreamOpen(false)
+        );
     }
 
     public static async ValueTask<IAsyncWriter> OpenAsyncWriter(
@@ -55,7 +59,12 @@ public static class WriterFactory
     {
         fileInfo.NotNull(nameof(fileInfo));
         var stream = Utility.OpenAsyncWriteStream(fileInfo.FullName, cancellationToken);
-        return await OpenAsyncWriter(stream, archiveType, writerOptions, cancellationToken);
+        return await OpenAsyncWriter(
+            stream,
+            archiveType,
+            writerOptions.WithLeaveStreamOpen(false),
+            cancellationToken
+        );
     }
 
     public static IWriter OpenWriter(
