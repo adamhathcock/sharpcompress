@@ -7,6 +7,7 @@ using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Providers;
+using SharpCompress.Providers.System;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 
