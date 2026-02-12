@@ -22,7 +22,9 @@ public static partial class ArchiveFactory
         readerOptions ??= ReaderOptions.ForExternalStream;
         var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken)
             .ConfigureAwait(false);
-        return factory.OpenAsyncArchive(stream, readerOptions);
+        return await factory
+            .OpenAsyncArchive(stream, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static ValueTask<IAsyncArchive> OpenAsyncArchive(
@@ -45,7 +47,9 @@ public static partial class ArchiveFactory
 
         var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken)
             .ConfigureAwait(false);
-        return factory.OpenAsyncArchive(fileInfo, options);
+        return await factory
+            .OpenAsyncArchive(fileInfo, options, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
