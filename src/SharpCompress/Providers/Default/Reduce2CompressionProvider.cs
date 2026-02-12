@@ -9,20 +9,20 @@ namespace SharpCompress.Providers.Default;
 /// Provides Reduce2 decompression using SharpCompress's internal implementation.
 /// Note: Reduce compression is not supported; this provider is decompression-only.
 /// </summary>
-public sealed class Reduce2CompressionProvider : ICompressionProvider
+public sealed class Reduce2CompressionProvider : CompressionProviderBase
 {
-    public CompressionType CompressionType => CompressionType.Reduce2;
-    public bool SupportsCompression => false;
-    public bool SupportsDecompression => true;
+    public override CompressionType CompressionType => CompressionType.Reduce2;
+    public override bool SupportsCompression => false;
+    public override bool SupportsDecompression => true;
 
-    public Stream CreateCompressStream(Stream destination, int compressionLevel)
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         throw new NotSupportedException(
             "Reduce compression is not supported by SharpCompress's internal implementation."
         );
     }
 
-    public Stream CreateCompressStream(
+    public override Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
@@ -33,7 +33,7 @@ public sealed class Reduce2CompressionProvider : ICompressionProvider
         );
     }
 
-    public Stream CreateDecompressStream(Stream source)
+    public override Stream CreateDecompressStream(Stream source)
     {
         throw new InvalidOperationException(
             "Reduce decompression requires compressed and uncompressed sizes. "
@@ -41,7 +41,7 @@ public sealed class Reduce2CompressionProvider : ICompressionProvider
         );
     }
 
-    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
         if (context.InputSize < 0 || context.OutputSize < 0)
         {

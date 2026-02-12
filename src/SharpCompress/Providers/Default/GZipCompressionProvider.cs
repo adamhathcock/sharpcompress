@@ -8,19 +8,19 @@ namespace SharpCompress.Providers.Default;
 /// <summary>
 /// Provides GZip compression using SharpCompress's internal implementation.
 /// </summary>
-public sealed class GZipCompressionProvider : ICompressionProvider
+public sealed class GZipCompressionProvider : CompressionProviderBase
 {
-    public CompressionType CompressionType => CompressionType.GZip;
-    public bool SupportsCompression => true;
-    public bool SupportsDecompression => true;
+    public override CompressionType CompressionType => CompressionType.GZip;
+    public override bool SupportsCompression => true;
+    public override bool SupportsDecompression => true;
 
-    public Stream CreateCompressStream(Stream destination, int compressionLevel)
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         var level = (CompressionLevel)compressionLevel;
         return new GZipStream(destination, CompressionMode.Compress, level);
     }
 
-    public Stream CreateCompressStream(
+    public override Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
@@ -30,12 +30,12 @@ public sealed class GZipCompressionProvider : ICompressionProvider
         return CreateCompressStream(destination, compressionLevel);
     }
 
-    public Stream CreateDecompressStream(Stream source)
+    public override Stream CreateDecompressStream(Stream source)
     {
         return new GZipStream(source, CompressionMode.Decompress);
     }
 
-    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
         // Context not used for simple GZip decompression
         return CreateDecompressStream(source);

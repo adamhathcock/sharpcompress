@@ -9,20 +9,20 @@ namespace SharpCompress.Providers.Default;
 /// Provides XZ compression decompression using SharpCompress's internal implementation.
 /// Note: Compression is not supported by this provider.
 /// </summary>
-public sealed class XzCompressionProvider : ICompressionProvider
+public sealed class XzCompressionProvider : CompressionProviderBase
 {
-    public CompressionType CompressionType => CompressionType.Xz;
-    public bool SupportsCompression => false;
-    public bool SupportsDecompression => true;
+    public override CompressionType CompressionType => CompressionType.Xz;
+    public override bool SupportsCompression => false;
+    public override bool SupportsDecompression => true;
 
-    public Stream CreateCompressStream(Stream destination, int compressionLevel)
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         throw new NotSupportedException(
             "XZ compression is not supported by SharpCompress's internal implementation."
         );
     }
 
-    public Stream CreateCompressStream(
+    public override Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
@@ -33,12 +33,12 @@ public sealed class XzCompressionProvider : ICompressionProvider
         );
     }
 
-    public Stream CreateDecompressStream(Stream source)
+    public override Stream CreateDecompressStream(Stream source)
     {
         return new XZStream(source);
     }
 
-    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
         // Context not used for XZ decompression
         return CreateDecompressStream(source);

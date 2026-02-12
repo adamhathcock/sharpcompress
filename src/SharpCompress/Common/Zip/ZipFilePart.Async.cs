@@ -168,23 +168,51 @@ internal abstract partial class ZipFilePart
                         : Header.UncompressedSize,
                 };
 
-                return providers.CreateDecompressStream(compressionType, stream, context);
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        stream,
+                        context,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.PPMd:
             {
                 var props = new byte[2];
                 await stream.ReadFullyAsync(props, 0, 2, cancellationToken).ConfigureAwait(false);
                 context = context with { Properties = props };
-                return providers.CreateDecompressStream(compressionType, stream, context);
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        stream,
+                        context,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             case ZipCompressionMethod.Explode:
             {
                 context = context with { FormatOptions = Header.Flags };
-                return providers.CreateDecompressStream(compressionType, stream, context);
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        stream,
+                        context,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
             default:
             {
-                return providers.CreateDecompressStream(compressionType, stream, context);
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        stream,
+                        context,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
         }
     }

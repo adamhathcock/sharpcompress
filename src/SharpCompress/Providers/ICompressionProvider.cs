@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Providers;
@@ -18,6 +20,10 @@ namespace SharpCompress.Providers;
 /// Implementations should be thread-safe for concurrent decompression operations,
 /// but CreateCompressStream/CreateDecompressStream themselves return new stream instances
 /// that are not shared.
+/// </para>
+/// <para>
+/// For simpler implementations, derive from <see cref="CompressionProviderBase"/> which provides
+/// default async implementations that delegate to the synchronous methods.
 /// </para>
 /// </remarks>
 public interface ICompressionProvider
@@ -76,4 +82,60 @@ public interface ICompressionProvider
     /// <returns>A decompression stream.</returns>
     /// <exception cref="NotSupportedException">Thrown if SupportsDecompression is false.</exception>
     Stream CreateDecompressStream(Stream source, CompressionContext context);
+
+    /// <summary>
+    /// Asynchronously creates a compression stream that compresses data written to it.
+    /// </summary>
+    /// <param name="destination">The destination stream to write compressed data to.</param>
+    /// <param name="compressionLevel">The compression level (0-9, algorithm-specific).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the compression stream.</returns>
+    /// <exception cref="NotSupportedException">Thrown if SupportsCompression is false.</exception>
+    ValueTask<Stream> CreateCompressStreamAsync(
+        Stream destination,
+        int compressionLevel,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Asynchronously creates a compression stream with context information.
+    /// </summary>
+    /// <param name="destination">The destination stream.</param>
+    /// <param name="compressionLevel">The compression level.</param>
+    /// <param name="context">Context information about the compression.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the compression stream.</returns>
+    /// <exception cref="NotSupportedException">Thrown if SupportsCompression is false.</exception>
+    ValueTask<Stream> CreateCompressStreamAsync(
+        Stream destination,
+        int compressionLevel,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Asynchronously creates a decompression stream that decompresses data read from it.
+    /// </summary>
+    /// <param name="source">The source stream to read compressed data from.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the decompression stream.</returns>
+    /// <exception cref="NotSupportedException">Thrown if SupportsDecompression is false.</exception>
+    ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Asynchronously creates a decompression stream with context information.
+    /// </summary>
+    /// <param name="source">The source stream.</param>
+    /// <param name="context">Context information about the decompression.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the decompression stream.</returns>
+    /// <exception cref="NotSupportedException">Thrown if SupportsDecompression is false.</exception>
+    ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    );
 }

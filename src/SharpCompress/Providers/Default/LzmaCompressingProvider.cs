@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA;
 
@@ -9,13 +11,13 @@ namespace SharpCompress.Providers.Default;
 /// Provides LZMA compression and decompression using SharpCompress's internal implementation.
 /// This is a complex provider that requires initialization data for compression.
 /// </summary>
-public sealed class LzmaCompressingProvider : ICompressionProviderHooks
+public sealed class LzmaCompressingProvider : CompressionProviderBase, ICompressionProviderHooks
 {
-    public CompressionType CompressionType => CompressionType.LZMA;
-    public bool SupportsCompression => true;
-    public bool SupportsDecompression => true;
+    public override CompressionType CompressionType => CompressionType.LZMA;
+    public override bool SupportsCompression => true;
+    public override bool SupportsDecompression => true;
 
-    public Stream CreateCompressStream(Stream destination, int compressionLevel)
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         throw new InvalidOperationException(
             "LZMA compression requires context with CanSeek information. "
@@ -23,7 +25,7 @@ public sealed class LzmaCompressingProvider : ICompressionProviderHooks
         );
     }
 
-    public Stream CreateCompressStream(
+    public override Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
@@ -35,7 +37,7 @@ public sealed class LzmaCompressingProvider : ICompressionProviderHooks
         return LzmaStream.Create(props, false, destination);
     }
 
-    public Stream CreateDecompressStream(Stream source)
+    public override Stream CreateDecompressStream(Stream source)
     {
         throw new InvalidOperationException(
             "LZMA decompression requires properties. "
@@ -43,7 +45,7 @@ public sealed class LzmaCompressingProvider : ICompressionProviderHooks
         );
     }
 
-    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
         if (context.Properties is null || context.Properties.Length < 5)
         {

@@ -10,20 +10,20 @@ namespace SharpCompress.Providers.Default;
 /// Provides Deflate64 decompression using SharpCompress's internal implementation.
 /// Note: Deflate64 compression is not supported; this provider is decompression-only.
 /// </summary>
-public sealed class Deflate64CompressionProvider : ICompressionProvider
+public sealed class Deflate64CompressionProvider : CompressionProviderBase
 {
-    public CompressionType CompressionType => CompressionType.Deflate64;
-    public bool SupportsCompression => false;
-    public bool SupportsDecompression => true;
+    public override CompressionType CompressionType => CompressionType.Deflate64;
+    public override bool SupportsCompression => false;
+    public override bool SupportsDecompression => true;
 
-    public Stream CreateCompressStream(Stream destination, int compressionLevel)
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         throw new NotSupportedException(
             "Deflate64 compression is not supported by SharpCompress's internal implementation."
         );
     }
 
-    public Stream CreateCompressStream(
+    public override Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
@@ -34,12 +34,12 @@ public sealed class Deflate64CompressionProvider : ICompressionProvider
         );
     }
 
-    public Stream CreateDecompressStream(Stream source)
+    public override Stream CreateDecompressStream(Stream source)
     {
         return new Deflate64Stream(source, CompressionMode.Decompress);
     }
 
-    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
         // Context not used for Deflate64 decompression
         return CreateDecompressStream(source);

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Providers.Default;
 
@@ -144,6 +146,114 @@ public sealed class CompressionProviderRegistry
             );
         }
         return provider.CreateDecompressStream(source, context);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a compression stream for the specified type.
+    /// </summary>
+    /// <param name="type">The compression type.</param>
+    /// <param name="destination">The destination stream.</param>
+    /// <param name="level">The compression level.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the compression stream.</returns>
+    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
+    public ValueTask<Stream> CreateCompressStreamAsync(
+        CompressionType type,
+        Stream destination,
+        int level,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var provider = GetProvider(type);
+        if (provider is null)
+        {
+            throw new InvalidOperationException(
+                $"No compression provider registered for type: {type}"
+            );
+        }
+        return provider.CreateCompressStreamAsync(destination, level, cancellationToken);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a decompression stream for the specified type.
+    /// </summary>
+    /// <param name="type">The compression type.</param>
+    /// <param name="source">The source stream.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the decompression stream.</returns>
+    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
+    public ValueTask<Stream> CreateDecompressStreamAsync(
+        CompressionType type,
+        Stream source,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var provider = GetProvider(type);
+        if (provider is null)
+        {
+            throw new InvalidOperationException(
+                $"No compression provider registered for type: {type}"
+            );
+        }
+        return provider.CreateDecompressStreamAsync(source, cancellationToken);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a compression stream for the specified type with context.
+    /// </summary>
+    /// <param name="type">The compression type.</param>
+    /// <param name="destination">The destination stream.</param>
+    /// <param name="level">The compression level.</param>
+    /// <param name="context">Context information for the compression.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the compression stream.</returns>
+    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
+    public ValueTask<Stream> CreateCompressStreamAsync(
+        CompressionType type,
+        Stream destination,
+        int level,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var provider = GetProvider(type);
+        if (provider is null)
+        {
+            throw new InvalidOperationException(
+                $"No compression provider registered for type: {type}"
+            );
+        }
+        return provider.CreateCompressStreamAsync(destination, level, context, cancellationToken);
+    }
+
+    /// <summary>
+    /// Asynchronously creates a decompression stream for the specified type with context.
+    /// </summary>
+    /// <param name="type">The compression type.</param>
+    /// <param name="source">The source stream.</param>
+    /// <param name="context">Context information for the decompression.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task containing the decompression stream.</returns>
+    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
+    public ValueTask<Stream> CreateDecompressStreamAsync(
+        CompressionType type,
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var provider = GetProvider(type);
+        if (provider is null)
+        {
+            throw new InvalidOperationException(
+                $"No compression provider registered for type: {type}"
+            );
+        }
+        return provider.CreateDecompressStreamAsync(source, context, cancellationToken);
     }
 
     /// <summary>

@@ -9,20 +9,20 @@ namespace SharpCompress.Providers.Default;
 /// Provides PPMd compression and decompression using SharpCompress's internal implementation.
 /// This is a complex provider that requires initialization data for compression.
 /// </summary>
-public sealed class PpmdCompressingProvider : ICompressionProviderHooks
+public sealed class PpmdCompressingProvider : CompressionProviderBase, ICompressionProviderHooks
 {
-    public CompressionType CompressionType => CompressionType.PPMd;
-    public bool SupportsCompression => true;
-    public bool SupportsDecompression => true;
+    public override CompressionType CompressionType => CompressionType.PPMd;
+    public override bool SupportsCompression => true;
+    public override bool SupportsDecompression => true;
 
-    public Stream CreateCompressStream(Stream destination, int compressionLevel)
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         // Ppmd doesn't use compressionLevel, uses PpmdProperties instead
         var props = new PpmdProperties();
         return PpmdStream.Create(props, destination, true);
     }
 
-    public Stream CreateCompressStream(
+    public override Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
@@ -37,7 +37,7 @@ public sealed class PpmdCompressingProvider : ICompressionProviderHooks
         return CreateCompressStream(destination, compressionLevel);
     }
 
-    public Stream CreateDecompressStream(Stream source)
+    public override Stream CreateDecompressStream(Stream source)
     {
         throw new InvalidOperationException(
             "PPMd decompression requires properties. "
@@ -45,7 +45,7 @@ public sealed class PpmdCompressingProvider : ICompressionProviderHooks
         );
     }
 
-    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
         if (context.Properties is null || context.Properties.Length < 2)
         {

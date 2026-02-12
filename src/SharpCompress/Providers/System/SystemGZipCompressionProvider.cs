@@ -11,19 +11,19 @@ namespace SharpCompress.Providers.System;
 /// On modern .NET (5+), System.IO.Compression uses hardware-accelerated zlib
 /// and is significantly faster than SharpCompress's pure C# implementation.
 /// </remarks>
-public sealed class SystemGZipCompressionProvider : ICompressionProvider
+public sealed class SystemGZipCompressionProvider : CompressionProviderBase
 {
-    public CompressionType CompressionType => CompressionType.GZip;
-    public bool SupportsCompression => true;
-    public bool SupportsDecompression => true;
+    public override CompressionType CompressionType => CompressionType.GZip;
+    public override bool SupportsCompression => true;
+    public override bool SupportsDecompression => true;
 
-    public Stream CreateCompressStream(Stream destination, int compressionLevel)
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         var bclLevel = MapCompressionLevel(compressionLevel);
         return new GZipStream(destination, bclLevel, leaveOpen: false);
     }
 
-    public Stream CreateCompressStream(
+    public override Stream CreateCompressStream(
         Stream destination,
         int compressionLevel,
         CompressionContext context
@@ -33,7 +33,7 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
         return CreateCompressStream(destination, compressionLevel);
     }
 
-    public Stream CreateDecompressStream(Stream source)
+    public override Stream CreateDecompressStream(Stream source)
     {
         return new GZipStream(
             source,
@@ -42,7 +42,7 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
         );
     }
 
-    public Stream CreateDecompressStream(Stream source, CompressionContext context)
+    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
         // Context not used for simple GZip decompression
         return CreateDecompressStream(source);

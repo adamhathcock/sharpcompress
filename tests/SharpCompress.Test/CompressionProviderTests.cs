@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using SharpCompress.Archives.Tar;
@@ -33,6 +34,10 @@ public class CompressionProviderTests
         public int CompressionCalls { get; private set; }
 
         public int DecompressionCalls { get; private set; }
+
+        public int AsyncCompressionCalls { get; private set; }
+
+        public int AsyncDecompressionCalls { get; private set; }
 
         public CompressionType CompressionType => _inner.CompressionType;
 
@@ -67,6 +72,55 @@ public class CompressionProviderTests
             DecompressionCalls++;
             return _inner.CreateDecompressStream(source, context);
         }
+
+        public ValueTask<Stream> CreateCompressStreamAsync(
+            Stream destination,
+            int compressionLevel,
+            CancellationToken cancellationToken = default
+        )
+        {
+            AsyncCompressionCalls++;
+            return _inner.CreateCompressStreamAsync(
+                destination,
+                compressionLevel,
+                cancellationToken
+            );
+        }
+
+        public ValueTask<Stream> CreateCompressStreamAsync(
+            Stream destination,
+            int compressionLevel,
+            CompressionContext context,
+            CancellationToken cancellationToken = default
+        )
+        {
+            AsyncCompressionCalls++;
+            return _inner.CreateCompressStreamAsync(
+                destination,
+                compressionLevel,
+                context,
+                cancellationToken
+            );
+        }
+
+        public ValueTask<Stream> CreateDecompressStreamAsync(
+            Stream source,
+            CancellationToken cancellationToken = default
+        )
+        {
+            AsyncDecompressionCalls++;
+            return _inner.CreateDecompressStreamAsync(source, cancellationToken);
+        }
+
+        public ValueTask<Stream> CreateDecompressStreamAsync(
+            Stream source,
+            CompressionContext context,
+            CancellationToken cancellationToken = default
+        )
+        {
+            AsyncDecompressionCalls++;
+            return _inner.CreateDecompressStreamAsync(source, context, cancellationToken);
+        }
     }
 
     private sealed class TrackingLzmaHooksProvider : ICompressionProviderHooks
@@ -97,6 +151,43 @@ public class CompressionProviderTests
 
         public Stream CreateDecompressStream(Stream source, CompressionContext context) =>
             throw new NotSupportedException();
+
+        public ValueTask<Stream> CreateCompressStreamAsync(
+            Stream destination,
+            int compressionLevel,
+            CancellationToken cancellationToken = default
+        )
+        {
+            CompressionContext context = new() { CanSeek = destination.CanSeek };
+            return CreateCompressStreamAsync(
+                destination,
+                compressionLevel,
+                context,
+                cancellationToken
+            );
+        }
+
+        public ValueTask<Stream> CreateCompressStreamAsync(
+            Stream destination,
+            int compressionLevel,
+            CompressionContext context,
+            CancellationToken cancellationToken = default
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return new ValueTask<Stream>(SharpCompressStream.CreateNonDisposing(destination));
+        }
+
+        public ValueTask<Stream> CreateDecompressStreamAsync(
+            Stream source,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
+
+        public ValueTask<Stream> CreateDecompressStreamAsync(
+            Stream source,
+            CompressionContext context,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
 
         public byte[]? GetPreCompressionData(CompressionContext context)
         {
