@@ -163,10 +163,17 @@ public class ZipFactory
     ) => ZipArchive.OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
-    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await ZipArchive
+            .OpenAsyncArchive(streams, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
     /// <inheritdoc/>
     public IArchive OpenArchive(
@@ -175,10 +182,17 @@ public class ZipFactory
     ) => ZipArchive.OpenArchive(fileInfos, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
-    ) => (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await ZipArchive
+            .OpenAsyncArchive(fileInfos, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
     #endregion
 
@@ -219,14 +233,15 @@ public class ZipFactory
     }
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsyncWriter(
+    public ValueTask<IAsyncWriter> OpenAsyncWriter(
         Stream stream,
         IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncWriter)OpenWriter(stream, writerOptions);
+        var writer = OpenWriter(stream, writerOptions);
+        return new((IAsyncWriter)writer);
     }
 
     #endregion

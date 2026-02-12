@@ -77,7 +77,9 @@ public static partial class ArchiveFactory
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken)
             .ConfigureAwait(false);
-        return factory.OpenAsyncArchive(filesArray, options);
+        return await factory
+            .OpenAsyncArchive(filesArray, options, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
@@ -106,7 +108,9 @@ public static partial class ArchiveFactory
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(firstStream, cancellationToken)
             .ConfigureAwait(false);
-        return factory.OpenAsyncArchive(streamsArray, options);
+        return await factory
+            .OpenAsyncArchive(streamsArray, options, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static ValueTask<T> FindFactoryAsync<T>(
