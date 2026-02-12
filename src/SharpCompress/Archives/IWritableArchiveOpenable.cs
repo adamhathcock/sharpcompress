@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using SharpCompress.Common.Options;
 
 #if NET8_0_OR_GREATER
@@ -8,6 +9,6 @@ public interface IWritableArchiveOpenable<TOptions>
     where TOptions : IWriterOptions
 {
     public static abstract IWritableArchive<TOptions> CreateArchive();
-    public static abstract IWritableAsyncArchive<TOptions> CreateAsyncArchive();
+    public static abstract ValueTask<IWritableAsyncArchive<TOptions>> CreateAsyncArchive();
 }
 #endif

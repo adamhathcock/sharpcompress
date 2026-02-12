@@ -2,6 +2,8 @@
 
 using System;
 using System.Buffers;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
@@ -196,10 +198,10 @@ internal sealed partial class Unpack : BitInput
         }
     }
 
-    private async System.Threading.Tasks.Task DoUnpackAsync(
+    private async Task DoUnpackAsync(
         uint Method,
         bool Solid,
-        System.Threading.CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default
     )
     {
         // Methods <50 will crash in Fragmented mode when accessing NULL Window.

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
@@ -33,6 +34,18 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         {
             using var entryStream = entry.OpenEntryStream();
             entryStream.CopyTo(Stream.Null);
+        }
+    }
+
+    [Benchmark(Description = "Tar: Extract all entries (Archive API, Async)")]
+    public async Task TarExtractArchiveApiAsync()
+    {
+        using var stream = new MemoryStream(_tarBytes);
+        await using var archive = await TarArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
+        {
+            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
         }
     }
 
@@ -98,6 +111,18 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         }
     }
 
+    [Benchmark(Description = "Tar.GZip: Extract all entries (Async)")]
+    public async Task TarGzipExtractAsync()
+    {
+        using var stream = new MemoryStream(_tarGzBytes);
+        await using var archive = await TarArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
+        {
+            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
+        }
+    }
+
     [Benchmark(Description = "Tar: Create archive with small files")]
     public void TarCreateSmallFiles()
     {
@@ -114,6 +139,24 @@ public class TarBenchmarks : ArchiveBenchmarkBase
             var data = new byte[1024]; // 1KB each
             using var entryStream = new MemoryStream(data);
             writer.Write($"file{i}.txt", entryStream);
+        }
+    }
+
+    [Benchmark(Description = "Tar: Create archive with small files (Async)")]
+    public async Task TarCreateSmallFilesAsync()
+    {
+        using var outputStream = new MemoryStream();
+        await using var writer = WriterFactory.OpenAsyncWriter(
+            outputStream,
+            ArchiveType.Tar,
+            new WriterOptions(CompressionType.None) { LeaveStreamOpen = true }
+        );
+
+        for (int i = 0; i < 10; i++)
+        {
+            var data = new byte[1024];
+            using var entryStream = new MemoryStream(data);
+            await writer.WriteAsync($"file{i}.txt", entryStream).ConfigureAwait(false);
         }
     }
 }

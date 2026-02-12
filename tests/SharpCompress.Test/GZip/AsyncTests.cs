@@ -72,7 +72,7 @@ public class AsyncTests : TestBase
     public async ValueTask Archive_Entry_Async_Open_Stream()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz");
-        await using var archive = GZipArchive.OpenAsyncArchive(
+        await using var archive = await GZipArchive.OpenAsyncArchive(
             new AsyncOnlyStream(File.OpenRead(testArchive))
         );
 
@@ -123,7 +123,7 @@ public class AsyncTests : TestBase
 
         // Verify the archive was created and contains the entry
         Assert.True(File.Exists(outputPath));
-        await using var archive = ZipArchive.OpenAsyncArchive(outputPath);
+        await using var archive = await ZipArchive.OpenAsyncArchive(outputPath);
         Assert.Single(await archive.EntriesAsync.Where(e => !e.IsDirectory).ToListAsync());
     }
 

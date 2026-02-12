@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.SevenZip;
 
@@ -31,6 +32,20 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         }
     }
 
+    [Benchmark(Description = "7Zip LZMA: Extract all entries (Async)")]
+    public async Task SevenZipLzmaExtractAsync()
+    {
+        using var stream = new MemoryStream(_lzmaBytes);
+        await using var archive = await SevenZipArchive
+            .OpenAsyncArchive(stream)
+            .ConfigureAwait(false);
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
+        {
+            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
+        }
+    }
+
     [Benchmark(Description = "7Zip LZMA2: Extract all entries")]
     public void SevenZipLzma2Extract()
     {
@@ -40,6 +55,48 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         {
             using var entryStream = entry.OpenEntryStream();
             entryStream.CopyTo(Stream.Null);
+        }
+    }
+
+    [Benchmark(Description = "7Zip LZMA2: Extract all entries (Async)")]
+    public async Task SevenZipLzma2ExtractAsync()
+    {
+        using var stream = new MemoryStream(_lzma2Bytes);
+        await using var archive = await SevenZipArchive
+            .OpenAsyncArchive(stream)
+            .ConfigureAwait(false);
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
+        {
+            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
+        }
+    }
+
+    [Benchmark(Description = "7Zip LZMA2 Reader: Extract all entries")]
+    public void SevenZipLzma2Extract_Reader()
+    {
+        using var stream = new MemoryStream(_lzma2Bytes);
+        using var archive = SevenZipArchive.OpenArchive(stream);
+        using var reader = archive.ExtractAllEntries();
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            entryStream.CopyTo(Stream.Null);
+        }
+    }
+
+    [Benchmark(Description = "7Zip LZMA2 Reader: Extract all entries (Async)")]
+    public async Task SevenZipLzma2ExtractAsync_Reader()
+    {
+        using var stream = new MemoryStream(_lzma2Bytes);
+        await using var archive = await SevenZipArchive
+            .OpenAsyncArchive(stream)
+            .ConfigureAwait(false);
+        await using var reader = await archive.ExtractAllEntriesAsync();
+        while (await reader.MoveToNextEntryAsync().ConfigureAwait(false))
+        {
+            await using var entryStream = await reader.OpenEntryStreamAsync().ConfigureAwait(false);
+            await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
         }
     }
 }

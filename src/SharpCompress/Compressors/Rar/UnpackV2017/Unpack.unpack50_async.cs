@@ -1,6 +1,8 @@
 #nullable disable
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using static SharpCompress.Compressors.Rar.UnpackV2017.PackDef;
 using static SharpCompress.Compressors.Rar.UnpackV2017.UnpackGlobal;
 using size_t = System.UInt32;
@@ -9,14 +11,14 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack
 {
-    private void Unpack5(bool Solid)
+    private async Task Unpack5Async(bool Solid, CancellationToken cancellationToken = default)
     {
         FileExtracted = true;
 
         if (!Suspended)
         {
             UnpInitData(Solid);
-            if (!UnpReadBuf())
+            if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {
                 return;
             }
@@ -24,7 +26,11 @@ internal partial class Unpack
             // Check TablesRead5 to be sure that we read tables at least once
             // regardless of current block header TablePresent flag.
             // So we can safefly use these tables below.
-            if (!ReadBlockHeader(Inp) || !ReadTables(Inp) || !TablesRead5)
+            if (
+                !await ReadBlockHeaderAsync(Inp, cancellationToken).ConfigureAwait(false)
+                || !await ReadTablesAsync(Inp, cancellationToken).ConfigureAwait(false)
+                || !TablesRead5
+            )
             {
                 return;
             }
@@ -51,12 +57,15 @@ internal partial class Unpack
                         FileDone = true;
                         break;
                     }
-                    if (!ReadBlockHeader(Inp) || !ReadTables(Inp))
+                    if (
+                        !await ReadBlockHeaderAsync(Inp, cancellationToken).ConfigureAwait(false)
+                        || !await ReadTablesAsync(Inp, cancellationToken).ConfigureAwait(false)
+                    )
                     {
                         return;
                     }
                 }
-                if (FileDone || !UnpReadBuf())
+                if (FileDone || !await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
@@ -64,7 +73,7 @@ internal partial class Unpack
 
             if (((WriteBorder - UnpPtr) & MaxWinMask) < MAX_LZ_MATCH + 3 && WriteBorder != UnpPtr)
             {
-                UnpWriteBuf();
+                await UnpWriteBufAsync(cancellationToken);
                 if (WrittenFileSize > DestUnpSize)
                 {
                     return;
@@ -88,7 +97,6 @@ internal partial class Unpack
                 {
                     Window[UnpPtr++] = (byte)MainSlot;
                 }
-
                 continue;
             }
             if (MainSlot >= 262)
@@ -118,6 +126,7 @@ internal partial class Unpack
                             Distance += ((Inp.getbits32() >> (int)(36 - DBits)) << 4);
                             Inp.addbits(DBits - 4);
                         }
+
                         var LowDist = DecodeNumber(Inp, BlockTables.LDD);
                         Distance += LowDist;
                     }
@@ -151,17 +160,18 @@ internal partial class Unpack
                 {
                     CopyString(Length, Distance);
                 }
-
                 continue;
             }
             if (MainSlot == 256)
             {
                 var Filter = new UnpackFilter();
-                if (!ReadFilter(Inp, Filter) || !AddFilter(Filter))
+                if (
+                    !await ReadFilterAsync(Inp, Filter, cancellationToken).ConfigureAwait(false)
+                    || !AddFilter(Filter)
+                )
                 {
                     break;
                 }
-
                 continue;
             }
             if (MainSlot == 257)
@@ -177,7 +187,6 @@ internal partial class Unpack
                         CopyString(LastLength, OldDist[0]);
                     }
                 }
-
                 continue;
             }
             if (MainSlot < 262)
@@ -206,28 +215,18 @@ internal partial class Unpack
                 continue;
             }
         }
-        UnpWriteBuf();
+        await UnpWriteBufAsync(cancellationToken);
     }
 
-    private uint ReadFilterData(BitInput Inp)
-    {
-        var ByteCount = (Inp.fgetbits() >> 14) + 1;
-        Inp.addbits(2);
-
-        uint Data = 0;
-        for (uint I = 0; I < ByteCount; I++)
-        {
-            Data += (Inp.fgetbits() >> 8) << (int)(I * 8);
-            Inp.addbits(8);
-        }
-        return Data;
-    }
-
-    private bool ReadFilter(BitInput Inp, UnpackFilter Filter)
+    private async Task<bool> ReadFilterAsync(
+        BitInput Inp,
+        UnpackFilter Filter,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 16)
         {
-            if (!UnpReadBuf())
+            if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {
                 return false;
             }
@@ -252,28 +251,7 @@ internal partial class Unpack
         return true;
     }
 
-    private bool AddFilter(UnpackFilter Filter)
-    {
-        if (Filters.Count >= MAX_UNPACK_FILTERS)
-        {
-            UnpWriteBuf(); // Write data, apply and flush filters.
-            if (Filters.Count >= MAX_UNPACK_FILTERS)
-            {
-                InitFilters(); // Still too many filters, prevent excessive memory use.
-            }
-        }
-
-        // If distance to filter start is that large that due to circular dictionary
-        // mode now it points to old not written yet data, then we set 'NextWindow'
-        // flag and process this filter only after processing that older data.
-        Filter.NextWindow = WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
-
-        Filter.BlockStart = (Filter.BlockStart + UnpPtr) & MaxWinMask;
-        Filters.Add(Filter);
-        return true;
-    }
-
-    private bool UnpReadBuf()
+    private async Task<bool> UnpReadBufAsync(CancellationToken cancellationToken = default)
     {
         var DataSize = ReadTop - Inp.InAddr; // Data left to process.
         if (DataSize < 0)
@@ -284,14 +262,7 @@ internal partial class Unpack
         BlockHeader.BlockSize -= Inp.InAddr - BlockHeader.BlockStart;
         if (Inp.InAddr > MAX_SIZE / 2)
         {
-            // If we already processed more than half of buffer, let's move
-            // remaining data into beginning to free more space for new data
-            // and ensure that calling function does not cross the buffer border
-            // even if we did not read anything here. Also it ensures that read size
-            // is not less than CRYPT_BLOCK_SIZE, so we can align it without risk
-            // to make it zero.
             if (DataSize > 0)
-            //x memmove(Inp.InBuf,Inp.InBuf+Inp.InAddr,DataSize);
             {
                 Buffer.BlockCopy(Inp.InBuf, Inp.InAddr, Inp.InBuf, 0, DataSize);
             }
@@ -307,7 +278,13 @@ internal partial class Unpack
         var ReadCode = 0;
         if (MAX_SIZE != DataSize)
         {
-            ReadCode = UnpIO_UnpRead(Inp.InBuf, DataSize, MAX_SIZE - DataSize);
+            ReadCode = await UnpIO_UnpReadAsync(
+                    Inp.InBuf,
+                    DataSize,
+                    MAX_SIZE - DataSize,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
 
         if (ReadCode > 0) // Can be also -1.
@@ -319,29 +296,20 @@ internal partial class Unpack
         BlockHeader.BlockStart = Inp.InAddr;
         if (BlockHeader.BlockSize != -1) // '-1' means not defined yet.
         {
-            // We may need to quit from main extraction loop and read new block header
-            // and trees earlier than data in input buffer ends.
             ReadBorder = Math.Min(ReadBorder, BlockHeader.BlockStart + BlockHeader.BlockSize - 1);
         }
         return ReadCode != -1;
     }
 
-    private void UnpWriteBuf()
+    private async Task UnpWriteBufAsync(CancellationToken cancellationToken = default)
     {
         var WrittenBorder = WrPtr;
         var FullWriteSize = (UnpPtr - WrittenBorder) & MaxWinMask;
         var WriteSizeLeft = FullWriteSize;
         var NotAllFiltersProcessed = false;
-        //for (size_t I=0;I<Filters.Count;I++)
-        // sharpcompress: size_t -> int
+
         for (var I = 0; I < Filters.Count; I++)
         {
-            // Here we apply filters to data which we need to write.
-            // We always copy data to another memory block before processing.
-            // We cannot process them just in place in Window buffer, because
-            // these data can be used for future string matches, so we must
-            // preserve them in original form.
-
             var flt = Filters[I];
             if (flt.Type == FILTER_NONE)
             {
@@ -350,42 +318,30 @@ internal partial class Unpack
 
             if (flt.NextWindow)
             {
-                // Here we skip filters which have block start in current data range
-                // due to address wrap around in circular dictionary, but actually
-                // belong to next dictionary block. If such filter start position
-                // is included to current write range, then we reset 'NextWindow' flag.
-                // In fact we can reset it even without such check, because current
-                // implementation seems to guarantee 'NextWindow' flag reset after
-                // buffer writing for all existing filters. But let's keep this check
-                // just in case. Compressor guarantees that distance between
-                // filter block start and filter storing position cannot exceed
-                // the dictionary size. So if we covered the filter block start with
-                // our write here, we can safely assume that filter is applicable
-                // to next block on no further wrap arounds is possible.
                 if (((flt.BlockStart - WrPtr) & MaxWinMask) <= FullWriteSize)
                 {
                     flt.NextWindow = false;
                 }
-
                 continue;
             }
+
             var BlockStart = flt.BlockStart;
             var BlockLength = flt.BlockLength;
             if (((BlockStart - WrittenBorder) & MaxWinMask) < WriteSizeLeft)
             {
                 if (WrittenBorder != BlockStart)
                 {
-                    UnpWriteArea(WrittenBorder, BlockStart);
+                    await UnpWriteAreaAsync(WrittenBorder, BlockStart, cancellationToken)
+                        .ConfigureAwait(false);
                     WrittenBorder = BlockStart;
                     WriteSizeLeft = (UnpPtr - WrittenBorder) & MaxWinMask;
                 }
                 if (BlockLength <= WriteSizeLeft)
                 {
-                    if (BlockLength > 0) // We set it to 0 also for invalid filters.
+                    if (BlockLength > 0)
                     {
                         var BlockEnd = (BlockStart + BlockLength) & MaxWinMask;
 
-                        //x FilterSrcMemory.Alloc(BlockLength);
                         FilterSrcMemory = EnsureCapacity(
                             FilterSrcMemory,
                             checked((int)BlockLength)
@@ -398,7 +354,6 @@ internal partial class Unpack
                                 FragWindow.CopyData(Mem, 0, BlockStart, BlockLength);
                             }
                             else
-                            //x memcpy(Mem,Window+BlockStart,BlockLength);
                             {
                                 Buffer.BlockCopy(Window, (int)BlockStart, Mem, 0, (int)BlockLength);
                             }
@@ -413,7 +368,6 @@ internal partial class Unpack
                             }
                             else
                             {
-                                //x memcpy(Mem,Window+BlockStart,FirstPartLength);
                                 Buffer.BlockCopy(
                                     Window,
                                     (int)BlockStart,
@@ -421,7 +375,6 @@ internal partial class Unpack
                                     0,
                                     (int)FirstPartLength
                                 );
-                                //x memcpy(Mem+FirstPartLength,Window,BlockEnd);
                                 Buffer.BlockCopy(
                                     Window,
                                     0,
@@ -438,46 +391,36 @@ internal partial class Unpack
 
                         if (OutMem != null)
                         {
-                            UnpIO_UnpWrite(OutMem, 0, BlockLength);
+                            await UnpIO_UnpWriteAsync(OutMem, 0, BlockLength, cancellationToken)
+                                .ConfigureAwait(false);
+                            WrittenFileSize += BlockLength;
                         }
 
-                        UnpSomeRead = true;
-                        WrittenFileSize += BlockLength;
                         WrittenBorder = BlockEnd;
                         WriteSizeLeft = (UnpPtr - WrittenBorder) & MaxWinMask;
                     }
                 }
                 else
                 {
-                    // Current filter intersects the window write border, so we adjust
-                    // the window border to process this filter next time, not now.
-                    WrPtr = WrittenBorder;
-
-                    // Since Filter start position can only increase, we quit processing
-                    // all following filters for this data block and reset 'NextWindow'
-                    // flag for them.
-                    //for (size_t J=I;J<Filters.Count;J++)
-                    // sharpcompress: size_t -> int
+                    NotAllFiltersProcessed = true;
                     for (var J = I; J < Filters.Count; J++)
                     {
-                        var _flt = Filters[J];
-                        if (_flt.Type != FILTER_NONE)
+                        var fltj = Filters[J];
+                        if (
+                            fltj.Type != FILTER_NONE
+                            && fltj.NextWindow == false
+                            && ((fltj.BlockStart - WrPtr) & MaxWinMask) < FullWriteSize
+                        )
                         {
-                            _flt.NextWindow = false;
+                            fltj.NextWindow = true;
                         }
                     }
-
-                    // Do not write data left after current filter now.
-                    NotAllFiltersProcessed = true;
                     break;
                 }
             }
         }
 
-        // Remove processed filters from queue.
-        // sharpcompress: size_t -> int
         var EmptyCount = 0;
-        // sharpcompress: size_t -> int
         for (var I = 0; I < Filters.Count; I++)
         {
             if (EmptyCount > 0)
@@ -491,25 +434,18 @@ internal partial class Unpack
             }
         }
         if (EmptyCount > 0)
-        //Filters.Alloc(Filters.Count-EmptyCount);
         {
             Filters.RemoveRange(Filters.Count - EmptyCount, EmptyCount);
         }
 
-        if (!NotAllFiltersProcessed) // Only if all filters are processed.
+        if (!NotAllFiltersProcessed)
         {
-            // Write data left after last filter.
-            UnpWriteArea(WrittenBorder, UnpPtr);
+            await UnpWriteAreaAsync(WrittenBorder, UnpPtr, cancellationToken).ConfigureAwait(false);
             WrPtr = UnpPtr;
         }
 
-        // We prefer to write data in blocks not exceeding UNPACK_MAX_WRITE
-        // instead of potentially huge MaxWinSize blocks. It also allows us
-        // to keep the size of Filters array reasonable.
         WriteBorder = (UnpPtr + Math.Min(MaxWinSize, UNPACK_MAX_WRITE)) & MaxWinMask;
 
-        // Choose the nearest among WriteBorder and WrPtr actual written border.
-        // If border is equal to UnpPtr, it means that we have MaxWinSize data ahead.
         if (
             WriteBorder == UnpPtr
             || WrPtr != UnpPtr
@@ -520,102 +456,11 @@ internal partial class Unpack
         }
     }
 
-    private byte[] ApplyFilter(byte[] __d, uint DataSize, UnpackFilter Flt)
-    {
-        var Data = 0;
-        var SrcData = __d;
-        switch (Flt.Type)
-        {
-            case FILTER_E8:
-            case FILTER_E8E9:
-                {
-                    var FileOffset = (uint)WrittenFileSize;
-
-                    const uint FileSize = 0x1000000;
-                    var CmpByte2 = Flt.Type == FILTER_E8E9 ? (byte)0xe9 : (byte)0xe8;
-                    // DataSize is unsigned, so we use "CurPos+4" and not "DataSize-4"
-                    // to avoid overflow for DataSize<4.
-                    for (uint CurPos = 0; CurPos + 4 < DataSize; )
-                    {
-                        //x byte CurByte=*(Data++);
-                        var CurByte = __d[Data++];
-                        CurPos++;
-                        if (CurByte == 0xe8 || CurByte == CmpByte2)
-                        {
-                            var Offset = (CurPos + FileOffset) % FileSize;
-                            var Addr = RawGet4(__d, Data);
-
-                            // We check 0x80000000 bit instead of '< 0' comparison
-                            // not assuming int32 presence or uint size and endianness.
-                            if ((Addr & 0x80000000) != 0) // Addr<0
-                            {
-                                if (((Addr + Offset) & 0x80000000) == 0) // Addr+Offset>=0
-                                {
-                                    RawPut4(Addr + FileSize, __d, Data);
-                                }
-                            }
-                            else if (((Addr - FileSize) & 0x80000000) != 0) // Addr<FileSize
-                            {
-                                RawPut4(Addr - Offset, __d, Data);
-                            }
-
-                            Data += 4;
-                            CurPos += 4;
-                        }
-                    }
-                }
-                return SrcData;
-            case FILTER_ARM:
-                {
-                    var FileOffset = (uint)WrittenFileSize;
-                    // DataSize is unsigned, so we use "CurPos+3" and not "DataSize-3"
-                    // to avoid overflow for DataSize<3.
-                    for (uint CurPos = 0; CurPos + 3 < DataSize; CurPos += 4)
-                    {
-                        var D = Data + CurPos;
-                        if (__d[D + 3] == 0xeb) // BL command with '1110' (Always) condition.
-                        {
-                            var Offset =
-                                __d[D]
-                                + ((uint)(__d[D + 1]) * 0x100)
-                                + ((uint)(__d[D + 2]) * 0x10000);
-                            Offset -= (FileOffset + CurPos) / 4;
-                            __d[D] = (byte)Offset;
-                            __d[D + 1] = (byte)(Offset >> 8);
-                            __d[D + 2] = (byte)(Offset >> 16);
-                        }
-                    }
-                }
-                return SrcData;
-            case FILTER_DELTA:
-            {
-                // Unlike RAR3, we do not need to reject excessive channel
-                // values here, since RAR5 uses only 5 bits to store channel.
-                uint Channels = Flt.Channels,
-                    SrcPos = 0;
-
-                //x FilterDstMemory.Alloc(DataSize);
-                FilterDstMemory = EnsureCapacity(FilterDstMemory, checked((int)DataSize));
-
-                var DstData = FilterDstMemory;
-
-                // Bytes from same channels are grouped to continual data blocks,
-                // so we need to place them back to their interleaving positions.
-                for (uint CurChannel = 0; CurChannel < Channels; CurChannel++)
-                {
-                    byte PrevByte = 0;
-                    for (var DestPos = CurChannel; DestPos < DataSize; DestPos += Channels)
-                    {
-                        DstData[DestPos] = (PrevByte -= __d[Data + SrcPos++]);
-                    }
-                }
-                return DstData;
-            }
-        }
-        return null;
-    }
-
-    private void UnpWriteArea(size_t StartPtr, size_t EndPtr)
+    private async Task UnpWriteAreaAsync(
+        size_t StartPtr,
+        size_t EndPtr,
+        CancellationToken cancellationToken = default
+    )
     {
         if (EndPtr != StartPtr)
         {
@@ -633,25 +478,32 @@ internal partial class Unpack
             while (SizeToWrite > 0)
             {
                 var BlockSize = FragWindow.GetBlockSize(StartPtr, SizeToWrite);
-                //UnpWriteData(&FragWindow[StartPtr],BlockSize);
                 FragWindow.GetBuffer(StartPtr, out var __buffer, out var __offset);
-                UnpWriteData(__buffer, __offset, BlockSize);
+                await UnpWriteDataAsync(__buffer, __offset, BlockSize, cancellationToken)
+                    .ConfigureAwait(false);
                 SizeToWrite -= BlockSize;
                 StartPtr = (StartPtr + BlockSize) & MaxWinMask;
             }
         }
         else if (EndPtr < StartPtr)
         {
-            UnpWriteData(Window, StartPtr, MaxWinSize - StartPtr);
-            UnpWriteData(Window, 0, EndPtr);
+            await UnpWriteDataAsync(Window, StartPtr, MaxWinSize - StartPtr, cancellationToken)
+                .ConfigureAwait(false);
+            await UnpWriteDataAsync(Window, 0, EndPtr, cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            UnpWriteData(Window, StartPtr, EndPtr - StartPtr);
+            await UnpWriteDataAsync(Window, StartPtr, EndPtr - StartPtr, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
-    private void UnpWriteData(byte[] Data, size_t offset, size_t Size)
+    private async Task UnpWriteDataAsync(
+        byte[] Data,
+        size_t offset,
+        size_t Size,
+        CancellationToken cancellationToken = default
+    )
     {
         if (WrittenFileSize >= DestUnpSize)
         {
@@ -665,25 +517,20 @@ internal partial class Unpack
             WriteSize = (size_t)LeftToWrite;
         }
 
-        UnpIO_UnpWrite(Data, offset, WriteSize);
+        await UnpIO_UnpWriteAsync(Data, offset, WriteSize, cancellationToken).ConfigureAwait(false);
         WrittenFileSize += Size;
     }
 
-    private void UnpInitData50(bool Solid)
-    {
-        if (!Solid)
-        {
-            TablesRead5 = false;
-        }
-    }
-
-    private bool ReadBlockHeader(BitInput Inp)
+    private async Task<bool> ReadBlockHeaderAsync(
+        BitInput Inp,
+        CancellationToken cancellationToken = default
+    )
     {
         BlockHeader.HeaderSize = 0;
 
         if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 7)
         {
-            if (!UnpReadBuf())
+            if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {
                 return false;
             }
@@ -729,7 +576,10 @@ internal partial class Unpack
         return true;
     }
 
-    private bool ReadTables(BitInput Inp)
+    private async Task<bool> ReadTablesAsync(
+        BitInput Inp,
+        CancellationToken cancellationToken = default
+    )
     {
         if (!BlockHeader.TablePresent)
         {
@@ -738,13 +588,13 @@ internal partial class Unpack
 
         if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 25)
         {
-            if (!UnpReadBuf())
+            if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {
                 return false;
             }
         }
 
-        Span<byte> BitLength = stackalloc byte[checked((int)BC)];
+        var BitLength = new byte[checked((int)BC)];
         for (int I = 0; I < BC; I++)
         {
             uint Length = (byte)(Inp.fgetbits() >> 12);
@@ -776,13 +626,13 @@ internal partial class Unpack
 
         MakeDecodeTables(BitLength, 0, BlockTables.BD, BC);
 
-        Span<byte> Table = stackalloc byte[checked((int)HUFF_TABLE_SIZE)];
+        var Table = new byte[checked((int)HUFF_TABLE_SIZE)];
         const int TableSize = checked((int)HUFF_TABLE_SIZE);
         for (int I = 0; I < TableSize; )
         {
             if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 5)
             {
-                if (!UnpReadBuf())
+                if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
                 {
                     return false;
                 }
@@ -856,8 +706,4 @@ internal partial class Unpack
         MakeDecodeTables(Table, (int)(NC + DC + LDC), BlockTables.RD, RC);
         return true;
     }
-
-    private void InitFilters() =>
-        //Filters.SoftReset();
-        Filters.Clear();
 }

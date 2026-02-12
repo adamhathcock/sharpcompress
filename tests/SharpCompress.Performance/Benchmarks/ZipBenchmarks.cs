@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
@@ -53,6 +54,15 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
         }
     }
 
+    [Benchmark(Description = "Zip: Extract all entries (Archive API, Async)")]
+    public async Task ZipExtractArchiveApiAsync()
+    {
+        using var stream = new MemoryStream(_archiveBytes);
+        await using var archive = await ZipArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
+        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
+        {
+            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
     [Benchmark(Description = "Zip: Extract all entries (Reader API) - SystemDeflate")]
     public void SystemZipExtractReaderApi()
     {
@@ -86,6 +96,20 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
         }
     }
 
+    [Benchmark(Description = "Zip: Extract all entries (Reader API, Async)")]
+    public async Task ZipExtractReaderApiAsync()
+    {
+        using var stream = new MemoryStream(_archiveBytes);
+        await using var reader = await ReaderFactory.OpenAsyncReader(stream).ConfigureAwait(false);
+        while (await reader.MoveToNextEntryAsync().ConfigureAwait(false))
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                await reader.WriteEntryToAsync(Stream.Null).ConfigureAwait(false);
+            }
+        }
+    }
+
     [Benchmark(Description = "Zip: Create archive with small files")]
     public void ZipCreateSmallFiles()
     {
@@ -102,6 +126,24 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
             var data = new byte[1024]; // 1KB each
             using var entryStream = new MemoryStream(data);
             writer.Write($"file{i}.txt", entryStream);
+        }
+    }
+
+    [Benchmark(Description = "Zip: Create archive with small files (Async)")]
+    public async Task ZipCreateSmallFilesAsync()
+    {
+        using var outputStream = new MemoryStream();
+        await using var writer = WriterFactory.OpenAsyncWriter(
+            outputStream,
+            ArchiveType.Zip,
+            new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true }
+        );
+
+        for (int i = 0; i < 10; i++)
+        {
+            var data = new byte[1024];
+            using var entryStream = new MemoryStream(data);
+            await writer.WriteAsync($"file{i}.txt", entryStream).ConfigureAwait(false);
         }
     }
 }

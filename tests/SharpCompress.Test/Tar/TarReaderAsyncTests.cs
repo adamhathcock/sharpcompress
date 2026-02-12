@@ -74,7 +74,7 @@ public class TarReaderAsyncTests : ReaderTests
     public async ValueTask Tar_BZip2_Entry_Stream_Async()
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
-        await using var reader = TarReader.OpenAsyncReader(stream);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
         while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
@@ -135,7 +135,7 @@ public class TarReaderAsyncTests : ReaderTests
     public async ValueTask Tar_BZip2_Skip_Entry_Stream_Async()
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
-        await using var reader = TarReader.OpenAsyncReader(stream);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
         var names = new List<string>();
         while (await reader.MoveToNextEntryAsync())
         {

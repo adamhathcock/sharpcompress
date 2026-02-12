@@ -30,7 +30,7 @@ RAR is not recommended as it's a proprietary format and the compression is close
 
 7Zip and XZ both are overly complicated. 7Zip does not support streamable formats. XZ has known holes explained here: (http://www.nongnu.org/lzip/xz_inadequate.html) Use Tar/LZip for LZMA compression instead.
 
-ZStandard is an efficient format that works well for streaming with a flexible compression level to tweak the speed/performance trade off you are looking for.  We currently only implement decompression for ZStandard but as we leverage the [ZstdSharp](https://github.com/oleg-st/ZstdSharp) library one could likely add compression support without much trouble (PRs are welcome!).
+ZStandard is an efficient format that works well for streaming with a flexible compression level to tweak the speed/performance trade off you are looking for.
 
 ## A Simple Request
 
@@ -49,6 +49,8 @@ XZ implementation based on: https://github.com/sambott/XZ.NET by @sambott
 XZ BCJ filters support contributed by Louis-Michel Bergeron, on behalf of aDolus Technology Inc. - 2022
 
 7Zip implementation based on: https://code.google.com/p/managed-lzma/
+
+Zstandard implementation from: https://github.com/oleg-st/ZstdSharp
 
 LICENSE
 Copyright (c) 2000 - 2011 The Legion Of The Bouncy Castle (http://www.bouncycastle.org)

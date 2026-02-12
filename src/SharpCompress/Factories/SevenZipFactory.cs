@@ -49,16 +49,30 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         SevenZipArchive.OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.OpenAsyncArchive(stream, readerOptions);
+    public ValueTask<IAsyncArchive> OpenAsyncArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)OpenArchive(stream, readerOptions));
+    }
 
     /// <inheritdoc/>
     public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         SevenZipArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        SevenZipArchive.OpenAsyncArchive(fileInfo, readerOptions);
+    public ValueTask<IAsyncArchive> OpenAsyncArchive(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)OpenArchive(fileInfo, readerOptions));
+    }
 
     #endregion
 
@@ -74,7 +88,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
-    ) => SevenZipArchive.OpenAsyncArchive(streams, readerOptions);
+    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
     public IArchive OpenArchive(
@@ -86,7 +100,7 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
     public IAsyncArchive OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
-    ) => SevenZipArchive.OpenAsyncArchive(fileInfos, readerOptions);
+    ) => (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
 
     #endregion
 
