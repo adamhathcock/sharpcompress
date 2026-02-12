@@ -128,10 +128,7 @@ internal static partial class Utility
     /// <param name="path">The file path to open.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A FileStream configured for asynchronous operations.</returns>
-    public static Stream OpenAsyncWriteStream(
-        string path,
-        CancellationToken cancellationToken
-    )
+    public static Stream OpenAsyncWriteStream(string path, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
