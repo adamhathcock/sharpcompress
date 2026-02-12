@@ -58,6 +58,40 @@ public sealed class LzmaCompressingProvider : CompressionProviderBase, ICompress
         return LzmaStream.Create(context.Properties, source, context.InputSize, context.OutputSize);
     }
 
+    public override ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    ) =>
+        throw new InvalidOperationException(
+            "LZMA decompression requires properties. "
+                + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) overload with Properties."
+        );
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (context.Properties is null || context.Properties.Length < 5)
+        {
+            throw new ArgumentException(
+                "LZMA decompression requires Properties (at least 5 bytes) in CompressionContext.",
+                nameof(context)
+            );
+        }
+
+        return await LzmaStream
+            .CreateAsync(
+                context.Properties,
+                source,
+                context.InputSize,
+                context.OutputSize,
+                leaveOpen: false
+            )
+            .ConfigureAwait(false);
+    }
+
     public byte[]? GetPreCompressionData(CompressionContext context)
     {
         // Zip format writes these magic bytes before the LZMA stream

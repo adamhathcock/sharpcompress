@@ -95,11 +95,13 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = CreateProbeDecompressionStream(
-                    sharpCompressStream,
-                    wrapper.CompressionType,
-                    providers
-                );
+                var decompressedStream = await CreateProbeDecompressionStreamAsync(
+                        sharpCompressStream,
+                        wrapper.CompressionType,
+                        providers,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
                 if (
                     await TarArchive
                         .IsTarFileAsync(decompressedStream, cancellationToken)
@@ -127,6 +129,23 @@ public class TarFactory
         return compressionType == CompressionType.None
             ? nonDisposingStream
             : providers.CreateDecompressStream(compressionType, nonDisposingStream);
+    }
+
+    private static async ValueTask<Stream> CreateProbeDecompressionStreamAsync(
+        Stream stream,
+        CompressionType compressionType,
+        CompressionProviderRegistry providers,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(stream);
+        if (compressionType == CompressionType.None)
+        {
+            return nonDisposingStream;
+        }
+        return await providers
+            .CreateDecompressStreamAsync(compressionType, nonDisposingStream, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public static CompressionType GetCompressionType(
@@ -170,11 +189,13 @@ public class TarFactory
             if (await wrapper.IsMatchAsync(stream, cancellationToken).ConfigureAwait(false))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                var decompressedStream = CreateProbeDecompressionStream(
-                    stream,
-                    wrapper.CompressionType,
-                    providers
-                );
+                var decompressedStream = await CreateProbeDecompressionStreamAsync(
+                        stream,
+                        wrapper.CompressionType,
+                        providers,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
                 if (
                     await TarArchive
                         .IsTarFileAsync(decompressedStream, cancellationToken)
@@ -298,11 +319,13 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = CreateProbeDecompressionStream(
-                    sharpCompressStream,
-                    wrapper.CompressionType,
-                    options.Providers
-                );
+                var decompressedStream = await CreateProbeDecompressionStreamAsync(
+                        sharpCompressStream,
+                        wrapper.CompressionType,
+                        options.Providers,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
                 if (
                     await TarArchive
                         .IsTarFileAsync(decompressedStream, cancellationToken)

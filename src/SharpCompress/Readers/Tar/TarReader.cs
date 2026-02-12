@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Compressors;
@@ -48,6 +50,50 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             CompressionType.Xz => providers.CreateDecompressStream(CompressionType.Xz, stream),
             CompressionType.Lzw => providers.CreateDecompressStream(CompressionType.Lzw, stream),
             CompressionType.None => stream,
+            _ => throw new NotSupportedException("Invalid compression type: " + compressionType),
+        };
+    }
+
+    protected override ValueTask<Stream> RequestInitialStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var stream = base.RequestInitialStream();
+        var providers = Options.Providers;
+
+        return compressionType switch
+        {
+            CompressionType.BZip2 => providers.CreateDecompressStreamAsync(
+                CompressionType.BZip2,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.GZip => providers.CreateDecompressStreamAsync(
+                CompressionType.GZip,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.ZStandard => providers.CreateDecompressStreamAsync(
+                CompressionType.ZStandard,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.LZip => providers.CreateDecompressStreamAsync(
+                CompressionType.LZip,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.Xz => providers.CreateDecompressStreamAsync(
+                CompressionType.Xz,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.Lzw => providers.CreateDecompressStreamAsync(
+                CompressionType.Lzw,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.None => new ValueTask<Stream>(stream),
             _ => throw new NotSupportedException("Invalid compression type: " + compressionType),
         };
     }

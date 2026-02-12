@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Explode;
@@ -64,5 +66,41 @@ public sealed class ExplodeCompressionProvider : CompressionProviderBase
         }
 
         return ExplodeStream.Create(source, context.InputSize, context.OutputSize, flags);
+    }
+
+    public override ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    ) =>
+        throw new InvalidOperationException(
+            "Explode decompression requires compressed size, uncompressed size, and flags. "
+                + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) overload with FormatOptions."
+        );
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (context.InputSize < 0 || context.OutputSize < 0)
+        {
+            throw new ArgumentException(
+                "Explode decompression requires InputSize and OutputSize in CompressionContext.",
+                nameof(context)
+            );
+        }
+
+        if (context.FormatOptions is not HeaderFlags flags)
+        {
+            throw new ArgumentException(
+                "Explode decompression requires HeaderFlags in CompressionContext.FormatOptions.",
+                nameof(context)
+            );
+        }
+
+        return await ExplodeStream
+            .CreateAsync(source, context.InputSize, context.OutputSize, flags, cancellationToken)
+            .ConfigureAwait(false);
     }
 }

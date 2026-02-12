@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors.PPMd;
 
@@ -57,6 +59,35 @@ public sealed class PpmdCompressingProvider : CompressionProviderBase, ICompress
 
         var props = new PpmdProperties(context.Properties);
         return PpmdStream.Create(props, source, false);
+    }
+
+    public override ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    ) =>
+        throw new InvalidOperationException(
+            "PPMd decompression requires properties. "
+                + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) overload with Properties."
+        );
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (context.Properties is null || context.Properties.Length < 2)
+        {
+            throw new ArgumentException(
+                "PPMd decompression requires Properties (at least 2 bytes) in CompressionContext.",
+                nameof(context)
+            );
+        }
+
+        var props = new PpmdProperties(context.Properties);
+        return await PpmdStream
+            .CreateAsync(props, source, false, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     public byte[]? GetPreCompressionData(CompressionContext context)

@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Reduce;
 
@@ -52,5 +54,33 @@ public sealed class Reduce2CompressionProvider : CompressionProviderBase
         }
 
         return ReduceStream.Create(source, context.InputSize, context.OutputSize, 2);
+    }
+
+    public override ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    ) =>
+        throw new InvalidOperationException(
+            "Reduce decompression requires compressed and uncompressed sizes. "
+                + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) overload."
+        );
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (context.InputSize < 0 || context.OutputSize < 0)
+        {
+            throw new ArgumentException(
+                "Reduce decompression requires InputSize and OutputSize in CompressionContext.",
+                nameof(context)
+            );
+        }
+
+        return await ReduceStream
+            .CreateAsync(source, context.InputSize, context.OutputSize, 2, cancellationToken)
+            .ConfigureAwait(false);
     }
 }

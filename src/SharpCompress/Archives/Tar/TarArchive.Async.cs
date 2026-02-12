@@ -97,7 +97,7 @@ public partial class TarArchive
     )
     {
         var sourceStream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
-        var stream = GetStream(sourceStream);
+        var stream = await GetStreamAsync(sourceStream).ConfigureAwait(false);
         if (stream.CanSeek)
         {
             stream.Position = 0;

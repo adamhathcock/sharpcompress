@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
@@ -39,5 +41,25 @@ public sealed class BZip2CompressionProvider : CompressionProviderBase
     {
         // Context not used for BZip2 decompression
         return CreateDecompressStream(source);
+    }
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await BZip2Stream
+            .CreateAsync(source, CompressionMode.Decompress, false, false, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Context not used for BZip2 decompression
+        return await CreateDecompressStreamAsync(source, cancellationToken).ConfigureAwait(false);
     }
 }

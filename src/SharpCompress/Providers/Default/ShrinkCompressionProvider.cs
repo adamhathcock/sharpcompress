@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Shrink;
@@ -61,5 +63,39 @@ public sealed class ShrinkCompressionProvider : CompressionProviderBase
             context.InputSize,
             context.OutputSize
         );
+    }
+
+    public override ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    ) =>
+        throw new InvalidOperationException(
+            "Shrink decompression requires compressed and uncompressed sizes. "
+                + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) overload."
+        );
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CompressionContext context,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (context.InputSize < 0 || context.OutputSize < 0)
+        {
+            throw new ArgumentException(
+                "Shrink decompression requires InputSize and OutputSize in CompressionContext.",
+                nameof(context)
+            );
+        }
+
+        return await ShrinkStream
+            .CreateAsync(
+                source,
+                CompressionMode.Decompress,
+                context.InputSize,
+                context.OutputSize,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 }

@@ -134,4 +134,14 @@ internal sealed partial class GZipFilePart
         var buffer = list.ToArray();
         return ArchiveEncoding.Decode(buffer);
     }
+
+    internal override async ValueTask<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        // GZip uses Deflate compression
+        return await _compressionProviders
+            .CreateDecompressStreamAsync(CompressionType.Deflate, _stream, cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

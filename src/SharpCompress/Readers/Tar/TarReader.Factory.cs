@@ -26,6 +26,24 @@ public partial class TarReader
             : providers.CreateDecompressStream(compressionType, nonDisposingStream);
     }
 
+    private static async ValueTask<Stream> CreateProbeDecompressionStreamAsync(
+        Stream stream,
+        CompressionType compressionType,
+        CompressionProviderRegistry providers,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var nonDisposingStream = SharpCompressStream.CreateNonDisposing(stream);
+        if (compressionType == CompressionType.None)
+        {
+            return nonDisposingStream;
+        }
+
+        return await providers
+            .CreateDecompressStreamAsync(compressionType, nonDisposingStream, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public static ValueTask<IAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
@@ -63,11 +81,13 @@ public partial class TarReader
             }
 
             sharpCompressStream.Position = pos;
-            var testStream = CreateProbeDecompressionStream(
-                sharpCompressStream,
-                wrapper.CompressionType,
-                options.Providers
-            );
+            var testStream = await CreateProbeDecompressionStreamAsync(
+                    sharpCompressStream,
+                    wrapper.CompressionType,
+                    options.Providers,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
             if (
                 await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
             )

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
@@ -61,6 +63,46 @@ public partial class TarArchive
                 stream
             ),
             CompressionType.None => stream,
+            _ => throw new NotSupportedException("Invalid compression type: " + _compressionType),
+        };
+
+    private ValueTask<Stream> GetStreamAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    ) =>
+        _compressionType switch
+        {
+            CompressionType.BZip2 => ReaderOptions.Providers.CreateDecompressStreamAsync(
+                CompressionType.BZip2,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.GZip => ReaderOptions.Providers.CreateDecompressStreamAsync(
+                CompressionType.GZip,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.ZStandard => ReaderOptions.Providers.CreateDecompressStreamAsync(
+                CompressionType.ZStandard,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.LZip => ReaderOptions.Providers.CreateDecompressStreamAsync(
+                CompressionType.LZip,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.Xz => ReaderOptions.Providers.CreateDecompressStreamAsync(
+                CompressionType.Xz,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.Lzw => ReaderOptions.Providers.CreateDecompressStreamAsync(
+                CompressionType.Lzw,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.None => new ValueTask<Stream>(stream),
             _ => throw new NotSupportedException("Invalid compression type: " + _compressionType),
         };
 

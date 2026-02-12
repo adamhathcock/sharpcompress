@@ -473,7 +473,7 @@ public class CompressionProviderTests
             break;
         }
 
-        trackingProvider.DecompressionCalls.Should().BeGreaterThan(0);
+        trackingProvider.AsyncDecompressionCalls.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -503,7 +503,7 @@ public class CompressionProviderTests
         using var resultStream = new MemoryStream();
         await entryStream.CopyToAsync(resultStream);
 
-        trackingProvider.DecompressionCalls.Should().BeGreaterThan(0);
+        trackingProvider.AsyncDecompressionCalls.Should().BeGreaterThan(0);
     }
 
     [Fact]
