@@ -95,7 +95,7 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
 }
 
 // Async extraction (requires IAsyncArchive)
-using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
+await using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
     await asyncArchive.WriteToDirectoryAsync(
         @"C:\output",
@@ -177,7 +177,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 // Async variants (use OpenAsyncReader to get IAsyncReader)
 using (var stream = File.OpenRead("file.zip"))
-using (var reader = await ReaderFactory.OpenAsyncReader(stream))
+await using (var reader = await ReaderFactory.OpenAsyncReader(stream))
 {
     while (await reader.MoveToNextEntryAsync())
     {
@@ -409,7 +409,7 @@ cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 try
 {
-    using (var archive = await ZipArchive.OpenAsyncArchive("archive.zip"))
+    await using (var archive = await ZipArchive.OpenAsyncArchive("archive.zip"))
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",
