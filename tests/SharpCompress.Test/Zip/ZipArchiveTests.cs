@@ -492,6 +492,56 @@ public class ZipArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void Zip_WinzipAES_CompressionType()
+    {
+        // Test that WinZip AES encrypted entries correctly report their compression type
+        using var deflateArchive = ZipArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+        foreach (var entry in deflateArchive.Entries.Where(x => !x.IsDirectory))
+        {
+            Assert.True(entry.IsEncrypted);
+            Assert.Equal(CompressionType.Deflate, entry.CompressionType);
+        }
+
+        using var lzmaArchive = ZipArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+        foreach (var entry in lzmaArchive.Entries.Where(x => !x.IsDirectory))
+        {
+            Assert.True(entry.IsEncrypted);
+            Assert.Equal(CompressionType.LZMA, entry.CompressionType);
+        }
+    }
+
+    [Fact]
+    public void Zip_Pkware_CompressionType()
+    {
+        // Test that Pkware encrypted entries correctly report their compression type
+        using var deflateArchive = ZipArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.pkware.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+        foreach (var entry in deflateArchive.Entries.Where(x => !x.IsDirectory))
+        {
+            Assert.True(entry.IsEncrypted);
+            Assert.Equal(CompressionType.Deflate, entry.CompressionType);
+        }
+
+        using var bzip2Archive = ZipArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+        foreach (var entry in bzip2Archive.Entries.Where(x => !x.IsDirectory))
+        {
+            Assert.True(entry.IsEncrypted);
+            Assert.Equal(CompressionType.BZip2, entry.CompressionType);
+        }
+    }
+
+    [Fact]
     public void Zip_Read_Volume_Comment()
     {
         using var reader = ZipArchive.OpenArchive(
