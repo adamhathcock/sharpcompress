@@ -233,7 +233,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         // This test verifies that solid archives iterate entries as contiguous streams
         // rather than recreating the decompression stream for each entry
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
-        await using var archive = SevenZipArchive.OpenAsyncArchive(testArchive);
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(testArchive);
         Assert.True(((SevenZipArchive)archive).IsSolid);
 
         await using var reader = await archive.ExtractAllEntriesAsync();
@@ -254,7 +254,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         // This test verifies that the folder stream is reused within each folder
         // and not recreated for each entry in solid archives
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
-        await using var archive = SevenZipArchive.OpenAsyncArchive(testArchive);
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(testArchive);
         Assert.True(((SevenZipArchive)archive).IsSolid);
 
         await using var reader = await archive.ExtractAllEntriesAsync();

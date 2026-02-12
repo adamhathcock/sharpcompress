@@ -109,6 +109,51 @@ public class TarFactory
 
     #endregion
 
+    public static CompressionType GetCompressionType(Stream stream)
+    {
+        stream.Seek(0, SeekOrigin.Begin);
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            if (wrapper.IsMatch(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                var decompressedStream = wrapper.CreateStream(stream);
+                if (TarArchive.IsTarFile(decompressedStream))
+                {
+                    return wrapper.CompressionType;
+                }
+            }
+        }
+        throw new InvalidFormatException("Not a tar file.");
+    }
+
+    public static async ValueTask<CompressionType> GetCompressionTypeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        stream.Seek(0, SeekOrigin.Begin);
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            if (wrapper.IsMatch(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                var decompressedStream = wrapper.CreateStream(stream);
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
+                {
+                    return wrapper.CompressionType;
+                }
+            }
+        }
+        throw new InvalidFormatException("Not a tar file.");
+    }
+
     #region IArchiveFactory
 
     /// <inheritdoc/>
@@ -116,16 +161,28 @@ public class TarFactory
         TarArchive.OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
-        (IAsyncArchive)OpenArchive(stream, readerOptions);
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) =>
+        await TarArchive
+            .OpenAsyncArchive(stream, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
 
     /// <inheritdoc/>
     public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         TarArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
-        (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) =>
+        await TarArchive
+            .OpenAsyncArchive(fileInfo, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
 
     #endregion
 

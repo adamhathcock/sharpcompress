@@ -614,7 +614,7 @@ public class ArchiveTests : ReaderTests
         {
             using (var stream = SharpCompressStream.CreateNonDisposing(File.OpenRead(path)))
             await using (
-                var archive = archiveFactory.OpenAsyncArchive(
+                var archive = await archiveFactory.OpenAsyncArchive(
                     new AsyncOnlyStream(stream),
                     readerOptions
                 )
