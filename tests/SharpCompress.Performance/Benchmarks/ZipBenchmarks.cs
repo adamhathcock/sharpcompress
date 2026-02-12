@@ -63,6 +63,9 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
             await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
+        }
+    }
+
     [Benchmark(Description = "Zip: Extract all entries (Reader API) - SystemDeflate")]
     public void SystemZipExtractReaderApi()
     {
