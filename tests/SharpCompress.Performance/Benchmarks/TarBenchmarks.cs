@@ -122,7 +122,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     public async Task TarCreateSmallFilesAsync()
     {
         using var outputStream = new MemoryStream();
-        await using var writer = WriterFactory.OpenAsyncWriter(
+        await using var writer = await WriterFactory.OpenAsyncWriter(
             outputStream,
             ArchiveType.Tar,
             new WriterOptions(CompressionType.None) { LeaveStreamOpen = true }
