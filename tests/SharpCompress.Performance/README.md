@@ -5,11 +5,11 @@ This project contains performance benchmarks for SharpCompress using [BenchmarkD
 ## Overview
 
 The benchmarks test all major archive formats supported by SharpCompress:
-- **Zip**: Read (Archive & Reader API) and Write operations
-- **Tar**: Read (Archive & Reader API) and Write operations, including Tar.GZip
-- **Rar**: Read operations (Archive & Reader API)
-- **7Zip**: Read operations for LZMA and LZMA2 compression
-- **GZip**: Compression and decompression
+- **Zip**: Read (Archive & Reader API) and Write operations, each with sync and async variants
+- **Tar**: Read (Archive & Reader API) and Write operations, including Tar.GZip, each with sync and async variants
+- **Rar**: Read operations (Archive & Reader API), each with sync and async variants
+- **7Zip**: Read operations for LZMA and LZMA2 compression, each with sync and async variants
+- **GZip**: Compression and decompression, each with sync and async variants
 
 ## Running Benchmarks
 

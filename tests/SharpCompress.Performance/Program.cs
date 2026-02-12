@@ -20,10 +20,10 @@ public class Program
         // Default: Run BenchmarkDotNet
         var config = DefaultConfig.Instance.AddJob(
             Job.Default.WithToolchain(InProcessEmitToolchain.Instance)
-                .WithWarmupCount(3) // Minimal warmup iterations for CI
-                .WithIterationCount(10) // Minimal measurement iterations for CI
-                .WithInvocationCount(10)
-                .WithUnrollFactor(1)
+                .WithWarmupCount(5) // Minimal warmup iterations for CI
+                .WithIterationCount(30) // Minimal measurement iterations for CI
+                .WithInvocationCount(30)
+                .WithUnrollFactor(2)
         );
 
         BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
