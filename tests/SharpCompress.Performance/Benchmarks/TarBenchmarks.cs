@@ -39,7 +39,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     public async Task TarExtractArchiveApiAsync()
     {
         using var stream = new MemoryStream(_tarBytes);
-        await using var archive = TarArchive.OpenAsyncArchive(stream);
+        await using var archive = await TarArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
         await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
@@ -91,7 +91,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     public async Task TarGzipExtractAsync()
     {
         using var stream = new MemoryStream(_tarGzBytes);
-        await using var archive = TarArchive.OpenAsyncArchive(stream);
+        await using var archive = await TarArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
         await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);

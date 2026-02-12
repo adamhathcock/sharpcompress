@@ -35,7 +35,7 @@ public class RarBenchmarks : ArchiveBenchmarkBase
     public async Task RarExtractArchiveApiAsync()
     {
         using var stream = new MemoryStream(_rarBytes);
-        await using var archive = RarArchive.OpenAsyncArchive(stream);
+        await using var archive = await RarArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
         await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
