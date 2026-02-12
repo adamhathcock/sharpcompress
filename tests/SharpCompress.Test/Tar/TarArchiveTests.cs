@@ -25,16 +25,6 @@ public class TarArchiveTests : ArchiveTests
     public void TarArchivePathRead() => ArchiveFileRead("Tar.tar");
 
     [Fact]
-    public void TarArchiveStreamRead_Autodetect_CompressedTar()
-    {
-        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        using var archive = ArchiveFactory.OpenArchive(stream);
-
-        Assert.Equal(ArchiveType.Tar, archive.Type);
-        Assert.NotEmpty(archive.Entries);
-    }
-
-    [Fact]
     public void TarArchiveStreamRead_Throws_On_NonSeekable_Stream()
     {
         using Stream stream = new ForwardOnlyStream(
@@ -328,5 +318,25 @@ public class TarArchiveTests : ArchiveTests
         var isTar = TarArchive.IsTarFile(Path.Combine(TEST_ARCHIVES_PATH, "false.positive.tar"));
 
         Assert.False(isTar);
+    }
+
+    [Fact]
+    public void TarArchiveStreamRead_Autodetect_CompressedTar()
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var archive = ArchiveFactory.OpenArchive(stream);
+
+        Assert.Equal(ArchiveType.Tar, archive.Type);
+        Assert.NotEmpty(archive.Entries);
+    }
+
+    [Fact]
+    public void TarReaderStreamRead_Autodetect_CompressedTar()
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        Assert.Equal(ArchiveType.Tar, reader.ArchiveType);
+        Assert.True(reader.MoveToNextEntry());
     }
 }

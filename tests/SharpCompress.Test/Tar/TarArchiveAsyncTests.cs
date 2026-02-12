@@ -253,7 +253,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         var numberOfEntries = 0;
 
         await using (
-            var archiveFactory = await ArchiveFactory.OpenAsyncArchive(new AsyncOnlyStream(memoryStream))
+            var archiveFactory = await ArchiveFactory.OpenAsyncArchive(
+                new AsyncOnlyStream(memoryStream)
+            )
         )
         {
             await foreach (var entry in archiveFactory.EntriesAsync)

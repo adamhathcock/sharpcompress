@@ -2,38 +2,60 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.Deflate;
+using SharpCompress.Compressors.LZMA;
+using SharpCompress.Compressors.Lzw;
+using SharpCompress.Compressors.Xz;
+using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
-using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
+using CompressionMode = SharpCompress.Compressors.CompressionMode;
+using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Archives.Tar;
 
 public partial class TarArchive
     : AbstractWritableArchive<TarArchiveEntry, TarVolume, TarWriterOptions>
 {
+    private readonly CompressionType _compressionType;
+
     protected override IEnumerable<TarVolume> LoadVolumes(SourceStream sourceStream)
     {
         sourceStream.NotNull("SourceStream is null").LoadAllParts();
         return new TarVolume(sourceStream, ReaderOptions, 1).AsEnumerable();
     }
 
-    private TarArchive(SourceStream sourceStream)
-        : base(ArchiveType.Tar, sourceStream) { }
+    internal TarArchive(SourceStream sourceStream, CompressionType compressionType)
+        : base(ArchiveType.Tar, sourceStream)
+    {
+        _compressionType = compressionType;
+    }
 
     private TarArchive()
         : base(ArchiveType.Tar) { }
 
+    private Stream GetStream(Stream stream) =>
+        _compressionType switch
+        {
+            CompressionType.BZip2 => BZip2Stream.Create(stream, CompressionMode.Decompress, false),
+            CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
+            CompressionType.ZStandard => new ZStandardStream(stream),
+            CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
+            CompressionType.Xz => new XZStream(stream),
+            CompressionType.Lzw => new LzwStream(stream),
+            CompressionType.None => stream,
+            _ => throw new NotSupportedException("Invalid compression type: " + _compressionType),
+        };
+
     protected override IEnumerable<TarArchiveEntry> LoadEntries(IEnumerable<TarVolume> volumes)
     {
-        var stream = volumes.Single().Stream;
+        var stream = GetStream(volumes.Single().Stream);
         if (stream.CanSeek)
         {
             stream.Position = 0;
@@ -41,7 +63,9 @@ public partial class TarArchive
         TarHeader? previousHeader = null;
         foreach (
             var header in TarHeaderFactory.ReadHeader(
-                StreamingMode.Seekable,
+                _compressionType == CompressionType.None
+                    ? StreamingMode.Seekable
+                    : StreamingMode.Streaming,
                 stream,
                 ReaderOptions.ArchiveEncoding
             )
@@ -154,6 +178,6 @@ public partial class TarArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return TarReader.OpenReader(stream);
+        return TarReader.OpenReader(GetStream(stream));
     }
 }

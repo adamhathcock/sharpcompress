@@ -109,6 +109,25 @@ public class TarFactory
 
     #endregion
 
+    public static CompressionType GetCompressionType(Stream stream)
+    {
+        stream.Seek(0, SeekOrigin.Begin);
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            if (wrapper.IsMatch(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                var decompressedStream = wrapper.CreateStream(stream);
+                if (TarArchive.IsTarFile(decompressedStream))
+                {
+                    return wrapper.CompressionType;
+                }
+            }
+        }
+        throw new InvalidFormatException("Not a tar file.");
+    }
+
     #region IArchiveFactory
 
     /// <inheritdoc/>

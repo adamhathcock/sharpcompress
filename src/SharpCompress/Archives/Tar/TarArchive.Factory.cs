@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Writers.Tar;
@@ -50,13 +51,14 @@ public partial class TarArchive
     {
         fileInfos.NotNull(nameof(fileInfos));
         var files = fileInfos.ToArray();
-        return new TarArchive(
-            new SourceStream(
-                files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
-            )
+        var sourceStream = new SourceStream(
+            files[0],
+            i => i < files.Length ? files[i] : null,
+            readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
         );
+        var compressionType = TarFactory.GetCompressionType(sourceStream);
+        sourceStream.Seek(0, SeekOrigin.Begin);
+        return new TarArchive(sourceStream, compressionType);
     }
 
     public static IWritableArchive<TarWriterOptions> OpenArchive(
@@ -66,13 +68,14 @@ public partial class TarArchive
     {
         streams.NotNull(nameof(streams));
         var strms = streams.ToArray();
-        return new TarArchive(
-            new SourceStream(
-                strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
-            )
+        var sourceStream = new SourceStream(
+            strms[0],
+            i => i < strms.Length ? strms[i] : null,
+            readerOptions ?? new ReaderOptions()
         );
+        var compressionType = TarFactory.GetCompressionType(sourceStream);
+        sourceStream.Seek(0, SeekOrigin.Begin);
+        return new TarArchive(sourceStream, compressionType);
     }
 
     public static IWritableArchive<TarWriterOptions> OpenArchive(
