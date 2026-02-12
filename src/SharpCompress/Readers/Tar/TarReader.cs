@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Archives.GZip;
-using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Compressors;
@@ -45,80 +43,6 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
         };
     }
 
-    #region OpenReader
-
-    /// <summary>
-    /// Opens a TarReader for Non-seeking usage with a single volume
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="options"></param>
-    /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
-    {
-        stream.NotNull(nameof(stream));
-        options = options ?? new ReaderOptions();
-        var sharpCompressStream = SharpCompressStream.Create(
-            stream,
-            bufferSize: options.RewindableBufferSize
-        );
-        long pos = sharpCompressStream.Position;
-        if (GZipArchive.IsGZipFile(sharpCompressStream))
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = new GZipStream(sharpCompressStream, CompressionMode.Decompress);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.GZip);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        if (BZip2Stream.IsBZip2(sharpCompressStream))
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = BZip2Stream.Create(
-                sharpCompressStream,
-                CompressionMode.Decompress,
-                false
-            );
-            if (TarArchive.IsTarFile(testStream))
-            {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.BZip2);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        if (ZStandardStream.IsZStandard(sharpCompressStream))
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = new ZStandardStream(sharpCompressStream);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.ZStandard);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        if (LZipStream.IsLZipFile(sharpCompressStream))
-        {
-            sharpCompressStream.Position = pos;
-            var testStream = new LZipStream(sharpCompressStream, CompressionMode.Decompress);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, CompressionType.LZip);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        sharpCompressStream.Position = pos;
-        return new TarReader(sharpCompressStream, options, CompressionType.None);
-    }
-
-    #endregion OpenReader
-
     protected override IEnumerable<TarEntry> GetEntries(Stream stream) =>
         TarEntry.GetEntries(
             StreamingMode.Streaming,
@@ -127,6 +51,4 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             Options.ArchiveEncoding,
             Options
         );
-
-    // GetEntriesAsync moved to TarReader.Async.cs
 }

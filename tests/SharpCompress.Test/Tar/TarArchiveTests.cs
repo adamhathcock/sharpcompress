@@ -7,6 +7,7 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -22,6 +23,26 @@ public class TarArchiveTests : ArchiveTests
 
     [Fact]
     public void TarArchivePathRead() => ArchiveFileRead("Tar.tar");
+
+    [Fact]
+    public void TarArchiveStreamRead_Autodetect_CompressedTar()
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var archive = ArchiveFactory.OpenArchive(stream);
+
+        Assert.Equal(ArchiveType.Tar, archive.Type);
+        Assert.NotEmpty(archive.Entries);
+    }
+
+    [Fact]
+    public void TarArchiveStreamRead_Throws_On_NonSeekable_Stream()
+    {
+        using Stream stream = new ForwardOnlyStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
+        );
+
+        Assert.Throws<ArgumentException>(() => ArchiveFactory.OpenArchive(stream));
+    }
 
     [Fact]
     public void Tar_FileName_Exactly_100_Characters()
@@ -53,7 +74,7 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.OpenArchive(unmodified))
+        using (var archive2 = ArchiveFactory.OpenArchive(unmodified))
         {
             Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
@@ -72,7 +93,7 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
-        using var archive = TarArchive.OpenArchive(unmodified);
+        using var archive = ArchiveFactory.OpenArchive(unmodified);
         Assert.Equal(5, archive.Entries.Count());
         Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
@@ -119,7 +140,7 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.OpenArchive(unmodified))
+        using (var archive2 = ArchiveFactory.OpenArchive(unmodified))
         {
             Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
@@ -138,7 +159,7 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_UstarArchivePathReadLongName()
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
-        using var archive = TarArchive.OpenArchive(unmodified);
+        using var archive = ArchiveFactory.OpenArchive(unmodified);
         Assert.Equal(6, archive.Entries.Count());
         Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
@@ -285,9 +306,9 @@ public class TarArchiveTests : ArchiveTests
 
         var numberOfEntries = 0;
 
-        using (var archiveFactory = TarArchive.OpenArchive(memoryStream))
+        using (var archive = ArchiveFactory.OpenArchive(memoryStream))
         {
-            foreach (var entry in archiveFactory.Entries)
+            foreach (var entry in archive.Entries)
             {
                 ++numberOfEntries;
 

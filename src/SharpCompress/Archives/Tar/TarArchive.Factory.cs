@@ -37,12 +37,9 @@ public partial class TarArchive
     )
     {
         fileInfo.NotNull(nameof(fileInfo));
-        return new TarArchive(
-            new SourceStream(
-                fileInfo,
-                i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
-            )
+        return OpenArchive(
+            [fileInfo],
+            readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
         );
     }
 
@@ -90,9 +87,7 @@ public partial class TarArchive
             throw new ArgumentException("Stream must be seekable", nameof(stream));
         }
 
-        return new TarArchive(
-            new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
-        );
+        return OpenArchive([stream], readerOptions);
     }
 
     public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
