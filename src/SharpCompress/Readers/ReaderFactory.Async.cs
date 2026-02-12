@@ -35,14 +35,15 @@ public static partial class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static async ValueTask<IAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
         options ??= ReaderOptions.ForOwnedFile;
-        return OpenAsyncReader(fileInfo.OpenRead(), options, cancellationToken);
+        var stream = fileInfo.OpenAsyncReadStream(cancellationToken);
+        return await OpenAsyncReader(stream, options, cancellationToken);
     }
 
     public static async ValueTask<IAsyncReader> OpenAsyncReader(

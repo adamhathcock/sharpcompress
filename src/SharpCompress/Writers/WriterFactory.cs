@@ -58,7 +58,7 @@ public static class WriterFactory
     )
     {
         fileInfo.NotNull(nameof(fileInfo));
-        var stream = Utility.OpenAsyncWriteStream(fileInfo.FullName, cancellationToken);
+        var stream = fileInfo.OpenAsyncWriteStream(cancellationToken);
         return await OpenAsyncWriter(
             stream,
             archiveType,
