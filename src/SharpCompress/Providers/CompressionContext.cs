@@ -1,7 +1,6 @@
-using System;
 using System.IO;
 
-namespace SharpCompress.Compressors;
+namespace SharpCompress.Providers;
 
 /// <summary>
 /// Provides context information for compression operations.

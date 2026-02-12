@@ -1,4 +1,5 @@
 using SharpCompress.Compressors;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Options;
 

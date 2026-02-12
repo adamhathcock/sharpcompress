@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Providers;
 
-namespace SharpCompress.Compressors;
+namespace SharpCompress.Providers;
 
 /// <summary>
 /// A registry of compression providers, keyed by CompressionType.

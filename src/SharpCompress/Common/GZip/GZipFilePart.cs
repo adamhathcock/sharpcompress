@@ -5,6 +5,7 @@ using System.IO;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Common.GZip;
 

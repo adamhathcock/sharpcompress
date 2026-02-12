@@ -1,7 +1,7 @@
 using System.IO;
 using SharpCompress.Common;
 
-namespace SharpCompress.Compressors;
+namespace SharpCompress.Providers;
 
 /// <summary>
 /// Provides compression and decompression stream creation for a specific compression type.

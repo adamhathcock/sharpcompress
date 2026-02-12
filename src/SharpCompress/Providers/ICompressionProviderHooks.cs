@@ -1,7 +1,6 @@
 using System.IO;
-using SharpCompress.Common;
 
-namespace SharpCompress.Compressors;
+namespace SharpCompress.Providers;
 
 /// <summary>
 /// Extended compression provider interface for formats that require initialization/finalization data.

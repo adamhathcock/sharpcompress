@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Compressors.LZMA;
 

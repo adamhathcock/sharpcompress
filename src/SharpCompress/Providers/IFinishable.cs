@@ -1,4 +1,4 @@
-namespace SharpCompress.Compressors;
+namespace SharpCompress.Providers;
 
 /// <summary>
 /// Interface for compression streams that require explicit finalization

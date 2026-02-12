@@ -15,6 +15,7 @@ using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Writers.Zip;

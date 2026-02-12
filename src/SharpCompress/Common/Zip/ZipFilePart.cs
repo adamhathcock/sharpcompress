@@ -15,6 +15,7 @@ using SharpCompress.Compressors.Shrink;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Zip;
 

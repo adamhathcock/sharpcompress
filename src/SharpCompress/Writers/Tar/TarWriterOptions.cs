@@ -3,6 +3,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 

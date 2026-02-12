@@ -2,6 +2,7 @@ using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Compressors;
+using SharpCompress.Providers;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers;
