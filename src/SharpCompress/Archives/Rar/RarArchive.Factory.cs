@@ -20,13 +20,15 @@ public partial class RarArchive
         IMultiArchiveOpenable<IRarArchive, IRarAsyncArchive>
 #endif
 {
-    public static IRarAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IRarAsyncArchive> OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return (IRarAsyncArchive)OpenArchive(new FileInfo(path), readerOptions);
+        return new((IRarAsyncArchive)OpenArchive(new FileInfo(path), readerOptions));
     }
 
     public static IRarArchive OpenArchive(string filePath, ReaderOptions? options = null)
@@ -98,36 +100,44 @@ public partial class RarArchive
         );
     }
 
-    public static IRarAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IRarAsyncArchive> OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IRarAsyncArchive)OpenArchive(stream, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IRarAsyncArchive)OpenArchive(stream, readerOptions));
     }
 
-    public static IRarAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IRarAsyncArchive> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IRarAsyncArchive)OpenArchive(fileInfo, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IRarAsyncArchive)OpenArchive(fileInfo, readerOptions));
     }
 
-    public static IRarAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IRarAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IRarAsyncArchive)OpenArchive(streams, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IRarAsyncArchive)OpenArchive(streams, readerOptions));
     }
 
-    public static IRarAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IRarAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IRarAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IRarAsyncArchive)OpenArchive(fileInfos, readerOptions));
     }
 
     public static bool IsRarFile(string filePath) => IsRarFile(new FileInfo(filePath));

@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
@@ -16,23 +18,92 @@ public partial class TarReader
     : IReaderOpenable
 #endif
 {
-    public static IAsyncReader OpenAsyncReader(string path, ReaderOptions? readerOptions = null)
-    {
-        path.NotNullOrEmpty(nameof(path));
-        return (IAsyncReader)OpenReader(new FileInfo(path), readerOptions);
-    }
-
-    public static IAsyncReader OpenAsyncReader(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        return (IAsyncReader)OpenReader(stream, readerOptions);
-    }
-
-    public static IAsyncReader OpenAsyncReader(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        string path,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IAsyncReader)OpenReader(fileInfo, readerOptions);
+        path.NotNullOrEmpty(nameof(path));
+        return OpenAsyncReader(new FileInfo(path), readerOptions, cancellationToken);
+    }
+
+    public static async ValueTask<IAsyncReader> OpenAsyncReader(
+        Stream stream,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        stream.NotNull(nameof(stream));
+        options ??= new ReaderOptions();
+        var sharpCompressStream = SharpCompressStream.Create(
+            stream,
+            bufferSize: options.RewindableBufferSize
+        );
+        long pos = sharpCompressStream.Position;
+        if (await GZipArchive.IsGZipFileAsync(sharpCompressStream, cancellationToken))
+        {
+            sharpCompressStream.Position = pos;
+            var testStream = new GZipStream(sharpCompressStream, CompressionMode.Decompress);
+            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            {
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.GZip);
+            }
+            throw new InvalidFormatException("Not a tar file.");
+        }
+        sharpCompressStream.Position = pos;
+        if (await BZip2Stream.IsBZip2Async(sharpCompressStream, cancellationToken))
+        {
+            sharpCompressStream.Position = pos;
+            var testStream = BZip2Stream.Create(
+                sharpCompressStream,
+                CompressionMode.Decompress,
+                false
+            );
+            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            {
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.BZip2);
+            }
+            throw new InvalidFormatException("Not a tar file.");
+        }
+        sharpCompressStream.Position = pos;
+        if (await ZStandardStream.IsZStandardAsync(sharpCompressStream, cancellationToken))
+        {
+            sharpCompressStream.Position = pos;
+            var testStream = new ZStandardStream(sharpCompressStream);
+            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            {
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.ZStandard);
+            }
+            throw new InvalidFormatException("Not a tar file.");
+        }
+        sharpCompressStream.Position = pos;
+        if (await LZipStream.IsLZipFileAsync(sharpCompressStream, cancellationToken))
+        {
+            sharpCompressStream.Position = pos;
+            var testStream = new LZipStream(sharpCompressStream, CompressionMode.Decompress);
+            if (await TarArchive.IsTarFileAsync(testStream, cancellationToken))
+            {
+                sharpCompressStream.Position = pos;
+                return new TarReader(sharpCompressStream, options, CompressionType.LZip);
+            }
+            throw new InvalidFormatException("Not a tar file.");
+        }
+        sharpCompressStream.Position = pos;
+        return new TarReader(sharpCompressStream, options, CompressionType.None);
+    }
+
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        FileInfo fileInfo,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
+        return OpenAsyncReader(fileInfo.OpenRead(), readerOptions, cancellationToken);
     }
 
     public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
@@ -44,6 +115,7 @@ public partial class TarReader
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
+        readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 

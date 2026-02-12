@@ -55,7 +55,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
-            var archive2 = TarArchive.OpenAsyncArchive(
+            var archive2 = await TarArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(File.OpenRead(unmodified)),
                 new ReaderOptions() { LeaveStreamOpen = false }
             )
@@ -113,7 +113,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
         await using (
-            var archive2 = TarArchive.OpenAsyncArchive(
+            var archive2 = await TarArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(File.OpenRead(unmodified)),
                 new ReaderOptions() { LeaveStreamOpen = false }
             )
@@ -145,7 +145,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        await using (var archive = TarArchive.CreateAsyncArchive())
+        await using (var archive = await TarArchive.CreateAsyncArchive())
         {
             await archive.AddAllFromDirectoryAsync(ORIGINAL_FILES_PATH);
             var twopt = new TarWriterOptions(CompressionType.None, true)
@@ -165,7 +165,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        await using (var archive = TarArchive.OpenAsyncArchive(unmodified))
+        await using (var archive = await TarArchive.OpenAsyncArchive(unmodified))
         {
             await archive.AddEntryAsync("jpg\\test.jpg", jpg);
             await archive.SaveToAsync(
@@ -183,7 +183,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.mod.tar");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Tar.noEmptyDirs.tar");
 
-        await using (var archive = TarArchive.OpenAsyncArchive(unmodified))
+        await using (var archive = await TarArchive.OpenAsyncArchive(unmodified))
         {
             var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)

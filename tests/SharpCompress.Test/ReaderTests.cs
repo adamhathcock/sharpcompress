@@ -178,7 +178,8 @@ public abstract class ReaderTests : TestBase
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(testStream),
-                options
+                options,
+                cancellationToken
             )
         )
         {

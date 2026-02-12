@@ -128,6 +128,28 @@ public class TarFactory
         throw new InvalidFormatException("Not a tar file.");
     }
 
+    public static async ValueTask<CompressionType> GetCompressionTypeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        stream.Seek(0, SeekOrigin.Begin);
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            stream.Seek(0, SeekOrigin.Begin);
+            if (wrapper.IsMatch(stream))
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+                var decompressedStream = wrapper.CreateStream(stream);
+                if (await TarArchive.IsTarFileAsync(decompressedStream, cancellationToken))
+                {
+                    return wrapper.CompressionType;
+                }
+            }
+        }
+        throw new InvalidFormatException("Not a tar file.");
+    }
+
     #region IArchiveFactory
 
     /// <inheritdoc/>

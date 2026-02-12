@@ -16,10 +16,17 @@ public partial class SevenZipArchive
         IMultiArchiveOpenable<IArchive, IAsyncArchive>
 #endif
 {
-    public static IAsyncArchive OpenAsyncArchive(string path, ReaderOptions? readerOptions = null)
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        string path,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty("path");
-        return (IAsyncArchive)OpenArchive(new FileInfo(path), readerOptions ?? new ReaderOptions());
+        return new(
+            (IAsyncArchive)OpenArchive(new FileInfo(path), readerOptions ?? new ReaderOptions())
+        );
     }
 
     public static IArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
@@ -86,33 +93,44 @@ public partial class SevenZipArchive
         );
     }
 
-    public static IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null)
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        return (IAsyncArchive)OpenArchive(stream, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)OpenArchive(stream, readerOptions));
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)OpenArchive(fileInfo, readerOptions));
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IAsyncArchive)OpenArchive(streams, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)OpenArchive(streams, readerOptions));
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)OpenArchive(fileInfos, readerOptions));
     }
 
     public static bool IsSevenZipFile(string filePath) => IsSevenZipFile(new FileInfo(filePath));

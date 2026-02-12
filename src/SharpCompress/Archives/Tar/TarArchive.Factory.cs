@@ -93,30 +93,98 @@ public partial class TarArchive
         return OpenArchive([stream], readerOptions);
     }
 
-    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
+    public static async ValueTask<IWritableAsyncArchive<TarWriterOptions>> OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null
-    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(stream, readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        stream.NotNull(nameof(stream));
+        var sourceStream = new SourceStream(
+            stream,
+            i => null,
+            readerOptions ?? new ReaderOptions()
+        );
+        var compressionType = await TarFactory.GetCompressionTypeAsync(
+            sourceStream,
+            cancellationToken
+        );
+        sourceStream.Seek(0, SeekOrigin.Begin);
+        return new TarArchive(sourceStream, compressionType);
+    }
 
-    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<TarWriterOptions>> OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null
-    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(new FileInfo(path), readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        path.NotNullOrEmpty(nameof(path));
+        return OpenAsyncArchive(new FileInfo(path), readerOptions, cancellationToken);
+    }
 
-    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
+    public static async ValueTask<IWritableAsyncArchive<TarWriterOptions>> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null
-    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfo, readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        fileInfo.NotNull(nameof(fileInfo));
+        readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
+        var sourceStream = new SourceStream(fileInfo, i => null, readerOptions);
+        var compressionType = await TarFactory.GetCompressionTypeAsync(
+            sourceStream,
+            cancellationToken
+        );
+        sourceStream.Seek(0, SeekOrigin.Begin);
+        return new TarArchive(sourceStream, compressionType);
+    }
 
-    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
+    public static async ValueTask<IWritableAsyncArchive<TarWriterOptions>> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
-    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(streams, readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        streams.NotNull(nameof(streams));
+        var strms = streams.ToArray();
+        var sourceStream = new SourceStream(
+            strms[0],
+            i => i < strms.Length ? strms[i] : null,
+            readerOptions ?? new ReaderOptions()
+        );
+        var compressionType = await TarFactory.GetCompressionTypeAsync(
+            sourceStream,
+            cancellationToken
+        );
+        sourceStream.Seek(0, SeekOrigin.Begin);
+        return new TarArchive(sourceStream, compressionType);
+    }
 
-    public static IWritableAsyncArchive<TarWriterOptions> OpenAsyncArchive(
+    public static async ValueTask<IWritableAsyncArchive<TarWriterOptions>> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
-    ) => (IWritableAsyncArchive<TarWriterOptions>)OpenArchive(fileInfos, readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        fileInfos.NotNull(nameof(fileInfos));
+        var files = fileInfos.ToArray();
+        var sourceStream = new SourceStream(
+            files[0],
+            i => i < files.Length ? files[i] : null,
+            readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
+        );
+        var compressionType = await TarFactory.GetCompressionTypeAsync(
+            sourceStream,
+            cancellationToken
+        );
+        sourceStream.Seek(0, SeekOrigin.Begin);
+        return new TarArchive(sourceStream, compressionType);
+    }
 
     public static bool IsTarFile(string filePath) => IsTarFile(new FileInfo(filePath));
 
@@ -181,5 +249,6 @@ public partial class TarArchive
 
     public static IWritableArchive<TarWriterOptions> CreateArchive() => new TarArchive();
 
-    public static IWritableAsyncArchive<TarWriterOptions> CreateAsyncArchive() => new TarArchive();
+    public static ValueTask<IWritableAsyncArchive<TarWriterOptions>> CreateAsyncArchive() =>
+        new(new TarArchive());
 }
