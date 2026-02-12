@@ -4,7 +4,7 @@ using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Shrink;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
 /// Provides Shrink decompression using SharpCompress's internal implementation.

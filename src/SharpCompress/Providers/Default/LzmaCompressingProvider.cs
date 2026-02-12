@@ -1,10 +1,9 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.LZMA;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
 /// Provides LZMA compression and decompression using SharpCompress's internal implementation.

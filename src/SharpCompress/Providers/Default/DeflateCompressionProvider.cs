@@ -1,23 +1,23 @@
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.Deflate;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
-/// Provides BZip2 compression using SharpCompress's internal implementation.
+/// Provides Deflate compression using SharpCompress's internal implementation.
 /// </summary>
-public sealed class BZip2CompressionProvider : ICompressionProvider
+public sealed class DeflateCompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.BZip2;
+    public CompressionType CompressionType => CompressionType.Deflate;
     public bool SupportsCompression => true;
     public bool SupportsDecompression => true;
 
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
-        // BZip2 doesn't use compressionLevel parameter in this implementation
-        return BZip2Stream.Create(destination, CompressionMode.Compress, false);
+        var level = (CompressionLevel)compressionLevel;
+        return new DeflateStream(destination, CompressionMode.Compress, level);
     }
 
     public Stream CreateCompressStream(
@@ -26,18 +26,18 @@ public sealed class BZip2CompressionProvider : ICompressionProvider
         CompressionContext context
     )
     {
-        // Context not used for BZip2 compression
+        // Context not used for simple Deflate compression
         return CreateCompressStream(destination, compressionLevel);
     }
 
     public Stream CreateDecompressStream(Stream source)
     {
-        return BZip2Stream.Create(source, CompressionMode.Decompress, false);
+        return new DeflateStream(source, CompressionMode.Decompress);
     }
 
     public Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
-        // Context not used for BZip2 decompression
+        // Context not used for simple Deflate decompression
         return CreateDecompressStream(source);
     }
 }

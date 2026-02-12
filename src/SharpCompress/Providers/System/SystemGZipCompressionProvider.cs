@@ -1,10 +1,8 @@
-using System;
 using System.IO;
 using System.IO.Compression;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.System;
 
 /// <summary>
 /// Provides GZip compression using System.IO.Compression.GZipStream.
@@ -39,7 +37,7 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
     {
         return new GZipStream(
             source,
-            System.IO.Compression.CompressionMode.Decompress,
+            global::System.IO.Compression.CompressionMode.Decompress,
             leaveOpen: true
         );
     }
@@ -53,17 +51,17 @@ public sealed class SystemGZipCompressionProvider : ICompressionProvider
     /// <summary>
     /// Maps SharpCompress compression level (0-9) to BCL CompressionLevel.
     /// </summary>
-    private static System.IO.Compression.CompressionLevel MapCompressionLevel(int level)
+    private static global::System.IO.Compression.CompressionLevel MapCompressionLevel(int level)
     {
         // Map 0-9 to appropriate BCL levels
         return level switch
         {
-            0 => System.IO.Compression.CompressionLevel.NoCompression,
-            <= 2 => System.IO.Compression.CompressionLevel.Fastest,
+            0 => global::System.IO.Compression.CompressionLevel.NoCompression,
+            <= 2 => global::System.IO.Compression.CompressionLevel.Fastest,
 #if NET7_0_OR_GREATER
-            >= 8 => System.IO.Compression.CompressionLevel.SmallestSize,
+            >= 8 => global::System.IO.Compression.CompressionLevel.SmallestSize,
 #endif
-            _ => System.IO.Compression.CompressionLevel.Optimal,
+            _ => global::System.IO.Compression.CompressionLevel.Optimal,
         };
     }
 }

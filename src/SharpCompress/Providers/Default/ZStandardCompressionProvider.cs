@@ -1,9 +1,8 @@
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
 using ZStd = SharpCompress.Compressors.ZStandard;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
 /// Provides ZStandard compression using SharpCompress's internal implementation.

@@ -2,10 +2,9 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.Explode;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
 /// Provides Explode decompression using SharpCompress's internal implementation.

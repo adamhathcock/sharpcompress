@@ -1,23 +1,22 @@
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.Deflate;
+using SharpCompress.Compressors.LZMA;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
-/// Provides Deflate compression using SharpCompress's internal implementation.
+/// Provides LZip compression using SharpCompress's internal implementation.
 /// </summary>
-public sealed class DeflateCompressionProvider : ICompressionProvider
+public sealed class LZipCompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.Deflate;
+    public CompressionType CompressionType => CompressionType.LZip;
     public bool SupportsCompression => true;
     public bool SupportsDecompression => true;
 
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
-        var level = (CompressionLevel)compressionLevel;
-        return new DeflateStream(destination, CompressionMode.Compress, level);
+        return new LZipStream(destination, CompressionMode.Compress);
     }
 
     public Stream CreateCompressStream(
@@ -26,18 +25,18 @@ public sealed class DeflateCompressionProvider : ICompressionProvider
         CompressionContext context
     )
     {
-        // Context not used for simple Deflate compression
+        // Context not used for LZip compression
         return CreateCompressStream(destination, compressionLevel);
     }
 
     public Stream CreateDecompressStream(Stream source)
     {
-        return new DeflateStream(source, CompressionMode.Decompress);
+        return new LZipStream(source, CompressionMode.Decompress);
     }
 
     public Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
-        // Context not used for simple Deflate decompression
+        // Context not used for LZip decompression
         return CreateDecompressStream(source);
     }
 }

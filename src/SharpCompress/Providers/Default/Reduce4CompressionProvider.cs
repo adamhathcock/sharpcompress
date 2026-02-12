@@ -1,18 +1,17 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.Reduce;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
-/// Provides Reduce1 decompression using SharpCompress's internal implementation.
+/// Provides Reduce4 decompression using SharpCompress's internal implementation.
 /// Note: Reduce compression is not supported; this provider is decompression-only.
 /// </summary>
-public sealed class Reduce1CompressionProvider : ICompressionProvider
+public sealed class Reduce4CompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.Reduce1;
+    public CompressionType CompressionType => CompressionType.Reduce4;
     public bool SupportsCompression => false;
     public bool SupportsDecompression => true;
 
@@ -52,6 +51,6 @@ public sealed class Reduce1CompressionProvider : ICompressionProvider
             );
         }
 
-        return ReduceStream.Create(source, context.InputSize, context.OutputSize, 1);
+        return ReduceStream.Create(source, context.InputSize, context.OutputSize, 4);
     }
 }

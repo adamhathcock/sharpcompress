@@ -6,6 +6,8 @@ using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.IO;
 using SharpCompress.Providers;
+using SharpCompress.Providers.Default;
+using SharpCompress.Providers.System;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Writers;

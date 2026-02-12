@@ -1,10 +1,9 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.Reduce;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
 /// Provides Reduce3 decompression using SharpCompress's internal implementation.

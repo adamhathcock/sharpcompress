@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Providers.Default;
 
 namespace SharpCompress.Providers;
 

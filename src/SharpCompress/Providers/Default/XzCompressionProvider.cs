@@ -1,25 +1,24 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
-using SharpCompress.Compressors.Lzw;
+using SharpCompress.Compressors.Xz;
 
-namespace SharpCompress.Providers;
+namespace SharpCompress.Providers.Default;
 
 /// <summary>
-/// Provides LZW compression decompression using SharpCompress's internal implementation.
+/// Provides XZ compression decompression using SharpCompress's internal implementation.
 /// Note: Compression is not supported by this provider.
 /// </summary>
-public sealed class LzwCompressionProvider : ICompressionProvider
+public sealed class XzCompressionProvider : ICompressionProvider
 {
-    public CompressionType CompressionType => CompressionType.Lzw;
+    public CompressionType CompressionType => CompressionType.Xz;
     public bool SupportsCompression => false;
     public bool SupportsDecompression => true;
 
     public Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         throw new NotSupportedException(
-            "LZW compression is not supported by SharpCompress's internal implementation."
+            "XZ compression is not supported by SharpCompress's internal implementation."
         );
     }
 
@@ -30,18 +29,18 @@ public sealed class LzwCompressionProvider : ICompressionProvider
     )
     {
         throw new NotSupportedException(
-            "LZW compression is not supported by SharpCompress's internal implementation."
+            "XZ compression is not supported by SharpCompress's internal implementation."
         );
     }
 
     public Stream CreateDecompressStream(Stream source)
     {
-        return new LzwStream(source);
+        return new XZStream(source);
     }
 
     public Stream CreateDecompressStream(Stream source, CompressionContext context)
     {
-        // Context not used for LZW decompression
+        // Context not used for XZ decompression
         return CreateDecompressStream(source);
     }
 }
