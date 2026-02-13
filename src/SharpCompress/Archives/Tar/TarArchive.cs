@@ -8,6 +8,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Writers.Tar;
@@ -44,7 +45,11 @@ public partial class TarArchive
             ),
             CompressionType.GZip => ReaderOptions.Providers.CreateDecompressStream(
                 CompressionType.GZip,
-                stream
+                stream,
+                CompressionContext.FromStream(stream) with
+                {
+                    FormatOptions = ReaderOptions,
+                }
             ),
             CompressionType.ZStandard => ReaderOptions.Providers.CreateDecompressStream(
                 CompressionType.ZStandard,
@@ -80,6 +85,10 @@ public partial class TarArchive
             CompressionType.GZip => ReaderOptions.Providers.CreateDecompressStreamAsync(
                 CompressionType.GZip,
                 stream,
+                CompressionContext.FromStream(stream) with
+                {
+                    FormatOptions = ReaderOptions,
+                },
                 cancellationToken
             ),
             CompressionType.ZStandard => ReaderOptions.Providers.CreateDecompressStreamAsync(

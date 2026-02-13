@@ -13,6 +13,7 @@ using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Readers.Tar;
 
@@ -41,7 +42,14 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
                 CompressionType.BZip2,
                 stream
             ),
-            CompressionType.GZip => providers.CreateDecompressStream(CompressionType.GZip, stream),
+            CompressionType.GZip => providers.CreateDecompressStream(
+                CompressionType.GZip,
+                stream,
+                CompressionContext.FromStream(stream) with
+                {
+                    FormatOptions = Options,
+                }
+            ),
             CompressionType.ZStandard => providers.CreateDecompressStream(
                 CompressionType.ZStandard,
                 stream
@@ -71,6 +79,10 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             CompressionType.GZip => providers.CreateDecompressStreamAsync(
                 CompressionType.GZip,
                 stream,
+                CompressionContext.FromStream(stream) with
+                {
+                    FormatOptions = Options,
+                },
                 cancellationToken
             ),
             CompressionType.ZStandard => providers.CreateDecompressStreamAsync(

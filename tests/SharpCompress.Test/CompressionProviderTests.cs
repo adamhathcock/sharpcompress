@@ -294,6 +294,45 @@ public class CompressionProviderTests
     }
 
     [Fact]
+    public void GZipProvider_Decompress_WithReaderOptionsContext_UsesArchiveEncoding()
+    {
+        var provider = new GZipCompressionProvider();
+        var data = Encoding.UTF8.GetBytes("gzip filename encoding");
+        var expectedFileName = "café.txt";
+        var archiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding("iso-8859-1") };
+
+        using var compressedStream = new MemoryStream();
+        using (
+            var compressStream = new SharpCompress.Compressors.Deflate.GZipStream(
+                SharpCompressStream.CreateNonDisposing(compressedStream),
+                CompressionMode.Compress,
+                SharpCompress.Compressors.Deflate.CompressionLevel.Default,
+                archiveEncoding.Default
+            )
+        )
+        {
+            compressStream.FileName = expectedFileName;
+            compressStream.Write(data, 0, data.Length);
+        }
+
+        compressedStream.Position = 0;
+        var readerOptions = new ReaderOptions { ArchiveEncoding = archiveEncoding };
+        var context = CompressionContext.FromStream(compressedStream) with
+        {
+            FormatOptions = readerOptions,
+        };
+
+        using var decompressStream = provider.CreateDecompressStream(compressedStream, context);
+        using var resultStream = new MemoryStream();
+        decompressStream.CopyTo(resultStream);
+
+        resultStream.ToArray().Should().Equal(data);
+        decompressStream.Should().BeOfType<SharpCompress.Compressors.Deflate.GZipStream>();
+        var gzipStream = (SharpCompress.Compressors.Deflate.GZipStream)decompressStream;
+        gzipStream.FileName.Should().Be(expectedFileName);
+    }
+
+    [Fact]
     public void BZip2Provider_SupportsCompressionAndDecompression()
     {
         var provider = new BZip2CompressionProvider();

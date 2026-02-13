@@ -9,6 +9,7 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
 using SharpCompress.Readers.Tar;
@@ -129,7 +130,11 @@ public class GZipFactory
             sharpCompressStream.Rewind();
             using var testStream = options.Providers.CreateDecompressStream(
                 CompressionType.GZip,
-                SharpCompressStream.CreateNonDisposing(sharpCompressStream)
+                SharpCompressStream.CreateNonDisposing(sharpCompressStream),
+                CompressionContext.FromStream(sharpCompressStream) with
+                {
+                    FormatOptions = options,
+                }
             );
             if (TarArchive.IsTarFile(testStream))
             {

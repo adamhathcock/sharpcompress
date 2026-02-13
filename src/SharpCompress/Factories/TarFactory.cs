@@ -99,7 +99,7 @@ public class TarFactory
                         sharpCompressStream,
                         wrapper.CompressionType,
                         providers,
-                        cancellationToken
+                        cancellationToken: cancellationToken
                     )
                     .ConfigureAwait(false);
                 if (
@@ -122,19 +122,36 @@ public class TarFactory
     private static Stream CreateProbeDecompressionStream(
         Stream stream,
         CompressionType compressionType,
-        CompressionProviderRegistry providers
+        CompressionProviderRegistry providers,
+        IReaderOptions? readerOptions = null
     )
     {
         var nonDisposingStream = SharpCompressStream.CreateNonDisposing(stream);
-        return compressionType == CompressionType.None
-            ? nonDisposingStream
-            : providers.CreateDecompressStream(compressionType, nonDisposingStream);
+        if (compressionType == CompressionType.None)
+        {
+            return nonDisposingStream;
+        }
+
+        if (compressionType == CompressionType.GZip && readerOptions is not null)
+        {
+            return providers.CreateDecompressStream(
+                compressionType,
+                nonDisposingStream,
+                CompressionContext.FromStream(nonDisposingStream) with
+                {
+                    FormatOptions = readerOptions,
+                }
+            );
+        }
+
+        return providers.CreateDecompressStream(compressionType, nonDisposingStream);
     }
 
     private static async ValueTask<Stream> CreateProbeDecompressionStreamAsync(
         Stream stream,
         CompressionType compressionType,
         CompressionProviderRegistry providers,
+        IReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
@@ -143,6 +160,22 @@ public class TarFactory
         {
             return nonDisposingStream;
         }
+
+        if (compressionType == CompressionType.GZip && readerOptions is not null)
+        {
+            return await providers
+                .CreateDecompressStreamAsync(
+                    compressionType,
+                    nonDisposingStream,
+                    CompressionContext.FromStream(nonDisposingStream) with
+                    {
+                        FormatOptions = readerOptions,
+                    },
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+
         return await providers
             .CreateDecompressStreamAsync(compressionType, nonDisposingStream, cancellationToken)
             .ConfigureAwait(false);
@@ -193,7 +226,7 @@ public class TarFactory
                         stream,
                         wrapper.CompressionType,
                         providers,
-                        cancellationToken
+                        cancellationToken: cancellationToken
                     )
                     .ConfigureAwait(false);
                 if (
@@ -286,7 +319,8 @@ public class TarFactory
                 var decompressedStream = CreateProbeDecompressionStream(
                     sharpCompressStream,
                     wrapper.CompressionType,
-                    options.Providers
+                    options.Providers,
+                    options
                 );
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
@@ -323,6 +357,7 @@ public class TarFactory
                         sharpCompressStream,
                         wrapper.CompressionType,
                         options.Providers,
+                        options,
                         cancellationToken
                     )
                     .ConfigureAwait(false);
