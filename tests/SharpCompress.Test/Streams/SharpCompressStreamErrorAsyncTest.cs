@@ -103,9 +103,8 @@ public class SharpCompressStreamErrorAsyncTest
         var buffer = new byte[32];
         for (int i = 0; i < 3; i++)
         {
-            await stream.ReadAsync(buffer, 0, 32).ConfigureAwait(false);
+            await stream.ReadExactAsync(buffer, 0, 32).ConfigureAwait(false);
         }
-        stream.Rewind();
         Assert.Throws<InvalidOperationException>(() => stream.Rewind());
     }
 

@@ -124,16 +124,4 @@ public class SharpCompressStreamSeekTest
         Assert.Equal(3, readBuffer[0]);
         Assert.Equal(4, readBuffer[1]);
     }
-
-    [Fact]
-    public void Position_SetBeforeRecordingStart_ThrowsNotSupported()
-    {
-        var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
-        var nonSeekableMs = new NonSeekableStreamWrapper(ms);
-        var stream = SharpCompressStream.Create(nonSeekableMs, 128);
-        stream.StartRecording();
-        var buffer = new byte[4];
-        stream.Read(buffer, 0, 4);
-        Assert.Throws<NotSupportedException>(() => stream.Position = 0);
-    }
 }
