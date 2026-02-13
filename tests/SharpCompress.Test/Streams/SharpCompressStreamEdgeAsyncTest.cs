@@ -9,6 +9,8 @@ namespace SharpCompress.Test.Streams;
 
 public class SharpCompressStreamEdgeAsyncTest
 {
+#if !LEGACY_DOTNET
+
     [Fact]
     public async ValueTask DisposeAsync_WithLeaveStreamOpenTrue_DoesNotDisposeUnderlying()
     {
@@ -28,6 +30,7 @@ public class SharpCompressStreamEdgeAsyncTest
         await stream.DisposeAsync().ConfigureAwait(false);
         Assert.Throws<ObjectDisposedException>(() => ms.Read(new byte[1], 0, 1));
     }
+#endif
 
     [Fact]
     public async ValueTask ReadAsync_ZeroCount_ReturnsZero()
@@ -50,6 +53,7 @@ public class SharpCompressStreamEdgeAsyncTest
         Assert.Equal(0, bytesRead);
     }
 
+#if !LEGACY_DOTNET
     [Fact]
     public async ValueTask ReadAsyncMemory_ZeroCount_ReturnsZero()
     {
@@ -70,6 +74,7 @@ public class SharpCompressStreamEdgeAsyncTest
         int bytesRead = await stream.ReadAsync(buffer.AsMemory()).ConfigureAwait(false);
         Assert.Equal(0, bytesRead);
     }
+#endif
 
     [Fact]
     public async ValueTask CopyToAsync_DelegatesToUnderlyingStream()
@@ -91,6 +96,7 @@ public class SharpCompressStreamEdgeAsyncTest
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, destination.ToArray());
     }
 
+#if !LEGACY_DOTNET
     [Fact]
     public async ValueTask WriteAsyncMemory_DelegatesToUnderlying()
     {
@@ -110,4 +116,5 @@ public class SharpCompressStreamEdgeAsyncTest
         await stream.FlushAsync().ConfigureAwait(false);
         Assert.Equal(3, ms.Length);
     }
+#endif
 }
