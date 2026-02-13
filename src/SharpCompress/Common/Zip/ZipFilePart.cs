@@ -140,31 +140,25 @@ internal abstract partial class ZipFilePart : FilePart
                 {
                     throw new NotSupportedException("LZMA with pkware encryption.");
                 }
-                using (
-                    var reader = new BinaryReader(
-                        stream,
-                        System.Text.Encoding.Default,
-                        leaveOpen: true
-                    )
-                )
+
+                using var reader = new BinaryReader(
+                    stream,
+                    System.Text.Encoding.Default,
+                    leaveOpen: true
+                );
+                reader.ReadUInt16(); // LZMA version
+                var propsLength = reader.ReadUInt16();
+                var props = reader.ReadBytes(propsLength);
+                context = context with
                 {
-                    reader.ReadUInt16(); // LZMA version
-                    var propsLength = reader.ReadUInt16();
-                    var props = new byte[propsLength];
-                    reader.Read(props, 0, props.Length);
-                    context = context with
-                    {
-                        Properties = props,
-                        InputSize =
-                            Header.CompressedSize > 0
-                                ? Header.CompressedSize - 4 - props.Length
-                                : -1,
-                        OutputSize = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
-                            ? -1
-                            : Header.UncompressedSize,
-                    };
-                    return providers.CreateDecompressStream(compressionType, stream, context);
-                }
+                    Properties = props,
+                    InputSize =
+                        Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
+                    OutputSize = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                        ? -1
+                        : Header.UncompressedSize,
+                };
+                return providers.CreateDecompressStream(compressionType, stream, context);
             }
             case ZipCompressionMethod.PPMd:
             {

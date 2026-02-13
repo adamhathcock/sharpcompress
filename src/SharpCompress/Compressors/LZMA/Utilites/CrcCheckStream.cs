@@ -15,7 +15,6 @@ public class CrcCheckStream : Stream
     private bool _mClosed;
 
     private readonly long[] _mBytes = ArrayPool<long>.Shared.Rent(256);
-    private long _mLength;
 
     public CrcCheckStream(uint crc)
     {
@@ -97,7 +96,6 @@ public class CrcCheckStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        _mLength += count;
         for (var i = 0; i < count; i++)
         {
             _mBytes[buffer[offset + i]]++;
