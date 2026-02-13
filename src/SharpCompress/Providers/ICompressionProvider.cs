@@ -78,7 +78,13 @@ public interface ICompressionProvider
     /// Creates a decompression stream with context information.
     /// </summary>
     /// <param name="source">The source stream.</param>
-    /// <param name="context">Context information about the decompression.</param>
+    /// <param name="context">
+    /// Context information about the decompression. Providers may use
+    /// <see cref="CompressionContext.ReaderOptions"/> for archive header encoding
+    /// (via <see cref="ReaderOptions.ArchiveEncoding"/>) and
+    /// <see cref="CompressionContext.FormatOptions"/> for format-specific metadata
+    /// such as compression properties or algorithm-specific configuration.
+    /// </param>
     /// <returns>A decompression stream.</returns>
     /// <exception cref="NotSupportedException">Thrown if SupportsDecompression is false.</exception>
     Stream CreateDecompressStream(Stream source, CompressionContext context);
@@ -129,7 +135,11 @@ public interface ICompressionProvider
     /// Asynchronously creates a decompression stream with context information.
     /// </summary>
     /// <param name="source">The source stream.</param>
-    /// <param name="context">Context information about the decompression.</param>
+    /// <param name="context">
+    /// Context information about the decompression. Providers may use
+    /// <see cref="CompressionContext.FormatOptions"/> for format-specific metadata
+    /// (for example, archive header encoding).
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task containing the decompression stream.</returns>
     /// <exception cref="NotSupportedException">Thrown if SupportsDecompression is false.</exception>

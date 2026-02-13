@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AwesomeAssertions;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Compressors;
 using SharpCompress.IO;
 using SharpCompress.Providers;
@@ -208,6 +209,29 @@ public class CompressionProviderTests
         }
     }
 
+    private sealed class ContextRequiredGZipProvider : CompressionProviderBase
+    {
+        private readonly GZipCompressionProvider _inner = new();
+
+        public override CompressionType CompressionType => CompressionType.GZip;
+
+        public override bool SupportsCompression => true;
+
+        public override bool SupportsDecompression => true;
+
+        public override Stream CreateCompressStream(Stream destination, int compressionLevel) =>
+            _inner.CreateCompressStream(destination, compressionLevel);
+
+        public override Stream CreateDecompressStream(Stream source) =>
+            throw new InvalidOperationException("Context is required for GZip decompression.");
+
+        public override Stream CreateDecompressStream(Stream source, CompressionContext context)
+        {
+            context.ReaderOptions.Should().NotBeNull();
+            return _inner.CreateDecompressStream(source, context);
+        }
+    }
+
     [Fact]
     public void CompressionProviderRegistry_Default_ReturnsInternalProviders()
     {
@@ -301,25 +325,17 @@ public class CompressionProviderTests
         var expectedFileName = "café.txt";
         var archiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding("iso-8859-1") };
 
-        using var compressedStream = new MemoryStream();
-        using (
-            var compressStream = new SharpCompress.Compressors.Deflate.GZipStream(
-                SharpCompressStream.CreateNonDisposing(compressedStream),
-                CompressionMode.Compress,
-                SharpCompress.Compressors.Deflate.CompressionLevel.Default,
-                archiveEncoding.Default
-            )
-        )
-        {
-            compressStream.FileName = expectedFileName;
-            compressStream.Write(data, 0, data.Length);
-        }
+        using var compressedStream = CreateGZipWithFileName(
+            data,
+            expectedFileName,
+            archiveEncoding.Default
+        );
 
         compressedStream.Position = 0;
         var readerOptions = new ReaderOptions { ArchiveEncoding = archiveEncoding };
         var context = CompressionContext.FromStream(compressedStream) with
         {
-            FormatOptions = readerOptions,
+            ReaderOptions = readerOptions,
         };
 
         using var decompressStream = provider.CreateDecompressStream(compressedStream, context);
@@ -328,6 +344,28 @@ public class CompressionProviderTests
 
         resultStream.ToArray().Should().Equal(data);
         decompressStream.Should().BeOfType<SharpCompress.Compressors.Deflate.GZipStream>();
+        var gzipStream = (SharpCompress.Compressors.Deflate.GZipStream)decompressStream;
+        gzipStream.FileName.Should().Be(expectedFileName);
+    }
+
+    [Fact]
+    public void GZipProvider_Decompress_WithNullReaderOptions_FallsBackToUtf8()
+    {
+        var provider = new GZipCompressionProvider();
+        var data = Encoding.UTF8.GetBytes("gzip filename encoding");
+        var expectedFileName = "café.txt";
+
+        using var compressedStream = CreateGZipWithFileName(data, expectedFileName, Encoding.UTF8);
+
+        compressedStream.Position = 0;
+        var context = CompressionContext.FromStream(compressedStream);
+        // ReaderOptions is null by default
+
+        using var decompressStream = provider.CreateDecompressStream(compressedStream, context);
+        using var resultStream = new MemoryStream();
+        decompressStream.CopyTo(resultStream);
+
+        resultStream.ToArray().Should().Equal(data);
         var gzipStream = (SharpCompress.Compressors.Deflate.GZipStream)decompressStream;
         gzipStream.FileName.Should().Be(expectedFileName);
     }
@@ -405,6 +443,35 @@ public class CompressionProviderTests
 
         var result = Encoding.UTF8.GetString(resultStream.ToArray());
         result.Should().Be("Test content for reading");
+    }
+
+    [Fact]
+    public void TarReader_OpenReader_WithContextRequiredGZipProvider_Succeeds()
+    {
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new TarWriter(
+                archiveStream,
+                new TarWriterOptions(CompressionType.GZip, true)
+            )
+        )
+        {
+            var data = Encoding.UTF8.GetBytes("Test content for context-required provider");
+            writer.Write("test.txt", new MemoryStream(data), DateTime.Now);
+        }
+
+        archiveStream.Position = 0;
+        var registry = CompressionProviderRegistry.Default.With(new ContextRequiredGZipProvider());
+        var readOptions = new ReaderOptions { Providers = registry };
+
+        using var reader = TarReader.OpenReader(archiveStream, readOptions);
+        reader.MoveToNextEntry().Should().BeTrue();
+        using var entryStream = reader.OpenEntryStream();
+        using var resultStream = new MemoryStream();
+        entryStream.CopyTo(resultStream);
+
+        var result = Encoding.UTF8.GetString(resultStream.ToArray());
+        result.Should().Be("Test content for context-required provider");
     }
 
     [Fact]
@@ -590,6 +657,30 @@ public class CompressionProviderTests
     }
 
     #region System.IO.Compression Tests
+
+    private static MemoryStream CreateGZipWithFileName(
+        byte[] data,
+        string fileName,
+        Encoding encoding
+    )
+    {
+        var compressedStream = new MemoryStream();
+        using (
+            var compressStream = new SharpCompress.Compressors.Deflate.GZipStream(
+                SharpCompressStream.CreateNonDisposing(compressedStream),
+                CompressionMode.Compress,
+                SharpCompress.Compressors.Deflate.CompressionLevel.Default,
+                encoding
+            )
+        )
+        {
+            compressStream.FileName = fileName;
+            compressStream.Write(data, 0, data.Length);
+        }
+
+        compressedStream.Position = 0;
+        return compressedStream;
+    }
 
     [Fact]
     public void SystemGZipProvider_RoundTrip_Works()

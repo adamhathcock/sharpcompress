@@ -45,10 +45,7 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             CompressionType.GZip => providers.CreateDecompressStream(
                 CompressionType.GZip,
                 stream,
-                CompressionContext.FromStream(stream) with
-                {
-                    FormatOptions = Options,
-                }
+                CompressionContext.FromStream(stream).WithReaderOptions(Options)
             ),
             CompressionType.ZStandard => providers.CreateDecompressStream(
                 CompressionType.ZStandard,
@@ -79,10 +76,7 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
             CompressionType.GZip => providers.CreateDecompressStreamAsync(
                 CompressionType.GZip,
                 stream,
-                CompressionContext.FromStream(stream) with
-                {
-                    FormatOptions = Options,
-                },
+                CompressionContext.FromStream(stream).WithReaderOptions(Options),
                 cancellationToken
             ),
             CompressionType.ZStandard => providers.CreateDecompressStreamAsync(

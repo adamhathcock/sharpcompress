@@ -17,19 +17,33 @@ public partial class TarReader
     private static Stream CreateProbeDecompressionStream(
         Stream stream,
         CompressionType compressionType,
-        CompressionProviderRegistry providers
+        CompressionProviderRegistry providers,
+        ReaderOptions options
     )
     {
         var nonDisposingStream = SharpCompressStream.CreateNonDisposing(stream);
-        return compressionType == CompressionType.None
-            ? nonDisposingStream
-            : providers.CreateDecompressStream(compressionType, nonDisposingStream);
+        if (compressionType == CompressionType.None)
+        {
+            return nonDisposingStream;
+        }
+
+        if (compressionType == CompressionType.GZip)
+        {
+            return providers.CreateDecompressStream(
+                compressionType,
+                nonDisposingStream,
+                CompressionContext.FromStream(nonDisposingStream).WithReaderOptions(options)
+            );
+        }
+
+        return providers.CreateDecompressStream(compressionType, nonDisposingStream);
     }
 
     private static async ValueTask<Stream> CreateProbeDecompressionStreamAsync(
         Stream stream,
         CompressionType compressionType,
         CompressionProviderRegistry providers,
+        ReaderOptions options,
         CancellationToken cancellationToken = default
     )
     {
@@ -37,6 +51,18 @@ public partial class TarReader
         if (compressionType == CompressionType.None)
         {
             return nonDisposingStream;
+        }
+
+        if (compressionType == CompressionType.GZip)
+        {
+            return await providers
+                .CreateDecompressStreamAsync(
+                    compressionType,
+                    nonDisposingStream,
+                    CompressionContext.FromStream(nonDisposingStream).WithReaderOptions(options),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
 
         return await providers
@@ -85,6 +111,7 @@ public partial class TarReader
                     sharpCompressStream,
                     wrapper.CompressionType,
                     options.Providers,
+                    options,
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -156,7 +183,8 @@ public partial class TarReader
             var testStream = CreateProbeDecompressionStream(
                 sharpCompressStream,
                 wrapper.CompressionType,
-                options.Providers
+                options.Providers,
+                options
             );
             if (TarArchive.IsTarFile(testStream))
             {

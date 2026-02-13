@@ -3,7 +3,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Common.Options;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 
@@ -35,7 +34,7 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
             source,
             CompressionMode.Decompress,
             CompressionLevel.Default,
-            ResolveHeaderEncoding(context)
+            context.ResolveArchiveEncoding()
         );
     }
 
@@ -48,14 +47,4 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
         cancellationToken.ThrowIfCancellationRequested();
         return new ValueTask<Stream>(CreateDecompressStream(source, context));
     }
-
-    private static Encoding ResolveHeaderEncoding(CompressionContext context) =>
-        context.FormatOptions switch
-        {
-            IReaderOptions readerOptions => readerOptions.ArchiveEncoding.GetEncoding(),
-            IEncodingOptions encodingOptions => encodingOptions.ArchiveEncoding.GetEncoding(),
-            IArchiveEncoding archiveEncoding => archiveEncoding.GetEncoding(),
-            Encoding encoding => encoding,
-            _ => Encoding.UTF8,
-        };
 }

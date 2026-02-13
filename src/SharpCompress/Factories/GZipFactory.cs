@@ -131,10 +131,7 @@ public class GZipFactory
             using var testStream = options.Providers.CreateDecompressStream(
                 CompressionType.GZip,
                 SharpCompressStream.CreateNonDisposing(sharpCompressStream),
-                CompressionContext.FromStream(sharpCompressStream) with
-                {
-                    FormatOptions = options,
-                }
+                CompressionContext.FromStream(sharpCompressStream).WithReaderOptions(options)
             );
             if (TarArchive.IsTarFile(testStream))
             {

@@ -24,16 +24,6 @@ namespace SharpCompress.Readers;
 public sealed record ReaderOptions : IReaderOptions
 {
     /// <summary>
-    /// The default buffer size for stream operations.
-    /// This value (65536 bytes) is preserved for backward compatibility.
-    /// New code should use Constants.BufferSize instead (81920 bytes), which matches .NET's Stream.CopyTo default.
-    /// </summary>
-    [Obsolete(
-        "Use Constants.BufferSize instead. This constant will be removed in a future version."
-    )]
-    public const int DefaultBufferSize = 0x10000;
-
-    /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.
     /// </summary>
     public bool LeaveStreamOpen { get; init; } = true;

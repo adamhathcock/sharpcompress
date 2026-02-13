@@ -137,10 +137,7 @@ public class TarFactory
             return providers.CreateDecompressStream(
                 compressionType,
                 nonDisposingStream,
-                CompressionContext.FromStream(nonDisposingStream) with
-                {
-                    FormatOptions = readerOptions,
-                }
+                CompressionContext.FromStream(nonDisposingStream).WithReaderOptions(readerOptions)
             );
         }
 
@@ -167,10 +164,9 @@ public class TarFactory
                 .CreateDecompressStreamAsync(
                     compressionType,
                     nonDisposingStream,
-                    CompressionContext.FromStream(nonDisposingStream) with
-                    {
-                        FormatOptions = readerOptions,
-                    },
+                    CompressionContext
+                        .FromStream(nonDisposingStream)
+                        .WithReaderOptions(readerOptions),
                     cancellationToken
                 )
                 .ConfigureAwait(false);

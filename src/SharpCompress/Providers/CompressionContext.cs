@@ -1,4 +1,5 @@
 using System.IO;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Providers;
 
@@ -31,6 +32,12 @@ public sealed record CompressionContext
     /// <summary>
     /// Additional format-specific options.
     /// </summary>
+    /// <remarks>
+    /// This value is consumed by provider implementations that need caller-supplied metadata
+    /// that is not tied to ReaderOptions. For archive header encoding, use <see cref="ReaderOptions"/> instead.
+    /// Examples of valid FormatOptions values include compression properties (e.g., LZMA properties),
+    /// format flags, or algorithm-specific configuration.
+    /// </remarks>
     public object? FormatOptions { get; init; }
 
     /// <summary>
@@ -40,4 +47,20 @@ public sealed record CompressionContext
     /// <returns>A CompressionContext populated from the stream.</returns>
     public static CompressionContext FromStream(Stream stream) =>
         new() { CanSeek = stream.CanSeek, InputSize = stream.CanSeek ? stream.Length : -1 };
+
+    /// <summary>
+    /// Reader options for accessing archive metadata such as header encoding.
+    /// </summary>
+    public IReaderOptions? ReaderOptions { get; init; }
+
+    /// <summary>
+    /// Returns a new <see cref="CompressionContext"/> with the specified reader options.
+    /// </summary>
+    /// <param name="readerOptions">The reader options to set.</param>
+    /// <returns>A new <see cref="CompressionContext"/> instance.</returns>
+    public CompressionContext WithReaderOptions(IReaderOptions? readerOptions) =>
+        this with
+        {
+            ReaderOptions = readerOptions,
+        };
 }
