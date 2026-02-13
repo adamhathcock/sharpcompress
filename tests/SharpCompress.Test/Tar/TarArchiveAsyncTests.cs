@@ -43,9 +43,11 @@ public class TarArchiveAsyncTests : ArchiveTests
             )
             using (Stream inputStream = new MemoryStream())
             {
-                var sw = new StreamWriter(inputStream);
-                await sw.WriteAsync("dummy filecontent");
-                await sw.FlushAsync();
+                using (var sw = new StreamWriter(inputStream))
+                {
+                    await sw.WriteAsync("dummy filecontent");
+                    await sw.FlushAsync();
+                }
 
                 inputStream.Position = 0;
                 await writer.WriteAsync(filename, inputStream, null);
@@ -69,10 +71,10 @@ public class TarArchiveAsyncTests : ArchiveTests
 
             await foreach (var entry in archive2.EntriesAsync)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync()
-                );
+                using (var sr = new StreamReader(await entry.OpenEntryStreamAsync()))
+                {
+                    Assert.Equal("dummy filecontent", await sr.ReadLineAsync());
+                }
             }
         }
     }
@@ -102,9 +104,11 @@ public class TarArchiveAsyncTests : ArchiveTests
         )
         using (Stream inputStream = new MemoryStream())
         {
-            var sw = new StreamWriter(inputStream);
-            await sw.WriteAsync("dummy filecontent");
-            await sw.FlushAsync();
+            using (var sw = new StreamWriter(inputStream))
+            {
+                await sw.WriteAsync("dummy filecontent");
+                await sw.FlushAsync();
+            }
 
             inputStream.Position = 0;
             await writer.WriteAsync(longFilename, inputStream, null);
@@ -127,10 +131,10 @@ public class TarArchiveAsyncTests : ArchiveTests
 
             await foreach (var entry in archive2.EntriesAsync)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync()
-                );
+                using (var sr = new StreamReader(await entry.OpenEntryStreamAsync()))
+                {
+                    Assert.Equal("dummy filecontent", await sr.ReadLineAsync());
+                }
             }
         }
 #if LEGACY_DOTNET

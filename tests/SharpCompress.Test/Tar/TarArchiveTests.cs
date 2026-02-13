@@ -54,9 +54,11 @@ public class TarArchiveTests : ArchiveTests
         )
         using (Stream inputStream = new MemoryStream())
         {
-            var sw = new StreamWriter(inputStream);
-            sw.Write("dummy filecontent");
-            sw.Flush();
+            using (var sw = new StreamWriter(inputStream))
+            {
+                sw.Write("dummy filecontent");
+                sw.Flush();
+            }
 
             inputStream.Position = 0;
             writer.Write(filename, inputStream, null);
@@ -71,10 +73,10 @@ public class TarArchiveTests : ArchiveTests
 
             foreach (var entry in archive2.Entries)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    new StreamReader(entry.OpenEntryStream()).ReadLine()
-                );
+                using (var sr = new StreamReader(entry.OpenEntryStream()))
+                {
+                    Assert.Equal("dummy filecontent", sr.ReadLine());
+                }
             }
         }
     }
@@ -120,9 +122,11 @@ public class TarArchiveTests : ArchiveTests
         )
         using (Stream inputStream = new MemoryStream())
         {
-            var sw = new StreamWriter(inputStream);
-            sw.Write("dummy filecontent");
-            sw.Flush();
+            using (var sw = new StreamWriter(inputStream))
+            {
+                sw.Write("dummy filecontent");
+                sw.Flush();
+            }
 
             inputStream.Position = 0;
             writer.Write(longFilename, inputStream, null);
@@ -137,10 +141,10 @@ public class TarArchiveTests : ArchiveTests
 
             foreach (var entry in archive2.Entries)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    new StreamReader(entry.OpenEntryStream()).ReadLine()
-                );
+                using (var sr = new StreamReader(entry.OpenEntryStream()))
+                {
+                    Assert.Equal("dummy filecontent", sr.ReadLine());
+                }
             }
         }
     }

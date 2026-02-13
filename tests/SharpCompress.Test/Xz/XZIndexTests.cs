@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz;
 using Xunit;
@@ -17,7 +17,7 @@ public class XzIndexTests : XzTestsBase
     public void RecordsStreamStartOnInit()
     {
         using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
-        var br = new BinaryReader(badStream);
+        using var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         Assert.Equal(0, index.StreamStartPosition);
     }
@@ -26,7 +26,7 @@ public class XzIndexTests : XzTestsBase
     public void ThrowsIfHasNoIndexMarker()
     {
         using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
-        var br = new BinaryReader(badStream);
+        using var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         Assert.Throws<InvalidFormatException>(() => index.Process());
     }
@@ -34,7 +34,7 @@ public class XzIndexTests : XzTestsBase
     [Fact]
     public void ReadsNoRecord()
     {
-        var br = new BinaryReader(CompressedEmptyStream);
+        using var br = new BinaryReader(CompressedEmptyStream);
         var index = new XZIndex(br, false);
         index.Process();
         Assert.Equal((ulong)0, index.NumberOfRecords);
@@ -43,7 +43,7 @@ public class XzIndexTests : XzTestsBase
     [Fact]
     public void ReadsOneRecord()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var index = new XZIndex(br, false);
         index.Process();
         Assert.Equal((ulong)1, index.NumberOfRecords);
@@ -52,7 +52,7 @@ public class XzIndexTests : XzTestsBase
     [Fact]
     public void ReadsMultipleRecords()
     {
-        var br = new BinaryReader(CompressedIndexedStream);
+        using var br = new BinaryReader(CompressedIndexedStream);
         var index = new XZIndex(br, false);
         index.Process();
         Assert.Equal((ulong)2, index.NumberOfRecords);
@@ -61,7 +61,7 @@ public class XzIndexTests : XzTestsBase
     [Fact]
     public void ReadsFirstRecord()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var index = new XZIndex(br, false);
         index.Process();
         Assert.Equal((ulong)OriginalBytes.Length, index.Records[0].UncompressedSize);
@@ -86,7 +86,7 @@ public class XzIndexTests : XzTestsBase
             0xC9,
             0xFF,
         ]);
-        var br = new BinaryReader(badStream);
+        using var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         index.Process();
         Assert.Equal(0L, badStream.Position % 4L);

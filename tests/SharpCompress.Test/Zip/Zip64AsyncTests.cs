@@ -199,33 +199,30 @@ public class Zip64AsyncTests : WriterTests
         ZipEntry? prev = null;
         using (var fs = File.OpenRead(filename))
         {
-            var rd = await ReaderFactory.OpenAsyncReader(
+            await using var rd = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(fs),
                 new ReaderOptions { LookForHeader = false }
             );
-            await using (rd)
+            while (await rd.MoveToNextEntryAsync())
             {
-                while (await rd.MoveToNextEntryAsync())
-                {
 #if LEGACY_DOTNET
-                    using (var entryStream = await rd.OpenEntryStreamAsync())
-                    {
-                        await entryStream.SkipEntryAsync();
-                    }
-#else
-                    await using (var entryStream = await rd.OpenEntryStreamAsync())
-                    {
-                        await entryStream.SkipEntryAsync();
-                    }
-#endif
-                    count++;
-                    if (prev != null)
-                    {
-                        size += prev.Size;
-                    }
-
-                    prev = (ZipEntry)rd.Entry;
+                using (var entryStream = await rd.OpenEntryStreamAsync())
+                {
+                    await entryStream.SkipEntryAsync();
                 }
+#else
+                await using (var entryStream = await rd.OpenEntryStreamAsync())
+                {
+                    await entryStream.SkipEntryAsync();
+                }
+#endif
+                count++;
+                if (prev != null)
+                {
+                    size += prev.Size;
+                }
+
+                prev = (ZipEntry)rd.Entry;
             }
         }
 

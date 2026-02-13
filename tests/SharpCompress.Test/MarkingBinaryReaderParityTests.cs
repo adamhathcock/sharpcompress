@@ -26,7 +26,7 @@ public class MarkingBinaryReaderParityTests : TestBase
     public void Mark_Resets_ByteCount()
     {
         using var stream = new MemoryStream(_testData);
-        var reader = new MarkingBinaryReader(stream);
+        using var reader = new MarkingBinaryReader(stream);
 
         reader.ReadBytes(10);
         Assert.Equal(10, reader.CurrentReadByteCount);
@@ -58,7 +58,7 @@ public class MarkingBinaryReaderParityTests : TestBase
     public void ReadByte_Updates_ByteCount()
     {
         using var stream = new MemoryStream(_testData);
-        var reader = new MarkingBinaryReader(stream);
+        using var reader = new MarkingBinaryReader(stream);
 
         reader.Mark();
         reader.ReadByte();
@@ -86,7 +86,7 @@ public class MarkingBinaryReaderParityTests : TestBase
     public void ReadBytes_Updates_ByteCount()
     {
         using var stream = new MemoryStream(_testData);
-        var reader = new MarkingBinaryReader(stream);
+        using var reader = new MarkingBinaryReader(stream);
 
         reader.Mark();
         reader.ReadBytes(16);
@@ -114,7 +114,7 @@ public class MarkingBinaryReaderParityTests : TestBase
     public void ReadUInt16_Updates_ByteCount()
     {
         using var stream = new MemoryStream(_testData);
-        var reader = new MarkingBinaryReader(stream);
+        using var reader = new MarkingBinaryReader(stream);
 
         reader.Mark();
         reader.ReadUInt16();
@@ -136,7 +136,7 @@ public class MarkingBinaryReaderParityTests : TestBase
     public void ReadUInt32_Updates_ByteCount()
     {
         using var stream = new MemoryStream(_testData);
-        var reader = new MarkingBinaryReader(stream);
+        using var reader = new MarkingBinaryReader(stream);
 
         reader.Mark();
         reader.ReadUInt32();
@@ -160,7 +160,7 @@ public class MarkingBinaryReaderParityTests : TestBase
         // Create valid RAR v-int data: 0x05 (value 5, no continuation bit)
         var data = new byte[] { 0x05, 0x85, 0x01, 0x00 }; // 0x05, then 0x85 0x01 (value 5 + 128 = 133)
         using var stream = new MemoryStream(data);
-        var reader = new MarkingBinaryReader(stream);
+        using var reader = new MarkingBinaryReader(stream);
 
         reader.Mark();
         // Read a single-byte v-int (value 5, no continuation bit)
@@ -197,7 +197,7 @@ public class MarkingBinaryReaderParityTests : TestBase
     {
         using var syncStream = new MemoryStream(_testData);
         using var asyncStream = new MemoryStream(_testData);
-        var syncReader = new MarkingBinaryReader(syncStream);
+        using var syncReader = new MarkingBinaryReader(syncStream);
         var asyncReader = new AsyncMarkingBinaryReader(asyncStream);
 
         syncReader.Mark();
@@ -229,7 +229,7 @@ public class MarkingBinaryReaderParityTests : TestBase
     {
         using var syncStream = new MemoryStream(_testData);
         using var asyncStream = new MemoryStream(_testData);
-        var syncReader = new MarkingBinaryReader(syncStream);
+        using var syncReader = new MarkingBinaryReader(syncStream);
         var asyncReader = new AsyncMarkingBinaryReader(asyncStream);
 
         syncReader.Mark();
