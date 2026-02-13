@@ -7,7 +7,7 @@ using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Filters;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.ZStandard;
 

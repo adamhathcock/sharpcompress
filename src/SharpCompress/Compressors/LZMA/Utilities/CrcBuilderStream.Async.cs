@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SharpCompress.Compressors.LZMA.Utilites;
+namespace SharpCompress.Compressors.LZMA.Utilities;
 
 internal partial class CrcBuilderStream : Stream
 {

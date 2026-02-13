@@ -1,8 +1,7 @@
-using System;
-using System.Diagnostics;
-using System.IO;
 
-namespace SharpCompress.Compressors.LZMA.Utilites;
+
+
+namespace SharpCompress.Compressors.LZMA.Utilities;
 
 internal enum BlockType : byte
 {
@@ -38,19 +37,3 @@ internal enum BlockType : byte
     #endregion
 }
 
-internal static class Utils
-{
-    [Conditional("DEBUG")]
-    public static void Assert(bool expression)
-    {
-        if (!expression)
-        {
-            if (Debugger.IsAttached)
-            {
-                Debugger.Break();
-            }
-
-            throw new InvalidOperationException("Assertion failed.");
-        }
-    }
-}

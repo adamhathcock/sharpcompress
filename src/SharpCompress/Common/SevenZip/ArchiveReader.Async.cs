@@ -1,13 +1,13 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
+using BlockType = SharpCompress.Compressors.LZMA.Utilities.BlockType;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -264,7 +264,7 @@ internal sealed partial class ArchiveReader
                 type = ReadId();
             }
 
-            List<byte[]> dataVector = null;
+            List<byte[]>? dataVector = null;
             if (type == BlockType.AdditionalStreamsInfo)
             {
                 dataVector = await ReadAndDecodePackedStreamsAsync(
@@ -332,8 +332,8 @@ internal sealed partial class ArchiveReader
             }
 
             var emptyStreamVector = new BitVector(numFiles);
-            BitVector emptyFileVector = null;
-            BitVector antiFileVector = null;
+            BitVector emptyFileVector = null!;
+            BitVector antiFileVector = null!;
             var numEmptyStreams = 0;
 
             for (; ; )
@@ -351,7 +351,7 @@ internal sealed partial class ArchiveReader
                     case BlockType.Name:
                         using (var streamSwitch = new CStreamSwitch())
                         {
-                            streamSwitch.Set(this, dataVector);
+                            streamSwitch.Set(this, dataVector ?? []);
 #if DEBUG
                             Log.Write("FileNames:");
 #endif

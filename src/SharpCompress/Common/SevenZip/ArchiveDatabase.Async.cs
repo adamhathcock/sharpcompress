@@ -1,10 +1,8 @@
-#nullable disable
-
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -13,6 +11,7 @@ internal sealed partial class ArchiveDatabase
     internal async ValueTask<Stream> GetFolderStreamAsync(
         Stream stream,
         CFolder folder,
+
         IPasswordProvider pw,
         CancellationToken cancellationToken
     )

@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,20 +5,22 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
+using BlockType = SharpCompress.Compressors.LZMA.Utilities.BlockType;
 
 namespace SharpCompress.Common.SevenZip;
 
 internal partial class ArchiveReader
 {
-    internal Stream _stream;
+    internal Stream _stream = null!;
     internal Stack<DataReader> _readerStack = new();
-    internal DataReader _currentReader;
+    internal DataReader _currentReader = null!;
     internal long _streamOrigin;
     internal long _streamEnding;
-    internal byte[] _header;
+    internal byte[] _header = null!;
 
     private readonly Dictionary<int, Stream> _cachedStreams = new();
 
@@ -54,9 +54,6 @@ internal partial class ArchiveReader
         {
             return null;
         }
-#if DEBUG
-        Log.WriteLine("ReadId: {0}", (BlockType)id);
-#endif
         return (BlockType)id;
     }
 
@@ -130,12 +127,12 @@ internal partial class ArchiveReader
         return ReadBitVector(length);
     }
 
-    private void ReadNumberVector(List<byte[]> dataVector, int numFiles, Action<int, long?> action)
+    private void ReadNumberVector(List<byte[]>? dataVector, int numFiles, Action<int, long?> action)
     {
         var defined = ReadOptionalBitVector(numFiles);
 
         using var streamSwitch = new CStreamSwitch();
-        streamSwitch.Set(this, dataVector);
+        streamSwitch.Set(this, dataVector ?? []);
 
         for (var i = 0; i < numFiles; i++)
         {
@@ -164,7 +161,7 @@ internal partial class ArchiveReader
     }
 
     private void ReadDateTimeVector(
-        List<byte[]> dataVector,
+        List<byte[]>? dataVector,
         int numFiles,
         Action<int, DateTime?> action
     ) =>
@@ -175,14 +172,14 @@ internal partial class ArchiveReader
         );
 
     private void ReadAttributeVector(
-        List<byte[]> dataVector,
+        List<byte[]>? dataVector,
         int numFiles,
         Action<int, uint?> action
     )
     {
         var boolVector = ReadOptionalBitVector(numFiles);
         using var streamSwitch = new CStreamSwitch();
-        streamSwitch.Set(this, dataVector);
+        streamSwitch.Set(this, dataVector ?? []);
         for (var i = 0; i < numFiles; i++)
         {
             if (boolVector[i])
@@ -427,7 +424,7 @@ internal partial class ArchiveReader
 #endif
         try
         {
-            packCrCs = null;
+            packCrCs = null!;
 
             dataOffset = checked((long)ReadNumber());
 #if DEBUG
@@ -489,7 +486,7 @@ internal partial class ArchiveReader
         }
     }
 
-    private void ReadUnpackInfo(List<byte[]> dataVector, out List<CFolder> folders)
+    private void ReadUnpackInfo(List<byte[]>? dataVector, out List<CFolder> folders)
     {
 #if DEBUG
         Log.WriteLine("-- ReadUnpackInfo --");
@@ -505,7 +502,7 @@ internal partial class ArchiveReader
 
             using (var streamSwitch = new CStreamSwitch())
             {
-                streamSwitch.Set(this, dataVector);
+                streamSwitch.Set(this, dataVector ?? []);
 
                 //folders.Clear();
                 //folders.Reserve(numFolders);
@@ -586,7 +583,7 @@ internal partial class ArchiveReader
 #endif
         try
         {
-            numUnpackStreamsInFolders = null;
+            numUnpackStreamsInFolders = null!;
 
             BlockType? type;
             for (; ; )
@@ -679,7 +676,7 @@ internal partial class ArchiveReader
                 numDigestsTotal += numSubstreams;
             }
 
-            digests = null;
+            digests = null!;
 
             for (; ; )
             {
@@ -696,7 +693,7 @@ internal partial class ArchiveReader
                         var folder = folders[i];
                         if (numSubstreams == 1 && folder.UnpackCrcDefined)
                         {
-                            digests.Add(folder._unpackCrc.Value);
+                            digests.Add(folder._unpackCrc!.Value);
                         }
                         else
                         {
@@ -741,7 +738,7 @@ internal partial class ArchiveReader
     }
 
     private void ReadStreamsInfo(
-        List<byte[]> dataVector,
+        List<byte[]>? dataVector,
         out long dataOffset,
         out List<long> packSizes,
         out List<uint?> packCrCs,
@@ -758,12 +755,12 @@ internal partial class ArchiveReader
         try
         {
             dataOffset = long.MinValue;
-            packSizes = null;
-            packCrCs = null;
-            folders = null;
-            numUnpackStreamsInFolders = null;
-            unpackSizes = null;
-            digests = null;
+            packSizes = null!;
+            packCrCs = null!;
+            folders = null!;
+            numUnpackStreamsInFolders = null!;
+            unpackSizes = null!;
+            digests = null!;
 
             for (; ; )
             {
@@ -779,7 +776,7 @@ internal partial class ArchiveReader
                         break;
                     case BlockType.SubStreamsInfo:
                         ReadSubStreamsInfo(
-                            folders,
+                            folders!,
                             out numUnpackStreamsInFolders,
                             out unpackSizes,
                             out digests
@@ -888,7 +885,7 @@ internal partial class ArchiveReader
                 type = ReadId();
             }
 
-            List<byte[]> dataVector = null;
+            List<byte[]>? dataVector = null;
             if (type == BlockType.AdditionalStreamsInfo)
             {
                 dataVector = ReadAndDecodePackedStreams(
@@ -954,8 +951,8 @@ internal partial class ArchiveReader
             }
 
             var emptyStreamVector = new BitVector(numFiles);
-            BitVector emptyFileVector = null;
-            BitVector antiFileVector = null;
+            BitVector emptyFileVector = null!;
+            BitVector antiFileVector = null!;
             var numEmptyStreams = 0;
 
             for (; ; )
@@ -973,7 +970,7 @@ internal partial class ArchiveReader
                     case BlockType.Name:
                         using (var streamSwitch = new CStreamSwitch())
                         {
-                            streamSwitch.Set(this, dataVector);
+                            streamSwitch.Set(this, dataVector ?? []);
 #if DEBUG
                             Log.Write("FileNames:");
 #endif
@@ -1445,7 +1442,7 @@ internal partial class ArchiveReader
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        private Stream _stream;
+        private Stream? _stream;
         private long _rem;
         private int _currentIndex;
 
@@ -1457,7 +1454,7 @@ internal partial class ArchiveReader
             )
             {
                 OpenFile();
-                _stream.Dispose();
+                _stream.NotNull().Dispose();
                 _stream = null;
                 _currentIndex++;
             }
@@ -1469,9 +1466,10 @@ internal partial class ArchiveReader
 #if DEBUG
             Log.WriteLine(_db._files[index].Name);
 #endif
-            if (_db._files[index].Crc.HasValue)
+            var crc = _db._files[index].Crc;
+            if (crc.HasValue)
             {
-                _stream = new CrcCheckStream(_db._files[index].Crc.Value);
+                _stream = new CrcCheckStream(crc.Value);
             }
             else
             {
@@ -1568,11 +1566,10 @@ internal partial class ArchiveReader
         return new ReadOnlySubStream(s, db._files[fileIndex].Size);
     }
 
-    public void Extract(ArchiveDatabase db, int[] indices)
+    public void Extract(ArchiveDatabase db, int[]? indices)
     {
-        var allFilesMode = (indices is null);
-
-        var numItems = allFilesMode ? db._files.Count : indices.Length;
+        var allFilesMode = indices is null;
+        var numItems = allFilesMode ? db._files.Count : indices!.Length;
 
         if (numItems == 0)
         {
@@ -1582,7 +1579,7 @@ internal partial class ArchiveReader
         var extractFolderInfoVector = new List<CExtractFolderInfo>();
         for (var i = 0; i < numItems; i++)
         {
-            var fileIndex = allFilesMode ? i : indices[i];
+            var fileIndex = allFilesMode ? i : indices![i];
 
             var folderIndex = db._fileIndexToFolderIndexMap[fileIndex];
             if (folderIndex == -1)
@@ -1608,7 +1605,7 @@ internal partial class ArchiveReader
             }
         }
 
-        byte[] buffer = null;
+        byte[] buffer = null!;
         foreach (var efi in extractFolderInfoVector)
         {
             int startIndex;
