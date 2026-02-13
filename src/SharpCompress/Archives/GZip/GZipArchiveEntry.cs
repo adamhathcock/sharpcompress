@@ -24,10 +24,20 @@ public class GZipArchiveEntry : GZipEntry, IArchiveEntry
         return Parts.Single().GetCompressedStream().NotNull();
     }
 
-    public ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+    public async ValueTask<Stream> OpenEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        // GZip synchronous implementation is fast enough, just wrap it
-        return new(OpenEntryStream());
+        // Reset the stream position if seekable
+        var part = (GZipFilePart)Parts.Single();
+        var rawStream = part.GetRawStream();
+        if (rawStream.CanSeek && rawStream.Position != part.EntryStartPosition)
+        {
+            rawStream.Position = part.EntryStartPosition;
+        }
+        return (
+            await Parts.Single().GetCompressedStreamAsync(cancellationToken).ConfigureAwait(false)
+        ).NotNull();
     }
 
     #region IArchiveEntry Members

@@ -96,7 +96,12 @@ public partial class ZipArchive
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s),
+                                new SeekableZipFilePart(
+                                    headerFactory.NotNull(),
+                                    deh,
+                                    s,
+                                    ReaderOptions.Providers
+                                ),
                                 ReaderOptions
                             );
                         }
@@ -171,6 +176,6 @@ public partial class ZipArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)ZipReader.OpenReader(stream));
+        return new((IAsyncReader)ZipReader.OpenReader(stream, ReaderOptions, Entries));
     }
 }

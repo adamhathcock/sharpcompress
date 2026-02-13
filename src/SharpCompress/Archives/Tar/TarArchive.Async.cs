@@ -89,18 +89,24 @@ public partial class TarArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)TarReader.OpenReader(stream));
+        return new((IAsyncReader)new TarReader(stream, ReaderOptions, _compressionType));
     }
 
     protected override async IAsyncEnumerable<TarArchiveEntry> LoadEntriesAsync(
         IAsyncEnumerable<TarVolume> volumes
     )
     {
-        var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
+        var sourceStream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
+        var stream = await GetStreamAsync(sourceStream).ConfigureAwait(false);
         if (stream.CanSeek)
         {
             stream.Position = 0;
         }
+
+        var streamingMode =
+            _compressionType == CompressionType.None
+                ? StreamingMode.Seekable
+                : StreamingMode.Streaming;
 
         // Always use async header reading in LoadEntriesAsync for consistency
         {
@@ -108,7 +114,7 @@ public partial class TarArchive
             TarHeader? previousHeader = null;
             await foreach (
                 var header in TarHeaderFactory.ReadHeaderAsync(
-                    StreamingMode.Seekable,
+                    streamingMode,
                     stream,
                     ReaderOptions.ArchiveEncoding
                 )
@@ -126,7 +132,10 @@ public partial class TarArchive
                         {
                             var entry = new TarArchiveEntry(
                                 this,
-                                new TarFilePart(previousHeader, stream),
+                                new TarFilePart(
+                                    previousHeader,
+                                    _compressionType == CompressionType.None ? stream : null
+                                ),
                                 CompressionType.None,
                                 ReaderOptions
                             );
@@ -151,7 +160,10 @@ public partial class TarArchive
                         }
                         yield return new TarArchiveEntry(
                             this,
-                            new TarFilePart(header, stream),
+                            new TarFilePart(
+                                header,
+                                _compressionType == CompressionType.None ? stream : null
+                            ),
                             CompressionType.None,
                             ReaderOptions
                         );

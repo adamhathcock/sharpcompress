@@ -44,7 +44,7 @@ public class TarReaderAsyncTests : ReaderTests
         await ReadAsync("Tar.tar.Z", CompressionType.Lzw);
 
     [Fact]
-    public async ValueTask Tar_Async_Assert() => await AssertArchiveAsync<TarFactory>("Tar.tar");
+    public async ValueTask Tar_Async_Assert() => await AssertArchiveAsync("Tar.tar");
 
     [Fact]
     public async ValueTask Tar_BZip2_Reader_Async() =>

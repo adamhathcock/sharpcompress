@@ -15,6 +15,7 @@ using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Writers.Zip;
@@ -378,6 +379,8 @@ public partial class ZipWriter : AbstractWriter
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
         private readonly int compressionLevel;
+        private ICompressionProviderHooks? compressionProviderHooks;
+        private CompressionContext? compressionContext;
         private CountingStream? counting;
         private ulong decompressed;
 
@@ -420,6 +423,9 @@ public partial class ZipWriter : AbstractWriter
         {
             counting = new CountingStream(SharpCompressStream.CreateNonDisposing(writeStream));
             Stream output = counting;
+
+            var providers = writer.WriterOptions.Providers;
+
             switch (zipCompressionMethod)
             {
                 case ZipCompressionMethod.None:
@@ -428,39 +434,98 @@ public partial class ZipWriter : AbstractWriter
                 }
                 case ZipCompressionMethod.Deflate:
                 {
-                    return new DeflateStream(
+                    return providers.CreateCompressStream(
+                        CompressionType.Deflate,
                         counting,
-                        CompressionMode.Compress,
-                        (CompressionLevel)compressionLevel
+                        compressionLevel
                     );
                 }
                 case ZipCompressionMethod.BZip2:
                 {
-                    return BZip2Stream.Create(counting, CompressionMode.Compress, false);
+                    return providers.CreateCompressStream(
+                        CompressionType.BZip2,
+                        counting,
+                        compressionLevel
+                    );
                 }
                 case ZipCompressionMethod.LZMA:
                 {
-                    counting.WriteByte(9);
-                    counting.WriteByte(20);
-                    counting.WriteByte(5);
-                    counting.WriteByte(0);
-
-                    var lzmaStream = LzmaStream.Create(
-                        new LzmaEncoderProperties(!originalStream.CanSeek),
-                        false,
-                        counting
+                    // Use ICompressionProviderHooks for complex initialization
+                    var compressingProvider = providers.GetCompressingProvider(
+                        CompressionType.LZMA
                     );
-                    counting.Write(lzmaStream.Properties, 0, lzmaStream.Properties.Length);
+                    if (compressingProvider is null)
+                    {
+                        throw new InvalidOperationException("LZMA compression provider not found.");
+                    }
+
+                    var context = new CompressionContext { CanSeek = originalStream.CanSeek };
+                    compressionProviderHooks = compressingProvider;
+                    compressionContext = context;
+
+                    // Write pre-compression data (magic bytes)
+                    var preData = compressingProvider.GetPreCompressionData(context);
+                    if (preData != null)
+                    {
+                        counting.Write(preData, 0, preData.Length);
+                    }
+
+                    // Create compression stream
+                    var lzmaStream = compressingProvider.CreateCompressStream(
+                        counting,
+                        compressionLevel,
+                        context
+                    );
+
+                    // Write compression properties
+                    var props = compressingProvider.GetCompressionProperties(lzmaStream, context);
+                    if (props != null)
+                    {
+                        counting.Write(props, 0, props.Length);
+                    }
+
                     return lzmaStream;
                 }
                 case ZipCompressionMethod.PPMd:
                 {
-                    counting.Write(writer.PpmdProperties.Properties, 0, 2);
-                    return PpmdStream.Create(writer.PpmdProperties, counting, true);
+                    // Use ICompressionProviderHooks for complex initialization
+                    var compressingProvider = providers.GetCompressingProvider(
+                        CompressionType.PPMd
+                    );
+                    if (compressingProvider is null)
+                    {
+                        throw new InvalidOperationException("PPMd compression provider not found.");
+                    }
+
+                    var context = new CompressionContext
+                    {
+                        CanSeek = originalStream.CanSeek,
+                        FormatOptions = writer.PpmdProperties,
+                    };
+                    compressionProviderHooks = compressingProvider;
+                    compressionContext = context;
+
+                    // Write pre-compression data (properties)
+                    var preData = compressingProvider.GetPreCompressionData(context);
+                    if (preData != null)
+                    {
+                        counting.Write(preData, 0, preData.Length);
+                    }
+
+                    // Create compression stream
+                    return compressingProvider.CreateCompressStream(
+                        counting,
+                        compressionLevel,
+                        context
+                    );
                 }
                 case ZipCompressionMethod.ZStandard:
                 {
-                    return new CompressionStream(counting, compressionLevel);
+                    return providers.CreateCompressStream(
+                        CompressionType.ZStandard,
+                        counting,
+                        compressionLevel
+                    );
                 }
                 default:
                 {
@@ -491,6 +556,8 @@ public partial class ZipWriter : AbstractWriter
                     originalStream.Dispose();
                     return;
                 }
+
+                WritePostCompressionData();
 
                 var countingCount = counting?.BytesWritten ?? 0;
                 entry.Crc = (uint)crc.Crc32Result;
@@ -628,6 +695,30 @@ public partial class ZipWriter : AbstractWriter
                     );
                 }
             }
+        }
+
+        private void WritePostCompressionData()
+        {
+            if (
+                compressionProviderHooks is null
+                || compressionContext is null
+                || counting is null
+                || zipCompressionMethod == ZipCompressionMethod.None
+            )
+            {
+                return;
+            }
+
+            var postData = compressionProviderHooks.GetPostCompressionData(
+                writeStream,
+                compressionContext
+            );
+            if (postData is null || postData.Length == 0)
+            {
+                return;
+            }
+
+            counting.Write(postData, 0, postData.Length);
         }
     }
 

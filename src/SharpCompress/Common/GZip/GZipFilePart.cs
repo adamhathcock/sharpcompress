@@ -5,6 +5,7 @@ using System.IO;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Common.GZip;
 
@@ -12,10 +13,15 @@ internal sealed partial class GZipFilePart : FilePart
 {
     private string? _name;
     private readonly Stream _stream;
+    private readonly CompressionProviderRegistry _compressionProviders;
 
-    internal static GZipFilePart Create(Stream stream, IArchiveEncoding archiveEncoding)
+    internal static GZipFilePart Create(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CompressionProviderRegistry compressionProviders
+    )
     {
-        var part = new GZipFilePart(stream, archiveEncoding);
+        var part = new GZipFilePart(stream, archiveEncoding, compressionProviders);
 
         part.ReadAndValidateGzipHeader();
         if (stream.CanSeek)
@@ -35,8 +41,16 @@ internal sealed partial class GZipFilePart : FilePart
         return part;
     }
 
-    private GZipFilePart(Stream stream, IArchiveEncoding archiveEncoding)
-        : base(archiveEncoding) => _stream = stream;
+    private GZipFilePart(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CompressionProviderRegistry compressionProviders
+    )
+        : base(archiveEncoding)
+    {
+        _stream = stream;
+        _compressionProviders = compressionProviders;
+    }
 
     internal long EntryStartPosition { get; private set; }
 
@@ -46,13 +60,11 @@ internal sealed partial class GZipFilePart : FilePart
 
     internal override string? FilePartName => _name;
 
-    internal override Stream GetCompressedStream() =>
-        new DeflateStream(
-            _stream,
-            CompressionMode.Decompress,
-            CompressionLevel.Default,
-            leaveOpen: true
-        );
+    internal override Stream GetCompressedStream()
+    {
+        //GZip uses Deflate compression, at this point we need a deflate stream
+        return _compressionProviders.CreateDecompressStream(CompressionType.Deflate, _stream);
+    }
 
     internal override Stream GetRawStream() => _stream;
 

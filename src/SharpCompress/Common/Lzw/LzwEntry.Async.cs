@@ -15,7 +15,9 @@ public partial class LzwEntry
     )
     {
         yield return new LzwEntry(
-            await LzwFilePart.CreateAsync(stream, options.ArchiveEncoding, cancellationToken),
+            await LzwFilePart
+                .CreateAsync(stream, options.ArchiveEncoding, options.Providers, cancellationToken)
+                .ConfigureAwait(false),
             options
         );
     }

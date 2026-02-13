@@ -5,12 +5,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
-using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Readers;
-using SharpCompress.Readers.GZip;
 using SharpCompress.Test.Mocks;
 using Xunit;
 
@@ -18,19 +16,14 @@ namespace SharpCompress.Test;
 
 public abstract class ReaderTests : TestBase
 {
-    protected void Read(string testArchive, ReaderOptions? options = null)
-    {
+    protected void Read(string testArchive, ReaderOptions? options = null) =>
         ReadCore(testArchive, options, ReadImpl);
-    }
 
     protected void Read(
         string testArchive,
         CompressionType expectedCompression,
         ReaderOptions? options = null
-    )
-    {
-        ReadCore(testArchive, options, (path, opts) => ReadImpl(path, expectedCompression, opts));
-    }
+    ) => ReadCore(testArchive, options, (path, opts) => ReadImpl(path, expectedCompression, opts));
 
     private void ReadCore(
         string testArchive,
@@ -50,19 +43,14 @@ public abstract class ReaderTests : TestBase
         VerifyFiles();
     }
 
-    private void ReadImpl(string testArchive, ReaderOptions options)
-    {
+    private void ReadImpl(string testArchive, ReaderOptions options) =>
         ReadImplCore(testArchive, options, UseReader);
-    }
 
     private void ReadImpl(
         string testArchive,
         CompressionType expectedCompression,
         ReaderOptions options
-    )
-    {
-        ReadImplCore(testArchive, options, r => UseReader(r, expectedCompression));
-    }
+    ) => ReadImplCore(testArchive, options, r => UseReader(r, expectedCompression));
 
     private void ReadImplCore(string testArchive, ReaderOptions options, Action<IReader> useReader)
     {
@@ -105,15 +93,22 @@ public abstract class ReaderTests : TestBase
         }
     }
 
-    protected async Task AssertArchiveAsync<T>(
+    protected async Task AssertArchiveAsync(
         string testArchive,
         CancellationToken cancellationToken = default
     )
-        where T : IFactory
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         var factory = new TarFactory();
-        factory.IsArchive(new FileInfo(testArchive).OpenRead()).Should().BeTrue();
+        (
+            await factory.IsArchiveAsync(
+                new FileInfo(testArchive).OpenRead(),
+                null,
+                cancellationToken
+            )
+        )
+            .Should()
+            .BeTrue();
         (
             await factory.IsArchiveAsync(
                 new FileInfo(testArchive).OpenRead(),

@@ -1,7 +1,9 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Providers;
 using SharpCompress.Writers;
 using D = SharpCompress.Compressors.Deflate;
 
@@ -58,6 +60,13 @@ public sealed record ZipWriterOptions : IWriterOptions
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; init; }
+
+    /// <summary>
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
+    /// </summary>
+    public CompressionProviderRegistry Providers { get; init; } =
+        CompressionProviderRegistry.Default;
 
     /// <summary>
     /// Optional comment for the archive.
@@ -119,6 +128,7 @@ public sealed record ZipWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        Providers = options.Providers;
     }
 
     /// <summary>
@@ -131,6 +141,7 @@ public sealed record ZipWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        Providers = options.Providers;
     }
 
     /// <summary>

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 
@@ -139,6 +141,10 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
 
     protected virtual Stream RequestInitialStream() =>
         Volume.NotNull("Volume isn't loaded.").Stream;
+
+    protected virtual ValueTask<Stream> RequestInitialStreamAsync(
+        CancellationToken cancellationToken = default
+    ) => new(RequestInitialStream());
 
     internal virtual bool NextEntryForCurrentStream() =>
         _entriesForCurrentReadStream.NotNull().MoveNext();

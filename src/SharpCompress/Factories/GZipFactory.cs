@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
@@ -10,6 +9,7 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
 using SharpCompress.Readers.Tar;
@@ -128,7 +128,11 @@ public class GZipFactory
         if (GZipArchive.IsGZipFile(sharpCompressStream))
         {
             sharpCompressStream.Rewind();
-            var testStream = new GZipStream(sharpCompressStream, CompressionMode.Decompress);
+            using var testStream = options.Providers.CreateDecompressStream(
+                CompressionType.GZip,
+                SharpCompressStream.CreateNonDisposing(sharpCompressStream),
+                CompressionContext.FromStream(sharpCompressStream).WithReaderOptions(options)
+            );
             if (TarArchive.IsTarFile(testStream))
             {
                 sharpCompressStream.StopRecording();

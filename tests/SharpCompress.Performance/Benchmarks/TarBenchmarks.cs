@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Compressors;
+using SharpCompress.Providers;
+using SharpCompress.Providers.System;
 using SharpCompress.Readers;
 using SharpCompress.Writers;
 
@@ -61,16 +64,38 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         }
     }
 
-    [Benchmark(Description = "Tar: Extract all entries (Reader API, Async)")]
-    public async Task TarExtractReaderApiAsync()
+    [Benchmark(Description = "Tar: Extract all entries (Archive API) - SystemGzip")]
+    public void SystemTarExtractArchiveApi()
     {
         using var stream = new MemoryStream(_tarBytes);
-        await using var reader = await ReaderFactory.OpenAsyncReader(stream).ConfigureAwait(false);
-        while (await reader.MoveToNextEntryAsync().ConfigureAwait(false))
+        using var archive = TarArchive.OpenArchive(
+            stream,
+            new ReaderOptions().WithProviders(
+                CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
+            )
+        );
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            entryStream.CopyTo(Stream.Null);
+        }
+    }
+
+    [Benchmark(Description = "Tar: Extract all entries (Reader API) - SystemGzip")]
+    public void SystemTarExtractReaderApi()
+    {
+        using var stream = new MemoryStream(_tarBytes);
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions().WithProviders(
+                CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
+            )
+        );
+        while (reader.MoveToNextEntry())
         {
             if (!reader.Entry.IsDirectory)
             {
-                await reader.WriteEntryToAsync(Stream.Null).ConfigureAwait(false);
+                reader.WriteEntryTo(Stream.Null);
             }
         }
     }

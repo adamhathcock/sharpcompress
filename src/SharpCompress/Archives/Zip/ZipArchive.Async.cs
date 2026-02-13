@@ -55,7 +55,12 @@ public partial class ZipArchive
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s),
+                                new SeekableZipFilePart(
+                                    headerFactory.NotNull(),
+                                    deh,
+                                    s,
+                                    ReaderOptions.Providers
+                                ),
                                 ReaderOptions
                             );
                         }

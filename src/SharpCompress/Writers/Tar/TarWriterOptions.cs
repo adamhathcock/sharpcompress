@@ -2,6 +2,8 @@ using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Compressors;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
@@ -41,6 +43,13 @@ public sealed record TarWriterOptions : IWriterOptions
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; init; }
+
+    /// <summary>
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
+    /// </summary>
+    public CompressionProviderRegistry Providers { get; init; } =
+        CompressionProviderRegistry.Default;
 
     /// <summary>
     /// Indicates if archive should be finalized (by 2 empty blocks) on close.
@@ -96,6 +105,7 @@ public sealed record TarWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        Providers = options.Providers;
     }
 
     /// <summary>
@@ -109,6 +119,7 @@ public sealed record TarWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        Providers = options.Providers;
     }
 
     /// <summary>

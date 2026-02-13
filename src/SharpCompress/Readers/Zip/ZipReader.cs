@@ -74,7 +74,11 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
                     case ZipHeaderType.LocalEntry:
                         {
                             yield return new ZipEntry(
-                                new StreamingZipFilePart((LocalEntryHeader)h, stream),
+                                new StreamingZipFilePart(
+                                    (LocalEntryHeader)h,
+                                    stream,
+                                    Options.Providers
+                                ),
                                 Options
                             );
                         }
