@@ -37,7 +37,15 @@ internal static partial class DecoderRegistry
             case K_LZMA:
             case K_LZMA2:
                 return await LzmaStream
-                    .CreateAsync(info.NotNull(), inStreams.Single(), -1, limit, null, info.NotNull().Length < 5, false)
+                    .CreateAsync(
+                        info.NotNull(),
+                        inStreams.Single(),
+                        -1,
+                        limit,
+                        null,
+                        info.NotNull().Length < 5,
+                        false
+                    )
                     .ConfigureAwait(false);
             case CMethodId.K_AES_ID:
                 return new AesDecoderStream(inStreams.Single(), info.NotNull(), pass, limit);
