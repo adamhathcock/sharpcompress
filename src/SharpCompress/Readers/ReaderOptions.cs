@@ -1,6 +1,8 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Readers;
 
@@ -21,16 +23,6 @@ namespace SharpCompress.Readers;
 /// </remarks>
 public sealed record ReaderOptions : IReaderOptions
 {
-    /// <summary>
-    /// The default buffer size for stream operations.
-    /// This value (65536 bytes) is preserved for backward compatibility.
-    /// New code should use Constants.BufferSize instead (81920 bytes), which matches .NET's Stream.CopyTo default.
-    /// </summary>
-    [Obsolete(
-        "Use Constants.BufferSize instead. This constant will be removed in a future version."
-    )]
-    public const int DefaultBufferSize = 0x10000;
-
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.
     /// </summary>
@@ -148,6 +140,14 @@ public sealed record ReaderOptions : IReaderOptions
     /// The default handler logs a warning message.
     /// </remarks>
     public Action<string, string>? SymbolicLinkHandler { get; init; }
+
+    /// <summary>
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
+    /// System.IO.Compression for Deflate/GZip on modern .NET.
+    /// </summary>
+    public CompressionProviderRegistry Providers { get; init; } =
+        CompressionProviderRegistry.Default;
 
     /// <summary>
     /// Creates a new ReaderOptions instance with default values.

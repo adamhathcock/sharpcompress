@@ -1,6 +1,7 @@
 #if NET8_0_OR_GREATER
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
@@ -18,19 +19,22 @@ public interface IArchiveOpenable<TSync, TASync>
 
     public static abstract TSync OpenArchive(Stream stream, ReaderOptions? readerOptions = null);
 
-    public static abstract TASync OpenAsyncArchive(
+    public static abstract ValueTask<TASync> OpenAsyncArchive(
         string path,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     );
 
-    public static abstract TASync OpenAsyncArchive(
+    public static abstract ValueTask<TASync> OpenAsyncArchive(
         Stream stream,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     );
 
-    public static abstract TASync OpenAsyncArchive(
+    public static abstract ValueTask<TASync> OpenAsyncArchive(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     );
 }
 

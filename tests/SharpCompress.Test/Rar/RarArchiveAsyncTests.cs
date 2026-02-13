@@ -69,7 +69,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
         await using (
-            var archive = RarArchive.OpenAsyncArchive(
+            var archive = await RarArchive.OpenAsyncArchive(
                 stream,
                 new ReaderOptions { Password = password, LeaveStreamOpen = true }
             )
@@ -691,7 +691,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var testFile = "Rar.issue1050.rar";
         using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
-        await using var archive = RarArchive.OpenAsyncArchive(fileStream);
+        await using var archive = await RarArchive.OpenAsyncArchive(fileStream);
 
         // Extract using archive.WriteToDirectoryAsync without explicit options
         await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH);

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers.Ace;
@@ -33,15 +35,25 @@ public partial class AceReader
         return new MultiVolumeAceReader(streams, options ?? new ReaderOptions());
     }
 
-    public static IAsyncReader OpenAsyncReader(string path, ReaderOptions? readerOptions = null)
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        string path,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return (IAsyncReader)OpenReader(new FileInfo(path), readerOptions);
+        return new((IAsyncReader)OpenReader(new FileInfo(path), readerOptions));
     }
 
-    public static IAsyncReader OpenAsyncReader(Stream stream, ReaderOptions? readerOptions = null)
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        return (IAsyncReader)OpenReader(stream, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncReader)OpenReader(stream, readerOptions));
     }
 
     public static IAsyncReader OpenAsyncReader(
@@ -53,12 +65,14 @@ public partial class AceReader
         return new MultiVolumeAceReader(streams, options ?? new ReaderOptions());
     }
 
-    public static IAsyncReader OpenAsyncReader(
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IAsyncReader)OpenReader(fileInfo, readerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncReader)OpenReader(fileInfo, readerOptions));
     }
 
     public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)

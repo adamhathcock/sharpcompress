@@ -103,8 +103,11 @@ tests/
 ### Factory Pattern
 Factory implementations can implement one or more interfaces (`IArchiveFactory`, `IReaderFactory`, `IWriterFactory`) depending on format capabilities:
 - `ArchiveFactory.OpenArchive()` - Opens archive API objects from seekable streams/files
+- `ArchiveFactory.OpenAsyncArchive()` - Opens async archive API objects for async archive use cases
 - `ReaderFactory.OpenReader()` - Auto-detects and opens forward-only readers
+- `ReaderFactory.OpenAsyncReader()` - Auto-detects and opens forward-only async readers
 - `WriterFactory.OpenWriter()` - Creates a writer for a specified `ArchiveType`
+- `WriterFactory.OpenAsyncWriter()` - Creates an async writer for async write scenarios
 - Factories located in: `src/SharpCompress/Factories/`
 
 ## Nullable Reference Types
@@ -132,6 +135,9 @@ SharpCompress supports multiple archive and compression formats:
 ### Async/Await Patterns
 - All I/O operations support async/await with `CancellationToken`
 - Async methods follow the naming convention: `MethodNameAsync`
+- For async archive scenarios, prefer `ArchiveFactory.OpenAsyncArchive(...)` over sync `OpenArchive(...)`.
+- For async forward-only read scenarios, prefer `ReaderFactory.OpenAsyncReader(...)` over sync `OpenReader(...)`.
+- For async write scenarios, prefer `WriterFactory.OpenAsyncWriter(...)` over sync `OpenWriter(...)`.
 - Key async methods:
   - `WriteEntryToAsync` - Extract entry asynchronously
   - `WriteAllToDirectoryAsync` - Extract all entries asynchronously
@@ -199,7 +205,8 @@ SharpCompress supports multiple archive and compression formats:
 ## Common Pitfalls
 
 1. **Don't mix Archive and Reader APIs** - Archive needs seekable stream, Reader doesn't
-2. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
-3. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
-4. **Tar + non-seekable stream** - Must provide file size or it will throw
-5. **Format detection** - Use `ReaderFactory.OpenReader()` for auto-detection, test with actual archive files
+2. **Don't mix sync and async open paths** - For async workflows use `OpenAsyncArchive`/`OpenAsyncReader`/`OpenAsyncWriter`, not `OpenArchive`/`OpenReader`/`OpenWriter`
+3. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
+4. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
+5. **Tar + non-seekable stream** - Must provide file size or it will throw
+6. **Format detection** - Use `ReaderFactory.OpenReader()` / `ReaderFactory.OpenAsyncReader()` for auto-detection, test with actual archive files

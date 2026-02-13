@@ -58,7 +58,12 @@ public class LzwFactory : Factory, IReaderFactory
         if (LzwStream.IsLzwStream(sharpCompressStream))
         {
             sharpCompressStream.Rewind();
-            using (var testStream = new LzwStream(sharpCompressStream) { IsStreamOwner = false })
+            using (
+                var testStream = options.Providers.CreateDecompressStream(
+                    CompressionType.Lzw,
+                    SharpCompressStream.CreateNonDisposing(sharpCompressStream)
+                )
+            )
             {
                 if (TarArchive.IsTarFile(testStream))
                 {
@@ -87,7 +92,7 @@ public class LzwFactory : Factory, IReaderFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new(LzwReader.OpenAsyncReader(stream, options));
+        return LzwReader.OpenAsyncReader(stream, options);
     }
 
     #endregion

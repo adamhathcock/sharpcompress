@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
@@ -20,14 +21,16 @@ public interface IMultiArchiveOpenable<TSync, TASync>
         ReaderOptions? readerOptions = null
     );
 
-    public static abstract TASync OpenAsyncArchive(
+    public static abstract ValueTask<TASync> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     );
 
-    public static abstract TASync OpenAsyncArchive(
+    public static abstract ValueTask<TASync> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     );
 }
 #endif

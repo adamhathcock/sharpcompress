@@ -84,7 +84,7 @@ public partial class GZipArchive
         var stream = volumes.Single().Stream;
         yield return new GZipArchiveEntry(
             this,
-            GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding),
+            GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding, ReaderOptions.Providers),
             ReaderOptions
         );
     }
@@ -93,6 +93,6 @@ public partial class GZipArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return GZipReader.OpenReader(stream);
+        return GZipReader.OpenReader(stream, ReaderOptions);
     }
 }

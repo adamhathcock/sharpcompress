@@ -6,17 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Compressors.Deflate64;
-using SharpCompress.Compressors.Explode;
-using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.PPMd;
-using SharpCompress.Compressors.Reduce;
-using SharpCompress.Compressors.Shrink;
-using SharpCompress.Compressors.Xz;
-using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Zip;
 
@@ -123,6 +114,7 @@ internal abstract partial class ZipFilePart
         CancellationToken cancellationToken = default
     )
     {
+        // Handle special cases first
         switch (method)
         {
             case ZipCompressionMethod.None:
@@ -134,98 +126,24 @@ internal abstract partial class ZipFilePart
 
                 return stream;
             }
-            case ZipCompressionMethod.Shrink:
+            case ZipCompressionMethod.WinzipAes:
             {
-                return await ShrinkStream
-                    .CreateAsync(
-                        stream,
-                        CompressionMode.Decompress,
-                        Header.CompressedSize,
-                        Header.UncompressedSize,
-                        cancellationToken
-                    )
+                return await CreateWinzipAesDecompressionStreamAsync(stream, cancellationToken)
                     .ConfigureAwait(false);
             }
-            case ZipCompressionMethod.Reduce1:
-            {
-                return await ReduceStream
-                    .CreateAsync(
-                        stream,
-                        Header.CompressedSize,
-                        Header.UncompressedSize,
-                        1,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            case ZipCompressionMethod.Reduce2:
-            {
-                return await ReduceStream
-                    .CreateAsync(
-                        stream,
-                        Header.CompressedSize,
-                        Header.UncompressedSize,
-                        2,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            case ZipCompressionMethod.Reduce3:
-            {
-                return await ReduceStream
-                    .CreateAsync(
-                        stream,
-                        Header.CompressedSize,
-                        Header.UncompressedSize,
-                        3,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            case ZipCompressionMethod.Reduce4:
-            {
-                return await ReduceStream
-                    .CreateAsync(
-                        stream,
-                        Header.CompressedSize,
-                        Header.UncompressedSize,
-                        4,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            case ZipCompressionMethod.Explode:
-            {
-                return await ExplodeStream
-                    .CreateAsync(
-                        stream,
-                        Header.CompressedSize,
-                        Header.UncompressedSize,
-                        Header.Flags,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
+        }
 
-            case ZipCompressionMethod.Deflate:
-            {
-                return new DeflateStream(stream, CompressionMode.Decompress);
-            }
-            case ZipCompressionMethod.Deflate64:
-            {
-                return new Deflate64Stream(stream, CompressionMode.Decompress);
-            }
-            case ZipCompressionMethod.BZip2:
-            {
-                return await BZip2Stream
-                    .CreateAsync(
-                        stream,
-                        CompressionMode.Decompress,
-                        false,
-                        cancellationToken: cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
+        var compressionType = ToCompressionType(method);
+        var providers = GetProviders();
+        var context = new CompressionContext
+        {
+            InputSize = Header.CompressedSize,
+            OutputSize = Header.UncompressedSize,
+            CanSeek = stream.CanSeek,
+        };
+
+        switch (method)
+        {
             case ZipCompressionMethod.LZMA:
             {
                 if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
@@ -234,81 +152,108 @@ internal abstract partial class ZipFilePart
                 }
                 var buffer = new byte[4];
                 await stream.ReadFullyAsync(buffer, 0, 4, cancellationToken).ConfigureAwait(false);
-                var version = BinaryPrimitives.ReadUInt16LittleEndian(buffer.AsSpan(0, 2));
                 var propsSize = BinaryPrimitives.ReadUInt16LittleEndian(buffer.AsSpan(2, 2));
                 var props = new byte[propsSize];
                 await stream
                     .ReadFullyAsync(props, 0, propsSize, cancellationToken)
                     .ConfigureAwait(false);
-                return await LzmaStream
-                    .CreateAsync(
-                        props,
-                        stream,
+
+                context = context with
+                {
+                    Properties = props,
+                    InputSize =
                         Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
-                        FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
-                            ? -1
-                            : Header.UncompressedSize
+                    OutputSize = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                        ? -1
+                        : Header.UncompressedSize,
+                };
+
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        stream,
+                        context,
+                        cancellationToken
                     )
                     .ConfigureAwait(false);
-            }
-            case ZipCompressionMethod.Xz:
-            {
-                return new XZStream(stream);
-            }
-            case ZipCompressionMethod.ZStandard:
-            {
-                return new DecompressionStream(stream);
             }
             case ZipCompressionMethod.PPMd:
             {
                 var props = new byte[2];
                 await stream.ReadFullyAsync(props, 0, 2, cancellationToken).ConfigureAwait(false);
-                return await PpmdStream
-                    .CreateAsync(new PpmdProperties(props), stream, false, cancellationToken)
+                context = context with { Properties = props };
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        stream,
+                        context,
+                        cancellationToken
+                    )
                     .ConfigureAwait(false);
             }
-            case ZipCompressionMethod.WinzipAes:
+            case ZipCompressionMethod.Explode:
             {
-                var data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
-                if (data is null)
-                {
-                    throw new InvalidFormatException("No Winzip AES extra data found.");
-                }
-
-                if (data.Length != 7)
-                {
-                    throw new InvalidFormatException("Winzip data length is not 7.");
-                }
-
-                var compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
-
-                if (compressedMethod != 0x01 && compressedMethod != 0x02)
-                {
-                    throw new InvalidFormatException(
-                        "Unexpected vendor version number for WinZip AES metadata"
-                    );
-                }
-
-                var vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
-                if (vendorId != 0x4541)
-                {
-                    throw new InvalidFormatException(
-                        "Unexpected vendor ID for WinZip AES metadata"
-                    );
-                }
-
-                return await CreateDecompressionStreamAsync(
+                context = context with { FormatOptions = Header.Flags };
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
                         stream,
-                        (ZipCompressionMethod)
-                            BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)),
+                        context,
                         cancellationToken
                     )
                     .ConfigureAwait(false);
             }
             default:
             {
-                throw new NotSupportedException("CompressionMethod: " + Header.CompressionMethod);
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        stream,
+                        context,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
             }
         }
+    }
+
+    private async ValueTask<Stream> CreateWinzipAesDecompressionStreamAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
+        if (data is null)
+        {
+            throw new InvalidFormatException("No Winzip AES extra data found.");
+        }
+
+        if (data.Length != 7)
+        {
+            throw new InvalidFormatException("Winzip data length is not 7.");
+        }
+
+        var compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
+
+        if (compressedMethod != 0x01 && compressedMethod != 0x02)
+        {
+            throw new InvalidFormatException(
+                "Unexpected vendor version number for WinZip AES metadata"
+            );
+        }
+
+        var vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
+        if (vendorId != 0x4541)
+        {
+            throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
+        }
+
+        return await CreateDecompressionStreamAsync(
+                stream,
+                (ZipCompressionMethod)
+                    BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5)),
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 }

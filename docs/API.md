@@ -95,7 +95,7 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
 }
 
 // Async extraction (requires IAsyncArchive)
-using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
+await using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
     await asyncArchive.WriteToDirectoryAsync(
         @"C:\output",
@@ -177,7 +177,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 // Async variants (use OpenAsyncReader to get IAsyncReader)
 using (var stream = File.OpenRead("file.zip"))
-using (var reader = await ReaderFactory.OpenAsyncReader(stream))
+await using (var reader = await ReaderFactory.OpenAsyncReader(stream))
 {
     while (await reader.MoveToNextEntryAsync())
     {
@@ -318,6 +318,24 @@ WriterOptions: write-time behavior (compression type/level, encoding, stream own
 ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, comments, zip64)
 ```
 
+### Compression Providers
+
+`ReaderOptions` and `WriterOptions` expose a `Providers` registry that controls which `ICompressionProvider` implementations are used for each `CompressionType`. The registry defaults to `CompressionProviderRegistry.Default`, so you only need to set it if you want to swap in a custom provider (for example the `SystemGZipCompressionProvider`). The selected registry is honored by Reader/Writer APIs, Archive APIs, and async entry-stream extraction paths.
+
+```csharp
+var registry = CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider());
+var readerOptions = ReaderOptions.ForOwnedFile().WithProviders(registry);
+var writerOptions = new WriterOptions(CompressionType.GZip)
+{
+    CompressionLevel = 6,
+}.WithProviders(registry);
+
+using var reader = ReaderFactory.OpenReader(input, readerOptions);
+using var writer = WriterFactory.OpenWriter(output, ArchiveType.GZip, writerOptions);
+```
+
+When a format needs additional initialization/finalization data (LZMA, PPMd, etc.) the registry exposes `GetCompressingProvider` which returns the `ICompressionProviderHooks` contract; the rest of the API continues to flow through `Providers`, including pre/properties/post compression hook data.
+
 ---
 
 ## Compression Types
@@ -409,7 +427,7 @@ cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 try
 {
-    using (var archive = await ZipArchive.OpenAsyncArchive("archive.zip"))
+    await using (var archive = await ZipArchive.OpenAsyncArchive("archive.zip"))
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",

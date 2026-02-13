@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
@@ -31,32 +29,32 @@ public partial class TarWriter : AbstractWriter
         {
             destination = SharpCompressStream.CreateNonDisposing(destination);
         }
-        switch (options.CompressionType)
+
+        var providers = options.Providers;
+
+        destination = options.CompressionType switch
         {
-            case CompressionType.None:
-                break;
-            case CompressionType.BZip2:
-                {
-                    destination = BZip2Stream.Create(destination, CompressionMode.Compress, false);
-                }
-                break;
-            case CompressionType.GZip:
-                {
-                    destination = new GZipStream(destination, CompressionMode.Compress);
-                }
-                break;
-            case CompressionType.LZip:
-                {
-                    destination = new LZipStream(destination, CompressionMode.Compress);
-                }
-                break;
-            default:
-            {
-                throw new InvalidFormatException(
-                    "Tar does not support compression: " + options.CompressionType
-                );
-            }
-        }
+            CompressionType.None => destination,
+            CompressionType.BZip2 => providers.CreateCompressStream(
+                CompressionType.BZip2,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.GZip => providers.CreateCompressStream(
+                CompressionType.GZip,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.LZip => providers.CreateCompressStream(
+                CompressionType.LZip,
+                destination,
+                options.CompressionLevel
+            ),
+            _ => throw new InvalidFormatException(
+                "Tar does not support compression: " + options.CompressionType
+            ),
+        };
+
         InitializeStream(destination);
     }
 
@@ -138,18 +136,10 @@ public partial class TarWriter : AbstractWriter
             {
                 OutputStream.Write(stackalloc byte[1024]);
             }
-            switch (OutputStream)
+            // Use IFinishable interface for generic finalization
+            if (OutputStream is IFinishable finishable)
             {
-                case BZip2Stream b:
-                {
-                    b.Finish();
-                    break;
-                }
-                case LZipStream l:
-                {
-                    l.Finish();
-                    break;
-                }
+                finishable.Finish();
             }
         }
         base.Dispose(isDisposing);

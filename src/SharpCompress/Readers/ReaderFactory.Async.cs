@@ -69,20 +69,14 @@ public static partial class ReaderFactory
                 a.GetSupportedExtensions()
                     .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
             );
-            if (testedFactory is IReaderFactory readerFactory)
+            if (testedFactory is not null)
             {
-                sharpCompressStream.Rewind();
-                if (
-                    await testedFactory
-                        .IsArchiveAsync(sharpCompressStream, cancellationToken: cancellationToken)
-                        .ConfigureAwait(false)
-                )
+                var reader = await testedFactory
+                    .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
+                    .ConfigureAwait(false);
+                if (reader is not null)
                 {
-                    sharpCompressStream.Rewind();
-                    sharpCompressStream.StopRecording();
-                    return await readerFactory
-                        .OpenAsyncReader(sharpCompressStream, options, cancellationToken)
-                        .ConfigureAwait(false);
+                    return reader;
                 }
             }
             sharpCompressStream.Rewind();
@@ -94,19 +88,12 @@ public static partial class ReaderFactory
             {
                 continue; // Already tested above
             }
-            sharpCompressStream.Rewind();
-            if (
-                factory is IReaderFactory readerFactory
-                && await factory
-                    .IsArchiveAsync(sharpCompressStream, cancellationToken: cancellationToken)
-                    .ConfigureAwait(false)
-            )
+            var reader = await factory
+                .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
+                .ConfigureAwait(false);
+            if (reader is not null)
             {
-                sharpCompressStream.Rewind();
-                sharpCompressStream.StopRecording();
-                return await readerFactory
-                    .OpenAsyncReader(sharpCompressStream, options, cancellationToken)
-                    .ConfigureAwait(false);
+                return reader;
             }
         }
 

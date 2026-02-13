@@ -1,5 +1,6 @@
 using System.IO;
-using SharpCompress.Compressors.Lzw;
+using SharpCompress.Common;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Lzw;
 
@@ -7,10 +8,15 @@ internal sealed partial class LzwFilePart : FilePart
 {
     private readonly Stream _stream;
     private readonly string? _name;
+    private readonly CompressionProviderRegistry _compressionProviders;
 
-    internal static LzwFilePart Create(Stream stream, IArchiveEncoding archiveEncoding)
+    internal static LzwFilePart Create(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CompressionProviderRegistry compressionProviders
+    )
     {
-        var part = new LzwFilePart(stream, archiveEncoding);
+        var part = new LzwFilePart(stream, archiveEncoding, compressionProviders);
 
         // For non-seekable streams, we can't track position, so use 0 since the stream will be
         // read sequentially from its current position.
@@ -18,11 +24,16 @@ internal sealed partial class LzwFilePart : FilePart
         return part;
     }
 
-    private LzwFilePart(Stream stream, IArchiveEncoding archiveEncoding)
+    private LzwFilePart(
+        Stream stream,
+        IArchiveEncoding archiveEncoding,
+        CompressionProviderRegistry compressionProviders
+    )
         : base(archiveEncoding)
     {
         _stream = stream;
         _name = DeriveFileName(stream);
+        _compressionProviders = compressionProviders;
     }
 
     internal long EntryStartPosition { get; private set; }
@@ -30,7 +41,7 @@ internal sealed partial class LzwFilePart : FilePart
     internal override string? FilePartName => _name;
 
     internal override Stream GetCompressedStream() =>
-        new LzwStream(_stream) { IsStreamOwner = false };
+        _compressionProviders.CreateDecompressStream(CompressionType.Lzw, _stream);
 
     internal override Stream GetRawStream() => _stream;
 

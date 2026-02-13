@@ -1,6 +1,8 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers;
 
@@ -52,4 +54,17 @@ public static class WriterOptionsExtensions
         this WriterOptions options,
         IProgress<ProgressReport> progress
     ) => options with { Progress = progress };
+
+    /// <summary>
+    /// Creates a copy with the specified compression provider registry.
+    /// </summary>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="providers"/> is null.</exception>
+    public static WriterOptions WithProviders(
+        this WriterOptions options,
+        CompressionProviderRegistry providers
+    )
+    {
+        _ = providers ?? throw new ArgumentNullException(nameof(providers));
+        return options with { Providers = providers };
+    }
 }
