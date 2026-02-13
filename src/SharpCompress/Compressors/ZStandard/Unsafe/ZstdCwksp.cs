@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static SharpCompress.Compressors.ZStandard.UnsafeHelper;
 
@@ -7,7 +6,6 @@ namespace SharpCompress.Compressors.ZStandard.Unsafe;
 public static unsafe partial class Methods
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Conditional("DEBUG")]
     private static void ZSTD_cwksp_assert_internal_consistency(ZSTD_cwksp* ws)
     {
         assert(ws->workspace <= ws->objectEnd);

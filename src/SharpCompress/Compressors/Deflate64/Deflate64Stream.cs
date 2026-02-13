@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -96,10 +95,6 @@ public sealed partial class Deflate64Stream : Stream
             if (_inflater.Finished())
             {
                 // if we finished decompressing, we can't have anything left in the outputwindow.
-                Debug.Assert(
-                    _inflater.AvailableOutput == 0,
-                    "We should have copied all stuff out!"
-                );
                 break;
             }
 

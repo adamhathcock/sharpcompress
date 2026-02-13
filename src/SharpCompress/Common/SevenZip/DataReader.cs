@@ -76,9 +76,6 @@ internal class DataReader
         }
 
         Offset += (int)size;
-#if DEBUG
-        Log.WriteLine("SkipData {0}", size);
-#endif
     }
 
     public void SkipData() => SkipData(checked((long)ReadNumber()));

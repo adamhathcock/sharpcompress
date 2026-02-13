@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -2838,12 +2837,6 @@ public static unsafe partial class Methods
         {
             ZSTD_frameProgression fp;
             nuint buffered = cctx->inBuff == null ? 0 : cctx->inBuffPos - cctx->inToCompress;
-#if DEBUG
-            if (buffered != 0)
-            {
-                assert(cctx->inBuffPos >= cctx->inToCompress);
-            }
-#endif
             assert(buffered <= 1 << 17);
             fp.ingested = cctx->consumedSrcSize + buffered;
             fp.consumed = cctx->consumedSrcSize;
@@ -2868,7 +2861,6 @@ public static unsafe partial class Methods
         return 0;
     }
 
-    [Conditional("DEBUG")]
     private static void ZSTD_assertEqualCParams(
         ZSTD_compressionParameters cParams1,
         ZSTD_compressionParameters cParams2
@@ -4617,12 +4609,6 @@ public static unsafe partial class Methods
             byte* @base = ms->window.@base;
             byte* istart = (byte*)src;
             uint curr = (uint)(istart - @base);
-#if DEBUG
-            if (sizeof(nint) == 8)
-            {
-                assert(istart - @base < unchecked((nint)(uint)-1));
-            }
-#endif
             if (curr > ms->nextToUpdate + 384)
             {
                 ms->nextToUpdate =
@@ -7160,12 +7146,6 @@ public static unsafe partial class Methods
         if (srcSize > unchecked((uint)-1) - (MEM_64bits ? 3500U * (1 << 20) : 2000U * (1 << 20)))
         {
             assert(ZSTD_window_isEmpty(ms->window) != 0);
-#if DEBUG
-            if (loadLdmDict != 0)
-            {
-                assert(ZSTD_window_isEmpty(ls->window) != 0);
-            }
-#endif
         }
 
         ZSTD_window_update(&ms->window, src, srcSize, 0);
@@ -9227,35 +9207,7 @@ public static unsafe partial class Methods
             zcs->stableIn_notConsumed = 0;
         }
 
-#if DEBUG
-        if (zcs->appliedParams.inBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered)
-        {
-            assert(zcs->inBuff != null);
-            assert(zcs->inBuffSize > 0);
-        }
-#endif
-
-#if DEBUG
-        if (zcs->appliedParams.outBufferMode == ZSTD_bufferMode_e.ZSTD_bm_buffered)
-        {
-            assert(zcs->outBuff != null);
-            assert(zcs->outBuffSize > 0);
-        }
-#endif
-
-#if DEBUG
-        if (input->src == null)
-        {
-            assert(input->size == 0);
-        }
-#endif
         assert(input->pos <= input->size);
-#if DEBUG
-        if (output->dst == null)
-        {
-            assert(output->size == 0);
-        }
-#endif
         assert(output->pos <= output->size);
         assert((uint)flushMode <= (uint)ZSTD_EndDirective.ZSTD_e_end);
         while (someMoreWork != 0)
@@ -9413,12 +9365,6 @@ public static unsafe partial class Methods
                                 zcs->inBuffTarget = zcs->blockSizeMax;
                             }
 
-#if DEBUG
-                            if (lastBlock == 0)
-                            {
-                                assert(zcs->inBuffTarget <= zcs->inBuffSize);
-                            }
-#endif
                             zcs->inToCompress = zcs->inBuffPos;
                         }
                         else
@@ -9445,12 +9391,6 @@ public static unsafe partial class Methods
                             }
 
                             zcs->frameEnded = lastBlock;
-#if DEBUG
-                            if (lastBlock != 0)
-                            {
-                                assert(ip == iend);
-                            }
-#endif
                         }
 
                         if (cDst == op)

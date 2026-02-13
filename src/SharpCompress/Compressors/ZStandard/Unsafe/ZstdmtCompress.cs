@@ -735,12 +735,6 @@ public static unsafe partial class Methods
             byte* op = ostart;
             byte* oend = op + dstBuff.capacity;
             int chunkNb;
-#if DEBUG
-            if (sizeof(nuint) > sizeof(int))
-            {
-                assert(job->src.size < unchecked(2147483647 * chunkSize));
-            }
-#endif
             assert(job->cSize == 0);
             for (chunkNb = 1; chunkNb < nbChunks; chunkNb++)
             {
@@ -797,13 +791,6 @@ public static unsafe partial class Methods
                 lastCBlockSize = cSize;
             }
         }
-
-#if DEBUG
-        if (job->firstJob == 0)
-        {
-            assert(ZSTD_window_hasExtDict(cctx->blockState.matchState.window) == 0);
-        }
-#endif
 
         ZSTD_CCtx_trace(cctx, 0);
         _endJob:
@@ -1211,12 +1198,6 @@ public static unsafe partial class Methods
                 assert(flushed <= produced);
                 assert(jobPtr->consumed <= jobPtr->src.size);
                 toFlush = produced - flushed;
-#if DEBUG
-                if (toFlush == 0)
-                {
-                    assert(jobPtr->consumed < jobPtr->src.size);
-                }
-#endif
             }
 
             SynchronizationWrapper.Exit(&mtctx->jobs[wJobID].job_mutex);

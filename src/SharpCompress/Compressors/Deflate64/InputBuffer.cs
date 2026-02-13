@@ -5,7 +5,6 @@
 #nullable disable
 
 using System;
-using System.Diagnostics;
 
 namespace SharpCompress.Compressors.Deflate64;
 
@@ -38,8 +37,6 @@ internal sealed class InputBuffer
     /// <returns>Returns false if input is not sufficient to make this true.</returns>
     public bool EnsureBitsAvailable(int count)
     {
-        Debug.Assert(0 < count && count <= 16, "count is invalid.");
-
         // manual inlining to improve perf
         if (_bitsInBuffer < count)
         {
@@ -106,8 +103,6 @@ internal sealed class InputBuffer
     /// <summary>Gets count bits from the input buffer. Returns -1 if not enough bits available.</summary>
     public int GetBits(int count)
     {
-        Debug.Assert(0 < count && count <= 16, "count is invalid.");
-
         if (!EnsureBitsAvailable(count))
         {
             return -1;
@@ -127,12 +122,6 @@ internal sealed class InputBuffer
     /// <returns>Returns the number of bytes copied, 0 if no byte is available.</returns>
     public int CopyTo(byte[] output, int offset, int length)
     {
-        Debug.Assert(output != null);
-        Debug.Assert(offset >= 0);
-        Debug.Assert(length >= 0);
-        Debug.Assert(offset <= output.Length - length);
-        Debug.Assert((_bitsInBuffer % 8) == 0);
-
         // Copy the bytes in bitBuffer first.
         var bytesFromBitBuffer = 0;
         while (_bitsInBuffer > 0 && length > 0)
@@ -175,12 +164,6 @@ internal sealed class InputBuffer
     /// </summary>
     public void SetInput(byte[] buffer, int offset, int length)
     {
-        Debug.Assert(buffer != null);
-        Debug.Assert(offset >= 0);
-        Debug.Assert(length >= 0);
-        Debug.Assert(offset <= buffer.Length - length);
-        Debug.Assert(_start == _end);
-
         _buffer = buffer;
         _start = offset;
         _end = offset + length;
@@ -189,10 +172,6 @@ internal sealed class InputBuffer
     /// <summary>Skip n bits in the buffer.</summary>
     public void SkipBits(int n)
     {
-        Debug.Assert(
-            _bitsInBuffer >= n,
-            "No enough bits in the buffer, Did you call EnsureBitsAvailable?"
-        );
         _bitBuffer >>= n;
         _bitsInBuffer -= n;
     }

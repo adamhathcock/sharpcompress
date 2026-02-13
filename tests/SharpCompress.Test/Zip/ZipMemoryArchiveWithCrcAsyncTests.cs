@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -76,7 +75,6 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
         // Calculate and output actual compression ratio
         var originalSize = file1Data.Length + file2Data.Length + file3Data.Length;
         var actualRatio = (double)zipStream.Length / originalSize;
-        //Debug.WriteLine($"Zip_Create_Archive_With_3_Files_Crc32_Test_Async: {compressionType} Level={compressionLevel} Size={sizeMb}MB Expected={expectedRatio:F3} Actual={actualRatio:F3}");
 
         // Verify compression occurred (except for None compression type)
         if (compressionType != CompressionType.None)
@@ -148,7 +146,6 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Calculate and output actual compression ratio
         var actualRatio = (double)zipStream.Length / testData.Length;
-        //Debug.WriteLine($"Zip_WriterFactory_Crc32_Test_Async: {compressionType} Level={compressionLevel} Size={sizeMb}MB Expected={expectedRatio:F3} Actual={actualRatio:F3}");
 
         VerifyCompressionRatio(
             testData.Length,
@@ -212,7 +209,6 @@ public class ZipTypesLevelsWithCrcRatioAsyncTests : ArchiveTests
 
         // Calculate and output actual compression ratio
         var actualRatio = (double)zipStream.Length / testData.Length;
-        //Debug.WriteLine($"Zip_ZipArchiveOpen_Crc32_Test_Async: {compressionType} Level={compressionLevel} Size={sizeMb}MB Expected={expectedRatio:F3} Actual={actualRatio:F3}");
 
         // Verify the archive
         zipStream.Position = 0;
