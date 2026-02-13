@@ -206,8 +206,22 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         throw new NotSupportedException();
     }
 
-    public override long Length =>
-        _isPassthrough ? stream.Length : throw new NotSupportedException();
+    public override long Length
+    {
+        get
+        {
+            if (_isPassthrough)
+            {
+                return stream.Length;
+            }
+
+            if (_ringBuffer is not null)
+            {
+                return _ringBuffer.Length;
+            }
+            throw new NotSupportedException();
+        }
+    }
 
     public override long Position
     {
