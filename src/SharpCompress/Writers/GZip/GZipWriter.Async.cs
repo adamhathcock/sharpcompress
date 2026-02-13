@@ -19,7 +19,7 @@ public partial class GZipWriter
         {
             throw new ArgumentException("Can only write a single stream to a GZip file.");
         }
-        var stream = (GZipStream)OutputStream;
+        var stream = (GZipStream)OutputStream.NotNull();
         stream.FileName = filename;
         stream.LastModified = modificationTime;
         var progressStream = WrapWithProgress(source, filename);

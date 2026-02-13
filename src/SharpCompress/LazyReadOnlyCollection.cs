@@ -1,5 +1,3 @@
-﻿#nullable disable
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -43,7 +41,7 @@ internal sealed class LazyReadOnlyCollection<T> : ICollection<T>
 
         #region IEnumerator Members
 
-        object IEnumerator.Current => Current;
+        object IEnumerator.Current => Current!;
 
         public bool MoveNext()
         {

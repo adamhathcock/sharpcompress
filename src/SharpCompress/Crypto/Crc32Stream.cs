@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.IO;
 
@@ -15,7 +13,7 @@ public sealed class Crc32Stream : Stream
     public const uint DEFAULT_POLYNOMIAL = 0xedb88320u;
     public const uint DEFAULT_SEED = 0xffffffffu;
 
-    private static uint[] _defaultTable;
+    private static uint[]? _defaultTable;
 
     public Crc32Stream(Stream stream)
         : this(stream, DEFAULT_POLYNOMIAL, DEFAULT_SEED) { }

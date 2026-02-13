@@ -1,5 +1,3 @@
-#nullable disable
-
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,9 +14,9 @@ internal class CryptKey3 : ICryptKey
 {
     const int AES_128 = 128;
 
-    private string _password;
+    private readonly string _password;
 
-    public CryptKey3(string password) => _password = password ?? "";
+    public CryptKey3(string? password) => _password = password ?? string.Empty;
 
     public ICryptoTransform Transformer(byte[] salt)
     {
