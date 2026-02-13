@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Text;
 using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-internal class MarkingBinaryReader : BinaryReader
+internal class MarkingBinaryReader(Stream stream)
+    : BinaryReader(stream, Encoding.UTF8, leaveOpen: true) //always leave the stream open
 {
-    public MarkingBinaryReader(Stream stream)
-        : base(stream) { }
-
     public virtual long CurrentReadByteCount { get; protected set; }
 
     public virtual void Mark() => CurrentReadByteCount = 0;

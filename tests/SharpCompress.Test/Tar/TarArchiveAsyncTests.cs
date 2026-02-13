@@ -43,11 +43,9 @@ public class TarArchiveAsyncTests : ArchiveTests
             )
             using (Stream inputStream = new MemoryStream())
             {
-                using (var sw = new StreamWriter(inputStream))
-                {
-                    await sw.WriteAsync("dummy filecontent");
-                    await sw.FlushAsync();
-                }
+                var sw = new StreamWriter(inputStream);
+                await sw.WriteAsync("dummy filecontent");
+                await sw.FlushAsync();
 
                 inputStream.Position = 0;
                 await writer.WriteAsync(filename, inputStream, null);
@@ -104,11 +102,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         )
         using (Stream inputStream = new MemoryStream())
         {
-            using (var sw = new StreamWriter(inputStream))
-            {
-                await sw.WriteAsync("dummy filecontent");
-                await sw.FlushAsync();
-            }
+            var sw = new StreamWriter(inputStream);
+            await sw.WriteAsync("dummy filecontent");
+            await sw.FlushAsync();
 
             inputStream.Position = 0;
             await writer.WriteAsync(longFilename, inputStream, null);
