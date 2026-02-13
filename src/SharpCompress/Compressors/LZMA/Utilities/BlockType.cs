@@ -1,6 +1,3 @@
-
-
-
 namespace SharpCompress.Compressors.LZMA.Utilities;
 
 internal enum BlockType : byte
@@ -36,4 +33,3 @@ internal enum BlockType : byte
 
     #endregion
 }
-

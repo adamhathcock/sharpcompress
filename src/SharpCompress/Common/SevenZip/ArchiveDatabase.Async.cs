@@ -11,7 +11,6 @@ internal sealed partial class ArchiveDatabase
     internal async ValueTask<Stream> GetFolderStreamAsync(
         Stream stream,
         CFolder folder,
-
         IPasswordProvider pw,
         CancellationToken cancellationToken
     )
