@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz;
 
@@ -12,9 +13,21 @@ namespace SharpCompress.Compressors.Xz;
 public sealed partial class XZStream : XZReadOnlyStream
 {
     public XZStream(Stream baseStream)
-        : base(baseStream)
+        : base(WrapIfNeeded(baseStream))
     {
-        _baseStream = baseStream;
+        _baseStream = BaseStream;
+    }
+
+    private static Stream WrapIfNeeded(Stream stream)
+    {
+        // XZ format requires position tracking for padding calculations.
+        // For non-seekable streams, wrap with SharpCompressStream which provides
+        // limited backward seeking via a ring buffer.
+        if (!stream.CanSeek)
+        {
+            return SharpCompressStream.Create(stream);
+        }
+        return stream;
     }
 
     protected override void Dispose(bool disposing)

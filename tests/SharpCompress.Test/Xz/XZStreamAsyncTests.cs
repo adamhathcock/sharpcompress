@@ -34,4 +34,24 @@ public class XzStreamAsyncTests : XzTestsBase
         var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
         Assert.Equal(OriginalIndexed, uncompressed);
     }
+
+    [Fact]
+    public async ValueTask CanReadNonSeekableStreamAsync()
+    {
+        var nonSeekable = new ForwardOnlyStream(new MemoryStream(Compressed));
+        var xz = new XZStream(nonSeekable);
+        using var sr = new StreamReader(new AsyncOnlyStream(xz));
+        var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
+        Assert.Equal(Original, uncompressed);
+    }
+
+    [Fact]
+    public async ValueTask CanReadNonSeekableEmptyStreamAsync()
+    {
+        var nonSeekable = new ForwardOnlyStream(new MemoryStream(CompressedEmpty));
+        var xz = new XZStream(nonSeekable);
+        using var sr = new StreamReader(new AsyncOnlyStream(xz));
+        var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
+        Assert.Equal(OriginalEmpty, uncompressed);
+    }
 }
