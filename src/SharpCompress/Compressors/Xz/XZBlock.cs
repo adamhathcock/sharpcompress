@@ -19,7 +19,6 @@ public sealed partial class XZBlock : XZReadOnlyStream
     public ulong? UncompressedSize { get; private set; }
     public Stack<BlockFilter> Filters { get; private set; } = new();
     public bool HeaderIsLoaded { get; private set; }
-    private CheckType _checkType;
     private readonly int _checkSize;
     private bool _streamConnected;
     private int _numFilters;
@@ -33,7 +32,6 @@ public sealed partial class XZBlock : XZReadOnlyStream
     public XZBlock(Stream stream, CheckType checkType, int checkSize)
         : base(stream)
     {
-        _checkType = checkType;
         _checkSize = checkSize;
         _startPosition = stream.Position;
     }

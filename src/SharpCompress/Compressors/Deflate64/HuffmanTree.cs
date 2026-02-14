@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Diagnostics;
 using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate64;
@@ -35,9 +34,6 @@ internal sealed class HuffmanTree
     private readonly short[] _left;
     private readonly short[] _right;
     private readonly byte[] _codeLengthArray;
-#if DEBUG
-    private uint[]? _codeArrayDebug;
-#endif
 
     private readonly int _tableMask;
 
@@ -48,12 +44,6 @@ internal sealed class HuffmanTree
 
     public HuffmanTree(byte[] codeLengths)
     {
-        Debug.Assert(
-            codeLengths.Length == MAX_LITERAL_TREE_ELEMENTS
-                || codeLengths.Length == MAX_DIST_TREE_ELEMENTS
-                || codeLengths.Length == NUMBER_OF_CODE_LENGTH_TREE_ELEMENTS,
-            "we only expect three kinds of Length here"
-        );
         _codeLengthArray = codeLengths;
 
         if (_codeLengthArray.Length == MAX_LITERAL_TREE_ELEMENTS)
@@ -152,9 +142,6 @@ internal sealed class HuffmanTree
     private void CreateTable()
     {
         var codeArray = CalculateHuffmanCode();
-#if DEBUG
-        _codeArrayDebug = codeArray;
-#endif
 
         var avail = (short)_codeLengthArray.Length;
 
@@ -236,11 +223,6 @@ internal sealed class HuffmanTree
                             // prevent an IndexOutOfRangeException from array[index]
                             throw new InvalidFormatException("Deflate64: invalid Huffman data");
                         }
-
-                        Debug.Assert(
-                            value < 0,
-                            "CreateTable: Only negative numbers are used for tree pointers!"
-                        );
 
                         if ((start & codeBitMask) == 0)
                         {

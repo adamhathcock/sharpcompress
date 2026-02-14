@@ -88,13 +88,8 @@ internal class Bcj2DecoderStream : DecoderStream2
     private bool _mFinished;
     private bool _isDisposed;
 
-    public Bcj2DecoderStream(Stream[] streams, byte[] info, long limit)
+    public Bcj2DecoderStream(Stream[] streams)
     {
-        if (info != null && info.Length > 0)
-        {
-            throw new NotSupportedException();
-        }
-
         if (streams.Length != 4)
         {
             throw new NotSupportedException();

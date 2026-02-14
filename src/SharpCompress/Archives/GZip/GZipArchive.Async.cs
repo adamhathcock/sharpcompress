@@ -40,10 +40,7 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        await using var writer = new GZipWriter(
-            stream,
-            options as GZipWriterOptions ?? new GZipWriterOptions(options)
-        );
+        await using var writer = new GZipWriter(stream, options);
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )

@@ -29,7 +29,7 @@ internal sealed partial class ArchiveHeader : RarHeader
             PosAv = reader.ReadInt32();
             if (HasFlag(ArchiveFlagsV4.ENCRYPT_VER))
             {
-                EncryptionVersion = reader.ReadByte();
+                _ = reader.ReadByte();
             }
         }
     }
@@ -43,8 +43,6 @@ internal sealed partial class ArchiveHeader : RarHeader
     internal short? HighPosAv { get; private set; }
 
     internal int? PosAv { get; private set; }
-
-    private byte? EncryptionVersion { get; set; }
 
     public bool? IsEncrypted => IsRar5 ? null : HasFlag(ArchiveFlagsV4.PASSWORD);
 

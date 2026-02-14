@@ -7,7 +7,7 @@ using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Filters;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.ZStandard;
 
@@ -18,7 +18,7 @@ internal static partial class DecoderRegistry
     internal static async ValueTask<Stream> CreateDecoderStreamAsync(
         CMethodId id,
         Stream[] inStreams,
-        byte[] info,
+        byte[]? info,
         IPasswordProvider pass,
         long limit,
         CancellationToken cancellationToken
@@ -33,18 +33,26 @@ internal static partial class DecoderRegistry
                 }
                 return inStreams.Single();
             case K_DELTA:
-                return new DeltaFilter(false, inStreams.Single(), info);
+                return new DeltaFilter(false, inStreams.Single(), info.NotNull());
             case K_LZMA:
             case K_LZMA2:
                 return await LzmaStream
-                    .CreateAsync(info, inStreams.Single(), -1, limit, null, info.Length < 5, false)
+                    .CreateAsync(
+                        info.NotNull(),
+                        inStreams.Single(),
+                        -1,
+                        limit,
+                        null,
+                        info.NotNull().Length < 5,
+                        false
+                    )
                     .ConfigureAwait(false);
             case CMethodId.K_AES_ID:
-                return new AesDecoderStream(inStreams.Single(), info, pass, limit);
+                return new AesDecoderStream(inStreams.Single(), info.NotNull(), pass, limit);
             case K_BCJ:
                 return new BCJFilter(false, inStreams.Single());
             case K_BCJ2:
-                return new Bcj2DecoderStream(inStreams, info, limit);
+                return new Bcj2DecoderStream(inStreams);
             case K_PPC:
                 return new BCJFilterPPC(false, inStreams.Single());
             case K_IA64:
@@ -71,7 +79,7 @@ internal static partial class DecoderRegistry
             case K_PPMD:
                 return await PpmdStream
                     .CreateAsync(
-                        new PpmdProperties(info),
+                        new PpmdProperties(info.NotNull()),
                         inStreams.Single(),
                         false,
                         cancellationToken

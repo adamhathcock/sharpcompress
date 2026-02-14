@@ -10,7 +10,7 @@ namespace SharpCompress.Common.Zip;
 internal partial class WinzipAesCryptoStream : Stream
 {
     private const int BLOCK_SIZE_IN_BYTES = 16;
-    private readonly SymmetricAlgorithm _cipher;
+    private readonly Aes _cipher;
     private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
     private readonly Stream _stream;
     private readonly ICryptoTransform _transform;
@@ -35,7 +35,7 @@ internal partial class WinzipAesCryptoStream : Stream
         _transform = _cipher.CreateEncryptor(winzipAesEncryptionData.KeyBytes, iv);
     }
 
-    private SymmetricAlgorithm CreateCipher(WinzipAesEncryptionData winzipAesEncryptionData)
+    private Aes CreateCipher(WinzipAesEncryptionData winzipAesEncryptionData)
     {
         var cipher = Aes.Create();
         cipher.BlockSize = BLOCK_SIZE_IN_BYTES * 8;
@@ -63,6 +63,7 @@ internal partial class WinzipAesCryptoStream : Stream
     {
         if (_isDisposed)
         {
+            base.Dispose(disposing);
             return;
         }
         _isDisposed = true;
@@ -88,6 +89,7 @@ internal partial class WinzipAesCryptoStream : Stream
             }
             _stream.Dispose();
         }
+        base.Dispose(disposing);
     }
 
     private async Task ReadAuthBytesAsync()

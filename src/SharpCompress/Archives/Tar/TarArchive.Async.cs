@@ -25,10 +25,7 @@ public partial class TarArchive
         CancellationToken cancellationToken = default
     )
     {
-        using var writer = new TarWriter(
-            stream,
-            options as TarWriterOptions ?? new TarWriterOptions(options)
-        );
+        using var writer = new TarWriter(stream, options);
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )

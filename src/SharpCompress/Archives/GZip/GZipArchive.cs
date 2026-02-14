@@ -67,10 +67,7 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        using var writer = new GZipWriter(
-            stream,
-            options as GZipWriterOptions ?? new GZipWriterOptions(options)
-        );
+        using var writer = new GZipWriter(stream, options);
         foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -114,14 +115,19 @@ Target(
     {
         var (version, isPrerelease) = await GetVersion();
         Console.WriteLine($"VERSION={version}");
-        Console.WriteLine($"PRERELEASE={isPrerelease.ToString().ToLower()}");
+        Console.WriteLine(
+            $"PRERELEASE={isPrerelease.ToString().ToLower(CultureInfo.InvariantCulture)}"
+        );
 
         // Write to environment file for GitHub Actions
         var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
         if (!string.IsNullOrEmpty(githubOutput))
         {
             File.AppendAllText(githubOutput, $"version={version}\n");
-            File.AppendAllText(githubOutput, $"prerelease={isPrerelease.ToString().ToLower()}\n");
+            File.AppendAllText(
+                githubOutput,
+                $"prerelease={isPrerelease.ToString().ToLower(CultureInfo.InvariantCulture)}\n"
+            );
         }
     }
 );
@@ -363,9 +369,13 @@ Target(
                 : "⚪";
 
             if (timeChange > 25 || memChange > 25)
+            {
                 hasRegressions = true;
+            }
             if (timeChange < -25 || memChange < -25)
+            {
                 hasImprovements = true;
+            }
 
             output.Add(
                 $"| {method} | {baseline.Mean} | {current.Mean} | {timeIcon} {timeChange:+0.0;-0.0;0}% | {baseline.Memory} | {current.Memory} | {memIcon} {memChange:+0.0;-0.0;0}% |"
@@ -545,7 +555,10 @@ static async Task<string> GetGitOutput(string command, string args)
     }
     catch (Exception ex)
     {
-        throw new Exception($"Git command failed: git {command} {args}\n{ex.Message}", ex);
+        throw new InvalidOperationException(
+            $"Git command failed: git {command} {args}\n{ex.Message}",
+            ex
+        );
     }
 }
 
@@ -575,7 +588,7 @@ static Dictionary<string, BenchmarkMetric> ParseBenchmarkResults(string markdown
         var line = lines[i].Trim();
 
         // Look for table rows with benchmark data
-        if (line.StartsWith("|") && line.Contains("&#39;") && i > 0)
+        if (line.StartsWith('|') && line.Contains("&#39;", StringComparison.Ordinal) && i > 0)
         {
             var parts = line.Split('|', StringSplitOptions.TrimEntries);
             if (parts.Length >= 5)
@@ -588,10 +601,10 @@ static Dictionary<string, BenchmarkMetric> ParseBenchmarkResults(string markdown
                 for (int j = parts.Length - 2; j >= 2; j--)
                 {
                     if (
-                        parts[j].Contains("KB")
-                        || parts[j].Contains("MB")
-                        || parts[j].Contains("GB")
-                        || parts[j].Contains("B")
+                        parts[j].Contains("KB", StringComparison.Ordinal)
+                        || parts[j].Contains("MB", StringComparison.Ordinal)
+                        || parts[j].Contains("GB", StringComparison.Ordinal)
+                        || parts[j].Contains('B')
                     )
                     {
                         memoryStr = parts[j];
@@ -624,17 +637,21 @@ static Dictionary<string, BenchmarkMetric> ParseBenchmarkResults(string markdown
 static double ParseTimeValue(string timeStr)
 {
     if (string.IsNullOrWhiteSpace(timeStr) || timeStr == "N/A" || timeStr == "NA")
+    {
         return 0;
+    }
 
     // Remove thousands separators and parse
     timeStr = timeStr.Replace(",", "").Trim();
 
     var match = Regex.Match(timeStr, @"([\d.]+)\s*(\w+)");
     if (!match.Success)
+    {
         return 0;
+    }
 
     var value = double.Parse(match.Groups[1].Value);
-    var unit = match.Groups[2].Value.ToLower();
+    var unit = match.Groups[2].Value.ToLower(CultureInfo.InvariantCulture);
 
     // Convert to microseconds for comparison
     return unit switch
@@ -650,16 +667,20 @@ static double ParseTimeValue(string timeStr)
 static double ParseMemoryValue(string memStr)
 {
     if (string.IsNullOrWhiteSpace(memStr) || memStr == "N/A" || memStr == "NA")
+    {
         return 0;
+    }
 
     memStr = memStr.Replace(",", "").Trim();
 
     var match = Regex.Match(memStr, @"([\d.]+)\s*(\w+)");
     if (!match.Success)
+    {
         return 0;
+    }
 
     var value = double.Parse(match.Groups[1].Value);
-    var unit = match.Groups[2].Value.ToUpper();
+    var unit = match.Groups[2].Value.ToUpper(CultureInfo.InvariantCulture);
 
     // Convert to KB for comparison
     return unit switch
@@ -675,7 +696,9 @@ static double ParseMemoryValue(string memStr)
 static double CalculateChange(double baseline, double current)
 {
     if (baseline == 0)
+    {
         return 0;
+    }
     return ((current - baseline) / baseline) * 100;
 }
 

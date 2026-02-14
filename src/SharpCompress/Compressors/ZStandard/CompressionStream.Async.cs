@@ -16,6 +16,13 @@ public partial class CompressionStream : Stream
     {
         if (compressor == null)
         {
+#if LEGACY_DOTNET
+            Dispose(true);
+            GC.SuppressFinalize(this);
+            await Task.CompletedTask.ConfigureAwait(false);
+#else
+            await base.DisposeAsync().ConfigureAwait(false);
+#endif
             return;
         }
 
@@ -28,6 +35,12 @@ public partial class CompressionStream : Stream
             ReleaseUnmanagedResources();
             GC.SuppressFinalize(this);
         }
+#if LEGACY_DOTNET
+        Dispose(true);
+        await Task.CompletedTask.ConfigureAwait(false);
+#else
+        await base.DisposeAsync().ConfigureAwait(false);
+#endif
     }
 
     public override async Task FlushAsync(CancellationToken cancellationToken) =>

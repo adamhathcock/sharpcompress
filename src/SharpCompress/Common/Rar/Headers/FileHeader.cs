@@ -72,7 +72,7 @@ internal partial class FileHeader : RarHeader
         // Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB, 15 - 4096 MB.
         WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo >> 10) & 0xf);
 
-        HostOs = reader.ReadRarVIntByte();
+        _ = reader.ReadRarVIntByte();
 
         var nameSize = reader.ReadRarVIntUInt16();
 
@@ -197,7 +197,7 @@ internal partial class FileHeader : RarHeader
 
         var lowUncompressedSize = reader.ReadUInt32();
 
-        HostOs = reader.ReadByte();
+        _ = reader.ReadByte();
 
         FileCrc = reader.ReadBytes(4);
 
@@ -415,7 +415,6 @@ internal partial class FileHeader : RarHeader
 
     internal byte[]? R4Salt { get; private set; }
     internal Rar5CryptoInfo? Rar5CryptoInfo { get; private set; }
-    private byte HostOs { get; set; }
     internal uint FileAttributes { get; private set; }
     internal long CompressedSize { get; private set; }
     internal long UncompressedSize { get; private set; }

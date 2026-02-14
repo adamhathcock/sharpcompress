@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using SharpCompress.Compressors.RLE90;
-using SharpCompress.Compressors.Squeezed;
+
+namespace SharpCompress.Compressors.ArcLzw;
 
 public partial class ArcLzwStream : Stream
 {

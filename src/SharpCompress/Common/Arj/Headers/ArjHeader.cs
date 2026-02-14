@@ -18,7 +18,6 @@ public enum ArjHeaderType
 
 public abstract partial class ArjHeader
 {
-    private const int FIRST_HDR_SIZE = 34;
     private const ushort ARJ_MAGIC = 0xEA60;
 
     public ArjHeader(ArjHeaderType type)

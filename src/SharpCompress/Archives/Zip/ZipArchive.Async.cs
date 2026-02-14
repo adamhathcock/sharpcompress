@@ -84,10 +84,7 @@ public partial class ZipArchive
         CancellationToken cancellationToken = default
     )
     {
-        using var writer = new ZipWriter(
-            stream,
-            options as ZipWriterOptions ?? new ZipWriterOptions(options)
-        );
+        using var writer = new ZipWriter(stream, options);
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )

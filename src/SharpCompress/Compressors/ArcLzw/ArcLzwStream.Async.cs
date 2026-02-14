@@ -1,9 +1,10 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.RLE90;
+
+namespace SharpCompress.Compressors.ArcLzw;
 
 public partial class ArcLzwStream
 {

@@ -1,5 +1,7 @@
 using System;
 
+namespace SharpCompress.Compressors.ArcLzw;
+
 public partial class ArcLzwStream
 {
     public class BitReader

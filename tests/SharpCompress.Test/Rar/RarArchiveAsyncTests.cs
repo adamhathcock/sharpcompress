@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using Xunit;

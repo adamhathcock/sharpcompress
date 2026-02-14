@@ -71,10 +71,10 @@ public class TarArchiveTests : ArchiveTests
 
             foreach (var entry in archive2.Entries)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    new StreamReader(entry.OpenEntryStream()).ReadLine()
-                );
+                using (var sr = new StreamReader(entry.OpenEntryStream()))
+                {
+                    Assert.Equal("dummy filecontent", sr.ReadLine());
+                }
             }
         }
     }
@@ -137,10 +137,10 @@ public class TarArchiveTests : ArchiveTests
 
             foreach (var entry in archive2.Entries)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    new StreamReader(entry.OpenEntryStream()).ReadLine()
-                );
+                using (var sr = new StreamReader(entry.OpenEntryStream()))
+                {
+                    Assert.Equal("dummy filecontent", sr.ReadLine());
+                }
             }
         }
     }

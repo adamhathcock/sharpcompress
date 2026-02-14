@@ -13,8 +13,9 @@ public partial class XZIndexRecord
     )
     {
         var record = new XZIndexRecord();
-        record.UnpaddedSize = await br.ReadXZIntegerAsync(cancellationToken).ConfigureAwait(false);
-        record.UncompressedSize = await br.ReadXZIntegerAsync(cancellationToken)
+        record.UnpaddedSize = await br.ReadXZIntegerAsync(cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+        record.UncompressedSize = await br.ReadXZIntegerAsync(cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         return record;
     }

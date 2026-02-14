@@ -1,10 +1,8 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -18,7 +16,7 @@ internal partial class ArchiveDatabase
     internal List<long> _packSizes = new();
     internal List<uint?> _packCrCs = new();
     internal List<CFolder> _folders = new();
-    internal List<int> _numUnpackStreamsVector;
+    internal List<int> _numUnpackStreamsVector = null!;
     internal List<CFileItem> _files = new();
 
     internal List<long> _packStreamStartPositions = new();
@@ -35,7 +33,7 @@ internal partial class ArchiveDatabase
         _packSizes.Clear();
         _packCrCs.Clear();
         _folders.Clear();
-        _numUnpackStreamsVector = null;
+        _numUnpackStreamsVector = null!;
         _files.Clear();
 
         _packStreamStartPositions.Clear();

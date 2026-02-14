@@ -44,9 +44,7 @@ internal sealed partial class ArchiveHeader
             PosAv = await reader.ReadInt32Async(cancellationToken).ConfigureAwait(false);
             if (HasFlag(ArchiveFlagsV4.ENCRYPT_VER))
             {
-                EncryptionVersion = await reader
-                    .ReadByteAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                _ = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
             }
         }
     }

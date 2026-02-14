@@ -42,4 +42,20 @@ internal sealed class NewSubHeaderType : IEquatable<NewSubHeaderType>
     }
 
     public bool Equals(NewSubHeaderType? other) => other is not null && Equals(other._bytes);
+
+    public override bool Equals(object? obj) => obj is NewSubHeaderType other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            var hash = 17;
+            foreach (byte value in _bytes)
+            {
+                hash = (hash * 31) + value;
+            }
+
+            return hash;
+        }
+    }
 }

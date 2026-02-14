@@ -60,7 +60,7 @@ public partial class RunLength90Stream : Stream
 
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
         {
-            throw new ArgumentOutOfRangeException();
+            throw new ArgumentOutOfRangeException(nameof(offset));
         }
 
         int bytesWritten = 0;

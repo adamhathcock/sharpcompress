@@ -8,8 +8,6 @@
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>

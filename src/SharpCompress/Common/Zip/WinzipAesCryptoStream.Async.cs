@@ -13,6 +13,7 @@ internal partial class WinzipAesCryptoStream
     {
         if (_isDisposed)
         {
+            await base.DisposeAsync().ConfigureAwait(false);
             return;
         }
         _isDisposed = true;
@@ -27,6 +28,7 @@ internal partial class WinzipAesCryptoStream
             ArrayPool<byte>.Shared.Return(authBytes);
             await _stream.DisposeAsync().ConfigureAwait(false);
         }
+        await base.DisposeAsync().ConfigureAwait(false);
     }
 #endif
 

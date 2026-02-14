@@ -43,7 +43,7 @@ public sealed partial class GZipWriter : AbstractWriter
         if (isDisposing)
         {
             //dispose here to finish the GZip, GZip won't close the underlying stream
-            OutputStream.Dispose();
+            OutputStream.NotNull().Dispose();
         }
         base.Dispose(isDisposing);
     }
@@ -63,7 +63,7 @@ public sealed partial class GZipWriter : AbstractWriter
         }
 
         var progressStream = WrapWithProgress(source, filename);
-        progressStream.CopyTo(OutputStream, Constants.BufferSize);
+        progressStream.CopyTo(OutputStream.NotNull(), Constants.BufferSize);
         _wroteToStream = true;
     }
 

@@ -559,6 +559,7 @@ public partial class LzwStream : Stream
                 baseInputStream.Dispose();
             }
         }
+        base.Dispose(disposing);
     }
 
     #endregion Stream Overrides

@@ -8,7 +8,6 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Writers;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions writerOptions)
     : IWriter,
         IAsyncWriter
@@ -19,8 +18,7 @@ public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions wr
 
     protected void InitializeStream(Stream stream) => OutputStream = stream;
 
-    protected Stream OutputStream { get; private set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    protected Stream? OutputStream { get; private set; }
 
     public ArchiveType WriterType { get; } = type;
 
@@ -57,7 +55,7 @@ public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions wr
     {
         if (isDisposing)
         {
-            OutputStream.Dispose();
+            OutputStream?.Dispose();
         }
     }
 

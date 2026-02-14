@@ -1,5 +1,3 @@
-#nullable disable
-
 using SharpCompress.Common.Rar;
 using SharpCompress.IO;
 

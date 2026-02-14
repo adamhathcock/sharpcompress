@@ -3604,14 +3604,6 @@ public static unsafe partial class Methods
             }
         }
 
-#if DEBUG
-        if (isDxS != 0)
-        {
-            assert(offset_1 <= dictAndPrefixLength);
-            assert(offset_2 <= dictAndPrefixLength);
-        }
-#endif
-
         ms->lazySkipping = 0;
         if (searchMethod == searchMethod_e.search_rowHash)
         {

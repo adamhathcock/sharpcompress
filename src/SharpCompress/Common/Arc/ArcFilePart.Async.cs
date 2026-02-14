@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Compressors.ArcLzw;
 using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.RLE90;
 using SharpCompress.Compressors.Squeezed;

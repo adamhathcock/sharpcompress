@@ -12,7 +12,7 @@ public class XzStreamAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask CanReadEmptyStreamAsync()
     {
-        var xz = new XZStream(CompressedEmptyStream);
+        using var xz = new XZStream(CompressedEmptyStream);
         using var sr = new StreamReader(new AsyncOnlyStream(xz));
         var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
         Assert.Equal(OriginalEmpty, uncompressed);
@@ -21,7 +21,7 @@ public class XzStreamAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask CanReadStreamAsync()
     {
-        var xz = new XZStream(CompressedStream);
+        using var xz = new XZStream(CompressedStream);
         using var sr = new StreamReader(new AsyncOnlyStream(xz));
         var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
         Assert.Equal(Original, uncompressed);
@@ -30,7 +30,7 @@ public class XzStreamAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask CanReadIndexedStreamAsync()
     {
-        var xz = new XZStream(CompressedIndexedStream);
+        using var xz = new XZStream(CompressedIndexedStream);
         using var sr = new StreamReader(new AsyncOnlyStream(xz));
         var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
         Assert.Equal(OriginalIndexed, uncompressed);

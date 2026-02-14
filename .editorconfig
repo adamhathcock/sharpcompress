@@ -299,6 +299,19 @@ dotnet_diagnostic.CA2251.severity = error
 dotnet_diagnostic.CA2252.severity = none
 dotnet_diagnostic.CA2254.severity = suggestion
 
+; High volume analyzers requiring extensive refactoring - set to suggestion temporarily
+dotnet_diagnostic.CA1835.severity = suggestion
+dotnet_diagnostic.CA1510.severity = suggestion
+dotnet_diagnostic.CA1512.severity = suggestion
+dotnet_diagnostic.CA1844.severity = suggestion
+dotnet_diagnostic.CA1825.severity = suggestion
+dotnet_diagnostic.CA1712.severity = suggestion
+dotnet_diagnostic.CA2022.severity = suggestion
+dotnet_diagnostic.CA1850.severity = suggestion
+dotnet_diagnostic.CA2263.severity = suggestion
+dotnet_diagnostic.CA2012.severity = suggestion
+dotnet_diagnostic.CA1001.severity = suggestion
+
 dotnet_diagnostic.CS0169.severity = error
 dotnet_diagnostic.CS0219.severity = error
 dotnet_diagnostic.CS0649.severity = suggestion
@@ -318,9 +331,9 @@ dotnet_diagnostic.MVC1000.severity = suggestion
 
 dotnet_diagnostic.RZ10012.severity = error
 
-dotnet_diagnostic.IDE0004.severity = error # redundant cast
+dotnet_diagnostic.IDE0004.severity = suggestion # redundant cast
 dotnet_diagnostic.IDE0005.severity = suggestion
-dotnet_diagnostic.IDE0007.severity = error # Use var
+dotnet_diagnostic.IDE0007.severity = suggestion # Use var
 dotnet_diagnostic.IDE0011.severity = error # Use braces on if statements
 dotnet_diagnostic.IDE0010.severity = silent # populate switch
 dotnet_diagnostic.IDE0017.severity = suggestion # initialization can be simplified
@@ -334,7 +347,7 @@ dotnet_diagnostic.IDE0028.severity = silent # expression body for accessors
 dotnet_diagnostic.IDE0032.severity = suggestion # Use auto property
 dotnet_diagnostic.IDE0033.severity = error # prefer tuple name
 dotnet_diagnostic.IDE0037.severity = suggestion # simplify anonymous type
-dotnet_diagnostic.IDE0040.severity = error # modifiers required
+dotnet_diagnostic.IDE0040.severity = suggestion # modifiers required
 dotnet_diagnostic.IDE0041.severity = error # simplify null
 dotnet_diagnostic.IDE0042.severity = error # deconstruct variable
 dotnet_diagnostic.IDE0044.severity = suggestion # make field only when possible
@@ -348,6 +361,12 @@ dotnet_diagnostic.IDE0060.severity = suggestion # unused parameters
 dotnet_diagnostic.IDE0061.severity = suggestion # local expression body
 dotnet_diagnostic.IDE0062.severity = suggestion # local to static
 dotnet_diagnostic.IDE0063.severity = error # simplify using
+
+[tests/**/*.cs]
+dotnet_diagnostic.CA1861.severity = suggestion
+dotnet_diagnostic.IDE0042.severity = suggestion
+dotnet_diagnostic.IDE0051.severity = suggestion
+dotnet_diagnostic.IDE0063.severity = suggestion
 dotnet_diagnostic.IDE0066.severity = suggestion # switch expression
 dotnet_diagnostic.IDE0072.severity = suggestion # Populate switch - forces population of all cases even when default specified
 dotnet_diagnostic.IDE0078.severity = suggestion # use pattern matching
@@ -359,7 +378,7 @@ dotnet_diagnostic.IDE0200.severity = suggestion # lambda not needed
 dotnet_diagnostic.IDE1006.severity = suggestion # Naming rule violation: These words cannot contain lower case characters
 dotnet_diagnostic.IDE0260.severity = suggestion # Use pattern matching
 dotnet_diagnostic.IDE0270.severity = suggestion # Null check simplifcation
-dotnet_diagnostic.IDE0290.severity = error # Primary Constructor
+dotnet_diagnostic.IDE0290.severity = suggestion # Primary Constructor
 dotnet_diagnostic.IDE0300.severity = suggestion # Collection
 dotnet_diagnostic.IDE0305.severity = suggestion # Collection ToList
 

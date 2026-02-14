@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +13,7 @@ namespace SharpCompress.Readers.Ace;
 internal class MultiVolumeAceReader : AceReader
 {
     private readonly IEnumerator<Stream> streams;
-    private Stream tempStream;
+    private Stream? tempStream;
 
     internal MultiVolumeAceReader(IEnumerable<Stream> streams, ReaderOptions options)
         : base(options) => this.streams = streams.GetEnumerator();
@@ -54,13 +52,13 @@ internal class MultiVolumeAceReader : AceReader
     {
         private readonly MultiVolumeAceReader reader;
         private readonly IEnumerator<Stream> nextReadableStreams;
-        private Stream tempStream;
+        private Stream? tempStream;
         private bool isFirst = true;
 
         internal MultiVolumeStreamEnumerator(
             MultiVolumeAceReader r,
             IEnumerator<Stream> nextReadableStreams,
-            Stream tempStream
+            Stream? tempStream
         )
         {
             reader = r;
@@ -72,7 +70,7 @@ internal class MultiVolumeAceReader : AceReader
 
         IEnumerator IEnumerable.GetEnumerator() => this;
 
-        public FilePart Current { get; private set; }
+        public FilePart Current { get; private set; } = null!;
 
         public void Dispose() { }
 

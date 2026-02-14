@@ -1,5 +1,3 @@
-﻿#nullable disable
-
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +12,7 @@ namespace SharpCompress.Readers.Rar;
 internal partial class MultiVolumeRarReader : RarReader
 {
     private readonly IEnumerator<Stream> streams;
-    private Stream tempStream;
+    private Stream? tempStream;
 
     internal MultiVolumeRarReader(IEnumerable<Stream> streams, ReaderOptions options)
         : base(options) => this.streams = streams.GetEnumerator();
@@ -55,13 +53,13 @@ internal partial class MultiVolumeRarReader : RarReader
     {
         private readonly MultiVolumeRarReader reader;
         private readonly IEnumerator<Stream> nextReadableStreams;
-        private Stream tempStream;
+        private Stream? tempStream;
         private bool isFirst = true;
 
         internal MultiVolumeStreamEnumerator(
             MultiVolumeRarReader r,
             IEnumerator<Stream> nextReadableStreams,
-            Stream tempStream
+            Stream? tempStream
         )
         {
             reader = r;
@@ -73,7 +71,7 @@ internal partial class MultiVolumeRarReader : RarReader
 
         IEnumerator IEnumerable.GetEnumerator() => this;
 
-        public FilePart Current { get; private set; }
+        public FilePart Current { get; private set; } = null!;
 
         public void Dispose() { }
 

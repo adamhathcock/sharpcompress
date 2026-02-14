@@ -69,10 +69,10 @@ public class TarArchiveAsyncTests : ArchiveTests
 
             await foreach (var entry in archive2.EntriesAsync)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync()
-                );
+                using (var sr = new StreamReader(await entry.OpenEntryStreamAsync()))
+                {
+                    Assert.Equal("dummy filecontent", await sr.ReadLineAsync());
+                }
             }
         }
     }
@@ -127,10 +127,10 @@ public class TarArchiveAsyncTests : ArchiveTests
 
             await foreach (var entry in archive2.EntriesAsync)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    await new StreamReader(await entry.OpenEntryStreamAsync()).ReadLineAsync()
-                );
+                using (var sr = new StreamReader(await entry.OpenEntryStreamAsync()))
+                {
+                    Assert.Equal("dummy filecontent", await sr.ReadLineAsync());
+                }
             }
         }
 #if LEGACY_DOTNET

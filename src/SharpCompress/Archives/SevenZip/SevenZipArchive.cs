@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 

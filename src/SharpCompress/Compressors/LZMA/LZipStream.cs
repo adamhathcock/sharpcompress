@@ -100,6 +100,7 @@ public sealed partial class LZipStream : Stream, IFinishable
     {
         if (_disposed)
         {
+            base.Dispose(disposing);
             return;
         }
         _disposed = true;
@@ -112,6 +113,7 @@ public sealed partial class LZipStream : Stream, IFinishable
                 _originalStream?.Dispose();
             }
         }
+        base.Dispose(disposing);
     }
 
     public CompressionMode Mode { get; }

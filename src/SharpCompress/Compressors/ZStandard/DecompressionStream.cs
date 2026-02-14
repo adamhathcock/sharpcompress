@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.IO;
 using System.Threading;
@@ -90,6 +90,7 @@ public partial class DecompressionStream : Stream
     {
         if (decompressor == null)
         {
+            base.Dispose(disposing);
             return;
         }
 
@@ -108,6 +109,7 @@ public partial class DecompressionStream : Stream
         {
             innerStream.Dispose();
         }
+        base.Dispose(disposing);
     }
 
     public override int Read(byte[] buffer, int offset, int count) =>

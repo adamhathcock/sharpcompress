@@ -10,7 +10,6 @@ namespace SharpCompress.Compressors.Squeezed;
 public partial class SqueezeStream : Stream
 {
     private readonly Stream _stream;
-    private readonly int _compressedSize;
     private const int NUMVALS = 257;
     private const int SPEOF = 256;
 
@@ -19,7 +18,6 @@ public partial class SqueezeStream : Stream
     private SqueezeStream(Stream stream, int compressedSize)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-        _compressedSize = compressedSize;
     }
 
     public static SqueezeStream Create(Stream stream, int compressedSize)
@@ -63,43 +61,41 @@ public partial class SqueezeStream : Stream
 
     private Stream BuildDecodedStream()
     {
-        using (var binaryReader = new BinaryReader(_stream, Encoding.Default, leaveOpen: true))
+        using var binaryReader = new BinaryReader(_stream, Encoding.Default, leaveOpen: true);
+        int numnodes = binaryReader.ReadUInt16();
+
+        if (numnodes >= NUMVALS || numnodes == 0)
         {
-            int numnodes = binaryReader.ReadUInt16();
-
-            if (numnodes >= NUMVALS || numnodes == 0)
-            {
-                return new MemoryStream(Array.Empty<byte>());
-            }
-
-            var dnode = new int[numnodes, 2];
-            for (int j = 0; j < numnodes; j++)
-            {
-                dnode[j, 0] = binaryReader.ReadInt16();
-                dnode[j, 1] = binaryReader.ReadInt16();
-            }
-
-            var bitReader = new BitReader(_stream);
-            var huffmanDecoded = new MemoryStream();
-            int i = 0;
-
-            while (true)
-            {
-                i = dnode[i, bitReader.ReadBit() ? 1 : 0];
-                if (i < 0)
-                {
-                    i = -(i + 1);
-                    if (i == SPEOF)
-                    {
-                        break;
-                    }
-                    huffmanDecoded.WriteByte((byte)i);
-                    i = 0;
-                }
-            }
-
-            huffmanDecoded.Position = 0;
-            return new RunLength90Stream(huffmanDecoded, (int)huffmanDecoded.Length);
+            return new MemoryStream(Array.Empty<byte>());
         }
+
+        var dnode = new int[numnodes, 2];
+        for (int j = 0; j < numnodes; j++)
+        {
+            dnode[j, 0] = binaryReader.ReadInt16();
+            dnode[j, 1] = binaryReader.ReadInt16();
+        }
+
+        var bitReader = new BitReader(_stream);
+        var huffmanDecoded = new MemoryStream();
+        int i = 0;
+
+        while (true)
+        {
+            i = dnode[i, bitReader.ReadBit() ? 1 : 0];
+            if (i < 0)
+            {
+                i = -(i + 1);
+                if (i == SPEOF)
+                {
+                    break;
+                }
+                huffmanDecoded.WriteByte((byte)i);
+                i = 0;
+            }
+        }
+
+        huffmanDecoded.Position = 0;
+        return new RunLength90Stream(huffmanDecoded, (int)huffmanDecoded.Length);
     }
 }

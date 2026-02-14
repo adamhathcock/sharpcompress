@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -21,11 +20,7 @@ public static unsafe class UnsafeHelper
 #else
         var ptr = (void*)Marshal.AllocHGlobal((nint)size);
 #endif
-#if DEBUG
-        return PoisonMemory(ptr, size);
-#else
         return ptr;
-#endif
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,7 +80,6 @@ public static unsafe class UnsafeHelper
         return destination;
     }
 
-    [Conditional("DEBUG")]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void assert(bool condition, string? message = null)
     {

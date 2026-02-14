@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,7 +14,7 @@ namespace SharpCompress.Readers.Arj;
 internal class MultiVolumeArjReader : ArjReader
 {
     private readonly IEnumerator<Stream> streams;
-    private Stream tempStream;
+    private Stream? tempStream;
 
     internal MultiVolumeArjReader(IEnumerable<Stream> streams, ReaderOptions options)
         : base(options) => this.streams = streams.GetEnumerator();
@@ -55,13 +53,13 @@ internal class MultiVolumeArjReader : ArjReader
     {
         private readonly MultiVolumeArjReader reader;
         private readonly IEnumerator<Stream> nextReadableStreams;
-        private Stream tempStream;
+        private Stream? tempStream;
         private bool isFirst = true;
 
         internal MultiVolumeStreamEnumerator(
             MultiVolumeArjReader r,
             IEnumerator<Stream> nextReadableStreams,
-            Stream tempStream
+            Stream? tempStream
         )
         {
             reader = r;
@@ -73,7 +71,7 @@ internal class MultiVolumeArjReader : ArjReader
 
         IEnumerator IEnumerable.GetEnumerator() => this;
 
-        public FilePart Current { get; private set; }
+        public FilePart Current { get; private set; } = null!;
 
         public void Dispose() { }
 

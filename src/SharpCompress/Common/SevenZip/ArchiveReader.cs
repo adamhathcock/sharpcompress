@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,20 +5,22 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
+using BlockType = SharpCompress.Compressors.LZMA.Utilities.BlockType;
 
 namespace SharpCompress.Common.SevenZip;
 
 internal partial class ArchiveReader
 {
-    internal Stream _stream;
+    internal Stream _stream = null!;
     internal Stack<DataReader> _readerStack = new();
-    internal DataReader _currentReader;
+    internal DataReader _currentReader = null!;
     internal long _streamOrigin;
     internal long _streamEnding;
-    internal byte[] _header;
+    internal byte[] _header = null!;
 
     private readonly Dictionary<int, Stream> _cachedStreams = new();
 
@@ -54,9 +54,6 @@ internal partial class ArchiveReader
         {
             return null;
         }
-#if DEBUG
-        Log.WriteLine("ReadId: {0}", (BlockType)id);
-#endif
         return (BlockType)id;
     }
 
@@ -130,12 +127,12 @@ internal partial class ArchiveReader
         return ReadBitVector(length);
     }
 
-    private void ReadNumberVector(List<byte[]> dataVector, int numFiles, Action<int, long?> action)
+    private void ReadNumberVector(List<byte[]>? dataVector, int numFiles, Action<int, long?> action)
     {
         var defined = ReadOptionalBitVector(numFiles);
 
         using var streamSwitch = new CStreamSwitch();
-        streamSwitch.Set(this, dataVector);
+        streamSwitch.Set(this, dataVector ?? []);
 
         for (var i = 0; i < numFiles; i++)
         {
@@ -164,7 +161,7 @@ internal partial class ArchiveReader
     }
 
     private void ReadDateTimeVector(
-        List<byte[]> dataVector,
+        List<byte[]>? dataVector,
         int numFiles,
         Action<int, DateTime?> action
     ) =>
@@ -175,14 +172,14 @@ internal partial class ArchiveReader
         );
 
     private void ReadAttributeVector(
-        List<byte[]> dataVector,
+        List<byte[]>? dataVector,
         int numFiles,
         Action<int, uint?> action
     )
     {
         var boolVector = ReadOptionalBitVector(numFiles);
         using var streamSwitch = new CStreamSwitch();
-        streamSwitch.Set(this, dataVector);
+        streamSwitch.Set(this, dataVector ?? []);
         for (var i = 0; i < numFiles; i++)
         {
             if (boolVector[i])
@@ -202,25 +199,14 @@ internal partial class ArchiveReader
 
     private void GetNextFolderItem(CFolder folder)
     {
-#if DEBUG
-        Log.WriteLine("-- GetNextFolderItem --");
-        Log.PushIndent();
-#endif
         try
         {
             var numCoders = ReadNum();
-#if DEBUG
-            Log.WriteLine("NumCoders: " + numCoders);
-#endif
             folder._coders = new List<CCoderInfo>(numCoders);
             var numInStreams = 0;
             var numOutStreams = 0;
             for (var i = 0; i < numCoders; i++)
             {
-#if DEBUG
-                Log.WriteLine("-- Coder --");
-                Log.PushIndent();
-#endif
                 try
                 {
                     var coder = new CCoderInfo();
@@ -230,18 +216,6 @@ internal partial class ArchiveReader
                     var idSize = (mainByte & 0xF);
                     var longId = new byte[idSize];
                     ReadBytes(longId, 0, idSize);
-#if DEBUG
-                    Log.WriteLine(
-                        "MethodId: "
-                            + string.Join(
-                                "",
-                                Enumerable
-                                    .Range(0, idSize)
-                                    .Select(x => longId[x].ToString("x2"))
-                                    .ToArray()
-                            )
-                    );
-#endif
                     if (idSize > 8)
                     {
                         throw new NotSupportedException();
@@ -257,21 +231,9 @@ internal partial class ArchiveReader
                     {
                         coder._numInStreams = ReadNum();
                         coder._numOutStreams = ReadNum();
-#if DEBUG
-                        Log.WriteLine(
-                            "Complex Stream (In: "
-                                + coder._numInStreams
-                                + " - Out: "
-                                + coder._numOutStreams
-                                + ")"
-                        );
-#endif
                     }
                     else
                     {
-#if DEBUG
-                        Log.WriteLine("Simple Stream (In: 1 - Out: 1)");
-#endif
                         coder._numInStreams = 1;
                         coder._numOutStreams = 1;
                     }
@@ -281,15 +243,6 @@ internal partial class ArchiveReader
                         var propsSize = ReadNum();
                         coder._props = new byte[propsSize];
                         ReadBytes(coder._props, 0, propsSize);
-#if DEBUG
-                        Log.WriteLine(
-                            "Settings: "
-                                + string.Join(
-                                    "",
-                                    coder._props.Select(bt => bt.ToString("x2")).ToArray()
-                                )
-                        );
-#endif
                     }
 
                     if ((mainByte & 0x80) != 0)
@@ -300,33 +253,18 @@ internal partial class ArchiveReader
                     numInStreams += coder._numInStreams;
                     numOutStreams += coder._numOutStreams;
                 }
-                finally
-                {
-#if DEBUG
-                    Log.PopIndent();
-#endif
-                }
+                finally { }
             }
 
             var numBindPairs = numOutStreams - 1;
             folder._bindPairs = new List<CBindPair>(numBindPairs);
-#if DEBUG
-            Log.WriteLine("BindPairs: " + numBindPairs);
-            Log.PushIndent();
-#endif
             for (var i = 0; i < numBindPairs; i++)
             {
                 var bp = new CBindPair();
                 bp._inIndex = ReadNum();
                 bp._outIndex = ReadNum();
                 folder._bindPairs.Add(bp);
-#if DEBUG
-                Log.WriteLine("#" + i + " - In: " + bp._inIndex + " - Out: " + bp._outIndex);
-#endif
             }
-#if DEBUG
-            Log.PopIndent();
-#endif
 
             if (numInStreams < numBindPairs)
             {
@@ -342,9 +280,6 @@ internal partial class ArchiveReader
                 {
                     if (folder.FindBindPairForInStream(i) < 0)
                     {
-#if DEBUG
-                        Log.WriteLine("Single PackStream: #" + i);
-#endif
                         folder._packStreams.Add(i);
                         break;
                     }
@@ -357,37 +292,18 @@ internal partial class ArchiveReader
             }
             else
             {
-#if DEBUG
-                Log.WriteLine("Multiple PackStreams ...");
-                Log.PushIndent();
-#endif
                 for (var i = 0; i < numPackStreams; i++)
                 {
                     var num = ReadNum();
-#if DEBUG
-                    Log.WriteLine("#" + i + " - " + num);
-#endif
                     folder._packStreams.Add(num);
                 }
-#if DEBUG
-                Log.PopIndent();
-#endif
             }
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
     private List<uint?> ReadHashDigests(int count)
     {
-#if DEBUG
-        Log.Write("ReadHashDigests:");
-#endif
-
         var defined = ReadOptionalBitVector(count);
         var digests = new List<uint?>(count);
         for (var i = 0; i < count; i++)
@@ -395,23 +311,13 @@ internal partial class ArchiveReader
             if (defined[i])
             {
                 var crc = ReadUInt32();
-#if DEBUG
-                Log.Write("  " + crc.ToString("x8"));
-#endif
                 digests.Add(crc);
             }
             else
             {
-#if DEBUG
-                Log.Write("  ########");
-#endif
                 digests.Add(null);
             }
         }
-#if DEBUG
-
-        Log.WriteLine();
-#endif
         return digests;
     }
 
@@ -421,40 +327,21 @@ internal partial class ArchiveReader
         out List<uint?> packCrCs
     )
     {
-#if DEBUG
-        Log.WriteLine("-- ReadPackInfo --");
-        Log.PushIndent();
-#endif
         try
         {
-            packCrCs = null;
+            packCrCs = null!;
 
             dataOffset = checked((long)ReadNumber());
-#if DEBUG
-            Log.WriteLine("DataOffset: " + dataOffset);
-#endif
 
             var numPackStreams = ReadNum();
-#if DEBUG
-            Log.WriteLine("NumPackStreams: " + numPackStreams);
-#endif
 
             WaitAttribute(BlockType.Size);
             packSizes = new List<long>(numPackStreams);
-#if DEBUG
-            Log.Write("Sizes:");
-#endif
             for (var i = 0; i < numPackStreams; i++)
             {
                 var size = checked((long)ReadNumber());
-#if DEBUG
-                Log.Write("  " + size);
-#endif
                 packSizes.Add(size);
             }
-#if DEBUG
-            Log.WriteLine();
-#endif
 
             BlockType? type;
             for (; ; )
@@ -481,31 +368,19 @@ internal partial class ArchiveReader
                 }
             }
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
-    private void ReadUnpackInfo(List<byte[]> dataVector, out List<CFolder> folders)
+    private void ReadUnpackInfo(List<byte[]>? dataVector, out List<CFolder> folders)
     {
-#if DEBUG
-        Log.WriteLine("-- ReadUnpackInfo --");
-        Log.PushIndent();
-#endif
         try
         {
             WaitAttribute(BlockType.Folder);
             var numFolders = ReadNum();
-#if DEBUG
-            Log.WriteLine("NumFolders: {0}", numFolders);
-#endif
 
             using (var streamSwitch = new CStreamSwitch())
             {
-                streamSwitch.Set(this, dataVector);
+                streamSwitch.Set(this, dataVector ?? []);
 
                 //folders.Clear();
                 //folders.Reserve(numFolders);
@@ -521,27 +396,15 @@ internal partial class ArchiveReader
             }
 
             WaitAttribute(BlockType.CodersUnpackSize);
-#if DEBUG
-            Log.WriteLine("UnpackSizes:");
-#endif
             for (var i = 0; i < numFolders; i++)
             {
                 var folder = folders[i];
-#if DEBUG
-                Log.Write("  #" + i + ":");
-#endif
                 var numOutStreams = folder.GetNumOutStreams();
                 for (var j = 0; j < numOutStreams; j++)
                 {
                     var size = checked((long)ReadNumber());
-#if DEBUG
-                    Log.Write("  " + size);
-#endif
                     folder._unpackSizes.Add(size);
                 }
-#if DEBUG
-                Log.WriteLine();
-#endif
             }
 
             for (; ; )
@@ -565,12 +428,7 @@ internal partial class ArchiveReader
                 SkipData();
             }
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
     private void ReadSubStreamsInfo(
@@ -580,13 +438,9 @@ internal partial class ArchiveReader
         out List<uint?> digests
     )
     {
-#if DEBUG
-        Log.WriteLine("-- ReadSubStreamsInfo --");
-        Log.PushIndent();
-#endif
         try
         {
-            numUnpackStreamsInFolders = null;
+            numUnpackStreamsInFolders = null!;
 
             BlockType? type;
             for (; ; )
@@ -595,20 +449,11 @@ internal partial class ArchiveReader
                 if (type == BlockType.NumUnpackStream)
                 {
                     numUnpackStreamsInFolders = new List<int>(folders.Count);
-#if DEBUG
-                    Log.Write("NumUnpackStreams:");
-#endif
                     for (var i = 0; i < folders.Count; i++)
                     {
                         var num = ReadNum();
-#if DEBUG
-                        Log.Write("  " + num);
-#endif
                         numUnpackStreamsInFolders.Add(num);
                     }
-#if DEBUG
-                    Log.WriteLine();
-#endif
                     continue;
                 }
                 if (type is BlockType.Crc or BlockType.Size)
@@ -641,26 +486,17 @@ internal partial class ArchiveReader
                 {
                     continue;
                 }
-#if DEBUG
-                Log.Write("#{0} StreamSizes:", i);
-#endif
                 long sum = 0;
                 for (var j = 1; j < numSubstreams; j++)
                 {
                     if (type == BlockType.Size)
                     {
                         var size = checked((long)ReadNumber());
-#if DEBUG
-                        Log.Write("  " + size);
-#endif
                         unpackSizes.Add(size);
                         sum += size;
                     }
                 }
                 unpackSizes.Add(folders[i].GetUnpackSize() - sum);
-#if DEBUG
-                Log.WriteLine("  -  rest: " + unpackSizes.Last());
-#endif
             }
             if (type == BlockType.Size)
             {
@@ -679,7 +515,7 @@ internal partial class ArchiveReader
                 numDigestsTotal += numSubstreams;
             }
 
-            digests = null;
+            digests = null!;
 
             for (; ; )
             {
@@ -696,7 +532,7 @@ internal partial class ArchiveReader
                         var folder = folders[i];
                         if (numSubstreams == 1 && folder.UnpackCrcDefined)
                         {
-                            digests.Add(folder._unpackCrc.Value);
+                            digests.Add(folder._unpackCrc!.Value);
                         }
                         else
                         {
@@ -732,16 +568,11 @@ internal partial class ArchiveReader
                 type = ReadId();
             }
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
     private void ReadStreamsInfo(
-        List<byte[]> dataVector,
+        List<byte[]>? dataVector,
         out long dataOffset,
         out List<long> packSizes,
         out List<uint?> packCrCs,
@@ -751,19 +582,15 @@ internal partial class ArchiveReader
         out List<uint?> digests
     )
     {
-#if DEBUG
-        Log.WriteLine("-- ReadStreamsInfo --");
-        Log.PushIndent();
-#endif
         try
         {
             dataOffset = long.MinValue;
-            packSizes = null;
-            packCrCs = null;
-            folders = null;
-            numUnpackStreamsInFolders = null;
-            unpackSizes = null;
-            digests = null;
+            packSizes = null!;
+            packCrCs = null!;
+            folders = null!;
+            numUnpackStreamsInFolders = null!;
+            unpackSizes = null!;
+            digests = null!;
 
             for (; ; )
             {
@@ -779,7 +606,7 @@ internal partial class ArchiveReader
                         break;
                     case BlockType.SubStreamsInfo:
                         ReadSubStreamsInfo(
-                            folders,
+                            folders!,
                             out numUnpackStreamsInFolders,
                             out unpackSizes,
                             out digests
@@ -790,20 +617,11 @@ internal partial class ArchiveReader
                 }
             }
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
     private List<byte[]> ReadAndDecodePackedStreams(long baseOffset, IPasswordProvider pass)
     {
-#if DEBUG
-        Log.WriteLine("-- ReadAndDecodePackedStreams --");
-        Log.PushIndent();
-#endif
         try
         {
             ReadStreamsInfo(
@@ -864,20 +682,11 @@ internal partial class ArchiveReader
             }
             return dataVector;
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
     private void ReadHeader(ArchiveDatabase db, IPasswordProvider getTextPassword)
     {
-#if DEBUG
-        Log.WriteLine("-- ReadHeader --");
-        Log.PushIndent();
-#endif
         try
         {
             var type = ReadId();
@@ -888,7 +697,7 @@ internal partial class ArchiveReader
                 type = ReadId();
             }
 
-            List<byte[]> dataVector = null;
+            List<byte[]>? dataVector = null;
             if (type == BlockType.AdditionalStreamsInfo)
             {
                 dataVector = ReadAndDecodePackedStreams(
@@ -944,9 +753,6 @@ internal partial class ArchiveReader
             }
 
             var numFiles = ReadNum();
-#if DEBUG
-            Log.WriteLine("NumFiles: " + numFiles);
-#endif
             db._files = new List<CFileItem>(numFiles);
             for (var i = 0; i < numFiles; i++)
             {
@@ -954,8 +760,8 @@ internal partial class ArchiveReader
             }
 
             var emptyStreamVector = new BitVector(numFiles);
-            BitVector emptyFileVector = null;
-            BitVector antiFileVector = null;
+            BitVector emptyFileVector = null!;
+            BitVector antiFileVector = null!;
             var numEmptyStreams = 0;
 
             for (; ; )
@@ -973,26 +779,14 @@ internal partial class ArchiveReader
                     case BlockType.Name:
                         using (var streamSwitch = new CStreamSwitch())
                         {
-                            streamSwitch.Set(this, dataVector);
-#if DEBUG
-                            Log.Write("FileNames:");
-#endif
+                            streamSwitch.Set(this, dataVector ?? []);
                             for (var i = 0; i < db._files.Count; i++)
                             {
                                 db._files[i].Name = _currentReader.ReadString();
-#if DEBUG
-                                Log.Write("  " + db._files[i].Name);
-#endif
                             }
-#if DEBUG
-                            Log.WriteLine();
-#endif
                         }
                         break;
                     case BlockType.WinAttributes:
-#if DEBUG
-                        Log.Write("WinAttributes:");
-#endif
                         ReadAttributeVector(
                             dataVector,
                             numFiles,
@@ -1026,150 +820,70 @@ internal partial class ArchiveReader
                                 }
 
                                 db._files[i].Attrib = attr;
-#if DEBUG
-                                Log.Write(
-                                    "  " + (attr.HasValue ? attr.Value.ToString("x8") : "n/a")
-                                );
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.EmptyStream:
                         emptyStreamVector = ReadBitVector(numFiles);
-#if DEBUG
-
-                        Log.Write("EmptyStream: ");
-#endif
                         for (var i = 0; i < emptyStreamVector.Length; i++)
                         {
                             if (emptyStreamVector[i])
                             {
-#if DEBUG
-                                Log.Write("x");
-#endif
                                 numEmptyStreams++;
                             }
-                            else
-                            {
-#if DEBUG
-                                Log.Write(".");
-#endif
-                            }
+                            else { }
                         }
-#if DEBUG
-                        Log.WriteLine();
-#endif
 
                         emptyFileVector = new BitVector(numEmptyStreams);
                         antiFileVector = new BitVector(numEmptyStreams);
                         break;
                     case BlockType.EmptyFile:
                         emptyFileVector = ReadBitVector(numEmptyStreams);
-#if DEBUG
-                        Log.Write("EmptyFile: ");
-                        for (var i = 0; i < numEmptyStreams; i++)
-                        {
-                            Log.Write(emptyFileVector[i] ? "x" : ".");
-                        }
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.Anti:
                         antiFileVector = ReadBitVector(numEmptyStreams);
-#if DEBUG
-                        Log.Write("Anti: ");
-                        for (var i = 0; i < numEmptyStreams; i++)
-                        {
-                            Log.Write(antiFileVector[i] ? "x" : ".");
-                        }
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.StartPos:
-#if DEBUG
-                        Log.Write("StartPos:");
-#endif
                         ReadNumberVector(
                             dataVector,
                             numFiles,
                             delegate(int i, long? startPos)
                             {
                                 db._files[i].StartPos = startPos;
-#if DEBUG
-                                Log.Write(
-                                    "  " + (startPos.HasValue ? startPos.Value.ToString() : "n/a")
-                                );
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.CTime:
-#if DEBUG
-                        Log.Write("CTime:");
-#endif
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
                             delegate(int i, DateTime? time)
                             {
                                 db._files[i].CTime = time;
-#if DEBUG
-                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.ATime:
-#if DEBUG
-                        Log.Write("ATime:");
-#endif
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
                             delegate(int i, DateTime? time)
                             {
                                 db._files[i].ATime = time;
-#if DEBUG
-                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.MTime:
-#if DEBUG
-                        Log.Write("MTime:");
-#endif
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
                             delegate(int i, DateTime? time)
                             {
                                 db._files[i].MTime = time;
-#if DEBUG
-                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.Dummy:
-#if DEBUG
-                        Log.Write("Dummy: " + size);
-#endif
                         for (long j = 0; j < size; j++)
                         {
                             if (ReadByte() != 0)
@@ -1215,12 +929,7 @@ internal partial class ArchiveReader
                 }
             }
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
     #endregion
@@ -1445,7 +1154,7 @@ internal partial class ArchiveReader
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        private Stream _stream;
+        private Stream? _stream;
         private long _rem;
         private int _currentIndex;
 
@@ -1457,7 +1166,7 @@ internal partial class ArchiveReader
             )
             {
                 OpenFile();
-                _stream.Dispose();
+                _stream.NotNull().Dispose();
                 _stream = null;
                 _currentIndex++;
             }
@@ -1466,12 +1175,10 @@ internal partial class ArchiveReader
         private void OpenFile()
         {
             var index = _startIndex + _currentIndex;
-#if DEBUG
-            Log.WriteLine(_db._files[index].Name);
-#endif
-            if (_db._files[index].Crc.HasValue)
+            var crc = _db._files[index].Crc;
+            if (crc.HasValue)
             {
-                _stream = new CrcCheckStream(_db._files[index].Crc.Value);
+                _stream = new CrcCheckStream(crc.Value);
             }
             else
             {
@@ -1568,11 +1275,10 @@ internal partial class ArchiveReader
         return new ReadOnlySubStream(s, db._files[fileIndex].Size);
     }
 
-    public void Extract(ArchiveDatabase db, int[] indices)
+    public void Extract(ArchiveDatabase db, int[]? indices)
     {
-        var allFilesMode = (indices is null);
-
-        var numItems = allFilesMode ? db._files.Count : indices.Length;
+        var allFilesMode = indices is null;
+        var numItems = allFilesMode ? db._files.Count : indices!.Length;
 
         if (numItems == 0)
         {
@@ -1582,7 +1288,7 @@ internal partial class ArchiveReader
         var extractFolderInfoVector = new List<CExtractFolderInfo>();
         for (var i = 0; i < numItems; i++)
         {
-            var fileIndex = allFilesMode ? i : indices[i];
+            var fileIndex = allFilesMode ? i : indices![i];
 
             var folderIndex = db._fileIndexToFolderIndexMap[fileIndex];
             if (folderIndex == -1)
@@ -1608,7 +1314,7 @@ internal partial class ArchiveReader
             }
         }
 
-        byte[] buffer = null;
+        byte[] buffer = null!;
         foreach (var efi in extractFolderInfoVector)
         {
             int startIndex;

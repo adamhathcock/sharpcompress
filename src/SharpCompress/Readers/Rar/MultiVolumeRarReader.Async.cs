@@ -1,5 +1,3 @@
-#nullable disable
-
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -26,13 +24,13 @@ internal partial class MultiVolumeRarReader : RarReader
     {
         private readonly MultiVolumeRarReader reader;
         private readonly IEnumerator<Stream> nextReadableStreams;
-        private Stream tempStream;
+        private Stream? tempStream;
         private bool isFirst = true;
 
         internal MultiVolumeStreamAsyncEnumerator(
             MultiVolumeRarReader r,
             IEnumerator<Stream> nextReadableStreams,
-            Stream tempStream
+            Stream? tempStream
         )
         {
             reader = r;
@@ -40,7 +38,7 @@ internal partial class MultiVolumeRarReader : RarReader
             this.tempStream = tempStream;
         }
 
-        public FilePart Current { get; private set; }
+        public FilePart Current { get; private set; } = null!;
 
         public async ValueTask<bool> MoveNextAsync()
         {

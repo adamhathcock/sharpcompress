@@ -43,7 +43,10 @@ public class SharpCompressStreamSeekTest
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 _baseStream.Dispose();
+            }
+
             base.Dispose(disposing);
         }
     }

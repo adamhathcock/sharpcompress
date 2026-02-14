@@ -140,7 +140,7 @@ public abstract class RarVolume : Volume
             }
 
             // we only want to load the archive header to avoid overhead but have to do the nasty thing and reset the stream
-            GetVolumeFileParts().First();
+            _ = GetVolumeFileParts().First();
             Stream.Position = 0;
         }
     }

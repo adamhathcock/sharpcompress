@@ -1,13 +1,13 @@
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Compressors.Deflate64;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
+using BlockType = SharpCompress.Compressors.LZMA.Utilities.BlockType;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -167,10 +167,6 @@ internal sealed partial class ArchiveReader
         CancellationToken cancellationToken
     )
     {
-#if DEBUG
-        Log.WriteLine("-- ReadAndDecodePackedStreamsAsync --");
-        Log.PushIndent();
-#endif
         try
         {
             ReadStreamsInfo(
@@ -236,12 +232,7 @@ internal sealed partial class ArchiveReader
             }
             return dataVector;
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 
     private async ValueTask ReadHeaderAsync(
@@ -250,10 +241,6 @@ internal sealed partial class ArchiveReader
         CancellationToken cancellationToken
     )
     {
-#if DEBUG
-        Log.WriteLine("-- ReadHeaderAsync --");
-        Log.PushIndent();
-#endif
         try
         {
             var type = ReadId();
@@ -264,7 +251,7 @@ internal sealed partial class ArchiveReader
                 type = ReadId();
             }
 
-            List<byte[]> dataVector = null;
+            List<byte[]>? dataVector = null;
             if (type == BlockType.AdditionalStreamsInfo)
             {
                 dataVector = await ReadAndDecodePackedStreamsAsync(
@@ -322,9 +309,6 @@ internal sealed partial class ArchiveReader
             }
 
             var numFiles = ReadNum();
-#if DEBUG
-            Log.WriteLine("NumFiles: " + numFiles);
-#endif
             db._files = new List<CFileItem>(numFiles);
             for (var i = 0; i < numFiles; i++)
             {
@@ -332,8 +316,8 @@ internal sealed partial class ArchiveReader
             }
 
             var emptyStreamVector = new BitVector(numFiles);
-            BitVector emptyFileVector = null;
-            BitVector antiFileVector = null;
+            BitVector emptyFileVector = null!;
+            BitVector antiFileVector = null!;
             var numEmptyStreams = 0;
 
             for (; ; )
@@ -351,26 +335,14 @@ internal sealed partial class ArchiveReader
                     case BlockType.Name:
                         using (var streamSwitch = new CStreamSwitch())
                         {
-                            streamSwitch.Set(this, dataVector);
-#if DEBUG
-                            Log.Write("FileNames:");
-#endif
+                            streamSwitch.Set(this, dataVector ?? []);
                             for (var i = 0; i < db._files.Count; i++)
                             {
                                 db._files[i].Name = _currentReader.ReadString();
-#if DEBUG
-                                Log.Write("  " + db._files[i].Name);
-#endif
                             }
-#if DEBUG
-                            Log.WriteLine();
-#endif
                         }
                         break;
                     case BlockType.WinAttributes:
-#if DEBUG
-                        Log.Write("WinAttributes:");
-#endif
                         ReadAttributeVector(
                             dataVector,
                             numFiles,
@@ -384,150 +356,70 @@ internal sealed partial class ArchiveReader
                                 }
 
                                 db._files[i].Attrib = attr;
-#if DEBUG
-                                Log.Write(
-                                    "  " + (attr.HasValue ? attr.Value.ToString("x8") : "n/a")
-                                );
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.EmptyStream:
                         emptyStreamVector = ReadBitVector(numFiles);
-#if DEBUG
-
-                        Log.Write("EmptyStream: ");
-#endif
                         for (var i = 0; i < emptyStreamVector.Length; i++)
                         {
                             if (emptyStreamVector[i])
                             {
-#if DEBUG
-                                Log.Write("x");
-#endif
                                 numEmptyStreams++;
                             }
-                            else
-                            {
-#if DEBUG
-                                Log.Write(".");
-#endif
-                            }
+                            else { }
                         }
-#if DEBUG
-                        Log.WriteLine();
-#endif
 
                         emptyFileVector = new BitVector(numEmptyStreams);
                         antiFileVector = new BitVector(numEmptyStreams);
                         break;
                     case BlockType.EmptyFile:
                         emptyFileVector = ReadBitVector(numEmptyStreams);
-#if DEBUG
-                        Log.Write("EmptyFile: ");
-                        for (var i = 0; i < numEmptyStreams; i++)
-                        {
-                            Log.Write(emptyFileVector[i] ? "x" : ".");
-                        }
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.Anti:
                         antiFileVector = ReadBitVector(numEmptyStreams);
-#if DEBUG
-                        Log.Write("Anti: ");
-                        for (var i = 0; i < numEmptyStreams; i++)
-                        {
-                            Log.Write(antiFileVector[i] ? "x" : ".");
-                        }
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.StartPos:
-#if DEBUG
-                        Log.Write("StartPos:");
-#endif
                         ReadNumberVector(
                             dataVector,
                             numFiles,
                             delegate(int i, long? startPos)
                             {
                                 db._files[i].StartPos = startPos;
-#if DEBUG
-                                Log.Write(
-                                    "  " + (startPos.HasValue ? startPos.Value.ToString() : "n/a")
-                                );
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.CTime:
-#if DEBUG
-                        Log.Write("CTime:");
-#endif
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
                             delegate(int i, DateTime? time)
                             {
                                 db._files[i].CTime = time;
-#if DEBUG
-                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.ATime:
-#if DEBUG
-                        Log.Write("ATime:");
-#endif
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
                             delegate(int i, DateTime? time)
                             {
                                 db._files[i].ATime = time;
-#if DEBUG
-                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.MTime:
-#if DEBUG
-                        Log.Write("MTime:");
-#endif
                         ReadDateTimeVector(
                             dataVector,
                             numFiles,
                             delegate(int i, DateTime? time)
                             {
                                 db._files[i].MTime = time;
-#if DEBUG
-                                Log.Write("  " + (time.HasValue ? time.Value.ToString() : "n/a"));
-#endif
                             }
                         );
-#if DEBUG
-                        Log.WriteLine();
-#endif
                         break;
                     case BlockType.Dummy:
-#if DEBUG
-                        Log.Write("Dummy: " + size);
-#endif
                         for (long j = 0; j < size; j++)
                         {
                             if (ReadByte() != 0)
@@ -572,11 +464,6 @@ internal sealed partial class ArchiveReader
                 }
             }
         }
-        finally
-        {
-#if DEBUG
-            Log.PopIndent();
-#endif
-        }
+        finally { }
     }
 }

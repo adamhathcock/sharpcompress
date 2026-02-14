@@ -79,7 +79,7 @@ internal partial class FileHeader
         CompressionMethod = (byte)((compressionInfo >> 7) & 0x7);
         WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo >> 10) & 0xf);
 
-        HostOs = await reader
+        _ = await reader
             .ReadRarVIntByteAsync(cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
@@ -222,7 +222,7 @@ internal partial class FileHeader
             .ReadUInt32Async(cancellationToken)
             .ConfigureAwait(false);
 
-        HostOs = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+        _ = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
 
         FileCrc = await reader.ReadBytesAsync(4, cancellationToken).ConfigureAwait(false);
 

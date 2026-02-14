@@ -1,65 +1,29 @@
 using System;
 using System.Buffers;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SharpCompress.Compressors.LZMA.Utilites;
+namespace SharpCompress.Compressors.LZMA.Utilities;
 
 [CLSCompliant(false)]
-public class CrcCheckStream : Stream
+public class CrcCheckStream(uint crc) : Stream
 {
-    private readonly uint _mExpectedCrc;
-    private uint _mCurrentCrc;
+    private uint _mCurrentCrc = Crc.INIT_CRC;
     private bool _mClosed;
 
     private readonly long[] _mBytes = ArrayPool<long>.Shared.Rent(256);
-    private long _mLength;
-
-    public CrcCheckStream(uint crc)
-    {
-        _mExpectedCrc = crc;
-        _mCurrentCrc = Crc.INIT_CRC;
-    }
 
     protected override void Dispose(bool disposing)
     {
-        //Nanook - is not equal here - _mCurrentCrc is yet to be negated
-        //if (_mCurrentCrc != _mExpectedCrc)
-        //{
-        //    throw new InvalidOperationException();
-        //}
         try
         {
             if (disposing && !_mClosed)
             {
                 _mClosed = true;
                 _mCurrentCrc = Crc.Finish(_mCurrentCrc); //now becomes equal
-#if DEBUG
-                if (_mCurrentCrc == _mExpectedCrc)
-                {
-                    Debug.WriteLine("CRC ok: " + _mExpectedCrc.ToString("x8"));
-                }
-                else
-                {
-                    Debugger.Break();
-                    Debug.WriteLine("bad CRC");
-                }
 
-                var lengthInv = 1.0 / _mLength;
-                double entropy = 0;
-                for (var i = 0; i < 256; i++)
-                {
-                    if (_mBytes[i] != 0)
-                    {
-                        var p = lengthInv * _mBytes[i];
-                        entropy -= p * Math.Log(p, 256);
-                    }
-                }
-                Debug.WriteLine("entropy: " + (int)(entropy * 100) + "%");
-#endif
-                if (_mCurrentCrc != _mExpectedCrc) //moved test to here
+                if (_mCurrentCrc != crc) //moved test to here
                 {
                     throw new InvalidOperationException();
                 }
@@ -97,7 +61,6 @@ public class CrcCheckStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        _mLength += count;
         for (var i = 0; i < count; i++)
         {
             _mBytes[buffer[offset + i]]++;

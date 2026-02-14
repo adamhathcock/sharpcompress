@@ -33,7 +33,9 @@ public partial class XZIndex
             await VerifyIndexMarkerAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        NumberOfRecords = await _reader.ReadXZIntegerAsync(cancellationToken).ConfigureAwait(false);
+        NumberOfRecords = await _reader
+            .ReadXZIntegerAsync(cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
         for (ulong i = 0; i < NumberOfRecords; i++)
         {
             Records.Add(

@@ -1,11 +1,12 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.Arj;
 
-public sealed partial class LhaStream<C>
+public sealed partial class LhaStream<TDecoderConfig>
 {
     public override async Task<int> ReadAsync(
         byte[] buffer,
@@ -20,7 +21,7 @@ public sealed partial class LhaStream<C>
         }
         if (offset < 0 || count < 0 || (offset + count) > buffer.Length)
         {
-            throw new ArgumentOutOfRangeException();
+            throw new ArgumentOutOfRangeException(nameof(offset));
         }
 
         if (_producedBytes >= _originalSize)
@@ -116,7 +117,7 @@ public sealed partial class LhaStream<C>
 
         if (numCodes > NUM_TEMP_CODELEN)
         {
-            throw new Exception("temporary codelen table has invalid size");
+            throw new InvalidDataException("temporary codelen table has invalid size");
         }
 
         // read actual lengths
@@ -132,7 +133,7 @@ public sealed partial class LhaStream<C>
 
         if (3 + skip > numCodes)
         {
-            throw new Exception("temporary codelen table has invalid size");
+            throw new InvalidDataException("temporary codelen table has invalid size");
         }
 
         for (int i = 3 + skip; i < numCodes; i++)
@@ -161,7 +162,7 @@ public sealed partial class LhaStream<C>
 
         if (numCodes > NUM_COMMANDS)
         {
-            throw new Exception("commands codelen table has invalid size");
+            throw new InvalidDataException("commands codelen table has invalid size");
         }
 
         int index = 0;

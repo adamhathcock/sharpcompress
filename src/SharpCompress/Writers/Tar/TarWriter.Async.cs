@@ -29,7 +29,7 @@ public partial class TarWriter
         header.Name = normalizedName;
         header.Size = 0;
         header.EntryType = EntryType.Directory;
-        await header.WriteAsync(OutputStream, cancellationToken).ConfigureAwait(false);
+        await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -67,10 +67,10 @@ public partial class TarWriter
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
-        await header.WriteAsync(OutputStream, cancellationToken).ConfigureAwait(false);
+        await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
         var progressStream = WrapWithProgress(source, filename);
         var written = await progressStream
-            .TransferToAsync(OutputStream, realSize, cancellationToken)
+            .TransferToAsync(OutputStream.NotNull(), realSize, cancellationToken)
             .ConfigureAwait(false);
         await PadTo512Async(written, cancellationToken).ConfigureAwait(false);
     }
@@ -81,6 +81,7 @@ public partial class TarWriter
         if (zeros > 0)
         {
             await OutputStream
+                .NotNull()
                 .WriteAsync(new byte[zeros], 0, zeros, cancellationToken)
                 .ConfigureAwait(false);
         }

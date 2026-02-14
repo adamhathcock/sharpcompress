@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 
 namespace SharpCompress.Compressors.Xz;
@@ -9,7 +7,7 @@ public static class Crc64
 {
     public const ulong DefaultSeed = 0x0;
 
-    internal static ulong[] Table;
+    internal static ulong[]? Table;
 
     public const ulong Iso3309Polynomial = 0xD800000000000000;
 
