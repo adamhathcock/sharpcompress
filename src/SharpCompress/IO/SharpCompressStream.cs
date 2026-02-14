@@ -4,7 +4,19 @@ using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-internal partial class SharpCompressStream : Stream, IStreamStack
+/// <summary>
+/// Stream wrapper that provides optional ring-buffered reading for non-seekable
+/// or forward-only streams, enabling limited backward seeking required by some
+/// decompressors and archive formats.
+/// </summary>
+/// <remarks>
+/// In most cases, callers should obtain an instance via the static
+/// <c>SharpCompressStream.Create(...)</c> methods rather than constructing this
+/// class directly. The <c>Create</c> methods select an appropriate configuration
+/// (such as passthrough vs buffered mode and buffer size) for the underlying
+/// stream and usage scenario.
+/// </remarks>
+public partial class SharpCompressStream : Stream, IStreamStack
 {
     public virtual Stream BaseStream() => stream;
 
