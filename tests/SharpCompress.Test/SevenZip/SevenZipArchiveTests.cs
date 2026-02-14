@@ -344,4 +344,39 @@ public class SevenZipArchiveTests : ArchiveTests
         // The critical check: within a single folder, the stream should NEVER be recreated
         Assert.Equal(0, streamRecreationsWithinFolder); // Folder stream should remain the same for all entries in the same folder
     }
+
+    [Fact]
+    public void SevenZipArchive_EmptyStream_WriteToDirectory()
+    {
+        // This test specifically verifies that archives with empty-stream entries
+        // (files with size 0 and no compressed data) can be extracted without throwing
+        // NullReferenceException. This was previously failing because the folder was null
+        // for empty-stream entries.
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.EmptyStream.7z");
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
+
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.IsDirectory)
+            {
+                // This should not throw NullReferenceException
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
+            }
+        }
+
+        // Verify that empty files were created
+        var extractedFiles = Directory.GetFiles(
+            SCRATCH_FILES_PATH,
+            "*",
+            SearchOption.AllDirectories
+        );
+        Assert.NotEmpty(extractedFiles);
+
+        // All extracted files should be empty (0 bytes)
+        foreach (var file in extractedFiles)
+        {
+            var fileInfo = new FileInfo(file);
+            Assert.Equal(0, fileInfo.Length);
+        }
+    }
 }
