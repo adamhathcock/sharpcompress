@@ -162,6 +162,15 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 return CreateEntryStream(Stream.Null);
             }
 
+            // 7z may contain valid "empty stream" file entries (HasStream == false).
+            // These entries represent zero-byte files and do not have folder mapping.
+            // Returning Stream.Null keeps extraction behavior correct and avoids
+            // null-folder dereference when requesting a folder stream.
+            if (!entry.FilePart.Header.HasStream)
+            {
+                return CreateEntryStream(Stream.Null);
+            }
+
             var folder = entry.FilePart.Folder;
 
             // Check if we're starting a new folder - dispose old folder stream if needed

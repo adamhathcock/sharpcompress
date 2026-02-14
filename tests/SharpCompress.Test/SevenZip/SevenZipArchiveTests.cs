@@ -133,6 +133,33 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_Copy_PathRead() => ArchiveFileRead("7Zip.Copy.7z");
 
     [Fact]
+    public void SevenZipArchive_EmptyStream_WriteToDirectory_DoesNotThrow()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.EmptyStream.7z");
+        var outputPath = Path.Combine(
+            SCRATCH_FILES_PATH,
+            nameof(SevenZipArchive_EmptyStream_WriteToDirectory_DoesNotThrow));
+
+        if (Directory.Exists(outputPath))
+        {
+            Directory.Delete(outputPath, true);
+        }
+
+        Directory.CreateDirectory(outputPath);
+
+        using var archive = SevenZipArchive.OpenArchive(archivePath);
+        var progress = new Progress<ProgressReport>(_ => { });
+
+        var ex = Record.Exception(() => archive.WriteToDirectory(outputPath, progress));
+
+        Assert.Null(ex);
+
+        var files = Directory.GetFiles(outputPath, "*", SearchOption.AllDirectories);
+        Assert.NotEmpty(files);
+        Assert.Contains(files, p => new FileInfo(p).Length == 0);
+    }
+
+    [Fact]
     public void SevenZipArchive_Copy_CompressionType()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Copy.7z")))
