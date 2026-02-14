@@ -36,7 +36,9 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
     public async Task SevenZipLzmaExtractAsync()
     {
         using var stream = new MemoryStream(_lzmaBytes);
-        await using var archive = SevenZipArchive.OpenAsyncArchive(stream);
+        await using var archive = await SevenZipArchive
+            .OpenAsyncArchive(stream)
+            .ConfigureAwait(false);
         await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
@@ -60,7 +62,9 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
     public async Task SevenZipLzma2ExtractAsync()
     {
         using var stream = new MemoryStream(_lzma2Bytes);
-        await using var archive = SevenZipArchive.OpenAsyncArchive(stream);
+        await using var archive = await SevenZipArchive
+            .OpenAsyncArchive(stream)
+            .ConfigureAwait(false);
         await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
@@ -85,7 +89,9 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
     public async Task SevenZipLzma2ExtractAsync_Reader()
     {
         using var stream = new MemoryStream(_lzma2Bytes);
-        await using var archive = SevenZipArchive.OpenAsyncArchive(stream);
+        await using var archive = await SevenZipArchive
+            .OpenAsyncArchive(stream)
+            .ConfigureAwait(false);
         await using var reader = await archive.ExtractAllEntriesAsync();
         while (await reader.MoveToNextEntryAsync().ConfigureAwait(false))
         {

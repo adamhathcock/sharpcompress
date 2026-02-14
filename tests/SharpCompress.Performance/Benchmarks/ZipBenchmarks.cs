@@ -39,7 +39,7 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
     public async Task ZipExtractArchiveApiAsync()
     {
         using var stream = new MemoryStream(_archiveBytes);
-        await using var archive = ZipArchive.OpenAsyncArchive(stream);
+        await using var archive = await ZipArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
         await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);

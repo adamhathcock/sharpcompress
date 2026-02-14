@@ -53,9 +53,9 @@ jobs:
         name: ${{ matrix.os }}-nuget-package
         path: artifacts/*.nupkg
     
-    # Push to NuGet.org using C# build target (Windows only, not on PRs)
+    # Push to NuGet.org only for version tag pushes (Windows only)
     - name: Push to NuGet
-      if: success() && matrix.os == 'windows-latest' && github.event_name != 'pull_request'
+      if: success() && matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
       run: dotnet run --project build/build.csproj -- push-to-nuget
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
