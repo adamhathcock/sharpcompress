@@ -60,10 +60,7 @@ public class ArchiveTests : ReaderTests
                         stream.ThrowOnDispose = false;
                         return;
                     }
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH);
-                    }
+                    WriteArchiveEntriesToDirectory(archive, SCRATCH_FILES_PATH);
                     stream.ThrowOnDispose = false;
                 }
                 catch (Exception)
@@ -146,10 +143,7 @@ public class ArchiveTests : ReaderTests
             {
                 try
                 {
-                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                    {
-                        entry.WriteToDirectory(SCRATCH_FILES_PATH);
-                    }
+                    WriteArchiveEntriesToDirectory(archive, SCRATCH_FILES_PATH);
                 }
                 catch (IndexOutOfRangeException)
                 {
@@ -184,10 +178,7 @@ public class ArchiveTests : ReaderTests
             )
         )
         {
-            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-            {
-                entry.WriteToDirectory(SCRATCH_FILES_PATH);
-            }
+            WriteArchiveEntriesToDirectory(archive, SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -213,10 +204,7 @@ public class ArchiveTests : ReaderTests
             )
         )
         {
-            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-            {
-                entry.WriteToDirectory(SCRATCH_FILES_PATH);
-            }
+            WriteArchiveEntriesToDirectory(archive, SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -285,10 +273,7 @@ public class ArchiveTests : ReaderTests
         ExtensionTest(testArchive, archiveFactory);
         using (var archive = archiveFactory.OpenArchive(new FileInfo(testArchive), readerOptions))
         {
-            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-            {
-                entry.WriteToDirectory(SCRATCH_FILES_PATH);
-            }
+            WriteArchiveEntriesToDirectory(archive, SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -329,10 +314,7 @@ public class ArchiveTests : ReaderTests
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using (var archive = ArchiveFactory.OpenArchive(testArchive))
         {
-            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-            {
-                entry.WriteToDirectory(SCRATCH_FILES_PATH);
-            }
+            WriteArchiveEntriesToDirectory(archive, SCRATCH_FILES_PATH);
         }
         VerifyFilesEx();
     }
@@ -341,6 +323,26 @@ public class ArchiveTests : ReaderTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using var archive = ArchiveFactory.OpenArchive(testArchive);
+
+        var hasNonExtractableEntries = archive.Entries.Any(entry =>
+            !entry.IsDirectory && entry is not IExtractableArchiveEntry
+        );
+        if (hasNonExtractableEntries)
+        {
+            using var reader = archive.ExtractAllEntries();
+            while (reader.MoveToNextEntry())
+            {
+                if (!reader.Entry.IsDirectory)
+                {
+                    using var memory = new MemoryStream();
+                    reader.WriteEntryTo(memory);
+                    VerifyDeltaDistanceStream(memory);
+                }
+            }
+
+            return;
+        }
+
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
@@ -348,17 +350,7 @@ public class ArchiveTests : ReaderTests
                 var memory = new MemoryStream();
                 entry.WriteTo(memory);
 
-                memory.Position = 0;
-
-                for (var y = 0; y < 9; y++)
-                {
-                    for (var x = 0; x < 256; x++)
-                    {
-                        Assert.Equal(x, memory.ReadByte());
-                    }
-                }
-
-                Assert.Equal(-1, memory.ReadByte());
+                VerifyDeltaDistanceStream(memory);
             }
         }
     }
@@ -413,7 +405,9 @@ public class ArchiveTests : ReaderTests
 
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
         {
-            using var entryStream = entry.OpenEntryStream();
+            using var entryStream = Assert
+                .IsAssignableFrom<IExtractableArchiveEntry>(entry)
+                .OpenEntryStream();
             using var extractedStream = new MemoryStream();
             entryStream.CopyTo(extractedStream);
             var extractedData = extractedStream.ToArray();
@@ -581,7 +575,9 @@ public class ArchiveTests : ReaderTests
         var entry = archive.Entries.FirstOrDefault(e => e.Key == entryName && !e.IsDirectory);
         Assert.NotNull(entry);
 
-        using var entryStream = entry.OpenEntryStream();
+        using var entryStream = Assert
+            .IsAssignableFrom<IExtractableArchiveEntry>(entry)
+            .OpenEntryStream();
         using var extractedStream = new MemoryStream();
         entryStream.CopyTo(extractedStream);
 
@@ -622,12 +618,7 @@ public class ArchiveTests : ReaderTests
             {
                 try
                 {
-                    await foreach (
-                        var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory)
-                    )
-                    {
-                        await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
-                    }
+                    await WriteArchiveEntriesToDirectoryAsync(archive, SCRATCH_FILES_PATH);
                 }
                 catch (IndexOutOfRangeException)
                 {
@@ -638,6 +629,69 @@ public class ArchiveTests : ReaderTests
                 stream.ThrowOnDispose = false;
             }
             VerifyFiles();
+        }
+    }
+
+    private static void VerifyDeltaDistanceStream(MemoryStream memory)
+    {
+        memory.Position = 0;
+
+        for (var y = 0; y < 9; y++)
+        {
+            for (var x = 0; x < 256; x++)
+            {
+                Assert.Equal(x, memory.ReadByte());
+            }
+        }
+
+        Assert.Equal(-1, memory.ReadByte());
+    }
+
+    private static void WriteArchiveEntriesToDirectory(
+        IArchive archive,
+        string destinationDirectory
+    )
+    {
+        if (
+            archive.Entries.Any(entry =>
+                !entry.IsDirectory && entry is not IExtractableArchiveEntry
+            )
+        )
+        {
+            archive.WriteToDirectory(destinationDirectory);
+            return;
+        }
+
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        {
+            entry.WriteToDirectory(destinationDirectory);
+        }
+    }
+
+    private static async Task WriteArchiveEntriesToDirectoryAsync(
+        IAsyncArchive archive,
+        string destinationDirectory
+    )
+    {
+        var hasNonExtractableEntries = false;
+        await foreach (var entry in archive.EntriesAsync)
+        {
+            if (!entry.IsDirectory && entry is not IExtractableArchiveEntry)
+            {
+                hasNonExtractableEntries = true;
+                break;
+            }
+        }
+
+        if (hasNonExtractableEntries)
+        {
+            await archive.WriteToDirectoryAsync(destinationDirectory).ConfigureAwait(false);
+            return;
+        }
+
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
+        {
+            await entry.WriteToDirectoryAsync(destinationDirectory).ConfigureAwait(false);
         }
     }
 }

@@ -1,13 +1,11 @@
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
 
 namespace SharpCompress.Archives.Zip;
 
-public partial class ZipArchiveEntry : ZipEntry, IArchiveEntry
+public partial class ZipArchiveEntry : ZipEntry, IExtractableArchiveEntry
 {
     internal ZipArchiveEntry(
         ZipArchive archive,

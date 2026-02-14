@@ -209,8 +209,11 @@ public class SevenZipArchiveTests : ArchiveTests
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.Tar.tar.7z")))
         using (var archive = SevenZipArchive.OpenArchive(stream))
         {
+            using var reader = archive.ExtractAllEntries();
+            Assert.True(reader.MoveToNextEntry());
+            reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
+
             var entry = archive.Entries.First();
-            entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
 
             var size = entry.Size;
             var scratch = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "7Zip.Tar.tar"));

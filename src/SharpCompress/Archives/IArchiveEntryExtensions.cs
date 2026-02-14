@@ -13,6 +13,20 @@ public static class IArchiveEntryExtensions
     extension(IArchiveEntry archiveEntry)
     {
         /// <summary>
+        /// Opens the current entry as a stream that will decompress as it is read.
+        /// For formats that only support sequential extraction, use archive.ExtractAllEntries().
+        /// </summary>
+        public Stream OpenEntryStream() => GetExtractableEntry(archiveEntry).OpenEntryStream();
+
+        /// <summary>
+        /// Opens the current entry as a stream that will decompress as it is read asynchronously.
+        /// For formats that only support sequential extraction, use archive.ExtractAllEntriesAsync().
+        /// </summary>
+        public ValueTask<Stream> OpenEntryStreamAsync(
+            CancellationToken cancellationToken = default
+        ) => GetExtractableEntry(archiveEntry).OpenEntryStreamAsync(cancellationToken);
+
+        /// <summary>
         /// Extract entry to the specified stream.
         /// </summary>
         /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
@@ -24,7 +38,8 @@ public static class IArchiveEntryExtensions
                 throw new ExtractionException("Entry is a file directory and cannot be extracted.");
             }
 
-            using var entryStream = archiveEntry.OpenEntryStream();
+            var extractable = GetExtractableEntry(archiveEntry);
+            using var entryStream = extractable.OpenEntryStream();
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
             sourceStream.CopyTo(streamToWriteTo, Constants.BufferSize);
         }
@@ -47,11 +62,11 @@ public static class IArchiveEntryExtensions
             }
 
 #if LEGACY_DOTNET
-            using var entryStream = await archiveEntry
+            using var entryStream = await GetExtractableEntry(archiveEntry)
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
 #else
-            await using var entryStream = await archiveEntry
+            await using var entryStream = await GetExtractableEntry(archiveEntry)
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
 #endif
@@ -60,6 +75,18 @@ public static class IArchiveEntryExtensions
                 .CopyToAsync(streamToWriteTo, Constants.BufferSize, cancellationToken)
                 .ConfigureAwait(false);
         }
+    }
+
+    private static IExtractableArchiveEntry GetExtractableEntry(IArchiveEntry entry)
+    {
+        if (entry is IExtractableArchiveEntry extractableEntry)
+        {
+            return extractableEntry;
+        }
+
+        throw new NotSupportedException(
+            $"Entry stream extraction is not supported for {entry.Archive.Type} archive entries. Use archive.ExtractAllEntries() for sequential extraction."
+        );
     }
 
     private static Stream WrapWithProgress(

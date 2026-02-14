@@ -7,7 +7,7 @@ using SharpCompress.Common.Options;
 
 namespace SharpCompress.Archives.GZip;
 
-public class GZipArchiveEntry : GZipEntry, IArchiveEntry
+public class GZipArchiveEntry : GZipEntry, IExtractableArchiveEntry
 {
     internal GZipArchiveEntry(GZipArchive archive, GZipFilePart? part, IReaderOptions readerOptions)
         : base(part, readerOptions) => Archive = archive;

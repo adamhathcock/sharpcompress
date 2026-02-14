@@ -8,7 +8,7 @@ using SharpCompress.Common.Tar;
 
 namespace SharpCompress.Archives.Tar;
 
-public class TarArchiveEntry : TarEntry, IArchiveEntry
+public class TarArchiveEntry : TarEntry, IExtractableArchiveEntry
 {
     internal TarArchiveEntry(
         TarArchive archive,

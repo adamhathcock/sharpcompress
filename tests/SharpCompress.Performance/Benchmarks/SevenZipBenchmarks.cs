@@ -25,9 +25,15 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
     {
         using var stream = new MemoryStream(_lzmaBytes);
         using var archive = SevenZipArchive.OpenArchive(stream);
-        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        using var reader = archive.ExtractAllEntries();
+        while (reader.MoveToNextEntry())
         {
-            using var entryStream = entry.OpenEntryStream();
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            using var entryStream = reader.OpenEntryStream();
             entryStream.CopyTo(Stream.Null);
         }
     }
@@ -39,9 +45,15 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         await using var archive = await SevenZipArchive
             .OpenAsyncArchive(stream)
             .ConfigureAwait(false);
-        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
+        await using var reader = await archive.ExtractAllEntriesAsync().ConfigureAwait(false);
+        while (await reader.MoveToNextEntryAsync().ConfigureAwait(false))
         {
-            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            await using var entryStream = await reader.OpenEntryStreamAsync().ConfigureAwait(false);
             await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
         }
     }
@@ -51,9 +63,15 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
     {
         using var stream = new MemoryStream(_lzma2Bytes);
         using var archive = SevenZipArchive.OpenArchive(stream);
-        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        using var reader = archive.ExtractAllEntries();
+        while (reader.MoveToNextEntry())
         {
-            using var entryStream = entry.OpenEntryStream();
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            using var entryStream = reader.OpenEntryStream();
             entryStream.CopyTo(Stream.Null);
         }
     }
@@ -65,9 +83,15 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         await using var archive = await SevenZipArchive
             .OpenAsyncArchive(stream)
             .ConfigureAwait(false);
-        await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
+        await using var reader = await archive.ExtractAllEntriesAsync().ConfigureAwait(false);
+        while (await reader.MoveToNextEntryAsync().ConfigureAwait(false))
         {
-            await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            await using var entryStream = await reader.OpenEntryStreamAsync().ConfigureAwait(false);
             await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
         }
     }
@@ -78,9 +102,14 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         using var stream = new MemoryStream(_lzma2Bytes);
         using var archive = SevenZipArchive.OpenArchive(stream);
         using var reader = archive.ExtractAllEntries();
-        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        while (reader.MoveToNextEntry())
         {
-            using var entryStream = entry.OpenEntryStream();
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            using var entryStream = reader.OpenEntryStream();
             entryStream.CopyTo(Stream.Null);
         }
     }

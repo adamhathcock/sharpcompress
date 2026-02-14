@@ -12,7 +12,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.Rar;
 
-public partial class RarArchiveEntry : RarEntry, IArchiveEntry
+public partial class RarArchiveEntry : RarEntry, IExtractableArchiveEntry
 {
     private readonly ICollection<RarFilePart> parts;
     private readonly RarArchive archive;
