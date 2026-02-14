@@ -4,6 +4,7 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Common.SevenZip;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using Xunit;
@@ -355,14 +356,28 @@ public class SevenZipArchiveTests : ArchiveTests
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.EmptyStream.7z");
         using var archive = SevenZipArchive.OpenArchive(testArchive);
 
+        var emptyStreamFileCount = 0;
         foreach (var entry in archive.Entries)
         {
             if (!entry.IsDirectory)
             {
+                // Verify this is actually an empty-stream entry (HasStream == false)
+                var sevenZipEntry = entry as SevenZipEntry;
+                if (sevenZipEntry?.FilePart.Header.HasStream == false)
+                {
+                    emptyStreamFileCount++;
+                }
+
                 // This should not throw NullReferenceException
                 entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
+
+        // Ensure we actually tested empty-stream entries
+        Assert.True(
+            emptyStreamFileCount > 0,
+            "Test archive should contain at least one empty-stream entry"
+        );
 
         // Verify that empty files were created
         var extractedFiles = Directory.GetFiles(
