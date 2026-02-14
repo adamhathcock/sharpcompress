@@ -4,7 +4,7 @@ using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-internal partial class SharpCompressStream : Stream, IStreamStack
+public partial class SharpCompressStream : Stream, IStreamStack
 {
     public virtual Stream BaseStream() => stream;
 

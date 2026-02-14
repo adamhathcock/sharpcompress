@@ -4,7 +4,7 @@ using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-internal partial class SharpCompressStream
+public partial class SharpCompressStream
 {
     /// <summary>
     /// Creates a SharpCompressStream that acts as a passthrough wrapper.
