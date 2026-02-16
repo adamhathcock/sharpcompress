@@ -485,6 +485,31 @@ using (var archive = ZipArchive.CreateArchive())
 }
 ```
 
+### Buffered Forward-Only Streams
+
+`SharpCompressStream` can wrap streams with buffering for forward-only scenarios:
+
+```csharp
+// Wrap a non-seekable stream with buffering
+using (var bufferedStream = new SharpCompressStream(rawStream))
+{
+    // Provides ring buffer functionality for reading ahead
+    // and seeking within buffered data
+    using (var reader = ReaderFactory.OpenReader(bufferedStream))
+    {
+        while (reader.MoveToNextEntry())
+        {
+            reader.WriteEntryToDirectory(@"C:\output");
+        }
+    }
+}
+```
+
+Useful for:
+- Non-seekable streams (network streams, pipes)
+- Forward-only reading with limited look-ahead
+- Buffering unbuffered streams for better performance
+
 ### Extract Specific Files
 
 ```csharp

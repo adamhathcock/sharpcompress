@@ -14,7 +14,7 @@ public partial class ZipWriter
     /// Asynchronously writes an entry to the ZIP archive.
     /// </summary>
     public override async ValueTask WriteAsync(
-        string entryPath,
+        string filename,
         Stream source,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
@@ -22,7 +22,7 @@ public partial class ZipWriter
     {
         cancellationToken.ThrowIfCancellationRequested();
         await WriteAsync(
-                entryPath,
+                filename,
                 source,
                 new ZipWriterEntryOptions { ModificationDateTime = modificationTime },
                 cancellationToken

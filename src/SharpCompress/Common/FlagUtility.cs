@@ -46,7 +46,11 @@ internal static class FlagUtility
     /// <param name="flag">Flag to test</param>
     /// <returns></returns>
     public static bool HasFlag<T>(T bitField, T flag)
-        where T : struct => HasFlag(Convert.ToInt64(bitField), Convert.ToInt64(flag));
+        where T : struct =>
+        HasFlag(
+            Convert.ToInt64(bitField, Constants.DefaultCultureInfo),
+            Convert.ToInt64(flag, Constants.DefaultCultureInfo)
+        );
 
     /// <summary>
     /// Returns true if the flag is set on the specified bit field.
@@ -82,5 +86,10 @@ internal static class FlagUtility
     /// <param name="on">bool</param>
     /// <returns>The flagged variable with the flag changed</returns>
     public static long SetFlag<T>(T bitField, T flag, bool on)
-        where T : struct => SetFlag(Convert.ToInt64(bitField), Convert.ToInt64(flag), on);
+        where T : struct =>
+        SetFlag(
+            Convert.ToInt64(bitField, Constants.DefaultCultureInfo),
+            Convert.ToInt64(flag, Constants.DefaultCultureInfo),
+            on
+        );
 }

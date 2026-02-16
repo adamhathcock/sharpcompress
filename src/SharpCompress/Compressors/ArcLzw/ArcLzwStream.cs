@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SharpCompress.Common;
 using SharpCompress.Compressors.RLE90;
 
 namespace SharpCompress.Compressors.ArcLzw;
@@ -74,7 +75,7 @@ public partial class ArcLzwStream : Stream
         {
             if (input[0] != BITS)
             {
-                throw new InvalidDataException($"File packed with {input[0]}, expected {BITS}.");
+                throw new InvalidFormatException($"File packed with {input[0]}, expected {BITS}.");
             }
 
             input = input.Skip(1).ToArray();
@@ -176,7 +177,7 @@ public partial class ArcLzwStream : Stream
         var data = new byte[_compressedSize];
         _stream.Read(data, 0, _compressedSize);
         var decoded = Decompress(data, _useCrunched);
-        var result = decoded.Count();
+        var result = decoded.Count;
         if (_useCrunched)
         {
             var unpacked = RLE.UnpackRLE(decoded.ToArray());

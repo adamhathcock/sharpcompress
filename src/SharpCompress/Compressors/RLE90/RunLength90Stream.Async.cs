@@ -14,10 +14,7 @@ public partial class RunLength90Stream
         CancellationToken cancellationToken
     )
     {
-        if (buffer == null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
 
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
         {

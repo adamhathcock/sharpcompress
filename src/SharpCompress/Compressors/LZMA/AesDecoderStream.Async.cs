@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -41,7 +42,7 @@ internal sealed partial class AesDecoderStream
                 if (read == 0)
                 {
                     // We are not done decoding and have less than 16 bytes.
-                    throw new EndOfStreamException();
+                    throw new IncompleteArchiveException("Unexpected end of stream.");
                 }
 
                 mEnding += read;

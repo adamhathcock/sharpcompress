@@ -89,7 +89,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     {
         if (_entriesForCurrentReadStreamAsync is not null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"{nameof(MoveToNextEntry)} cannot be used after {nameof(MoveToNextEntryAsync)} has been used."
             );
         }
@@ -122,7 +122,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     {
         if (_entriesForCurrentReadStreamAsync is not null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"{nameof(LoadStreamForReading)} cannot be used after {nameof(LoadStreamForReadingAsync)} has been used."
             );
         }
@@ -190,10 +190,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
             throw new ArgumentException("WriteEntryTo or OpenEntryStream can only be called once.");
         }
 
-        if (writableStream is null)
-        {
-            throw new ArgumentNullException(nameof(writableStream));
-        }
+        ThrowHelper.ThrowIfNull(writableStream);
         if (!writableStream.CanWrite)
         {
             throw new ArgumentException(

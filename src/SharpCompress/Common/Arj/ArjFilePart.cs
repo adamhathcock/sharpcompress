@@ -26,43 +26,34 @@ public class ArjFilePart : FilePart
 
     internal override Stream GetCompressedStream()
     {
-        if (_stream != null)
+        Stream compressedStream;
+        switch (Header.CompressionMethod)
         {
-            Stream compressedStream;
-            switch (Header.CompressionMethod)
-            {
-                case CompressionMethod.Stored:
-                    compressedStream = new ReadOnlySubStream(
-                        _stream,
-                        Header.DataStartPosition,
-                        Header.CompressedSize
-                    );
-                    break;
-                case CompressionMethod.CompressedMost:
-                case CompressionMethod.Compressed:
-                case CompressionMethod.CompressedFaster:
-                    if (Header.OriginalSize > 128 * 1024)
-                    {
-                        throw new NotSupportedException(
-                            "CompressionMethod: " + Header.CompressionMethod + " with size > 128KB"
-                        );
-                    }
-                    compressedStream = new LhaStream<Lh7DecoderCfg>(
-                        _stream,
-                        (int)Header.OriginalSize
-                    );
-                    break;
-                case CompressionMethod.CompressedFastest:
-                    compressedStream = new LHDecoderStream(_stream, (int)Header.OriginalSize);
-                    break;
-                default:
+            case CompressionMethod.Stored:
+                compressedStream = new ReadOnlySubStream(
+                    _stream,
+                    Header.DataStartPosition,
+                    Header.CompressedSize
+                );
+                break;
+            case CompressionMethod.CompressedMost:
+            case CompressionMethod.Compressed:
+            case CompressionMethod.CompressedFaster:
+                if (Header.OriginalSize > 128 * 1024)
+                {
                     throw new NotSupportedException(
-                        "CompressionMethod: " + Header.CompressionMethod
+                        "CompressionMethod: " + Header.CompressionMethod + " with size > 128KB"
                     );
-            }
-            return compressedStream;
+                }
+                compressedStream = new LhaStream<Lh7DecoderCfg>(_stream, (int)Header.OriginalSize);
+                break;
+            case CompressionMethod.CompressedFastest:
+                compressedStream = new LHDecoderStream(_stream, (int)Header.OriginalSize);
+                break;
+            default:
+                throw new NotSupportedException("CompressionMethod: " + Header.CompressionMethod);
         }
-        return _stream.NotNull();
+        return compressedStream;
     }
 
     internal override Stream GetRawStream() => _stream;

@@ -164,6 +164,12 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 
             var folder = entry.FilePart.Folder;
 
+            // If folder is null (empty stream entry), return empty stream
+            if (folder is null)
+            {
+                return CreateEntryStream(Stream.Null);
+            }
+
             // Check if we're starting a new folder - dispose old folder stream if needed
             if (folder != _currentFolder)
             {

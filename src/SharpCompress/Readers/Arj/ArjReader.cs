@@ -27,12 +27,12 @@ public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
     /// Opens an ArjReader for Non-seeking usage with a single volume
     /// </summary>
     /// <param name="stream"></param>
-    /// <param name="options"></param>
+    /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new SingleVolumeArjReader(stream, options ?? new ReaderOptions());
+        return new SingleVolumeArjReader(stream, readerOptions ?? new ReaderOptions());
     }
 
     /// <summary>

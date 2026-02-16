@@ -151,15 +151,9 @@ internal partial class Model
     /// </summary>
     public void Encode(Stream target, Stream source, PpmdProperties properties)
     {
-        if (target is null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
+        ThrowHelper.ThrowIfNull(target);
 
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowHelper.ThrowIfNull(source);
 
         EncodeStart(properties);
         EncodeBlock(target, source, true);
@@ -239,15 +233,9 @@ internal partial class Model
     /// </summary>
     public void Decode(Stream target, Stream source, PpmdProperties properties)
     {
-        if (target is null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
+        ThrowHelper.ThrowIfNull(target);
 
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowHelper.ThrowIfNull(source);
 
         DecodeStart(source, properties);
         var buffer = new byte[65536];

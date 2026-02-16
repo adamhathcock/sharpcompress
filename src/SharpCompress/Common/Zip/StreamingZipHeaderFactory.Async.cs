@@ -82,7 +82,7 @@ internal sealed partial class StreamingZipHeaderFactory
         private ZipHeader? _current;
 
         public ZipHeader Current =>
-            _current ?? throw new InvalidOperationException("No current header is available.");
+            _current ?? throw new ArchiveOperationException("No current header is available.");
 
         /// <summary>
         /// Advances to the next ZIP header in the stream, honoring streaming data descriptors where applicable.

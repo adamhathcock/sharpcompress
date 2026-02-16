@@ -27,7 +27,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         if (!disposed)
         {
             base.Dispose();
-            if (!externalWindow && window is not null)
+            if (window is not null)
             {
                 ArrayPool<byte>.Shared.Return(window);
                 window = null;
@@ -90,8 +90,6 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
     private readonly byte[] unpOldTable = new byte[PackDef.HUFF_TABLE_SIZE];
 
     private BlockTypes unpBlockType;
-
-    private bool externalWindow;
 
     private long writtenFileSize;
 

@@ -1,6 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.Xz;
+using SharpCompress.IO;
 using SharpCompress.Test.Mocks;
 using Xunit;
 
@@ -33,5 +34,25 @@ public class XzStreamAsyncTests : XzTestsBase
         using var sr = new StreamReader(new AsyncOnlyStream(xz));
         var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
         Assert.Equal(OriginalIndexed, uncompressed);
+    }
+
+    [Fact]
+    public async ValueTask CanReadNonSeekableStreamAsync()
+    {
+        var nonSeekable = new ForwardOnlyStream(new MemoryStream(Compressed));
+        var xz = new XZStream(SharpCompressStream.Create(nonSeekable));
+        using var sr = new StreamReader(new AsyncOnlyStream(xz));
+        var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
+        Assert.Equal(Original, uncompressed);
+    }
+
+    [Fact]
+    public async ValueTask CanReadNonSeekableEmptyStreamAsync()
+    {
+        var nonSeekable = new ForwardOnlyStream(new MemoryStream(CompressedEmpty));
+        var xz = new XZStream(SharpCompressStream.Create(nonSeekable));
+        using var sr = new StreamReader(new AsyncOnlyStream(xz));
+        var uncompressed = await sr.ReadToEndAsync().ConfigureAwait(false);
+        Assert.Equal(OriginalEmpty, uncompressed);
     }
 }

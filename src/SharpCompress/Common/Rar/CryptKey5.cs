@@ -14,8 +14,8 @@ internal class CryptKey5 : ICryptKey
 
     private string _password;
     private Rar5CryptoInfo _cryptoInfo;
-    private byte[] _pswCheck = { };
-    private byte[] _hashKey = { };
+    private byte[] _pswCheck = [];
+    private byte[] _hashKey = [];
 
     public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo)
     {
@@ -34,8 +34,13 @@ internal class CryptKey5 : ICryptKey
         int keyLength
     )
     {
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(password));
+        var passwordBytes = Encoding.UTF8.GetBytes(password);
+#if LEGACY_DOTNET
+        using var hmac = new HMACSHA256(passwordBytes);
         var block = hmac.ComputeHash(salt);
+#else
+        var block = HMACSHA256.HashData(passwordBytes, salt);
+#endif
         var finalHash = (byte[])block.Clone();
 
         var loop = new int[] { iterations, 17, 17 };
@@ -45,7 +50,11 @@ internal class CryptKey5 : ICryptKey
         {
             for (var i = 1; i < loop[x]; i++)
             {
+#if LEGACY_DOTNET
                 block = hmac.ComputeHash(block);
+#else
+                block = HMACSHA256.HashData(passwordBytes, block);
+#endif
                 for (var j = 0; j < finalHash.Length; j++)
                 {
                     finalHash[j] ^= block[j];

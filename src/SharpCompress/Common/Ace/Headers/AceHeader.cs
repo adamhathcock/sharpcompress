@@ -89,7 +89,7 @@ public abstract partial class AceHeader
         var checksum = AceCrc.AceCrc16(body);
         if (checksum != HeaderCrc)
         {
-            throw new InvalidDataException("Header checksum is invalid");
+            throw new InvalidFormatException("Header checksum is invalid");
         }
         return body;
     }

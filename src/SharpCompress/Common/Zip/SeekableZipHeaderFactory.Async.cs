@@ -143,7 +143,7 @@ internal sealed partial class SeekableZipHeaderFactory
             is not LocalEntryHeader localEntryHeader
         )
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         // populate fields only known from the DirectoryEntryHeader

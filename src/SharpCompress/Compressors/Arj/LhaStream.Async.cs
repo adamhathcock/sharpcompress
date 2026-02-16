@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Arj;
 
@@ -15,10 +16,7 @@ public sealed partial class LhaStream<TDecoderConfig>
         CancellationToken cancellationToken
     )
     {
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
         if (offset < 0 || count < 0 || (offset + count) > buffer.Length)
         {
             throw new ArgumentOutOfRangeException(nameof(offset));
@@ -67,7 +65,7 @@ public sealed partial class LhaStream<TDecoderConfig>
                 len++;
                 if (len > 255)
                 {
-                    throw new InvalidOperationException("Code length overflow");
+                    throw new ArchiveOperationException("Code length overflow");
                 }
             }
         }
@@ -117,7 +115,7 @@ public sealed partial class LhaStream<TDecoderConfig>
 
         if (numCodes > NUM_TEMP_CODELEN)
         {
-            throw new InvalidDataException("temporary codelen table has invalid size");
+            throw new InvalidFormatException("temporary codelen table has invalid size");
         }
 
         // read actual lengths
@@ -133,7 +131,7 @@ public sealed partial class LhaStream<TDecoderConfig>
 
         if (3 + skip > numCodes)
         {
-            throw new InvalidDataException("temporary codelen table has invalid size");
+            throw new InvalidFormatException("temporary codelen table has invalid size");
         }
 
         for (int i = 3 + skip; i < numCodes; i++)
@@ -162,7 +160,7 @@ public sealed partial class LhaStream<TDecoderConfig>
 
         if (numCodes > NUM_COMMANDS)
         {
-            throw new InvalidDataException("commands codelen table has invalid size");
+            throw new InvalidFormatException("commands codelen table has invalid size");
         }
 
         int index = 0;
@@ -211,7 +209,7 @@ public sealed partial class LhaStream<TDecoderConfig>
 
         if (numCodes > _config.HistoryBits)
         {
-            throw new InvalidDataException("Offset code table too large");
+            throw new InvalidFormatException("Offset code table too large");
         }
 
         byte[] codeLengths = new byte[NUM_TEMP_CODELEN];

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -39,7 +40,7 @@ internal static class Crc
             var delta = stream.Read(buffer, 0, (int)Math.Min(length, buffer.Length));
             if (delta == 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
             crc = Update(crc, buffer, 0, delta);
             length -= delta;

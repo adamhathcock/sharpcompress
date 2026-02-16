@@ -5,6 +5,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -45,7 +46,7 @@ internal partial class CBZip2InputStream : Stream
     private static void Cadvise()
     {
         //System.out.Println("CRC Error");
-        throw new InvalidOperationException("BZip2 error");
+        throw new ArchiveOperationException("BZip2 error");
     }
 
     private static void BadBGLengths() => Cadvise();
@@ -54,7 +55,7 @@ internal partial class CBZip2InputStream : Stream
 
     private static void CompressedStreamEOF()
     {
-        throw new InvalidOperationException("BZip2 compressed file ends unexpectedly");
+        throw new ArchiveOperationException("BZip2 compressed file ends unexpectedly");
     }
 
     private void MakeMaps()
@@ -259,7 +260,7 @@ internal partial class CBZip2InputStream : Stream
         }
         if (magic0 != 'B' || magic1 != 'Z' || magic2 != 'h')
         {
-            throw new IOException("Not a BZIP2 marked stream");
+            throw new InvalidFormatException("Not a BZIP2 marked stream");
         }
         var magic3 = bsStream.ReadByte();
         if (magic3 < '1' || magic3 > '9')
@@ -1084,7 +1085,7 @@ internal partial class CBZip2InputStream : Stream
     {
         if (!(0 <= newSize100k && newSize100k <= 9 && 0 <= blockSize100k && blockSize100k <= 9))
         {
-            // throw new IOException("Invalid block size");
+            // throw new InvalidFormatException("Invalid block size");
         }
 
         blockSize100k = newSize100k;

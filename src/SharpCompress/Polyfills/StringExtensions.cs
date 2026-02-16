@@ -1,4 +1,6 @@
-﻿#if LEGACY_DOTNET
+﻿using System;
+
+#if LEGACY_DOTNET
 
 namespace SharpCompress;
 
@@ -9,5 +11,10 @@ internal static class StringExtensions
 
     internal static bool Contains(this string text, char value) => text.IndexOf(value) > -1;
 }
+
+[AttributeUsage(
+    AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue
+)]
+public class NotNullAttribute : Attribute;
 
 #endif

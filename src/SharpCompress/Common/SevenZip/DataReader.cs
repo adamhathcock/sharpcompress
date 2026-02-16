@@ -49,7 +49,7 @@ internal class DataReader
     {
         if (Offset >= _ending)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
         return _buffer[Offset++];
@@ -59,7 +59,7 @@ internal class DataReader
     {
         if (length > _ending - Offset)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
         while (length-- > 0)
@@ -72,7 +72,7 @@ internal class DataReader
     {
         if (size > _ending - Offset)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
         Offset += (int)size;
@@ -84,7 +84,7 @@ internal class DataReader
     {
         if (Offset >= _ending)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
         var firstByte = _buffer[Offset++];
@@ -102,7 +102,7 @@ internal class DataReader
 
             if (Offset >= _ending)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             value |= (ulong)_buffer[Offset++] << (8 * i);
@@ -127,7 +127,7 @@ internal class DataReader
     {
         if (Offset + 4 > _ending)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
         var res = Get32(_buffer, Offset);
@@ -139,7 +139,7 @@ internal class DataReader
     {
         if (Offset + 8 > _ending)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
         var res = Get64(_buffer, Offset);
@@ -155,7 +155,7 @@ internal class DataReader
         {
             if (ending + 2 > _ending)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             if (_buffer[ending] == 0 && _buffer[ending + 1] == 0)

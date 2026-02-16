@@ -14,10 +14,7 @@ internal static partial class MultiByteIntegers
         CancellationToken cancellationToken = default
     )
     {
-        if (maxBytes <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxBytes));
-        }
+        ThrowHelper.ThrowIfNegativeOrZero(maxBytes);
 
         if (maxBytes > 9)
         {

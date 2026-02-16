@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Providers;
 
@@ -12,7 +13,7 @@ public abstract class ContextRequiredDecompressionProviderBase : DecompressionOn
     protected virtual string DecompressionContextRequirementSuffix => string.Empty;
 
     public sealed override Stream CreateDecompressStream(Stream source) =>
-        throw new InvalidOperationException(
+        throw new ArchiveOperationException(
             $"{DecompressionContextRequirementDescription}. "
                 + $"Use CreateDecompressStream(Stream, CompressionContext) overload{DecompressionContextRequirementSuffix}."
         );
@@ -21,7 +22,7 @@ public abstract class ContextRequiredDecompressionProviderBase : DecompressionOn
         Stream source,
         CancellationToken cancellationToken = default
     ) =>
-        throw new InvalidOperationException(
+        throw new ArchiveOperationException(
             $"{DecompressionContextRequirementDescription}. "
                 + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) "
                 + $"overload{DecompressionContextRequirementSuffix}."

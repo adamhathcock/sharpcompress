@@ -41,7 +41,7 @@ public sealed class PpmdCompressingProvider : CompressionProviderBase, ICompress
 
     public override Stream CreateDecompressStream(Stream source)
     {
-        throw new InvalidOperationException(
+        throw new ArchiveOperationException(
             "PPMd decompression requires properties. "
                 + "Use CreateDecompressStream(Stream, CompressionContext) overload with Properties."
         );
@@ -65,7 +65,7 @@ public sealed class PpmdCompressingProvider : CompressionProviderBase, ICompress
         Stream source,
         CancellationToken cancellationToken = default
     ) =>
-        throw new InvalidOperationException(
+        throw new ArchiveOperationException(
             "PPMd decompression requires properties. "
                 + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) overload with Properties."
         );

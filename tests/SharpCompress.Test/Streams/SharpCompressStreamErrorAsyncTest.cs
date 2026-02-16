@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.IO;
 using Xunit;
 
@@ -56,7 +57,7 @@ public class SharpCompressStreamErrorAsyncTest
         var stream = SharpCompressStream.CreateNonDisposing(ms);
         stream.ThrowOnDispose = true;
         await Assert
-            .ThrowsAsync<InvalidOperationException>(async () =>
+            .ThrowsAsync<ArchiveOperationException>(async () =>
                 await stream.DisposeAsync().ConfigureAwait(false)
             )
             .ConfigureAwait(false);
@@ -108,7 +109,7 @@ public class SharpCompressStreamErrorAsyncTest
         {
             await stream.ReadExactAsync(buffer, 0, 32).ConfigureAwait(false);
         }
-        Assert.Throws<InvalidOperationException>(() => stream.Rewind());
+        Assert.Throws<ArchiveOperationException>(() => stream.Rewind());
     }
 
     [Fact]

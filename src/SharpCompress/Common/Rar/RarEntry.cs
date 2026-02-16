@@ -76,6 +76,7 @@ public abstract class RarEntry : Entry
 
     public override string ToString() =>
         string.Format(
+            Constants.DefaultCultureInfo,
             "Entry Path: {0} Compressed Size: {1} Uncompressed Size: {2} CRC: {3}",
             Key,
             CompressedSize,

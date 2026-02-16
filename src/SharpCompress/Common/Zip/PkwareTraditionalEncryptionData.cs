@@ -69,10 +69,7 @@ internal class PkwareTraditionalEncryptionData
 
     public byte[] Encrypt(byte[] plainText, int length)
     {
-        if (plainText is null)
-        {
-            throw new ArgumentNullException(nameof(plainText));
-        }
+        ThrowHelper.ThrowIfNull(plainText);
 
         if (length > plainText.Length)
         {

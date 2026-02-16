@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using SharpCompress.Common;
 using size_t = System.UInt32;
 
 namespace SharpCompress.Compressors.Rar.UnpackV2017;
@@ -63,7 +64,7 @@ internal partial class FragmentedWindow
             // sharpcompress: don't need this, freshly allocated above
             //Utility.Memset(NewMem,0,Size);
 
-            Mem[BlockNum] = NewMem ?? throw new InvalidOperationException();
+            Mem[BlockNum] = NewMem ?? throw new ArchiveOperationException();
             TotalSize += Size;
             MemSize[BlockNum] = TotalSize;
             BlockNum++;
@@ -71,7 +72,7 @@ internal partial class FragmentedWindow
         if (TotalSize < WinSize) // Not found enough free blocks.
         //throw std::bad_alloc();
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
     }
 

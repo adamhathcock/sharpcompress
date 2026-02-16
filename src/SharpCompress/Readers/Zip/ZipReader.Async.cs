@@ -63,7 +63,7 @@ public partial class ZipReader
         }
 
         public ZipEntry Current =>
-            _current ?? throw new InvalidOperationException("No current entry is available.");
+            _current ?? throw new ArchiveOperationException("No current entry is available.");
 
         /// <summary>
         /// Advances to the next non-directory entry-relevant header and materializes a <see cref="ZipEntry"/>,

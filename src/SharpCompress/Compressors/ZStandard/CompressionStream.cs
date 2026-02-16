@@ -32,20 +32,14 @@ public partial class CompressionStream : Stream
         bool leaveOpen = true
     )
     {
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        SharpCompress.ThrowHelper.ThrowIfNull(stream);
 
         if (!stream.CanWrite)
         {
             throw new ArgumentException("Stream is not writable", nameof(stream));
         }
 
-        if (bufferSize < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
-        }
+        SharpCompress.ThrowHelper.ThrowIfNegative(bufferSize);
 
         innerStream = stream;
         this.compressor = compressor;

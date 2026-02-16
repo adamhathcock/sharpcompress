@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Arj;
 
@@ -20,7 +21,7 @@ public partial class BitReader
                 .ConfigureAwait(false);
             if (bytesRead < 1)
             {
-                throw new EndOfStreamException("No more data available in BitReader.");
+                throw new IncompleteArchiveException("No more data available in BitReader.");
             }
 
             _bitBuffer = buffer[0];

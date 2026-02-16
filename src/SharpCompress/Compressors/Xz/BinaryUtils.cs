@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Xz;
 
@@ -24,7 +25,7 @@ public static partial class BinaryUtils
         var read = stream.ReadFully(bytes);
         if (!read)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
         return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }

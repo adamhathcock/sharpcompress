@@ -9,8 +9,14 @@ using SharpCompress.Compressors.LZMA.RangeCoder;
 
 namespace SharpCompress.Compressors.LZMA;
 
-public partial class Decoder : ICoder, ISetDecoderProperties // ,System.IO.Stream
+public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
 {
+    public void Dispose()
+    {
+        _outWindow?.Dispose();
+        _outWindow = null;
+    }
+
     private partial class LenDecoder
     {
         private BitDecoder _choice = new();

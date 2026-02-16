@@ -31,7 +31,7 @@ public partial class RarArchive
         return new((IRarAsyncArchive)OpenArchive(new FileInfo(path), readerOptions));
     }
 
-    public static IRarArchive OpenArchive(string filePath, ReaderOptions? options = null)
+    public static IRarArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         var fileInfo = new FileInfo(filePath);
@@ -39,24 +39,24 @@ public partial class RarArchive
             new SourceStream(
                 fileInfo,
                 i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                options ?? new ReaderOptions()
+                readerOptions ?? new ReaderOptions()
             )
         );
     }
 
-    public static IRarArchive OpenArchive(FileInfo fileInfo, ReaderOptions? options = null)
+    public static IRarArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return new RarArchive(
             new SourceStream(
                 fileInfo,
                 i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                options ?? new ReaderOptions()
+                readerOptions ?? new ReaderOptions()
             )
         );
     }
 
-    public static IRarArchive OpenArchive(Stream stream, ReaderOptions? options = null)
+    public static IRarArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
 
@@ -65,7 +65,9 @@ public partial class RarArchive
             throw new ArgumentException("Stream must be seekable", nameof(stream));
         }
 
-        return new RarArchive(new SourceStream(stream, _ => null, options ?? new ReaderOptions()));
+        return new RarArchive(
+            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+        );
     }
 
     public static IRarArchive OpenArchive(

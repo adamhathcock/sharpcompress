@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Deflate;
@@ -85,7 +86,7 @@ public partial class GZipStream
             }
             else
             {
-                throw new InvalidOperationException();
+                throw new ArchiveOperationException();
             }
         }
 
@@ -111,7 +112,7 @@ public partial class GZipStream
             }
             else
             {
-                throw new InvalidOperationException();
+                throw new ArchiveOperationException();
             }
         }
 

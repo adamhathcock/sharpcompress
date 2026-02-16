@@ -8,7 +8,10 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar;
 
-internal class AsyncMarkingBinaryReader
+internal class AsyncMarkingBinaryReader : IDisposable
+#if NET8_0_OR_GREATER
+        , IAsyncDisposable
+#endif
 {
     private readonly AsyncBinaryReader _reader;
 
@@ -121,7 +124,7 @@ internal class AsyncMarkingBinaryReader
             shift += 7;
         } while (shift <= maxShift);
 
-        throw new FormatException("malformed vint");
+        throw new InvalidFormatException("malformed vint");
     }
 
     public async ValueTask<uint> ReadRarVIntUInt32Async(
@@ -185,6 +188,12 @@ internal class AsyncMarkingBinaryReader
             shift += 7;
         } while (shift <= maxShift);
 
-        throw new FormatException("malformed vint");
+        throw new InvalidFormatException("malformed vint");
     }
+
+    public virtual void Dispose() => _reader.Dispose();
+
+#if NET8_0_OR_GREATER
+    public virtual ValueTask DisposeAsync() => _reader.DisposeAsync();
+#endif
 }

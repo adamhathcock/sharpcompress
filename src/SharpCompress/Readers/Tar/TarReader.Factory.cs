@@ -82,16 +82,16 @@ public partial class TarReader
 
     public static async ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
-        ReaderOptions? options = null,
+        ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
         stream.NotNull(nameof(stream));
-        options ??= new ReaderOptions();
+        readerOptions ??= new ReaderOptions();
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            bufferSize: options.RewindableBufferSize
+            bufferSize: readerOptions.RewindableBufferSize
         );
         long pos = sharpCompressStream.Position;
         foreach (var wrapper in TarWrapper.Wrappers)
@@ -110,8 +110,8 @@ public partial class TarReader
             var testStream = await CreateProbeDecompressionStreamAsync(
                     sharpCompressStream,
                     wrapper.CompressionType,
-                    options.Providers,
-                    options,
+                    readerOptions.Providers,
+                    readerOptions,
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -120,7 +120,7 @@ public partial class TarReader
             )
             {
                 sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
+                return new TarReader(sharpCompressStream, readerOptions, wrapper.CompressionType);
             }
 
             if (wrapper.CompressionType != CompressionType.None)
@@ -130,7 +130,7 @@ public partial class TarReader
         }
 
         sharpCompressStream.Position = pos;
-        return new TarReader(sharpCompressStream, options, CompressionType.None);
+        return new TarReader(sharpCompressStream, readerOptions, CompressionType.None);
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
@@ -160,15 +160,15 @@ public partial class TarReader
     /// Opens a TarReader for Non-seeking usage with a single volume
     /// </summary>
     /// <param name="stream"></param>
-    /// <param name="options"></param>
+    /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        options ??= new ReaderOptions();
+        readerOptions ??= new ReaderOptions();
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            bufferSize: options.RewindableBufferSize
+            bufferSize: readerOptions.RewindableBufferSize
         );
         long pos = sharpCompressStream.Position;
         foreach (var wrapper in TarWrapper.Wrappers)
@@ -183,13 +183,13 @@ public partial class TarReader
             var testStream = CreateProbeDecompressionStream(
                 sharpCompressStream,
                 wrapper.CompressionType,
-                options.Providers,
-                options
+                readerOptions.Providers,
+                readerOptions
             );
             if (TarArchive.IsTarFile(testStream))
             {
                 sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
+                return new TarReader(sharpCompressStream, readerOptions, wrapper.CompressionType);
             }
 
             if (wrapper.CompressionType != CompressionType.None)
@@ -199,6 +199,6 @@ public partial class TarReader
         }
 
         sharpCompressStream.Position = pos;
-        return new TarReader(sharpCompressStream, options, CompressionType.None);
+        return new TarReader(sharpCompressStream, readerOptions, CompressionType.None);
     }
 }

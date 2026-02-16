@@ -92,7 +92,7 @@ public class LzwFactory : Factory, IReaderFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return LzwReader.OpenAsyncReader(stream, options);
+        return LzwReader.OpenAsyncReader(stream, options, cancellationToken);
     }
 
     #endregion

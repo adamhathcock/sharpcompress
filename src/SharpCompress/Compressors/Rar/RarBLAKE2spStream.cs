@@ -81,7 +81,7 @@ internal partial class RarBLAKE2spStream : RarStream
 
     BLAKE2SP _blake2sp;
 
-    byte[] _hash = { };
+    byte[] _hash = [];
 
     private RarBLAKE2spStream(
         IRarUnpack unpack,

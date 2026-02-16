@@ -32,9 +32,9 @@ public sealed partial class AceMainHeader : AceHeader
     /// Returns header if this is a valid ACE archive.
     /// Supports both ACE 1.0 and ACE 2.0 formats.
     /// </summary>
-    public override AceHeader? Read(Stream stream)
+    public override AceHeader? Read(Stream reader)
     {
-        var headerData = ReadHeader(stream);
+        var headerData = ReadHeader(reader);
         if (headerData.Length == 0)
         {
             return null;
@@ -54,7 +54,7 @@ public sealed partial class AceMainHeader : AceHeader
         // Skip signature "**ACE**" (7 bytes)
         if (!CheckMagicBytes(headerData, offset))
         {
-            throw new InvalidDataException("Invalid ACE archive signature.");
+            throw new InvalidFormatException("Invalid ACE archive signature.");
         }
         offset += 7;
 

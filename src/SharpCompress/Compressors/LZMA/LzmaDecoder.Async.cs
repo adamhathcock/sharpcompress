@@ -9,8 +9,17 @@ using SharpCompress.Compressors.LZMA.RangeCoder;
 
 namespace SharpCompress.Compressors.LZMA;
 
-public partial class Decoder : ICoder, ISetDecoderProperties
+public partial class Decoder : IAsyncDisposable
 {
+    public async ValueTask DisposeAsync()
+    {
+        if (_outWindow is not null)
+        {
+            await _outWindow.DisposeAsync().ConfigureAwait(false);
+            _outWindow = null;
+        }
+    }
+
     partial class LenDecoder
     {
         public async ValueTask<uint> DecodeAsync(

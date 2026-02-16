@@ -76,6 +76,6 @@ internal class WinzipAesEncryptionData
             WinzipAesKeySize.KeySize128 => 16,
             WinzipAesKeySize.KeySize192 => 24,
             WinzipAesKeySize.KeySize256 => 32,
-            _ => throw new InvalidOperationException(),
+            _ => throw new ArchiveOperationException(),
         };
 }

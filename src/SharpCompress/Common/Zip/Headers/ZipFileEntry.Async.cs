@@ -12,10 +12,7 @@ internal abstract partial class ZipFileEntry
         CancellationToken cancellationToken = default
     )
     {
-        if (archiveStream is null)
-        {
-            throw new ArgumentNullException(nameof(archiveStream));
-        }
+        ThrowHelper.ThrowIfNull(archiveStream);
 
         var buffer = new byte[12];
         await archiveStream.ReadFullyAsync(buffer, 0, 12, cancellationToken).ConfigureAwait(false);

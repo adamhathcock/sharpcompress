@@ -56,9 +56,9 @@ public sealed partial class AceFileHeader : AceHeader
     /// Returns null if no more entries or end of archive.
     /// Supports both ACE 1.0 and ACE 2.0 formats.
     /// </summary>
-    public override AceHeader? Read(Stream stream)
+    public override AceHeader? Read(Stream reader)
     {
-        var headerData = ReadHeader(stream);
+        var headerData = ReadHeader(reader);
         if (headerData.Length == 0)
         {
             return null;
@@ -144,7 +144,7 @@ public sealed partial class AceFileHeader : AceHeader
         }
 
         // Store the data start position
-        DataStartPosition = stream.Position;
+        DataStartPosition = reader.Position;
 
         return this;
     }

@@ -57,7 +57,7 @@ public class RarReaderAsyncTests : ReaderTests
 
     [Fact]
     public async ValueTask Rar_Multi_Reader_Encrypted_Async() =>
-        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
         {
             string[] archives =
             [

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.ZStandard.Unsafe;
 
 namespace SharpCompress.Compressors.ZStandard;
@@ -78,7 +79,7 @@ public partial class DecompressionStream
             {
                 if (checkEndOfStream && lastDecompressResult != 0)
                 {
-                    throw new EndOfStreamException("Premature end of stream");
+                    throw new IncompleteArchiveException("Premature end of stream");
                 }
 
                 return 0;

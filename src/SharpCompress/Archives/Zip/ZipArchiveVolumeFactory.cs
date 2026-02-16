@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using SharpCompress.Common;
 
 namespace SharpCompress.Archives.Zip;
 
@@ -21,7 +22,7 @@ internal static class ZipArchiveVolumeFactory
                     String.Concat(
                         m.Groups[1].Value,
                         Regex.Replace(m.Groups[2].Value, @"[^xz]", ""),
-                        index.ToString().PadLeft(2, '0')
+                        index.ToString(Constants.DefaultCultureInfo).PadLeft(2, '0')
                     )
                 )
             );

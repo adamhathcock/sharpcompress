@@ -7,12 +7,12 @@ namespace SharpCompress.Common.Arj.Headers;
 public partial class ArjMainHeader
 {
     public override async ValueTask<ArjHeader?> ReadAsync(
-        Stream stream,
+        Stream reader,
         CancellationToken cancellationToken = default
     )
     {
-        var body = await ReadHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
-        await ReadExtendedHeadersAsync(stream, cancellationToken).ConfigureAwait(false);
+        var body = await ReadHeaderAsync(reader, cancellationToken).ConfigureAwait(false);
+        await ReadExtendedHeadersAsync(reader, cancellationToken).ConfigureAwait(false);
         return LoadFrom(body);
     }
 }

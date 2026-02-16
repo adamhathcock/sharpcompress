@@ -126,10 +126,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             );
         }
 
-        if (writableStream is null)
-        {
-            throw new ArgumentNullException(nameof(writableStream));
-        }
+        ThrowHelper.ThrowIfNull(writableStream);
         if (!writableStream.CanWrite)
         {
             throw new ArgumentException(

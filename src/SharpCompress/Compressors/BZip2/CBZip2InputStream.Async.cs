@@ -5,6 +5,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2;
@@ -68,7 +69,7 @@ internal partial class CBZip2InputStream
         }
         if (magic0 != 'B' || magic1 != 'Z' || magic2 != 'h')
         {
-            throw new IOException("Not a BZIP2 marked stream");
+            throw new InvalidFormatException("Not a BZIP2 marked stream");
         }
         var read3 = await bsStream
             .ReadAsync(singleByte, 0, 1, cancellationToken)

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using Xunit;
 
 namespace SharpCompress.Test;
@@ -101,7 +102,7 @@ public class UtilityTests
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
-        var buffer = new byte[0];
+        var buffer = Array.Empty<byte>();
 
         var result = stream.ReadFully(buffer);
 
@@ -149,7 +150,7 @@ public class UtilityTests
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
-        Span<byte> buffer = new byte[0];
+        Span<byte> buffer = Array.Empty<byte>();
 
         var result = stream.ReadFully(buffer);
 
@@ -174,12 +175,14 @@ public class UtilityTests
     }
 
     [Fact]
-    public async ValueTask ReadByteAsync_EmptyStream_ThrowsEndOfStreamException()
+    public async ValueTask ReadByteAsync_EmptyStream_ThrowsIncompleteArchiveException()
     {
         using var stream = new MemoryStream();
         using var reader = new BinaryReader(stream);
 
-        await Assert.ThrowsAsync<EndOfStreamException>(async () => await reader.ReadByteAsync());
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+            await reader.ReadByteAsync()
+        );
     }
 
     [Fact]
@@ -216,22 +219,26 @@ public class UtilityTests
     }
 
     [Fact]
-    public async ValueTask ReadBytesAsync_NotEnoughData_ThrowsEndOfStreamException()
+    public async ValueTask ReadBytesAsync_NotEnoughData_ThrowsIncompleteArchiveException()
     {
         var data = new byte[] { 1, 2, 3 };
         using var stream = new MemoryStream(data);
         using var reader = new BinaryReader(stream);
 
-        await Assert.ThrowsAsync<EndOfStreamException>(async () => await reader.ReadBytesAsync(5));
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+            await reader.ReadBytesAsync(5)
+        );
     }
 
     [Fact]
-    public async ValueTask ReadBytesAsync_EmptyStream_ThrowsEndOfStreamException()
+    public async ValueTask ReadBytesAsync_EmptyStream_ThrowsIncompleteArchiveException()
     {
         using var stream = new MemoryStream();
         using var reader = new BinaryReader(stream);
 
-        await Assert.ThrowsAsync<EndOfStreamException>(async () => await reader.ReadBytesAsync(1));
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+            await reader.ReadBytesAsync(1)
+        );
     }
 
     [Fact]

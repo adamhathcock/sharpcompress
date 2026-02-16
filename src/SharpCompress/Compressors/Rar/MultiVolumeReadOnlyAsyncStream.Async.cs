@@ -35,7 +35,9 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOn
     {
         base.Dispose(disposing);
         //acceptable for now?
+#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
         filePartEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
 
         currentStream = null;
     }
@@ -65,7 +67,7 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOn
                 .ConfigureAwait(false);
             if (read < 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             currentPosition += read;
@@ -127,7 +129,7 @@ internal sealed partial class MultiVolumeReadOnlyAsyncStream : MultiVolumeReadOn
                 .ConfigureAwait(false);
             if (read < 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             currentPosition += read;

@@ -9,7 +9,6 @@ namespace SharpCompress.IO;
 internal class CountingStream : Stream
 {
     private readonly Stream _stream;
-    private readonly bool _leaveOpen;
     private long _bytesWritten;
 
     public CountingStream(Stream stream)
@@ -59,7 +58,7 @@ internal class CountingStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && !_leaveOpen)
+        if (disposing)
         {
             _stream.Dispose();
         }

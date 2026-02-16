@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA.Utilities;
 
@@ -25,7 +26,7 @@ public class CrcCheckStream(uint crc) : Stream
 
                 if (_mCurrentCrc != crc) //moved test to here
                 {
-                    throw new InvalidOperationException();
+                    throw new ArchiveOperationException();
                 }
             }
         }
@@ -53,7 +54,7 @@ public class CrcCheckStream(uint crc) : Stream
     }
 
     public override int Read(byte[] buffer, int offset, int count) =>
-        throw new InvalidOperationException();
+        throw new ArchiveOperationException();
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 

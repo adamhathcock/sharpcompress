@@ -90,10 +90,7 @@ public class PpmdStream : Stream
         CancellationToken cancellationToken = default
     )
     {
-        if (stream is null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        ThrowHelper.ThrowIfNull(stream);
 
         if (properties.Version == PpmdVersion.H && compress)
         {
@@ -154,7 +151,11 @@ public class PpmdStream : Stream
         }
         catch
         {
+#if LEGACY_DOTNET
             instance.Dispose();
+#else
+            await instance.DisposeAsync().ConfigureAwait(false);
+#endif
             throw;
         }
     }
@@ -167,21 +168,21 @@ public class PpmdStream : Stream
 
     public override void Flush() { }
 
-    protected override void Dispose(bool isDisposing)
+    protected override void Dispose(bool disposing)
     {
         if (_isDisposed)
         {
             return;
         }
         _isDisposed = true;
-        if (isDisposing)
+        if (disposing)
         {
             if (_compress)
             {
                 _model.EncodeBlock(_stream, new MemoryStream(), true);
             }
         }
-        base.Dispose(isDisposing);
+        base.Dispose(disposing);
     }
 
     public override long Length => throw new NotSupportedException();

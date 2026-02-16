@@ -158,7 +158,7 @@ public class Zip64Tests : WriterTests
         var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = setZip64 };
 
         // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
-        var eo = new ZipWriterEntryOptions { DeflateCompressionLevel = CompressionLevel.None };
+        var eo = new ZipWriterEntryOptions { CompressionLevel = 0 };
 
         using var zip = File.OpenWrite(filename);
         using var st = forwardOnly ? (Stream)new ForwardOnlyStream(zip) : zip;

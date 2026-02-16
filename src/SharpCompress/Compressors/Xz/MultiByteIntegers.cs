@@ -10,10 +10,7 @@ internal static partial class MultiByteIntegers
 {
     public static ulong ReadXZInteger(this BinaryReader reader, int MaxBytes = 9)
     {
-        if (MaxBytes <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(MaxBytes));
-        }
+        ThrowHelper.ThrowIfNegativeOrZero(MaxBytes);
 
         if (MaxBytes > 9)
         {

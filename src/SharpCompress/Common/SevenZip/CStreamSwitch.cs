@@ -44,7 +44,7 @@ internal struct CStreamSwitch : IDisposable
             var dataIndex = archive.ReadNum();
             if (dataIndex < 0 || dataIndex >= dataVector.Count)
             {
-                throw new InvalidOperationException();
+                throw new ArchiveOperationException();
             }
 
             _archive = archive;

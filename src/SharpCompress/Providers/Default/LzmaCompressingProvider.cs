@@ -19,7 +19,7 @@ public sealed class LzmaCompressingProvider : CompressionProviderBase, ICompress
 
     public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
-        throw new InvalidOperationException(
+        throw new ArchiveOperationException(
             "LZMA compression requires context with CanSeek information. "
                 + "Use CreateCompressStream(Stream, int, CompressionContext) overload."
         );
@@ -39,7 +39,7 @@ public sealed class LzmaCompressingProvider : CompressionProviderBase, ICompress
 
     public override Stream CreateDecompressStream(Stream source)
     {
-        throw new InvalidOperationException(
+        throw new ArchiveOperationException(
             "LZMA decompression requires properties. "
                 + "Use CreateDecompressStream(Stream, CompressionContext) overload with Properties."
         );
@@ -62,7 +62,7 @@ public sealed class LzmaCompressingProvider : CompressionProviderBase, ICompress
         Stream source,
         CancellationToken cancellationToken = default
     ) =>
-        throw new InvalidOperationException(
+        throw new ArchiveOperationException(
             "LZMA decompression requires properties. "
                 + "Use CreateDecompressStreamAsync(Stream, CompressionContext, CancellationToken) overload with Properties."
         );

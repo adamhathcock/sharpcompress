@@ -4,6 +4,7 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Common.SevenZip;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using Xunit;
@@ -34,9 +35,8 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = null })
+        Assert.Throws<CryptographicException>(() =>
+            ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = null })
         ); //was failing with ArgumentNullException not CryptographicException like rar
 
     [Fact]
@@ -83,7 +83,7 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_BZip2_Split() =>
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ArchiveOperationException>(() =>
             ArchiveStreamRead(
                 ".001",
                 null,
@@ -100,7 +100,7 @@ public class SevenZipArchiveTests : ArchiveTests
     //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
     [Fact]
     public void SevenZipArchive_BZip2_Split_Working() =>
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ArchiveOperationException>(() =>
             ArchiveStreamRead(
                 ".001",
                 null,
@@ -346,5 +346,54 @@ public class SevenZipArchiveTests : ArchiveTests
 
         // The critical check: within a single folder, the stream should NEVER be recreated
         Assert.Equal(0, streamRecreationsWithinFolder); // Folder stream should remain the same for all entries in the same folder
+    }
+
+    [Fact]
+    public void SevenZipArchive_EmptyStream_WriteToDirectory()
+    {
+        // This test specifically verifies that archives with empty-stream entries
+        // (files with size 0 and no compressed data) can be extracted without throwing
+        // NullReferenceException. This was previously failing because the folder was null
+        // for empty-stream entries.
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.EmptyStream.7z");
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
+
+        var emptyStreamFileCount = 0;
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.IsDirectory)
+            {
+                // Verify this is actually an empty-stream entry (HasStream == false)
+                var sevenZipEntry = entry as SevenZipEntry;
+                if (sevenZipEntry?.FilePart.Header.HasStream == false)
+                {
+                    emptyStreamFileCount++;
+                }
+
+                // This should not throw NullReferenceException
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
+            }
+        }
+
+        // Ensure we actually tested empty-stream entries
+        Assert.True(
+            emptyStreamFileCount > 0,
+            "Test archive should contain at least one empty-stream entry"
+        );
+
+        // Verify that empty files were created
+        var extractedFiles = Directory.GetFiles(
+            SCRATCH_FILES_PATH,
+            "*",
+            SearchOption.AllDirectories
+        );
+        Assert.NotEmpty(extractedFiles);
+
+        // All extracted files should be empty (0 bytes)
+        foreach (var file in extractedFiles)
+        {
+            var fileInfo = new FileInfo(file);
+            Assert.Equal(0, fileInfo.Length);
+        }
     }
 }

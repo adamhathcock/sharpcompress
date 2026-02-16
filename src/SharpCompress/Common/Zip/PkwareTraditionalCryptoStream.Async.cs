@@ -20,10 +20,7 @@ internal partial class PkwareTraditionalCryptoStream
             throw new NotSupportedException("This stream does not encrypt via Read()");
         }
 
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
 
         var temp = new byte[count];
         var readBytes = await _stream

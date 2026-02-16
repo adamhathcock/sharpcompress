@@ -182,7 +182,7 @@ public partial class TarArchive
     }
 
     protected override TarArchiveEntry CreateEntryInternal(
-        string filePath,
+        string key,
         Stream source,
         long size,
         DateTime? modified,
@@ -192,16 +192,14 @@ public partial class TarArchive
             this,
             source,
             CompressionType.Unknown,
-            filePath,
+            key,
             size,
             modified,
             closeStream
         );
 
-    protected override TarArchiveEntry CreateDirectoryEntry(
-        string directoryPath,
-        DateTime? modified
-    ) => new TarWritableArchiveEntry(this, directoryPath, modified);
+    protected override TarArchiveEntry CreateDirectoryEntry(string key, DateTime? modified) =>
+        new TarWritableArchiveEntry(this, key, modified);
 
     protected override void SaveTo(
         Stream stream,

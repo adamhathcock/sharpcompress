@@ -52,9 +52,9 @@ public partial class GZipReader
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new GZipReader(stream, options ?? new ReaderOptions());
+        return new GZipReader(stream, readerOptions ?? new ReaderOptions());
     }
 }

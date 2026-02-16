@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -60,7 +61,7 @@ public class SharpCompressStreamErrorTest
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var nonSeekableMs = new NonSeekableStreamWrapper(ms);
         var stream = SharpCompressStream.Create(nonSeekableMs, 128);
-        Assert.Throws<InvalidOperationException>(() => stream.Rewind());
+        Assert.Throws<ArchiveOperationException>(() => stream.Rewind());
     }
 
     [Fact]
@@ -68,7 +69,7 @@ public class SharpCompressStreamErrorTest
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var stream = SharpCompressStream.CreateNonDisposing(ms);
-        Assert.Throws<InvalidOperationException>(() => stream.Rewind());
+        Assert.Throws<ArchiveOperationException>(() => stream.Rewind());
     }
 
     [Fact]
@@ -78,7 +79,7 @@ public class SharpCompressStreamErrorTest
         var nonSeekableMs = new NonSeekableStreamWrapper(ms);
         var stream = SharpCompressStream.Create(nonSeekableMs, 128);
         stream.StartRecording();
-        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
+        Assert.Throws<ArchiveOperationException>(() => stream.StartRecording());
     }
 
     [Fact]
@@ -86,7 +87,7 @@ public class SharpCompressStreamErrorTest
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var stream = SharpCompressStream.CreateNonDisposing(ms);
-        Assert.Throws<InvalidOperationException>(() => stream.StartRecording());
+        Assert.Throws<ArchiveOperationException>(() => stream.StartRecording());
     }
 
     [Fact]
@@ -95,7 +96,7 @@ public class SharpCompressStreamErrorTest
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var nonSeekableMs = new NonSeekableStreamWrapper(ms);
         var stream = SharpCompressStream.Create(nonSeekableMs, 128);
-        Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
+        Assert.Throws<ArchiveOperationException>(() => stream.StopRecording());
     }
 
     [Fact]
@@ -103,7 +104,7 @@ public class SharpCompressStreamErrorTest
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var stream = SharpCompressStream.CreateNonDisposing(ms);
-        Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
+        Assert.Throws<ArchiveOperationException>(() => stream.StopRecording());
     }
 
     [Fact]
@@ -115,7 +116,7 @@ public class SharpCompressStreamErrorTest
         stream.StartRecording();
         stream.Read(new byte[4], 0, 4);
         stream.StopRecording();
-        Assert.Throws<InvalidOperationException>(() => stream.StopRecording());
+        Assert.Throws<ArchiveOperationException>(() => stream.StopRecording());
     }
 
     [Fact]

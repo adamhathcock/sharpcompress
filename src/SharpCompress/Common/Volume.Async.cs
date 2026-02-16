@@ -9,7 +9,7 @@ public abstract partial class Volume
     {
 #if LEGACY_DOTNET
         _actualStream.Dispose();
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
 #else
         await _actualStream.DisposeAsync().ConfigureAwait(false);
 #endif

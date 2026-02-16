@@ -226,7 +226,7 @@ public partial class TarArchive
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0
-                && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
+                && IsDefined(tarHeader.EntryType);
             return readSucceeded || isEmptyArchive;
         }
         catch (Exception)
@@ -254,7 +254,7 @@ public partial class TarArchive
             var isEmptyArchive =
                 tarHeader.Name?.Length == 0
                 && tarHeader.Size == 0
-                && Enum.IsDefined(typeof(EntryType), tarHeader.EntryType);
+                && IsDefined(tarHeader.EntryType);
             return readSucceeded || isEmptyArchive;
         }
         catch (Exception)
@@ -269,4 +269,13 @@ public partial class TarArchive
 
     public static ValueTask<IWritableAsyncArchive<TarWriterOptions>> CreateAsyncArchive() =>
         new(new TarArchive());
+
+    private static bool IsDefined(EntryType value)
+    {
+#if LEGACY_DOTNET
+        return Enum.IsDefined(typeof(EntryType), value);
+#else
+        return Enum.IsDefined(value);
+#endif
+    }
 }

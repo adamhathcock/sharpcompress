@@ -37,7 +37,7 @@ public partial class SevenZipArchive
 
     public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        fileInfo.NotNull("fileInfo");
+        fileInfo.NotNull(nameof(fileInfo));
         return new SevenZipArchive(
             new SourceStream(
                 fileInfo,
@@ -81,7 +81,7 @@ public partial class SevenZipArchive
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull("stream");
+        stream.NotNull(nameof(stream));
 
         if (stream is not { CanSeek: true })
         {

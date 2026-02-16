@@ -15,6 +15,11 @@ public class ExceptionHierarchyTests
         // Verify that ArchiveException inherits from SharpCompressException
         Assert.True(typeof(SharpCompressException).IsAssignableFrom(typeof(ArchiveException)));
 
+        // Verify that ArchiveOperationException inherits from SharpCompressException
+        Assert.True(
+            typeof(SharpCompressException).IsAssignableFrom(typeof(ArchiveOperationException))
+        );
+
         // Verify that ExtractionException inherits from SharpCompressException
         Assert.True(typeof(SharpCompressException).IsAssignableFrom(typeof(ExtractionException)));
 

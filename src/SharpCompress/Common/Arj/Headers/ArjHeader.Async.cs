@@ -28,7 +28,7 @@ public abstract partial class ArjHeader
 
         if (!CheckMagicBytes(magic))
         {
-            throw new InvalidDataException("Not an ARJ file (wrong magic bytes)");
+            throw new InvalidFormatException("Not an ARJ file (wrong magic bytes)");
         }
 
         // read header_size
@@ -55,7 +55,7 @@ public abstract partial class ArjHeader
         // Compute the hash value
         if (checksum != BitConverter.ToUInt32(crc, 0))
         {
-            throw new InvalidDataException("Header checksum is invalid");
+            throw new InvalidFormatException("Header checksum is invalid");
         }
         return body;
     }
@@ -75,7 +75,7 @@ public abstract partial class ArjHeader
                 .ConfigureAwait(false);
             if (bytesRead < 2)
             {
-                throw new EndOfStreamException(
+                throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header size."
                 );
             }
@@ -92,7 +92,7 @@ public abstract partial class ArjHeader
                 .ConfigureAwait(false);
             if (bytesRead < extHeaderSize)
             {
-                throw new EndOfStreamException(
+                throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header data."
                 );
             }
@@ -103,7 +103,7 @@ public abstract partial class ArjHeader
                 .ConfigureAwait(false);
             if (bytesRead < 4)
             {
-                throw new EndOfStreamException(
+                throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header CRC."
                 );
             }
@@ -111,7 +111,7 @@ public abstract partial class ArjHeader
             var checksum = Crc32Stream.Compute(header);
             if (checksum != BitConverter.ToUInt32(crcextended, 0))
             {
-                throw new InvalidDataException("Extended header checksum is invalid");
+                throw new InvalidFormatException("Extended header checksum is invalid");
             }
 
             extendedHeader.Add(header);

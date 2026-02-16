@@ -22,10 +22,7 @@ public sealed partial class Deflate64Stream : Stream
 
     public Deflate64Stream(Stream stream, CompressionMode mode)
     {
-        if (stream is null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        ThrowHelper.ThrowIfNull(stream);
 
         if (mode != CompressionMode.Decompress)
         {
@@ -72,9 +69,9 @@ public sealed partial class Deflate64Stream : Stream
     public override void SetLength(long value) =>
         throw new NotSupportedException("Deflate64: not supported");
 
-    public override int Read(byte[] array, int offset, int count)
+    public override int Read(byte[] buffer, int offset, int count)
     {
-        ValidateParameters(array, offset, count);
+        ValidateParameters(buffer, offset, count);
         EnsureNotDisposed();
 
         int bytesRead;
@@ -83,7 +80,7 @@ public sealed partial class Deflate64Stream : Stream
 
         while (true)
         {
-            bytesRead = _inflater.Inflate(array, currentOffset, remainingCount);
+            bytesRead = _inflater.Inflate(buffer, currentOffset, remainingCount);
             currentOffset += bytesRead;
             remainingCount -= bytesRead;
 
@@ -118,20 +115,11 @@ public sealed partial class Deflate64Stream : Stream
 
     private void ValidateParameters(byte[] array, int offset, int count)
     {
-        if (array is null)
-        {
-            throw new ArgumentNullException(nameof(array));
-        }
+        ThrowHelper.ThrowIfNull(array);
 
-        if (offset < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
+        ThrowHelper.ThrowIfNegative(offset);
 
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
+        ThrowHelper.ThrowIfNegative(count);
 
         if (array.Length - offset < count)
         {
@@ -153,9 +141,9 @@ public sealed partial class Deflate64Stream : Stream
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ThrowCannotWriteToDeflateManagedStreamException() =>
-        throw new InvalidOperationException("Deflate64: cannot write to this stream");
+        throw new ArchiveOperationException("Deflate64: cannot write to this stream");
 
-    public override void Write(byte[] array, int offset, int count) =>
+    public override void Write(byte[] buffer, int offset, int count) =>
         ThrowCannotWriteToDeflateManagedStreamException();
 
     // This is called by Dispose:

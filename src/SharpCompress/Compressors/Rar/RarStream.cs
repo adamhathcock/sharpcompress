@@ -3,6 +3,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Compressors.Rar;
@@ -99,7 +100,7 @@ internal partial class RarStream : Stream
         if (count > 0 && outTotal == 0 && _position < Length)
         {
             // sanity check, eg if we try to decompress a redir entry
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"unpacked file size does not match header: expected {Length} found {_position}"
             );
         }

@@ -34,7 +34,7 @@ public partial class ArcLzwStream
             totalRead += read;
         }
         var decoded = Decompress(data, _useCrunched);
-        var result = decoded.Count();
+        var result = decoded.Count;
         if (_useCrunched)
         {
             var unpacked = RLE.UnpackRLE(decoded.ToArray());

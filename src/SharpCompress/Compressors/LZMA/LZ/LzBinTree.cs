@@ -91,10 +91,7 @@ internal sealed class BinTree : InWindow
         uint keepAddBufferAfter
     )
     {
-        if (historySize > K_MAX_VAL_FOR_NORMALIZE - 256)
-        {
-            throw new ArgumentOutOfRangeException(nameof(historySize));
-        }
+        ThrowHelper.ThrowIfGreaterThan(historySize, K_MAX_VAL_FOR_NORMALIZE - 256);
         _cutValue = 16 + (matchMaxLen >> 1);
 
         var windowReservSize =

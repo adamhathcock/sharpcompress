@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Squeezed;
 
@@ -23,7 +24,7 @@ public partial class BitReader
             int nextByte = _stream.ReadByte();
             if (nextByte == -1)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             _bitBuffer = nextByte;

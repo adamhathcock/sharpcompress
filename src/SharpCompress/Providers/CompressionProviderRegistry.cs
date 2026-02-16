@@ -62,14 +62,14 @@ public sealed class CompressionProviderRegistry
     /// <param name="destination">The destination stream.</param>
     /// <param name="level">The compression level.</param>
     /// <returns>A compression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
     public Stream CreateCompressStream(CompressionType type, Stream destination, int level)
     {
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -82,14 +82,14 @@ public sealed class CompressionProviderRegistry
     /// <param name="type">The compression type.</param>
     /// <param name="source">The source stream.</param>
     /// <returns>A decompression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
     public Stream CreateDecompressStream(CompressionType type, Stream source)
     {
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -104,7 +104,7 @@ public sealed class CompressionProviderRegistry
     /// <param name="level">The compression level.</param>
     /// <param name="context">Context information for the compression.</param>
     /// <returns>A compression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
     public Stream CreateCompressStream(
         CompressionType type,
@@ -116,7 +116,7 @@ public sealed class CompressionProviderRegistry
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -130,7 +130,7 @@ public sealed class CompressionProviderRegistry
     /// <param name="source">The source stream.</param>
     /// <param name="context">Context information for the decompression.</param>
     /// <returns>A decompression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
     public Stream CreateDecompressStream(
         CompressionType type,
@@ -141,7 +141,7 @@ public sealed class CompressionProviderRegistry
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -156,7 +156,7 @@ public sealed class CompressionProviderRegistry
     /// <param name="level">The compression level.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task containing the compression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
     public ValueTask<Stream> CreateCompressStreamAsync(
         CompressionType type,
@@ -168,7 +168,7 @@ public sealed class CompressionProviderRegistry
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -182,7 +182,7 @@ public sealed class CompressionProviderRegistry
     /// <param name="source">The source stream.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task containing the decompression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
     public ValueTask<Stream> CreateDecompressStreamAsync(
         CompressionType type,
@@ -193,7 +193,7 @@ public sealed class CompressionProviderRegistry
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -209,7 +209,7 @@ public sealed class CompressionProviderRegistry
     /// <param name="context">Context information for the compression.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task containing the compression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
     public ValueTask<Stream> CreateCompressStreamAsync(
         CompressionType type,
@@ -222,7 +222,7 @@ public sealed class CompressionProviderRegistry
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -237,7 +237,7 @@ public sealed class CompressionProviderRegistry
     /// <param name="context">Context information for the decompression.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task containing the decompression stream.</returns>
-    /// <exception cref="InvalidOperationException">If no provider is registered for the type.</exception>
+    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
     public ValueTask<Stream> CreateDecompressStreamAsync(
         CompressionType type,
@@ -249,7 +249,7 @@ public sealed class CompressionProviderRegistry
         var provider = GetProvider(type);
         if (provider is null)
         {
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"No compression provider registered for type: {type}"
             );
         }
@@ -275,10 +275,7 @@ public sealed class CompressionProviderRegistry
     /// <exception cref="ArgumentNullException">If provider is null.</exception>
     public CompressionProviderRegistry With(ICompressionProvider provider)
     {
-        if (provider is null)
-        {
-            throw new ArgumentNullException(nameof(provider));
-        }
+        ThrowHelper.ThrowIfNull(provider);
 
         var newProviders = new Dictionary<CompressionType, ICompressionProvider>(_providers)
         {

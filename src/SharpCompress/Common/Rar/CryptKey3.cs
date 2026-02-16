@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
@@ -36,7 +37,9 @@ internal class CryptKey3 : ICryptKey
             rawPassword[i + rawLength] = salt[i];
         }
 
+#if LEGACY_DOTNET
         var msgDigest = SHA1.Create();
+#endif
         const int noOfRounds = (1 << 18);
         const int iblock = 3;
 
@@ -54,11 +57,19 @@ internal class CryptKey3 : ICryptKey
 
             if (i % (noOfRounds / EncryptionConstV5.SIZE_INITV) == 0)
             {
+#if LEGACY_DOTNET
                 digest = msgDigest.ComputeHash(data, 0, (i + 1) * (rawPassword.Length + iblock));
+#else
+                digest = SHA1.HashData(data.AsSpan(0, (i + 1) * (rawPassword.Length + iblock)));
+#endif
                 aesIV[i / (noOfRounds / EncryptionConstV5.SIZE_INITV)] = digest[19];
             }
         }
+#if LEGACY_DOTNET
         digest = msgDigest.ComputeHash(data);
+#else
+        digest = SHA1.HashData(data);
+#endif
         //slow code ends
 
         var aesKey = new byte[EncryptionConstV5.SIZE_INITV];

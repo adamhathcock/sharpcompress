@@ -40,7 +40,7 @@ public class Lzma2Tests : XzTestsBase
     {
         uint temp;
         _filter.Init([41]);
-        var ex = Assert.Throws<OverflowException>(() =>
+        var ex = Assert.Throws<InvalidFormatException>(() =>
         {
             temp = _filter.DictionarySize;
         });

@@ -20,7 +20,7 @@ internal partial class MarkHeader
         {
             return buffer[0];
         }
-        throw new EndOfStreamException();
+        throw new IncompleteArchiveException("Unexpected end of stream.");
     }
 
     public static async ValueTask<MarkHeader> ReadAsync(
@@ -122,7 +122,11 @@ internal partial class MarkHeader
         {
             if (!leaveStreamOpen)
             {
+#if LEGACY_DOTNET
                 stream.Dispose();
+#else
+                await stream.DisposeAsync().ConfigureAwait(false);
+#endif
             }
             throw new InvalidFormatException("Error trying to read rar signature.", e);
         }

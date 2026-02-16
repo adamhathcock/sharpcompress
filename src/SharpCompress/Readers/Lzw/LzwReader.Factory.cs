@@ -52,9 +52,9 @@ public partial class LzwReader
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new LzwReader(stream, options ?? new ReaderOptions());
+        return new LzwReader(stream, readerOptions ?? new ReaderOptions());
     }
 }

@@ -148,7 +148,7 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
         var signature = reader.ReadUInt32();
         if (ReadHeader(signature, reader, _zip64) is not LocalEntryHeader localEntryHeader)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         // populate fields only known from the DirectoryEntryHeader

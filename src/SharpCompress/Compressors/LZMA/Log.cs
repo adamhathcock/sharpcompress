@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -16,7 +17,7 @@ internal static class Log
     {
         if (INDENT.Count == 1)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         INDENT.Pop();

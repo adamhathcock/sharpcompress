@@ -66,6 +66,7 @@
 // -----------------------------------------------------------------------
 
 using System;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate;
 
@@ -696,6 +697,7 @@ internal sealed class ZlibCodec
         {
             throw new ZlibException(
                 string.Format(
+                    Constants.DefaultCultureInfo,
                     "Invalid State. (pending.Length={0}, pendingCount={1})",
                     dstate.pending.Length,
                     dstate.pendingCount

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace SharpCompress.IO;
@@ -206,7 +207,7 @@ public partial class SourceStream : Stream, IStreamStack
                 if (!SetStream(_stream + 1))
                 {
                     // No more streams available, cannot seek to requested position
-                    throw new InvalidOperationException(
+                    throw new ArchiveOperationException(
                         $"Cannot seek to position {pos}. End of stream reached at position {_prevSize}."
                     );
                 }
@@ -216,7 +217,7 @@ public partial class SourceStream : Stream, IStreamStack
                 if (currentLength <= 0 && Current.Length <= 0)
                 {
                     // Both old and new stream have zero length - cannot make progress
-                    throw new InvalidOperationException(
+                    throw new ArchiveOperationException(
                         $"Cannot seek to position {pos}. Encountered zero-length streams at position {_prevSize}."
                     );
                 }

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Arj;
 
@@ -13,7 +14,7 @@ public sealed partial class HuffTree
     {
         if (_tree.Count == 0)
         {
-            throw new InvalidOperationException("Tree not initialized");
+            throw new ArchiveOperationException("Tree not initialized");
         }
 
         TreeEntry node = _tree[0];
@@ -29,7 +30,7 @@ public sealed partial class HuffTree
 
             if (index >= _tree.Count)
             {
-                throw new InvalidOperationException("Invalid branch index during read");
+                throw new ArchiveOperationException("Invalid branch index during read");
             }
 
             node = _tree[index];

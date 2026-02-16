@@ -24,9 +24,9 @@ public partial class GZipWriter : IWriterOpenable<GZipWriterOptions>
         return new GZipWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(string path, GZipWriterOptions writerOptions)
+    public static IAsyncWriter OpenAsyncWriter(string stream, GZipWriterOptions writerOptions)
     {
-        return (IAsyncWriter)OpenWriter(path, writerOptions);
+        return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
     public static IAsyncWriter OpenAsyncWriter(Stream stream, GZipWriterOptions writerOptions)

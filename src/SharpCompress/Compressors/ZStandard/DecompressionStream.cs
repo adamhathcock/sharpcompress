@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.ZStandard.Unsafe;
 
 namespace SharpCompress.Compressors.ZStandard;
@@ -37,20 +38,14 @@ public partial class DecompressionStream : Stream
         bool leaveOpen = true
     )
     {
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        SharpCompress.ThrowHelper.ThrowIfNull(stream);
 
         if (!stream.CanRead)
         {
             throw new ArgumentException("Stream is not readable", nameof(stream));
         }
 
-        if (bufferSize < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
-        }
+        SharpCompress.ThrowHelper.ThrowIfNegative(bufferSize);
 
         innerStream = stream;
         this.decompressor = decompressor;
@@ -157,7 +152,7 @@ public partial class DecompressionStream : Stream
             {
                 if (checkEndOfStream && lastDecompressResult != 0)
                 {
-                    throw new EndOfStreamException("Premature end of stream");
+                    throw new IncompleteArchiveException("Premature end of stream");
                 }
 
                 return 0;

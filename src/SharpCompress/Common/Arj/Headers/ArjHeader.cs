@@ -44,7 +44,7 @@ public abstract partial class ArjHeader
 
         if (!CheckMagicBytes(magic))
         {
-            throw new InvalidDataException("Not an ARJ file (wrong magic bytes)");
+            throw new InvalidFormatException("Not an ARJ file (wrong magic bytes)");
         }
 
         // read header_size
@@ -69,7 +69,7 @@ public abstract partial class ArjHeader
         // Compute the hash value
         if (checksum != BitConverter.ToUInt32(crc, 0))
         {
-            throw new InvalidDataException("Header checksum is invalid");
+            throw new InvalidFormatException("Header checksum is invalid");
         }
         return body;
     }
@@ -86,7 +86,7 @@ public abstract partial class ArjHeader
             int bytesRead = reader.Read(buffer, 0, 2);
             if (bytesRead < 2)
             {
-                throw new EndOfStreamException(
+                throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header size."
                 );
             }
@@ -101,7 +101,7 @@ public abstract partial class ArjHeader
             bytesRead = reader.Read(header, 0, extHeaderSize);
             if (bytesRead < extHeaderSize)
             {
-                throw new EndOfStreamException(
+                throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header data."
                 );
             }
@@ -110,7 +110,7 @@ public abstract partial class ArjHeader
             bytesRead = reader.Read(crc, 0, 4);
             if (bytesRead < 4)
             {
-                throw new EndOfStreamException(
+                throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header CRC."
                 );
             }
@@ -118,7 +118,7 @@ public abstract partial class ArjHeader
             var checksum = Crc32Stream.Compute(header);
             if (checksum != BitConverter.ToUInt32(crc, 0))
             {
-                throw new InvalidDataException("Extended header checksum is invalid");
+                throw new InvalidFormatException("Extended header checksum is invalid");
             }
 
             extendedHeader.Add(header);
@@ -137,7 +137,11 @@ public abstract partial class ArjHeader
 
     public static FileType FileTypeFromByte(byte value)
     {
+#if LEGACY_DOTNET
         return Enum.IsDefined(typeof(FileType), value) ? (FileType)value : Headers.FileType.Unknown;
+#else
+        return Enum.IsDefined((FileType)value) ? (FileType)value : Headers.FileType.Unknown;
+#endif
     }
 
     public static bool IsArchive(Stream stream)

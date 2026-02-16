@@ -170,7 +170,7 @@ public partial class ZipArchive
             {
                 return false;
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -203,7 +203,7 @@ public partial class ZipArchive
                     return false;
                 }
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -234,7 +234,7 @@ public partial class ZipArchive
             {
                 return false;
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -261,9 +261,11 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            var header = headerFactory
-                .ReadStreamHeader(stream)
-                .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+            var header = await headerFactory
+                .ReadStreamHeaderAsync(stream)
+                .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
             if (header is null)
             {
                 if (stream.CanSeek)
@@ -286,7 +288,7 @@ public partial class ZipArchive
                     return false;
                 }
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -296,5 +298,14 @@ public partial class ZipArchive
         {
             return false;
         }
+    }
+
+    private static bool IsDefined(ZipHeaderType value)
+    {
+#if LEGACY_DOTNET
+        return Enum.IsDefined(typeof(ZipHeaderType), value);
+#else
+        return Enum.IsDefined(value);
+#endif
     }
 }

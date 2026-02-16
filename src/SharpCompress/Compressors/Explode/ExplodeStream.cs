@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using SharpCompress.Common;
 using SharpCompress.Common.Zip.Headers;
 
 namespace SharpCompress.Compressors.Explode;
@@ -697,7 +698,7 @@ public partial class ExplodeStream : Stream
                             ) != 0
                         )
                         {
-                            throw new InvalidDataException("Error decoding literal value");
+                            throw new InvalidFormatException("Error decoding literal value");
                         }
 
                         nextByte = (byte)huftPointer.Value;
@@ -736,7 +737,7 @@ public partial class ExplodeStream : Stream
                     ) != 0
                 )
                 {
-                    throw new InvalidDataException("Error decoding distance high bits");
+                    throw new InvalidFormatException("Error decoding distance high bits");
                 }
 
                 distance = windowIndex - (distance + huftPointer.Value); /* construct offset */
@@ -752,7 +753,7 @@ public partial class ExplodeStream : Stream
                     ) != 0
                 )
                 {
-                    throw new InvalidDataException("Error decoding coded length");
+                    throw new InvalidFormatException("Error decoding coded length");
                 }
 
                 length = huftPointer.Value;

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Squeezed;
 
@@ -17,7 +18,7 @@ public partial class BitReader
                 .ConfigureAwait(false);
             if (bytesRead == 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             _bitBuffer = buffer[0];

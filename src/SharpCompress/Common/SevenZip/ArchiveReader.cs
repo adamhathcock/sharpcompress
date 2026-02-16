@@ -72,7 +72,7 @@ internal partial class ArchiveReader
             }
             if (type == BlockType.End)
             {
-                throw new InvalidOperationException();
+                throw new ArchiveOperationException();
             }
             SkipData();
         }
@@ -749,7 +749,7 @@ internal partial class ArchiveReader
 
             if (type != BlockType.FilesInfo)
             {
-                throw new InvalidOperationException();
+                throw new ArchiveOperationException();
             }
 
             var numFiles = ReadNum();
@@ -888,7 +888,7 @@ internal partial class ArchiveReader
                         {
                             if (ReadByte() != 0)
                             {
-                                throw new InvalidOperationException();
+                                throw new ArchiveOperationException();
                             }
                         }
                         break;
@@ -901,7 +901,7 @@ internal partial class ArchiveReader
                 var checkRecordsSize = (db._majorVersion > 0 || db._minorVersion > 2);
                 if (checkRecordsSize && _currentReader.Offset - oldPos != size)
                 {
-                    throw new InvalidOperationException();
+                    throw new ArchiveOperationException();
                 }
             }
 
@@ -953,7 +953,7 @@ internal partial class ArchiveReader
                 var delta = stream.Read(_header, offset, 0x20 - offset);
                 if (delta == 0)
                 {
-                    throw new EndOfStreamException();
+                    throw new IncompleteArchiveException("Unexpected end of stream.");
                 }
 
                 offset += delta;
@@ -1005,7 +1005,7 @@ internal partial class ArchiveReader
 
         if (db._majorVersion != 0)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         var crcFromArchive = DataReader.Get32(_header, 8);
@@ -1021,7 +1021,7 @@ internal partial class ArchiveReader
 
         if (crc != crcFromArchive)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         db._startPositionAfterHeader = _streamOrigin + 0x20;
@@ -1035,12 +1035,12 @@ internal partial class ArchiveReader
 
         if (nextHeaderOffset < 0 || nextHeaderSize < 0 || nextHeaderSize > int.MaxValue)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         if (nextHeaderOffset > _streamEnding - db._startPositionAfterHeader)
         {
-            throw new InvalidOperationException("nextHeaderOffset is invalid");
+            throw new ArchiveOperationException("nextHeaderOffset is invalid");
         }
 
         _stream.Seek(nextHeaderOffset, SeekOrigin.Current);
@@ -1050,7 +1050,7 @@ internal partial class ArchiveReader
 
         if (Crc.Finish(Crc.Update(Crc.INIT_CRC, header, 0, header.Length)) != nextHeaderCrc)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         using (var streamSwitch = new CStreamSwitch())
@@ -1062,7 +1062,7 @@ internal partial class ArchiveReader
             {
                 if (type != BlockType.EncodedHeader)
                 {
-                    throw new InvalidOperationException();
+                    throw new ArchiveOperationException();
                 }
 
                 var dataVector = ReadAndDecodePackedStreams(
@@ -1079,14 +1079,14 @@ internal partial class ArchiveReader
 
                 if (dataVector.Count != 1)
                 {
-                    throw new InvalidOperationException();
+                    throw new ArchiveOperationException();
                 }
 
                 streamSwitch.Set(this, dataVector[0]);
 
                 if (ReadId() != BlockType.Header)
                 {
-                    throw new InvalidOperationException();
+                    throw new ArchiveOperationException();
                 }
             }
 
@@ -1260,7 +1260,7 @@ internal partial class ArchiveReader
         var firstFileIndex = db._folderStartFileIndex[folderIndex];
         if (firstFileIndex > fileIndex || fileIndex - firstFileIndex >= numFilesInFolder)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         var skipCount = fileIndex - firstFileIndex;

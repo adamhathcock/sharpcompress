@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.Utilities;
 
 namespace SharpCompress.Compressors.LZMA;
@@ -44,7 +45,7 @@ internal sealed partial class AesDecoderStream : DecoderStream2
         var key = InitKey(numCyclesPower, salt, passwordBytes);
         if (key == null)
         {
-            throw new InvalidOperationException("Initialized with null key");
+            throw new ArchiveOperationException("Initialized with null key");
         }
 
         using (var aes = Aes.Create())
@@ -107,7 +108,7 @@ internal sealed partial class AesDecoderStream : DecoderStream2
                 if (read == 0)
                 {
                     // We are not done decoding and have less than 16 bytes.
-                    throw new EndOfStreamException();
+                    throw new IncompleteArchiveException("Unexpected end of stream.");
                 }
 
                 mEnding += read;
@@ -160,7 +161,7 @@ internal sealed partial class AesDecoderStream : DecoderStream2
         var ivSize = (bt >> 6) & 1;
         if (info.Length == 1)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         var bt2 = info[1];
@@ -168,7 +169,7 @@ internal sealed partial class AesDecoderStream : DecoderStream2
         ivSize += (bt2 & 15);
         if (info.Length < 2 + saltSize + ivSize)
         {
-            throw new InvalidOperationException();
+            throw new ArchiveOperationException();
         }
 
         salt = new byte[saltSize];

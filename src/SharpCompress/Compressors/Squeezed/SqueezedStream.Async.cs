@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.RLE90;
 
 namespace SharpCompress.Compressors.Squeezed;
@@ -73,7 +74,7 @@ public partial class SqueezeStream
 
             if (bytesRead != 4)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             dnode[j, 0] = (short)(nodeBytes[0] | (nodeBytes[1] << 8));

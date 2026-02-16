@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace SharpCompress.Common;
 
 public static class Constants
@@ -38,4 +40,6 @@ public static class Constants
     /// </para>
     /// </remarks>
     public static int RewindableBufferSize { get; set; } = 81920;
+
+    public static CultureInfo DefaultCultureInfo { get; set; } = CultureInfo.InvariantCulture;
 }

@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
@@ -279,7 +280,7 @@ public partial class ExplodeStream
 
                         if (literalResult.returnCode != 0)
                         {
-                            throw new InvalidDataException("Error decoding literal value");
+                            throw new InvalidFormatException("Error decoding literal value");
                         }
 
                         huftPointer = literalResult.huftPointer;
@@ -319,7 +320,7 @@ public partial class ExplodeStream
 
                 if (distanceResult.returnCode != 0)
                 {
-                    throw new InvalidDataException("Error decoding distance high bits");
+                    throw new InvalidFormatException("Error decoding distance high bits");
                 }
 
                 huftPointer = distanceResult.huftPointer;
@@ -335,7 +336,7 @@ public partial class ExplodeStream
 
                 if (lengthResult.returnCode != 0)
                 {
-                    throw new InvalidDataException("Error decoding coded length");
+                    throw new InvalidFormatException("Error decoding coded length");
                 }
 
                 huftPointer = lengthResult.huftPointer;

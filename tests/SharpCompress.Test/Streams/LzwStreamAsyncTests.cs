@@ -110,7 +110,7 @@ public class LzwStreamAsyncTests : TestBase
         using var stream = File.OpenRead(testArchive);
         using var lzwStream = new LzwStream(stream);
 
-        var buffer = new byte[0];
+        var buffer = Array.Empty<byte>();
         int bytesRead = await lzwStream.ReadAsync(buffer, 0, 0).ConfigureAwait(false);
 
         Assert.Equal(0, bytesRead);

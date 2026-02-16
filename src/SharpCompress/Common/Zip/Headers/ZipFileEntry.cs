@@ -44,10 +44,7 @@ internal abstract partial class ZipFileEntry(ZipHeaderType type, IArchiveEncodin
 
     internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
     {
-        if (archiveStream is null)
-        {
-            throw new ArgumentNullException(nameof(archiveStream));
-        }
+        ThrowHelper.ThrowIfNull(archiveStream);
 
         var buffer = new byte[12];
         archiveStream.ReadFully(buffer);
@@ -95,7 +92,7 @@ internal abstract partial class ZipFileEntry(ZipHeaderType type, IArchiveEncodin
             }
 
             var type = (ExtraDataType)BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
-            if (!Enum.IsDefined(typeof(ExtraDataType), type))
+            if (!IsDefined(type))
             {
                 type = ExtraDataType.NotImplementedExtraData;
             }
@@ -135,4 +132,13 @@ internal abstract partial class ZipFileEntry(ZipHeaderType type, IArchiveEncodin
     internal uint ExternalFileAttributes { get; set; }
 
     internal string? Comment { get; set; }
+
+    private static bool IsDefined(ExtraDataType type)
+    {
+#if LEGACY_DOTNET
+        return Enum.IsDefined(typeof(ExtraDataType), type);
+#else
+        return Enum.IsDefined(type);
+#endif
+    }
 }

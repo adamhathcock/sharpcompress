@@ -139,7 +139,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
         var read = BaseStream.Read(blockHeaderWithoutCrc, 1, BlockHeaderSize - 5);
         if (read != BlockHeaderSize - 5)
         {
-            throw new EndOfStreamException("Reached end of stream unexpectedly");
+            throw new IncompleteArchiveException("Reached end of stream unexpectedly");
         }
 
         var crc = BaseStream.ReadLittleEndianUInt32();

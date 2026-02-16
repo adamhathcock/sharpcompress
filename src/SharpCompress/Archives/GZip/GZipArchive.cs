@@ -37,7 +37,7 @@ public partial class GZipArchive
     }
 
     protected override GZipArchiveEntry CreateEntryInternal(
-        string filePath,
+        string key,
         Stream source,
         long size,
         DateTime? modified,
@@ -48,13 +48,11 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-        return new GZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
+        return new GZipWritableArchiveEntry(this, source, key, size, modified, closeStream);
     }
 
-    protected override GZipArchiveEntry CreateDirectoryEntry(
-        string directoryPath,
-        DateTime? modified
-    ) => throw new NotSupportedException("GZip archives do not support directory entries.");
+    protected override GZipArchiveEntry CreateDirectoryEntry(string key, DateTime? modified) =>
+        throw new NotSupportedException("GZip archives do not support directory entries.");
 
     protected override void SaveTo(
         Stream stream,

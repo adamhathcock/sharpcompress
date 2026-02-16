@@ -24,9 +24,9 @@ public partial class TarWriter : IWriterOpenable<TarWriterOptions>
         return new TarWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(string path, TarWriterOptions writerOptions)
+    public static IAsyncWriter OpenAsyncWriter(string stream, TarWriterOptions writerOptions)
     {
-        return (IAsyncWriter)OpenWriter(path, writerOptions);
+        return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
     public static IAsyncWriter OpenAsyncWriter(Stream stream, TarWriterOptions writerOptions)

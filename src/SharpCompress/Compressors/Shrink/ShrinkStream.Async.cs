@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Shrink;
 
@@ -49,7 +50,7 @@ internal partial class ShrinkStream : Stream
                 .ConfigureAwait(false);
             if (bytesRead == 0)
             {
-                throw new EndOfStreamException(
+                throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading compressed data"
                 );
             }

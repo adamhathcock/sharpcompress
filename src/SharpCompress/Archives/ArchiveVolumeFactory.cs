@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using SharpCompress.Common;
 
 namespace SharpCompress.Archives;
 
@@ -19,7 +20,9 @@ internal abstract class ArchiveVolumeFactory
                     part1.DirectoryName!,
                     String.Concat(
                         m.Groups[1].Value,
-                        (index + 1).ToString().PadLeft(m.Groups[2].Value.Length, '0')
+                        (index + 1)
+                            .ToString(Constants.DefaultCultureInfo)
+                            .PadLeft(m.Groups[2].Value.Length, '0')
                     )
                 )
             );

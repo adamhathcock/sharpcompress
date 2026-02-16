@@ -15,12 +15,12 @@ public partial class AceReader
     /// Opens an AceReader for non-seeking usage with a single volume.
     /// </summary>
     /// <param name="stream">The stream containing the ACE archive.</param>
-    /// <param name="options">Reader options.</param>
+    /// <param name="readerOptions">Reader options.</param>
     /// <returns>An AceReader instance.</returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new SingleVolumeAceReader(stream, options ?? new ReaderOptions());
+        return new SingleVolumeAceReader(stream, readerOptions ?? new ReaderOptions());
     }
 
     /// <summary>

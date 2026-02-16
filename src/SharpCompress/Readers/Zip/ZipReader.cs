@@ -43,12 +43,12 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     /// Opens a ZipReader for Non-seeking usage with a single volume
     /// </summary>
     /// <param name="stream"></param>
-    /// <param name="options"></param>
+    /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new ZipReader(stream, options ?? new ReaderOptions());
+        return new ZipReader(stream, readerOptions ?? new ReaderOptions());
     }
 
     public static IReader OpenReader(

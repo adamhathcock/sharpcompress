@@ -78,9 +78,9 @@ public partial class ZipWriter : AbstractWriter
             _ => throw new InvalidFormatException("Invalid compression method: " + compressionType),
         };
 
-    public override void Write(string entryPath, Stream source, DateTime? modificationTime) =>
+    public override void Write(string filename, Stream source, DateTime? modificationTime) =>
         Write(
-            entryPath,
+            filename,
             source,
             new ZipWriterEntryOptions() { ModificationDateTime = modificationTime }
         );
@@ -133,7 +133,11 @@ public partial class ZipWriter : AbstractWriter
     {
         filename = filename.Replace('\\', '/');
 
+#if LEGACY_DOTNET
         var pos = filename.IndexOf(':');
+#else
+        var pos = filename.IndexOf(':', StringComparison.Ordinal);
+#endif
         if (pos >= 0)
         {
             filename = filename.Remove(0, pos + 1);
@@ -456,7 +460,7 @@ public partial class ZipWriter : AbstractWriter
                     );
                     if (compressingProvider is null)
                     {
-                        throw new InvalidOperationException("LZMA compression provider not found.");
+                        throw new ArchiveOperationException("LZMA compression provider not found.");
                     }
 
                     var context = new CompressionContext { CanSeek = originalStream.CanSeek };
@@ -494,7 +498,7 @@ public partial class ZipWriter : AbstractWriter
                     );
                     if (compressingProvider is null)
                     {
-                        throw new InvalidOperationException("PPMd compression provider not found.");
+                        throw new ArchiveOperationException("PPMd compression provider not found.");
                     }
 
                     var context = new CompressionContext

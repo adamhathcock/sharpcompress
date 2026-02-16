@@ -87,7 +87,7 @@ internal partial class ArchiveDatabase
                 {
                     if (folderIndex >= _folders.Count)
                     {
-                        throw new InvalidOperationException();
+                        throw new ArchiveOperationException();
                     }
 
                     _folderStartFileIndex.Add(i); // check it

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA.Utilities;
 
@@ -17,7 +18,7 @@ internal partial class CrcBuilderStream : Stream
         cancellationToken.ThrowIfCancellationRequested();
         if (_mFinished)
         {
-            throw new InvalidOperationException("CRC calculation has been finished.");
+            throw new ArchiveOperationException("CRC calculation has been finished.");
         }
 
         Processed += count;

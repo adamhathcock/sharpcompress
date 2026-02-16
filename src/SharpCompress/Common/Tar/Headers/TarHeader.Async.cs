@@ -27,7 +27,7 @@ internal sealed partial class TarHeader
                 await WriteUstarAsync(output, cancellationToken).ConfigureAwait(false);
                 break;
             default:
-                throw new InvalidOperationException("This should be impossible...");
+                throw new ArchiveOperationException("This should be impossible...");
         }
     }
 
@@ -80,7 +80,7 @@ internal sealed partial class TarHeader
 
             if (splitIndex == -1)
             {
-                throw new InvalidDataException(
+                throw new InvalidFormatException(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Directory separator not found! Try using GNU Tar format instead!"
                 );
             }
@@ -90,14 +90,14 @@ internal sealed partial class TarHeader
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(namePrefix) >= 155)
             {
-                throw new InvalidDataException(
+                throw new InvalidFormatException(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
             }
 
             if (this.ArchiveEncoding.GetEncoding().GetByteCount(name) >= 100)
             {
-                throw new InvalidDataException(
+                throw new InvalidFormatException(
                     $"Tar header USTAR format can not fit file name \"{fullName}\" of length {nameByteCount}! Try using GNU Tar format instead!"
                 );
             }
@@ -266,7 +266,7 @@ internal sealed partial class TarHeader
         LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
         Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
 
-        if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic))
+        if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic, StringComparison.Ordinal))
         {
             var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
 

@@ -73,7 +73,7 @@ internal partial class Unpack
 
             if (((WriteBorder - UnpPtr) & MaxWinMask) < MAX_LZ_MATCH + 3 && WriteBorder != UnpPtr)
             {
-                await UnpWriteBufAsync(cancellationToken);
+                await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (WrittenFileSize > DestUnpSize)
                 {
                     return;
@@ -215,7 +215,7 @@ internal partial class Unpack
                 continue;
             }
         }
-        await UnpWriteBufAsync(cancellationToken);
+        await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<bool> ReadFilterAsync(

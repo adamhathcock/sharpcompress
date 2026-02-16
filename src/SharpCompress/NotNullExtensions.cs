@@ -52,7 +52,7 @@ internal static class NotNullExtensions
     )
         where T : class
     {
-        ArgumentNullException.ThrowIfNull(obj, paramName);
+        ThrowHelper.ThrowIfNull(obj, paramName);
         return obj;
     }
 

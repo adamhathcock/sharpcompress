@@ -270,7 +270,7 @@ internal abstract partial class ZipFilePart : FilePart
 
                 default:
                 {
-                    throw new InvalidOperationException("Header.CompressionMethod is invalid");
+                    throw new ArchiveOperationException("Header.CompressionMethod is invalid");
                 }
             }
         }

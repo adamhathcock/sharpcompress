@@ -3,6 +3,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
@@ -91,7 +92,7 @@ internal partial class Decoder
                 .ConfigureAwait(false);
             if (read == 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
             _code = (_code << 8) | buffer[0];
         }
@@ -108,7 +109,7 @@ internal partial class Decoder
                 .ConfigureAwait(false);
             if (read == 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
             _code = (_code << 8) | buffer[0];
             _range <<= 8;
@@ -126,7 +127,7 @@ internal partial class Decoder
                 .ConfigureAwait(false);
             if (read == 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
             _code = (_code << 8) | buffer[0];
             _range <<= 8;
@@ -157,7 +158,7 @@ internal partial class Decoder
                     .ConfigureAwait(false);
                 if (read == 0)
                 {
-                    throw new EndOfStreamException();
+                    throw new IncompleteArchiveException("Unexpected end of stream.");
                 }
                 code = (code << 8) | buffer[0];
                 range <<= 8;

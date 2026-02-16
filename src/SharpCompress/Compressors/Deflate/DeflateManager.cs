@@ -70,6 +70,7 @@
 
 using System;
 using SharpCompress.Algorithms;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate;
 
@@ -1706,7 +1707,11 @@ internal sealed partial class DeflateManager
         if (memLevel < 1 || memLevel > MEM_LEVEL_MAX)
         {
             throw new ZlibException(
-                string.Format("memLevel must be in the range 1.. {0}", MEM_LEVEL_MAX)
+                string.Format(
+                    Constants.DefaultCultureInfo,
+                    "memLevel must be in the range 1.. {0}",
+                    MEM_LEVEL_MAX
+                )
             );
         }
 
@@ -1876,7 +1881,13 @@ internal sealed partial class DeflateManager
             _codec.Message = _ErrorMessage[
                 ZlibConstants.Z_NEED_DICT - (ZlibConstants.Z_STREAM_ERROR)
             ];
-            throw new ZlibException(string.Format("Something is fishy. [{0}]", _codec.Message));
+            throw new ZlibException(
+                string.Format(
+                    Constants.DefaultCultureInfo,
+                    "Something is fishy. [{0}]",
+                    _codec.Message
+                )
+            );
 
             //return ZlibConstants.Z_STREAM_ERROR;
         }

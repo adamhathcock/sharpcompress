@@ -7,16 +7,16 @@ namespace SharpCompress.Common.Arj.Headers;
 public partial class ArjLocalHeader
 {
     public override async ValueTask<ArjHeader?> ReadAsync(
-        Stream stream,
+        Stream reader,
         CancellationToken cancellationToken = default
     )
     {
-        var body = await ReadHeaderAsync(stream, cancellationToken).ConfigureAwait(false);
+        var body = await ReadHeaderAsync(reader, cancellationToken).ConfigureAwait(false);
         if (body.Length > 0)
         {
-            await ReadExtendedHeadersAsync(stream, cancellationToken).ConfigureAwait(false);
+            await ReadExtendedHeadersAsync(reader, cancellationToken).ConfigureAwait(false);
             var header = LoadFrom(body);
-            header.DataStartPosition = stream.Position;
+            header.DataStartPosition = reader.Position;
             return header;
         }
         return null;

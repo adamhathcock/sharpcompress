@@ -34,7 +34,7 @@ internal sealed partial class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStr
                 .ConfigureAwait(false);
             if (read < 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             currentPosition += read;
@@ -96,7 +96,7 @@ internal sealed partial class MultiVolumeReadOnlyStream : MultiVolumeReadOnlyStr
                 .ConfigureAwait(false);
             if (read < 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             currentPosition += read;

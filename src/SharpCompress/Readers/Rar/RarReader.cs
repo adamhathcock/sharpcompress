@@ -40,16 +40,16 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
 
     public override RarVolume? Volume => volume;
 
-    public static IReader OpenReader(string filePath, ReaderOptions? options = null)
+    public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenReader(new FileInfo(filePath), options);
+        return OpenReader(new FileInfo(filePath), readerOptions);
     }
 
-    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
+    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
-        return OpenReader(fileInfo.OpenRead(), options);
+        readerOptions ??= new ReaderOptions { LeaveStreamOpen = false };
+        return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 
     public static IReader OpenReader(IEnumerable<string> filePaths, ReaderOptions? options = null)
@@ -67,12 +67,12 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     /// Opens a RarReader for Non-seeking usage with a single volume
     /// </summary>
     /// <param name="stream"></param>
-    /// <param name="options"></param>
+    /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new SingleVolumeRarReader(stream, options ?? new ReaderOptions());
+        return new SingleVolumeRarReader(stream, readerOptions ?? new ReaderOptions());
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     {
         if (Entry.IsRedir)
         {
-            throw new InvalidOperationException("no stream for redirect entry");
+            throw new ArchiveOperationException("no stream for redirect entry");
         }
 
         var stream = new MultiVolumeReadOnlyStream(

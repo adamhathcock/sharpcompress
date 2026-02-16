@@ -19,7 +19,7 @@ public partial class Lzma2Filter : BlockFilter
         {
             if (_dictionarySize > 40)
             {
-                throw new OverflowException("Dictionary size greater than UInt32.Max");
+                throw new InvalidFormatException("Dictionary size greater than UInt32.Max");
             }
 
             if (_dictionarySize == 40)

@@ -24,7 +24,7 @@ internal partial class MarkHeader : IRarHeader
         {
             return (byte)b;
         }
-        throw new EndOfStreamException();
+        throw new IncompleteArchiveException("Unexpected end of stream.");
     }
 
     public static MarkHeader Read(Stream stream, bool leaveStreamOpen, bool lookForHeader)

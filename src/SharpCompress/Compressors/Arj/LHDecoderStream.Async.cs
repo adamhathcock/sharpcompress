@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Arj;
 
@@ -34,7 +35,7 @@ public sealed partial class LHDecoderStream
 
             if (backPtr >= _buffer.Count)
             {
-                throw new InvalidDataException("Invalid back_ptr in LH stream");
+                throw new InvalidFormatException("Invalid back_ptr in LH stream");
             }
 
             int srcIndex = _buffer.Count - 1 - backPtr;
@@ -92,10 +93,7 @@ public sealed partial class LHDecoderStream
             throw new ObjectDisposedException(nameof(LHDecoderStream));
         }
 
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
 
         if (offset < 0 || count < 0 || offset + count > buffer.Length)
         {

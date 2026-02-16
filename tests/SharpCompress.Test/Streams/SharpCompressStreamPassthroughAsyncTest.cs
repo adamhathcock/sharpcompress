@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -101,7 +102,7 @@ public class SharpCompressStreamPassthroughAsyncTest
         var stream = SharpCompressStream.CreateNonDisposing(ms);
         stream.ThrowOnDispose = true;
         await Assert
-            .ThrowsAsync<InvalidOperationException>(async () =>
+            .ThrowsAsync<ArchiveOperationException>(async () =>
                 await stream.DisposeAsync().ConfigureAwait(false)
             )
             .ConfigureAwait(false);

@@ -24,9 +24,9 @@ public partial class ZipWriter : IWriterOpenable<ZipWriterOptions>
         return new ZipWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(string path, ZipWriterOptions writerOptions)
+    public static IAsyncWriter OpenAsyncWriter(string stream, ZipWriterOptions writerOptions)
     {
-        return (IAsyncWriter)OpenWriter(path, writerOptions);
+        return (IAsyncWriter)OpenWriter(stream, writerOptions);
     }
 
     public static IAsyncWriter OpenAsyncWriter(Stream stream, ZipWriterOptions writerOptions)

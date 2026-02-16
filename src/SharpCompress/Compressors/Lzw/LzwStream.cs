@@ -64,6 +64,7 @@ public partial class LzwStream : Stream
             {
                 throw new IncompleteArchiveException(
                     String.Format(
+                        Constants.DefaultCultureInfo,
                         "Wrong LZW header. Magic bytes don't match. 0x{0:x2} 0x{1:x2}",
                         hdr[0],
                         hdr[1]
@@ -397,6 +398,7 @@ public partial class LzwStream : Stream
         {
             throw new IncompleteArchiveException(
                 String.Format(
+                    Constants.DefaultCultureInfo,
                     "Wrong LZW header. Magic bytes don't match. 0x{0:x2} 0x{1:x2}",
                     hdr[0],
                     hdr[1]
@@ -581,10 +583,10 @@ public partial class LzwStream : Stream
 
     private const int TBL_FIRST = TBL_CLEAR + 1;
 
-    private int[] tabPrefix = new int[0]; //
-    private byte[] tabSuffix = new byte[0]; //
+    private int[] tabPrefix = []; //
+    private byte[] tabSuffix = []; //
     private readonly int[] zeros = new int[256];
-    private byte[] stack = new byte[0]; //
+    private byte[] stack = []; //
 
     // various state
     private bool blockMode;

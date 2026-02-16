@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress;
 
@@ -117,12 +118,12 @@ public static class AsyncEnumerableExtensions
 
             if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
-                throw new InvalidOperationException("The source sequence is empty.");
+                throw new ArchiveOperationException("The source sequence is empty.");
             }
             var value = enumerator.Current;
             if (await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
-                throw new InvalidOperationException(
+                throw new ArchiveOperationException(
                     "The source sequence contains more than one element."
                 );
             }
@@ -135,7 +136,7 @@ public static class AsyncEnumerableExtensions
             {
                 return item;
             }
-            throw new InvalidOperationException("The source sequence is empty.");
+            throw new ArchiveOperationException("The source sequence is empty.");
         }
 
         public async ValueTask<T?> FirstOrDefaultAsync(

@@ -34,14 +34,14 @@ public partial class ZipArchive
     internal ZipArchive()
         : base(ArchiveType.Zip) { }
 
-    protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream stream)
+    protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream sourceStream)
     {
-        stream.LoadAllParts();
+        sourceStream.LoadAllParts();
         //stream.Position = 0;
 
-        var streams = stream.Streams.ToList();
+        var streams = sourceStream.Streams.ToList();
         var idx = 0;
-        if (streams.Count() > 1)
+        if (streams.Count > 1)
         {
             //check if second stream is zip header without changing position
             var headerProbeStream = streams[1];
@@ -51,7 +51,7 @@ public partial class ZipArchive
             headerProbeStream.Position = startPosition;
             if (isZip)
             {
-                stream.IsVolumes = true;
+                sourceStream.IsVolumes = true;
 
                 var tmp = streams[0];
                 streams.RemoveAt(0);
@@ -61,7 +61,7 @@ public partial class ZipArchive
             }
         }
 
-        return new ZipVolume(stream, ReaderOptions, idx++).AsEnumerable();
+        return new ZipVolume(sourceStream, ReaderOptions, idx++).AsEnumerable();
     }
 
     protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
@@ -150,17 +150,15 @@ public partial class ZipArchive
     }
 
     protected override ZipArchiveEntry CreateEntryInternal(
-        string filePath,
+        string key,
         Stream source,
         long size,
         DateTime? modified,
         bool closeStream
-    ) => new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
+    ) => new ZipWritableArchiveEntry(this, source, key, size, modified, closeStream);
 
-    protected override ZipArchiveEntry CreateDirectoryEntry(
-        string directoryPath,
-        DateTime? modified
-    ) => new ZipWritableArchiveEntry(this, directoryPath, modified);
+    protected override ZipArchiveEntry CreateDirectoryEntry(string key, DateTime? modified) =>
+        new ZipWritableArchiveEntry(this, key, modified);
 
     protected override IReader CreateReaderForSolidExtraction()
     {

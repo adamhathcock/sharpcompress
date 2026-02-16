@@ -15,6 +15,17 @@ public class SharpCompressException : Exception
 
 public class ArchiveException(string message) : SharpCompressException(message);
 
+public class ArchiveOperationException : SharpCompressException
+{
+    public ArchiveOperationException() { }
+
+    public ArchiveOperationException(string message)
+        : base(message) { }
+
+    public ArchiveOperationException(string message, Exception inner)
+        : base(message, inner) { }
+}
+
 public class IncompleteArchiveException(string message) : ArchiveException(message);
 
 public class CryptographicException(string message) : SharpCompressException(message);
