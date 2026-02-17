@@ -67,6 +67,19 @@ var options2 = new WriterOptions(CompressionType.Deflate)
 };
 ```
 
+### Format-specific Openables (.NET 8+)
+
+```csharp
+// Reader static openables return format-specific interfaces
+using var zipReader = ZipReader.OpenReader(stream);            // IZipReader
+using var sevenZipReader = SevenZipReader.OpenReader(stream);  // ISevenZipReader
+
+// Writer static openables return format-specific interfaces
+using var zipWriter = ZipWriter.OpenWriter(output, new ZipWriterOptions(CompressionType.Deflate));      // IZipWriter
+using var tarWriter = TarWriter.OpenWriter(output, new TarWriterOptions(CompressionType.None));         // ITarWriter
+using var gzipWriter = GZipWriter.OpenWriter(output, new GZipWriterOptions());                          // IGZipWriter
+```
+
 ---
 
 ## Archive API Methods

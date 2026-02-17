@@ -288,6 +288,33 @@ classDiagram
     IFactory <|-- IWriterFactory
 ```
 
+### Static Openable Interfaces (.NET 8+)
+
+```mermaid
+classDiagram
+    direction TB
+    
+    class IReaderOpenable~TReader,TAsyncReader~ {
+        <<interface>>
+        +OpenReader(filePath, options) TReader
+        +OpenReader(fileInfo, options) TReader
+        +OpenReader(stream, options) TReader
+        +OpenAsyncReader(path, options, ct) ValueTask~TAsyncReader~
+        +OpenAsyncReader(fileInfo, options, ct) ValueTask~TAsyncReader~
+        +OpenAsyncReader(stream, options, ct) ValueTask~TAsyncReader~
+    }
+    
+    class IWriterOpenable~TWriter,TAsyncWriter,TOptions~ {
+        <<interface>>
+        +OpenWriter(filePath, options) TWriter
+        +OpenWriter(fileInfo, options) TWriter
+        +OpenWriter(stream, options) TWriter
+        +OpenAsyncWriter(filePath, options) TAsyncWriter
+        +OpenAsyncWriter(fileInfo, options) TAsyncWriter
+        +OpenAsyncWriter(stream, options) TAsyncWriter
+    }
+```
+
 ---
 
 ## Format-Specific Interfaces
@@ -396,6 +423,12 @@ classDiagram
     class ILzwReader {
         <<interface>>
     }
+    class ISevenZipReader {
+        <<interface>>
+    }
+    class ISevenZipAsyncReader {
+        <<interface>>
+    }
     
     IReader <|-- IZipReader
     IAsyncReader <|-- IZipAsyncReader
@@ -407,6 +440,48 @@ classDiagram
     IReader <|-- IArcReader
     IReader <|-- IArjReader
     IReader <|-- ILzwReader
+    IReader <|-- ISevenZipReader
+    IAsyncReader <|-- ISevenZipAsyncReader
+```
+
+### Writer Formats
+
+```mermaid
+classDiagram
+    direction LR
+    
+    class IWriter {
+        <<interface>>
+    }
+    class IAsyncWriter {
+        <<interface>>
+    }
+    
+    class IZipWriter {
+        <<interface>>
+    }
+    class IZipAsyncWriter {
+        <<interface>>
+    }
+    class ITarWriter {
+        <<interface>>
+    }
+    class ITarAsyncWriter {
+        <<interface>>
+    }
+    class IGZipWriter {
+        <<interface>>
+    }
+    class IGZipAsyncWriter {
+        <<interface>>
+    }
+    
+    IWriter <|-- IZipWriter
+    IAsyncWriter <|-- IZipAsyncWriter
+    IWriter <|-- ITarWriter
+    IAsyncWriter <|-- ITarAsyncWriter
+    IWriter <|-- IGZipWriter
+    IAsyncWriter <|-- IGZipAsyncWriter
 ```
 
 ---
@@ -552,8 +627,10 @@ await writer.WriteAsync("file.txt", contentStream, DateTime.Now);
 
 2. **IExtractableArchive**: Separates archives that support random entry extraction from those that don't (7Zip requires sequential processing).
 
-3. **Marker Interfaces**: Format-specific interfaces (`IZipArchive`, `ITarReader`) are markers that allow type-safe casting when format-specific features are needed.
+3. **Marker Interfaces**: Format-specific interfaces (`IZipArchive`, `ITarReader`, `IZipWriter`) are markers that allow type-safe casting when format-specific features are needed.
 
 4. **Factory Pattern**: All instances are created through factories (`ArchiveFactory`, `ReaderFactory`, `WriterFactory`) which handle format detection and instantiation.
 
-5. **Entry Hierarchy**: `IEntry` → `IArchiveEntry` → `IExtractableArchiveEntry` provides progressive capabilities.
+5. **Static Openable Pattern (.NET 8+)**: Reader/Writer implementations can implement `IReaderOpenable<...>` and `IWriterOpenable<...>` to expose strongly-typed static `Open*` APIs.
+
+6. **Entry Hierarchy**: `IEntry` → `IArchiveEntry` → `IExtractableArchiveEntry` provides progressive capabilities.
