@@ -20,7 +20,7 @@ using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Writers.Zip;
 
-public partial class ZipWriter : AbstractWriter
+public partial class ZipWriter : AbstractWriter, IZipWriter, IZipAsyncWriter
 {
     private readonly CompressionType compressionType;
     private readonly int compressionLevel;

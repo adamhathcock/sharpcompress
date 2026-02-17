@@ -10,7 +10,7 @@ using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
-public partial class TarWriter : AbstractWriter
+public partial class TarWriter : AbstractWriter, ITarWriter, ITarAsyncWriter
 {
     private readonly bool finalizeArchiveOnClose;
     private TarHeaderWriteFormat headerFormat;

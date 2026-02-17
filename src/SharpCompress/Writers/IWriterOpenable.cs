@@ -5,13 +5,15 @@ using SharpCompress.Common.Options;
 
 namespace SharpCompress.Writers;
 
-public interface IWriterOpenable<TWriterOptions>
+public interface IWriterOpenable<TWriter, TAsyncWriter, TWriterOptions>
+    where TWriter : IWriter
+    where TAsyncWriter : IAsyncWriter
     where TWriterOptions : IWriterOptions
 {
-    public static abstract IWriter OpenWriter(string filePath, TWriterOptions writerOptions);
+    public static abstract TWriter OpenWriter(string filePath, TWriterOptions writerOptions);
 
-    public static abstract IWriter OpenWriter(FileInfo fileInfo, TWriterOptions writerOptions);
-    public static abstract IWriter OpenWriter(Stream stream, TWriterOptions writerOptions);
+    public static abstract TWriter OpenWriter(FileInfo fileInfo, TWriterOptions writerOptions);
+    public static abstract TWriter OpenWriter(Stream stream, TWriterOptions writerOptions);
 
     /// <summary>
     /// Opens a Writer asynchronously.
@@ -20,17 +22,17 @@ public interface IWriterOpenable<TWriterOptions>
     /// <param name="archiveType">The archive type.</param>
     /// <param name="writerOptions">Writer options.</param>
     /// <returns>A task that returns an IWriter.</returns>
-    public static abstract IAsyncWriter OpenAsyncWriter(
+    public static abstract TAsyncWriter OpenAsyncWriter(
         Stream stream,
         TWriterOptions writerOptions
     );
 
-    public static abstract IAsyncWriter OpenAsyncWriter(
+    public static abstract TAsyncWriter OpenAsyncWriter(
         string filePath,
         TWriterOptions writerOptions
     );
 
-    public static abstract IAsyncWriter OpenAsyncWriter(
+    public static abstract TAsyncWriter OpenAsyncWriter(
         FileInfo fileInfo,
         TWriterOptions writerOptions
     );
