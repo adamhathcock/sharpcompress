@@ -45,13 +45,13 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>, IZipReader
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
+    public static IZipReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
         return new ZipReader(stream, readerOptions ?? new ReaderOptions());
     }
 
-    public static IReader OpenReader(
+    public static IZipReader OpenReader(
         Stream stream,
         ReaderOptions? options,
         IEnumerable<ZipEntry> entries

@@ -17,6 +17,10 @@ public sealed class SevenZipReader
     : AbstractReader<SevenZipEntry, SevenZipVolume>,
         ISevenZipReader,
         ISevenZipAsyncReader
+#if NET8_0_OR_GREATER
+        ,
+        IReaderOpenable<ISevenZipReader, ISevenZipAsyncReader>
+#endif
 {
     private readonly SevenZipArchive _archive;
     private readonly bool _disposeArchive;
@@ -42,6 +46,7 @@ public sealed class SevenZipReader
     /// </summary>
     internal Stream? DiagnosticsCurrentFolderStream =>
         DiagnosticsEnabled ? _currentFolderStream : null;
+
     internal SevenZipReader(
         ReaderOptions readerOptions,
         SevenZipArchive archive,
@@ -89,21 +94,21 @@ public sealed class SevenZipReader
     /// <summary>
     /// Opens a 7Zip reader from a file path asynchronously.
     /// </summary>
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
-        string filePath,
+    public static ValueTask<ISevenZipAsyncReader> OpenAsyncReader(
+        string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsyncReader(new FileInfo(filePath), readerOptions, cancellationToken);
+        path.NotNullOrEmpty(nameof(path));
+        return OpenAsyncReader(new FileInfo(path), readerOptions, cancellationToken);
     }
 
     /// <summary>
     /// Opens a 7Zip reader from a file asynchronously.
     /// </summary>
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<ISevenZipAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -121,14 +126,14 @@ public sealed class SevenZipReader
     /// <summary>
     /// Opens a 7Zip reader from a stream asynchronously.
     /// </summary>
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<ISevenZipAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)OpenReader(stream, readerOptions));
+        return new((ISevenZipAsyncReader)OpenReader(stream, readerOptions));
     }
 
     public override SevenZipVolume Volume => _archive.Volumes.Single();

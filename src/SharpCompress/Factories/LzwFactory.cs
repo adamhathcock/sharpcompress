@@ -85,14 +85,16 @@ public class LzwFactory : Factory, IReaderFactory
         LzwReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncReader> OpenAsyncReader(
+    public async ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return LzwReader.OpenAsyncReader(stream, options, cancellationToken);
+        return await LzwReader
+            .OpenAsyncReader(stream, options, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     #endregion

@@ -5,30 +5,32 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Readers;
 
-public interface IReaderOpenable
+public interface IReaderOpenable<out TReader, TAsyncReader>
+    where TReader : IReader
+    where TAsyncReader : IAsyncReader
 {
-    public static abstract IReader OpenReader(string filePath, ReaderOptions? readerOptions = null);
+    public static abstract TReader OpenReader(string filePath, ReaderOptions? readerOptions = null);
 
-    public static abstract IReader OpenReader(
+    public static abstract TReader OpenReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null
     );
 
-    public static abstract IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null);
+    public static abstract TReader OpenReader(Stream stream, ReaderOptions? readerOptions = null);
 
-    public static abstract ValueTask<IAsyncReader> OpenAsyncReader(
+    public static abstract ValueTask<TAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     );
 
-    public static abstract ValueTask<IAsyncReader> OpenAsyncReader(
+    public static abstract ValueTask<TAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     );
 
-    public static abstract ValueTask<IAsyncReader> OpenAsyncReader(
+    public static abstract ValueTask<TAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

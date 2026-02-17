@@ -6,9 +6,9 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Readers.Rar;
 
-public partial class RarReader : IReaderOpenable
+public partial class RarReader : IReaderOpenable<IRarReader, IRarAsyncReader>
 {
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<IRarAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -16,27 +16,27 @@ public partial class RarReader : IReaderOpenable
     {
         cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return new((IAsyncReader)OpenReader(new FileInfo(path), readerOptions));
+        return new((IRarAsyncReader)OpenReader(new FileInfo(path), readerOptions));
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<IRarAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)OpenReader(stream, readerOptions));
+        return new((IRarAsyncReader)OpenReader(stream, readerOptions));
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<IRarAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)OpenReader(fileInfo, readerOptions));
+        return new((IRarAsyncReader)OpenReader(fileInfo, readerOptions));
     }
 }
 #endif

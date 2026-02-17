@@ -6,10 +6,10 @@ namespace SharpCompress.Readers.Lzw;
 
 public partial class LzwReader
 #if NET8_0_OR_GREATER
-    : IReaderOpenable
+    : IReaderOpenable<ILzwReader, ILzwAsyncReader>
 #endif
 {
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<ILzwAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -17,42 +17,42 @@ public partial class LzwReader
     {
         cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return new((IAsyncReader)OpenReader(new FileInfo(path), readerOptions));
+        return new((ILzwAsyncReader)OpenReader(new FileInfo(path), readerOptions));
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<ILzwAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)OpenReader(stream, readerOptions));
+        return new((ILzwAsyncReader)OpenReader(stream, readerOptions));
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<ILzwAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)OpenReader(fileInfo, readerOptions));
+        return new((ILzwAsyncReader)OpenReader(fileInfo, readerOptions));
     }
 
-    public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
+    public static ILzwReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return OpenReader(new FileInfo(filePath), readerOptions);
     }
 
-    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static ILzwReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 
-    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
+    public static ILzwReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
         return new LzwReader(stream, readerOptions ?? new ReaderOptions());

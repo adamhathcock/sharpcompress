@@ -32,7 +32,7 @@ public abstract partial class ArjReader
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
+    public static IArjReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
         return new SingleVolumeArjReader(stream, readerOptions ?? new ReaderOptions());
@@ -44,7 +44,7 @@ public abstract partial class ArjReader
     /// <param name="streams"></param>
     /// <param name="options"></param>
     /// <returns></returns>
-    public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
+    public static IArjReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
         streams.NotNull(nameof(streams));
         return new MultiVolumeArjReader(streams, options ?? new ReaderOptions());

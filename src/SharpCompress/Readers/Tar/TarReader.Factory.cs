@@ -11,7 +11,7 @@ namespace SharpCompress.Readers.Tar;
 
 public partial class TarReader
 #if NET8_0_OR_GREATER
-    : IReaderOpenable
+    : IReaderOpenable<ITarReader, ITarAsyncReader>
 #endif
 {
     private static Stream CreateProbeDecompressionStream(
@@ -70,7 +70,7 @@ public partial class TarReader
             .ConfigureAwait(false);
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<ITarAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -80,7 +80,7 @@ public partial class TarReader
         return OpenAsyncReader(new FileInfo(path), readerOptions, cancellationToken);
     }
 
-    public static async ValueTask<IAsyncReader> OpenAsyncReader(
+    public static async ValueTask<ITarAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -133,7 +133,7 @@ public partial class TarReader
         return new TarReader(sharpCompressStream, readerOptions, CompressionType.None);
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<ITarAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -143,13 +143,13 @@ public partial class TarReader
         return OpenAsyncReader(fileInfo.OpenRead(), readerOptions, cancellationToken);
     }
 
-    public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
+    public static ITarReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return OpenReader(new FileInfo(filePath), readerOptions);
     }
 
-    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static ITarReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
@@ -162,7 +162,7 @@ public partial class TarReader
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
+    public static ITarReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
         readerOptions ??= new ReaderOptions();

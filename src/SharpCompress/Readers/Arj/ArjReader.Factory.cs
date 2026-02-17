@@ -6,9 +6,9 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Readers.Arj;
 
-public partial class ArjReader : IReaderOpenable
+public partial class ArjReader : IReaderOpenable<IArjReader, IArjAsyncReader>
 {
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<IArjAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -16,36 +16,36 @@ public partial class ArjReader : IReaderOpenable
     {
         cancellationToken.ThrowIfCancellationRequested();
         path.NotNullOrEmpty(nameof(path));
-        return new((IAsyncReader)OpenReader(new FileInfo(path), readerOptions));
+        return new((IArjAsyncReader)OpenReader(new FileInfo(path), readerOptions));
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<IArjAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)OpenReader(stream, readerOptions));
+        return new((IArjAsyncReader)OpenReader(stream, readerOptions));
     }
 
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public static ValueTask<IArjAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)OpenReader(fileInfo, readerOptions));
+        return new((IArjAsyncReader)OpenReader(fileInfo, readerOptions));
     }
 
-    public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
+    public static IArjReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         return OpenReader(new FileInfo(filePath), readerOptions);
     }
 
-    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
+    public static IArjReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
         return OpenReader(fileInfo.OpenRead(), readerOptions);

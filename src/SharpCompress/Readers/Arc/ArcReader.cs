@@ -22,7 +22,7 @@ public partial class ArcReader : AbstractReader<ArcEntry, ArcVolume>, IArcReader
     /// <param name="stream"></param>
     /// <param name="readerOptions"></param>
     /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
+    public static IArcReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
         return new ArcReader(stream, readerOptions ?? new ReaderOptions());

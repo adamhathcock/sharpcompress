@@ -118,11 +118,14 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, I
         SevenZipReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncReader> OpenAsyncReader(
+    public async ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
-    ) => SevenZipReader.OpenAsyncReader(stream, options, cancellationToken);
+    ) =>
+        await SevenZipReader
+            .OpenAsyncReader(stream, options, cancellationToken)
+            .ConfigureAwait(false);
 
     #endregion
 }
