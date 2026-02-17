@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 using SharpCompress.Archives;
@@ -7,6 +6,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
+using SharpCompress.Readers.SevenZip;
 using Xunit;
 
 namespace SharpCompress.Test.SevenZip;
@@ -62,6 +62,24 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_PathRead() =>
         ArchiveFileRead("7Zip.LZMA2.exe", new() { LookForHeader = true }, new SevenZipFactory());
+
+    [Fact]
+    public void SevenZipReader_OpenReader_StreamRead()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z"));
+        using var reader = SevenZipReader.OpenReader(stream);
+
+        Assert.IsAssignableFrom<ISevenZipReader>(reader);
+    }
+
+    [Fact]
+    public void ReaderFactory_OpenReader_SevenZip_ReturnsSevenZipReader()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z"));
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        Assert.IsAssignableFrom<ISevenZipReader>(reader);
+    }
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>
@@ -289,7 +307,8 @@ public class SevenZipArchiveTests : ArchiveTests
 
         using var reader = archive.ExtractAllEntries();
 
-        var sevenZipReader = Assert.IsType<SevenZipArchive.SevenZipReader>(reader);
+        Assert.IsType<ISevenZipReader>(reader);
+        SevenZipReader sevenZipReader = (SevenZipReader)reader;
         sevenZipReader.DiagnosticsEnabled = true;
 
         Stream? currentFolderStreamInstance = null;

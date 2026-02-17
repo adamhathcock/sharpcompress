@@ -2,6 +2,8 @@
 
 Quick reference for commonly used SharpCompress APIs.
 
+Refer to [INTERFACES.md](INTERFACES.md) for more details.
+
 ## Factory Methods
 
 ### Opening Archives

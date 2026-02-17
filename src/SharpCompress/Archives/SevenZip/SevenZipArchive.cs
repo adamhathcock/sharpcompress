@@ -9,6 +9,7 @@ using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Readers.SevenZip;
 
 namespace SharpCompress.Archives.SevenZip;
 
@@ -18,6 +19,7 @@ public partial class SevenZipArchive
         ISevenZipAsyncArchive
 {
     private ArchiveDatabase? _database;
+    internal ArchiveDatabase? Database => _database;
 
     /// <summary>
     /// Constructor with a SourceStream able to handle FileInfo and Streams.
@@ -105,111 +107,6 @@ public partial class SevenZipArchive
 
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
-
-    internal sealed class SevenZipReader
-        : AbstractReader<SevenZipEntry, SevenZipVolume>,
-            ISevenZipReader,
-            ISevenZipAsyncReader
-    {
-        private readonly SevenZipArchive _archive;
-        private SevenZipEntry? _currentEntry;
-        private Stream? _currentFolderStream;
-        private CFolder? _currentFolder;
-
-        /// <summary>
-        /// Enables internal diagnostics for tests.
-        /// When disabled (default), diagnostics properties return null to avoid exposing internal state.
-        /// </summary>
-        internal bool DiagnosticsEnabled { get; set; }
-
-        /// <summary>
-        /// Current folder instance used to decide whether the solid folder stream should be reused.
-        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
-        /// </summary>
-        internal object? DiagnosticsCurrentFolder => DiagnosticsEnabled ? _currentFolder : null;
-
-        /// <summary>
-        /// Current shared folder stream instance.
-        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
-        /// </summary>
-        internal Stream? DiagnosticsCurrentFolderStream =>
-            DiagnosticsEnabled ? _currentFolderStream : null;
-
-        internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
-            : base(readerOptions, ArchiveType.SevenZip, false) => this._archive = archive;
-
-        public override SevenZipVolume Volume => _archive.Volumes.Single();
-
-        protected override IEnumerable<SevenZipEntry> GetEntries(Stream stream)
-        {
-            var entries = _archive.Entries.ToList();
-            stream.Position = 0;
-            foreach (var dir in entries.Where(x => x.IsDirectory))
-            {
-                _currentEntry = dir;
-                yield return dir;
-            }
-            // For solid archives (entries in the same folder share a compressed stream),
-            // we must iterate entries sequentially and maintain the folder stream state
-            // across entries in the same folder to avoid recreating the decompression
-            // stream for each file, which breaks contiguous streaming.
-            foreach (var entry in entries.Where(x => !x.IsDirectory))
-            {
-                _currentEntry = entry;
-                yield return entry;
-            }
-        }
-
-        protected override EntryStream GetEntryStream()
-        {
-            var entry = _currentEntry.NotNull("currentEntry is not null");
-            if (entry.IsDirectory)
-            {
-                return CreateEntryStream(Stream.Null);
-            }
-
-            var folder = entry.FilePart.Folder;
-
-            // If folder is null (empty stream entry), return empty stream
-            if (folder is null)
-            {
-                return CreateEntryStream(Stream.Null);
-            }
-
-            // Check if we're starting a new folder - dispose old folder stream if needed
-            if (folder != _currentFolder)
-            {
-                _currentFolderStream?.Dispose();
-                _currentFolderStream = null;
-                _currentFolder = folder;
-            }
-
-            // Create the folder stream once per folder
-            if (_currentFolderStream is null)
-            {
-                _currentFolderStream = _archive._database!.GetFolderStream(
-                    _archive.Volumes.Single().Stream,
-                    folder!,
-                    _archive._database.PasswordProvider
-                );
-            }
-
-            return CreateEntryStream(
-                new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
-            );
-        }
-
-        protected override ValueTask<EntryStream> GetEntryStreamAsync(
-            CancellationToken cancellationToken = default
-        ) => new(GetEntryStream());
-
-        public override void Dispose()
-        {
-            _currentFolderStream?.Dispose();
-            _currentFolderStream = null;
-            base.Dispose();
-        }
-    }
 
     /// <summary>
     /// WORKAROUND: Forces async operations to use synchronous equivalents.

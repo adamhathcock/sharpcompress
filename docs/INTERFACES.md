@@ -537,7 +537,7 @@ await writer.WriteAsync("file.txt", contentStream, DateTime.Now);
 | **Zip** | ✅ | ✅ | ✅ | ✅ |
 | **Tar** | ✅ | ✅ | ✅ | ✅ |
 | **GZip** | ✅ | ✅ | ✅ | ✅ |
-| **7Zip** | ✅ | ❌ (sequential only) | ❌ | ❌ |
+| **7Zip** | ✅ | ❌ (sequential only) | ✅ (sequential only) | ❌ |
 | **Rar** | ✅ | ✅ | ✅ (read-only) | ❌ |
 | **Ace** | ❌ | ❌ | ✅ (read-only) | ❌ |
 | **Arc** | ❌ | ❌ | ✅ (read-only) | ❌ |

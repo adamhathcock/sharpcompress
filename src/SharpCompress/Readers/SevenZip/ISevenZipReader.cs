@@ -1,6 +1,6 @@
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives.SevenZip;
+namespace SharpCompress.Readers.SevenZip;
 
 /// <summary>
 /// Reader for 7Zip archives - supports sequential extraction only.

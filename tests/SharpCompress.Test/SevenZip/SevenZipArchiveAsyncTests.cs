@@ -6,6 +6,8 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Readers;
 using Xunit;
+using PublicISevenZipAsyncReader = SharpCompress.Readers.SevenZip.ISevenZipAsyncReader;
+using PublicSevenZipReader = SharpCompress.Readers.SevenZip.SevenZipReader;
 
 namespace SharpCompress.Test.SevenZip;
 
@@ -37,6 +39,24 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.BZip2.7z");
         await ExtractAllEntriesSequentiallyAsync(testArchive);
+    }
+
+    [Fact]
+    public async Task SevenZipReader_OpenAsyncReader_ReturnsSevenZipReader()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z"));
+        await using var reader = await PublicSevenZipReader.OpenAsyncReader(stream);
+
+        Assert.IsAssignableFrom<PublicISevenZipAsyncReader>(reader);
+    }
+
+    [Fact]
+    public async Task ReaderFactory_OpenAsyncReader_SevenZip_ReturnsSevenZipReader()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "7Zip.LZMA.7z"));
+        await using var reader = await ReaderFactory.OpenAsyncReader(stream);
+
+        Assert.IsAssignableFrom<PublicISevenZipAsyncReader>(reader);
     }
 
     [Fact]
@@ -78,7 +98,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
 
         await using var reader = await archive.ExtractAllEntriesAsync();
 
-        var sevenZipReader = Assert.IsType<SevenZipArchive.SevenZipReader>(reader);
+        var sevenZipReader = Assert.IsType<PublicSevenZipReader>(reader);
         sevenZipReader.DiagnosticsEnabled = true;
 
         Stream? currentFolderStreamInstance = null;

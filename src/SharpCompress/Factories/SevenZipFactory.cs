@@ -7,13 +7,14 @@ using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Readers.SevenZip;
 
 namespace SharpCompress.Factories;
 
 /// <summary>
 /// Represents the foundation factory of 7Zip archive.
 /// </summary>
-public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
+public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReaderFactory
 {
     #region IFactory
 
@@ -110,11 +111,18 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory
         SharpCompressStream sharpCompressStream,
         ReaderOptions options,
         out IReader? reader
-    )
-    {
-        reader = null;
-        return false;
-    }
+    ) => base.TryOpenReader(sharpCompressStream, options, out reader);
+
+    /// <inheritdoc/>
+    public IReader OpenReader(Stream stream, ReaderOptions? options) =>
+        SevenZipReader.OpenReader(stream, options);
+
+    /// <inheritdoc/>
+    public ValueTask<IAsyncReader> OpenAsyncReader(
+        Stream stream,
+        ReaderOptions? options,
+        CancellationToken cancellationToken = default
+    ) => SevenZipReader.OpenAsyncReader(stream, options, cancellationToken);
 
     #endregion
 }

@@ -7,6 +7,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Readers.SevenZip;
 
 namespace SharpCompress.Archives.SevenZip;
 
