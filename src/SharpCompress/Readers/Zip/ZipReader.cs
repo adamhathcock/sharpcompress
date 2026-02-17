@@ -37,31 +37,6 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>, IZipReader
 
     public override ZipVolume Volume { get; }
 
-    #region Open
-
-    /// <summary>
-    /// Opens a ZipReader for Non-seeking usage with a single volume
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="readerOptions"></param>
-    /// <returns></returns>
-    public static IZipReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        stream.NotNull(nameof(stream));
-        return new ZipReader(stream, readerOptions ?? new ReaderOptions());
-    }
-
-    public static IZipReader OpenReader(
-        Stream stream,
-        ReaderOptions? options,
-        IEnumerable<ZipEntry> entries
-    )
-    {
-        stream.NotNull(nameof(stream));
-        return new ZipReader(stream, options ?? new ReaderOptions(), entries);
-    }
-
-    #endregion Open
 
     protected override IEnumerable<ZipEntry> GetEntries(Stream stream)
     {

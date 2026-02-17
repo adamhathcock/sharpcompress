@@ -1,13 +1,41 @@
-#if NET8_0_OR_GREATER
+
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common;
+using SharpCompress.Common.Zip;
 
 namespace SharpCompress.Readers.Zip;
 
-public partial class ZipReader : IReaderOpenable<IZipReader, IZipAsyncReader>
+public partial class ZipReader
+#if NET8_0_OR_GREATER
+    : IReaderOpenable<IZipReader, IZipAsyncReader>
+#endif
 {
+
+
+    /// <summary>
+    /// Opens a ZipReader for Non-seeking usage with a single volume
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <param name="readerOptions"></param>
+    /// <returns></returns>
+    public static IZipReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
+    {
+        stream.NotNull(nameof(stream));
+        return new ZipReader(stream, readerOptions ?? new ReaderOptions());
+    }
+
+    public static IZipReader OpenReader(
+        Stream stream,
+        ReaderOptions? options,
+        IEnumerable<ZipEntry> entries
+    )
+    {
+        stream.NotNull(nameof(stream));
+        return new ZipReader(stream, options ?? new ReaderOptions(), entries);
+    }
+
     public static ValueTask<IZipAsyncReader> OpenAsyncReader(
         string path,
         ReaderOptions? readerOptions = null,
@@ -51,4 +79,3 @@ public partial class ZipReader : IReaderOpenable<IZipReader, IZipAsyncReader>
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 }
-#endif
