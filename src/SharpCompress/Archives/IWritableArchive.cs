@@ -12,7 +12,7 @@ public interface IWritableArchiveCommon
     /// <summary>
     /// Use this to pause entry rebuilding when adding large collections of entries.  Dispose when complete.  A  using statement is recommended.
     /// </summary>
-    /// <returns>IDisposeable to resume entry rebuilding</returns>
+    /// <returns>IDisposable to resume entry rebuilding</returns>
     IDisposable PauseEntryRebuilding();
 }
 
