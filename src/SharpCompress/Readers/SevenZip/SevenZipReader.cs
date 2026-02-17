@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
@@ -13,14 +11,10 @@ namespace SharpCompress.Readers.SevenZip;
 /// <summary>
 /// Public 7Zip reader entry point for sequential extraction.
 /// </summary>
-public sealed class SevenZipReader
+public sealed partial class SevenZipReader
     : AbstractReader<SevenZipEntry, SevenZipVolume>,
         ISevenZipReader,
         ISevenZipAsyncReader
-#if NET8_0_OR_GREATER
-        ,
-        IReaderOpenable<ISevenZipReader, ISevenZipAsyncReader>
-#endif
 {
     private readonly SevenZipArchive _archive;
     private readonly bool _disposeArchive;
@@ -56,84 +50,6 @@ public sealed class SevenZipReader
     {
         _archive = archive;
         _disposeArchive = disposeArchive;
-    }
-
-    /// <summary>
-    /// Opens a 7Zip reader from a file path.
-    /// </summary>
-    public static ISevenZipReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenReader(new FileInfo(filePath), readerOptions);
-    }
-
-    /// <summary>
-    /// Opens a 7Zip reader from a file.
-    /// </summary>
-    public static ISevenZipReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
-    {
-        fileInfo.NotNull(nameof(fileInfo));
-        var options = readerOptions ?? ReaderOptions.ForOwnedFile;
-        return OpenReader(fileInfo.OpenRead(), options);
-    }
-
-    /// <summary>
-    /// Opens a 7Zip reader from a stream.
-    /// </summary>
-    public static ISevenZipReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        stream.NotNull(nameof(stream));
-        var options = readerOptions ?? ReaderOptions.ForExternalStream;
-        return new SevenZipReader(
-            options,
-            (SevenZipArchive)SevenZipArchive.OpenArchive(stream, options),
-            disposeArchive: true
-        );
-    }
-
-    /// <summary>
-    /// Opens a 7Zip reader from a file path asynchronously.
-    /// </summary>
-    public static ValueTask<ISevenZipAsyncReader> OpenAsyncReader(
-        string path,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return OpenAsyncReader(new FileInfo(path), readerOptions, cancellationToken);
-    }
-
-    /// <summary>
-    /// Opens a 7Zip reader from a file asynchronously.
-    /// </summary>
-    public static ValueTask<ISevenZipAsyncReader> OpenAsyncReader(
-        FileInfo fileInfo,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        fileInfo.NotNull(nameof(fileInfo));
-        return OpenAsyncReader(
-            fileInfo.OpenRead(),
-            readerOptions ?? ReaderOptions.ForOwnedFile,
-            cancellationToken
-        );
-    }
-
-    /// <summary>
-    /// Opens a 7Zip reader from a stream asynchronously.
-    /// </summary>
-    public static ValueTask<ISevenZipAsyncReader> OpenAsyncReader(
-        Stream stream,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return new((ISevenZipAsyncReader)OpenReader(stream, readerOptions));
     }
 
     public override SevenZipVolume Volume => _archive.Volumes.Single();
@@ -198,10 +114,6 @@ public sealed class SevenZipReader
         );
     }
 
-    protected override ValueTask<EntryStream> GetEntryStreamAsync(
-        CancellationToken cancellationToken = default
-    ) => new(GetEntryStream());
-
     public override void Dispose()
     {
         _currentFolderStream?.Dispose();
@@ -210,17 +122,6 @@ public sealed class SevenZipReader
         if (_disposeArchive)
         {
             _archive.Dispose();
-        }
-    }
-
-    public override async ValueTask DisposeAsync()
-    {
-        _currentFolderStream?.Dispose();
-        _currentFolderStream = null;
-        await base.DisposeAsync().ConfigureAwait(false);
-        if (_disposeArchive)
-        {
-            await _archive.DisposeAsync().ConfigureAwait(false);
         }
     }
 }
