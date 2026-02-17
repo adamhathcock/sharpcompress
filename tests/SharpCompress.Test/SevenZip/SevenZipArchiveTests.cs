@@ -307,7 +307,7 @@ public class SevenZipArchiveTests : ArchiveTests
 
         using var reader = archive.ExtractAllEntries();
 
-        Assert.IsType<ISevenZipReader>(reader);
+        Assert.IsAssignableFrom<ISevenZipReader>(reader);
         SevenZipReader sevenZipReader = (SevenZipReader)reader;
         sevenZipReader.DiagnosticsEnabled = true;
 

@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -12,8 +11,6 @@ public partial class ZipReader
     : IReaderOpenable<IZipReader, IZipAsyncReader>
 #endif
 {
-
-
     /// <summary>
     /// Opens a ZipReader for Non-seeking usage with a single volume
     /// </summary>

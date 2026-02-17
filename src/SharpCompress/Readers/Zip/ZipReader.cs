@@ -37,7 +37,6 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>, IZipReader
 
     public override ZipVolume Volume { get; }
 
-
     protected override IEnumerable<ZipEntry> GetEntries(Stream stream)
     {
         foreach (var h in _headerFactory.ReadStreamHeader(stream))

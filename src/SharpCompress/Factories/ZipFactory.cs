@@ -206,7 +206,7 @@ public class ZipFactory
     /// <inheritdoc/>
     public IWriter OpenWriter(Stream stream, IWriterOptions writerOptions)
     {
-        ZipWriterOptions zipOptions = writerOptions switch
+        var zipOptions = writerOptions switch
         {
             ZipWriterOptions zwo => zwo,
             WriterOptions wo => new ZipWriterOptions(wo),
