@@ -20,9 +20,9 @@ public interface IRarArchiveCommon
     int MaxVersion { get; }
 }
 
-public interface IRarArchive : IArchive, IRarArchiveCommon { }
+public interface IRarArchive : IExtractableArchive, IRarArchiveCommon { }
 
-public interface IRarAsyncArchive : IAsyncArchive, IRarArchiveCommon { }
+public interface IRarAsyncArchive : IExtractableAsyncArchive, IRarArchiveCommon { }
 
 public partial class RarArchive
     : AbstractArchive<RarArchiveEntry, RarVolume>,
@@ -104,4 +104,10 @@ public partial class RarArchive
     public virtual int MinVersion => Volumes.First().MinVersion;
 
     public virtual int MaxVersion => Volumes.First().MaxVersion;
+
+    IEnumerable<IExtractableArchiveEntry> IExtractableArchive.Entries =>
+        Entries.Cast<IExtractableArchiveEntry>();
+
+    IAsyncEnumerable<IExtractableArchiveEntry> IExtractableAsyncArchive.EntriesAsync =>
+        EntriesAsync.CastToExtractableEntry<RarArchiveEntry>();
 }

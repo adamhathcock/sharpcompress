@@ -18,7 +18,9 @@ using SharpCompress.Writers.Zip;
 namespace SharpCompress.Archives.Zip;
 
 public partial class ZipArchive
-    : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>
+    : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>,
+        IZipArchive,
+        IZipAsyncArchive
 {
     private readonly SeekableZipHeaderFactory? headerFactory;
 
@@ -173,4 +175,10 @@ public partial class ZipArchive
         stream.Position = 0;
         return new((IAsyncReader)ZipReader.OpenReader(stream, ReaderOptions, Entries));
     }
+
+    IEnumerable<IExtractableArchiveEntry> IExtractableArchive.Entries =>
+        Entries.Cast<IExtractableArchiveEntry>();
+
+    IAsyncEnumerable<IExtractableArchiveEntry> IExtractableAsyncArchive.EntriesAsync =>
+        EntriesAsync.CastToExtractableEntry<ZipArchiveEntry>();
 }

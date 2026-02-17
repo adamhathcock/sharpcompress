@@ -18,7 +18,10 @@ namespace SharpCompress.Readers.Ace;
 /// - Recovery record support
 /// - Additional header flags
 /// </remarks>
-public abstract partial class AceReader : AbstractReader<AceEntry, AceVolume>
+public abstract partial class AceReader
+    : AbstractReader<AceEntry, AceVolume>,
+        IAceReader,
+        IAceAsyncReader
 {
     private readonly IArchiveEncoding _archiveEncoding;
 

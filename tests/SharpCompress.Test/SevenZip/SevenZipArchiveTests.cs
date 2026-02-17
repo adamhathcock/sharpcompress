@@ -369,11 +369,11 @@ public class SevenZipArchiveTests : ArchiveTests
                 {
                     emptyStreamFileCount++;
                 }
-
-                // This should not throw NullReferenceException
-                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
+
+        // Use archive-level extraction for SevenZip since entries don't support direct stream extraction
+        archive.WriteToDirectory(SCRATCH_FILES_PATH);
 
         // Ensure we actually tested empty-stream entries
         Assert.True(

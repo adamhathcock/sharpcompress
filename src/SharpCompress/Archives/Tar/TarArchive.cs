@@ -17,7 +17,9 @@ using Constants = SharpCompress.Common.Constants;
 namespace SharpCompress.Archives.Tar;
 
 public partial class TarArchive
-    : AbstractWritableArchive<TarArchiveEntry, TarVolume, TarWriterOptions>
+    : AbstractWritableArchive<TarArchiveEntry, TarVolume, TarWriterOptions>,
+        ITarArchive,
+        ITarAsyncArchive
 {
     private readonly CompressionType _compressionType;
 
@@ -237,4 +239,10 @@ public partial class TarArchive
         stream.Position = 0;
         return new TarReader(stream, ReaderOptions, _compressionType);
     }
+
+    IEnumerable<IExtractableArchiveEntry> IExtractableArchive.Entries =>
+        Entries.Cast<IExtractableArchiveEntry>();
+
+    IAsyncEnumerable<IExtractableArchiveEntry> IExtractableAsyncArchive.EntriesAsync =>
+        EntriesAsync.CastToExtractableEntry<TarArchiveEntry>();
 }

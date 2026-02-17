@@ -12,7 +12,10 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.SevenZip;
 
-public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
+public partial class SevenZipArchive
+    : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>,
+        ISevenZipArchive,
+        ISevenZipAsyncArchive
 {
     private ArchiveDatabase? _database;
 
@@ -103,7 +106,10 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
 
-    internal sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
+    internal sealed class SevenZipReader
+        : AbstractReader<SevenZipEntry, SevenZipVolume>,
+            ISevenZipReader,
+            ISevenZipAsyncReader
     {
         private readonly SevenZipArchive _archive;
         private SevenZipEntry? _currentEntry;

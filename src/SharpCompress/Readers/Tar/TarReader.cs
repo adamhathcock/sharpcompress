@@ -17,7 +17,7 @@ using SharpCompress.Providers;
 
 namespace SharpCompress.Readers.Tar;
 
-public partial class TarReader : AbstractReader<TarEntry, TarVolume>
+public partial class TarReader : AbstractReader<TarEntry, TarVolume>, ITarReader, ITarAsyncReader
 {
     private readonly CompressionType compressionType;
 

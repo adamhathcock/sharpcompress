@@ -14,7 +14,9 @@ using SharpCompress.Writers.GZip;
 namespace SharpCompress.Archives.GZip;
 
 public partial class GZipArchive
-    : AbstractWritableArchive<GZipArchiveEntry, GZipVolume, GZipWriterOptions>
+    : AbstractWritableArchive<GZipArchiveEntry, GZipVolume, GZipWriterOptions>,
+        IGZipArchive,
+        IGZipAsyncArchive
 {
     private GZipArchive(SourceStream sourceStream)
         : base(ArchiveType.GZip, sourceStream) { }
@@ -93,4 +95,10 @@ public partial class GZipArchive
         stream.Position = 0;
         return GZipReader.OpenReader(stream, ReaderOptions);
     }
+
+    IEnumerable<IExtractableArchiveEntry> IExtractableArchive.Entries =>
+        Entries.Cast<IExtractableArchiveEntry>();
+
+    IAsyncEnumerable<IExtractableArchiveEntry> IExtractableAsyncArchive.EntriesAsync =>
+        EntriesAsync.CastToExtractableEntry<GZipArchiveEntry>();
 }

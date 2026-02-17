@@ -5,7 +5,7 @@ using SharpCompress.Common.Lzw;
 
 namespace SharpCompress.Readers.Lzw;
 
-public partial class LzwReader : AbstractReader<LzwEntry, LzwVolume>
+public partial class LzwReader : AbstractReader<LzwEntry, LzwVolume>, ILzwReader, ILzwAsyncReader
 {
     private LzwReader(Stream stream, ReaderOptions options)
         : base(options, ArchiveType.Lzw) => Volume = new LzwVolume(stream, options, 0);

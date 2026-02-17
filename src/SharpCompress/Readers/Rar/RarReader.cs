@@ -11,7 +11,10 @@ namespace SharpCompress.Readers.Rar;
 /// <summary>
 /// This class faciliates Reading a Rar Archive in a non-seekable forward-only manner
 /// </summary>
-public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolume>
+public abstract partial class RarReader
+    : AbstractReader<RarReaderEntry, RarVolume>,
+        IRarReader,
+        IRarAsyncReader
 {
     private bool _disposed;
     private RarVolume? volume;
