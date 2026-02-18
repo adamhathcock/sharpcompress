@@ -409,7 +409,10 @@ public class TarFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive<TarWriterOptions> CreateArchive() => TarArchive.CreateArchive();
+    public ITarWritableArchive CreateArchive() => (ITarWritableArchive)TarArchive.CreateArchive();
+
+    IWritableArchive<TarWriterOptions> IWriteableArchiveFactory<TarWriterOptions>.CreateArchive() =>
+        CreateArchive();
 
     #endregion
 }

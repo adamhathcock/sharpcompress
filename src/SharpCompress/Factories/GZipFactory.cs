@@ -206,7 +206,11 @@ public class GZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive<GZipWriterOptions> CreateArchive() => GZipArchive.CreateArchive();
+    public IGZipWritableArchive CreateArchive() =>
+        (IGZipWritableArchive)GZipArchive.CreateArchive();
+
+    IWritableArchive<GZipWriterOptions> IWriteableArchiveFactory<GZipWriterOptions>.CreateArchive() =>
+        CreateArchive();
 
     #endregion
 }

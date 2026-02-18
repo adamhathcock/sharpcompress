@@ -234,7 +234,10 @@ public class ZipFactory
     #region IWriteableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive<ZipWriterOptions> CreateArchive() => ZipArchive.CreateArchive();
+    public IZipWritableArchive CreateArchive() => (IZipWritableArchive)ZipArchive.CreateArchive();
+
+    IWritableArchive<ZipWriterOptions> IWriteableArchiveFactory<ZipWriterOptions>.CreateArchive() =>
+        CreateArchive();
 
     #endregion
 }

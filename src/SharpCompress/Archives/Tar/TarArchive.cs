@@ -18,8 +18,8 @@ namespace SharpCompress.Archives.Tar;
 
 public partial class TarArchive
     : AbstractWritableArchive<TarArchiveEntry, TarVolume, TarWriterOptions>,
-        ITarArchive,
-        ITarAsyncArchive
+        ITarWritableArchive,
+        ITarWritableAsyncArchive
 {
     private readonly CompressionType _compressionType;
 

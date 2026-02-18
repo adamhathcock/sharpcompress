@@ -15,8 +15,8 @@ namespace SharpCompress.Archives.GZip;
 
 public partial class GZipArchive
     : AbstractWritableArchive<GZipArchiveEntry, GZipVolume, GZipWriterOptions>,
-        IGZipArchive,
-        IGZipAsyncArchive
+        IGZipWritableArchive,
+        IGZipWritableAsyncArchive
 {
     private GZipArchive(SourceStream sourceStream)
         : base(ArchiveType.GZip, sourceStream) { }

@@ -19,8 +19,8 @@ namespace SharpCompress.Archives.Zip;
 
 public partial class ZipArchive
     : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>,
-        IZipArchive,
-        IZipAsyncArchive
+        IZipWritableArchive,
+        IZipWritableAsyncArchive
 {
     private readonly SeekableZipHeaderFactory? headerFactory;
 
