@@ -1,18 +1,20 @@
-#if NET10_0_OR_GREATER
+using System;
 using System.IO;
 using SharpCompress.Cli;
 using SharpCompress.Cli.Inspection;
 using Xunit;
 
-namespace SharpCompress.Test.Cli;
+namespace SharpCompress.Cli.Test;
 
-public class ArchiveInspectorTests : TestBase
+public class ArchiveInspectorTests
 {
+    private static readonly string TestArchivesPath = FindTestArchivesPath();
+
     [Fact]
     public void Forward_Default_UsesForward_ForSimpleZipArchive()
     {
         var inspector = new ArchiveInspector();
-        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip");
+        var archivePath = Path.Combine(TestArchivesPath, "Zip.deflate.zip");
 
         var result = inspector.InspectArchives([archivePath], new InspectionRequest());
 
@@ -30,7 +32,7 @@ public class ArchiveInspectorTests : TestBase
     public void Seekable_Mode_ForcesSeekable_ForSimpleZipArchive()
     {
         var inspector = new ArchiveInspector();
-        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip");
+        var archivePath = Path.Combine(TestArchivesPath, "Zip.deflate.zip");
 
         var result = inspector.InspectArchives(
             [archivePath],
@@ -49,7 +51,7 @@ public class ArchiveInspectorTests : TestBase
     public void Forward_Default_FallsBackToSeekable_ForSplitZipArchive()
     {
         var inspector = new ArchiveInspector();
-        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.split.001");
+        var archivePath = Path.Combine(TestArchivesPath, "Zip.deflate.split.001");
 
         var result = inspector.InspectArchives([archivePath], new InspectionRequest());
 
@@ -66,7 +68,7 @@ public class ArchiveInspectorTests : TestBase
     public void Seekable_Mode_ShowsActionableError_ForForwardOnlyArchive()
     {
         var inspector = new ArchiveInspector();
-        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Ace.method1.ace");
+        var archivePath = Path.Combine(TestArchivesPath, "Ace.method1.ace");
 
         var result = inspector.InspectArchives(
             [archivePath],
@@ -78,5 +80,21 @@ public class ArchiveInspectorTests : TestBase
         Assert.Equal(archivePath, error.ArchivePath);
         Assert.Contains("--access forward", error.Message);
     }
+
+    private static string FindTestArchivesPath()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var candidate = Path.Combine(directory.FullName, "tests", "TestArchives", "Archives");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Unable to locate tests/TestArchives/Archives.");
+    }
 }
-#endif

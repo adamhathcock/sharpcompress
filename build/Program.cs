@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using GlobExpressions;
 using static Bullseye.Targets;
 using static SimpleExec.Command;
@@ -96,6 +97,11 @@ Target(
 
         foreach (var file in GetFiles("**/*.Test.csproj"))
         {
+            if (!ProjectSupportsFramework(file, framework))
+            {
+                continue;
+            }
+
             Run("dotnet", $"test {file} -c Release -f {framework} --no-restore --verbosity=normal");
         }
     }
@@ -748,6 +754,33 @@ static string GetRequiredEnvironmentVariable(string variableName)
     }
 
     return value;
+}
+
+static bool ProjectSupportsFramework(string projectFile, string framework)
+{
+    var project = XDocument.Load(projectFile);
+
+    var frameworkValues = project
+        .Descendants()
+        .Where(element =>
+            element.Name.LocalName.Equals("TargetFramework", StringComparison.Ordinal)
+            || element.Name.LocalName.Equals("TargetFrameworks", StringComparison.Ordinal)
+        )
+        .SelectMany(element =>
+            (element.Value ?? string.Empty).Split(
+                ';',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
+        )
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    if (frameworkValues.Count == 0)
+    {
+        return true;
+    }
+
+    return frameworkValues.Contains(framework, StringComparer.OrdinalIgnoreCase);
 }
 
 record BenchmarkMetric

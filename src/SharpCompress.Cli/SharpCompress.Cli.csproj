@@ -3,8 +3,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyOriginatorKeyFile>../../SharpCompress.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
     <PublishAot>true</PublishAot>
     <PublishTrimmed>true</PublishTrimmed>
     <IsAotCompatible>true</IsAotCompatible>
@@ -14,10 +12,6 @@
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SharpCompress\SharpCompress.csproj">
-      <AdditionalProperties>
-        TargetFramework=net10.0;PublishAot=false;PublishTrimmed=false
-      </AdditionalProperties>
-    </ProjectReference>
+    <ProjectReference Include="..\SharpCompress\SharpCompress.csproj" />
   </ItemGroup>
 </Project>
