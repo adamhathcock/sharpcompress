@@ -42,7 +42,12 @@ public sealed class ArchiveInspector
             throw new ArgumentException("Archive path is required.", nameof(archivePath));
         }
 
-        var fileInfo = new FileInfo(archivePath);
+        // Handle tilde expansion for home directory, then convert relative paths to absolute paths
+        var expandedPath = archivePath.StartsWith('~')
+            ? archivePath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), StringComparison.Ordinal)
+            : archivePath;
+        var fullPath = Path.GetFullPath(expandedPath);
+        var fileInfo = new FileInfo(fullPath);
         if (!fileInfo.Exists)
         {
             throw new FileNotFoundException($"Archive file was not found: {fileInfo.FullName}");

@@ -108,7 +108,11 @@ internal class SevenZipFilePart : FilePart
             return CompressionType.None;
         }
 
-        var coder = Folder.NotNull()._coders.First();
+        var coder = Folder?._coders.FirstOrDefault();
+        if (coder == null)
+        {
+            return CompressionType.Unknown;
+        }
         return coder._methodId._id switch
         {
             K_COPY => CompressionType.None,
