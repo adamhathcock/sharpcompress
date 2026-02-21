@@ -23,6 +23,7 @@ const string PushToNuGet = "push-to-nuget";
 const string DisplayBenchmarkResults = "display-benchmark-results";
 const string CompareBenchmarkResults = "compare-benchmark-results";
 const string GenerateBaseline = "generate-baseline";
+const string CliNative = "cli-native";
 
 Target(
     Clean,
@@ -466,6 +467,40 @@ Target(
     }
 );
 
+Target(
+    CliNative,
+    () =>
+    {
+        var rid = GetRequiredEnvironmentVariable("CLI_RID");
+        var configuration = Environment.GetEnvironmentVariable("CLI_CONFIGURATION") ?? "Release";
+        var framework = Environment.GetEnvironmentVariable("CLI_FRAMEWORK") ?? "net10.0";
+        const string project = "src/SharpCompress.Cli/SharpCompress.Cli.csproj";
+
+        Run("dotnet", $"restore {project} -r {rid}");
+        Run(
+            "dotnet",
+            $"publish {project} -c {configuration} -f {framework} -r {rid} -p:PublishAot=true --no-restore"
+        );
+
+        var binaryName = rid.StartsWith("win-", StringComparison.OrdinalIgnoreCase)
+            ? "SharpCompress.Cli.exe"
+            : "SharpCompress.Cli";
+        var binaryPath = Path.Combine(
+            "src",
+            "SharpCompress.Cli",
+            "bin",
+            configuration,
+            framework,
+            rid,
+            "publish",
+            binaryName
+        );
+
+        Console.WriteLine($"Smoke testing native binary: {binaryPath}");
+        Run(binaryPath, "formats --format json");
+    }
+);
+
 Target("default", [Publish], () => Console.WriteLine("Done!"));
 
 await RunTargetsAndExitAsync(args);
@@ -700,6 +735,19 @@ static double CalculateChange(double baseline, double current)
         return 0;
     }
     return ((current - baseline) / baseline) * 100;
+}
+
+static string GetRequiredEnvironmentVariable(string variableName)
+{
+    var value = Environment.GetEnvironmentVariable(variableName);
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        throw new InvalidOperationException(
+            $"Environment variable '{variableName}' must be set for this target."
+        );
+    }
+
+    return value;
 }
 
 record BenchmarkMetric

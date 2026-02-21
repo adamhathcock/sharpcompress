@@ -1,0 +1,67 @@
+name: CLI Native Build
+
+on:
+  push:
+    branches:
+      - "master"
+      - "release"
+    paths:
+      - "src/SharpCompress.Cli/**"
+      - "src/SharpCompress/**"
+      - "build/**"
+      - "tests/SharpCompress.Test/Cli/**"
+      - "tests/SharpCompress.Test/SharpCompress.Test.csproj"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - "global.json"
+      - ".github/workflows/cli-native.yml"
+  pull_request:
+    branches:
+      - "master"
+      - "release"
+    paths:
+      - "src/SharpCompress.Cli/**"
+      - "src/SharpCompress/**"
+      - "build/**"
+      - "tests/SharpCompress.Test/Cli/**"
+      - "tests/SharpCompress.Test/SharpCompress.Test.csproj"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - "global.json"
+      - ".github/workflows/cli-native.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-aot:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-14
+            rid: osx-arm64
+          - os: windows-latest
+            rid: win-x64
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build Native AOT CLI
+        run: dotnet run --project build/build.csproj -- cli-native
+        env:
+          CLI_RID: ${{ matrix.rid }}
+
+      - name: Upload CLI Native Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: sharpcompress-cli-${{ matrix.rid }}
+          path: src/SharpCompress.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish/
