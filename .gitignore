@@ -24,3 +24,4 @@ profiler-snapshots/
 .DS_Store
 *.snupkg
 benchmark-results/
+output/

@@ -1,10 +1,9 @@
-using System;
 using System.Globalization;
 using SharpCompress.Cli.Formats;
 using SharpCompress.Cli.Inspection;
 using Spectre.Console;
 
-namespace SharpCompress.Cli.Output;
+namespace SharpCompress.Cli.Renders;
 
 internal static class TableOutputRenderer
 {

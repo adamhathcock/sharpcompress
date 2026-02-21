@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using SharpCompress.Cli.Formats;
 using SharpCompress.Cli.Inspection;
 
-namespace SharpCompress.Cli.Output;
+namespace SharpCompress.Cli.Renders;
 
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

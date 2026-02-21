@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Factories;
 using SharpCompress.Readers;

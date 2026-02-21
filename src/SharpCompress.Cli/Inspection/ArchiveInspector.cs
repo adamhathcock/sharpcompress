@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;

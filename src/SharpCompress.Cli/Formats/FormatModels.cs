@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace SharpCompress.Cli.Formats;
 
 public sealed record FormatSupportResult(

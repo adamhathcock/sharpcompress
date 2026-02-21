@@ -1,9 +1,8 @@
-using System;
 using System.Text.Json;
 using SharpCompress.Cli.Formats;
 using SharpCompress.Cli.Inspection;
 
-namespace SharpCompress.Cli.Output;
+namespace SharpCompress.Cli.Renders;
 
 internal static class JsonOutputRenderer
 {

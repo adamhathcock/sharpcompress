@@ -1,9 +1,7 @@
-using System;
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using SharpCompress.Cli.Formats;
 using SharpCompress.Cli.Inspection;
-using SharpCompress.Cli.Output;
+using SharpCompress.Cli.Renders;
 
 namespace SharpCompress.Cli;
 
