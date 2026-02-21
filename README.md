@@ -14,7 +14,7 @@ GitHub Actions Build -
 
 Post Issues on Github!
 
-Check the [Supported Formats](docs/FORMATS.md) and [Basic Usage.](docs/USAGE.md)
+Check the [Supported Formats](docs/FORMATS.md), [Basic Usage](docs/USAGE.md), and [CLI Usage](docs/CLI.md).
 
 ## Custom Compression Providers
 
