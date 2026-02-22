@@ -1,0 +1,60 @@
+{
+  "archives": [
+    {
+      "archivePath": "\u003CARCHIVE_PATH\u003E",
+      "detectedArchiveType": 6,
+      "archiveType": "Arj",
+      "streamingType": 0,
+      "requestedAccessMode": 0,
+      "usedAccessMode": 0,
+      "autoFallbackApplied": false,
+      "fallbackReason": null,
+      "isComplete": null,
+      "isSolid": false,
+      "isEncrypted": false,
+      "volumeCount": 1,
+      "entryCount": 3,
+      "displayedEntryCount": 2,
+      "outputTruncated": true,
+      "totalCompressedSize": 100926,
+      "totalUncompressedSize": 100926,
+      "entries": [
+        {
+          "key": "TECT.TXT",
+          "compressionType": 0,
+          "compressedSize": 15498,
+          "size": 15498,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2022-08-01T19:23:04",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        },
+        {
+          "key": "EXE/TEST.EXE",
+          "compressionType": 0,
+          "compressedSize": 45056,
+          "size": 45056,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2024-03-23T19:12:46",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,60 @@
+{
+  "archives": [
+    {
+      "archivePath": "\u003CARCHIVE_PATH\u003E",
+      "detectedArchiveType": 3,
+      "archiveType": "SevenZip",
+      "streamingType": 0,
+      "requestedAccessMode": 0,
+      "usedAccessMode": 0,
+      "autoFallbackApplied": false,
+      "fallbackReason": null,
+      "isComplete": null,
+      "isSolid": true,
+      "isEncrypted": false,
+      "volumeCount": 1,
+      "entryCount": 6,
+      "displayedEntryCount": 2,
+      "outputTruncated": true,
+      "totalCompressedSize": 0,
+      "totalUncompressedSize": 100926,
+      "entries": [
+        {
+          "key": "jpg/test.jpg",
+          "compressionType": 6,
+          "compressedSize": 0,
+          "size": 40372,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2011-07-05T17:00:17.0884179\u002B01:00",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        },
+        {
+          "key": "\u0442\u0435\u0441\u0442.txt",
+          "compressionType": 6,
+          "compressedSize": 0,
+          "size": 15498,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": true,
+          "volumeIndexFirst": 1,
+          "volumeIndexLast": 1,
+          "lastModifiedTime": "2011-06-23T21:35:53.4918566\u002B01:00",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,60 @@
+{
+  "archives": [
+    {
+      "archivePath": "\u003CARCHIVE_PATH\u003E",
+      "detectedArchiveType": 0,
+      "archiveType": "Rar",
+      "streamingType": 0,
+      "requestedAccessMode": 0,
+      "usedAccessMode": 0,
+      "autoFallbackApplied": false,
+      "fallbackReason": null,
+      "isComplete": null,
+      "isSolid": false,
+      "isEncrypted": false,
+      "volumeCount": 1,
+      "entryCount": 6,
+      "displayedEntryCount": 2,
+      "outputTruncated": true,
+      "totalCompressedSize": 59729,
+      "totalUncompressedSize": 100926,
+      "entries": [
+        {
+          "key": "\u0442\u0435\u0441\u0442.txt",
+          "compressionType": 5,
+          "compressedSize": 2714,
+          "size": 15498,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2011-06-23T21:35:52.4918566\u002B01:00",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        },
+        {
+          "key": "exe/test.exe",
+          "compressionType": 5,
+          "compressedSize": 18039,
+          "size": 45056,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2002-05-19T08:43:43.3278079\u002B01:00",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,60 @@
+{
+  "archives": [
+    {
+      "archivePath": "\u003CARCHIVE_PATH\u003E",
+      "detectedArchiveType": 1,
+      "archiveType": "Zip",
+      "streamingType": 0,
+      "requestedAccessMode": 0,
+      "usedAccessMode": 0,
+      "autoFallbackApplied": false,
+      "fallbackReason": null,
+      "isComplete": null,
+      "isSolid": false,
+      "isEncrypted": false,
+      "volumeCount": 1,
+      "entryCount": 6,
+      "displayedEntryCount": 2,
+      "outputTruncated": true,
+      "totalCompressedSize": 60231,
+      "totalUncompressedSize": 100926,
+      "entries": [
+        {
+          "key": "exe/test.exe",
+          "compressionType": 4,
+          "compressedSize": 18628,
+          "size": 45056,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2002-05-19T08:43:44\u002B01:00",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        },
+        {
+          "key": "jpg/test.jpg",
+          "compressionType": 4,
+          "compressedSize": 38908,
+          "size": 40372,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2011-07-05T17:00:18\u002B01:00",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

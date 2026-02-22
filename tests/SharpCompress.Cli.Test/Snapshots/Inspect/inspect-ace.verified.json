@@ -1,0 +1,60 @@
+{
+  "archives": [
+    {
+      "archivePath": "\u003CARCHIVE_PATH\u003E",
+      "detectedArchiveType": 7,
+      "archiveType": "Ace",
+      "streamingType": 0,
+      "requestedAccessMode": 0,
+      "usedAccessMode": 0,
+      "autoFallbackApplied": false,
+      "fallbackReason": null,
+      "isComplete": null,
+      "isSolid": false,
+      "isEncrypted": false,
+      "volumeCount": 1,
+      "entryCount": 5,
+      "displayedEntryCount": 2,
+      "outputTruncated": true,
+      "totalCompressedSize": 100926,
+      "totalUncompressedSize": 100926,
+      "entries": [
+        {
+          "key": "exe\\test.exe",
+          "compressionType": 0,
+          "compressedSize": 45056,
+          "size": 45056,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2025-10-27T10:57:04",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        },
+        {
+          "key": "jpg\\test.jpg",
+          "compressionType": 0,
+          "compressedSize": 40372,
+          "size": 40372,
+          "isDirectory": false,
+          "isEncrypted": false,
+          "isSplitAfter": false,
+          "isSolid": false,
+          "volumeIndexFirst": 0,
+          "volumeIndexLast": 0,
+          "lastModifiedTime": "2025-10-27T10:57:04",
+          "createdTime": null,
+          "lastAccessedTime": null,
+          "archivedTime": null,
+          "linkTarget": null
+        }
+      ]
+    }
+  ],
+  "errors": []
+}
