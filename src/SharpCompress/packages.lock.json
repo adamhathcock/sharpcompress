@@ -214,6 +214,12 @@
       }
     },
     "net10.0": {
+      "Microsoft.DotNet.ILCompiler": {
+        "type": "Direct",
+        "requested": "[10.0.0, )",
+        "resolved": "10.0.0",
+        "contentHash": "f9u8fMRROe2lS5MOOLutK6iSNTK9pC3kqd90FIn8Sk29fbZ0QDjZrBbwUkhouk/8dppC71SIEQaag0lGRTxvfA=="
+      },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
         "requested": "[10.0.0, )",
@@ -262,6 +268,12 @@
       }
     },
     "net8.0": {
+      "Microsoft.DotNet.ILCompiler": {
+        "type": "Direct",
+        "requested": "[8.0.22, )",
+        "resolved": "8.0.22",
+        "contentHash": "4SDEQzYp3d9yVu0iQRFMV4HJCTjDvCt2AclSxMGXZSva5VrdoatwDg5nQVSD42ZuzBY5Y+BzgaexNbwb0/3gHw=="
+      },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
         "requested": "[8.0.22, )",

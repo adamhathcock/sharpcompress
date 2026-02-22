@@ -64,6 +64,8 @@ internal static class TableOutputRenderer
         table.AddColumn("Value");
 
         table.AddRow("archive-type", Markup.Escape(archive.ArchiveType));
+        table.AddRow("detected-type", Markup.Escape(archive.DetectedArchiveType.ToString()));
+        table.AddRow("streaming-type", Markup.Escape(archive.StreamingType.ToString()));
         table.AddRow("access-requested", archive.RequestedAccessMode.ToString().ToLowerInvariant());
         table.AddRow("access-used", archive.UsedAccessMode.ToString().ToLowerInvariant());
         table.AddRow("entries", archive.EntryCount.ToString(CultureInfo.InvariantCulture));
@@ -151,7 +153,7 @@ internal static class TableOutputRenderer
         foreach (var error in report.Errors)
         {
             AnsiConsole.MarkupLine(
-                $"[red]error[/] {Markup.Escape(error.ArchivePath)}: {Markup.Escape(error.Message)}"
+                $"[red]error[/] {Markup.Escape(error.ArchivePath)} ({Markup.Escape(error.Code.ToString())}): {Markup.Escape(error.Message)}"
             );
         }
     }

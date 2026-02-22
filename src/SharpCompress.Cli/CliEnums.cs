@@ -12,6 +12,24 @@ public enum OutputFormat
     Json,
 }
 
+public enum StreamingType
+{
+    Forward,
+    Seekable,
+    AutoFallbackSeekable,
+    SeekableMultiVolume,
+}
+
+public enum InspectionErrorCode
+{
+    InvalidPath,
+    FileNotFound,
+    NotArchive,
+    AccessModeNotSupported,
+    InspectionFailed,
+    Unexpected,
+}
+
 internal enum InspectionRenderMode
 {
     Inspect,

@@ -22,8 +22,10 @@ public class ArchiveInspectorTests
         var archive = Assert.Single(result.Archives);
         Assert.Equal(AccessMode.Forward, archive.RequestedAccessMode);
         Assert.Equal(AccessMode.Forward, archive.UsedAccessMode);
+        Assert.Equal(StreamingType.Forward, archive.StreamingType);
         Assert.False(archive.AutoFallbackApplied);
         Assert.Null(archive.FallbackReason);
+        Assert.Equal(SharpCompress.Common.ArchiveType.Zip, archive.DetectedArchiveType);
         Assert.Equal("Zip", archive.ArchiveType);
         Assert.True(archive.EntryCount > 0);
     }
@@ -43,6 +45,7 @@ public class ArchiveInspectorTests
         var archive = Assert.Single(result.Archives);
         Assert.Equal(AccessMode.Seekable, archive.RequestedAccessMode);
         Assert.Equal(AccessMode.Seekable, archive.UsedAccessMode);
+        Assert.Equal(StreamingType.Seekable, archive.StreamingType);
         Assert.False(archive.AutoFallbackApplied);
         Assert.True(archive.IsComplete);
     }
@@ -59,6 +62,7 @@ public class ArchiveInspectorTests
         var archive = Assert.Single(result.Archives);
         Assert.Equal(AccessMode.Forward, archive.RequestedAccessMode);
         Assert.Equal(AccessMode.Seekable, archive.UsedAccessMode);
+        Assert.Equal(StreamingType.SeekableMultiVolume, archive.StreamingType);
         Assert.True(archive.AutoFallbackApplied);
         Assert.Contains("multi-volume", archive.FallbackReason);
         Assert.True(archive.VolumeCount > 1);
@@ -78,7 +82,33 @@ public class ArchiveInspectorTests
         Assert.Empty(result.Archives);
         var error = Assert.Single(result.Errors);
         Assert.Equal(archivePath, error.ArchivePath);
+        Assert.Equal(InspectionErrorCode.AccessModeNotSupported, error.Code);
         Assert.Contains("--access forward", error.Message);
+    }
+
+    [Fact]
+    public void DetectsNonArchiveFilesWithoutThrowing()
+    {
+        var inspector = new ArchiveInspector();
+        var filePath = Path.Combine(
+            Path.GetTempPath(),
+            $"sharpcompress-cli-{Guid.NewGuid():N}.txt"
+        );
+        File.WriteAllText(filePath, "not an archive");
+
+        try
+        {
+            var result = inspector.InspectArchives([filePath], new InspectionRequest());
+
+            Assert.Empty(result.Archives);
+            var error = Assert.Single(result.Errors);
+            Assert.Equal(filePath, error.ArchivePath);
+            Assert.Equal(InspectionErrorCode.NotArchive, error.Code);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
     }
 
     private static string FindTestArchivesPath()

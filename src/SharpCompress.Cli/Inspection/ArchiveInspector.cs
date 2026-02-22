@@ -19,162 +19,428 @@ public sealed class ArchiveInspector
 
         foreach (var archivePath in archivePaths)
         {
-            try
+            if (TryInspectArchive(archivePath, request, out var archive, out var error))
             {
-                archives.Add(InspectArchive(archivePath, request));
+                archives.Add(archive!);
+                continue;
             }
-            catch (Exception exception)
+
+            if (error is not null)
             {
-                errors.Add(new InspectionError(archivePath, exception.Message));
+                errors.Add(error);
+                continue;
             }
+
+            errors.Add(
+                new InspectionError(
+                    archivePath,
+                    InspectionErrorCode.Unexpected,
+                    "Unexpected inspection failure."
+                )
+            );
         }
 
         return new InspectionExecutionResult(archives, errors);
     }
 
-    private static ArchiveInspectionResult InspectArchive(
+    private static bool TryInspectArchive(
         string archivePath,
-        InspectionRequest request
+        InspectionRequest request,
+        out ArchiveInspectionResult? archiveResult,
+        out InspectionError? error
     )
     {
+        archiveResult = null;
+        error = null;
+
+        try
+        {
+            if (!TryResolveFileInfo(archivePath, out var fileInfo, out error))
+            {
+                return false;
+            }
+
+            if (!TryDetectArchiveType(fileInfo, out var detectedArchiveType, out error))
+            {
+                return false;
+            }
+
+            var capabilities = ArchiveTypeCapabilities.Get(detectedArchiveType);
+            var readerOptions = CreateReaderOptions(request);
+            var archiveParts = ArchiveFactory.GetFileParts(fileInfo).ToList();
+
+            if (
+                !TryCreateExecutionPlan(
+                    fileInfo,
+                    request,
+                    capabilities,
+                    archiveParts,
+                    out var plan,
+                    out error
+                )
+            )
+            {
+                return false;
+            }
+
+            if (plan.UsedAccessMode == AccessMode.Seekable)
+            {
+                return TryInspectWithSeekable(
+                    fileInfo,
+                    archiveParts,
+                    readerOptions,
+                    request,
+                    detectedArchiveType,
+                    capabilities,
+                    plan,
+                    out archiveResult,
+                    out error
+                );
+            }
+
+            if (
+                TryInspectWithForward(
+                    fileInfo,
+                    readerOptions,
+                    request,
+                    detectedArchiveType,
+                    plan,
+                    out archiveResult,
+                    out var forwardFailure
+                )
+            )
+            {
+                return true;
+            }
+
+            if (
+                !plan.AllowSeekableFallback
+                || forwardFailure is null
+                || !ShouldFallbackToSeekable(forwardFailure)
+            )
+            {
+                error = new InspectionError(
+                    fileInfo.FullName,
+                    InspectionErrorCode.InspectionFailed,
+                    forwardFailure?.Message ?? "Failed to inspect archive with forward mode."
+                );
+                return false;
+            }
+
+            var fallbackPlan = plan with
+            {
+                UsedAccessMode = AccessMode.Seekable,
+                StreamingType = StreamingType.AutoFallbackSeekable,
+                AutoFallbackApplied = true,
+                FallbackReason =
+                    $"Forward reader failed and seekable mode was used ({forwardFailure.GetType().Name}).",
+                AllowSeekableFallback = false,
+            };
+
+            return TryInspectWithSeekable(
+                fileInfo,
+                archiveParts,
+                readerOptions,
+                request,
+                detectedArchiveType,
+                capabilities,
+                fallbackPlan,
+                out archiveResult,
+                out error
+            );
+        }
+        catch (Exception exception)
+        {
+            error = new InspectionError(
+                archivePath,
+                InspectionErrorCode.Unexpected,
+                exception.Message
+            );
+            return false;
+        }
+    }
+
+    private static bool TryResolveFileInfo(
+        string archivePath,
+        out FileInfo fileInfo,
+        out InspectionError? error
+    )
+    {
+        fileInfo = null!;
+        error = null;
+
         if (string.IsNullOrWhiteSpace(archivePath))
         {
-            throw new ArgumentException("Archive path is required.", nameof(archivePath));
-        }
-
-        // Handle tilde expansion for home directory, then convert relative paths to absolute paths
-        var expandedPath = archivePath.StartsWith('~')
-            ? archivePath.Replace(
-                "~",
-                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                StringComparison.Ordinal
-            )
-            : archivePath;
-        var fullPath = Path.GetFullPath(expandedPath);
-        var fileInfo = new FileInfo(fullPath);
-        if (!fileInfo.Exists)
-        {
-            throw new FileNotFoundException($"Archive file was not found: {fileInfo.FullName}");
-        }
-
-        var readerOptions = CreateReaderOptions(request);
-        var archiveParts = ArchiveFactory.GetFileParts(fileInfo).ToList();
-
-        if (request.AccessMode == AccessMode.Seekable)
-        {
-            return InspectWithSeekable(
-                fileInfo,
-                archiveParts,
-                readerOptions,
-                request,
-                autoFallbackApplied: false,
-                fallbackReason: null,
-                forcedSeekable: true
+            error = new InspectionError(
+                archivePath,
+                InspectionErrorCode.InvalidPath,
+                "Archive path is required."
             );
-        }
-
-        if (archiveParts.Count > 1)
-        {
-            return InspectWithSeekable(
-                fileInfo,
-                archiveParts,
-                readerOptions,
-                request,
-                autoFallbackApplied: true,
-                fallbackReason: "Detected multi-volume archive parts.",
-                forcedSeekable: false
-            );
+            return false;
         }
 
         try
         {
-            return InspectWithForward(fileInfo, readerOptions, request);
+            var expandedPath = archivePath.StartsWith('~')
+                ? archivePath.Replace(
+                    "~",
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    StringComparison.Ordinal
+                )
+                : archivePath;
+
+            var fullPath = Path.GetFullPath(expandedPath);
+            fileInfo = new FileInfo(fullPath);
+            if (!fileInfo.Exists)
+            {
+                error = new InspectionError(
+                    fullPath,
+                    InspectionErrorCode.FileNotFound,
+                    $"Archive file was not found: {fullPath}"
+                );
+                return false;
+            }
+
+            return true;
         }
-        catch (Exception exception) when (ShouldFallbackToSeekable(exception))
+        catch (Exception exception)
         {
-            return InspectWithSeekable(
-                fileInfo,
-                archiveParts,
-                readerOptions,
-                request,
-                autoFallbackApplied: true,
-                fallbackReason: $"Forward reader failed and seekable mode was used ({exception.GetType().Name}).",
-                forcedSeekable: false
+            error = new InspectionError(
+                archivePath,
+                InspectionErrorCode.InvalidPath,
+                exception.Message
             );
+            return false;
         }
     }
 
-    private static ArchiveInspectionResult InspectWithForward(
+    private static bool TryDetectArchiveType(
         FileInfo fileInfo,
-        ReaderOptions readerOptions,
-        InspectionRequest request
+        out ArchiveType detectedArchiveType,
+        out InspectionError? error
     )
     {
-        using var reader = ReaderFactory.OpenReader(fileInfo, readerOptions);
-        var entries = new List<ArchiveEntryResult>();
+        detectedArchiveType = default;
+        error = null;
 
-        var entryCount = 0;
-        var displayedEntryCount = 0;
-        var outputTruncated = false;
-        var totalCompressedSize = 0L;
-        var totalUncompressedSize = 0L;
-        var isSolid = false;
-        var isEncrypted = false;
-
-        while (reader.MoveToNextEntry())
+        try
         {
-            var entry = reader.Entry;
-            entryCount++;
-            totalCompressedSize += entry.CompressedSize;
-            totalUncompressedSize += entry.Size;
-            isSolid |= entry.IsSolid;
-            isEncrypted |= entry.IsEncrypted;
-
-            if (!ShouldIncludeEntry(entry, request))
+            if (!ArchiveFactory.IsArchive(fileInfo.FullName, out var type) || type is null)
             {
-                continue;
+                error = new InspectionError(
+                    fileInfo.FullName,
+                    InspectionErrorCode.NotArchive,
+                    "The provided file is not a supported archive type."
+                );
+                return false;
             }
 
-            if (request.Limit.HasValue && displayedEntryCount >= request.Limit.Value)
-            {
-                outputTruncated = true;
-                continue;
-            }
-
-            entries.Add(MapEntry(entry));
-            displayedEntryCount++;
+            detectedArchiveType = type.Value;
+            return true;
         }
-
-        return new ArchiveInspectionResult(
-            ArchivePath: fileInfo.FullName,
-            ArchiveType: reader.ArchiveType.ToString(),
-            RequestedAccessMode: request.AccessMode,
-            UsedAccessMode: AccessMode.Forward,
-            AutoFallbackApplied: false,
-            FallbackReason: null,
-            IsComplete: null,
-            IsSolid: isSolid,
-            IsEncrypted: isEncrypted,
-            VolumeCount: 1,
-            EntryCount: entryCount,
-            DisplayedEntryCount: displayedEntryCount,
-            OutputTruncated: outputTruncated,
-            TotalCompressedSize: totalCompressedSize,
-            TotalUncompressedSize: totalUncompressedSize,
-            Entries: entries
-        );
+        catch (Exception exception)
+        {
+            error = new InspectionError(
+                fileInfo.FullName,
+                InspectionErrorCode.InspectionFailed,
+                exception.Message
+            );
+            return false;
+        }
     }
 
-    private static ArchiveInspectionResult InspectWithSeekable(
+    private static bool TryCreateExecutionPlan(
+        FileInfo fileInfo,
+        InspectionRequest request,
+        ArchiveTypeCapabilities.Capability capabilities,
+        List<FileInfo> archiveParts,
+        out InspectionExecutionPlan plan,
+        out InspectionError? error
+    )
+    {
+        error = null;
+
+        var isMultiVolume = archiveParts.Count > 1;
+
+        if (request.AccessMode == AccessMode.Seekable)
+        {
+            if (!capabilities.SupportsSeekable)
+            {
+                plan = default!;
+                error = new InspectionError(
+                    fileInfo.FullName,
+                    InspectionErrorCode.AccessModeNotSupported,
+                    "Seekable mode is not available for this archive. Re-run the command with --access forward."
+                );
+                return false;
+            }
+
+            plan = new InspectionExecutionPlan(
+                RequestedAccessMode: request.AccessMode,
+                UsedAccessMode: AccessMode.Seekable,
+                StreamingType: isMultiVolume
+                    ? StreamingType.SeekableMultiVolume
+                    : StreamingType.Seekable,
+                AutoFallbackApplied: false,
+                FallbackReason: null,
+                AllowSeekableFallback: false
+            );
+            return true;
+        }
+
+        if (isMultiVolume)
+        {
+            if (!capabilities.SupportsSeekable)
+            {
+                plan = default!;
+                error = new InspectionError(
+                    fileInfo.FullName,
+                    InspectionErrorCode.AccessModeNotSupported,
+                    "Multi-volume archive inspection requires seekable access, which this archive type does not support."
+                );
+                return false;
+            }
+
+            plan = new InspectionExecutionPlan(
+                RequestedAccessMode: request.AccessMode,
+                UsedAccessMode: AccessMode.Seekable,
+                StreamingType: StreamingType.SeekableMultiVolume,
+                AutoFallbackApplied: true,
+                FallbackReason: "Detected multi-volume archive parts.",
+                AllowSeekableFallback: false
+            );
+            return true;
+        }
+
+        if (!capabilities.SupportsForward)
+        {
+            if (!capabilities.SupportsSeekable)
+            {
+                plan = default!;
+                error = new InspectionError(
+                    fileInfo.FullName,
+                    InspectionErrorCode.AccessModeNotSupported,
+                    "The detected archive type does not support forward or seekable inspection."
+                );
+                return false;
+            }
+
+            plan = new InspectionExecutionPlan(
+                RequestedAccessMode: request.AccessMode,
+                UsedAccessMode: AccessMode.Seekable,
+                StreamingType: StreamingType.AutoFallbackSeekable,
+                AutoFallbackApplied: true,
+                FallbackReason: "Detected archive type requires seekable access.",
+                AllowSeekableFallback: false
+            );
+            return true;
+        }
+
+        plan = new InspectionExecutionPlan(
+            RequestedAccessMode: request.AccessMode,
+            UsedAccessMode: AccessMode.Forward,
+            StreamingType: StreamingType.Forward,
+            AutoFallbackApplied: false,
+            FallbackReason: null,
+            AllowSeekableFallback: capabilities.SupportsSeekable
+        );
+        return true;
+    }
+
+    private static bool TryInspectWithForward(
+        FileInfo fileInfo,
+        ReaderOptions readerOptions,
+        InspectionRequest request,
+        ArchiveType detectedArchiveType,
+        InspectionExecutionPlan plan,
+        out ArchiveInspectionResult? archiveResult,
+        out Exception? failure
+    )
+    {
+        archiveResult = null;
+        failure = null;
+        try
+        {
+            using var reader = ReaderFactory.OpenReader(fileInfo, readerOptions);
+            var entries = new List<ArchiveEntryResult>();
+
+            var entryCount = 0;
+            var displayedEntryCount = 0;
+            var outputTruncated = false;
+            var totalCompressedSize = 0L;
+            var totalUncompressedSize = 0L;
+            var isSolid = false;
+            var isEncrypted = false;
+
+            while (reader.MoveToNextEntry())
+            {
+                var entry = reader.Entry;
+                entryCount++;
+                totalCompressedSize += entry.CompressedSize;
+                totalUncompressedSize += entry.Size;
+                isSolid |= entry.IsSolid;
+                isEncrypted |= entry.IsEncrypted;
+
+                if (!ShouldIncludeEntry(entry, request))
+                {
+                    continue;
+                }
+
+                if (request.Limit.HasValue && displayedEntryCount >= request.Limit.Value)
+                {
+                    outputTruncated = true;
+                    continue;
+                }
+
+                entries.Add(MapEntry(entry));
+                displayedEntryCount++;
+            }
+
+            archiveResult = new ArchiveInspectionResult(
+                ArchivePath: fileInfo.FullName,
+                DetectedArchiveType: detectedArchiveType,
+                ArchiveType: reader.ArchiveType.ToString(),
+                StreamingType: plan.StreamingType,
+                RequestedAccessMode: plan.RequestedAccessMode,
+                UsedAccessMode: AccessMode.Forward,
+                AutoFallbackApplied: plan.AutoFallbackApplied,
+                FallbackReason: plan.FallbackReason,
+                IsComplete: null,
+                IsSolid: isSolid,
+                IsEncrypted: isEncrypted,
+                VolumeCount: 1,
+                EntryCount: entryCount,
+                DisplayedEntryCount: displayedEntryCount,
+                OutputTruncated: outputTruncated,
+                TotalCompressedSize: totalCompressedSize,
+                TotalUncompressedSize: totalUncompressedSize,
+                Entries: entries
+            );
+
+            return true;
+        }
+        catch (Exception exception)
+        {
+            failure = exception;
+            return false;
+        }
+    }
+
+    private static bool TryInspectWithSeekable(
         FileInfo fileInfo,
         List<FileInfo> archiveParts,
         ReaderOptions readerOptions,
         InspectionRequest request,
-        bool autoFallbackApplied,
-        string? fallbackReason,
-        bool forcedSeekable
+        ArchiveType detectedArchiveType,
+        ArchiveTypeCapabilities.Capability capabilities,
+        InspectionExecutionPlan plan,
+        out ArchiveInspectionResult? archiveResult,
+        out InspectionError? error
     )
     {
+        archiveResult = null;
+        error = null;
+
         try
         {
             using var archive =
@@ -210,13 +476,15 @@ public sealed class ArchiveInspector
                 displayedEntryCount++;
             }
 
-            return new ArchiveInspectionResult(
+            archiveResult = new ArchiveInspectionResult(
                 ArchivePath: fileInfo.FullName,
+                DetectedArchiveType: detectedArchiveType,
                 ArchiveType: archive.Type.ToString(),
-                RequestedAccessMode: request.AccessMode,
+                StreamingType: plan.StreamingType,
+                RequestedAccessMode: plan.RequestedAccessMode,
                 UsedAccessMode: AccessMode.Seekable,
-                AutoFallbackApplied: autoFallbackApplied,
-                FallbackReason: fallbackReason,
+                AutoFallbackApplied: plan.AutoFallbackApplied,
+                FallbackReason: plan.FallbackReason,
                 IsComplete: archive.IsComplete,
                 IsSolid: archive.IsSolid,
                 IsEncrypted: archive.IsEncrypted,
@@ -228,14 +496,27 @@ public sealed class ArchiveInspector
                 TotalUncompressedSize: totalUncompressedSize,
                 Entries: entries
             );
+
+            return true;
         }
         catch (Exception exception)
-            when (forcedSeekable && SupportsForwardOnly(fileInfo, readerOptions))
         {
-            throw new InvalidOperationException(
-                "Seekable mode is not available for this archive. Re-run the command with --access forward.",
-                exception
+            if (plan.RequestedAccessMode == AccessMode.Seekable && capabilities.SupportsForward)
+            {
+                error = new InspectionError(
+                    fileInfo.FullName,
+                    InspectionErrorCode.AccessModeNotSupported,
+                    "Seekable mode is not available for this archive. Re-run the command with --access forward."
+                );
+                return false;
+            }
+
+            error = new InspectionError(
+                fileInfo.FullName,
+                InspectionErrorCode.InspectionFailed,
+                exception.Message
             );
+            return false;
         }
     }
 
@@ -256,19 +537,6 @@ public sealed class ArchiveInspector
 
     private static bool ShouldFallbackToSeekable(Exception exception) =>
         exception is InvalidFormatException or ArchiveOperationException;
-
-    private static bool SupportsForwardOnly(FileInfo fileInfo, ReaderOptions readerOptions)
-    {
-        try
-        {
-            using var reader = ReaderFactory.OpenReader(fileInfo, readerOptions);
-            return reader is not null;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     private static bool ShouldIncludeEntry(IEntry entry, InspectionRequest request) =>
         request.IncludeDirectories || !entry.IsDirectory;
@@ -291,4 +559,13 @@ public sealed class ArchiveInspector
             ArchivedTime: entry.ArchivedTime,
             LinkTarget: entry.LinkTarget
         );
+
+    private sealed record InspectionExecutionPlan(
+        AccessMode RequestedAccessMode,
+        AccessMode UsedAccessMode,
+        StreamingType StreamingType,
+        bool AutoFallbackApplied,
+        string? FallbackReason,
+        bool AllowSeekableFallback
+    );
 }

@@ -9,7 +9,9 @@ public sealed record InspectionExecutionResult(
 
 public sealed record ArchiveInspectionResult(
     string ArchivePath,
+    ArchiveType DetectedArchiveType,
     string ArchiveType,
+    StreamingType StreamingType,
     AccessMode RequestedAccessMode,
     AccessMode UsedAccessMode,
     bool AutoFallbackApplied,
@@ -44,4 +46,4 @@ public sealed record ArchiveEntryResult(
     string? LinkTarget
 );
 
-public sealed record InspectionError(string ArchivePath, string Message);
+public sealed record InspectionError(string ArchivePath, InspectionErrorCode Code, string Message);
