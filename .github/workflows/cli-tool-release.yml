@@ -1,0 +1,100 @@
+name: CLI Tool Release
+
+on:
+  push:
+    tags:
+      - "SharpCompress.Cli.*"
+
+permissions:
+  contents: read
+
+jobs:
+  pack-outer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Determine CLI Version
+        id: version
+        run: dotnet run --project build/build.csproj -- determine-cli-version
+
+      - name: Pack CLI Tool Outer Package
+        run: dotnet run --project build/build.csproj -- pack-cli-tool-outer
+        env:
+          CLI_VERSION: ${{ steps.version.outputs.cli_version }}
+
+      - name: Upload CLI Tool Outer Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-tool-outer
+          path: artifacts/cli/*.nupkg
+
+  pack-rid:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-14
+            rid: osx-arm64
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Determine CLI Version
+        id: version
+        run: dotnet run --project build/build.csproj -- determine-cli-version
+
+      - name: Pack CLI Tool RID Package
+        run: dotnet run --project build/build.csproj -- pack-cli-tool-rid
+        env:
+          CLI_VERSION: ${{ steps.version.outputs.cli_version }}
+          CLI_RID: ${{ matrix.rid }}
+
+      - name: Upload CLI Tool RID Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cli-tool-${{ matrix.rid }}
+          path: artifacts/cli/*.nupkg
+
+  push-to-nuget:
+    runs-on: ubuntu-latest
+    needs:
+      - pack-outer
+      - pack-rid
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Download CLI Tool Artifacts
+        uses: actions/download-artifact@v6
+        with:
+          pattern: cli-tool-*
+          merge-multiple: true
+          path: artifacts/cli
+
+      - name: Push CLI Tool Packages
+        run: dotnet run --project build/build.csproj -- push-cli-to-nuget
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}

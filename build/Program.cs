@@ -25,6 +25,10 @@ const string DisplayBenchmarkResults = "display-benchmark-results";
 const string CompareBenchmarkResults = "compare-benchmark-results";
 const string GenerateBaseline = "generate-baseline";
 const string CliNative = "cli-native";
+const string DetermineCliVersion = "determine-cli-version";
+const string PackCliToolOuter = "pack-cli-tool-outer";
+const string PackCliToolRid = "pack-cli-tool-rid";
+const string PushCliToNuGet = "push-cli-to-nuget";
 
 Target(
     Clean,
@@ -418,6 +422,99 @@ Target(
 );
 
 Target(
+    DetermineCliVersion,
+    async () =>
+    {
+        var version = await GetCliToolVersion();
+        Console.WriteLine($"CLI_VERSION={version}");
+
+        var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
+        if (!string.IsNullOrEmpty(githubOutput))
+        {
+            File.AppendAllText(githubOutput, $"cli_version={version}\n");
+        }
+    }
+);
+
+Target(
+    PackCliToolOuter,
+    () =>
+    {
+        var version = GetRequiredEnvironmentVariable("CLI_VERSION");
+        var configuration = Environment.GetEnvironmentVariable("CLI_CONFIGURATION") ?? "Release";
+        const string project = "src/SharpCompress.Cli/SharpCompress.Cli.csproj";
+        const string outputDirectory = "artifacts/cli";
+
+        Directory.CreateDirectory(outputDirectory);
+        Run("dotnet", $"restore {project}");
+        Run(
+            "dotnet",
+            $"pack {project} -c {configuration} -o {outputDirectory} -p:PackageVersion={version} -p:PublishAot=true --no-restore"
+        );
+    }
+);
+
+Target(
+    PackCliToolRid,
+    () =>
+    {
+        var version = GetRequiredEnvironmentVariable("CLI_VERSION");
+        var rid = GetRequiredEnvironmentVariable("CLI_RID");
+        var configuration = Environment.GetEnvironmentVariable("CLI_CONFIGURATION") ?? "Release";
+        const string project = "src/SharpCompress.Cli/SharpCompress.Cli.csproj";
+        const string outputDirectory = "artifacts/cli";
+
+        Directory.CreateDirectory(outputDirectory);
+        Run("dotnet", $"restore {project} -r {rid}");
+        Run(
+            "dotnet",
+            $"pack {project} -c {configuration} -o {outputDirectory} -p:PackageVersion={version} -p:PublishAot=true -p:RuntimeIdentifier={rid} --no-restore"
+        );
+    }
+);
+
+Target(
+    PushCliToNuGet,
+    () =>
+    {
+        var apiKey = Environment.GetEnvironmentVariable("NUGET_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            Console.WriteLine(
+                "NUGET_API_KEY environment variable is not set. Skipping CLI NuGet push."
+            );
+            return;
+        }
+
+        var outputDirectory = Path.Combine("artifacts", "cli");
+        if (!Directory.Exists(outputDirectory))
+        {
+            Console.WriteLine("CLI artifacts directory does not exist. Nothing to push.");
+            return;
+        }
+
+        var packages = Directory
+            .GetFiles(outputDirectory, "*.nupkg")
+            .OrderBy(path => path)
+            .ToList();
+        if (packages.Count == 0)
+        {
+            Console.WriteLine("No CLI packages found in artifacts/cli directory.");
+            return;
+        }
+
+        foreach (var package in packages)
+        {
+            Console.WriteLine($"Pushing {package} to NuGet.org");
+            Run(
+                "dotnet",
+                $"nuget push \"{package}\" --api-key {apiKey} --source https://api.nuget.org/v3/index.json --skip-duplicate"
+            );
+        }
+    }
+);
+
+Target(
     GenerateBaseline,
     () =>
     {
@@ -562,6 +659,52 @@ static async Task<(string version, bool isPrerelease)> GetVersion()
         Console.WriteLine($"Building prerelease version: {version}");
         return (version, true);
     }
+}
+
+static async Task<string> GetCliToolVersion()
+{
+    var githubRefName = Environment.GetEnvironmentVariable("GITHUB_REF_NAME");
+    if (TryParseCliVersionTag(githubRefName, out var githubVersion))
+    {
+        Console.WriteLine($"Building CLI tagged release version: {githubVersion}");
+        return githubVersion;
+    }
+
+    var currentTag = (await GetGitOutput("tag", "--points-at HEAD"))
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        .Select(tag => tag.Trim())
+        .FirstOrDefault(tag => TryParseCliVersionTag(tag, out _));
+
+    if (TryParseCliVersionTag(currentTag, out var tagVersion))
+    {
+        Console.WriteLine($"Building CLI tagged release version: {tagVersion}");
+        return tagVersion;
+    }
+
+    throw new InvalidOperationException(
+        "Could not determine CLI version. Expected tag format: SharpCompress.Cli.<version>."
+    );
+}
+
+static bool TryParseCliVersionTag(string? tagName, out string version)
+{
+    version = string.Empty;
+    if (string.IsNullOrWhiteSpace(tagName))
+    {
+        return false;
+    }
+
+    var match = Regex.Match(
+        tagName.Trim(),
+        @"^SharpCompress\.Cli\.(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)$"
+    );
+    if (!match.Success)
+    {
+        return false;
+    }
+
+    version = match.Groups[1].Value;
+    return true;
 }
 
 static async Task<string> GetCurrentBranch()

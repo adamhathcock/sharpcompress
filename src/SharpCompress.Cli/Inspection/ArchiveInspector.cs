@@ -44,7 +44,11 @@ public sealed class ArchiveInspector
 
         // Handle tilde expansion for home directory, then convert relative paths to absolute paths
         var expandedPath = archivePath.StartsWith('~')
-            ? archivePath.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), StringComparison.Ordinal)
+            ? archivePath.Replace(
+                "~",
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                StringComparison.Ordinal
+            )
             : archivePath;
         var fullPath = Path.GetFullPath(expandedPath);
         var fileInfo = new FileInfo(fullPath);
