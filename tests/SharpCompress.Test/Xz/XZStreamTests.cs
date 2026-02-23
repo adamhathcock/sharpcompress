@@ -54,4 +54,24 @@ public class XzStreamTests : XzTestsBase
         var uncompressed = sr.ReadToEnd();
         Assert.Equal(OriginalEmpty, uncompressed);
     }
+
+    [Fact]
+    public void CanReadRawNonSeekableStream()
+    {
+        var nonSeekable = new ForwardOnlyStream(new MemoryStream(Compressed));
+        var xz = new XZStream(nonSeekable);
+        using var sr = new StreamReader(xz);
+        var uncompressed = sr.ReadToEnd();
+        Assert.Equal(Original, uncompressed);
+    }
+
+    [Fact]
+    public void CanReadRawNonSeekableEmptyStream()
+    {
+        var nonSeekable = new ForwardOnlyStream(new MemoryStream(CompressedEmpty));
+        var xz = new XZStream(nonSeekable);
+        using var sr = new StreamReader(xz);
+        var uncompressed = sr.ReadToEnd();
+        Assert.Equal(OriginalEmpty, uncompressed);
+    }
 }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Xz;
 
@@ -12,7 +13,7 @@ namespace SharpCompress.Compressors.Xz;
 public sealed partial class XZStream : XZReadOnlyStream
 {
     public XZStream(Stream baseStream)
-        : base(baseStream) { }
+        : base(baseStream.CanSeek ? baseStream : SharpCompressStream.Create(baseStream)) { }
 
     protected override void Dispose(bool disposing)
     {
