@@ -181,7 +181,7 @@ public partial class SharpCompressStream : Stream, IStreamStack
         // Ensure ring buffer exists
         if (_ringBuffer is null)
         {
-            _ringBuffer = new RingBuffer(Constants.BufferSize);
+            _ringBuffer = new RingBuffer(Constants.RewindableBufferSize);
         }
 
         // Mark current position as recording anchor
