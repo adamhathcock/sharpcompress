@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-internal partial class SharpCompressStream
+public partial class SharpCompressStream
 {
     public override Task<int> ReadAsync(
         byte[] buffer,

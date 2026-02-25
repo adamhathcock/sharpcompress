@@ -4,7 +4,7 @@ using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-internal partial class SharpCompressStream : Stream, IStreamStack
+public partial class SharpCompressStream : Stream, IStreamStack
 {
     public virtual Stream BaseStream() => stream;
 
@@ -38,7 +38,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
     /// Gets or sets whether to throw an exception when Dispose is called.
     /// Useful for testing to ensure streams are not disposed prematurely.
     /// </summary>
-    public virtual bool ThrowOnDispose { get; set; }
+    internal bool ThrowOnDispose { get; set; }
 
     public SharpCompressStream(Stream stream)
     {
@@ -181,7 +181,7 @@ internal partial class SharpCompressStream : Stream, IStreamStack
         // Ensure ring buffer exists
         if (_ringBuffer is null)
         {
-            _ringBuffer = new RingBuffer(Constants.BufferSize);
+            _ringBuffer = new RingBuffer(Constants.RewindableBufferSize);
         }
 
         // Mark current position as recording anchor
