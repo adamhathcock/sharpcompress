@@ -107,6 +107,6 @@ public partial class SharpCompressStream
 
         // For non-seekable streams, create a SharpCompressStream with rolling buffer
         // to allow limited backward seeking (required by decompressors that over-read)
-        return new SharpCompressStream(stream, false, false, bufferSize);
+        return new SharpCompressStream(stream, false, false, rewindableBufferSize);
     }
 }
