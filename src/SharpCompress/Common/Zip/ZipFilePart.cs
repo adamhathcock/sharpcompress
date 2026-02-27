@@ -149,6 +149,21 @@ internal abstract partial class ZipFilePart : FilePart
                 reader.ReadUInt16(); // LZMA version
                 var propsLength = reader.ReadUInt16();
                 var props = reader.ReadBytes(propsLength);
+
+                // When the uncompressed size is known to be zero, skip remaining compressed
+                // bytes (required for streaming reads) and return an empty stream.
+                // Bit1 (EOS marker flag) means the output size is not stored in the header
+                // (the LZMA stream itself contains an end-of-stream marker instead), so we
+                // only short-circuit when the size is explicitly known to be zero.
+                if (
+                    !FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                    && Header.UncompressedSize == 0
+                )
+                {
+                    stream.Skip();
+                    return Stream.Null;
+                }
+
                 context = context with
                 {
                     Properties = props,
