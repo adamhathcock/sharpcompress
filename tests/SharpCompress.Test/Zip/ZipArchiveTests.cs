@@ -846,4 +846,18 @@ public class ZipArchiveTests : ArchiveTests
         const int expected = (S_IFREG | 0b110_100_100) << 16; // 0644 mode regular file
         Assert.Equal(expected, firstEntry.Attrib);
     }
+
+    [Fact]
+    public void Zip_LZMA_ZeroSizeEntry_CanExtract()
+    {
+        using var archive = ArchiveFactory.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.empty.zip")
+        );
+        var entries = archive.Entries.Where(x => !x.IsDirectory).ToList();
+        Assert.Single(entries);
+        Assert.Equal(0, entries[0].Size);
+        var outStream = new MemoryStream();
+        entries[0].WriteTo(outStream);
+        Assert.Equal(0, outStream.Length);
+    }
 }

@@ -240,9 +240,34 @@ internal abstract partial class ZipFilePart
                 await stream
                     .ReadFullyAsync(props, 0, propsSize, cancellationToken)
                     .ConfigureAwait(false);
-                return await LzmaStream
-                    .CreateAsync(
-                        props,
+
+                // When the uncompressed size is known to be zero, skip remaining compressed
+                // bytes (required for streaming reads) and return an empty stream.
+                // Bit1 (EOS marker flag) means the output size is not stored in the header
+                // (the LZMA stream itself contains an end-of-stream marker instead), so we
+                // only short-circuit when the size is explicitly known to be zero.
+                if (
+                    !FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                    && Header.UncompressedSize == 0
+                )
+                {
+                    await stream.SkipAsync(cancellationToken).ConfigureAwait(false);
+                    return Stream.Null;
+                }
+
+                context = context with
+                {
+                    Properties = props,
+                    InputSize =
+                        Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
+                    OutputSize = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
+                        ? -1
+                        : Header.UncompressedSize,
+                };
+
+                return await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
                         stream,
                         Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
                         FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
