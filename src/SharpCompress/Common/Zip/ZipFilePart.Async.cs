@@ -228,19 +228,10 @@ internal abstract partial class ZipFilePart
             }
             case ZipCompressionMethod.LZMA:
             {
-                if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
+                 if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
                 {
                     throw new NotSupportedException("LZMA with pkware encryption.");
                 }
-                var buffer = new byte[4];
-                await stream.ReadFullyAsync(buffer, 0, 4, cancellationToken).ConfigureAwait(false);
-                var version = BinaryPrimitives.ReadUInt16LittleEndian(buffer.AsSpan(0, 2));
-                var propsSize = BinaryPrimitives.ReadUInt16LittleEndian(buffer.AsSpan(2, 2));
-                var props = new byte[propsSize];
-                await stream
-                    .ReadFullyAsync(props, 0, propsSize, cancellationToken)
-                    .ConfigureAwait(false);
-
                 // When the uncompressed size is known to be zero, skip remaining compressed
                 // bytes (required for streaming reads) and return an empty stream.
                 // Bit1 (EOS marker flag) means the output size is not stored in the header
@@ -254,20 +245,17 @@ internal abstract partial class ZipFilePart
                     await stream.SkipAsync(cancellationToken).ConfigureAwait(false);
                     return Stream.Null;
                 }
-
-                context = context with
-                {
-                    Properties = props,
-                    InputSize =
-                        Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
-                    OutputSize = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
-                        ? -1
-                        : Header.UncompressedSize,
-                };
-
-                return await providers
-                    .CreateDecompressStreamAsync(
-                        compressionType,
+                var buffer = new byte[4];
+                await stream.ReadFullyAsync(buffer, 0, 4, cancellationToken).ConfigureAwait(false);
+                var version = BinaryPrimitives.ReadUInt16LittleEndian(buffer.AsSpan(0, 2));
+                var propsSize = BinaryPrimitives.ReadUInt16LittleEndian(buffer.AsSpan(2, 2));
+                var props = new byte[propsSize];
+                await stream
+                    .ReadFullyAsync(props, 0, propsSize, cancellationToken)
+                    .ConfigureAwait(false);
+                return await LzmaStream
+                    .CreateAsync(
+                        props,
                         stream,
                         Header.CompressedSize > 0 ? Header.CompressedSize - 4 - props.Length : -1,
                         FlagUtility.HasFlag(Header.Flags, HeaderFlags.Bit1)
