@@ -146,7 +146,7 @@ internal abstract partial class ZipFilePart : FilePart
             }
             case ZipCompressionMethod.LZMA:
             {
-                 if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
+                if (FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted))
                 {
                     throw new NotSupportedException("LZMA with pkware encryption.");
                 }
