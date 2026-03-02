@@ -48,7 +48,7 @@ jobs:
     
     # Upload artifacts for verification
     - name: Upload NuGet Package
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.os }}-nuget-package
         path: artifacts/*.nupkg
