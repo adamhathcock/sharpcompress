@@ -44,7 +44,7 @@ jobs:
     
     - name: Upload Benchmark Results
       if: always()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: benchmark-results
         path: benchmark-results/
