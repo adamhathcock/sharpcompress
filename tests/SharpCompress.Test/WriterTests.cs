@@ -99,7 +99,10 @@ public class WriterTests : TestBase
                 readerOptions,
                 cancellationToken
             );
-            await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH, cancellationToken);
+            await reader.WriteAllToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                cancellationToken: cancellationToken
+            );
         }
         VerifyFiles();
     }

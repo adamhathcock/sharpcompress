@@ -4,9 +4,13 @@ namespace SharpCompress.Common;
 
 internal static class EntryExtensions
 {
-    internal static void PreserveExtractionOptions(this IEntry entry, string destinationFileName)
+    internal static void PreserveExtractionOptions(
+        this IEntry entry,
+        string destinationFileName,
+        ExtractionOptions options
+    )
     {
-        if (entry.Options.PreserveFileTime || entry.Options.PreserveAttributes)
+        if (options.PreserveFileTime || options.PreserveAttributes)
         {
             var nf = new FileInfo(destinationFileName);
             if (!nf.Exists)
@@ -15,7 +19,7 @@ internal static class EntryExtensions
             }
 
             // update file time to original packed time
-            if (entry.Options.PreserveFileTime)
+            if (options.PreserveFileTime)
             {
                 if (entry.CreatedTime.HasValue)
                 {
@@ -33,7 +37,7 @@ internal static class EntryExtensions
                 }
             }
 
-            if (entry.Options.PreserveAttributes)
+            if (options.PreserveAttributes)
             {
                 if (entry.Attrib.HasValue)
                 {

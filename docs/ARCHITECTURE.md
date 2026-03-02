@@ -90,7 +90,8 @@ Common types, options, and enumerations used across formats.
 - `ArchiveType.cs` - Enum for archive formats
 - `CompressionType.cs` - Enum for compression methods
 - `ArchiveEncoding.cs` - Character encoding configuration
-- `IExtractionOptions.cs` - Extraction configuration exposed through `ReaderOptions`
+- `IExtractionOptions.cs` - Interface for extraction configuration
+- `ExtractionOptions.cs` - Extraction behavior options for file extraction APIs
 - Format-specific headers: `Zip/Headers/`, `Tar/Headers/`, `Rar/Headers/`, etc.
 
 #### `Compressors/` - Compression Algorithms

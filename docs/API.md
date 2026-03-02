@@ -190,7 +190,7 @@ await using (var reader = await ReaderFactory.OpenAsyncReader(stream))
     // Async extraction of all entries
     await reader.WriteAllToDirectoryAsync(
         @"C:\output",
-        cancellationToken
+        cancellationToken: cancellationToken
     );
 }
 ```
@@ -244,9 +244,13 @@ using (var archive = ZipArchive.OpenArchive("file.zip", options))
     // ...
 }
 
-// Common presets
-var safeOptions = ReaderOptions.SafeExtract;      // No overwrite
-var flatOptions = ReaderOptions.FlatExtract;      // No directory structure
+// Open-time presets
+var external = ReaderOptions.ForExternalStream;
+var owned = ReaderOptions.ForOwnedFile;
+
+// Extraction presets
+var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
+var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
 
 // Factory defaults:
 // - file path / FileInfo overloads use LeaveStreamOpen = false
@@ -297,23 +301,24 @@ archive.SaveTo("output.zip", options);
 ### Extraction behavior
 
 ```csharp
-var options = new ReaderOptions
+var options = new ExtractionOptions
 {
     ExtractFullPath = true,                         // Recreate directory structure
     Overwrite = true,                               // Overwrite existing files
     PreserveFileTime = true                         // Keep original timestamps
 };
 
-using (var archive = ZipArchive.OpenArchive("file.zip", options))
+using (var archive = ZipArchive.OpenArchive("file.zip"))
 {
-    archive.WriteToDirectory(@"C:\output");
+    archive.WriteToDirectory(@"C:\output", options);
 }
 ```
 
 ### Options matrix
 
 ```text
-ReaderOptions: open-time behavior (password, encoding, stream ownership, extraction defaults)
+ReaderOptions: open-time behavior (password, encoding, stream ownership)
+ExtractionOptions: extract-time behavior (overwrite, paths, timestamps, attributes, symlinks)
 WriterOptions: write-time behavior (compression type/level, encoding, stream ownership)
 ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, comments, zip64)
 ```

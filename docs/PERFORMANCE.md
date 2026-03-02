@@ -333,7 +333,7 @@ using (var archive = ZipArchive.OpenArchive("archive.zip"))
 {
     await archive.WriteToDirectoryAsync(
         @"C:\output",
-        cancellationToken
+        cancellationToken: cancellationToken
     );
 }
 // Thread can handle other work while I/O happens
@@ -369,7 +369,7 @@ try
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",
-            cts.Token
+            cancellationToken: cts.Token
         );
     }
 }

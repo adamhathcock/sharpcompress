@@ -242,7 +242,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
             await using IAsyncArchive archive = await ZipArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(stream)
             );
-            await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, progress);
+            await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, progress: progress);
         }
 
         await Task.Delay(1000);
