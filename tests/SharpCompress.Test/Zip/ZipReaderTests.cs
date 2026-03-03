@@ -543,4 +543,27 @@ public class ZipReaderTests : ReaderTests
         // Should iterate through all entries, not just the first one
         Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
     }
+
+    [Fact]
+    public void Zip_LZMA_ZeroSizeEntry_CanExtract_Streaming()
+    {
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.empty.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ForwardOnlyStream(fileStream);
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        var count = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+                Assert.Equal(0, reader.Entry.Size);
+                var outStream = new MemoryStream();
+                reader.WriteEntryTo(outStream);
+                Assert.Equal(0, outStream.Length);
+            }
+        }
+        Assert.Equal(1, count);
+    }
 }
