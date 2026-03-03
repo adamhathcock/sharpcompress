@@ -98,6 +98,12 @@ public sealed record ExtractionOptions : IExtractionOptions
     public static ExtractionOptions FlatExtract => new(extractFullPath: false, overwrite: true);
 
     /// <summary>
+    /// Gets an ExtractionOptions instance configured to preserve timestamps and attributes.
+    /// </summary>
+    public static ExtractionOptions PreserveMetadata =>
+        new() { PreserveFileTime = true, PreserveAttributes = true };
+
+    /// <summary>
     /// Default symbolic link handler that logs a warning message.
     /// </summary>
     public static void DefaultSymbolicLinkHandler(string sourcePath, string targetPath)

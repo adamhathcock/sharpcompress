@@ -17,7 +17,7 @@ public static partial class ReaderFactory
 
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
     {
-        options ??= ReaderOptions.ForOwnedFile;
+        options ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfo.OpenRead(), options);
     }
 

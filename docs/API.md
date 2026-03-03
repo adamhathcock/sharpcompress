@@ -246,11 +246,12 @@ using (var archive = ZipArchive.OpenArchive("file.zip", options))
 
 // Open-time presets
 var external = ReaderOptions.ForExternalStream;
-var owned = ReaderOptions.ForOwnedFile;
+var owned = ReaderOptions.ForFilePath;
 
 // Extraction presets
 var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
 var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
+var metadataOptions = ExtractionOptions.PreserveMetadata; // Keep timestamps and attributes
 
 // Factory defaults:
 // - file path / FileInfo overloads use LeaveStreamOpen = false
@@ -329,7 +330,7 @@ ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, 
 
 ```csharp
 var registry = CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider());
-var readerOptions = ReaderOptions.ForOwnedFile().WithProviders(registry);
+var readerOptions = ReaderOptions.ForFilePath.WithProviders(registry);
 var writerOptions = new WriterOptions(CompressionType.GZip)
 {
     CompressionLevel = 6,
@@ -417,7 +418,7 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-var options = ReaderOptions.ForOwnedFile().WithProgress(progress);
+var options = ReaderOptions.ForFilePath.WithProgress(progress);
 using (var archive = ZipArchive.OpenArchive("archive.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");

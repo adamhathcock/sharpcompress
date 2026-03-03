@@ -128,7 +128,7 @@ public sealed record ReaderOptions : IReaderOptions
     /// <summary>
     /// Gets ReaderOptions configured for file-based overloads that open their own stream.
     /// </summary>
-    public static ReaderOptions ForOwnedFile => new() { LeaveStreamOpen = false };
+    public static ReaderOptions ForFilePath => new() { LeaveStreamOpen = false };
 
     /// <summary>
     /// Creates ReaderOptions for reading encrypted archives.

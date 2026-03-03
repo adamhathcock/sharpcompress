@@ -43,7 +43,7 @@ public static partial class ArchiveFactory
         CancellationToken cancellationToken = default
     )
     {
-        options ??= ReaderOptions.ForOwnedFile;
+        options ??= ReaderOptions.ForFilePath;
 
         var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken)
             .ConfigureAwait(false);
@@ -73,7 +73,7 @@ public static partial class ArchiveFactory
         }
 
         fileInfo.NotNull(nameof(fileInfo));
-        options ??= ReaderOptions.ForOwnedFile;
+        options ??= ReaderOptions.ForFilePath;
 
         var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken)
             .ConfigureAwait(false);

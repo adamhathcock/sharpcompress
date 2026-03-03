@@ -209,7 +209,7 @@ public class OptionsUsabilityTests : TestBase
         var external = ReaderOptions.ForExternalStream;
         Assert.True(external.LeaveStreamOpen);
 
-        var owned = ReaderOptions.ForOwnedFile;
+        var owned = ReaderOptions.ForFilePath;
         Assert.False(owned.LeaveStreamOpen);
     }
 
@@ -222,6 +222,10 @@ public class OptionsUsabilityTests : TestBase
         var flat = ExtractionOptions.FlatExtract;
         Assert.False(flat.ExtractFullPath);
         Assert.True(flat.Overwrite);
+
+        var preserveMetadata = ExtractionOptions.PreserveMetadata;
+        Assert.True(preserveMetadata.PreserveFileTime);
+        Assert.True(preserveMetadata.PreserveAttributes);
     }
 
     [Fact]

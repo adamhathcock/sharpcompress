@@ -40,7 +40,7 @@ public static partial class ArchiveFactory
 
     public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? options = null)
     {
-        options ??= ReaderOptions.ForOwnedFile;
+        options ??= ReaderOptions.ForFilePath;
 
         return FindFactory<IArchiveFactory>(fileInfo).OpenArchive(fileInfo, options);
     }
@@ -64,7 +64,7 @@ public static partial class ArchiveFactory
         }
 
         fileInfo.NotNull(nameof(fileInfo));
-        options ??= ReaderOptions.ForOwnedFile;
+        options ??= ReaderOptions.ForFilePath;
 
         return FindFactory<IMultiArchiveFactory>(fileInfo).OpenArchive(filesArray, options);
     }

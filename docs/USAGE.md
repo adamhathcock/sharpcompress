@@ -95,7 +95,7 @@ Note: Extracting a solid rar or 7z file needs to be done in sequential order to 
 
 ```C#
 // Use ReaderOptions for open-time behavior and ExtractionOptions for extract-time behavior
-using (var archive = RarArchive.OpenArchive("Test.rar", ReaderOptions.ForOwnedFile()))
+using (var archive = RarArchive.OpenArchive("Test.rar", ReaderOptions.ForFilePath))
 {
     // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
     archive.WriteToDirectory(
@@ -131,7 +131,7 @@ var progress = new Progress<ProgressReport>(report =>
 });
 
 using (var archive = RarArchive.OpenArchive("archive.rar",
-    ReaderOptions.ForOwnedFile()
+    ReaderOptions.ForFilePath
         .WithProgress(progress))) // Must be solid Rar or 7Zip
 {
     archive.WriteToDirectory(
@@ -219,7 +219,7 @@ To replace a specific algorithm (for example to use `System.IO.Compression` for 
 var systemGZip = new SystemGZipCompressionProvider();
 var customRegistry = CompressionProviderRegistry.Default.With(systemGZip);
 
-var readerOptions = ReaderOptions.ForOwnedFile()
+var readerOptions = ReaderOptions.ForFilePath
     .WithProviders(customRegistry);
 using var reader = ReaderFactory.OpenReader(stream, readerOptions);
 
