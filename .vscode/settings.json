@@ -25,5 +25,8 @@
   "csharpier.enableDebugLogs": false,
   "omnisharp.enableRoslynAnalyzers": true,
   "omnisharp.enableEditorConfigSupport": true,
-  "dotnet-test-explorer.testProjectPath": "tests/**/*.csproj"
+  "dotnet-test-explorer.testProjectPath": "tests/**/*.csproj",
+  "chat.tools.terminal.autoApprove": {
+    "dotnet csharpier": true
+  }
 }
