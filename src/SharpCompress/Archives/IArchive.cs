@@ -13,7 +13,7 @@ public interface IArchive : IDisposable
     ArchiveType Type { get; }
 
     /// <summary>
-    /// The options used when opening this archive, including extraction behavior settings.
+    /// The options used when opening this archive.
     /// </summary>
     ReaderOptions ReaderOptions { get; }
 

@@ -1,9 +1,6 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
@@ -24,11 +21,13 @@ internal static partial class ExtractionMethods
     public static void WriteEntryToDirectory(
         IEntry entry,
         string destinationDirectory,
+        ExtractionOptions? options,
         Action<string> write
     )
     {
         string destinationFileName;
         var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
+        options ??= new ExtractionOptions();
 
         //check for trailing slash.
         if (
@@ -48,7 +47,7 @@ internal static partial class ExtractionMethods
 
         var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
         file = Utility.ReplaceInvalidFileNameChars(file);
-        if (entry.Options.ExtractFullPath)
+        if (options.ExtractFullPath)
         {
             var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
                 .NotNull("Directory is null");
@@ -84,7 +83,7 @@ internal static partial class ExtractionMethods
             }
             write(destinationFileName);
         }
-        else if (entry.Options.ExtractFullPath && !Directory.Exists(destinationFileName))
+        else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
         {
             Directory.CreateDirectory(destinationFileName);
         }
@@ -93,18 +92,20 @@ internal static partial class ExtractionMethods
     public static void WriteEntryToFile(
         IEntry entry,
         string destinationFileName,
+        ExtractionOptions? options,
         Action<string, FileMode> openAndWrite
     )
     {
+        options ??= new ExtractionOptions();
         if (entry.LinkTarget != null)
         {
-            if (entry.Options.SymbolicLinkHandler is not null)
+            if (options.SymbolicLinkHandler is not null)
             {
-                entry.Options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+                options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
             else
             {
-                ReaderOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+                ExtractionOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
             return;
         }
@@ -112,13 +113,13 @@ internal static partial class ExtractionMethods
         {
             var fm = FileMode.Create;
 
-            if (!entry.Options.Overwrite)
+            if (!options.Overwrite)
             {
                 fm = FileMode.CreateNew;
             }
 
             openAndWrite(destinationFileName, fm);
-            entry.PreserveExtractionOptions(destinationFileName);
+            entry.PreserveExtractionOptions(destinationFileName, options);
         }
     }
 }

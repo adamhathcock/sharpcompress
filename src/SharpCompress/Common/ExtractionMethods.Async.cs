@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
@@ -11,12 +10,14 @@ internal static partial class ExtractionMethods
     public static async ValueTask WriteEntryToDirectoryAsync(
         IEntry entry,
         string destinationDirectory,
+        ExtractionOptions? options,
         Func<string, CancellationToken, ValueTask> writeAsync,
         CancellationToken cancellationToken = default
     )
     {
         string destinationFileName;
         var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
+        options ??= new ExtractionOptions();
 
         //check for trailing slash.
         if (
@@ -36,7 +37,7 @@ internal static partial class ExtractionMethods
 
         var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
         file = Utility.ReplaceInvalidFileNameChars(file);
-        if (entry.Options.ExtractFullPath)
+        if (options.ExtractFullPath)
         {
             var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
                 .NotNull("Directory is null");
@@ -72,7 +73,7 @@ internal static partial class ExtractionMethods
             }
             await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
         }
-        else if (entry.Options.ExtractFullPath && !Directory.Exists(destinationFileName))
+        else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
         {
             Directory.CreateDirectory(destinationFileName);
         }
@@ -81,19 +82,21 @@ internal static partial class ExtractionMethods
     public static async ValueTask WriteEntryToFileAsync(
         IEntry entry,
         string destinationFileName,
+        ExtractionOptions? options,
         Func<string, FileMode, CancellationToken, ValueTask> openAndWriteAsync,
         CancellationToken cancellationToken = default
     )
     {
+        options ??= new ExtractionOptions();
         if (entry.LinkTarget != null)
         {
-            if (entry.Options.SymbolicLinkHandler is not null)
+            if (options.SymbolicLinkHandler is not null)
             {
-                entry.Options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+                options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
             else
             {
-                ReaderOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
+                ExtractionOptions.DefaultSymbolicLinkHandler(destinationFileName, entry.LinkTarget);
             }
             return;
         }
@@ -101,14 +104,14 @@ internal static partial class ExtractionMethods
         {
             var fm = FileMode.Create;
 
-            if (!entry.Options.Overwrite)
+            if (!options.Overwrite)
             {
                 fm = FileMode.CreateNew;
             }
 
             await openAndWriteAsync(destinationFileName, fm, cancellationToken)
                 .ConfigureAwait(false);
-            entry.PreserveExtractionOptions(destinationFileName);
+            entry.PreserveExtractionOptions(destinationFileName, options);
         }
     }
 }

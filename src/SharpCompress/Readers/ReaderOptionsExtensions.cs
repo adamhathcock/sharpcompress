@@ -87,47 +87,6 @@ public static class ReaderOptionsExtensions
     ) => options with { RewindableBufferSize = rewindableBufferSize };
 
     /// <summary>
-    /// Creates a copy with the specified overwrite setting.
-    /// </summary>
-    public static ReaderOptions WithOverwrite(this ReaderOptions options, bool overwrite) =>
-        options with
-        {
-            Overwrite = overwrite,
-        };
-
-    /// <summary>
-    /// Creates a copy with the specified extract full path setting.
-    /// </summary>
-    public static ReaderOptions WithExtractFullPath(
-        this ReaderOptions options,
-        bool extractFullPath
-    ) => options with { ExtractFullPath = extractFullPath };
-
-    /// <summary>
-    /// Creates a copy with the specified preserve file time setting.
-    /// </summary>
-    public static ReaderOptions WithPreserveFileTime(
-        this ReaderOptions options,
-        bool preserveFileTime
-    ) => options with { PreserveFileTime = preserveFileTime };
-
-    /// <summary>
-    /// Creates a copy with the specified preserve attributes setting.
-    /// </summary>
-    public static ReaderOptions WithPreserveAttributes(
-        this ReaderOptions options,
-        bool preserveAttributes
-    ) => options with { PreserveAttributes = preserveAttributes };
-
-    /// <summary>
-    /// Creates a copy with the specified symbolic link handler.
-    /// </summary>
-    public static ReaderOptions WithSymbolicLinkHandler(
-        this ReaderOptions options,
-        Action<string, string>? handler
-    ) => options with { SymbolicLinkHandler = handler };
-
-    /// <summary>
     /// Creates a copy with the specified compression provider registry.
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="providers"/> is null.</exception>

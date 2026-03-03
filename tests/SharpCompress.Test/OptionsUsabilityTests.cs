@@ -180,7 +180,8 @@ public class OptionsUsabilityTests : TestBase
             .WithLeaveStreamOpen(false)
             .WithPassword("secret")
             .WithLookForHeader(true)
-            .WithOverwrite(false);
+            .WithBufferSize(65536)
+            .WithDisableCheckIncomplete(true);
 
         // Object initializer approach
         var initializerApproach = new ReaderOptions
@@ -188,13 +189,18 @@ public class OptionsUsabilityTests : TestBase
             LeaveStreamOpen = false,
             Password = "secret",
             LookForHeader = true,
-            Overwrite = false,
+            BufferSize = 65536,
+            DisableCheckIncomplete = true,
         };
 
         Assert.Equal(fluentApproach.LeaveStreamOpen, initializerApproach.LeaveStreamOpen);
         Assert.Equal(fluentApproach.Password, initializerApproach.Password);
         Assert.Equal(fluentApproach.LookForHeader, initializerApproach.LookForHeader);
-        Assert.Equal(fluentApproach.Overwrite, initializerApproach.Overwrite);
+        Assert.Equal(fluentApproach.BufferSize, initializerApproach.BufferSize);
+        Assert.Equal(
+            fluentApproach.DisableCheckIncomplete,
+            initializerApproach.DisableCheckIncomplete
+        );
     }
 
     [Fact]
@@ -203,15 +209,23 @@ public class OptionsUsabilityTests : TestBase
         var external = ReaderOptions.ForExternalStream;
         Assert.True(external.LeaveStreamOpen);
 
-        var owned = ReaderOptions.ForOwnedFile;
+        var owned = ReaderOptions.ForFilePath;
         Assert.False(owned.LeaveStreamOpen);
+    }
 
-        var safe = ReaderOptions.SafeExtract;
+    [Fact]
+    public void ExtractionOptions_Presets_Have_Correct_Defaults()
+    {
+        var safe = ExtractionOptions.SafeExtract;
         Assert.False(safe.Overwrite);
 
-        var flat = ReaderOptions.FlatExtract;
+        var flat = ExtractionOptions.FlatExtract;
         Assert.False(flat.ExtractFullPath);
         Assert.True(flat.Overwrite);
+
+        var preserveMetadata = ExtractionOptions.PreserveMetadata;
+        Assert.True(preserveMetadata.PreserveFileTime);
+        Assert.True(preserveMetadata.PreserveAttributes);
     }
 
     [Fact]

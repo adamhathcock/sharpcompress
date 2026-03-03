@@ -190,7 +190,7 @@ await using (var reader = await ReaderFactory.OpenAsyncReader(stream))
     // Async extraction of all entries
     await reader.WriteAllToDirectoryAsync(
         @"C:\output",
-        cancellationToken
+        cancellationToken: cancellationToken
     );
 }
 ```
@@ -231,11 +231,11 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, Compressio
 
 ### ReaderOptions
 
-Use factory presets and fluent helpers for common configurations:
+Use preset properties and fluent helpers for common configurations:
 
 ```csharp
 // External stream with password and custom encoding
-var options = ReaderOptions.ForExternalStream()
+var options = ReaderOptions.ForExternalStream
     .WithPassword("password")
     .WithArchiveEncoding(new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
 
@@ -244,9 +244,14 @@ using (var archive = ZipArchive.OpenArchive("file.zip", options))
     // ...
 }
 
-// Common presets
-var safeOptions = ReaderOptions.SafeExtract;      // No overwrite
-var flatOptions = ReaderOptions.FlatExtract;      // No directory structure
+// Open-time presets
+var external = ReaderOptions.ForExternalStream;
+var owned = ReaderOptions.ForFilePath;
+
+// Extraction presets
+var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
+var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
+var metadataOptions = ExtractionOptions.PreserveMetadata; // Keep timestamps and attributes
 
 // Factory defaults:
 // - file path / FileInfo overloads use LeaveStreamOpen = false
@@ -297,23 +302,24 @@ archive.SaveTo("output.zip", options);
 ### Extraction behavior
 
 ```csharp
-var options = new ReaderOptions
+var options = new ExtractionOptions
 {
     ExtractFullPath = true,                         // Recreate directory structure
     Overwrite = true,                               // Overwrite existing files
     PreserveFileTime = true                         // Keep original timestamps
 };
 
-using (var archive = ZipArchive.OpenArchive("file.zip", options))
+using (var archive = ZipArchive.OpenArchive("file.zip"))
 {
-    archive.WriteToDirectory(@"C:\output");
+    archive.WriteToDirectory(@"C:\output", options);
 }
 ```
 
 ### Options matrix
 
 ```text
-ReaderOptions: open-time behavior (password, encoding, stream ownership, extraction defaults)
+ReaderOptions: open-time behavior (password, encoding, stream ownership)
+ExtractionOptions: extract-time behavior (overwrite, paths, timestamps, attributes, symlinks)
 WriterOptions: write-time behavior (compression type/level, encoding, stream ownership)
 ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, comments, zip64)
 ```
@@ -324,7 +330,7 @@ ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, 
 
 ```csharp
 var registry = CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider());
-var readerOptions = ReaderOptions.ForOwnedFile().WithProviders(registry);
+var readerOptions = ReaderOptions.ForFilePath.WithProviders(registry);
 var writerOptions = new WriterOptions(CompressionType.GZip)
 {
     CompressionLevel = 6,
@@ -412,7 +418,7 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-var options = ReaderOptions.ForOwnedFile().WithProgress(progress);
+var options = ReaderOptions.ForFilePath.WithProgress(progress);
 using (var archive = ZipArchive.OpenArchive("archive.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");

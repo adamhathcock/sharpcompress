@@ -144,7 +144,7 @@ public class AsyncTests : TestBase
             cancellationToken: cts.Token
         );
 
-        await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH, cts.Token);
+        await reader.WriteAllToDirectoryAsync(SCRATCH_FILES_PATH, cancellationToken: cts.Token);
 
         // Just verify some files were extracted
         var extractedFiles = Directory.GetFiles(

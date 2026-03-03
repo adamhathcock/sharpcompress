@@ -17,10 +17,12 @@ public static class IAsyncArchiveExtensions
         /// </summary>
         /// <param name="archive">The archive to extract.</param>
         /// <param name="destinationDirectory">The folder to extract into.</param>
+        /// <param name="options">Extraction options.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
         /// <param name="cancellationToken">Optional cancellation token.</param>
         public async ValueTask WriteToDirectoryAsync(
             string destinationDirectory,
+            ExtractionOptions? options = null,
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
         )
@@ -34,7 +36,7 @@ public static class IAsyncArchiveExtensions
                     .ExtractAllEntriesAsync()
                     .ConfigureAwait(false);
                 await reader
-                    .WriteAllToDirectoryAsync(destinationDirectory, cancellationToken)
+                    .WriteAllToDirectoryAsync(destinationDirectory, options, cancellationToken)
                     .ConfigureAwait(false);
             }
             else
@@ -42,6 +44,7 @@ public static class IAsyncArchiveExtensions
                 await archive
                     .WriteToDirectoryAsyncInternal(
                         destinationDirectory,
+                        options,
                         progress,
                         cancellationToken
                     )
@@ -51,6 +54,7 @@ public static class IAsyncArchiveExtensions
 
         private async ValueTask WriteToDirectoryAsyncInternal(
             string destinationDirectory,
+            ExtractionOptions? options,
             IProgress<ProgressReport>? progress,
             CancellationToken cancellationToken
         )
@@ -80,7 +84,7 @@ public static class IAsyncArchiveExtensions
                 }
 
                 await entry
-                    .WriteToDirectoryAsync(destinationDirectory, cancellationToken)
+                    .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
                     .ConfigureAwait(false);
 
                 bytesRead += entry.Size;

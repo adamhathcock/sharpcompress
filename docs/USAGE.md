@@ -6,7 +6,7 @@ SharpCompress now provides full async/await support for all I/O operations. All 
 
 **Key Async Methods:**
 - `reader.WriteEntryToAsync(stream, cancellationToken)` - Extract entry asynchronously  
-- `reader.WriteAllToDirectoryAsync(path, cancellationToken)` - Extract all asynchronously
+- `reader.WriteAllToDirectoryAsync(path, cancellationToken: cancellationToken)` - Extract all asynchronously
 - `writer.WriteAsync(filename, stream, modTime, cancellationToken)` - Write entry asynchronously
 - `writer.WriteAllAsync(directory, pattern, searchOption, cancellationToken)` - Write directory asynchronously
 - `entry.OpenEntryStreamAsync(cancellationToken)` - Open entry stream asynchronously
@@ -94,14 +94,14 @@ Note: Extracting a solid rar or 7z file needs to be done in sequential order to 
 `ExtractAllEntries` is primarily intended for solid archives (like solid Rar) or 7Zip archives, where sequential extraction provides the best performance. For general/simple extraction with any supported archive type, use `archive.WriteToDirectory()` instead.
 
 ```C#
-// Using fluent factory method for extraction options
-using (var archive = RarArchive.OpenArchive("Test.rar",
-    ReaderOptions.ForOwnedFile()
-        .WithExtractFullPath(true)
-        .WithOverwrite(true)))
+// Use ReaderOptions for open-time behavior and ExtractionOptions for extract-time behavior
+using (var archive = RarArchive.OpenArchive("Test.rar", ReaderOptions.ForFilePath))
 {
     // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
-    archive.WriteToDirectory(@"D:\temp");
+    archive.WriteToDirectory(
+        @"D:\temp",
+        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+    );
 }
 ```
 
@@ -131,12 +131,13 @@ var progress = new Progress<ProgressReport>(report =>
 });
 
 using (var archive = RarArchive.OpenArchive("archive.rar",
-    ReaderOptions.ForOwnedFile()
-        .WithProgress(progress)
-        .WithExtractFullPath(true)
-        .WithOverwrite(true))) // Must be solid Rar or 7Zip
+    ReaderOptions.ForFilePath
+        .WithProgress(progress))) // Must be solid Rar or 7Zip
 {
-    archive.WriteToDirectory(@"D:\output");
+    archive.WriteToDirectory(
+        @"D:\output",
+        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+    );
 }
 ```
 
@@ -218,7 +219,7 @@ To replace a specific algorithm (for example to use `System.IO.Compression` for 
 var systemGZip = new SystemGZipCompressionProvider();
 var customRegistry = CompressionProviderRegistry.Default.With(systemGZip);
 
-var readerOptions = ReaderOptions.ForOwnedFile()
+var readerOptions = ReaderOptions.ForFilePath
     .WithProviders(customRegistry);
 using var reader = ReaderFactory.OpenReader(stream, readerOptions);
 
@@ -261,7 +262,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 {
     await reader.WriteAllToDirectoryAsync(
         @"D:\temp",
-        cancellationToken
+        cancellationToken: cancellationToken
     );
 }
 ```
@@ -339,7 +340,7 @@ using (var archive = ZipArchive.OpenArchive("archive.zip"))
     // Simple async extraction - works for all archive types
     await archive.WriteToDirectoryAsync(
         @"C:\output",
-        cancellationToken
+        cancellationToken: cancellationToken
     );
 }
 ```

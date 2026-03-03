@@ -10,9 +10,9 @@ namespace SharpCompress.Readers;
 /// Options for configuring reader behavior when opening archives.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use factory presets and fluent helpers for common configurations:
+/// This class is immutable. Use preset properties and fluent helpers for common configurations:
 /// <code>
-/// var options = ReaderOptions.ForExternalStream()
+/// var options = ReaderOptions.ForExternalStream
 ///     .WithPassword("secret")
 ///     .WithLookForHeader(true);
 /// </code>
@@ -108,40 +108,6 @@ public sealed record ReaderOptions : IReaderOptions
     public int? RewindableBufferSize { get; init; }
 
     /// <summary>
-    /// Overwrite target if it exists.
-    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
-    /// </summary>
-    public bool Overwrite { get; init; } = true;
-
-    /// <summary>
-    /// Extract with internal directory structure.
-    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
-    /// </summary>
-    public bool ExtractFullPath { get; init; } = true;
-
-    /// <summary>
-    /// Preserve file time.
-    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
-    /// </summary>
-    public bool PreserveFileTime { get; init; } = true;
-
-    /// <summary>
-    /// Preserve windows file attributes.
-    /// </summary>
-    public bool PreserveAttributes { get; init; }
-
-    /// <summary>
-    /// Delegate for writing symbolic links to disk.
-    /// The first parameter is the source path (where the symlink is created).
-    /// The second parameter is the target path (what the symlink refers to).
-    /// </summary>
-    /// <remarks>
-    /// <b>Breaking change:</b> Changed from field to init-only property in version 0.40.0.
-    /// The default handler logs a warning message.
-    /// </remarks>
-    public Action<string, string>? SymbolicLinkHandler { get; init; }
-
-    /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
@@ -162,17 +128,7 @@ public sealed record ReaderOptions : IReaderOptions
     /// <summary>
     /// Gets ReaderOptions configured for file-based overloads that open their own stream.
     /// </summary>
-    public static ReaderOptions ForOwnedFile => new() { LeaveStreamOpen = false };
-
-    /// <summary>
-    /// Gets a ReaderOptions instance configured for safe extraction (no overwrite).
-    /// </summary>
-    public static ReaderOptions SafeExtract => new() { Overwrite = false };
-
-    /// <summary>
-    /// Gets a ReaderOptions instance configured for flat extraction (no directory structure).
-    /// </summary>
-    public static ReaderOptions FlatExtract => new() { ExtractFullPath = false, Overwrite = true };
+    public static ReaderOptions ForFilePath => new() { LeaveStreamOpen = false };
 
     /// <summary>
     /// Creates ReaderOptions for reading encrypted archives.
@@ -196,16 +152,6 @@ public sealed record ReaderOptions : IReaderOptions
             .WithLookForHeader(true)
             .WithPassword(password)
             .WithRewindableBufferSize(1_048_576); // 1MB for SFX archives
-
-    /// <summary>
-    /// Default symbolic link handler that logs a warning message.
-    /// </summary>
-    public static void DefaultSymbolicLinkHandler(string sourcePath, string targetPath)
-    {
-        Console.WriteLine(
-            $"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271"
-        );
-    }
 
     // Note: Parameterized constructors have been removed.
     // Use fluent With*() helpers or object initializers instead:

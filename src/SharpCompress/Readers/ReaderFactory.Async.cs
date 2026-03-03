@@ -41,7 +41,7 @@ public static partial class ReaderFactory
         CancellationToken cancellationToken = default
     )
     {
-        options ??= ReaderOptions.ForOwnedFile;
+        options ??= ReaderOptions.ForFilePath;
         var stream = fileInfo.OpenAsyncReadStream(cancellationToken);
         return await OpenAsyncReader(stream, options, cancellationToken).ConfigureAwait(false);
     }

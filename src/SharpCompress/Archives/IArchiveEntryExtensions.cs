@@ -102,11 +102,15 @@ public static class IArchiveEntryExtensions
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public void WriteToDirectory(string destinationDirectory) =>
+        public void WriteToDirectory(
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        ) =>
             ExtractionMethods.WriteEntryToDirectory(
                 entry,
                 destinationDirectory,
-                (path) => entry.WriteToFile(path)
+                options,
+                (path) => entry.WriteToFile(path, options)
             );
 
         /// <summary>
@@ -114,14 +118,16 @@ public static class IArchiveEntryExtensions
         /// </summary>
         public async ValueTask WriteToDirectoryAsync(
             string destinationDirectory,
+            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await ExtractionMethods
                 .WriteEntryToDirectoryAsync(
                     entry,
                     destinationDirectory,
+                    options,
                     async (path, ct) =>
-                        await entry.WriteToFileAsync(path, ct).ConfigureAwait(false),
+                        await entry.WriteToFileAsync(path, options, ct).ConfigureAwait(false),
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -129,10 +135,11 @@ public static class IArchiveEntryExtensions
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public void WriteToFile(string destinationFileName) =>
+        public void WriteToFile(string destinationFileName, ExtractionOptions? options = null) =>
             ExtractionMethods.WriteEntryToFile(
                 entry,
                 destinationFileName,
+                options,
                 (x, fm) =>
                 {
                     using var fs = File.Open(destinationFileName, fm);
@@ -145,12 +152,14 @@ public static class IArchiveEntryExtensions
         /// </summary>
         public async ValueTask WriteToFileAsync(
             string destinationFileName,
+            ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
             await ExtractionMethods
                 .WriteEntryToFileAsync(
                     entry,
                     destinationFileName,
+                    options,
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(destinationFileName, fm);

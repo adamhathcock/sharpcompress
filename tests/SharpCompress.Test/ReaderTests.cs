@@ -202,7 +202,10 @@ public abstract class ReaderTests : TestBase
                     Assert.Equal(expectedCompression, reader.Entry.CompressionType);
                 }
 
-                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH, cancellationToken);
+                await reader.WriteEntryToDirectoryAsync(
+                    SCRATCH_FILES_PATH,
+                    cancellationToken: cancellationToken
+                );
             }
         }
     }

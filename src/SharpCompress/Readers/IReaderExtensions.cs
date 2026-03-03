@@ -22,31 +22,42 @@ public static class IReaderExtensions
         /// <summary>
         /// Extract all remaining unread entries to specific directory, retaining filename
         /// </summary>
-        public void WriteAllToDirectory(string destinationDirectory)
+        public void WriteAllToDirectory(
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        )
         {
             while (reader.MoveToNextEntry())
             {
-                reader.WriteEntryToDirectory(destinationDirectory);
+                reader.WriteEntryToDirectory(destinationDirectory, options);
             }
         }
 
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public void WriteEntryToDirectory(string destinationDirectory) =>
+        public void WriteEntryToDirectory(
+            string destinationDirectory,
+            ExtractionOptions? options = null
+        ) =>
             ExtractionMethods.WriteEntryToDirectory(
                 reader.Entry,
                 destinationDirectory,
-                (path) => reader.WriteEntryToFile(path)
+                options,
+                (path) => reader.WriteEntryToFile(path, options)
             );
 
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public void WriteEntryToFile(string destinationFileName) =>
+        public void WriteEntryToFile(
+            string destinationFileName,
+            ExtractionOptions? options = null
+        ) =>
             ExtractionMethods.WriteEntryToFile(
                 reader.Entry,
                 destinationFileName,
+                options,
                 (x, fm) =>
                 {
                     using var fs = File.Open(destinationFileName, fm);

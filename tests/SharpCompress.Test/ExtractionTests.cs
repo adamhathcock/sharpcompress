@@ -47,7 +47,12 @@ public class ExtractionTests : TestBase
 
             // This should not throw an exception even if Path.GetFullPath returns
             // a path with different casing than the actual directory
-            var exception = Record.Exception(() => reader.WriteAllToDirectory(extractPath));
+            var exception = Record.Exception(() =>
+                reader.WriteAllToDirectory(
+                    extractPath,
+                    new ExtractionOptions { ExtractFullPath = false, Overwrite = true }
+                )
+            );
 
             Assert.Null(exception);
         }
@@ -90,7 +95,10 @@ public class ExtractionTests : TestBase
             using var reader = ReaderFactory.OpenReader(stream);
 
             var exception = Assert.Throws<ExtractionException>(() =>
-                reader.WriteAllToDirectory(extractPath)
+                reader.WriteAllToDirectory(
+                    extractPath,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                )
             );
 
             Assert.Contains("outside of the destination", exception.Message);
