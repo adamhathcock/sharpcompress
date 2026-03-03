@@ -10,9 +10,9 @@ namespace SharpCompress.Readers;
 /// Options for configuring reader behavior when opening archives.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use factory presets and fluent helpers for common configurations:
+/// This class is immutable. Use preset properties and fluent helpers for common configurations:
 /// <code>
-/// var options = ReaderOptions.ForExternalStream()
+/// var options = ReaderOptions.ForExternalStream
 ///     .WithPassword("secret")
 ///     .WithLookForHeader(true);
 /// </code>

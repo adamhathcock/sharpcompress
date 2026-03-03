@@ -231,11 +231,11 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, Compressio
 
 ### ReaderOptions
 
-Use factory presets and fluent helpers for common configurations:
+Use preset properties and fluent helpers for common configurations:
 
 ```csharp
 // External stream with password and custom encoding
-var options = ReaderOptions.ForExternalStream()
+var options = ReaderOptions.ForExternalStream
     .WithPassword("password")
     .WithArchiveEncoding(new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
 
