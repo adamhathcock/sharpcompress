@@ -112,7 +112,7 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
-    public static ValueTask<T> FindFactoryAsync<T>(
+    internal static ValueTask<T> FindFactoryAsync<T>(
         string filePath,
         CancellationToken cancellationToken = default
     )
@@ -122,7 +122,7 @@ public static partial class ArchiveFactory
         return FindFactoryAsync<T>(new FileInfo(filePath), cancellationToken);
     }
 
-    private static async ValueTask<T> FindFactoryAsync<T>(
+    internal static async ValueTask<T> FindFactoryAsync<T>(
         FileInfo finfo,
         CancellationToken cancellationToken = default
     )
@@ -133,7 +133,7 @@ public static partial class ArchiveFactory
         return await FindFactoryAsync<T>(stream, cancellationToken).ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> FindFactoryAsync<T>(
+    internal static async ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
         CancellationToken cancellationToken = default
     )
