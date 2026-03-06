@@ -19,7 +19,11 @@ public static class IWritableAsyncArchiveExtensions
             using (writableArchive.PauseEntryRebuilding())
             {
                 foreach (
-                    var filePath in Directory.EnumerateFiles(directoryPath, searchPattern, searchOption)
+                    var filePath in Directory.EnumerateFiles(
+                        directoryPath,
+                        searchPattern,
+                        searchOption
+                    )
                 )
                 {
                     var fileInfo = new FileInfo(filePath);

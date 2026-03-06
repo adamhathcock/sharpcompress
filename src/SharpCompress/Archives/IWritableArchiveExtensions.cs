@@ -17,7 +17,11 @@ public static class IWritableArchiveExtensions
             using (writableArchive.PauseEntryRebuilding())
             {
                 foreach (
-                    var filePath in Directory.EnumerateFiles(directoryPath, searchPattern, searchOption)
+                    var filePath in Directory.EnumerateFiles(
+                        directoryPath,
+                        searchPattern,
+                        searchOption
+                    )
                 )
                 {
                     var fileInfo = new FileInfo(filePath);
