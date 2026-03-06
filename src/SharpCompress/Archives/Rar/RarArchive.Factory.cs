@@ -21,14 +21,14 @@ public partial class RarArchive
 #endif
 {
     public static ValueTask<IRarAsyncArchive> OpenAsyncArchive(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return new((IRarAsyncArchive)OpenArchive(new FileInfo(path), readerOptions));
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return new((IRarAsyncArchive)OpenArchive(new FileInfo(filePath), readerOptions));
     }
 
     public static IRarArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
@@ -39,7 +39,7 @@ public partial class RarArchive
             new SourceStream(
                 fileInfo,
                 i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
@@ -71,33 +71,33 @@ public partial class RarArchive
     }
 
     public static IRarArchive OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new RarArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < files.Count ? files[i] : null,
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IRarArchive OpenArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
         streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams;
         return new RarArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }

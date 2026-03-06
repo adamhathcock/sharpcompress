@@ -6,7 +6,7 @@ namespace SharpCompress.Readers;
 
 public interface IReader : IDisposable
 {
-    ArchiveType ArchiveType { get; }
+    ArchiveType Type { get; }
 
     IEntry Entry { get; }
 

@@ -22,20 +22,16 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
     private bool _wroteCurrentEntry;
     private readonly bool _disposeVolume;
 
-    internal AbstractReader(
-        ReaderOptions options,
-        ArchiveType archiveType,
-        bool disposeVolume = true
-    )
+    internal AbstractReader(ReaderOptions options, ArchiveType type, bool disposeVolume = true)
     {
-        ArchiveType = archiveType;
+        Type = type;
         _disposeVolume = disposeVolume;
         Options = options;
     }
 
     internal ReaderOptions Options { get; }
 
-    public ArchiveType ArchiveType { get; }
+    public ArchiveType Type { get; }
 
     /// <summary>
     /// Current volume that the current entry resides in

@@ -48,7 +48,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
 
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        readerOptions ??= new ReaderOptions { LeaveStreamOpen = false };
+        readerOptions ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 
@@ -59,7 +59,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
 
     public static IReader OpenReader(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfos.Select(x => x.OpenRead()), options);
     }
 

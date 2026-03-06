@@ -22,7 +22,7 @@ public static class IWritableArchiveExtensions
                     var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption)
                 )
                 {
-                    var fileInfo = new FileInfo(path);
+                    var fileInfo = new FileInfo(filePath);
                     writableArchive.AddEntry(
                         path.Substring(filePath.Length),
                         fileInfo.OpenRead(),

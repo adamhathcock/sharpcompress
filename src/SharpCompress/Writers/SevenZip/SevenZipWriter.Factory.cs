@@ -1,5 +1,7 @@
 #if NET8_0_OR_GREATER
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Writers.SevenZip;
 
@@ -20,7 +22,13 @@ public partial class SevenZipWriter : IWriterOpenable<SevenZipWriterOptions>
     public static IWriter OpenWriter(FileInfo fileInfo, SevenZipWriterOptions writerOptions)
     {
         fileInfo.NotNull(nameof(fileInfo));
-        return new SevenZipWriter(fileInfo.OpenWrite(), writerOptions);
+        return new SevenZipWriter(
+            fileInfo.OpenWrite(),
+            writerOptions with
+            {
+                LeaveStreamOpen = false,
+            }
+        );
     }
 
     /// <summary>
@@ -35,28 +43,40 @@ public partial class SevenZipWriter : IWriterOpenable<SevenZipWriterOptions>
     /// <summary>
     /// Opens a new async SevenZipWriter for the specified file path.
     /// </summary>
-    public static IAsyncWriter OpenAsyncWriter(string filePath, SevenZipWriterOptions writerOptions)
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
+        string filePath,
+        SevenZipWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
     {
-        return (IAsyncWriter)OpenWriter(filePath, writerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncWriter)OpenWriter(filePath, writerOptions));
     }
 
     /// <summary>
     /// Opens a new async SevenZipWriter for the specified stream.
     /// </summary>
-    public static IAsyncWriter OpenAsyncWriter(Stream stream, SevenZipWriterOptions writerOptions)
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
+        Stream stream,
+        SevenZipWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
     {
-        return (IAsyncWriter)OpenWriter(stream, writerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncWriter)OpenWriter(stream, writerOptions));
     }
 
     /// <summary>
     /// Opens a new async SevenZipWriter for the specified file.
     /// </summary>
-    public static IAsyncWriter OpenAsyncWriter(
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
         FileInfo fileInfo,
-        SevenZipWriterOptions writerOptions
+        SevenZipWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
     )
     {
-        return (IAsyncWriter)OpenWriter(fileInfo, writerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncWriter)OpenWriter(fileInfo, writerOptions));
     }
 }
 #endif

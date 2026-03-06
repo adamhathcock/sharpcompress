@@ -27,7 +27,8 @@ public class GZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory<GZipWriterOptions>
+        IWritableArchiveFactory<GZipWriterOptions>,
+        IWritableAsyncArchiveFactory<GZipWriterOptions>
 {
     #region IFactory
 
@@ -218,10 +219,19 @@ public class GZipFactory
 
     #endregion
 
-    #region IWriteableArchiveFactory
+    #region IWritableArchiveFactory
 
     /// <inheritdoc/>
     public IWritableArchive<GZipWriterOptions> CreateArchive() => GZipArchive.CreateArchive();
+
+    /// <inheritdoc/>
+    public ValueTask<IWritableAsyncArchive<GZipWriterOptions>> CreateAsyncArchive(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return GZipArchive.CreateAsyncArchive();
+    }
 
     #endregion
 }

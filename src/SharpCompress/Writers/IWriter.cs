@@ -8,14 +8,14 @@ namespace SharpCompress.Writers;
 
 public interface IWriter : IDisposable
 {
-    ArchiveType WriterType { get; }
+    ArchiveType Type { get; }
     void Write(string filename, Stream source, DateTime? modificationTime);
     void WriteDirectory(string directoryName, DateTime? modificationTime);
 }
 
 public interface IAsyncWriter : IDisposable, IAsyncDisposable
 {
-    ArchiveType WriterType { get; }
+    ArchiveType Type { get; }
     ValueTask WriteAsync(
         string filename,
         Stream source,

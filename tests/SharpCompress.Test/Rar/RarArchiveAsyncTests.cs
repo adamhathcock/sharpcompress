@@ -253,7 +253,10 @@ public class RarArchiveAsyncTests : ArchiveTests
     private async ValueTask DoRar_Multi_ArchiveStreamReadAsync(string[] archives, bool isSolid)
     {
         using var archive = RarArchive.OpenArchive(
-            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+            archives
+                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .Select(File.OpenRead)
+                .ToArray()
         );
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -672,7 +675,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
         using var archive = ArchiveFactory.OpenArchive(
-            paths.Select(a => new FileInfo(a)),
+            paths.Select(a => new FileInfo(a)).ToArray(),
             readerOptions
         );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -730,7 +733,7 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
         using var archive = ArchiveFactory.OpenArchive(
-            paths.Select(f => new FileInfo(f)),
+            paths.Select(f => new FileInfo(f)).ToArray(),
             readerOptions
         );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))

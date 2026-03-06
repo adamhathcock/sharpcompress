@@ -336,7 +336,7 @@ public class TarArchiveTests : ArchiveTests
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var reader = ReaderFactory.OpenReader(stream);
 
-        Assert.Equal(ArchiveType.Tar, reader.ArchiveType);
+        Assert.Equal(ArchiveType.Tar, reader.Type);
         Assert.True(reader.MoveToNextEntry());
     }
 }

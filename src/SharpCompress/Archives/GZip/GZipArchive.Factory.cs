@@ -21,14 +21,14 @@ public partial class GZipArchive
 #endif
 {
     public static ValueTask<IWritableAsyncArchive<GZipWriterOptions>> OpenAsyncArchive(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return OpenAsyncArchive(new FileInfo(path), readerOptions, cancellationToken);
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return OpenAsyncArchive(new FileInfo(filePath), readerOptions, cancellationToken);
     }
 
     public static IWritableArchive<GZipWriterOptions> OpenArchive(
@@ -37,7 +37,7 @@ public partial class GZipArchive
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        return OpenArchive(new FileInfo(filePath), readerOptions ?? ReaderOptions.ForFilePath);
     }
 
     public static IWritableArchive<GZipWriterOptions> OpenArchive(
@@ -50,39 +50,39 @@ public partial class GZipArchive
             new SourceStream(
                 fileInfo,
                 i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IWritableArchive<GZipWriterOptions> OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new GZipArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < files.Count ? files[i] : null,
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IWritableArchive<GZipWriterOptions> OpenArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
         streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams;
         return new GZipArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }
@@ -100,7 +100,7 @@ public partial class GZipArchive
         }
 
         return new GZipArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 

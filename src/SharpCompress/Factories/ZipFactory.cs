@@ -24,7 +24,8 @@ public class ZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory<ZipWriterOptions>
+        IWritableArchiveFactory<ZipWriterOptions>,
+        IWritableAsyncArchiveFactory<ZipWriterOptions>
 {
     #region IFactory
 
@@ -246,10 +247,19 @@ public class ZipFactory
 
     #endregion
 
-    #region IWriteableArchiveFactory
+    #region IWritableArchiveFactory
 
     /// <inheritdoc/>
     public IWritableArchive<ZipWriterOptions> CreateArchive() => ZipArchive.CreateArchive();
+
+    /// <inheritdoc/>
+    public ValueTask<IWritableAsyncArchive<ZipWriterOptions>> CreateAsyncArchive(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return ZipArchive.CreateAsyncArchive();
+    }
 
     #endregion
 }

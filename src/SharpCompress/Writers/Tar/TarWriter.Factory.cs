@@ -1,5 +1,7 @@
 #if NET8_0_OR_GREATER
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers.Tar;
@@ -15,7 +17,7 @@ public partial class TarWriter : IWriterOpenable<TarWriterOptions>
     public static IWriter OpenWriter(FileInfo fileInfo, TarWriterOptions writerOptions)
     {
         fileInfo.NotNull(nameof(fileInfo));
-        return new TarWriter(fileInfo.OpenWrite(), writerOptions);
+        return new TarWriter(fileInfo.OpenWrite(), writerOptions with { LeaveStreamOpen = false });
     }
 
     public static IWriter OpenWriter(Stream stream, TarWriterOptions writerOptions)
@@ -24,19 +26,34 @@ public partial class TarWriter : IWriterOpenable<TarWriterOptions>
         return new TarWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(string stream, TarWriterOptions writerOptions)
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
+        string filePath,
+        TarWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
     {
-        return (IAsyncWriter)OpenWriter(stream, writerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncWriter)OpenWriter(filePath, writerOptions));
     }
 
-    public static IAsyncWriter OpenAsyncWriter(Stream stream, TarWriterOptions writerOptions)
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
+        Stream stream,
+        TarWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
     {
-        return (IAsyncWriter)OpenWriter(stream, writerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncWriter)OpenWriter(stream, writerOptions));
     }
 
-    public static IAsyncWriter OpenAsyncWriter(FileInfo fileInfo, TarWriterOptions writerOptions)
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
+        FileInfo fileInfo,
+        TarWriterOptions writerOptions,
+        CancellationToken cancellationToken = default
+    )
     {
-        return (IAsyncWriter)OpenWriter(fileInfo, writerOptions);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncWriter)OpenWriter(fileInfo, writerOptions));
     }
 }
 #endif

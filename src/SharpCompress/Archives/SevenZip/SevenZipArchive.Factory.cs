@@ -17,22 +17,25 @@ public partial class SevenZipArchive
 #endif
 {
     public static ValueTask<IAsyncArchive> OpenAsyncArchive(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty("path");
+        filePath.NotNullOrEmpty(nameof(filePath));
         return new(
-            (IAsyncArchive)OpenArchive(new FileInfo(path), readerOptions ?? new ReaderOptions())
+            (IAsyncArchive)OpenArchive(
+                new FileInfo(filePath),
+                readerOptions ?? ReaderOptions.ForFilePath
+            )
         );
     }
 
     public static IArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
     {
-        filePath.NotNullOrEmpty("filePath");
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return OpenArchive(new FileInfo(filePath), readerOptions ?? ReaderOptions.ForFilePath);
     }
 
     public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null)
@@ -42,39 +45,39 @@ public partial class SevenZipArchive
             new SourceStream(
                 fileInfo,
                 i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IArchive OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new SevenZipArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < files.Count ? files[i] : null,
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IArchive OpenArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
         streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams;
         return new SevenZipArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }
@@ -89,7 +92,7 @@ public partial class SevenZipArchive
         }
 
         return new SevenZipArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 

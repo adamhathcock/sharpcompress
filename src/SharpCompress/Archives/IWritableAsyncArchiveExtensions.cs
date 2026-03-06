@@ -24,7 +24,7 @@ public static class IWritableAsyncArchiveExtensions
                     var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption)
                 )
                 {
-                    var fileInfo = new FileInfo(path);
+                    var fileInfo = new FileInfo(filePath);
                     await writableArchive
                         .AddEntryAsync(
                             path.Substring(filePath.Length),
