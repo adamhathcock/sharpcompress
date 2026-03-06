@@ -29,7 +29,7 @@ public static class IWritableAsyncArchiveExtensions
                     var fileInfo = new FileInfo(filePath);
                     await writableArchive
                         .AddEntryAsync(
-                            Path.GetFileName(filePath),
+                            filePath.Substring(directoryPath.Length),
                             fileInfo.OpenRead(),
                             true,
                             fileInfo.Length,

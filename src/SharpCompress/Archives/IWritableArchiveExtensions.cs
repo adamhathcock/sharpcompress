@@ -26,7 +26,7 @@ public static class IWritableArchiveExtensions
                 {
                     var fileInfo = new FileInfo(filePath);
                     writableArchive.AddEntry(
-                        Path.GetFileName(filePath),
+                        filePath.Substring(directoryPath.Length),
                         fileInfo.OpenRead(),
                         true,
                         fileInfo.Length,
