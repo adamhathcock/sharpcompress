@@ -36,14 +36,14 @@ public partial class AceReader
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return new((IAsyncReader)OpenReader(new FileInfo(path), readerOptions));
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return new((IAsyncReader)OpenReader(new FileInfo(filePath), readerOptions));
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
@@ -84,6 +84,7 @@ public partial class AceReader
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
+        readerOptions ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 }

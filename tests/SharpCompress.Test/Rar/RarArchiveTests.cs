@@ -242,7 +242,10 @@ public class RarArchiveTests : ArchiveTests
     private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
     {
         using var archive = RarArchive.OpenArchive(
-            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+            archives
+                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .Select(File.OpenRead)
+                .ToArray()
         );
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))

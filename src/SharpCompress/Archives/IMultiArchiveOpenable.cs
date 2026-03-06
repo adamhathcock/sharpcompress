@@ -12,12 +12,12 @@ public interface IMultiArchiveOpenable<TSync, TASync>
     where TASync : IAsyncArchive
 {
     public static abstract TSync OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     );
 
     public static abstract TSync OpenArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     );
 

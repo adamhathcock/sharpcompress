@@ -8,7 +8,7 @@ namespace SharpCompress.Readers;
 
 public interface IAsyncReader : IAsyncDisposable
 {
-    ArchiveType ArchiveType { get; }
+    ArchiveType Type { get; }
 
     IEntry Entry { get; }
 

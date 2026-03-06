@@ -20,7 +20,7 @@ public interface IArchiveOpenable<TSync, TASync>
     public static abstract TSync OpenArchive(Stream stream, ReaderOptions? readerOptions = null);
 
     public static abstract ValueTask<TASync> OpenAsyncArchive(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     );
