@@ -34,24 +34,6 @@ public static partial class ArchiveFactory
         throw new NotSupportedException("Cannot create Archives of type: " + typeof(TOptions));
     }
 
-    public static ValueTask<IWritableAsyncArchive<TOptions>> CreateAsyncArchive<TOptions>(
-        CancellationToken cancellationToken = default
-    )
-        where TOptions : IWriterOptions
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var factory = Factory
-            .Factories.OfType<IWritableAsyncArchiveFactory<TOptions>>()
-            .FirstOrDefault();
-
-        if (factory is not null)
-        {
-            return factory.CreateAsyncArchive(cancellationToken);
-        }
-
-        throw new NotSupportedException("Cannot create Archives of type: " + typeof(TOptions));
-    }
-
     public static IArchive OpenArchive(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
@@ -202,14 +184,14 @@ public static partial class ArchiveFactory
         return false;
     }
 
-    public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
+    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream stream = File.OpenRead(filePath);
-        return IsArchiveAsync(stream, cancellationToken);
+        return await IsArchiveAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
     public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(

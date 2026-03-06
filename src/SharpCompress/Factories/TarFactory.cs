@@ -25,8 +25,7 @@ public class TarFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWritableArchiveFactory<TarWriterOptions>,
-        IWritableAsyncArchiveFactory<TarWriterOptions>
+        IWritableArchiveFactory<TarWriterOptions>
 {
     #region IFactory
 
@@ -426,15 +425,6 @@ public class TarFactory
 
     /// <inheritdoc/>
     public IWritableArchive<TarWriterOptions> CreateArchive() => TarArchive.CreateArchive();
-
-    /// <inheritdoc/>
-    public ValueTask<IWritableAsyncArchive<TarWriterOptions>> CreateAsyncArchive(
-        CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return TarArchive.CreateAsyncArchive();
-    }
 
     #endregion
 }
