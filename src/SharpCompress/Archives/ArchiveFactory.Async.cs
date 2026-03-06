@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Factories;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
@@ -123,7 +122,7 @@ public static partial class ArchiveFactory
         return FindFactoryAsync<T>(new FileInfo(filePath), cancellationToken);
     }
 
-    public static async ValueTask<T> FindFactoryAsync<T>(
+    private static async ValueTask<T> FindFactoryAsync<T>(
         FileInfo finfo,
         CancellationToken cancellationToken = default
     )

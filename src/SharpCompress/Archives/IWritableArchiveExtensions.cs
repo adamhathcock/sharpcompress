@@ -1,8 +1,6 @@
 using System;
 using System.IO;
-using SharpCompress.Common;
 using SharpCompress.Common.Options;
-using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
 
@@ -11,7 +9,7 @@ public static class IWritableArchiveExtensions
     extension(IWritableArchive writableArchive)
     {
         public void AddAllFromDirectory(
-            string filePath,
+            string directoryPath,
             string searchPattern = "*.*",
             SearchOption searchOption = SearchOption.AllDirectories
         )
@@ -19,12 +17,12 @@ public static class IWritableArchiveExtensions
             using (writableArchive.PauseEntryRebuilding())
             {
                 foreach (
-                    var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption)
+                    var filePath in Directory.EnumerateFiles(directoryPath, searchPattern, searchOption)
                 )
                 {
                     var fileInfo = new FileInfo(filePath);
                     writableArchive.AddEntry(
-                        path.Substring(filePath.Length),
+                        Path.GetFileName(filePath),
                         fileInfo.OpenRead(),
                         true,
                         fileInfo.Length,
