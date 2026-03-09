@@ -15,6 +15,8 @@ namespace SharpCompress.Test.Zip;
 
 public class ZipArchiveTests : ArchiveTests
 {
+    private const long GeneratedZip64EntrySize = (long)uint.MaxValue + 1;
+
     public ZipArchiveTests() => UseExtensionInsteadOfNameToVerify = true;
 
     [Fact]
@@ -517,6 +519,53 @@ public class ZipArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void Zip_Zstandard_WinzipAES_Mixed_ArchiveFileRead()
+    {
+        using var archive = ZipArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.zstd.WinzipAES.mixed.zip"),
+            new ReaderOptions { Password = "test" }
+        );
+
+        VerifyMixedZstandardArchive(archive);
+    }
+
+    [Fact]
+    public void Zip_Zstandard_WinzipAES_Mixed_ArchiveStreamRead()
+    {
+        using var stream = File.OpenRead(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.zstd.WinzipAES.mixed.zip")
+        );
+        using var archive = ZipArchive.OpenArchive(stream, new ReaderOptions { Password = "test" });
+
+        VerifyMixedZstandardArchive(archive);
+    }
+
+    [Fact(Explicit = true)]
+    [Trait("zip64", "generated")]
+    public void Zip_Zip64_GeneratedArchive_StreamIsBoundedToEntryLength()
+    {
+        var zipPath = Path.Combine(SCRATCH2_FILES_PATH, "generated.zip64.large.zip");
+        CreateZip64Archive(zipPath);
+
+        using var archive = ZipArchive.OpenArchive(zipPath);
+        var entries = archive
+            .Entries.Where(x => !x.IsDirectory)
+            .OrderByDescending(x => x.Size)
+            .ToArray();
+
+        Assert.Equal(2, entries.Length);
+        Assert.Equal(GeneratedZip64EntrySize, entries[0].Size);
+        Assert.Equal(1, entries[1].Size);
+
+        using var firstStream = entries[0].OpenEntryStream();
+        Assert.Equal(entries[0].Size, CountBytes(firstStream));
+
+        using var secondStream = entries[1].OpenEntryStream();
+        Assert.Equal(0x42, secondStream.ReadByte());
+        Assert.Equal(-1, secondStream.ReadByte());
+    }
+
+    [Fact]
     public void Zip_Pkware_CompressionType()
     {
         // Test that Pkware encrypted entries correctly report their compression type
@@ -909,5 +958,86 @@ public class ZipArchiveTests : ArchiveTests
         var outStream = new MemoryStream();
         entries[0].WriteTo(outStream);
         Assert.Equal(0, outStream.Length);
+    }
+
+    private static void VerifyMixedZstandardArchive(IArchive archive)
+    {
+        var entries = archive.Entries.Where(x => !x.IsDirectory).ToArray();
+        Assert.Equal(4, entries.Length);
+        Assert.Equal(2, entries.Count(x => x.IsEncrypted));
+        Assert.All(
+            entries,
+            entry => Assert.Equal(CompressionType.ZStandard, entry.CompressionType)
+        );
+
+        var expectedSizes = new long[] { 160, 1024 * 1024, 1024 * 1024, 1073741 };
+        Assert.Equal(expectedSizes, entries.Select(x => x.Size).OrderBy(x => x).ToArray());
+
+        foreach (var entry in entries)
+        {
+            using var entryStream = entry.OpenEntryStream();
+            using var target = new MemoryStream();
+            entryStream.CopyTo(target);
+            Assert.Equal(entry.Size, target.Length);
+        }
+    }
+
+    private static long CountBytes(Stream stream)
+    {
+        var buffer = new byte[8 * 1024 * 1024];
+        long total = 0;
+        int read;
+        while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            total += read;
+        }
+
+        return total;
+    }
+
+    private static void CreateZip64Archive(string path)
+    {
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+
+        var writerOptions = new ZipWriterOptions(CompressionType.None) { UseZip64 = true };
+        using var fileStream = File.OpenWrite(path);
+        using var zipWriter = (ZipWriter)
+            WriterFactory.OpenWriter(fileStream, ArchiveType.Zip, writerOptions);
+
+        using (
+            var largeEntryStream = zipWriter.WriteToStream(
+                "large-entry.bin",
+                new ZipWriterEntryOptions()
+            )
+        )
+        {
+            WriteZeroes(largeEntryStream, GeneratedZip64EntrySize);
+        }
+
+        using (
+            var trailingEntryStream = zipWriter.WriteToStream(
+                "trailing-entry.bin",
+                new ZipWriterEntryOptions()
+            )
+        )
+        {
+            trailingEntryStream.WriteByte(0x42);
+        }
+    }
+
+    private static void WriteZeroes(Stream stream, long length)
+    {
+        byte[] buffer = new byte[8 * 1024 * 1024];
+        long remaining = length;
+
+        while (remaining > 0)
+        {
+            int chunk = (int)Math.Min(buffer.Length, remaining);
+            stream.Write(buffer, 0, chunk);
+            remaining -= chunk;
+        }
     }
 }

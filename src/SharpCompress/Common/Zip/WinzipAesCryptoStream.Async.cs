@@ -95,46 +95,24 @@ internal partial class WinzipAesCryptoStream
         }
     }
 
-    private int ReadTransformOneBlock(Span<byte> buffer, int offset, int last)
+    private int ReadTransformOneBlock(Span<byte> buffer, int offset, int remaining)
     {
-        if (_isFinalBlock)
+        if (_counterOutOffset == BLOCK_SIZE_IN_BYTES)
         {
-            throw new ArchiveOperationException();
+            FillCounterOut();
         }
 
-        var bytesRemaining = last - offset;
-        var bytesToRead =
-            (bytesRemaining > BLOCK_SIZE_IN_BYTES) ? BLOCK_SIZE_IN_BYTES : bytesRemaining;
-
-        // update the counter
-        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(_counter, _nonce++);
-
-        // Determine if this is the final block
-        if ((bytesToRead == bytesRemaining) && (_totalBytesLeftToRead == 0))
-        {
-            _counterOut = _transform.TransformFinalBlock(_counter, 0, BLOCK_SIZE_IN_BYTES);
-            _isFinalBlock = true;
-        }
-        else
-        {
-            _transform.TransformBlock(
-                _counter,
-                0, // offset
-                BLOCK_SIZE_IN_BYTES,
-                _counterOut,
-                0
-            ); // offset
-        }
-
-        XorInPlace(buffer, offset, bytesToRead);
-        return bytesToRead;
+        var bytesToXor = Math.Min(BLOCK_SIZE_IN_BYTES - _counterOutOffset, remaining);
+        XorInPlace(buffer, offset, bytesToXor, _counterOutOffset);
+        _counterOutOffset += bytesToXor;
+        return bytesToXor;
     }
 
-    private void XorInPlace(Span<byte> buffer, int offset, int count)
+    private void XorInPlace(Span<byte> buffer, int offset, int count, int counterOffset)
     {
         for (var i = 0; i < count; i++)
         {
-            buffer[offset + i] = (byte)(_counterOut[i] ^ buffer[offset + i]);
+            buffer[offset + i] = (byte)(_counterOut[counterOffset + i] ^ buffer[offset + i]);
         }
     }
 #endif
