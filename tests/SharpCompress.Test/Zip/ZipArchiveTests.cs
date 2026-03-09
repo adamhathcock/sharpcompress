@@ -965,12 +965,16 @@ public class ZipArchiveTests : ArchiveTests
         var entries = archive.Entries.Where(x => !x.IsDirectory).ToArray();
         Assert.Equal(4, entries.Length);
         Assert.Equal(2, entries.Count(x => x.IsEncrypted));
+        Assert.Equal(
+            [".signature", "encrypted-zstd-entry.bin", "plain-zstd-entry.bin", "tables.db"],
+            entries.Select(x => x.Key.NotNull()).OrderBy(x => x).ToArray()
+        );
         Assert.All(
             entries,
             entry => Assert.Equal(CompressionType.ZStandard, entry.CompressionType)
         );
 
-        var expectedSizes = new long[] { 160, 1024 * 1024, 1024 * 1024, 1073741 };
+        var expectedSizes = new long[] { 160, 64 * 1024, 64 * 1024, 192 * 1024 };
         Assert.Equal(expectedSizes, entries.Select(x => x.Size).OrderBy(x => x).ToArray());
 
         foreach (var entry in entries)
