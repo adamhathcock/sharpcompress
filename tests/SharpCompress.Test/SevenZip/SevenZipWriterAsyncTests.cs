@@ -143,6 +143,48 @@ public class SevenZipWriterAsyncTests : TestBase
     }
 
     [Fact]
+    public async ValueTask SevenZipWriter_Async_SolidAll_GroupsConsecutiveFiles()
+    {
+        using var archiveStream = new MemoryStream();
+
+        await using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions
+                {
+                    Solid = new SevenZipSolidOptions { Mode = SevenZipSolidMode.All },
+                }
+            )
+        )
+        {
+            await writer.WriteAsync(
+                "first.txt",
+                new MemoryStream("first"u8.ToArray()),
+                DateTime.UtcNow
+            );
+            await writer.WriteAsync(
+                "second.txt",
+                new MemoryStream("second"u8.ToArray()),
+                DateTime.UtcNow
+            );
+            await writer.WriteAsync(
+                "third.txt",
+                new MemoryStream("third"u8.ToArray()),
+                DateTime.UtcNow
+            );
+        }
+
+        archiveStream.Position = 0;
+        using var archive = (SevenZipArchive)SevenZipArchive.OpenArchive(archiveStream);
+        var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
+
+        Assert.True(archive.IsSolid);
+        Assert.False(entries[0].IsSolid);
+        Assert.True(entries[1].IsSolid);
+        Assert.True(entries[2].IsSolid);
+    }
+
+    [Fact]
     public async ValueTask SevenZipWriter_Async_Cancelled_Throws()
     {
         using var archiveStream = new MemoryStream();

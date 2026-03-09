@@ -403,6 +403,123 @@ public class SevenZipWriterTests : TestBase
     }
 
     [Fact]
+    public void SevenZipWriter_SolidAll_GroupsConsecutiveFiles()
+    {
+        var files = new[]
+        {
+            ("first.txt", "first"),
+            ("second.txt", "second"),
+            ("third.txt", "third"),
+        };
+
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions
+                {
+                    Solid = new SevenZipSolidOptions { Mode = SevenZipSolidMode.All },
+                }
+            )
+        )
+        {
+            foreach (var (name, text) in files)
+            {
+                using var source = new MemoryStream(Encoding.UTF8.GetBytes(text));
+                writer.Write(name, source, DateTime.UtcNow);
+            }
+        }
+
+        archiveStream.Position = 0;
+        using var archive = (SevenZipArchive)SevenZipArchive.OpenArchive(archiveStream);
+        var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
+
+        Assert.True(archive.IsSolid);
+        Assert.Equal(files.Length, entries.Count);
+        Assert.False(entries[0].IsSolid);
+        Assert.True(entries[1].IsSolid);
+        Assert.True(entries[2].IsSolid);
+    }
+
+    [Fact]
+    public void SevenZipWriter_SolidCustom_OnlyGroupsConsecutiveMatches()
+    {
+        var files = new[]
+        {
+            ("first.txt", "first"),
+            ("second.txt", "second"),
+            ("third.bin", "third"),
+            ("fourth.txt", "fourth"),
+        };
+
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions
+                {
+                    Solid = new SevenZipSolidOptions
+                    {
+                        Mode = SevenZipSolidMode.Custom,
+                        GroupKeySelector = context => context.Extension,
+                    },
+                }
+            )
+        )
+        {
+            foreach (var (name, text) in files)
+            {
+                using var source = new MemoryStream(Encoding.UTF8.GetBytes(text));
+                writer.Write(name, source, DateTime.UtcNow);
+            }
+        }
+
+        archiveStream.Position = 0;
+        using var archive = (SevenZipArchive)SevenZipArchive.OpenArchive(archiveStream);
+        var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
+
+        Assert.True(archive.IsSolid);
+        Assert.False(entries[0].IsSolid);
+        Assert.True(entries[1].IsSolid);
+        Assert.False(entries[2].IsSolid);
+        Assert.False(entries[3].IsSolid);
+    }
+
+    [Fact]
+    public void SevenZipWriter_SolidAll_EmptyFileBreaksGrouping()
+    {
+        using var archiveStream = new MemoryStream();
+        using (
+            var writer = new SevenZipWriter(
+                archiveStream,
+                new SevenZipWriterOptions
+                {
+                    Solid = new SevenZipSolidOptions { Mode = SevenZipSolidMode.All },
+                }
+            )
+        )
+        {
+            using var first = new MemoryStream("first"u8.ToArray());
+            writer.Write("first.txt", first, DateTime.UtcNow);
+
+            using var empty = new MemoryStream();
+            writer.Write("empty.txt", empty, DateTime.UtcNow);
+
+            using var second = new MemoryStream("second"u8.ToArray());
+            writer.Write("second.txt", second, DateTime.UtcNow);
+        }
+
+        archiveStream.Position = 0;
+        using var archive = (SevenZipArchive)SevenZipArchive.OpenArchive(archiveStream);
+        var entries = archive.Entries.Where(e => !e.IsDirectory).ToList();
+
+        Assert.False(archive.IsSolid);
+        Assert.False(entries[0].IsSolid);
+        Assert.False(entries[1].IsSolid);
+        Assert.False(entries[2].IsSolid);
+    }
+
+    [Fact]
     public void SevenZipWriter_LargerFile_RoundTrip()
     {
         // Create 100KB of repeating pattern data (compresses well)

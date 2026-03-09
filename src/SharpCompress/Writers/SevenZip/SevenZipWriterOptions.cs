@@ -65,6 +65,12 @@ public sealed record SevenZipWriterOptions : IWriterOptions
         CompressionProviderRegistry.Default;
 
     /// <summary>
+    /// Controls whether consecutive file writes are grouped into shared 7z folders.
+    /// Default is disabled so each file is compressed independently.
+    /// </summary>
+    public SevenZipSolidOptions Solid { get; init; } = SevenZipSolidOptions.Disabled;
+
+    /// <summary>
     /// Whether to compress the archive header itself using LZMA.
     /// Default is true, matching standard 7-Zip behavior.
     /// </summary>
@@ -118,6 +124,13 @@ public sealed record SevenZipWriterOptions : IWriterOptions
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
         Providers = options.Providers;
+
+        if (options is SevenZipWriterOptions sevenZipOptions)
+        {
+            Solid = sevenZipOptions.Solid;
+            CompressHeader = sevenZipOptions.CompressHeader;
+            LzmaProperties = sevenZipOptions.LzmaProperties;
+        }
     }
 
     /// <summary>

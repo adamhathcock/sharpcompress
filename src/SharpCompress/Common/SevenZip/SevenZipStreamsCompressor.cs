@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,190 +10,157 @@ using SharpCompress.Crypto;
 namespace SharpCompress.Common.SevenZip;
 
 /// <summary>
-/// Result of compressing a stream - contains folder metadata, compressed sizes, and CRCs.
+/// Result of compressing one 7z folder.
 /// </summary>
-internal sealed class PackedStream
+internal sealed class PackedFolder
 {
     public CFolder Folder { get; init; } = new();
-    public ulong[] Sizes { get; init; } = [];
-    public uint?[] CRCs { get; init; } = [];
+    public ulong PackSize { get; init; }
+    public uint? PackCrc { get; init; }
+    public ulong[] UnPackSizes { get; init; } = [];
+    public uint?[] FileCrcs { get; init; } = [];
 }
 
 /// <summary>
-/// Compresses a single input stream using LZMA or LZMA2, writing compressed output
-/// to the archive stream. Builds the CFolder metadata describing the compression.
-/// Uses SharpCompress's existing LzmaStream encoder.
+/// Compresses one or more consecutive files into a single 7z folder.
 /// </summary>
-internal sealed class SevenZipStreamsCompressor(Stream outputStream)
+internal sealed class SevenZipFolderCompressor : IDisposable
 {
-    /// <summary>
-    /// Compresses the input stream to the output stream using the specified method.
-    /// Returns a PackedStream containing folder metadata, compressed size, and CRCs.
-    /// </summary>
-    /// <param name="inputStream">Uncompressed data to compress.</param>
-    /// <param name="compressionType">Compression method (LZMA or LZMA2).</param>
-    /// <param name="encoderProperties">LZMA encoder properties (null for defaults).</param>
-    public PackedStream Compress(
-        Stream inputStream,
+    private readonly Stream outputStream;
+    private readonly long outStartOffset;
+    private readonly Crc32Stream packedCrcStream;
+    private readonly Stream compressionStream;
+    private readonly bool isLzma2;
+    private readonly byte[] properties;
+    private readonly List<ulong> unpackSizes = [];
+    private readonly List<uint?> fileCrcs = [];
+    private bool finalized;
+
+    public SevenZipFolderCompressor(
+        Stream outputStream,
         CompressionType compressionType,
         LzmaEncoderProperties? encoderProperties = null
     )
     {
-        var isLzma2 = compressionType == CompressionType.LZMA2;
+        if (compressionType != CompressionType.LZMA && compressionType != CompressionType.LZMA2)
+        {
+            throw new ArgumentException(
+                $"SevenZipWriter only supports CompressionType.LZMA and CompressionType.LZMA2. Got: {compressionType}",
+                nameof(compressionType)
+            );
+        }
+
+        this.outputStream = outputStream;
+        isLzma2 = compressionType == CompressionType.LZMA2;
         encoderProperties ??= new LzmaEncoderProperties(eos: !isLzma2);
 
-        var outStartOffset = outputStream.Position;
-
-        // Wrap the output stream in CRC calculator
-        using var outCrcStream = new Crc32Stream(outputStream);
-
-        byte[] properties;
+        outStartOffset = outputStream.Position;
+        packedCrcStream = new Crc32Stream(outputStream);
 
         if (isLzma2)
         {
-            // LZMA2: use Lzma2EncoderStream for chunk-based framing
-            using var lzma2Stream = new Lzma2EncoderStream(
-                outCrcStream,
+            var lzma2Stream = new Lzma2EncoderStream(
+                packedCrcStream,
                 encoderProperties.DictionarySize,
                 encoderProperties.NumFastBytes
             );
-
-            CopyWithCrc(inputStream, lzma2Stream, out var inputCrc2, out var inputSize2);
-            lzma2Stream.Dispose();
-
+            compressionStream = lzma2Stream;
             properties = lzma2Stream.Properties;
-
-            return BuildPackedStream(
-                isLzma2: true,
-                properties,
-                (ulong)(outputStream.Position - outStartOffset),
-                (ulong)inputSize2,
-                inputCrc2,
-                outCrcStream.Crc
-            );
         }
-
-        // LZMA
-        using var lzmaStream = LzmaStream.Create(encoderProperties, false, outCrcStream);
-        properties = lzmaStream.Properties;
-
-        CopyWithCrc(inputStream, lzmaStream, out var inputCrc, out var inputSize);
-        lzmaStream.Dispose();
-
-        return BuildPackedStream(
-            isLzma2: false,
-            properties,
-            (ulong)(outputStream.Position - outStartOffset),
-            (ulong)inputSize,
-            inputCrc,
-            outCrcStream.Crc
-        );
+        else
+        {
+            var lzmaStream = LzmaStream.Create(encoderProperties, false, packedCrcStream);
+            compressionStream = lzmaStream;
+            properties = lzmaStream.Properties;
+        }
     }
 
-    /// <summary>
-    /// Asynchronously compresses the input stream to the output stream using the specified method.
-    /// Returns a PackedStream containing folder metadata, compressed size, and CRCs.
-    /// </summary>
-    /// <param name="inputStream">Uncompressed data to compress.</param>
-    /// <param name="compressionType">Compression method (LZMA or LZMA2).</param>
-    /// <param name="encoderProperties">LZMA encoder properties (null for defaults).</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    public async ValueTask<PackedStream> CompressAsync(
+    public void Append(Stream inputStream, byte firstByte)
+    {
+        ThrowIfFinalized();
+
+        CopyWithCrc(inputStream, compressionStream, firstByte, out var inputCrc, out var inputSize);
+        unpackSizes.Add((ulong)inputSize);
+        fileCrcs.Add(inputCrc);
+    }
+
+    public async ValueTask AppendAsync(
         Stream inputStream,
-        CompressionType compressionType,
-        LzmaEncoderProperties? encoderProperties = null,
+        byte firstByte,
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfFinalized();
         cancellationToken.ThrowIfCancellationRequested();
 
-        var isLzma2 = compressionType == CompressionType.LZMA2;
-        encoderProperties ??= new LzmaEncoderProperties(eos: !isLzma2);
+        var (inputCrc, inputSize) = await CopyWithCrcAsync(
+                inputStream,
+                compressionStream,
+                firstByte,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+        unpackSizes.Add((ulong)inputSize);
+        fileCrcs.Add(inputCrc);
+    }
 
-        var outStartOffset = outputStream.Position;
+    public PackedFolder FinalizeFolder()
+    {
+        ThrowIfFinalized();
+        finalized = true;
 
-        // Wrap the output stream in CRC calculator
-        using var outCrcStream = new Crc32Stream(outputStream);
+        compressionStream.Dispose();
+        packedCrcStream.Dispose();
 
-        byte[] properties;
-
-        if (isLzma2)
-        {
-            // LZMA2: use Lzma2EncoderStream for chunk-based framing
-            uint inputCrc2;
-            long inputSize2;
-            {
-                using var lzma2Stream = new Lzma2EncoderStream(
-                    outCrcStream,
-                    encoderProperties.DictionarySize,
-                    encoderProperties.NumFastBytes
-                );
-
-                (inputCrc2, inputSize2) = await CopyWithCrcAsync(
-                        inputStream,
-                        lzma2Stream,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-
-                properties = lzma2Stream.Properties;
-            }
-
-            return BuildPackedStream(
-                isLzma2: true,
-                properties,
-                (ulong)(outputStream.Position - outStartOffset),
-                (ulong)inputSize2,
-                inputCrc2,
-                outCrcStream.Crc
-            );
-        }
-
-        // LZMA
-        uint inputCrc;
-        long inputSize;
-        {
-            using var lzmaStream = LzmaStream.Create(encoderProperties, false, outCrcStream);
-            properties = lzmaStream.Properties;
-
-            (inputCrc, inputSize) = await CopyWithCrcAsync(
-                    inputStream,
-                    lzmaStream,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
-
-        return BuildPackedStream(
-            isLzma2: false,
+        return BuildPackedFolder(
+            isLzma2,
             properties,
             (ulong)(outputStream.Position - outStartOffset),
-            (ulong)inputSize,
-            inputCrc,
-            outCrcStream.Crc
+            packedCrcStream.Crc,
+            unpackSizes.ToArray(),
+            fileCrcs.ToArray()
         );
     }
 
-    /// <summary>
-    /// Copies data from source to destination while computing CRC32 of the source data.
-    /// Uses Crc32Stream.Compute for CRC calculation to avoid duplicating the table/algorithm.
-    /// </summary>
+    public void Dispose()
+    {
+        if (finalized)
+        {
+            return;
+        }
+
+        finalized = true;
+        compressionStream.Dispose();
+        packedCrcStream.Dispose();
+    }
+
+    private void ThrowIfFinalized()
+    {
+        if (finalized)
+        {
+            throw new ObjectDisposedException(nameof(SevenZipFolderCompressor));
+        }
+    }
+
     private static void CopyWithCrc(
         Stream source,
         Stream destination,
+        byte firstByte,
         out uint crc,
         out long bytesRead
     )
     {
         var seed = Crc32Stream.DEFAULT_SEED;
         var buffer = new byte[81920];
-        long totalRead = 0;
+        long totalRead = 1;
+
+        buffer[0] = firstByte;
+        seed = ~Crc32Stream.Compute(Crc32Stream.DEFAULT_POLYNOMIAL, seed, buffer.AsSpan(0, 1));
+        destination.Write(buffer, 0, 1);
 
         int read;
         while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
         {
-            // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
-            // so passing ~result as next seed chains correctly.
             seed = ~Crc32Stream.Compute(
                 Crc32Stream.DEFAULT_POLYNOMIAL,
                 seed,
@@ -206,19 +174,20 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
         bytesRead = totalRead;
     }
 
-    /// <summary>
-    /// Asynchronously copies data from source to destination while computing CRC32 of source data.
-    /// Uses Crc32Stream.Compute for CRC calculation to avoid duplicating the table/algorithm.
-    /// </summary>
     private static async ValueTask<(uint crc, long bytesRead)> CopyWithCrcAsync(
         Stream source,
         Stream destination,
+        byte firstByte,
         CancellationToken cancellationToken
     )
     {
         var seed = Crc32Stream.DEFAULT_SEED;
         var buffer = new byte[81920];
-        long totalRead = 0;
+        long totalRead = 1;
+
+        buffer[0] = firstByte;
+        seed = ~Crc32Stream.Compute(Crc32Stream.DEFAULT_POLYNOMIAL, seed, buffer.AsSpan(0, 1));
+        await destination.WriteAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
 
         int read;
         while (
@@ -229,8 +198,6 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
             ) > 0
         )
         {
-            // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
-            // so passing ~result as next seed chains correctly.
             seed = ~Crc32Stream.Compute(
                 Crc32Stream.DEFAULT_POLYNOMIAL,
                 seed,
@@ -243,16 +210,21 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
         return (~seed, totalRead);
     }
 
-    private static PackedStream BuildPackedStream(
+    private static PackedFolder BuildPackedFolder(
         bool isLzma2,
         byte[] properties,
         ulong compressedSize,
-        ulong uncompressedSize,
-        uint inputCrc,
-        uint? outputCrc
+        uint? packedCrc,
+        ulong[] uncompressedSizes,
+        uint?[] fileCrcs
     )
     {
         var methodId = isLzma2 ? CMethodId.K_LZMA2 : CMethodId.K_LZMA;
+        ulong totalUncompressedSize = 0;
+        for (var i = 0; i < uncompressedSizes.Length; i++)
+        {
+            totalUncompressedSize += uncompressedSizes[i];
+        }
 
         var folder = new CFolder();
         folder._coders.Add(
@@ -265,14 +237,71 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
             }
         );
         folder._packStreams.Add(0);
-        folder._unpackSizes.Add((long)uncompressedSize);
-        folder._unpackCrc = inputCrc;
+        folder._unpackSizes.Add((long)totalUncompressedSize);
 
-        return new PackedStream
+        return new PackedFolder
         {
             Folder = folder,
-            Sizes = [compressedSize],
-            CRCs = [outputCrc],
+            PackSize = compressedSize,
+            PackCrc = packedCrc,
+            UnPackSizes = uncompressedSizes,
+            FileCrcs = fileCrcs,
         };
+    }
+}
+
+/// <summary>
+/// Compresses input streams using LZMA or LZMA2 and writes the resulting folder data.
+/// </summary>
+internal sealed class SevenZipStreamsCompressor(Stream outputStream)
+{
+    public PackedFolder Compress(
+        Stream inputStream,
+        CompressionType compressionType,
+        LzmaEncoderProperties? encoderProperties = null
+    )
+    {
+        var firstByte = inputStream.ReadByte();
+        if (firstByte < 0)
+        {
+            throw new InvalidOperationException("Cannot compress an empty stream.");
+        }
+
+        using var folderCompressor = new SevenZipFolderCompressor(
+            outputStream,
+            compressionType,
+            encoderProperties
+        );
+        folderCompressor.Append(inputStream, (byte)firstByte);
+        return folderCompressor.FinalizeFolder();
+    }
+
+    public async ValueTask<PackedFolder> CompressAsync(
+        Stream inputStream,
+        CompressionType compressionType,
+        LzmaEncoderProperties? encoderProperties = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var buffer = new byte[1];
+        var bytesRead = await inputStream
+            .ReadAsync(buffer, 0, 1, cancellationToken)
+            .ConfigureAwait(false);
+        if (bytesRead == 0)
+        {
+            throw new InvalidOperationException("Cannot compress an empty stream.");
+        }
+
+        using var folderCompressor = new SevenZipFolderCompressor(
+            outputStream,
+            compressionType,
+            encoderProperties
+        );
+        await folderCompressor
+            .AppendAsync(inputStream, buffer[0], cancellationToken)
+            .ConfigureAwait(false);
+        return folderCompressor.FinalizeFolder();
     }
 }

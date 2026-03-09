@@ -29,46 +29,26 @@ public partial class SevenZipWriter
         cancellationToken.ThrowIfCancellationRequested();
 
         filename = NormalizeFilename(filename);
+        var context = new SevenZipWriteContext(filename, modificationTime);
         var progressStream = WrapWithProgress(source, filename);
 
-        var isEmpty = source.CanSeek && source.Length == 0;
-
-        if (isEmpty)
+        var firstByteBuffer = new byte[1];
+        var firstByteRead = await progressStream
+            .ReadAsync(firstByteBuffer, 0, 1, cancellationToken)
+            .ConfigureAwait(false);
+        if (firstByteRead == 0)
         {
-            entries.Add(
-                new SevenZipWriteEntry
-                {
-                    Name = filename,
-                    ModificationTime = modificationTime,
-                    IsDirectory = false,
-                    IsEmpty = true,
-                }
-            );
+            FinalizeActiveFolder();
+            AddEmptyFileEntry(filename, modificationTime);
             return;
         }
 
-        var output = OutputStream.NotNull();
-        var outputPosBefore = output.Position;
-        var compressor = new SevenZipStreamsCompressor(output);
-        var packed = await compressor
-            .CompressAsync(
-                progressStream,
-                sevenZipOptions.CompressionType,
-                sevenZipOptions.LzmaProperties,
-                cancellationToken
-            )
+        var groupKey = sevenZipOptions.Solid.ResolveGroupKey(context);
+        EnsureActiveFolder(groupKey);
+        await activeFolderCompressor
+            .NotNull()
+            .AppendAsync(progressStream, firstByteBuffer[0], cancellationToken)
             .ConfigureAwait(false);
-
-        var actuallyEmpty = packed.Folder.GetUnpackSize() == 0;
-        if (!actuallyEmpty)
-        {
-            packedStreams.Add(packed);
-        }
-        else
-        {
-            output.Position = outputPosBefore;
-            output.SetLength(outputPosBefore);
-        }
 
         entries.Add(
             new SevenZipWriteEntry
@@ -76,9 +56,14 @@ public partial class SevenZipWriter
                 Name = filename,
                 ModificationTime = modificationTime,
                 IsDirectory = false,
-                IsEmpty = isEmpty || actuallyEmpty,
+                IsEmpty = false,
             }
         );
+
+        if (groupKey is null)
+        {
+            FinalizeActiveFolder();
+        }
     }
 
     /// <summary>
