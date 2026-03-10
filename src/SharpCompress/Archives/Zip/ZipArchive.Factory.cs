@@ -47,33 +47,33 @@ public partial class ZipArchive
     }
 
     public static IWritableArchive<ZipWriterOptions> OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new ZipArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
+                i => i < files.Count ? files[i] : null,
                 readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
             )
         );
     }
 
     public static IWritableArchive<ZipWriterOptions> OpenArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
         streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams;
         return new ZipArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }
@@ -91,18 +91,18 @@ public partial class ZipArchive
         }
 
         return new ZipArchive(
-            new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, i => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 
     public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> OpenAsyncArchive(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(path, readerOptions));
+        return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(filePath, readerOptions));
     }
 
     public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> OpenAsyncArchive(

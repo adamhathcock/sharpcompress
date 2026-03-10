@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Factories;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
@@ -53,20 +52,20 @@ public static partial class ArchiveFactory
     }
 
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var filesArray = fileInfos.ToArray();
-        if (filesArray.Length == 0)
+        var filesArray = fileInfos;
+        if (filesArray.Count == 0)
         {
             throw new ArchiveOperationException("No files to open");
         }
 
         var fileInfo = filesArray[0];
-        if (filesArray.Length == 1)
+        if (filesArray.Count == 1)
         {
             return await OpenAsyncArchive(fileInfo, options, cancellationToken)
                 .ConfigureAwait(false);
@@ -83,21 +82,21 @@ public static partial class ArchiveFactory
     }
 
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
         streams.NotNull(nameof(streams));
-        var streamsArray = streams.ToArray();
-        if (streamsArray.Length == 0)
+        var streamsArray = streams;
+        if (streamsArray.Count == 0)
         {
             throw new ArchiveOperationException("No streams");
         }
 
         var firstStream = streamsArray[0];
-        if (streamsArray.Length == 1)
+        if (streamsArray.Count == 1)
         {
             return await OpenAsyncArchive(firstStream, options, cancellationToken)
                 .ConfigureAwait(false);
@@ -113,19 +112,19 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
-    public static ValueTask<T> FindFactoryAsync<T>(
-        string path,
+    internal static ValueTask<T> FindFactoryAsync<T>(
+        string filePath,
         CancellationToken cancellationToken = default
     )
         where T : IFactory
     {
-        path.NotNullOrEmpty(nameof(path));
-        return FindFactoryAsync<T>(new FileInfo(path), cancellationToken);
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return FindFactoryAsync<T>(new FileInfo(filePath), cancellationToken);
     }
 
-    private static async ValueTask<T> FindFactoryAsync<T>(
+    internal static async ValueTask<T> FindFactoryAsync<T>(
         FileInfo finfo,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
         where T : IFactory
     {
@@ -134,9 +133,9 @@ public static partial class ArchiveFactory
         return await FindFactoryAsync<T>(stream, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async ValueTask<T> FindFactoryAsync<T>(
+    internal static async ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
         where T : IFactory
     {

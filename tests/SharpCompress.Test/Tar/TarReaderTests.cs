@@ -147,7 +147,7 @@ public class TarReaderTests : ReaderTests
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
         using var reader = ReaderFactory.OpenReader(stream);
-        Assert.True(reader.ArchiveType == ArchiveType.Tar);
+        Assert.True(reader.Type == ArchiveType.Tar);
     }
 
     [Fact]

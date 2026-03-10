@@ -2,9 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common;
 using SharpCompress.Common.Options;
-using SharpCompress.Writers;
 
 namespace SharpCompress.Archives;
 
@@ -13,7 +11,7 @@ public static class IWritableAsyncArchiveExtensions
     extension(IWritableAsyncArchive writableArchive)
     {
         public async ValueTask AddAllFromDirectoryAsync(
-            string filePath,
+            string directoryPath,
             string searchPattern = "*.*",
             SearchOption searchOption = SearchOption.AllDirectories
         )
@@ -21,13 +19,17 @@ public static class IWritableAsyncArchiveExtensions
             using (writableArchive.PauseEntryRebuilding())
             {
                 foreach (
-                    var path in Directory.EnumerateFiles(filePath, searchPattern, searchOption)
+                    var filePath in Directory.EnumerateFiles(
+                        directoryPath,
+                        searchPattern,
+                        searchOption
+                    )
                 )
                 {
-                    var fileInfo = new FileInfo(path);
+                    var fileInfo = new FileInfo(filePath);
                     await writableArchive
                         .AddEntryAsync(
-                            path.Substring(filePath.Length),
+                            filePath.Substring(directoryPath.Length),
                             fileInfo.OpenRead(),
                             true,
                             fileInfo.Length,

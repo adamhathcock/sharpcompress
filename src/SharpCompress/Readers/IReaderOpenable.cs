@@ -17,7 +17,7 @@ public interface IReaderOpenable
     public static abstract IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null);
 
     public static abstract ValueTask<IAsyncReader> OpenAsyncReader(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     );

@@ -24,6 +24,6 @@ public interface IReaderFactory : Factories.IFactory
     ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     );
 }

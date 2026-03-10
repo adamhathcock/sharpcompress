@@ -25,7 +25,7 @@ public class TarFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory<TarWriterOptions>
+        IWritableArchiveFactory<TarWriterOptions>
 {
     #region IFactory
 
@@ -421,7 +421,7 @@ public class TarFactory
 
     #endregion
 
-    #region IWriteableArchiveFactory
+    #region IWritableArchiveFactory
 
     /// <inheritdoc/>
     public IWritableArchive<TarWriterOptions> CreateArchive() => TarArchive.CreateArchive();

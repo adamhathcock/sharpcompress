@@ -179,7 +179,7 @@ public class ArchiveTests : ReaderTests
     {
         using (
             var archive = ArchiveFactory.OpenArchive(
-                testArchives.Select(a => new FileInfo(a)),
+                testArchives.Select(a => new FileInfo(a)).ToArray(),
                 readerOptions
             )
         )
@@ -208,7 +208,7 @@ public class ArchiveTests : ReaderTests
     {
         using (
             var archive = ArchiveFactory.OpenArchive(
-                testArchives.Select(f => new FileInfo(f)),
+                testArchives.Select(f => new FileInfo(f)).ToArray(),
                 readerOptions
             )
         )
@@ -240,7 +240,7 @@ public class ArchiveTests : ReaderTests
     {
         var src = testArchives.ToArray();
         using var archive = ArchiveFactory.OpenArchive(
-            src.Select(f => new FileInfo(f)),
+            src.Select(f => new FileInfo(f)).ToArray(),
             readerOptions
         );
         var idx = 0;
