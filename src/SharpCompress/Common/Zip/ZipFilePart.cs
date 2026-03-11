@@ -234,10 +234,8 @@ internal abstract partial class ZipFilePart : FilePart
         }
 
         if (
-            (
-                Header.CompressedSize == 0
-                && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor)
-            ) || Header.IsZip64
+            Header.CompressedSize == 0
+            && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor)
         )
         {
             plainStream = SharpCompressStream.CreateNonDisposing(plainStream); //make sure AES doesn't close
