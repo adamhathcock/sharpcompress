@@ -86,12 +86,13 @@ internal partial class WinzipAesCryptoStream
     private void ReadTransformBlocks(Span<byte> buffer, int count)
     {
         var posn = 0;
-        var last = count;
+        var remaining = count;
 
-        while (posn < buffer.Length && posn < last)
+        while (posn < buffer.Length && remaining > 0)
         {
-            var n = ReadTransformOneBlock(buffer, posn, last);
+            var n = ReadTransformOneBlock(buffer, posn, remaining);
             posn += n;
+            remaining -= n;
         }
     }
 

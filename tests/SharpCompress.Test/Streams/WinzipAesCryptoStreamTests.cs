@@ -65,6 +65,26 @@ public class WinzipAesCryptoStreamTests
     }
 
     [Fact]
+    public async Task ReadAsync_Memory_Preserves_Keystream_Between_NonAligned_Reads()
+    {
+        const string password = "sample-password";
+        byte[] plainText = Enumerable
+            .Range(0, 113)
+            .Select(i => unchecked((byte)(255 - i)))
+            .ToArray();
+        byte[] salt = [0x91, 0x82, 0x73, 0x64, 0x55, 0x46, 0x37, 0x28];
+        using var stream = CreateStream(plainText, password, salt);
+
+        byte[] actual = await ReadWithChunkPatternMemoryAsync(
+            stream,
+            plainText.Length,
+            [11, 3, 17, 5, 41]
+        );
+
+        Assert.Equal(plainText, actual);
+    }
+
+    [Fact]
     public void Read_Stops_At_Encrypted_Payload_Length()
     {
         const string password = "sample-password";
@@ -198,6 +218,31 @@ public class WinzipAesCryptoStreamTests
                 totalLength - offset
             );
             int bytesRead = await readAsync(actual, offset, requested);
+            Assert.True(bytesRead > 0);
+            offset += bytesRead;
+            chunkIndex++;
+        }
+
+        return actual;
+    }
+
+    private static async Task<byte[]> ReadWithChunkPatternMemoryAsync(
+        Stream stream,
+        int totalLength,
+        int[] chunkPattern
+    )
+    {
+        byte[] actual = new byte[totalLength];
+        int offset = 0;
+        int chunkIndex = 0;
+
+        while (offset < totalLength)
+        {
+            int requested = Math.Min(
+                chunkPattern[chunkIndex % chunkPattern.Length],
+                totalLength - offset
+            );
+            int bytesRead = await stream.ReadAsync(actual.AsMemory(offset, requested));
             Assert.True(bytesRead > 0);
             offset += bytesRead;
             chunkIndex++;
