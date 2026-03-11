@@ -2,7 +2,6 @@ using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors;
 using SharpCompress.IO;
 using SharpCompress.Providers;
 using Xunit;
