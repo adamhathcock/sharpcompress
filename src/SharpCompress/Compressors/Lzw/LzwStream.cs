@@ -129,7 +129,18 @@ public partial class LzwStream : Stream
     {
         if (!headerParsed)
         {
-            ParseHeader();
+            try
+            {
+                ParseHeader();
+            }
+            catch
+            {
+                // If header parsing fails, mark stream as exhausted so subsequent
+                // reads (e.g. from SkipEntry during disposal) do not attempt to
+                // use the uninitialised decompressor state.
+                eof = true;
+                throw;
+            }
         }
 
         if (eof)
@@ -278,7 +289,7 @@ public partial class LzwStream : Stream
                 // Handle KwK case
                 if (code >= lFreeEnt)
                 {
-                    if (code > lFreeEnt)
+                    if (code > lFreeEnt || lOldCode < 0)
                     {
                         throw new IncompleteArchiveException(
                             "corrupt input: code=" + code + ", freeEnt=" + lFreeEnt
@@ -289,9 +300,18 @@ public partial class LzwStream : Stream
                     code = lOldCode;
                 }
 
-                // Generate output characters in reverse order
+                // Generate output characters in reverse order.
+                // Validate that the code chain stays within the allocated table bounds;
+                // malformed input can produce code values >= the table size.
                 while (code >= 256)
                 {
+                    if (code >= lTabSuffix.Length)
+                    {
+                        throw new IncompleteArchiveException(
+                            "corrupt input: code out of range: " + code
+                        );
+                    }
+
                     lStack[--lStackP] = lTabSuffix[code];
                     code = lTabPrefix[code];
                 }
