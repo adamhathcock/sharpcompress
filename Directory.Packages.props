@@ -12,7 +12,7 @@
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.102" />
+    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.201" />
     <GlobalPackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <GlobalPackageReference
       Include="Microsoft.VisualStudio.Threading.Analyzers"
