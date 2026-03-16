@@ -242,7 +242,11 @@ public class WinzipAesCryptoStreamTests
                 chunkPattern[chunkIndex % chunkPattern.Length],
                 totalLength - offset
             );
+#if NET48
+            int bytesRead = await stream.ReadAsync(actual, offset, requested);
+#else
             int bytesRead = await stream.ReadAsync(actual.AsMemory(offset, requested));
+#endif
             Assert.True(bytesRead > 0);
             offset += bytesRead;
             chunkIndex++;
