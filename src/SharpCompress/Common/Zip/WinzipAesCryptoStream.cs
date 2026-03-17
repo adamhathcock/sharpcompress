@@ -16,7 +16,7 @@ internal partial class WinzipAesCryptoStream : Stream
     private readonly ICryptoTransform _transform;
     private int _nonce = 1;
     private byte[] _counterOut = new byte[BLOCK_SIZE_IN_BYTES];
-    private bool _isFinalBlock;
+    private int _counterOutOffset = BLOCK_SIZE_IN_BYTES;
     private long _totalBytesLeftToRead;
     private bool _isDisposed;
 
@@ -123,58 +123,45 @@ internal partial class WinzipAesCryptoStream : Stream
         return read;
     }
 
-    private int ReadTransformOneBlock(byte[] buffer, int offset, int last)
+    private void FillCounterOut()
     {
-        if (_isFinalBlock)
-        {
-            throw new ArchiveOperationException();
-        }
-
-        var bytesRemaining = last - offset;
-        var bytesToRead =
-            (bytesRemaining > BLOCK_SIZE_IN_BYTES) ? BLOCK_SIZE_IN_BYTES : bytesRemaining;
-
         // update the counter
         BinaryPrimitives.WriteInt32LittleEndian(_counter, _nonce++);
-
-        // Determine if this is the final block
-        if ((bytesToRead == bytesRemaining) && (_totalBytesLeftToRead == 0))
-        {
-            _counterOut = _transform.TransformFinalBlock(_counter, 0, BLOCK_SIZE_IN_BYTES);
-            _isFinalBlock = true;
-        }
-        else
-        {
-            _transform.TransformBlock(
-                _counter,
-                0, // offset
-                BLOCK_SIZE_IN_BYTES,
-                _counterOut,
-                0
-            ); // offset
-        }
-
-        XorInPlace(buffer, offset, bytesToRead);
-        return bytesToRead;
+        _transform.TransformBlock(
+            _counter,
+            0, // offset
+            BLOCK_SIZE_IN_BYTES,
+            _counterOut,
+            0
+        ); // offset
+        _counterOutOffset = 0;
     }
 
-    private void XorInPlace(byte[] buffer, int offset, int count)
+    private void XorInPlace(byte[] buffer, int offset, int count, int counterOffset)
     {
         for (var i = 0; i < count; i++)
         {
-            buffer[offset + i] = (byte)(_counterOut[i] ^ buffer[offset + i]);
+            buffer[offset + i] = (byte)(_counterOut[counterOffset + i] ^ buffer[offset + i]);
         }
     }
 
     private void ReadTransformBlocks(byte[] buffer, int offset, int count)
     {
         var posn = offset;
-        var last = count + offset;
+        var remaining = count;
 
-        while (posn < buffer.Length && posn < last)
+        while (posn < buffer.Length && remaining > 0)
         {
-            var n = ReadTransformOneBlock(buffer, posn, last);
-            posn += n;
+            if (_counterOutOffset == BLOCK_SIZE_IN_BYTES)
+            {
+                FillCounterOut();
+            }
+
+            var bytesToXor = Math.Min(BLOCK_SIZE_IN_BYTES - _counterOutOffset, remaining);
+            XorInPlace(buffer, posn, bytesToXor, _counterOutOffset);
+            _counterOutOffset += bytesToXor;
+            posn += bytesToXor;
+            remaining -= bytesToXor;
         }
     }
 

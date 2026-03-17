@@ -16,10 +16,6 @@ public class TestBase : IAsyncDisposable
     public static readonly string TEST_ARCHIVES_PATH;
     public static readonly string ORIGINAL_FILES_PATH;
     public static readonly string MISC_TEST_FILES_PATH;
-    private static readonly string SCRATCH_BASE_PATH;
-
-    private static readonly string SCRATCH_DIRECTORY;
-    private static readonly string SCRATCH2_DIRECTORY;
 
     static TestBase()
     {
@@ -33,23 +29,18 @@ public class TestBase : IAsyncDisposable
         TEST_ARCHIVES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Archives");
         ORIGINAL_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "Original");
         MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
-
-        SCRATCH_BASE_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives");
-        SCRATCH_DIRECTORY = Path.Combine(SCRATCH_BASE_PATH, "Scratch");
-        SCRATCH2_DIRECTORY = Path.Combine(SCRATCH_BASE_PATH, "Scratch2");
-
-        Directory.CreateDirectory(SCRATCH_DIRECTORY);
-        Directory.CreateDirectory(SCRATCH2_DIRECTORY);
     }
 
     private readonly Guid _testGuid = Guid.NewGuid();
+    private readonly string _testTempDirectory;
     protected readonly string SCRATCH_FILES_PATH;
     protected readonly string SCRATCH2_FILES_PATH;
 
     protected TestBase()
     {
-        SCRATCH_FILES_PATH = Path.Combine(SCRATCH_DIRECTORY, _testGuid.ToString());
-        SCRATCH2_FILES_PATH = Path.Combine(SCRATCH2_DIRECTORY, _testGuid.ToString());
+        _testTempDirectory = Path.Combine(Path.GetTempPath(), $"SharpCompress.Test.{_testGuid:N}");
+        SCRATCH_FILES_PATH = Path.Combine(_testTempDirectory, "Scratch");
+        SCRATCH2_FILES_PATH = Path.Combine(_testTempDirectory, "Scratch2");
 
         Directory.CreateDirectory(SCRATCH_FILES_PATH);
         Directory.CreateDirectory(SCRATCH2_FILES_PATH);
@@ -59,22 +50,50 @@ public class TestBase : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await Task.CompletedTask;
-        Directory.Delete(SCRATCH_FILES_PATH, true);
-        Directory.Delete(SCRATCH2_FILES_PATH, true);
+        DeleteScratchDirectory(_testTempDirectory);
     }
 
     public void CleanScratch()
     {
-        if (Directory.Exists(SCRATCH_FILES_PATH))
+        ResetScratchDirectory(SCRATCH_FILES_PATH);
+        ResetScratchDirectory(SCRATCH2_FILES_PATH);
+    }
+
+    private static void ResetScratchDirectory(string path)
+    {
+        if (Directory.Exists(path))
         {
-            Directory.Delete(SCRATCH_FILES_PATH, true);
+            Directory.Delete(path, true);
         }
-        Directory.CreateDirectory(SCRATCH_FILES_PATH);
-        if (Directory.Exists(SCRATCH2_FILES_PATH))
+
+        Directory.CreateDirectory(path);
+    }
+
+    private static void DeleteScratchDirectory(string path)
+    {
+        if (!Directory.Exists(path))
         {
-            Directory.Delete(SCRATCH2_FILES_PATH, true);
+            return;
         }
-        Directory.CreateDirectory(SCRATCH2_FILES_PATH);
+
+        try
+        {
+            Directory.Delete(path, true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            throw new InvalidOperationException(
+                $"Failed to clean up temp test directory '{path}'.",
+                ex
+            );
+        }
+
+        if (Directory.Exists(path))
+        {
+            throw new InvalidOperationException(
+                $"Temp test directory '{path}' was not cleaned up."
+            );
+        }
     }
 
     public void VerifyFiles()
