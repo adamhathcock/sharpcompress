@@ -237,6 +237,12 @@ internal partial class CBZip2InputStream
 
         /* Now the selectors */
         nGroups = await BsRAsync(3, cancellationToken).ConfigureAwait(false);
+        // The BZip2 spec requires between 2 and N_GROUPS (6) Huffman groups.
+        if (nGroups < 2 || nGroups > BZip2Constants.N_GROUPS)
+        {
+            throw new InvalidFormatException("BZip2: invalid number of Huffman groups: " + nGroups);
+        }
+
         nSelectors = await BsRAsync(15, cancellationToken).ConfigureAwait(false);
         for (i = 0; i < nSelectors; i++)
         {
@@ -244,6 +250,10 @@ internal partial class CBZip2InputStream
             while (await BsRAsync(1, cancellationToken).ConfigureAwait(false) == 1)
             {
                 j++;
+                if (j >= nGroups)
+                {
+                    throw new InvalidFormatException("BZip2: selector MTF value out of range");
+                }
             }
             if (i < BZip2Constants.MAX_SELECTORS)
             {
@@ -266,6 +276,11 @@ internal partial class CBZip2InputStream
             for (i = 0; i < nSelectors; i++)
             {
                 v = selectorMtf[i];
+                if (v >= nGroups)
+                {
+                    throw new InvalidFormatException("BZip2: selector MTF value out of range");
+                }
+
                 tmp = pos[v];
                 while (v > 0)
                 {
@@ -294,6 +309,14 @@ internal partial class CBZip2InputStream
                         curr--;
                     }
                 }
+                // Code lengths must fit within the pre-allocated table bounds.
+                if (curr < 1 || curr >= BZip2Constants.MAX_CODE_LEN)
+                {
+                    throw new InvalidFormatException(
+                        "BZip2: Huffman code length out of range: " + curr
+                    );
+                }
+
                 len[t][i] = (char)curr;
             }
         }
@@ -374,6 +397,11 @@ internal partial class CBZip2InputStream
             while (zvec > limit[zt][zn])
             {
                 zn++;
+                if (zn >= BZip2Constants.MAX_CODE_LEN)
+                {
+                    throw new InvalidFormatException("BZip2: Huffman code too long");
+                }
+
                 {
                     {
                         while (bsLive < 1)
@@ -405,7 +433,15 @@ internal partial class CBZip2InputStream
                 }
                 zvec = (zvec << 1) | zj;
             }
-            nextSym = perm[zt][zvec - basev[zt][zn]];
+            {
+                int permIndex = zvec - basev[zt][zn];
+                if (permIndex < 0 || permIndex >= BZip2Constants.MAX_ALPHA_SIZE)
+                {
+                    throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                }
+
+                nextSym = perm[zt][permIndex];
+            }
         }
 
         while (true)
@@ -448,6 +484,11 @@ internal partial class CBZip2InputStream
                         while (zvec > limit[zt][zn])
                         {
                             zn++;
+                            if (zn >= BZip2Constants.MAX_CODE_LEN)
+                            {
+                                throw new InvalidFormatException("BZip2: Huffman code too long");
+                            }
+
                             {
                                 {
                                     while (bsLive < 1)
@@ -479,7 +520,15 @@ internal partial class CBZip2InputStream
                             }
                             zvec = (zvec << 1) | zj;
                         }
-                        nextSym = perm[zt][zvec - basev[zt][zn]];
+                        {
+                            int permIndex = zvec - basev[zt][zn];
+                            if (permIndex < 0 || permIndex >= BZip2Constants.MAX_ALPHA_SIZE)
+                            {
+                                throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                            }
+
+                            nextSym = perm[zt][permIndex];
+                        }
                     }
                 } while (nextSym == BZip2Constants.RUNA || nextSym == BZip2Constants.RUNB);
 
@@ -550,6 +599,11 @@ internal partial class CBZip2InputStream
                     while (zvec > limit[zt][zn])
                     {
                         zn++;
+                        if (zn >= BZip2Constants.MAX_CODE_LEN)
+                        {
+                            throw new InvalidFormatException("BZip2: Huffman code too long");
+                        }
+
                         {
                             {
                                 while (bsLive < 1)
@@ -581,7 +635,15 @@ internal partial class CBZip2InputStream
                         }
                         zvec = (zvec << 1) | zj;
                     }
-                    nextSym = perm[zt][zvec - basev[zt][zn]];
+                    {
+                        int permIndex = zvec - basev[zt][zn];
+                        if (permIndex < 0 || permIndex >= BZip2Constants.MAX_ALPHA_SIZE)
+                        {
+                            throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                        }
+
+                        nextSym = perm[zt][permIndex];
+                    }
                 }
             }
         }
@@ -607,6 +669,11 @@ internal partial class CBZip2InputStream
             ch = ll8[i];
             tt[cftab[ch]] = i;
             cftab[ch]++;
+        }
+
+        if (origPtr < 0 || origPtr > last)
+        {
+            throw new InvalidFormatException("BZip2: origPtr out of range");
         }
 
         tPos = tt[origPtr];
@@ -858,9 +925,11 @@ internal partial class CBZip2InputStream
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         cbZip2InputStream.BsSetStream(zStream);
-        await cbZip2InputStream.InitializeAsync(true, cancellationToken).ConfigureAwait(false);
-        await cbZip2InputStream.InitBlockAsync(cancellationToken).ConfigureAwait(false);
-        await cbZip2InputStream.SetupBlockAsync(cancellationToken).ConfigureAwait(false);
+        if (await cbZip2InputStream.InitializeAsync(true, cancellationToken).ConfigureAwait(false))
+        {
+            await cbZip2InputStream.InitBlockAsync(cancellationToken).ConfigureAwait(false);
+            await cbZip2InputStream.SetupBlockAsync(cancellationToken).ConfigureAwait(false);
+        }
         return cbZip2InputStream;
     }
 }

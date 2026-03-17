@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -87,5 +88,46 @@ public class LzwReaderTests : ReaderTests
 
         // When opened via ReaderFactory with a non-FileStream, key defaults to "data"
         Assert.NotNull(reader.Entry.Key);
+    }
+
+    // Regression tests for malformed input crashes (fuzzer-discovered)
+
+    [Fact]
+    public void Lzw_MalformedInput_IOOB_ThrowsSharpCompressException()
+    {
+        // Malformed LZW stream with maxBits=8 producing codes >= table size;
+        // previously caused IndexOutOfRangeException in Read().
+        var data = Convert.FromHexString(
+            "1f9d0836e1553ac4e1ce9ea227000000000000001070b4058faf051127c54144f8bfe54192e141bab6efe8032c41cd64004aef53da4acc8077a5b26245c47b97e6d615e29400000000000003edd1310a8030f1e2ee66ff535d800000000b00000000"
+        );
+        var ex = Record.Exception(() => DrainReader(data));
+        Assert.IsAssignableFrom<SharpCompressException>(ex);
+    }
+
+    [Fact]
+    public void Lzw_MalformedInput_DivideByZero_ThrowsSharpCompressException()
+    {
+        // Malformed LZW header (maxBits > MAX_BITS) that previously caused DivideByZeroException
+        // on a second Read call (e.g. SkipEntry during disposal) because nBits was left at 0.
+        var data = Convert.FromHexString(
+            "1f9d1a362f20000000130003edd1310a8030f1605ca2b26245c47b97e6d615e29400000000130003edd1310a8030f1605c606060606060606060606060606060606060606060606060007f60606060280000"
+        );
+        var ex = Record.Exception(() => DrainReader(data));
+        Assert.IsAssignableFrom<SharpCompressException>(ex);
+    }
+
+    private static void DrainReader(byte[] data)
+    {
+        using var ms = new MemoryStream(data);
+        using var reader = ReaderFactory.OpenReader(ms);
+        var buf = new byte[4096];
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var entryStream = reader.OpenEntryStream();
+                while (entryStream.Read(buf, 0, buf.Length) > 0) { }
+            }
+        }
     }
 }

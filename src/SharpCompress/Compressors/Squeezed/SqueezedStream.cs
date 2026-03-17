@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.Compressors.RLE90;
 
 namespace SharpCompress.Compressors.Squeezed;
@@ -83,6 +84,11 @@ public partial class SqueezeStream : Stream
         while (true)
         {
             i = dnode[i, bitReader.ReadBit() ? 1 : 0];
+            if (i >= 0 && i >= numnodes)
+            {
+                throw new InvalidFormatException("Squeezed: Huffman tree node index out of range");
+            }
+
             if (i < 0)
             {
                 i = -(i + 1);

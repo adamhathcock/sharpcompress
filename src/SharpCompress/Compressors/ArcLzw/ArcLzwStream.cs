@@ -73,6 +73,11 @@ public partial class ArcLzwStream : Stream
 
         if (useCrunched)
         {
+            if (input.Length < 1)
+            {
+                throw new InvalidFormatException("ARC compressed data is too short");
+            }
+
             if (input[0] != BITS)
             {
                 throw new InvalidFormatException($"File packed with {input[0]}, expected {BITS}.");
