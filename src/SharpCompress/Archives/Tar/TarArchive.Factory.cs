@@ -58,7 +58,8 @@ public partial class TarArchive
         );
         var compressionType = TarFactory.GetCompressionType(
             sourceStream,
-            sourceStream.ReaderOptions.Providers
+            sourceStream.ReaderOptions.Providers,
+            sourceStream.ReaderOptions
         );
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);
@@ -78,7 +79,8 @@ public partial class TarArchive
         );
         var compressionType = TarFactory.GetCompressionType(
             sourceStream,
-            sourceStream.ReaderOptions.Providers
+            sourceStream.ReaderOptions.Providers,
+            sourceStream.ReaderOptions
         );
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);
@@ -115,6 +117,7 @@ public partial class TarArchive
             .GetCompressionTypeAsync(
                 sourceStream,
                 sourceStream.ReaderOptions.Providers,
+                sourceStream.ReaderOptions,
                 cancellationToken
             )
             .ConfigureAwait(false);
@@ -147,6 +150,7 @@ public partial class TarArchive
             .GetCompressionTypeAsync(
                 sourceStream,
                 sourceStream.ReaderOptions.Providers,
+                sourceStream.ReaderOptions,
                 cancellationToken
             )
             .ConfigureAwait(false);
@@ -172,6 +176,7 @@ public partial class TarArchive
             .GetCompressionTypeAsync(
                 sourceStream,
                 sourceStream.ReaderOptions.Providers,
+                sourceStream.ReaderOptions,
                 cancellationToken
             )
             .ConfigureAwait(false);
@@ -197,6 +202,7 @@ public partial class TarArchive
             .GetCompressionTypeAsync(
                 sourceStream,
                 sourceStream.ReaderOptions.Providers,
+                sourceStream.ReaderOptions,
                 cancellationToken
             )
             .ConfigureAwait(false);
