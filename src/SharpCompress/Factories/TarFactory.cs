@@ -119,6 +119,81 @@ public class TarFactory
 
     #endregion
 
+    internal override bool TryOpenReader(
+        SharpCompressStream stream,
+        ReaderOptions options,
+        out IReader? reader
+    )
+    {
+        reader = null;
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            stream.Rewind();
+            if (wrapper.IsMatch(stream))
+            {
+                stream.Rewind();
+                var decompressedStream = CreateProbeDecompressionStream(
+                    stream,
+                    wrapper.CompressionType,
+                    options.Providers,
+                    options
+                );
+                if (TarArchive.IsTarFile(decompressedStream))
+                {
+                    stream.Rewind(true);
+                    reader = new TarReader(stream, options, wrapper.CompressionType);
+                    return true;
+                }
+            }
+        }
+        stream.Rewind();
+        return false;
+    }
+
+    internal override async ValueTask<IAsyncReader?> TryOpenReaderAsync(
+        SharpCompressStream stream,
+        ReaderOptions options,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Use an intermediate ring-buffer wrapper for the probe phase.
+        // This ensures decompressor constructors that use synchronous reads
+        // can replay already-buffered data, even when the underlying stream
+        // only supports async I/O (e.g. streams wrapping async-only transports).
+        // After StopRecording(), the ring buffer is still available for replay
+        // because ReadWithRingBuffer() serves data whenever _logicalPosition < streamPosition,
+        // regardless of whether recording is active.
+        var probeStream = new SharpCompressStream(stream);
+        probeStream.StartRecording();
+        foreach (var wrapper in TarWrapper.Wrappers)
+        {
+            probeStream.Rewind();
+            if (await wrapper.IsMatchAsync(probeStream, cancellationToken).ConfigureAwait(false))
+            {
+                probeStream.Rewind();
+                var decompressedStream = await CreateProbeDecompressionStreamAsync(
+                        probeStream,
+                        wrapper.CompressionType,
+                        options.Providers,
+                        options,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
+                {
+                    probeStream.StopRecording();
+                    return new TarReader(probeStream, options, wrapper.CompressionType);
+                }
+            }
+        }
+        stream.Rewind();
+        return null;
+    }
+
     private static Stream CreateProbeDecompressionStream(
         Stream stream,
         CompressionType compressionType,
@@ -179,10 +254,11 @@ public class TarFactory
 
     public static CompressionType GetCompressionType(
         Stream stream,
-        CompressionProviderRegistry? providers = null
+        CompressionProviderRegistry? providers = null,
+        IReaderOptions? readerOptions = null
     )
     {
-        providers ??= CompressionProviderRegistry.Default;
+        providers ??= readerOptions?.Providers ?? CompressionProviderRegistry.Default;
         stream.Seek(0, SeekOrigin.Begin);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -193,7 +269,8 @@ public class TarFactory
                 var decompressedStream = CreateProbeDecompressionStream(
                     stream,
                     wrapper.CompressionType,
-                    providers
+                    providers,
+                    readerOptions
                 );
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
@@ -207,10 +284,11 @@ public class TarFactory
     public static async ValueTask<CompressionType> GetCompressionTypeAsync(
         Stream stream,
         CompressionProviderRegistry? providers = null,
+        IReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
-        providers ??= CompressionProviderRegistry.Default;
+        providers ??= readerOptions?.Providers ?? CompressionProviderRegistry.Default;
         stream.Seek(0, SeekOrigin.Begin);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -222,7 +300,8 @@ public class TarFactory
                         stream,
                         wrapper.CompressionType,
                         providers,
-                        cancellationToken: cancellationToken
+                        readerOptions,
+                        cancellationToken
                     )
                     .ConfigureAwait(false);
                 if (
