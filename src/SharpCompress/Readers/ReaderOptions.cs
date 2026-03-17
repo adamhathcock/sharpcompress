@@ -76,7 +76,8 @@ public sealed record ReaderOptions : IReaderOptions
     /// by rewinding and re-reading the same data.
     /// </para>
     /// <para>
-    /// <b>Default:</b> Constants.RewindableBufferSize (81920 bytes / 81KB)
+    /// <b>Default:</b> Constants.RewindableBufferSize (163840 bytes / 160KB) - sized to cover
+    /// ZStandard's worst-case first block on a tar archive (~131KB including header overhead).
     /// </para>
     /// <para>
     /// <b>Typical usage:</b> 500-1000 bytes for most archives
