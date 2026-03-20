@@ -129,6 +129,22 @@ public partial class TarArchive
         {
             if (header != null)
             {
+                // For compressed (streaming) archives, buffer each entry's packed stream into
+                // memory immediately. This ensures the underlying compressed stream advances
+                // past each entry's data, and allows entry streams to be opened after the
+                // full entry list has been enumerated.
+                if (_compressionType != CompressionType.None && header.PackedStream != null)
+                {
+                    var buffered = new MemoryStream();
+                    using (header.PackedStream)
+                    {
+                        header.PackedStream.CopyTo(buffered, Constants.BufferSize);
+                        // Disposing TarReadOnlySubStream skips any remaining bytes and padding
+                    }
+                    buffered.Position = 0;
+                    header.PackedStream = buffered;
+                }
+
                 if (header.EntryType == EntryType.LongName)
                 {
                     previousHeader = header;
@@ -147,19 +163,32 @@ public partial class TarArchive
                             ReaderOptions
                         );
 
-                        var oldStreamPos = stream.Position;
-
-                        using (var entryStream = entry.OpenEntryStream())
+                        if (stream.CanSeek)
                         {
+                            var oldStreamPos = stream.Position;
+
+                            using (var entryStream = entry.OpenEntryStream())
+                            {
+                                using var memoryStream = new MemoryStream();
+                                entryStream.CopyTo(memoryStream, Constants.BufferSize);
+                                var bytes = memoryStream.ToArray();
+
+                                header.Name = ReaderOptions
+                                    .ArchiveEncoding.Decode(bytes)
+                                    .TrimNulls();
+                            }
+
+                            stream.Position = oldStreamPos;
+                        }
+                        else
+                        {
+                            // Streaming mode: PackedStream is already a buffered MemoryStream
+                            using var entryStream = entry.OpenEntryStream();
                             using var memoryStream = new MemoryStream();
                             entryStream.CopyTo(memoryStream, Constants.BufferSize);
-                            memoryStream.Position = 0;
                             var bytes = memoryStream.ToArray();
-
                             header.Name = ReaderOptions.ArchiveEncoding.Decode(bytes).TrimNulls();
                         }
-
-                        stream.Position = oldStreamPos;
 
                         previousHeader = null;
                     }

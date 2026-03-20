@@ -275,4 +275,50 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         Assert.Equal(2, numberOfEntries);
     }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    public async ValueTask CompressedTar_AsyncArchive_Lists_All_Entries_Async(
+        string archiveFileName
+    )
+    {
+        await using var archive = await TarArchive.OpenAsyncArchive(
+            new AsyncOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveFileName))),
+            new ReaderOptions { LeaveStreamOpen = false }
+        );
+
+        Assert.Equal(6, await archive.EntriesAsync.CountAsync());
+    }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    public async ValueTask CompressedTar_AsyncArchive_Entry_Streams_Are_Readable_Async(
+        string archiveFileName
+    )
+    {
+        await using var archive = await TarArchive.OpenAsyncArchive(
+            new AsyncOnlyStream(File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveFileName))),
+            new ReaderOptions { LeaveStreamOpen = false }
+        );
+
+        await foreach (
+            var entry in archive.EntriesAsync.Where(e => !e.IsDirectory).ConfigureAwait(false)
+        )
+        {
+#if LEGACY_DOTNET
+            using var entryStream = await entry.OpenEntryStreamAsync();
+#else
+            await using var entryStream = await entry.OpenEntryStreamAsync();
+#endif
+            using var ms = new MemoryStream();
+            await entryStream.CopyToAsync(ms);
+            Assert.Equal(entry.Size, ms.Length);
+        }
+    }
 }
