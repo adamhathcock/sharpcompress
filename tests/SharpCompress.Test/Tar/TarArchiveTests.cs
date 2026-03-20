@@ -339,4 +339,37 @@ public class TarArchiveTests : ArchiveTests
         Assert.Equal(ArchiveType.Tar, reader.Type);
         Assert.True(reader.MoveToNextEntry());
     }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    public void CompressedTar_Archive_Lists_All_Entries(string archiveFileName)
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveFileName));
+        using var archive = ArchiveFactory.OpenArchive(stream);
+
+        Assert.Equal(ArchiveType.Tar, archive.Type);
+        Assert.Equal(6, archive.Entries.Count());
+    }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    public void CompressedTar_Archive_Entry_Streams_Are_Readable(string archiveFileName)
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveFileName));
+        using var archive = ArchiveFactory.OpenArchive(stream);
+
+        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        {
+            using var entryStream = entry.OpenEntryStream();
+            using var ms = new MemoryStream();
+            entryStream.CopyTo(ms);
+            Assert.Equal(entry.Size, ms.Length);
+        }
+    }
 }
