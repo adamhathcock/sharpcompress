@@ -70,7 +70,15 @@ public partial class LzwStream
     {
         if (!headerParsed)
         {
-            await ParseHeaderAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await ParseHeaderAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch
+            {
+                eof = true;
+                throw;
+            }
         }
 
         if (eof)
@@ -344,6 +352,17 @@ public partial class LzwStream
                     + maxBits
                     + " bits, but decompression can only handle "
                     + LzwConstants.MAX_BITS
+                    + " bits."
+            );
+        }
+
+        if (maxBits < LzwConstants.INIT_BITS)
+        {
+            throw new InvalidFormatException(
+                "Stream compressed with "
+                    + maxBits
+                    + " bits, but minimum supported is "
+                    + LzwConstants.INIT_BITS
                     + " bits."
             );
         }
