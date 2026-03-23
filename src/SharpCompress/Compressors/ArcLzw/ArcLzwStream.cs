@@ -73,6 +73,10 @@ public partial class ArcLzwStream : Stream
 
         if (useCrunched)
         {
+            if (input.Length == 0)
+            {
+                throw new InvalidFormatException("ArcLzwStream: compressed data is empty");
+            }
             if (input[0] != BITS)
             {
                 throw new InvalidFormatException($"File packed with {input[0]}, expected {BITS}.");
@@ -129,6 +133,10 @@ public partial class ArcLzwStream : Stream
 
             while (code >= 256)
             {
+                if (code >= suffix.Length)
+                {
+                    throw new InvalidFormatException("ArcLzwStream: code out of range");
+                }
                 stack.Push(suffix[code]);
                 code = prefix[code];
             }

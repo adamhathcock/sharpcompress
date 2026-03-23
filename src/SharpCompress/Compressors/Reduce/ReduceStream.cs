@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Reduce;
 
@@ -192,6 +193,10 @@ public partial class ReduceStream : Stream
             return outByte;
         }
         READBITS(bitCountTable[nextByteTable[outByte].Length], out byte nextByteIndex);
+        if (nextByteIndex >= nextByteTable[outByte].Length)
+        {
+            throw new InvalidFormatException("ReduceStream: next byte table index out of range");
+        }
         outByte = nextByteTable[outByte][nextByteIndex];
         return outByte;
     }

@@ -20,7 +20,10 @@ public partial class ExplodeStream
     )
     {
         var ex = new ExplodeStream(inStr, compressedSize, uncompressedSize, generalPurposeBitFlag);
-        await ex.explode_SetTables_async(cancellationToken).ConfigureAwait(false);
+        if (await ex.explode_SetTables_async(cancellationToken).ConfigureAwait(false) != 0)
+        {
+            throw new InvalidFormatException("ExplodeStream: invalid Huffman table data");
+        }
         ex.explode_var_init();
         return ex;
     }

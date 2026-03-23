@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SharpCompress.Common;
 using SharpCompress.Compressors.RLE90;
 
 namespace SharpCompress.Compressors.Squeezed;
@@ -92,6 +93,10 @@ public partial class SqueezeStream : Stream
                 }
                 huffmanDecoded.WriteByte((byte)i);
                 i = 0;
+            }
+            else if (i >= numnodes)
+            {
+                throw new InvalidFormatException("SqueezeStream: invalid Huffman tree node index");
             }
         }
 
