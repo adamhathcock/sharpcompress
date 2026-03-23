@@ -484,7 +484,7 @@ internal partial class CBZip2InputStream : Stream
         }
         for (i = 0; i < alphaSize; i++)
         {
-            if (length[i] >= BZip2Constants.MAX_CODE_LEN - 1)
+            if (length[i] >= BZip2Constants.MAX_CODE_LEN)
             {
                 throw new InvalidFormatException("BZip2: invalid Huffman code length");
             }
