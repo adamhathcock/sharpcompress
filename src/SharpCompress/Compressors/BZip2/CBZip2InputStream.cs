@@ -179,7 +179,10 @@ internal partial class CBZip2InputStream : Stream
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         cbZip2InputStream.BsSetStream(zStream);
-        cbZip2InputStream.Initialize(true);
+        if (!cbZip2InputStream.Initialize(true))
+        {
+            throw new InvalidFormatException("Not a valid BZip2 stream");
+        }
         cbZip2InputStream.InitBlock();
         cbZip2InputStream.SetupBlock();
         return cbZip2InputStream;
@@ -403,6 +406,10 @@ internal partial class CBZip2InputStream : Stream
         int v;
         while (bsLive < n)
         {
+            if (bsStream is null)
+            {
+                CompressedStreamEOF();
+            }
             int zzi;
             int thech = '\0';
             try
@@ -477,6 +484,10 @@ internal partial class CBZip2InputStream : Stream
         }
         for (i = 0; i < alphaSize; i++)
         {
+            if (length[i] >= BZip2Constants.MAX_CODE_LEN - 1)
+            {
+                throw new InvalidFormatException("BZip2: invalid Huffman code length");
+            }
             basev[length[i] + 1]++;
         }
 
@@ -553,6 +564,10 @@ internal partial class CBZip2InputStream : Stream
 
         /* Now the selectors */
         nGroups = BsR(3);
+        if (nGroups < 2 || nGroups > BZip2Constants.N_GROUPS)
+        {
+            throw new InvalidFormatException("BZip2: invalid number of Huffman trees");
+        }
         nSelectors = BsR(15);
         for (i = 0; i < nSelectors; i++)
         {
@@ -560,6 +575,10 @@ internal partial class CBZip2InputStream : Stream
             while (BsR(1) == 1)
             {
                 j++;
+                if (j >= nGroups)
+                {
+                    throw new InvalidFormatException("BZip2: invalid selector MTF value");
+                }
             }
             if (i < BZip2Constants.MAX_SELECTORS)
             {
@@ -582,6 +601,10 @@ internal partial class CBZip2InputStream : Stream
             for (i = 0; i < nSelectors; i++)
             {
                 v = selectorMtf[i];
+                if (v >= nGroups)
+                {
+                    throw new InvalidFormatException("BZip2: selector MTF value out of range");
+                }
                 tmp = pos[v];
                 while (v > 0)
                 {
@@ -689,6 +712,10 @@ internal partial class CBZip2InputStream : Stream
             while (zvec > limit[zt][zn])
             {
                 zn++;
+                if (zn >= BZip2Constants.MAX_CODE_LEN)
+                {
+                    throw new InvalidFormatException("BZip2: Huffman code too long");
+                }
                 {
                     {
                         while (bsLive < 1)
@@ -717,7 +744,14 @@ internal partial class CBZip2InputStream : Stream
                 }
                 zvec = (zvec << 1) | zj;
             }
-            nextSym = perm[zt][zvec - basev[zt][zn]];
+            {
+                int permIdx = zvec - basev[zt][zn];
+                if (permIdx < 0 || permIdx >= perm[zt].Length)
+                {
+                    throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                }
+                nextSym = perm[zt][permIdx];
+            }
         }
 
         while (true)
@@ -760,6 +794,10 @@ internal partial class CBZip2InputStream : Stream
                         while (zvec > limit[zt][zn])
                         {
                             zn++;
+                            if (zn >= BZip2Constants.MAX_CODE_LEN)
+                            {
+                                throw new InvalidFormatException("BZip2: Huffman code too long");
+                            }
                             {
                                 {
                                     while (bsLive < 1)
@@ -788,7 +826,14 @@ internal partial class CBZip2InputStream : Stream
                             }
                             zvec = (zvec << 1) | zj;
                         }
-                        nextSym = perm[zt][zvec - basev[zt][zn]];
+                        {
+                            int permIdx = zvec - basev[zt][zn];
+                            if (permIdx < 0 || permIdx >= perm[zt].Length)
+                            {
+                                throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                            }
+                            nextSym = perm[zt][permIdx];
+                        }
                     }
                 } while (nextSym == BZip2Constants.RUNA || nextSym == BZip2Constants.RUNB);
 
@@ -859,6 +904,10 @@ internal partial class CBZip2InputStream : Stream
                     while (zvec > limit[zt][zn])
                     {
                         zn++;
+                        if (zn >= BZip2Constants.MAX_CODE_LEN)
+                        {
+                            throw new InvalidFormatException("BZip2: Huffman code too long");
+                        }
                         {
                             {
                                 while (bsLive < 1)
@@ -883,7 +932,14 @@ internal partial class CBZip2InputStream : Stream
                         }
                         zvec = (zvec << 1) | zj;
                     }
-                    nextSym = perm[zt][zvec - basev[zt][zn]];
+                    {
+                        int permIdx = zvec - basev[zt][zn];
+                        if (permIdx < 0 || permIdx >= perm[zt].Length)
+                        {
+                            throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                        }
+                        nextSym = perm[zt][permIdx];
+                    }
                 }
             }
         }
@@ -907,10 +963,18 @@ internal partial class CBZip2InputStream : Stream
         for (i = 0; i <= last; i++)
         {
             ch = ll8[i];
+            if (cftab[ch] < 0 || cftab[ch] >= tt.Length)
+            {
+                throw new InvalidFormatException("BZip2: block data out of bounds");
+            }
             tt[cftab[ch]] = i;
             cftab[ch]++;
         }
 
+        if (origPtr < 0 || origPtr >= tt.Length)
+        {
+            throw new InvalidFormatException("BZip2: origPtr out of bounds");
+        }
         tPos = tt[origPtr];
 
         count = 0;
