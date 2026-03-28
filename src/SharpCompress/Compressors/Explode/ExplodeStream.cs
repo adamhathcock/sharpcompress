@@ -61,7 +61,10 @@ public partial class ExplodeStream : Stream
     )
     {
         var ex = new ExplodeStream(inStr, compressedSize, uncompressedSize, generalPurposeBitFlag);
-        ex.explode_SetTables();
+        if (ex.explode_SetTables() != 0)
+        {
+            throw new InvalidFormatException("ExplodeStream: invalid Huffman table data");
+        }
         ex.explode_var_init();
         return ex;
     }

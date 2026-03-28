@@ -208,6 +208,10 @@ internal sealed class HuffmanTree
 
                     do
                     {
+                        if (index < 0 || index >= array.Length)
+                        {
+                            throw new InvalidFormatException("Deflate64: invalid Huffman data");
+                        }
                         var value = array[index];
 
                         if (value == 0)
