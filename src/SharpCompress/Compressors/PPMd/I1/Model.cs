@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 // This is a port of Dmitry Shkarin's PPMd Variant I Revision 1.
 // Ported by Michael Bone (mjbone03@yahoo.com.au).
@@ -253,6 +254,10 @@ internal partial class Model
         _coder.RangeDecoderInitialize(source);
         StartModel(properties.ModelOrder, properties.RestorationMethod);
         _minimumContext = _maximumContext;
+        if (_minimumContext == PpmContext.ZERO)
+        {
+            throw new InvalidFormatException("PPMd: model context not initialized");
+        }
         _numberStatistics = _minimumContext.NumberStatistics;
         return _coder;
     }
@@ -268,6 +273,10 @@ internal partial class Model
         await _coder.RangeDecoderInitializeAsync(source, cancellationToken).ConfigureAwait(false);
         StartModel(properties.ModelOrder, properties.RestorationMethod);
         _minimumContext = _maximumContext;
+        if (_minimumContext == PpmContext.ZERO)
+        {
+            throw new InvalidFormatException("PPMd: model context not initialized");
+        }
         _numberStatistics = _minimumContext.NumberStatistics;
         return _coder;
     }
@@ -429,13 +438,16 @@ internal partial class Model
         if (modelOrder < 2)
         {
             _orderFall = _modelOrder;
-            for (
-                var context = _maximumContext;
-                context.Suffix != PpmContext.ZERO;
-                context = context.Suffix
-            )
+            if (_maximumContext != PpmContext.ZERO)
             {
-                _orderFall--;
+                for (
+                    var context = _maximumContext;
+                    context.Suffix != PpmContext.ZERO;
+                    context = context.Suffix
+                )
+                {
+                    _orderFall--;
+                }
             }
             return;
         }

@@ -99,6 +99,10 @@ public partial class SqueezeStream
                 huffmanDecoded.WriteByte((byte)i);
                 i = 0;
             }
+            else if (i >= numnodes)
+            {
+                throw new InvalidFormatException("SqueezeStream: invalid Huffman tree node index");
+            }
         }
 
         huffmanDecoded.Position = 0;

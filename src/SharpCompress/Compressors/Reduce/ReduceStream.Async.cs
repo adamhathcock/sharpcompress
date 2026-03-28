@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Reduce;
@@ -96,6 +97,10 @@ public partial class ReduceStream
                 cancellationToken
             )
             .ConfigureAwait(false);
+        if (nextByteIndex >= nextByteTable[outByte].Length)
+        {
+            throw new InvalidFormatException("ReduceStream: next byte table index out of range");
+        }
         outByte = nextByteTable[outByte][nextByteIndex];
         return outByte;
     }

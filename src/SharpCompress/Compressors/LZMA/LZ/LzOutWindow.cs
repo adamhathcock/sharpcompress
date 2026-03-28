@@ -5,6 +5,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA.LZ;
 
@@ -25,6 +26,10 @@ internal partial class OutWindow : IDisposable
 
     public void Create(int windowSize)
     {
+        if (windowSize <= 0)
+        {
+            throw new InvalidFormatException($"LZMA: invalid dictionary size {windowSize}");
+        }
         if (_windowSize != windowSize)
         {
             if (_buffer is not null)
