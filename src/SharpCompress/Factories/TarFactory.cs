@@ -59,6 +59,7 @@ public class TarFactory
             if (wrapper.IsMatch(sharpCompressStream))
             {
                 sharpCompressStream.Rewind();
+                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = CreateProbeDecompressionStream(
                     sharpCompressStream,
                     wrapper.CompressionType,
@@ -95,6 +96,7 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
+                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = await CreateProbeDecompressionStreamAsync(
                         sharpCompressStream,
                         wrapper.CompressionType,
@@ -326,6 +328,7 @@ public class TarFactory
             if (wrapper.IsMatch(sharpCompressStream))
             {
                 sharpCompressStream.Rewind();
+                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = CreateProbeDecompressionStream(
                     sharpCompressStream,
                     wrapper.CompressionType,
@@ -363,6 +366,7 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
+                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = await CreateProbeDecompressionStreamAsync(
                         sharpCompressStream,
                         wrapper.CompressionType,

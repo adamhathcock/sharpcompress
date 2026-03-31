@@ -107,6 +107,7 @@ public partial class TarReader
             }
 
             sharpCompressStream.Position = pos;
+            sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
             var testStream = await CreateProbeDecompressionStreamAsync(
                     sharpCompressStream,
                     wrapper.CompressionType,
@@ -182,6 +183,7 @@ public partial class TarReader
             }
 
             sharpCompressStream.Position = pos;
+            sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
             var testStream = CreateProbeDecompressionStream(
                 sharpCompressStream,
                 wrapper.CompressionType,

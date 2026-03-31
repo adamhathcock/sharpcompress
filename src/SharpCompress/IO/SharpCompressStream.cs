@@ -202,6 +202,37 @@ public partial class SharpCompressStream : Stream, IStreamStack
         _isRecording = true;
     }
 
+    /// <summary>
+    /// Ensures the ring buffer has at least the specified minimum capacity.
+    /// If the current buffer is smaller, it is replaced with a larger one while
+    /// preserving all existing buffered data. Call this after detecting a compression
+    /// format that requires a larger buffer for format detection (e.g. BZip2 whose
+    /// first block can be up to 900 KB of compressed data).
+    /// </summary>
+    /// <param name="minSize">Minimum required ring buffer capacity in bytes.</param>
+    internal void EnsureMinimumRewindBufferSize(int minSize)
+    {
+        if (_isPassthrough || _ringBuffer is null || _ringBuffer.Capacity >= minSize)
+        {
+            return;
+        }
+
+        // Create a new larger buffer with the required capacity
+        var newBuffer = new RingBuffer(minSize);
+
+        // Preserve existing buffered data in the new buffer
+        var existingLength = _ringBuffer.Length;
+        if (existingLength > 0)
+        {
+            var existingData = new byte[existingLength];
+            _ringBuffer.ReadFromEnd(existingLength, existingData, 0, existingLength);
+            newBuffer.Write(existingData, 0, existingLength);
+        }
+
+        _ringBuffer.Dispose();
+        _ringBuffer = newBuffer;
+    }
+
     public override bool CanRead => true;
 
     public override bool CanSeek => !_isPassthrough || stream.CanSeek;

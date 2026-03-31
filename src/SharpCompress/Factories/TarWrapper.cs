@@ -22,13 +22,23 @@ public class TarWrapper(
     Func<Stream, Stream> createStream,
     Func<Stream, CancellationToken, ValueTask<Stream>> createStreamAsync,
     IEnumerable<string> knownExtensions,
-    bool wrapInSharpCompressStream = true
+    bool wrapInSharpCompressStream = true,
+    int? minimumRewindBufferSize = null
 )
 {
     public CompressionType CompressionType { get; } = type;
     public Func<Stream, bool> IsMatch { get; } = canHandle;
     public Func<Stream, CancellationToken, ValueTask<bool>> IsMatchAsync { get; } = canHandleAsync;
     public bool WrapInSharpCompressStream { get; } = wrapInSharpCompressStream;
+
+    /// <summary>
+    /// The minimum ring buffer size required to detect and probe this format.
+    /// Format detection reads a decompressed block to check the tar header, so
+    /// the ring buffer must be large enough to hold the compressed bytes consumed
+    /// during that probe. Defaults to <see cref="Common.Constants.RewindableBufferSize"/>.
+    /// </summary>
+    public int MinimumRewindBufferSize { get; } =
+        minimumRewindBufferSize ?? Common.Constants.RewindableBufferSize;
 
     public Func<Stream, Stream> CreateStream { get; } = createStream;
     public Func<Stream, CancellationToken, ValueTask<Stream>> CreateStreamAsync { get; } =
@@ -57,7 +67,11 @@ public class TarWrapper(
                 await BZip2Stream
                     .CreateAsync(stream, CompressionMode.Decompress, false)
                     .ConfigureAwait(false),
-            ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"]
+            ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"],
+            // BZip2 decompresses in whole blocks; the compressed size of the first block
+            // can be close to the uncompressed maximum (9 × 100 000 = 900 000 bytes).
+            // The ring buffer must hold all compressed bytes read during format detection.
+            minimumRewindBufferSize: BZip2Constants.baseBlockSize * 9
         ),
         new(
             CompressionType.GZip,
