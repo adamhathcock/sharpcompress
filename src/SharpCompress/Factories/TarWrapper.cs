@@ -88,7 +88,11 @@ public class TarWrapper(
             ZStandardStream.IsZStandardAsync,
             (stream) => new ZStandardStream(stream),
             (stream, _) => new ValueTask<Stream>(new ZStandardStream(stream)),
-            ["tar.zst", "tar.zstd", "tzst", "tzstd"]
+            ["tar.zst", "tar.zstd", "tzst", "tzstd"],
+            // ZStandard decompresses in blocks; the compressed size of the first block
+            // can be up to ZSTD_BLOCKSIZE_MAX + ZSTD_blockHeaderSize = 131075 bytes.
+            // The ring buffer must hold all compressed bytes read during format detection.
+            minimumRewindBufferSize: ZstandardConstants.DStreamInSize
         ),
         new(
             CompressionType.LZip,
