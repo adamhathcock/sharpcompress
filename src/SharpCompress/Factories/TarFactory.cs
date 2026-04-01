@@ -52,14 +52,13 @@ public class TarFactory
     {
         var providers = CompressionProviderRegistry.Default;
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
             if (wrapper.IsMatch(sharpCompressStream))
             {
                 sharpCompressStream.Rewind();
-                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = CreateProbeDecompressionStream(
                     sharpCompressStream,
                     wrapper.CompressionType,
@@ -85,7 +84,7 @@ public class TarFactory
     {
         var providers = CompressionProviderRegistry.Default;
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
@@ -96,7 +95,6 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
-                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = await CreateProbeDecompressionStreamAsync(
                         sharpCompressStream,
                         wrapper.CompressionType,
@@ -321,14 +319,13 @@ public class TarFactory
     {
         options ??= new ReaderOptions();
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
             if (wrapper.IsMatch(sharpCompressStream))
             {
                 sharpCompressStream.Rewind();
-                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = CreateProbeDecompressionStream(
                     sharpCompressStream,
                     wrapper.CompressionType,
@@ -355,7 +352,7 @@ public class TarFactory
         cancellationToken.ThrowIfCancellationRequested();
         options ??= new ReaderOptions();
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
@@ -366,7 +363,6 @@ public class TarFactory
             )
             {
                 sharpCompressStream.Rewind();
-                sharpCompressStream.EnsureMinimumRewindBufferSize(wrapper.MinimumRewindBufferSize);
                 var decompressedStream = await CreateProbeDecompressionStreamAsync(
                         sharpCompressStream,
                         wrapper.CompressionType,

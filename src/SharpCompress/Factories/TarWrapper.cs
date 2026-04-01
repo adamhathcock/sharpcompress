@@ -118,4 +118,25 @@ public class TarWrapper(
             false
         ),
     ];
+
+    /// <summary>
+    /// The largest <see cref="MinimumRewindBufferSize"/> across all registered wrappers.
+    /// Use this as the ring buffer size when creating a stream for Tar format detection so
+    /// that the buffer is sized correctly at construction and never needs to be reallocated.
+    /// </summary>
+    public static int MaximumRewindBufferSize { get; } = GetMaximumRewindBufferSize();
+
+    // Computed after Wrappers is initialised so the static initialisation order is safe.
+    private static int GetMaximumRewindBufferSize()
+    {
+        var max = 0;
+        foreach (var w in Wrappers)
+        {
+            if (w.MinimumRewindBufferSize > max)
+            {
+                max = w.MinimumRewindBufferSize;
+            }
+        }
+        return max;
+    }
 }
