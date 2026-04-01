@@ -706,6 +706,10 @@ internal partial class CBZip2InputStream : Stream
                 groupPos = BZip2Constants.G_SIZE;
             }
             groupPos--;
+            if (groupNo < 0 || groupNo >= selector.Length)
+            {
+                throw new InvalidFormatException("BZip2: group selector out of range");
+            }
             zt = selector[groupNo];
             zn = minLens[zt];
             zvec = BsR(zn);
@@ -788,6 +792,10 @@ internal partial class CBZip2InputStream : Stream
                             groupPos = BZip2Constants.G_SIZE;
                         }
                         groupPos--;
+                        if (groupNo < 0 || groupNo >= selector.Length)
+                        {
+                            throw new InvalidFormatException("BZip2: group selector out of range");
+                        }
                         zt = selector[groupNo];
                         zn = minLens[zt];
                         zvec = BsR(zn);
@@ -862,6 +870,10 @@ internal partial class CBZip2InputStream : Stream
                     BlockOverrun();
                 }
 
+                if (nextSym - 1 < 0 || nextSym - 1 >= yy.Length)
+                {
+                    throw new InvalidFormatException("BZip2: symbol out of range");
+                }
                 tmp = yy[nextSym - 1];
                 unzftab[seqToUnseq[tmp]]++;
                 ll8[last] = seqToUnseq[tmp];
@@ -898,6 +910,10 @@ internal partial class CBZip2InputStream : Stream
                         groupPos = BZip2Constants.G_SIZE;
                     }
                     groupPos--;
+                    if (groupNo < 0 || groupNo >= selector.Length)
+                    {
+                        throw new InvalidFormatException("BZip2: group selector out of range");
+                    }
                     zt = selector[groupNo];
                     zn = minLens[zt];
                     zvec = BsR(zn);
