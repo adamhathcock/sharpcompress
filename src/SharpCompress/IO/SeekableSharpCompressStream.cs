@@ -80,7 +80,7 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
         }
     }
 
-    public override void StartRecording(int minBufferSize = 0) =>
+    public override void StartRecording(int? minBufferSize = null) =>
         _recordedPosition = _stream.Position;
 
     public override void StopRecording() => _recordedPosition = null;

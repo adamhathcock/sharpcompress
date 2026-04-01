@@ -179,13 +179,13 @@ public partial class SharpCompressStream : Stream, IStreamStack
     /// Begins recording reads so that <see cref="Rewind()"/> can replay them.
     /// </summary>
     /// <param name="minBufferSize">
-    /// Minimum ring buffer capacity in bytes. When greater than zero and larger than
+    /// Minimum ring buffer capacity in bytes. When provided and larger than
     /// <see cref="Common.Constants.RewindableBufferSize"/>, the ring buffer is allocated
     /// with this size. Pass the largest amount of compressed data that may be consumed
     /// during format detection before the first rewind. Defaults to
-    /// <see cref="Common.Constants.RewindableBufferSize"/> when zero or not supplied.
+    /// <see cref="Common.Constants.RewindableBufferSize"/> when null or not supplied.
     /// </param>
-    public virtual void StartRecording(int minBufferSize = 0)
+    public virtual void StartRecording(int? minBufferSize = null)
     {
         if (_isPassthrough)
         {
@@ -204,8 +204,8 @@ public partial class SharpCompressStream : Stream, IStreamStack
         if (_ringBuffer is null)
         {
             var size =
-                minBufferSize > Constants.RewindableBufferSize
-                    ? minBufferSize
+                minBufferSize.GetValueOrDefault() > Constants.RewindableBufferSize
+                    ? minBufferSize.GetValueOrDefault()
                     : Constants.RewindableBufferSize;
             _ringBuffer = new RingBuffer(size);
         }
