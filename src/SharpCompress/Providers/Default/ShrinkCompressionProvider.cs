@@ -27,12 +27,7 @@ public sealed class ShrinkCompressionProvider : ContextRequiredDecompressionProv
     {
         ValidateRequiredSizes(context, "Shrink");
 
-        return new ShrinkStream(
-            source,
-            CompressionMode.Decompress,
-            context.InputSize,
-            context.OutputSize
-        );
+        return new ShrinkStream(source, context.OutputSize);
     }
 
     public override async ValueTask<Stream> CreateDecompressStreamAsync(
