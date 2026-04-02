@@ -33,29 +33,13 @@ internal partial class ShrinkStream : Stream
             return;
         }
 
-        // Read all compressed data asynchronously
-        var src = new byte[_compressedSize];
-        int bytesRead = 0;
-        int totalBytesRead = 0;
-
-        while (totalBytesRead < (int)_compressedSize)
-        {
-            bytesRead = await inStream
-                .ReadAsync(
-                    src,
-                    totalBytesRead,
-                    (int)_compressedSize - totalBytesRead,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-            if (bytesRead == 0)
-            {
-                throw new IncompleteArchiveException(
-                    "Unexpected end of stream while reading compressed data"
-                );
-            }
-            totalBytesRead += bytesRead;
-        }
+        // Read actual compressed data from stream rather than pre-allocating based on the
+        // declared compressed size, which may be crafted to cause an OutOfMemoryException.
+        // The stream is already bounded by ReadOnlySubStream in ZipFilePart.
+        using var srcMs = new MemoryStream();
+        await inStream.CopyToAsync(srcMs, 81920, cancellationToken).ConfigureAwait(false);
+        var src = srcMs.ToArray();
+        var srcLen = src.Length;
 
         // Decompress synchronously (CPU-bound operation)
         var srcUsed = 0;
@@ -63,7 +47,7 @@ internal partial class ShrinkStream : Stream
 
         HwUnshrink.Unshrink(
             src,
-            (int)_compressedSize,
+            srcLen,
             out srcUsed,
             _byteOut,
             (int)_uncompressedSize,

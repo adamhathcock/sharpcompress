@@ -115,16 +115,24 @@ public partial class ReduceStream : Stream
 
     private int bitBufferCount;
     private ulong bitBuffer;
+    private bool _inputExhausted;
 
     private int NEXTBYTE()
     {
         if (inByteCount == compressedSize)
         {
+            _inputExhausted = true;
             return EOF;
         }
 
         inByteCount++;
-        return inStream.ReadByte();
+        int b = inStream.ReadByte();
+        if (b < 0)
+        {
+            _inputExhausted = true;
+            return EOF;
+        }
+        return b;
     }
 
     private void READBITS(int nbits, out byte zdest)
@@ -208,6 +216,13 @@ public partial class ReduceStream : Stream
         {
             if (length == 0)
             {
+                if (_inputExhausted && bitBufferCount <= 0)
+                {
+                    throw new InvalidFormatException(
+                        "ReduceStream: compressed data exhausted before uncompressed size reached"
+                    );
+                }
+
                 byte nextByte = GetNextByte();
                 if (nextByte != RunLengthCode)
                 {

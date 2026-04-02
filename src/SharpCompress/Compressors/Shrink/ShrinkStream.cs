@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using SharpCompress;
 
 namespace SharpCompress.Compressors.Shrink;
 
@@ -8,7 +7,6 @@ internal partial class ShrinkStream : Stream
 {
     private Stream inStream;
 
-    private ulong _compressedSize;
     private long _uncompressedSize;
     private byte[] _byteOut;
     private long _outBytesCount;
@@ -24,7 +22,6 @@ internal partial class ShrinkStream : Stream
     {
         inStream = stream;
 
-        _compressedSize = (ulong)compressedSize;
         _uncompressedSize = uncompressedSize;
         _byteOut = new byte[_uncompressedSize];
         _outBytesCount = 0L;
@@ -55,14 +52,19 @@ internal partial class ShrinkStream : Stream
     {
         if (!_decompressed)
         {
-            var src = new byte[_compressedSize];
-            inStream.ReadExact(src, 0, (int)_compressedSize);
+            // Read actual compressed data from stream rather than pre-allocating based on the
+            // declared compressed size, which may be crafted to cause an OutOfMemoryException.
+            // The stream is already bounded by ReadOnlySubStream in ZipFilePart.
+            using var srcMs = new MemoryStream();
+            inStream.CopyTo(srcMs);
+            var src = srcMs.ToArray();
+            var srcLen = src.Length;
             var srcUsed = 0;
             var dstUsed = 0;
 
             HwUnshrink.Unshrink(
                 src,
-                (int)_compressedSize,
+                srcLen,
                 out srcUsed,
                 _byteOut,
                 (int)_uncompressedSize,

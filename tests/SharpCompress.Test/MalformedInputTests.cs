@@ -130,5 +130,50 @@ public class MalformedInputTests
             "504b03040a0200000e001c0068646c6c6f2e7478745554ac507578000000000000000000000000000000000000000000e80300000000000068030a0000000000147f040020303a360600002e7478745554090003a8c8b6696045ac69f5780b0006ff1d000908180000e8030000000000a4810000109a9a9a8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b9a0000000000000000000000e80300000000000068030a0000009a9a9a504b03440a6fcb486c6c6f2e74ffff"
         );
     }
+
+    [Fact]
+    public void Reduce_DecompressionBomb_Method2_ThrowsLibraryException()
+    {
+        // 31-byte ZIP using Reduce method 2 with declared uncompressed size far exceeding the
+        // actual compressed data - the decompressor must not generate unbounded output.
+        VerifyMalformedInputThrowsLibraryException(
+            "504b03040a000000020000000200f7ff0500f7ff05ff200600180700000000"
+        );
+    }
+
+    [Fact]
+    public void Deflate64_HuffmanTree_IndexOutOfRange_ThrowsLibraryException()
+    {
+        // 105-byte ZIP using Deflate64 with invalid Huffman code lengths causing IOOB in CreateTable
+        VerifyMalformedInputThrowsLibraryException(
+            "504b03040a00005409000088c8b669757800009ac8b66975783606000000640028b52ffd047fff"
+                + "02009a888888888820313735303600303132002030007573746172202000757001307230819b75"
+                + "72756e7475410a000c2000391eeb061ffe391eeb068f0c0a000c20"
+        );
+    }
+
+    [Fact]
+    public void BZip2_GetAndMoveToFrontDecode_IndexOutOfRange_ThrowsLibraryException()
+    {
+        // 93-byte BZip2 stream triggering IOOB deeper in GetAndMoveToFrontDecode
+        VerifyMalformedInputThrowsLibraryException(
+            "425a6839314159265359c1c080e2000001410000100244a00100808b640006000775780b2ef2ed"
+                + "0001393beb06060606060606060606f9050605060606060f0654090003ffffff7f003403"
+                + "0a0002001f8b7fff0000000000e98b8b3931"
+        );
+    }
+
+    [Fact]
+    public void Zip_ShrinkOOM_CraftedCompressedSize_ThrowsLibraryException()
+    {
+        // 122-byte ZIP with Shrink compression and compressed size set to 0x7FFFFFFF (2 GB).
+        // The library must not attempt to allocate a 2 GB buffer based on the untrusted header.
+        VerifyMalformedInputThrowsLibraryException(
+            "504b03040a0000000100147f6f5c20303a36ffffff7f0600000009001c0068656c6c6f2e747874"
+                + "5554090003a8c8b6696045ac6975780b01e8303a36060000000600000009001800000001004f2a"
+                + "2a2a2a0c2000395d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d000004e8303a360600000006000000"
+                + "0900180000"
+        );
+    }
 }
 #endif
