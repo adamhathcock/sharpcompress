@@ -9,8 +9,6 @@ internal partial class ShrinkStream : Stream
 {
     internal static async ValueTask<ShrinkStream> CreateAsync(
         Stream stream,
-        CompressionMode compressionMode,
-        long compressedSize,
         long uncompressedSize,
         CancellationToken cancellationToken = default
     )

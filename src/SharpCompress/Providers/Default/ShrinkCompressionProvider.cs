@@ -39,13 +39,7 @@ public sealed class ShrinkCompressionProvider : ContextRequiredDecompressionProv
         ValidateRequiredSizes(context, "Shrink");
 
         return await ShrinkStream
-            .CreateAsync(
-                source,
-                CompressionMode.Decompress,
-                context.InputSize,
-                context.OutputSize,
-                cancellationToken
-            )
+            .CreateAsync(source, context.OutputSize, cancellationToken)
             .ConfigureAwait(false);
     }
 }
