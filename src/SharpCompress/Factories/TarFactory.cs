@@ -52,7 +52,7 @@ public class TarFactory
     {
         var providers = CompressionProviderRegistry.Default;
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
@@ -84,7 +84,7 @@ public class TarFactory
     {
         var providers = CompressionProviderRegistry.Default;
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
@@ -319,7 +319,7 @@ public class TarFactory
     {
         options ??= new ReaderOptions();
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
@@ -352,7 +352,7 @@ public class TarFactory
         cancellationToken.ThrowIfCancellationRequested();
         options ??= new ReaderOptions();
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording();
+        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
             sharpCompressStream.Rewind();
