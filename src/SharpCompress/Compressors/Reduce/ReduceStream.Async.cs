@@ -26,6 +26,7 @@ public partial class ReduceStream
     {
         if (inByteCount == compressedSize)
         {
+            _inputExhausted = true;
             return EOF;
         }
 
@@ -35,6 +36,7 @@ public partial class ReduceStream
             .ConfigureAwait(false);
         if (bytesRead == 0)
         {
+            _inputExhausted = true;
             return EOF;
         }
 
@@ -117,6 +119,13 @@ public partial class ReduceStream
         {
             if (length == 0)
             {
+                if (_inputExhausted && bitBufferCount <= 0)
+                {
+                    throw new InvalidFormatException(
+                        "ReduceStream: compressed data exhausted before uncompressed size reached"
+                    );
+                }
+
                 byte nextByte = await GetNextByteAsync(cancellationToken).ConfigureAwait(false);
                 if (nextByte != RunLengthCode)
                 {

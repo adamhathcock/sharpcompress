@@ -1,38 +1,33 @@
 using System;
 using System.IO;
-using SharpCompress;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Shrink;
 
 internal partial class ShrinkStream : Stream
 {
-    private Stream inStream;
+    private readonly Stream _inStream;
 
-    private ulong _compressedSize;
-    private long _uncompressedSize;
-    private byte[] _byteOut;
+    private readonly long _uncompressedSize;
+    private readonly byte[] _byteOut;
     private long _outBytesCount;
     private bool _decompressed;
     private long _position;
 
-    public ShrinkStream(
-        Stream stream,
-        CompressionMode compressionMode,
-        long compressedSize,
-        long uncompressedSize
-    )
+    public ShrinkStream(Stream stream, long uncompressedSize)
     {
-        inStream = stream;
+        if (uncompressedSize > int.MaxValue)
+        {
+            throw new InvalidFormatException(
+                $"Shrink: declared uncompressed size {uncompressedSize} exceeds maximum supported size."
+            );
+        }
 
-        _compressedSize = (ulong)compressedSize;
+        _inStream = stream;
+
         _uncompressedSize = uncompressedSize;
-        _byteOut = new byte[_uncompressedSize];
+        _byteOut = new byte[(int)_uncompressedSize];
         _outBytesCount = 0L;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
     }
 
     public override bool CanRead => true;
@@ -55,18 +50,21 @@ internal partial class ShrinkStream : Stream
     {
         if (!_decompressed)
         {
-            var src = new byte[_compressedSize];
-            inStream.ReadExact(src, 0, (int)_compressedSize);
-            var srcUsed = 0;
-            var dstUsed = 0;
+            // Read actual compressed data from the stream rather than pre-allocating based on the
+            // declared compressed size, which may be crafted to cause an OutOfMemoryException.
+            // The stream is already bounded by ReadOnlySubStream in ZipFilePart.
+            using var srcMs = new MemoryStream();
+            _inStream.CopyTo(srcMs);
+            var src = srcMs.ToArray();
+            var srcLen = src.Length;
 
             HwUnshrink.Unshrink(
                 src,
-                (int)_compressedSize,
-                out srcUsed,
+                srcLen,
+                out _,
                 _byteOut,
                 (int)_uncompressedSize,
-                out dstUsed
+                out var dstUsed
             );
             _outBytesCount = dstUsed;
             _decompressed = true;
