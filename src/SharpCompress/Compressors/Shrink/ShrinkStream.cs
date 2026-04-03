@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Shrink;
 
@@ -15,10 +16,17 @@ internal partial class ShrinkStream : Stream
 
     public ShrinkStream(Stream stream, long uncompressedSize)
     {
+        if (uncompressedSize > int.MaxValue)
+        {
+            throw new InvalidFormatException(
+                $"Shrink: declared uncompressed size {uncompressedSize} exceeds maximum supported size."
+            );
+        }
+
         _inStream = stream;
 
         _uncompressedSize = uncompressedSize;
-        _byteOut = new byte[_uncompressedSize];
+        _byteOut = new byte[(int)_uncompressedSize];
         _outBytesCount = 0L;
     }
 

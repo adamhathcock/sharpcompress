@@ -2,7 +2,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.Shrink;
 
 namespace SharpCompress.Providers.Default;
