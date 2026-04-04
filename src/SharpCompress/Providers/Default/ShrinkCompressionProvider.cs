@@ -2,7 +2,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Compressors;
 using SharpCompress.Compressors.Shrink;
 
 namespace SharpCompress.Providers.Default;
@@ -27,12 +26,7 @@ public sealed class ShrinkCompressionProvider : ContextRequiredDecompressionProv
     {
         ValidateRequiredSizes(context, "Shrink");
 
-        return new ShrinkStream(
-            source,
-            CompressionMode.Decompress,
-            context.InputSize,
-            context.OutputSize
-        );
+        return new ShrinkStream(source, context.OutputSize);
     }
 
     public override async ValueTask<Stream> CreateDecompressStreamAsync(
@@ -44,13 +38,7 @@ public sealed class ShrinkCompressionProvider : ContextRequiredDecompressionProv
         ValidateRequiredSizes(context, "Shrink");
 
         return await ShrinkStream
-            .CreateAsync(
-                source,
-                CompressionMode.Decompress,
-                context.InputSize,
-                context.OutputSize,
-                cancellationToken
-            )
+            .CreateAsync(source, context.OutputSize, cancellationToken)
             .ConfigureAwait(false);
     }
 }

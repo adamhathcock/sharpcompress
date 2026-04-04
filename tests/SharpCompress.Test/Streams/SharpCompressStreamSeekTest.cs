@@ -127,4 +127,58 @@ public class SharpCompressStreamSeekTest
         Assert.Equal(3, readBuffer[0]);
         Assert.Equal(4, readBuffer[1]);
     }
+
+    [Fact]
+    public void StartRecording_WithLargerMinBufferSize_AllowsLargeRewind()
+    {
+        // Simulates the BZip2 scenario: the ring buffer must be large enough
+        // from the moment StartRecording is called so that a large probe read
+        // (up to 900 KB for BZip2) can be rewound without buffer overflow.
+        const int largeSize = 100;
+        const int largeReadSize = 80;
+
+        var data = new byte[100];
+        for (var i = 0; i < data.Length; i++)
+        {
+            data[i] = (byte)(i + 1);
+        }
+
+        var ms = new MemoryStream(data);
+        var nonSeekableMs = new NonSeekableStreamWrapper(ms);
+        var stream = SharpCompressStream.Create(nonSeekableMs, largeSize);
+
+        // Pass the required size upfront — no expansion needed later
+        stream.StartRecording(largeSize);
+
+        // Read a large amount (simulating BZip2 block decompression during IsTarFile probe)
+        var largeBuffer = new byte[largeReadSize];
+        stream.Read(largeBuffer, 0, largeReadSize);
+
+        // Rewind must succeed because the buffer was large enough from the start
+        stream.Rewind();
+
+        var verifyBuffer = new byte[largeReadSize];
+        stream.Read(verifyBuffer, 0, largeReadSize);
+        Assert.Equal(data[0], verifyBuffer[0]);
+        Assert.Equal(data[largeReadSize - 1], verifyBuffer[largeReadSize - 1]);
+    }
+
+    [Fact]
+    public void StartRecording_DefaultSize_UsesConstantsRewindableBufferSize()
+    {
+        // When no minimum is specified StartRecording uses the global default.
+        var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+        var nonSeekableMs = new NonSeekableStreamWrapper(ms);
+        var stream = SharpCompressStream.Create(nonSeekableMs);
+        stream.StartRecording();
+
+        var buffer = new byte[5];
+        stream.Read(buffer, 0, 5);
+        stream.Rewind();
+
+        var readBuffer = new byte[5];
+        stream.Read(readBuffer, 0, 5);
+        Assert.Equal(1, readBuffer[0]);
+        Assert.Equal(5, readBuffer[4]);
+    }
 }

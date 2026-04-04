@@ -22,9 +22,11 @@ public static class Constants
     /// by rewinding and re-reading the same data.
     /// </para>
     /// <para>
-    /// <b>Default:</b> 163840 bytes (160KB) - sized to cover ZStandard's worst-case
-    /// first block on a tar archive (~131KB including frame header overhead).
-    /// ZStandard blocks can be up to 128KB, exceeding the previous 81KB default.
+    /// <b>Default:</b> 81920 bytes (80KB) — sufficient for most formats.
+    /// Formats that require larger buffers (e.g. BZip2, ZStandard) declare their
+    /// own minimum via <c>TarWrapper.MinimumRewindBufferSize</c>, and
+    /// <c>TarWrapper.MaximumRewindBufferSize</c> is used at stream construction
+    /// to ensure the correct capacity is allocated upfront.
     /// </para>
     /// <para>
     /// <b>Typical usage:</b> 500-1000 bytes for most archives
@@ -41,7 +43,7 @@ public static class Constants
     /// </list>
     /// </para>
     /// </remarks>
-    public static int RewindableBufferSize { get; set; } = 163840;
+    public static int RewindableBufferSize { get; set; } = 81920;
 
     public static CultureInfo DefaultCultureInfo { get; set; } = CultureInfo.InvariantCulture;
 }
