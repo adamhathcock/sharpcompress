@@ -54,49 +54,28 @@ public class PooledMemoryStreamTests
     }
 
     [Fact]
-    public void BufferConstructorCopiesDataAndIsNonExpandable()
+    public void TryGetBufferReturnsSegmentWhenOpen()
     {
-        var backing = Enumerable.Range(0, 10).Select(i => (byte)i).ToArray();
-        using var stream = new PooledMemoryStream(
-            backing,
-            2,
-            4,
-            writable: true,
-            publiclyVisible: true
-        );
+        using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8);
+        stream.Write(new byte[] { 1, 2, 3, 4 }, 0, 4);
 
-        Assert.Equal(4, stream.Length);
-        Assert.Equal(4, stream.Capacity);
-
-        backing[2] = 255;
-        Assert.Equal(new byte[] { 2, 3, 4, 5 }, stream.ToArray());
-
-        Assert.Throws<NotSupportedException>(() => stream.Capacity = 5);
+        Assert.True(stream.TryGetBuffer(out var segment));
+        Assert.Equal(0, segment.Offset);
+        Assert.Equal(4, segment.Count);
+        Assert.Equal(1, segment.Array![0]);
     }
 
     [Fact]
-    public void BufferConstructorTryGetBufferRespectsVisibilityFlag()
+    public void CapacitySetterCanGrowAndShrinkWithinLength()
     {
-        var backing = new byte[10];
-        using var hidden = new PooledMemoryStream(
-            backing,
-            1,
-            5,
-            writable: true,
-            publiclyVisible: false
-        );
-        Assert.False(hidden.TryGetBuffer(out _));
+        using var stream = new PooledMemoryStream(capacity: 16, blockSize: 8);
+        stream.Write(new byte[6], 0, 6);
 
-        using var visible = new PooledMemoryStream(
-            backing,
-            1,
-            5,
-            writable: true,
-            publiclyVisible: true
-        );
-        Assert.True(visible.TryGetBuffer(out var segment));
-        Assert.Equal(0, segment.Offset);
-        Assert.Equal(5, segment.Count);
+        stream.Capacity = 24;
+        Assert.Equal(24, stream.Capacity);
+
+        stream.Capacity = 8;
+        Assert.Equal(8, stream.Capacity);
     }
 
     [Fact]

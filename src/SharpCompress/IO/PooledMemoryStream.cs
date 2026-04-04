@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
@@ -12,8 +13,6 @@ namespace SharpCompress.IO;
 /// </summary>
 public sealed class PooledMemoryStream : MemoryStream
 {
-    public const int DefaultBlockSize = 81920;
-
     private const int MaxStreamLength = int.MaxValue;
 
     private enum StorageMode
@@ -33,11 +32,6 @@ public sealed class PooledMemoryStream : MemoryStream
 
     private bool _contiguousBufferExposed;
     private bool _isOpen;
-    private bool _writable;
-    private bool _expandable;
-    private bool _exposable;
-
-    private int _origin;
     private int _position;
     private int _length;
     private int _capacity;
@@ -47,7 +41,7 @@ public sealed class PooledMemoryStream : MemoryStream
         : this(0) { }
 
     public PooledMemoryStream(int capacity)
-        : this(capacity, DefaultBlockSize, ArrayPool<byte>.Shared) { }
+        : this(capacity, Constants.BufferSize, ArrayPool<byte>.Shared) { }
 
     public PooledMemoryStream(int capacity, int blockSize)
         : this(capacity, blockSize, ArrayPool<byte>.Shared) { }
@@ -64,10 +58,6 @@ public sealed class PooledMemoryStream : MemoryStream
         _mode = StorageMode.Segmented;
         _blocks = new List<byte[]>();
         _isOpen = true;
-        _writable = true;
-        _expandable = true;
-        _exposable = true;
-        _origin = 0;
         _position = 0;
         _length = 0;
         _capacity = capacity;
@@ -75,67 +65,18 @@ public sealed class PooledMemoryStream : MemoryStream
         EnsureSegmentedAllocated(capacity);
     }
 
-    public PooledMemoryStream(byte[] buffer)
-        : this(buffer, writable: true) { }
-
-    public PooledMemoryStream(byte[] buffer, bool writable)
-        : this(buffer, 0, buffer?.Length ?? 0, writable, publiclyVisible: false) { }
-
-    public PooledMemoryStream(byte[] buffer, int index, int count)
-        : this(buffer, index, count, writable: true, publiclyVisible: false) { }
-
-    public PooledMemoryStream(byte[] buffer, int index, int count, bool writable)
-        : this(buffer, index, count, writable, publiclyVisible: false) { }
-
-    public PooledMemoryStream(
-        byte[] buffer,
-        int index,
-        int count,
-        bool writable,
-        bool publiclyVisible
-    )
-    {
-        ThrowHelper.ThrowIfNull(buffer, nameof(buffer));
-        ThrowHelper.ThrowIfNegative(index, nameof(index));
-        ThrowHelper.ThrowIfNegative(count, nameof(count));
-        if (buffer.Length - index < count)
-        {
-            throw new ArgumentException("Offset and length are out of bounds.");
-        }
-
-        _arrayPool = ArrayPool<byte>.Shared;
-        _blockSize = DefaultBlockSize;
-
-        _mode = StorageMode.Segmented;
-        _blocks = new List<byte[]>();
-        _origin = 0;
-        _position = 0;
-        _length = count;
-        _capacity = count;
-        _writable = writable;
-        _expandable = false;
-        _exposable = publiclyVisible;
-        _isOpen = true;
-
-        EnsureSegmentedAllocated(_capacity);
-        if (count > 0)
-        {
-            CopyToSegmented(0, buffer, index, count);
-        }
-    }
-
     public override bool CanRead => _isOpen;
 
     public override bool CanSeek => _isOpen;
 
-    public override bool CanWrite => _writable;
+    public override bool CanWrite => _isOpen;
 
     public override long Length
     {
         get
         {
             EnsureNotClosed();
-            return _length - _origin;
+            return _length;
         }
     }
 
@@ -144,15 +85,15 @@ public sealed class PooledMemoryStream : MemoryStream
         get
         {
             EnsureNotClosed();
-            return _position - _origin;
+            return _position;
         }
         set
         {
             ThrowHelper.ThrowIfNegative(value, nameof(value));
             EnsureNotClosed();
-            ThrowHelper.ThrowIfGreaterThan(value, MaxStreamLength - _origin, nameof(value));
+            ThrowHelper.ThrowIfGreaterThan(value, MaxStreamLength, nameof(value));
 
-            _position = _origin + (int)value;
+            _position = (int)value;
         }
     }
 
@@ -161,23 +102,15 @@ public sealed class PooledMemoryStream : MemoryStream
         get
         {
             EnsureNotClosed();
-            return _capacity - _origin;
+            return _capacity;
         }
         set
         {
-            if (value < Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value));
-            }
+            ThrowHelper.ThrowIfLessThan(value, _length, nameof(value));
 
             EnsureNotClosed();
 
-            if (!_expandable && value != Capacity)
-            {
-                throw new NotSupportedException("Memory stream is not expandable.");
-            }
-
-            var target = _origin + value;
+            var target = value;
             if (target == _capacity)
             {
                 return;
@@ -205,14 +138,14 @@ public sealed class PooledMemoryStream : MemoryStream
 
         var anchor = loc switch
         {
-            SeekOrigin.Begin => _origin,
+            SeekOrigin.Begin => 0,
             SeekOrigin.Current => _position,
             SeekOrigin.End => _length,
             _ => throw new ArgumentException("Invalid seek origin.", nameof(loc)),
         };
 
         var target = anchor + offset;
-        if (target < _origin)
+        if (target < 0)
         {
             throw new IOException("Attempted to seek before the beginning of the stream.");
         }
@@ -223,7 +156,7 @@ public sealed class PooledMemoryStream : MemoryStream
         }
 
         _position = (int)target;
-        return _position - _origin;
+        return _position;
     }
 
     public override void SetLength(long value)
@@ -233,7 +166,7 @@ public sealed class PooledMemoryStream : MemoryStream
 
         EnsureWritable();
 
-        var newLength = _origin + (int)value;
+        var newLength = (int)value;
         if (newLength > _capacity)
         {
             EnsureCapacityForAppend(newLength);
@@ -395,11 +328,6 @@ public sealed class PooledMemoryStream : MemoryStream
     public override byte[] GetBuffer()
     {
         EnsureNotClosed();
-        if (!_exposable)
-        {
-            throw new UnauthorizedAccessException("Memory stream buffer is not publicly visible.");
-        }
-
         EnsureContiguous();
         _contiguousBufferExposed = true;
         return _contiguousBuffer!;
@@ -407,12 +335,6 @@ public sealed class PooledMemoryStream : MemoryStream
 
     public override bool TryGetBuffer(out ArraySegment<byte> buffer)
     {
-        if (!_exposable)
-        {
-            buffer = default;
-            return false;
-        }
-
         EnsureNotClosed();
 
         EnsureContiguous();
@@ -425,7 +347,7 @@ public sealed class PooledMemoryStream : MemoryStream
     {
         EnsureNotClosed();
 
-        var count = _length - _origin;
+        var count = _length;
         if (count == 0)
         {
             return Array.Empty<byte>();
@@ -435,10 +357,10 @@ public sealed class PooledMemoryStream : MemoryStream
         switch (_mode)
         {
             case StorageMode.Contiguous:
-                Buffer.BlockCopy(_contiguousBuffer!, _origin, copy, 0, count);
+                Buffer.BlockCopy(_contiguousBuffer!, 0, copy, 0, count);
                 break;
             case StorageMode.Segmented:
-                CopyFromSegmented(_origin, copy, 0, count);
+                CopyFromSegmented(0, copy, 0, count);
                 break;
         }
 
@@ -450,7 +372,7 @@ public sealed class PooledMemoryStream : MemoryStream
         ThrowHelper.ThrowIfNull(stream, nameof(stream));
         EnsureNotClosed();
 
-        var count = _length - _origin;
+        var count = _length;
         if (count == 0)
         {
             return;
@@ -459,11 +381,11 @@ public sealed class PooledMemoryStream : MemoryStream
         switch (_mode)
         {
             case StorageMode.Contiguous:
-                stream.Write(_contiguousBuffer!, _origin, count);
+                stream.Write(_contiguousBuffer!, 0, count);
                 break;
             case StorageMode.Segmented:
             {
-                var position = _origin;
+                var position = 0;
                 var remaining = count;
                 while (remaining > 0)
                 {
@@ -526,7 +448,7 @@ public sealed class PooledMemoryStream : MemoryStream
     }
 
 #if !LEGACY_DOTNET
-    public override int Read(Span<byte> buffer)
+    public override int Read(Span<byte> destination)
     {
         EnsureNotClosed();
 
@@ -536,11 +458,11 @@ public sealed class PooledMemoryStream : MemoryStream
             return 0;
         }
 
-        var count = Math.Min(available, buffer.Length);
+        var count = Math.Min(available, destination.Length);
         switch (_mode)
         {
             case StorageMode.Contiguous:
-                _contiguousBuffer.AsSpan(_position, count).CopyTo(buffer);
+                _contiguousBuffer.AsSpan(_position, count).CopyTo(destination);
                 break;
             case StorageMode.Segmented:
             {
@@ -556,7 +478,7 @@ public sealed class PooledMemoryStream : MemoryStream
                     _blocks!
                         [blockIndex]
                         .AsSpan(blockOffset, toCopy)
-                        .CopyTo(buffer.Slice(destinationOffset, toCopy));
+                        .CopyTo(destination.Slice(destinationOffset, toCopy));
 
                     sourcePosition += toCopy;
                     destinationOffset += toCopy;
@@ -571,15 +493,15 @@ public sealed class PooledMemoryStream : MemoryStream
         return count;
     }
 
-    public override void Write(ReadOnlySpan<byte> buffer)
+    public override void Write(ReadOnlySpan<byte> source)
     {
         EnsureWritable();
-        if (buffer.Length == 0)
+        if (source.Length == 0)
         {
             return;
         }
 
-        var endPosition = _position + buffer.Length;
+        var endPosition = _position + source.Length;
         if (endPosition < 0)
         {
             throw new IOException("Stream is too long.");
@@ -598,13 +520,13 @@ public sealed class PooledMemoryStream : MemoryStream
         switch (_mode)
         {
             case StorageMode.Contiguous:
-                buffer.CopyTo(_contiguousBuffer.AsSpan(_position, buffer.Length));
+                source.CopyTo(_contiguousBuffer.AsSpan(_position, source.Length));
                 break;
             case StorageMode.Segmented:
             {
                 var sourceOffset = 0;
                 var destinationPosition = _position;
-                var remaining = buffer.Length;
+                var remaining = source.Length;
 
                 while (remaining > 0)
                 {
@@ -612,7 +534,7 @@ public sealed class PooledMemoryStream : MemoryStream
                     var blockOffset = destinationPosition % _blockSize;
                     var toCopy = Math.Min(remaining, _blockSize - blockOffset);
 
-                    buffer
+                    source
                         .Slice(sourceOffset, toCopy)
                         .CopyTo(_blocks![blockIndex].AsSpan(blockOffset, toCopy));
 
@@ -633,7 +555,7 @@ public sealed class PooledMemoryStream : MemoryStream
     }
 
     public override ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
+        Memory<byte> destination,
         CancellationToken cancellationToken = default
     )
     {
@@ -644,7 +566,7 @@ public sealed class PooledMemoryStream : MemoryStream
 
         try
         {
-            return ValueTask.FromResult(Read(buffer.Span));
+            return ValueTask.FromResult(Read(destination.Span));
         }
         catch (Exception ex)
         {
@@ -653,7 +575,7 @@ public sealed class PooledMemoryStream : MemoryStream
     }
 
     public override ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
+        ReadOnlyMemory<byte> source,
         CancellationToken cancellationToken = default
     )
     {
@@ -664,7 +586,7 @@ public sealed class PooledMemoryStream : MemoryStream
 
         try
         {
-            Write(buffer.Span);
+            Write(source.Span);
             return ValueTask.CompletedTask;
         }
         catch (Exception ex)
@@ -679,8 +601,6 @@ public sealed class PooledMemoryStream : MemoryStream
         if (_isOpen)
         {
             _isOpen = false;
-            _writable = false;
-            _expandable = false;
 
             if (disposing)
             {
@@ -702,10 +622,6 @@ public sealed class PooledMemoryStream : MemoryStream
     private void EnsureWritable()
     {
         EnsureNotClosed();
-        if (!_writable)
-        {
-            throw new NotSupportedException("Stream does not support writing.");
-        }
     }
 
     private void EnsureCapacityForAppend(int requiredLength)
@@ -718,11 +634,6 @@ public sealed class PooledMemoryStream : MemoryStream
         if (requiredLength <= _capacity)
         {
             return;
-        }
-
-        if (!_expandable)
-        {
-            throw new NotSupportedException("Memory stream is not expandable.");
         }
 
         var nextCapacity = RoundUpToBlockBoundary(requiredLength);
