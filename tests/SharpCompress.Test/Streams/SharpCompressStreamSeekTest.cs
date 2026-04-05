@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -134,10 +135,10 @@ public class SharpCompressStreamSeekTest
         // Simulates the BZip2 scenario: the ring buffer must be large enough
         // from the moment StartRecording is called so that a large probe read
         // (up to 900 KB for BZip2) can be rewound without buffer overflow.
-        const int largeSize = 100;
-        const int largeReadSize = 80;
+        const int largeSize = 100_000;
+        const int largeReadSize = 80_000;
 
-        var data = new byte[100];
+        var data = new byte[largeSize];
         for (var i = 0; i < data.Length; i++)
         {
             data[i] = (byte)(i + 1);
@@ -180,5 +181,21 @@ public class SharpCompressStreamSeekTest
         stream.Read(readBuffer, 0, 5);
         Assert.Equal(1, readBuffer[0]);
         Assert.Equal(5, readBuffer[4]);
+    }
+
+    [Fact]
+    public void StartRecording_WithExistingSmallerRingBuffer_Throws()
+    {
+        var ms = new MemoryStream(new byte[131_072]);
+        var nonSeekableMs = new NonSeekableStreamWrapper(ms);
+        var stream = SharpCompressStream.Create(nonSeekableMs, 32_768);
+
+        var exception = Assert.Throws<ArchiveOperationException>(() =>
+            stream.StartRecording(131_072)
+        );
+
+        Assert.Contains("ring buffer", exception.Message);
+        Assert.Contains("131072", exception.Message);
+        Assert.Contains("32768", exception.Message);
     }
 }
