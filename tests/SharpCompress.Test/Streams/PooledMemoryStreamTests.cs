@@ -1,7 +1,6 @@
 using System;
 using System.Buffers;
 using System.IO;
-using System.Linq;
 using SharpCompress.IO;
 using Xunit;
 
@@ -35,22 +34,28 @@ public class PooledMemoryStreamTests
     }
 
     [Fact]
-    public void GetBufferPromotesToContiguousAndLaterGrowthUsesBlocks()
+    public void GetBufferReturnsArraySizedToCapacityWithoutTouchingPool()
     {
-        var pool = new TrackingArrayPool();
+        var pool = new OverRentingArrayPool(extraLength: 8);
 
         using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8, arrayPool: pool);
-        stream.Write(new byte[10], 0, 10);
+        stream.Write(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, 0, 10);
 
-        var contiguous = stream.GetBuffer();
-        Assert.Equal(16, contiguous.Length);
-        Assert.Contains(16, pool.RentRequests);
+        var rentsBefore = pool.RentRequests.Count;
+        var returnsBefore = pool.ReturnedLengths.Count;
 
-        stream.Position = stream.Length;
-        stream.Write(new byte[10], 0, 10); // grow to 20, forcing demotion + block growth
+        var buffer = stream.GetBuffer();
+        Assert.Equal(16, buffer.Length);
+        Assert.Equal(1, buffer[0]);
+        Assert.Equal(10, buffer[9]);
+        Assert.Equal(0, buffer[10]);
+        Assert.Equal(0, buffer[15]);
+        Assert.Equal(rentsBefore, pool.RentRequests.Count);
+        Assert.Equal(returnsBefore, pool.ReturnedLengths.Count);
 
-        var totalBlockRents = pool.RentRequests.Count(size => size == 8);
-        Assert.True(totalBlockRents >= 3);
+        buffer[0] = 255;
+        stream.Position = 0;
+        Assert.Equal(1, stream.ReadByte());
     }
 
     [Fact]
@@ -63,6 +68,33 @@ public class PooledMemoryStreamTests
         Assert.Equal(0, segment.Offset);
         Assert.Equal(4, segment.Count);
         Assert.Equal(1, segment.Array![0]);
+    }
+
+    [Fact]
+    public void TryGetBufferReturnsArraySizedToCapacityWithoutTouchingPool()
+    {
+        var pool = new OverRentingArrayPool(extraLength: 8);
+
+        using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8, arrayPool: pool);
+        stream.Write(new byte[] { 1, 2, 3, 4 }, 0, 4);
+
+        var rentsBefore = pool.RentRequests.Count;
+        var returnsBefore = pool.ReturnedLengths.Count;
+
+        Assert.True(stream.TryGetBuffer(out var segment));
+        Assert.Equal(0, segment.Offset);
+        Assert.Equal(4, segment.Count);
+        Assert.Equal(8, segment.Array!.Length);
+        Assert.Equal(1, segment.Array[0]);
+        Assert.Equal(4, segment.Array[3]);
+        Assert.Equal(0, segment.Array[4]);
+        Assert.Equal(0, segment.Array[7]);
+        Assert.Equal(rentsBefore, pool.RentRequests.Count);
+        Assert.Equal(returnsBefore, pool.ReturnedLengths.Count);
+
+        segment.Array[0] = 255;
+        stream.Position = 0;
+        Assert.Equal(1, stream.ReadByte());
     }
 
     [Fact]
@@ -106,7 +138,7 @@ public class PooledMemoryStreamTests
     }
 
     [Fact]
-    public void MultipleGetBufferCallsReturnSameArray()
+    public void MultipleGetBufferCallsReturnDifferentArrays()
     {
         using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8);
         stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
@@ -114,10 +146,8 @@ public class PooledMemoryStreamTests
         var buffer1 = stream.GetBuffer();
         var buffer2 = stream.GetBuffer();
 
-        Assert.Same(buffer1, buffer2);
-        Assert.Equal(1, buffer1[0]);
-        Assert.Equal(2, buffer1[1]);
-        Assert.Equal(3, buffer1[2]);
+        Assert.NotSame(buffer1, buffer2);
+        Assert.Equal(buffer1, buffer2);
     }
 
     [Fact]
@@ -147,6 +177,34 @@ public class PooledMemoryStreamTests
             }
 
             return array;
+        }
+
+        public override void Return(byte[] array, bool clearArray = false)
+        {
+            ReturnedLengths.Add(array.Length);
+            if (clearArray)
+            {
+                Array.Clear(array, 0, array.Length);
+            }
+        }
+    }
+
+    private sealed class OverRentingArrayPool : ArrayPool<byte>
+    {
+        private readonly int _extraLength;
+
+        public OverRentingArrayPool(int extraLength)
+        {
+            _extraLength = extraLength;
+        }
+
+        public readonly System.Collections.Generic.List<int> RentRequests = new();
+        public readonly System.Collections.Generic.List<int> ReturnedLengths = new();
+
+        public override byte[] Rent(int minimumLength)
+        {
+            RentRequests.Add(minimumLength);
+            return new byte[minimumLength + _extraLength];
         }
 
         public override void Return(byte[] array, bool clearArray = false)

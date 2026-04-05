@@ -333,30 +333,38 @@ public sealed class PooledMemoryStream : MemoryStream
         }
     }
 
-    private byte[] GetExposableContiguousBuffer()
+    private byte[] CreateExposableBuffer()
     {
-        EnsureContiguous();
-
-        if (_capacity > _length)
+        var exposable = new byte[_capacity];
+        if (_length == 0)
         {
-            ClearRange(_length, _capacity - _length);
+            return exposable;
         }
 
-        _contiguousBufferExposed = true;
-        return _contiguousBuffer!;
+        switch (_mode)
+        {
+            case StorageMode.Contiguous:
+                Buffer.BlockCopy(_contiguousBuffer!, 0, exposable, 0, _length);
+                break;
+            case StorageMode.Segmented:
+                CopyFromSegmented(0, exposable, 0, _length);
+                break;
+        }
+
+        return exposable;
     }
 
     public override byte[] GetBuffer()
     {
         EnsureNotClosed();
-        return GetExposableContiguousBuffer();
+        return CreateExposableBuffer();
     }
 
     public override bool TryGetBuffer(out ArraySegment<byte> buffer)
     {
         EnsureNotClosed();
 
-        var exposableBuffer = GetExposableContiguousBuffer();
+        var exposableBuffer = CreateExposableBuffer();
         buffer = new ArraySegment<byte>(exposableBuffer, 0, _length);
         return true;
     }
