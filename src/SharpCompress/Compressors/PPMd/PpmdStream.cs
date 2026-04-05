@@ -180,7 +180,7 @@ public class PpmdStream : Stream
         {
             if (_compress)
             {
-                _model.EncodeBlock(_stream, new PooledMemoryStream(), true);
+                _model.EncodeBlock(_stream, Stream.Null, true);
             }
         }
         base.Dispose(disposing);
