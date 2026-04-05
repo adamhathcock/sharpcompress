@@ -892,11 +892,10 @@ public sealed class PooledMemoryStream : MemoryStream
             _contiguousBuffer = null;
         }
 
-        for (var i = 0; i < _detachedExposedBuffers.Count; i++)
-        {
-            _arrayPool.Return(_detachedExposedBuffers[i]);
-        }
-
+        // Buffers tracked here have been exposed to callers. Returning them to the
+        // shared pool would allow unrelated code to rent and mutate arrays that may
+        // still be referenced after the stream is disposed, which breaks
+        // MemoryStream-compatible expectations for GetBuffer/TryGetBuffer.
         _detachedExposedBuffers.Clear();
     }
 
