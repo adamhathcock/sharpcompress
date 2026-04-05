@@ -107,13 +107,22 @@ public class PooledMemoryStreamTests
 
     private sealed class TrackingArrayPool : ArrayPool<byte>
     {
+        private const byte RentedBufferFillValue = 0x5A;
+
         public readonly System.Collections.Generic.List<int> RentRequests = new();
         public readonly System.Collections.Generic.List<int> ReturnedLengths = new();
 
         public override byte[] Rent(int minimumLength)
         {
             RentRequests.Add(minimumLength);
-            return new byte[minimumLength];
+
+            var array = new byte[minimumLength];
+            for (var i = 0; i < array.Length; i++)
+            {
+                array[i] = RentedBufferFillValue;
+            }
+
+            return array;
         }
 
         public override void Return(byte[] array, bool clearArray = false)
