@@ -129,6 +129,59 @@ public class PooledMemoryStreamTests
         );
     }
 
+    [Fact]
+    public void DisposeAfterGetBufferDoesNotReturnExposedArrayToPool()
+    {
+        var pool = new TrackingArrayPool();
+        byte[] buffer;
+
+        using (var stream = new PooledMemoryStream(pool, capacity: 0, blockSize: 8))
+        {
+            stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
+            buffer = stream.GetBuffer();
+
+            Assert.NotNull(buffer);
+            Assert.NotEmpty(pool.RentRequests);
+        }
+
+        Assert.Empty(pool.ReturnedLengths);
+        Assert.Equal(1, buffer[0]);
+        Assert.Equal(2, buffer[1]);
+        Assert.Equal(3, buffer[2]);
+    }
+
+    [Fact]
+    public void DisposeAfterTryGetBufferDoesNotReturnExposedArrayToPool()
+    {
+        var pool = new TrackingArrayPool();
+        ArraySegment<byte> segment;
+
+        using (var stream = new PooledMemoryStream(pool, capacity: 0, blockSize: 8))
+        {
+            stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
+
+            Assert.True(stream.TryGetBuffer(out segment));
+            Assert.NotNull(segment.Array);
+            Assert.NotEmpty(pool.RentRequests);
+        }
+
+        Assert.Empty(pool.ReturnedLengths);
+        Assert.Equal(1, segment.Array![segment.Offset]);
+        Assert.Equal(2, segment.Array[segment.Offset + 1]);
+        Assert.Equal(3, segment.Array[segment.Offset + 2]);
+    }
+
+    [Fact]
+    public void SetLengthNearIntMaxValueDoesNotThrowIOException()
+    {
+        using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8);
+        var length = int.MaxValue - 1L;
+
+        var exception = Record.Exception(() => stream.SetLength(length));
+
+        Assert.Null(exception);
+        Assert.Equal(length, stream.Length);
+    }
     private sealed class TrackingArrayPool : ArrayPool<byte>
     {
         private const byte RentedBufferFillValue = 0x5A;
