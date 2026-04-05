@@ -325,21 +325,31 @@ public sealed class PooledMemoryStream : MemoryStream
         }
     }
 
+    private byte[] GetExposableContiguousBuffer()
+    {
+        EnsureContiguous();
+
+        if (_capacity > _length)
+        {
+            ClearRange(_length, _capacity - _length);
+        }
+
+        _contiguousBufferExposed = true;
+        return _contiguousBuffer!;
+    }
+
     public override byte[] GetBuffer()
     {
         EnsureNotClosed();
-        EnsureContiguous();
-        _contiguousBufferExposed = true;
-        return _contiguousBuffer!;
+        return GetExposableContiguousBuffer();
     }
 
     public override bool TryGetBuffer(out ArraySegment<byte> buffer)
     {
         EnsureNotClosed();
 
-        EnsureContiguous();
-        _contiguousBufferExposed = true;
-        buffer = new ArraySegment<byte>(_contiguousBuffer!, 0, _length);
+        var exposableBuffer = GetExposableContiguousBuffer();
+        buffer = new ArraySegment<byte>(exposableBuffer, 0, _length);
         return true;
     }
 
