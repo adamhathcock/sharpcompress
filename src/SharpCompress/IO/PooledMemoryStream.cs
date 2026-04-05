@@ -424,14 +424,7 @@ public sealed class PooledMemoryStream : MemoryStream
             return Task.FromCanceled<int>(cancellationToken);
         }
 
-        try
-        {
-            return Task.FromResult(Read(buffer, offset, count));
-        }
-        catch (Exception ex)
-        {
-            return Task.FromException<int>(ex);
-        }
+        return Task.FromResult(Read(buffer, offset, count));
     }
 
     public override Task WriteAsync(
@@ -446,19 +439,12 @@ public sealed class PooledMemoryStream : MemoryStream
             return Task.FromCanceled(cancellationToken);
         }
 
-        try
-        {
-            Write(buffer, offset, count);
-            return Task.CompletedTask;
-        }
-        catch (Exception ex)
-        {
-            return Task.FromException(ex);
-        }
+        Write(buffer, offset, count);
+        return Task.CompletedTask;
     }
 
 #if !LEGACY_DOTNET
-    public override int Read(Span<byte> destination)
+    public override int Read(Span<byte> buffer)
     {
         EnsureNotClosed();
 
@@ -468,11 +454,11 @@ public sealed class PooledMemoryStream : MemoryStream
             return 0;
         }
 
-        var count = Math.Min(available, destination.Length);
+        var count = Math.Min(available, buffer.Length);
         switch (_mode)
         {
             case StorageMode.Contiguous:
-                _contiguousBuffer.AsSpan(_position, count).CopyTo(destination);
+                _contiguousBuffer.AsSpan(_position, count).CopyTo(buffer);
                 break;
             case StorageMode.Segmented:
             {
@@ -488,7 +474,7 @@ public sealed class PooledMemoryStream : MemoryStream
                     _blocks!
                         [blockIndex]
                         .AsSpan(blockOffset, toCopy)
-                        .CopyTo(destination.Slice(destinationOffset, toCopy));
+                        .CopyTo(buffer.Slice(destinationOffset, toCopy));
 
                     sourcePosition += toCopy;
                     destinationOffset += toCopy;
@@ -503,15 +489,15 @@ public sealed class PooledMemoryStream : MemoryStream
         return count;
     }
 
-    public override void Write(ReadOnlySpan<byte> source)
+    public override void Write(ReadOnlySpan<byte> buffer)
     {
         EnsureWritable();
-        if (source.Length == 0)
+        if (buffer.Length == 0)
         {
             return;
         }
 
-        var endPosition = _position + source.Length;
+        var endPosition = _position + buffer.Length;
         if (endPosition < 0)
         {
             throw new IOException("Stream is too long.");
@@ -530,13 +516,13 @@ public sealed class PooledMemoryStream : MemoryStream
         switch (_mode)
         {
             case StorageMode.Contiguous:
-                source.CopyTo(_contiguousBuffer.AsSpan(_position, source.Length));
+                buffer.CopyTo(_contiguousBuffer.AsSpan(_position, buffer.Length));
                 break;
             case StorageMode.Segmented:
             {
                 var sourceOffset = 0;
                 var destinationPosition = _position;
-                var remaining = source.Length;
+                var remaining = buffer.Length;
 
                 while (remaining > 0)
                 {
@@ -544,7 +530,7 @@ public sealed class PooledMemoryStream : MemoryStream
                     var blockOffset = destinationPosition % _blockSize;
                     var toCopy = Math.Min(remaining, _blockSize - blockOffset);
 
-                    source
+                    buffer
                         .Slice(sourceOffset, toCopy)
                         .CopyTo(_blocks![blockIndex].AsSpan(blockOffset, toCopy));
 
@@ -565,7 +551,7 @@ public sealed class PooledMemoryStream : MemoryStream
     }
 
     public override ValueTask<int> ReadAsync(
-        Memory<byte> destination,
+        Memory<byte> buffer,
         CancellationToken cancellationToken = default
     )
     {
@@ -574,18 +560,11 @@ public sealed class PooledMemoryStream : MemoryStream
             return ValueTask.FromCanceled<int>(cancellationToken);
         }
 
-        try
-        {
-            return ValueTask.FromResult(Read(destination.Span));
-        }
-        catch (Exception ex)
-        {
-            return ValueTask.FromException<int>(ex);
-        }
+        return ValueTask.FromResult(Read(buffer.Span));
     }
 
     public override ValueTask WriteAsync(
-        ReadOnlyMemory<byte> source,
+        ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
     )
     {
@@ -594,15 +573,8 @@ public sealed class PooledMemoryStream : MemoryStream
             return ValueTask.FromCanceled(cancellationToken);
         }
 
-        try
-        {
-            Write(source.Span);
-            return ValueTask.CompletedTask;
-        }
-        catch (Exception ex)
-        {
-            return ValueTask.FromException(ex);
-        }
+        Write(buffer.Span);
+        return ValueTask.CompletedTask;
     }
 #endif
 
