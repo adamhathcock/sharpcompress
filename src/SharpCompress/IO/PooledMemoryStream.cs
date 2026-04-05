@@ -14,36 +14,21 @@ namespace SharpCompress.IO;
 /// </summary>
 /// <remarks>
 /// This implementation is not thread-safe. Use appropriate synchronization for concurrent access.
-/// Buffers exposed via <see cref="GetBuffer"/> or <see cref="TryGetBuffer"/> will not be
-/// returned to the pool on dispose to maintain MemoryStream-compatible semantics.
-/// The stream dynamically switches between segmented (multiple blocks) and contiguous storage modes
-/// based on usage patterns, optimizing for both memory efficiency and performance.
+/// Buffers exposed via <see cref="GetBuffer"/> or <see cref="TryGetBuffer"/> are allocated as
+/// fresh non-pooled arrays to avoid exposing pooled memory.
 /// </remarks>
 public sealed class PooledMemoryStream : MemoryStream
 {
     private const int MaxStreamLength = int.MaxValue;
 
-    private enum StorageMode
-    {
-        Segmented,
-        Contiguous,
-    }
-
     private readonly ArrayPool<byte> _arrayPool;
     private readonly int _blockSize;
 
-    private readonly List<byte[]> _detachedExposedBuffers = new();
-
-    private StorageMode _mode;
     private List<byte[]>? _blocks;
-    private byte[]? _contiguousBuffer;
-
-    private bool _contiguousBufferExposed;
     private bool _isOpen;
     private int _position;
     private int _length;
     private int _capacity;
-    private int _allocatedCapacity;
 
     public PooledMemoryStream()
         : this(0) { }
@@ -63,7 +48,6 @@ public sealed class PooledMemoryStream : MemoryStream
         _arrayPool = arrayPool;
         _blockSize = blockSize;
 
-        _mode = StorageMode.Segmented;
         _blocks = new List<byte[]>();
         _isOpen = true;
         _position = 0;
@@ -208,15 +192,7 @@ public sealed class PooledMemoryStream : MemoryStream
             count = available;
         }
 
-        switch (_mode)
-        {
-            case StorageMode.Contiguous:
-                Buffer.BlockCopy(_contiguousBuffer!, _position, buffer, offset, count);
-                break;
-            case StorageMode.Segmented:
-                CopyFromSegmented(_position, buffer, offset, count);
-                break;
-        }
+        CopyFromSegmented(_position, buffer, offset, count);
 
         _position += count;
         return count;
@@ -230,20 +206,9 @@ public sealed class PooledMemoryStream : MemoryStream
             return -1;
         }
 
-        byte value;
-        switch (_mode)
-        {
-            case StorageMode.Contiguous:
-                value = _contiguousBuffer![_position];
-                break;
-            default:
-            {
-                var blockIndex = _position / _blockSize;
-                var blockOffset = _position % _blockSize;
-                value = _blocks![blockIndex][blockOffset];
-                break;
-            }
-        }
+        var blockIndex = _position / _blockSize;
+        var blockOffset = _position % _blockSize;
+        var value = _blocks![blockIndex][blockOffset];
 
         _position++;
         return value;
@@ -275,15 +240,7 @@ public sealed class PooledMemoryStream : MemoryStream
             ClearRange(_length, _position - _length);
         }
 
-        switch (_mode)
-        {
-            case StorageMode.Contiguous:
-                Buffer.BlockCopy(buffer, offset, _contiguousBuffer!, _position, count);
-                break;
-            case StorageMode.Segmented:
-                CopyToSegmented(_position, buffer, offset, count);
-                break;
-        }
+        CopyToSegmented(_position, buffer, offset, count);
 
         _position = endPosition;
         if (_position > _length)
@@ -312,19 +269,9 @@ public sealed class PooledMemoryStream : MemoryStream
             ClearRange(_length, _position - _length);
         }
 
-        switch (_mode)
-        {
-            case StorageMode.Contiguous:
-                _contiguousBuffer![_position] = value;
-                break;
-            default:
-            {
-                var blockIndex = _position / _blockSize;
-                var blockOffset = _position % _blockSize;
-                _blocks![blockIndex][blockOffset] = value;
-                break;
-            }
-        }
+        var blockIndex = _position / _blockSize;
+        var blockOffset = _position % _blockSize;
+        _blocks![blockIndex][blockOffset] = value;
 
         _position = endPosition;
         if (_position > _length)
@@ -341,15 +288,7 @@ public sealed class PooledMemoryStream : MemoryStream
             return exposable;
         }
 
-        switch (_mode)
-        {
-            case StorageMode.Contiguous:
-                Buffer.BlockCopy(_contiguousBuffer!, 0, exposable, 0, _length);
-                break;
-            case StorageMode.Segmented:
-                CopyFromSegmented(0, exposable, 0, _length);
-                break;
-        }
+        CopyFromSegmented(0, exposable, 0, _length);
 
         return exposable;
     }
@@ -380,15 +319,7 @@ public sealed class PooledMemoryStream : MemoryStream
         }
 
         var copy = new byte[count];
-        switch (_mode)
-        {
-            case StorageMode.Contiguous:
-                Buffer.BlockCopy(_contiguousBuffer!, 0, copy, 0, count);
-                break;
-            case StorageMode.Segmented:
-                CopyFromSegmented(0, copy, 0, count);
-                break;
-        }
+        CopyFromSegmented(0, copy, 0, count);
 
         return copy;
     }
@@ -404,27 +335,16 @@ public sealed class PooledMemoryStream : MemoryStream
             return;
         }
 
-        switch (_mode)
+        var position = 0;
+        var remaining = count;
+        while (remaining > 0)
         {
-            case StorageMode.Contiguous:
-                stream.Write(_contiguousBuffer!, 0, count);
-                break;
-            case StorageMode.Segmented:
-            {
-                var position = 0;
-                var remaining = count;
-                while (remaining > 0)
-                {
-                    var blockIndex = position / _blockSize;
-                    var blockOffset = position % _blockSize;
-                    var toWrite = Math.Min(remaining, _blockSize - blockOffset);
-                    stream.Write(_blocks![blockIndex], blockOffset, toWrite);
-                    position += toWrite;
-                    remaining -= toWrite;
-                }
-
-                break;
-            }
+            var blockIndex = position / _blockSize;
+            var blockOffset = position % _blockSize;
+            var toWrite = Math.Min(remaining, _blockSize - blockOffset);
+            stream.Write(_blocks![blockIndex], blockOffset, toWrite);
+            position += toWrite;
+            remaining -= toWrite;
         }
     }
 
@@ -471,34 +391,23 @@ public sealed class PooledMemoryStream : MemoryStream
         }
 
         var count = Math.Min(available, buffer.Length);
-        switch (_mode)
+        var sourcePosition = _position;
+        var destinationOffset = 0;
+        var remaining = count;
+
+        while (remaining > 0)
         {
-            case StorageMode.Contiguous:
-                _contiguousBuffer.AsSpan(_position, count).CopyTo(buffer);
-                break;
-            case StorageMode.Segmented:
-            {
-                var sourcePosition = _position;
-                var destinationOffset = 0;
-                var remaining = count;
+            var blockIndex = sourcePosition / _blockSize;
+            var blockOffset = sourcePosition % _blockSize;
+            var toCopy = Math.Min(remaining, _blockSize - blockOffset);
+            _blocks!
+                [blockIndex]
+                .AsSpan(blockOffset, toCopy)
+                .CopyTo(buffer.Slice(destinationOffset, toCopy));
 
-                while (remaining > 0)
-                {
-                    var blockIndex = sourcePosition / _blockSize;
-                    var blockOffset = sourcePosition % _blockSize;
-                    var toCopy = Math.Min(remaining, _blockSize - blockOffset);
-                    _blocks!
-                        [blockIndex]
-                        .AsSpan(blockOffset, toCopy)
-                        .CopyTo(buffer.Slice(destinationOffset, toCopy));
-
-                    sourcePosition += toCopy;
-                    destinationOffset += toCopy;
-                    remaining -= toCopy;
-                }
-
-                break;
-            }
+            sourcePosition += toCopy;
+            destinationOffset += toCopy;
+            remaining -= toCopy;
         }
 
         _position += count;
@@ -529,34 +438,23 @@ public sealed class PooledMemoryStream : MemoryStream
             ClearRange(_length, _position - _length);
         }
 
-        switch (_mode)
+        var sourceOffset = 0;
+        var destinationPosition = _position;
+        var remaining = buffer.Length;
+
+        while (remaining > 0)
         {
-            case StorageMode.Contiguous:
-                buffer.CopyTo(_contiguousBuffer.AsSpan(_position, buffer.Length));
-                break;
-            case StorageMode.Segmented:
-            {
-                var sourceOffset = 0;
-                var destinationPosition = _position;
-                var remaining = buffer.Length;
+            var blockIndex = destinationPosition / _blockSize;
+            var blockOffset = destinationPosition % _blockSize;
+            var toCopy = Math.Min(remaining, _blockSize - blockOffset);
 
-                while (remaining > 0)
-                {
-                    var blockIndex = destinationPosition / _blockSize;
-                    var blockOffset = destinationPosition % _blockSize;
-                    var toCopy = Math.Min(remaining, _blockSize - blockOffset);
+            buffer
+                .Slice(sourceOffset, toCopy)
+                .CopyTo(_blocks![blockIndex].AsSpan(blockOffset, toCopy));
 
-                    buffer
-                        .Slice(sourceOffset, toCopy)
-                        .CopyTo(_blocks![blockIndex].AsSpan(blockOffset, toCopy));
-
-                    sourceOffset += toCopy;
-                    destinationPosition += toCopy;
-                    remaining -= toCopy;
-                }
-
-                break;
-            }
+            sourceOffset += toCopy;
+            destinationPosition += toCopy;
+            remaining -= toCopy;
         }
 
         _position = endPosition;
@@ -642,20 +540,7 @@ public sealed class PooledMemoryStream : MemoryStream
     {
         ThrowHelper.ThrowIfLessThan(newCapacity, _length, nameof(newCapacity));
 
-        switch (_mode)
-        {
-            case StorageMode.Contiguous:
-                if (newCapacity > _allocatedCapacity)
-                {
-                    DemoteContiguousToSegmented();
-                    EnsureSegmentedAllocated(newCapacity);
-                }
-                break;
-
-            case StorageMode.Segmented:
-                EnsureSegmentedAllocated(newCapacity);
-                break;
-        }
+        EnsureSegmentedAllocated(newCapacity);
 
         _capacity = newCapacity;
         if (_length > _capacity)
@@ -668,67 +553,8 @@ public sealed class PooledMemoryStream : MemoryStream
         }
     }
 
-    private void EnsureContiguous()
-    {
-        if (_mode == StorageMode.Contiguous)
-        {
-            return;
-        }
-
-        var requested = Math.Max(_capacity, 1);
-        var contiguous = _arrayPool.Rent(requested);
-        if (_length > 0)
-        {
-            CopyFromSegmented(0, contiguous, 0, _length);
-        }
-
-        ReturnSegmentedBlocks();
-
-        _mode = StorageMode.Contiguous;
-        _contiguousBuffer = contiguous;
-        _contiguousBufferExposed = false;
-        _allocatedCapacity = contiguous.Length;
-    }
-
-    private void DemoteContiguousToSegmented()
-    {
-        var contiguous = _contiguousBuffer;
-        if (contiguous is null)
-        {
-            return;
-        }
-
-        var requiredCapacity = Math.Max(_capacity, _length);
-        _mode = StorageMode.Segmented;
-        _blocks = new List<byte[]>();
-        _contiguousBuffer = null;
-        EnsureSegmentedAllocated(requiredCapacity);
-
-        if (_length > 0)
-        {
-            CopyToSegmented(0, contiguous, 0, _length);
-        }
-
-        if (_contiguousBufferExposed)
-        {
-            _detachedExposedBuffers.Add(contiguous);
-            _contiguousBufferExposed = false;
-        }
-        else
-        {
-            _arrayPool.Return(contiguous);
-        }
-    }
-
     private void EnsureSegmentedAllocated(int capacity)
     {
-        if (_mode != StorageMode.Segmented)
-        {
-            throw new InvalidOperationException(
-                "Segmented allocation requested while not in segmented mode."
-            );
-        }
-
         var requiredAllocated = RoundUpToBlockBoundary(capacity);
         var requiredBlocks = requiredAllocated == 0 ? 0 : requiredAllocated / _blockSize;
 
@@ -746,8 +572,6 @@ public sealed class PooledMemoryStream : MemoryStream
             _blocks.RemoveAt(index);
             _arrayPool.Return(block);
         }
-
-        _allocatedCapacity = requiredAllocated;
     }
 
     private int RoundUpToBlockBoundary(int value)
@@ -773,27 +597,16 @@ public sealed class PooledMemoryStream : MemoryStream
             return;
         }
 
-        switch (_mode)
+        var position = absoluteStart;
+        var remaining = count;
+        while (remaining > 0)
         {
-            case StorageMode.Contiguous:
-                Array.Clear(_contiguousBuffer!, absoluteStart, count);
-                break;
-            case StorageMode.Segmented:
-            {
-                var position = absoluteStart;
-                var remaining = count;
-                while (remaining > 0)
-                {
-                    var blockIndex = position / _blockSize;
-                    var blockOffset = position % _blockSize;
-                    var toClear = Math.Min(remaining, _blockSize - blockOffset);
-                    Array.Clear(_blocks![blockIndex], blockOffset, toClear);
-                    position += toClear;
-                    remaining -= toClear;
-                }
-
-                break;
-            }
+            var blockIndex = position / _blockSize;
+            var blockOffset = position % _blockSize;
+            var toClear = Math.Min(remaining, _blockSize - blockOffset);
+            Array.Clear(_blocks![blockIndex], blockOffset, toClear);
+            position += toClear;
+            remaining -= toClear;
         }
     }
 
@@ -868,22 +681,8 @@ public sealed class PooledMemoryStream : MemoryStream
 
     private void ReturnPooledBuffers()
     {
-        if (_mode == StorageMode.Segmented)
-        {
-            ReturnSegmentedBlocks();
-            _blocks = null;
-        }
-        else if (_mode == StorageMode.Contiguous && _contiguousBuffer is not null)
-        {
-            _arrayPool.Return(_contiguousBuffer);
-            _contiguousBuffer = null;
-        }
-
-        // Buffers tracked here have been exposed to callers. Returning them to the
-        // shared pool would allow unrelated code to rent and mutate arrays that may
-        // still be referenced after the stream is disposed, which breaks
-        // MemoryStream-compatible expectations for GetBuffer/TryGetBuffer.
-        _detachedExposedBuffers.Clear();
+        ReturnSegmentedBlocks();
+        _blocks = null;
     }
 
     private static void ValidateReadWriteBufferArguments(byte[] buffer, int offset, int count)

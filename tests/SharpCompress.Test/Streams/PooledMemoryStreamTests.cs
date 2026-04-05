@@ -34,6 +34,53 @@ public class PooledMemoryStreamTests
     }
 
     [Fact]
+    public void OverRentedBlocksUseLogicalBlockSize()
+    {
+        var pool = new FilledOverRentingArrayPool(extraLength: 8, fillValue: 0x5A);
+
+        using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8, arrayPool: pool);
+        stream.Write(new byte[] { 1, 2, 3, 4, 5 }, 0, 5);
+
+        stream.Position = 10;
+        stream.Write(new byte[] { 42, 43, 44, 45, 46, 47, 48, 49, 50, 51 }, 0, 10);
+
+        Assert.Equal(3, pool.RentRequests.Count);
+        Assert.All(pool.RentRequests, requested => Assert.Equal(8, requested));
+        Assert.All(pool.RentedLengths, length => Assert.Equal(16, length));
+
+        var expected = new byte[]
+        {
+            1,
+            2,
+            3,
+            4,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+        };
+
+        Assert.Equal(expected, stream.ToArray());
+
+        stream.Position = 0;
+        var roundTrip = new byte[expected.Length];
+        Assert.Equal(expected.Length, stream.Read(roundTrip, 0, roundTrip.Length));
+        Assert.Equal(expected, roundTrip);
+    }
+
+    [Fact]
     public void GetBufferReturnsArraySizedToCapacityWithoutTouchingPool()
     {
         var pool = new OverRentingArrayPool(extraLength: 8);
@@ -210,6 +257,42 @@ public class PooledMemoryStreamTests
         public override void Return(byte[] array, bool clearArray = false)
         {
             ReturnedLengths.Add(array.Length);
+            if (clearArray)
+            {
+                Array.Clear(array, 0, array.Length);
+            }
+        }
+    }
+
+    private sealed class FilledOverRentingArrayPool : ArrayPool<byte>
+    {
+        private readonly int _extraLength;
+        private readonly byte _fillValue;
+
+        public FilledOverRentingArrayPool(int extraLength, byte fillValue)
+        {
+            _extraLength = extraLength;
+            _fillValue = fillValue;
+        }
+
+        public readonly System.Collections.Generic.List<int> RentRequests = new();
+        public readonly System.Collections.Generic.List<int> RentedLengths = new();
+
+        public override byte[] Rent(int minimumLength)
+        {
+            RentRequests.Add(minimumLength);
+
+            var array = new byte[minimumLength + _extraLength];
+            RentedLengths.Add(array.Length);
+            for (var i = 0; i < array.Length; i++)
+            {
+                array[i] = _fillValue;
+            }
+            return array;
+        }
+
+        public override void Return(byte[] array, bool clearArray = false)
+        {
             if (clearArray)
             {
                 Array.Clear(array, 0, array.Length);
