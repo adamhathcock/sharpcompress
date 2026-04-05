@@ -105,6 +105,30 @@ public class PooledMemoryStreamTests
         Assert.Throws<ObjectDisposedException>(() => stream.GetBuffer());
     }
 
+    [Fact]
+    public void MultipleGetBufferCallsReturnSameArray()
+    {
+        using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8);
+        stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
+
+        var buffer1 = stream.GetBuffer();
+        var buffer2 = stream.GetBuffer();
+
+        Assert.Same(buffer1, buffer2);
+        Assert.Equal(1, buffer1[0]);
+        Assert.Equal(2, buffer1[1]);
+        Assert.Equal(3, buffer1[2]);
+    }
+
+    [Fact]
+    public void SeekBeyondMaxLengthThrows()
+    {
+        using var stream = new PooledMemoryStream();
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            stream.Seek(int.MaxValue + 1L, SeekOrigin.Begin)
+        );
+    }
+
     private sealed class TrackingArrayPool : ArrayPool<byte>
     {
         private const byte RentedBufferFillValue = 0x5A;

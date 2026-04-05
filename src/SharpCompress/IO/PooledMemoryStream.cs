@@ -10,7 +10,15 @@ namespace SharpCompress.IO;
 
 /// <summary>
 /// MemoryStream implementation backed by pooled byte arrays.
+/// Uses <see cref="ArrayPool{T}"/> to reduce GC pressure for temporary buffers.
 /// </summary>
+/// <remarks>
+/// This implementation is not thread-safe. Use appropriate synchronization for concurrent access.
+/// Buffers exposed via <see cref="GetBuffer"/> or <see cref="TryGetBuffer"/> will not be
+/// returned to the pool on dispose to maintain MemoryStream-compatible semantics.
+/// The stream dynamically switches between segmented (multiple blocks) and contiguous storage modes
+/// based on usage patterns, optimizing for both memory efficiency and performance.
+/// </remarks>
 public sealed class PooledMemoryStream : MemoryStream
 {
     private const int MaxStreamLength = int.MaxValue;
@@ -857,8 +865,7 @@ public sealed class PooledMemoryStream : MemoryStream
             ReturnSegmentedBlocks();
             _blocks = null;
         }
-
-        if (_mode == StorageMode.Contiguous && _contiguousBuffer is not null)
+        else if (_mode == StorageMode.Contiguous && _contiguousBuffer is not null)
         {
             _arrayPool.Return(_contiguousBuffer);
             _contiguousBuffer = null;
