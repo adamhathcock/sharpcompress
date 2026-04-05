@@ -680,6 +680,7 @@ public sealed class PooledMemoryStream : MemoryStream
         _contiguousBuffer = contiguous;
         _contiguousBufferExposed = false;
         _allocatedCapacity = contiguous.Length;
+        _capacity = _allocatedCapacity;
     }
 
     private void DemoteContiguousToSegmented()
