@@ -300,7 +300,7 @@ var cts = new CancellationTokenSource();
 cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 using Stream stream = File.OpenWrite("archive.zip");
-using var writer = await WriterFactory.OpenAsyncWriter(stream, ArchiveType.Zip, new WriterOptions(CompressionType.Deflate), cts.Token);
+await using var writer = await WriterFactory.OpenAsyncWriter(stream, ArchiveType.Zip, new WriterOptions(CompressionType.Deflate), cts.Token);
 try
 {
     await writer.WriteAllAsync(@"D:\data", "*", SearchOption.AllDirectories, cts.Token);
