@@ -84,8 +84,8 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
     archive.WriteToDirectory(@"C:\output");
 
     // Extract single entry
-    var entry = archive.Entries.First();
-    entry.WriteToFile(@"C:\output\file.txt");
+    var firstEntry = archive.Entries.First();
+    firstEntry.WriteToFile(@"C:\output\file.txt");
 
     // Get entry stream
     using (var stream = entry.OpenEntryStream())
@@ -97,14 +97,23 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
 // Async extraction (requires IAsyncArchive)
 await using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
+    // Extract all entries asynchronously
     await asyncArchive.WriteToDirectoryAsync(
         @"C:\output",
         cancellationToken: cancellationToken
     );
 }
-using (var stream = await entry.OpenEntryStreamAsync(cancellationToken))
+
+// Open a specific entry stream asynchronously
+await using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
-    // ...
+    await foreach (var entry in asyncArchive.EntriesAsync)
+    {
+        using (var stream = await entry.OpenEntryStreamAsync(cancellationToken))
+        {
+            // ...
+        }
+    }
 }
 ```
 
@@ -214,15 +223,18 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, Compressio
     // Write directory
     writer.WriteAll("C:\\source", "*", SearchOption.AllDirectories);
     writer.WriteAll("C:\\source", "*.txt", SearchOption.TopDirectoryOnly);
-    
-    // Async variants
-    using (var fileStream = File.OpenRead("source.txt"))
-    {
-        await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken);
-    }
-    
-    await writer.WriteAllAsync("C:\\source", "*", SearchOption.AllDirectories, cancellationToken);
 }
+
+// Async variants: use OpenAsyncWriter to get IAsyncWriter
+await using var stream = File.Create("output.zip");
+await using var writer = await WriterFactory.OpenAsyncWriter(stream, ArchiveType.Zip, new WriterOptions(CompressionType.Deflate), cancellationToken);
+
+using (var fileStream = File.OpenRead("source.txt"))
+{
+    await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken);
+}
+
+await writer.WriteAllAsync("C:\\source", "*", SearchOption.AllDirectories, cancellationToken);
 ```
 
 ---
@@ -390,7 +402,7 @@ ArchiveType.ZStandard
 ```csharp
 try
 {
-    using (var archive = ZipArchive.Open("archive.zip", 
+    using (var archive = ZipArchive.OpenArchive("archive.zip", 
         ReaderOptions.ForEncryptedArchive("password")))
     {
         archive.WriteToDirectory(@"C:\output");

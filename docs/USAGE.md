@@ -242,7 +242,6 @@ while (await reader.MoveToNextEntryAsync(cancellationToken))
 {
     if (!reader.Entry.IsDirectory)
     {
-        using var entryStream = await reader.OpenEntryStreamAsync(cancellationToken);
         using var outputStream = File.Create("output.bin");
         await reader.WriteEntryToAsync(outputStream, cancellationToken);
     }
@@ -261,12 +260,15 @@ await reader.WriteAllToDirectoryAsync(
 
 **Open and process entry stream asynchronously:**
 ```C#
-using var archive = ZipArchive.OpenArchive("archive.zip");
-foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+await using var archive = await ZipArchive.OpenAsyncArchive("archive.zip", cancellationToken: cancellationToken);
+await foreach (var entry in archive.EntriesAsync)
 {
-    using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
-    // Process the decompressed stream asynchronously
-    await ProcessStreamAsync(entryStream, cancellationToken);
+    if (!entry.IsDirectory)
+    {
+        using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
+        // Process the decompressed stream asynchronously
+        await ProcessStreamAsync(entryStream, cancellationToken);
+    }
 }
 ```
 
