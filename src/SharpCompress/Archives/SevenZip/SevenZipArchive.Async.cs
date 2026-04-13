@@ -68,4 +68,13 @@ public partial class SevenZipArchive
 
     protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
         new(new SevenZipReader(ReaderOptions, this));
+
+    public override async ValueTask<bool> IsSolidAsync()
+    {
+        var entries = await EntriesAsync
+            .Where(x => !x.IsDirectory)
+            .ToListAsync()
+            .ConfigureAwait(false);
+        return entries.GroupBy(x => x.FilePart.Folder).Any(folder => folder.Skip(1).Any());
+    }
 }
