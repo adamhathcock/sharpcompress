@@ -96,7 +96,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         Entries
             .Where(x => !x.IsDirectory)
             .GroupBy(x => x.FilePart.Folder)
-            .Any(folder => folder.Count() > 1);
+            .Any(folder => folder.Skip(1).Any());
 
     public override bool IsEncrypted => Entries.First(x => !x.IsDirectory).IsEncrypted;
 

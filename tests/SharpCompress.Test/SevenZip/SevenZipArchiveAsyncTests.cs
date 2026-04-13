@@ -228,13 +228,32 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
+    public async Task SevenZipArchive_TestSolidDetectionAsync()
+    {
+        await using var oneBlockSolidArchive = await SevenZipArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.1block.7z")
+        );
+        Assert.True(await oneBlockSolidArchive.IsSolidAsync());
+
+        await using var solidArchive = await SevenZipArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z")
+        );
+        Assert.True(await solidArchive.IsSolidAsync());
+
+        await using var nonSolidArchive = await SevenZipArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.nonsolid.7z")
+        );
+        Assert.False(await nonSolidArchive.IsSolidAsync());
+    }
+
+    [Fact]
     public async Task SevenZipArchive_Solid_ExtractAllEntries_Contiguous_Async()
     {
         // This test verifies that solid archives iterate entries as contiguous streams
         // rather than recreating the decompression stream for each entry
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
         await using var archive = await SevenZipArchive.OpenAsyncArchive(testArchive);
-        Assert.True(((SevenZipArchive)archive).IsSolid);
+        Assert.True(await archive.IsSolidAsync());
 
         await using var reader = await archive.ExtractAllEntriesAsync();
         while (await reader.MoveToNextEntryAsync())
@@ -255,7 +274,7 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         // and not recreated for each entry in solid archives
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
         await using var archive = await SevenZipArchive.OpenAsyncArchive(testArchive);
-        Assert.True(((SevenZipArchive)archive).IsSolid);
+        Assert.True(await archive.IsSolidAsync());
 
         await using var reader = await archive.ExtractAllEntriesAsync();
 
