@@ -1006,9 +1006,13 @@ internal class ZlibBaseStream : Stream, IStreamStack
             && !_wantCompress
         )
         {
-            //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
+            // Rewind the buffer. Only clear AvailableBytesIn if rewind succeeded.
+            // If rewind fails (e.g., non-seekable stream), the trailer bytes are
+            // still in the working buffer and will be needed by finish().
+            if (this.Rewind(z.AvailableBytesIn))
+            {
+                z.AvailableBytesIn = 0;
+            }
         }
 
         return rc;
@@ -1209,9 +1213,13 @@ internal class ZlibBaseStream : Stream, IStreamStack
             && !_wantCompress
         )
         {
-            //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
+            // Rewind the buffer. Only clear AvailableBytesIn if rewind succeeded.
+            // If rewind fails (e.g., non-seekable stream), the trailer bytes are
+            // still in the working buffer and will be needed by finish().
+            if (this.Rewind(z.AvailableBytesIn))
+            {
+                z.AvailableBytesIn = 0;
+            }
         }
 
         return rc;

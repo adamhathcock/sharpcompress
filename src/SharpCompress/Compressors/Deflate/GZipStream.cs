@@ -79,8 +79,24 @@ public partial class GZipStream : Stream
         CompressionLevel level,
         Encoding encoding
     )
+        : this(stream, mode, level, leaveOpen: false, encoding) { }
+
+    public GZipStream(
+        Stream stream,
+        CompressionMode mode,
+        CompressionLevel level,
+        bool leaveOpen,
+        Encoding encoding
+    )
     {
-        BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, encoding);
+        BaseStream = new ZlibBaseStream(
+            stream,
+            mode,
+            level,
+            ZlibStreamFlavor.GZIP,
+            leaveOpen,
+            encoding
+        );
         _encoding = encoding;
     }
 

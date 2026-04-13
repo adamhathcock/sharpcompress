@@ -20,7 +20,13 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
     public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         var level = (CompressionLevel)compressionLevel;
-        return new GZipStream(destination, CompressionMode.Compress, level, Encoding.UTF8);
+        return new GZipStream(
+            destination,
+            CompressionMode.Compress,
+            level,
+            leaveOpen: true,
+            Encoding.UTF8
+        );
     }
 
     public override Stream CreateDecompressStream(Stream source)
