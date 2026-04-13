@@ -12,24 +12,21 @@ namespace SharpCompress.Test.Zip;
 
 public class ZipCompressionRoundtripTests : TestBase
 {
-    private const int TESTSIZE = 1024 * 1024;
+    private const int TestSize = 1024 * 1024;
 
-    [Fact]
-    public void Zip_Deflate_Roundtrip_ArchiveApi_BufferedRead_Succeeds()
+    private static (byte[] TestSet1, byte[] TestSet2, MemoryStream Stream) CreateTestZip()
     {
-        // Create test data with specific patterns
         var testset1 = Enumerable
-            .Range(0, TESTSIZE)
+            .Range(0, TestSize)
             .Select(i => (byte)((i * 22695477) % 257))
             .ToArray();
         var testset2 = Enumerable
-            .Range(0, TESTSIZE)
+            .Range(0, TestSize)
             .Select(i => (byte)((i * 48271) % 257))
             .ToArray();
 
-        using var stream = new MemoryStream();
+        var stream = new MemoryStream();
 
-        // Compress test streams
         var writerOptions = new ZipWriterOptions(CompressionType.Deflate, compressionLevel: 9);
 
         using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, writerOptions))
@@ -37,6 +34,15 @@ public class ZipCompressionRoundtripTests : TestBase
             writer.Write("sample1", new MemoryStream(testset1));
             writer.Write("sample2", new MemoryStream(testset2));
         }
+
+        stream.Position = 0;
+        return (testset1, testset2, stream);
+    }
+
+    [Fact]
+    public void Zip_Deflate_Roundtrip_ArchiveApi_BufferedRead_Succeeds()
+    {
+        var (testset1, testset2, stream) = CreateTestZip();
 
         // Decompress and verify using Archive API with buffered read (CopyTo)
         stream.Position = 0;
@@ -65,29 +71,7 @@ public class ZipCompressionRoundtripTests : TestBase
     [Fact]
     public void Zip_Deflate_Roundtrip_ArchiveApi_ByteByByteRead_Succeeds()
     {
-        // Create test data with specific patterns
-        var testset1 = Enumerable
-            .Range(0, TESTSIZE)
-            .Select(i => (byte)((i * 22695477) % 257))
-            .ToArray();
-        var testset2 = Enumerable
-            .Range(0, TESTSIZE)
-            .Select(i => (byte)((i * 48271) % 257))
-            .ToArray();
-
-        using var stream = new MemoryStream();
-
-        // Compress test streams
-        var writerOptions = new ZipWriterOptions(CompressionType.Deflate, compressionLevel: 9);
-
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, writerOptions))
-        {
-            writer.Write("sample1", new MemoryStream(testset1));
-            writer.Write("sample2", new MemoryStream(testset2));
-        }
-
-        // Decompress and verify using byte-by-byte read
-        stream.Position = 0;
+        var (testset1, testset2, stream) = CreateTestZip();
         using (var archive = ZipArchive.OpenArchive(stream))
         {
             var files = archive.Entries.Where(e => !e.IsDirectory).OrderBy(e => e.Key).ToList();
@@ -129,29 +113,7 @@ public class ZipCompressionRoundtripTests : TestBase
     [Fact]
     public void Zip_Deflate_Roundtrip_ReaderApi_BufferedRead_Succeeds()
     {
-        // Create test data with specific patterns
-        var testset1 = Enumerable
-            .Range(0, TESTSIZE)
-            .Select(i => (byte)((i * 22695477) % 257))
-            .ToArray();
-        var testset2 = Enumerable
-            .Range(0, TESTSIZE)
-            .Select(i => (byte)((i * 48271) % 257))
-            .ToArray();
-
-        using var stream = new MemoryStream();
-
-        // Compress test streams
-        var writerOptions = new ZipWriterOptions(CompressionType.Deflate, compressionLevel: 9);
-
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, writerOptions))
-        {
-            writer.Write("sample1", new MemoryStream(testset1));
-            writer.Write("sample2", new MemoryStream(testset2));
-        }
-
-        // Decompress and verify using Reader API with buffered read (CopyTo)
-        stream.Position = 0;
+        var (testset1, testset2, stream) = CreateTestZip();
         using (var reader = ReaderFactory.OpenReader(stream))
         {
             // Read first entry
@@ -182,29 +144,7 @@ public class ZipCompressionRoundtripTests : TestBase
     [Fact]
     public void Zip_Deflate_Roundtrip_ReaderApi_ByteByByteRead_Succeeds()
     {
-        // Create test data with specific patterns
-        var testset1 = Enumerable
-            .Range(0, TESTSIZE)
-            .Select(i => (byte)((i * 22695477) % 257))
-            .ToArray();
-        var testset2 = Enumerable
-            .Range(0, TESTSIZE)
-            .Select(i => (byte)((i * 48271) % 257))
-            .ToArray();
-
-        using var stream = new MemoryStream();
-
-        // Compress test streams
-        var writerOptions = new ZipWriterOptions(CompressionType.Deflate, compressionLevel: 9);
-
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, writerOptions))
-        {
-            writer.Write("sample1", new MemoryStream(testset1));
-            writer.Write("sample2", new MemoryStream(testset2));
-        }
-
-        // Decompress and verify using Reader API with byte-by-byte read
-        stream.Position = 0;
+        var (testset1, testset2, stream) = CreateTestZip();
         using (var reader = ReaderFactory.OpenReader(stream))
         {
             // Read first entry byte by byte
