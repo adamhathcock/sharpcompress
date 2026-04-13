@@ -64,8 +64,8 @@ public static class StreamStackExtensions
                 }
 
                 // Try to rewind within the buffer. If the position is outside the buffered
-                // region, silently ignore (matching release behavior where streams without
-                // buffering simply didn't rewind).
+                // region, silently ignore (non-seekable/non-buffered streams cannot rewind,
+                // but passthrough streams with seekable underlying streams can).
                 var targetPosition = sharpCompressStream.Position - count;
                 if (targetPosition >= 0)
                 {

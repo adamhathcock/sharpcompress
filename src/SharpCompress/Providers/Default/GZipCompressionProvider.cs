@@ -13,6 +13,16 @@ namespace SharpCompress.Providers.Default;
 /// </summary>
 public sealed class GZipCompressionProvider : CompressionProviderBase
 {
+    private readonly bool _leaveOpen;
+
+    public GZipCompressionProvider()
+        : this(leaveOpen: false) { }
+
+    public GZipCompressionProvider(bool leaveOpen)
+    {
+        _leaveOpen = leaveOpen;
+    }
+
     public override CompressionType CompressionType => CompressionType.GZip;
     public override bool SupportsCompression => true;
     public override bool SupportsDecompression => true;
@@ -24,6 +34,7 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
             destination,
             CompressionMode.Compress,
             level,
+            _leaveOpen,
             Encoding.UTF8
         );
     }
