@@ -24,7 +24,6 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
             destination,
             CompressionMode.Compress,
             level,
-            leaveOpen: true,
             Encoding.UTF8
         );
     }
