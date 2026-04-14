@@ -1,4 +1,6 @@
 APPNOTE.TXT is the ZIP file format specification.
 Section 1.4 states that PKWARE permits use of this document only for creating products, programs, and processes that read and write ZIP files, and that any reproduction or distribution of the document in whole or in part without prior written permission from PKWARE is strictly prohibited.
 This file has therefore been replaced with a reference link.
+
+Specification Link:
 https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
