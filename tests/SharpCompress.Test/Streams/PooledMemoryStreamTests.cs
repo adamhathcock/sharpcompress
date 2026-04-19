@@ -259,6 +259,7 @@ public class PooledMemoryStreamTests
         Assert.Null(exception);
         Assert.Equal(length, stream.Length);
     }
+
     private sealed class TrackingArrayPool : ArrayPool<byte>
     {
         private const byte RentedBufferFillValue = 0x5A;
