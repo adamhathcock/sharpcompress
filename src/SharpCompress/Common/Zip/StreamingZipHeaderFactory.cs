@@ -151,7 +151,17 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                 }
                 else
                 {
-                    headerBytes = reader.ReadUInt32();
+                    try
+                    {
+                        headerBytes = reader.ReadUInt32();
+                    }
+                    catch (EndOfStreamException ex)
+                    {
+                        throw new InvalidFormatException(
+                            "Unexpected end of stream while reading ZIP archive",
+                            ex
+                        );
+                    }
                 }
 
                 _lastEntryHeader = null;

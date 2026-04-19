@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -91,7 +92,10 @@ public partial class TarReader
         readerOptions ??= new ReaderOptions();
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            bufferSize: readerOptions.RewindableBufferSize
+            bufferSize: Math.Max(
+                readerOptions.RewindableBufferSize ?? 0,
+                TarWrapper.MaximumRewindBufferSize
+            )
         );
         long pos = sharpCompressStream.Position;
         foreach (var wrapper in TarWrapper.Wrappers)
@@ -170,7 +174,10 @@ public partial class TarReader
         readerOptions ??= new ReaderOptions();
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            bufferSize: readerOptions.RewindableBufferSize
+            bufferSize: Math.Max(
+                readerOptions.RewindableBufferSize ?? 0,
+                TarWrapper.MaximumRewindBufferSize
+            )
         );
         long pos = sharpCompressStream.Position;
         foreach (var wrapper in TarWrapper.Wrappers)
