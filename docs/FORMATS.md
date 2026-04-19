@@ -20,7 +20,7 @@
 | Tar.BZip2              | BZip2                                             | Both                | TarArchive      | TarReader  | TarWriter (3) |
 | Tar.Zstandard          | ZStandard                                         | Decompress          | TarArchive      | TarReader  | N/A |
 | Tar.LZip               | LZMA                                              | Both                | TarArchive      | TarReader  | TarWriter (3) |
-| Tar.XZ                 | LZMA2                                             | Decompress          | TarArchive      | TarReader  | TarWriter (3) |
+| Tar.XZ                 | LZMA2                                             | Decompress          | TarArchive      | TarReader  | N/A           |
 | GZip (single file)     | DEFLATE                                           | Both                | GZipArchive     | GZipReader | GZipWriter    |
 | 7Zip (4)               | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate      | Both                | SevenZipArchive | N/A        | SevenZipWriter |
 
