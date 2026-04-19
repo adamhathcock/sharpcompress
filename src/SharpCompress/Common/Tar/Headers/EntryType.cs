@@ -15,4 +15,5 @@ internal enum EntryType : byte
     SparseFile = (byte)'S',
     VolumeHeader = (byte)'V',
     GlobalExtendedHeader = (byte)'g',
+    ExtendedHeader = (byte)'x',
 }

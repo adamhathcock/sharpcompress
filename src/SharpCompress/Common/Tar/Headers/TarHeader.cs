@@ -264,6 +264,11 @@ internal sealed partial class TarHeader
                 longLinkName = ReadLongName(reader, buffer);
                 continue;
             }
+            else if (entryType == EntryType.ExtendedHeader || entryType == EntryType.GlobalExtendedHeader)
+            {
+                ReadPaxHeader(reader, buffer, ref longName, ref longLinkName);
+                continue;
+            }
 
             hasLongValue = false;
         } while (hasLongValue);
@@ -339,6 +344,60 @@ internal sealed partial class TarHeader
             reader.ReadBytes(remainingBytesToRead);
         }
         return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
+    }
+
+    private void ReadPaxHeader(BinaryReader reader, byte[] buffer, ref string? longName, ref string? longLinkName)
+    {
+        var size = ReadSize(buffer);
+        if (size < 0 || size > MAX_LONG_NAME_SIZE)
+        {
+            throw new InvalidFormatException(
+                $"PAX header size {size} is invalid or exceeds maximum allowed size of {MAX_LONG_NAME_SIZE} bytes"
+            );
+        }
+        var dataLength = (int)size;
+        var dataBytes = reader.ReadBytes(dataLength);
+        var remainingBytesToRead = BLOCK_SIZE - (dataLength % BLOCK_SIZE);
+        if (remainingBytesToRead < BLOCK_SIZE)
+        {
+            reader.ReadBytes(remainingBytesToRead);
+        }
+        var text = ArchiveEncoding.Decode(dataBytes, 0, dataLength);
+        var pos = 0;
+        while (pos < text.Length)
+        {
+            var spaceIdx = text.IndexOf(' ', pos);
+            if (spaceIdx < 0)
+            {
+                break;
+            }
+            if (!int.TryParse(text.AsSpan(pos, spaceIdx - pos), out var lineLen) || lineLen <= 0)
+            {
+                break;
+            }
+            var contentStart = spaceIdx + 1;
+            var contentLen = lineLen - (spaceIdx - pos) - 2; // subtract "<len> " and trailing \n
+            if (contentStart + contentLen > text.Length || contentLen < 0)
+            {
+                break;
+            }
+            var content = text.Substring(contentStart, contentLen);
+            var eqIdx = content.IndexOf('=');
+            if (eqIdx > 0)
+            {
+                var key = content[..eqIdx];
+                var value = content[(eqIdx + 1)..];
+                if (key == "path")
+                {
+                    longName = value;
+                }
+                else if (key == "linkpath")
+                {
+                    longLinkName = value;
+                }
+            }
+            pos += lineLen;
+        }
     }
 
     private static EntryType ReadEntryType(byte[] buffer) => (EntryType)buffer[156];

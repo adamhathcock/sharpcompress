@@ -51,7 +51,7 @@ public class TarFactory
     public override bool IsArchive(Stream stream, string? password = null)
     {
         var providers = CompressionProviderRegistry.Default;
-        var sharpCompressStream = new SharpCompressStream(stream);
+        var sharpCompressStream = SharpCompressStream.Create(stream);
         sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -83,7 +83,7 @@ public class TarFactory
     )
     {
         var providers = CompressionProviderRegistry.Default;
-        var sharpCompressStream = new SharpCompressStream(stream);
+        var sharpCompressStream = SharpCompressStream.Create(stream);
         sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -318,7 +318,7 @@ public class TarFactory
     public IReader OpenReader(Stream stream, ReaderOptions? options)
     {
         options ??= new ReaderOptions();
-        var sharpCompressStream = new SharpCompressStream(stream);
+        var sharpCompressStream = SharpCompressStream.Create(stream);
         sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -351,7 +351,7 @@ public class TarFactory
     {
         cancellationToken.ThrowIfCancellationRequested();
         options ??= new ReaderOptions();
-        var sharpCompressStream = new SharpCompressStream(stream);
+        var sharpCompressStream = SharpCompressStream.Create(stream);
         sharpCompressStream.StartRecording();
         foreach (var wrapper in TarWrapper.Wrappers)
         {
