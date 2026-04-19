@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using SharpCompress.Compressors.LZMA.Utilities;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -215,7 +216,7 @@ internal sealed class SevenZipFilesInfoWriter
         Action<Stream> writeData
     )
     {
-        using var dataStream = new MemoryStream();
+        using var dataStream = new PooledMemoryStream();
         writeData(dataStream);
 
         stream.WriteByte((byte)propertyId);

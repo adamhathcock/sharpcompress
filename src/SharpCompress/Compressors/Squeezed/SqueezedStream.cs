@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Compressors.RLE90;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Squeezed;
 
@@ -67,7 +68,7 @@ public partial class SqueezeStream : Stream
 
         if (numnodes >= NUMVALS || numnodes == 0)
         {
-            return new MemoryStream(Array.Empty<byte>());
+            return new PooledMemoryStream();
         }
 
         var dnode = new int[numnodes, 2];
@@ -78,7 +79,7 @@ public partial class SqueezeStream : Stream
         }
 
         var bitReader = new BitReader(_stream);
-        var huffmanDecoded = new MemoryStream();
+        var huffmanDecoded = new PooledMemoryStream();
         int i = 0;
 
         while (true)

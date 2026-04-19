@@ -171,7 +171,7 @@ public partial class SevenZipWriter : AbstractWriter
         var filesInfo = new SevenZipFilesInfoWriter { Entries = entries.ToArray() };
 
         // Write header to a temporary stream first
-        using var headerStream = new MemoryStream();
+        using var headerStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteRawHeader(headerStream, mainStreamsInfo, filesInfo);
 
         // Optionally compress the header
@@ -212,7 +212,7 @@ public partial class SevenZipWriter : AbstractWriter
         };
 
         // Write encoded header to a second temporary stream
-        using var encodedHeaderStream = new MemoryStream();
+        using var encodedHeaderStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteEncodedHeader(encodedHeaderStream, headerStreamsInfo);
 
         // Write the encoded header to the output
@@ -220,12 +220,10 @@ public partial class SevenZipWriter : AbstractWriter
         encodedHeaderStream.Position = 0;
         encodedHeaderStream.CopyTo(output);
 
-        // Compute CRC of the encoded header
-        var headerCrc = Crc32Stream.Compute(
-            Crc32Stream.DEFAULT_POLYNOMIAL,
-            Crc32Stream.DEFAULT_SEED,
-            encodedHeaderStream.GetBuffer().AsSpan(0, (int)encodedHeaderStream.Length)
-        );
+        // Compute CRC of the encoded header without allocating a contiguous buffer
+        var encodedHeaderCrcSink = new Crc32Stream(Stream.Null);
+        encodedHeaderStream.WriteTo(encodedHeaderCrcSink);
+        var headerCrc = encodedHeaderCrcSink.Crc;
 
         // Back-patch signature header
         var nextHeaderOffset = (ulong)(headerStartPos - SevenZipSignatureHeaderWriter.HeaderSize);
@@ -251,12 +249,10 @@ public partial class SevenZipWriter : AbstractWriter
         rawHeaderStream.Position = 0;
         rawHeaderStream.CopyTo(output);
 
-        // Compute CRC of the raw header
-        var headerCrc = Crc32Stream.Compute(
-            Crc32Stream.DEFAULT_POLYNOMIAL,
-            Crc32Stream.DEFAULT_SEED,
-            rawHeaderStream.GetBuffer().AsSpan(0, (int)rawHeaderStream.Length)
-        );
+        // Compute CRC of the raw header without allocating a contiguous buffer
+        var rawHeaderCrcSink = new Crc32Stream(Stream.Null);
+        rawHeaderStream.WriteTo(rawHeaderCrcSink);
+        var headerCrc = rawHeaderCrcSink.Crc;
 
         // Back-patch signature header
         var nextHeaderOffset = (ulong)(headerStartPos - SevenZipSignatureHeaderWriter.HeaderSize);

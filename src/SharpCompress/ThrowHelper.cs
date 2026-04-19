@@ -61,6 +61,15 @@ internal static class ThrowHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowIfGreaterThan(long value, long other, string? paramName = null)
+    {
+        if (value > other)
+        {
+            throw new ArgumentOutOfRangeException(paramName);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfGreaterThan(uint value, uint other, string? paramName = null)
     {
         if (value > other)

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 using SharpCompress.Compressors.PPMd.H;
 using SharpCompress.Compressors.PPMd.I1;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.PPMd;
 
@@ -179,7 +180,7 @@ public class PpmdStream : Stream
         {
             if (_compress)
             {
-                _model.EncodeBlock(_stream, new MemoryStream(), true);
+                _model.EncodeBlock(_stream, Stream.Null, true);
             }
         }
         base.Dispose(disposing);
