@@ -81,8 +81,8 @@ public sealed class PooledMemoryStream : MemoryStream
         }
         set
         {
-            ThrowHelper.ThrowIfNegative(value, nameof(value));
             EnsureNotClosed();
+            ThrowHelper.ThrowIfNegative(value, nameof(value));
             ThrowHelper.ThrowIfGreaterThan(value, MaxStreamLength, nameof(value));
 
             _position = (int)value;
