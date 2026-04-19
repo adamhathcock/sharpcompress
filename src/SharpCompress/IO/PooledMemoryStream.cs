@@ -112,7 +112,10 @@ public sealed class PooledMemoryStream : MemoryStream
         }
     }
 
-    public override void Flush() { }
+    public override void Flush()
+    {
+        EnsureNotClosed();
+    }
 
     public override Task FlushAsync(CancellationToken cancellationToken)
     {
@@ -121,6 +124,7 @@ public sealed class PooledMemoryStream : MemoryStream
             return Task.FromCanceled(cancellationToken);
         }
 
+        EnsureNotClosed();
         return Task.CompletedTask;
     }
 
