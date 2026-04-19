@@ -17,6 +17,12 @@ Primary references:
 - `src/SharpCompress/Common/Tar/`
 - `tests/SharpCompress.Test/Tar/`
 
+## Implemented Since Baseline
+
+- `Tar.XZ` is now documented as read-only (`Writer API = N/A`) in `docs/FORMATS.md`.
+- Local PAX extended headers (`x`) are now implemented on the read path for selected keys.
+- Tar tests now include local PAX coverage for reader/archive sync and async paths.
+
 ## Claimed vs Actual Support
 
 ### `Tar.XZ` is read-only
@@ -41,24 +47,28 @@ Recommended action:
 
 ## Read-Path Gaps
 
-### PAX headers are not implemented
+### Local PAX headers are implemented; global PAX is still pending
 
-There is no explicit support for POSIX PAX local extended headers.
+Local POSIX PAX extended headers (`x`) are now supported on the read path.
 
-Evidence:
+Supported keys in the current implementation:
 
-- `EntryType` does not define the usual local PAX header type value
-- `TarHeader.Read` handles `LongName` and `LongLink`, but does not implement PAX record parsing
-- there are no tests or test archives covering PAX behavior
+- `path`
+- `linkpath`
+- `size`
+- `mtime`
+- `uid`
+- `gid`
+- `mode`
 
-Impact:
+Remaining gap:
 
-- archives relying on PAX for long names, metadata, or timestamps may not be interpreted correctly
+- global PAX extended headers (`g`) are still not semantically implemented
 
 Recommended action:
 
-- decide whether PAX is intentionally unsupported or should be implemented
-- document that decision explicitly
+- keep local PAX key support documented as implemented
+- implement global PAX (`g`) separately when cross-entry metadata state is added
 
 ### Sparse files are not semantically implemented
 
@@ -241,11 +251,10 @@ Recommended action:
 
 - add dedicated sync and async writer tests for header format selection
 
-### No tests for PAX, sparse, or global headers
+### No tests for sparse or global PAX headers
 
-There is no evidence of coverage for:
+Local PAX coverage now exists, but there is still no evidence of coverage for:
 
-- PAX local headers
 - global extended headers
 - sparse tar entries
 
@@ -306,10 +315,6 @@ Recommended action:
 
 ## Recommended Follow-Ups
 
-### Priority 0
-
-- Correct `docs/FORMATS.md` for `Tar.XZ` write support
-
 ### Priority 1
 
 - Fix `TarWriterOptions.HeaderFormat` handling in sync and async writer paths
@@ -318,9 +323,9 @@ Recommended action:
 
 ### Priority 2
 
-- Decide and document the support position for PAX headers
+- Implement and document global PAX (`g`) support
 - Decide and document the support position for sparse files
-- Decide and document the support position for global extended headers
+- Decide and document support boundaries for non-modeled PAX keys (`uname`, `gname`, vendor keys)
 
 ### Priority 3
 

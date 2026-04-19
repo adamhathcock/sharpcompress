@@ -275,4 +275,43 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         Assert.Equal(2, numberOfEntries);
     }
+
+    [Fact]
+    public async ValueTask Tar_PaxLocalHeader_Archive_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.tar");
+        await using var archive = await TarArchive.OpenAsyncArchive(
+            new AsyncOnlyStream(File.OpenRead(archivePath))
+        );
+
+        var firstEntry = (TarArchiveEntry)
+            await archive.EntriesAsync.SingleAsync(entry => entry.Key == "pax/overridden-name.txt");
+        Assert.Equal(10, firstEntry.Size);
+        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(2345, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+
+        var expectedTime = DateTimeOffset.FromUnixTimeSeconds(1700000000).LocalDateTime;
+        Assert.Equal(expectedTime, firstEntry.LastModifiedTime);
+
+        var secondEntry = (TarArchiveEntry)
+            await archive.EntriesAsync.SingleAsync(entry => entry.Key == "second.txt");
+        Assert.Equal(2, secondEntry.Size);
+        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(22, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
+    }
+
+    [Fact]
+    public async ValueTask Tar_PaxLocalHeader_Link_Archive_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.Link.tar");
+        await using var archive = await TarArchive.OpenAsyncArchive(
+            new AsyncOnlyStream(File.OpenRead(archivePath))
+        );
+
+        var entry = (TarArchiveEntry)await archive.EntriesAsync.SingleAsync();
+        Assert.Equal("pax/link-entry", entry.Key);
+        Assert.Equal("pax/target-entry", entry.LinkTarget);
+    }
 }

@@ -175,6 +175,41 @@ public class TarArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void Tar_PaxLocalHeader_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var firstEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "pax/overridden-name.txt");
+        Assert.Equal(10, firstEntry.Size);
+        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(2345, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+
+        var expectedTime = DateTimeOffset.FromUnixTimeSeconds(1700000000).LocalDateTime;
+        Assert.Equal(expectedTime, firstEntry.LastModifiedTime);
+
+        var secondEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "second.txt");
+        Assert.Equal(2, secondEntry.Size);
+        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(22, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
+    }
+
+    [Fact]
+    public void Tar_PaxLocalHeader_Link_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.Link.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var entry = (TarArchiveEntry)archive.Entries.Single();
+        Assert.Equal("pax/link-entry", entry.Key);
+        Assert.Equal("pax/target-entry", entry.LinkTarget);
+    }
+
+    [Fact]
     public void Tar_Create_New()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");

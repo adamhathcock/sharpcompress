@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -148,6 +149,58 @@ public class TarReaderAsyncTests : ReaderTests
             }
         }
         Assert.Equal(3, names.Count);
+    }
+
+    [Fact]
+    public async ValueTask Tar_PaxLocalHeader_Reader_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var firstEntry = (TarEntry)reader.Entry;
+        Assert.Equal("pax/overridden-name.txt", firstEntry.Key);
+        Assert.Equal(10, firstEntry.Size);
+        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(2345, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+
+        var expectedTime = DateTimeOffset.FromUnixTimeSeconds(1700000000).LocalDateTime;
+        Assert.Equal(expectedTime, firstEntry.LastModifiedTime);
+
+        using (var entryStream = await reader.OpenEntryStreamAsync())
+        using (var memoryStream = new MemoryStream())
+        {
+            await entryStream.CopyToAsync(memoryStream);
+            Assert.Equal(10, memoryStream.Length);
+        }
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var secondEntry = (TarEntry)reader.Entry;
+        Assert.Equal("second.txt", secondEntry.Key);
+        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(22, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
+        Assert.Equal(2, secondEntry.Size);
+
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
+
+    [Fact]
+    public async ValueTask Tar_PaxLocalHeader_Link_Reader_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.Link.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.Equal("pax/link-entry", reader.Entry.Key);
+        Assert.Equal("pax/target-entry", reader.Entry.LinkTarget);
+        Assert.False(reader.Entry.IsDirectory);
+        Assert.False(await reader.MoveToNextEntryAsync());
     }
 
     [Fact]
