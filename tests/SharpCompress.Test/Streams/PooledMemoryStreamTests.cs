@@ -209,10 +209,10 @@ public class PooledMemoryStreamTests
     [Fact]
     public void DisposeAfterGetBufferDoesNotReturnExposedArrayToPool()
     {
-        var pool = new TrackingArrayPool();
+        var pool = new OverRentingArrayPool(extraLength: 8);
         byte[] buffer;
 
-        using (var stream = new PooledMemoryStream(pool, capacity: 0, blockSize: 8))
+        using (var stream = new PooledMemoryStream(capacity: 0, blockSize: 8, pool))
         {
             stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
             buffer = stream.GetBuffer();
@@ -221,7 +221,7 @@ public class PooledMemoryStreamTests
             Assert.NotEmpty(pool.RentRequests);
         }
 
-        Assert.Empty(pool.ReturnedLengths);
+        Assert.DoesNotContain(buffer, pool.ReturnedArrays);
         Assert.Equal(1, buffer[0]);
         Assert.Equal(2, buffer[1]);
         Assert.Equal(3, buffer[2]);
@@ -230,10 +230,10 @@ public class PooledMemoryStreamTests
     [Fact]
     public void DisposeAfterTryGetBufferDoesNotReturnExposedArrayToPool()
     {
-        var pool = new TrackingArrayPool();
+        var pool = new OverRentingArrayPool(extraLength: 8);
         ArraySegment<byte> segment;
 
-        using (var stream = new PooledMemoryStream(pool, capacity: 0, blockSize: 8))
+        using (var stream = new PooledMemoryStream(capacity: 0, blockSize: 8, pool))
         {
             stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
 
@@ -242,22 +242,20 @@ public class PooledMemoryStreamTests
             Assert.NotEmpty(pool.RentRequests);
         }
 
-        Assert.Empty(pool.ReturnedLengths);
+        Assert.DoesNotContain(segment.Array!, pool.ReturnedArrays);
         Assert.Equal(1, segment.Array![segment.Offset]);
         Assert.Equal(2, segment.Array[segment.Offset + 1]);
         Assert.Equal(3, segment.Array[segment.Offset + 2]);
     }
 
     [Fact]
-    public void SetLengthNearIntMaxValueDoesNotThrowIOException()
+    public void SetLengthNearIntMaxValueThrowsIOExceptionWhenBlockRoundingOverflows()
     {
         using var stream = new PooledMemoryStream(capacity: 0, blockSize: 8);
         var length = int.MaxValue - 1L;
 
-        var exception = Record.Exception(() => stream.SetLength(length));
-
-        Assert.Null(exception);
-        Assert.Equal(length, stream.Length);
+        Assert.Throws<IOException>(() => stream.SetLength(length));
+        Assert.Equal(0, stream.Length);
     }
 
     private sealed class TrackingArrayPool : ArrayPool<byte>
@@ -301,6 +299,7 @@ public class PooledMemoryStreamTests
 
         public readonly System.Collections.Generic.List<int> RentRequests = new();
         public readonly System.Collections.Generic.List<int> ReturnedLengths = new();
+        public readonly System.Collections.Generic.List<byte[]> ReturnedArrays = new();
 
         public override byte[] Rent(int minimumLength)
         {
@@ -311,6 +310,7 @@ public class PooledMemoryStreamTests
         public override void Return(byte[] array, bool clearArray = false)
         {
             ReturnedLengths.Add(array.Length);
+            ReturnedArrays.Add(array);
             if (clearArray)
             {
                 Array.Clear(array, 0, array.Length);
