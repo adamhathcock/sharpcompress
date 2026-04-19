@@ -82,7 +82,14 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
 
     public override void StartRecording() => _recordedPosition = _stream.Position;
 
-    public override void StopRecording() => _recordedPosition = null;
+    public override void StopRecording()
+    {
+        if (_recordedPosition.HasValue)
+        {
+            _stream.Seek(_recordedPosition.Value, SeekOrigin.Begin);
+        }
+        _recordedPosition = null;
+    }
 
     protected override void Dispose(bool disposing)
     {

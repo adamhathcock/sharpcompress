@@ -231,6 +231,15 @@ internal sealed partial class TarHeader
                 longLinkName = await ReadLongNameAsync(reader, buffer).ConfigureAwait(false);
                 continue;
             }
+            else if (entryType == EntryType.ExtendedHeader || entryType == EntryType.GlobalExtendedHeader)
+            {
+                await ReadPaxHeaderAsync(reader, buffer, (k, v) =>
+                {
+                    if (k == "path") longName = v;
+                    else if (k == "linkpath") longLinkName = v;
+                }).ConfigureAwait(false);
+                continue;
+            }
 
             hasLongValue = false;
         } while (hasLongValue);
@@ -344,6 +353,58 @@ internal sealed partial class TarHeader
         finally
         {
             ArrayPool<byte>.Shared.Return(nameBytes);
+        }
+    }
+
+    private async ValueTask ReadPaxHeaderAsync(AsyncBinaryReader reader, byte[] buffer, Action<string, string> onEntry)
+    {
+        var size = ReadSize(buffer);
+        if (size < 0 || size > MAX_LONG_NAME_SIZE)
+        {
+            throw new InvalidFormatException(
+                $"PAX header size {size} is invalid or exceeds maximum allowed size of {MAX_LONG_NAME_SIZE} bytes"
+            );
+        }
+        var dataLength = (int)size;
+        var dataBytes = ArrayPool<byte>.Shared.Rent(dataLength);
+        try
+        {
+            await reader.ReadBytesAsync(dataBytes, 0, dataLength).ConfigureAwait(false);
+            var remainingBytesToRead = BLOCK_SIZE - (dataLength % BLOCK_SIZE);
+            if (remainingBytesToRead < BLOCK_SIZE)
+            {
+                var remainingBytes = ArrayPool<byte>.Shared.Rent(remainingBytesToRead);
+                try
+                {
+                    await reader.ReadBytesAsync(remainingBytes, 0, remainingBytesToRead).ConfigureAwait(false);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(remainingBytes);
+                }
+            }
+            var text = ArchiveEncoding.Decode(dataBytes, 0, dataLength);
+            var pos = 0;
+            while (pos < text.Length)
+            {
+                var spaceIdx = text.IndexOf(' ', pos);
+                if (spaceIdx < 0) break;
+                if (!int.TryParse(text.AsSpan(pos, spaceIdx - pos), out var lineLen) || lineLen <= 0) break;
+                var contentStart = spaceIdx + 1;
+                var contentLen = lineLen - (spaceIdx - pos) - 2;
+                if (contentStart + contentLen > text.Length || contentLen < 0) break;
+                var content = text.Substring(contentStart, contentLen);
+                var eqIdx = content.IndexOf('=');
+                if (eqIdx > 0)
+                {
+                    onEntry(content[..eqIdx], content[(eqIdx + 1)..]);
+                }
+                pos += lineLen;
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(dataBytes);
         }
     }
 }
