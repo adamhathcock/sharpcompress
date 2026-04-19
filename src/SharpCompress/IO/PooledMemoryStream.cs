@@ -153,11 +153,10 @@ public sealed class PooledMemoryStream : MemoryStream
 
     public override void SetLength(long value)
     {
-        ThrowHelper.ThrowIfNegative(value, nameof(value));
-        ThrowHelper.ThrowIfGreaterThan(value, MaxStreamLength, nameof(value));
-
         EnsureWritable();
 
+        ThrowHelper.ThrowIfNegative(value, nameof(value));
+        ThrowHelper.ThrowIfGreaterThan(value, MaxStreamLength, nameof(value));
         var newLength = (int)value;
         if (newLength > _capacity)
         {
