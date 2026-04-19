@@ -244,6 +244,10 @@ internal sealed class HuffmanTree
                         overflowBits--;
                     } while (overflowBits != 0);
 
+                    if (index < 0 || index >= array.Length)
+                    {
+                        throw new InvalidFormatException("Deflate64: invalid Huffman data");
+                    }
                     array[index] = (short)ch;
                 }
             }

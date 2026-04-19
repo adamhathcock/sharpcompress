@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Compressors.BZip2;
+using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
@@ -57,6 +59,52 @@ public class TarReaderTests : ReaderTests
 
     [Fact]
     public void Tar_GZip_OldGnu_Reader() => Read("Tar.oldgnu.tar.gz", CompressionType.GZip);
+
+    [Fact]
+    public void Tar_BZip2_Reader_NonSeekable()
+    {
+        // Regression test for: Dynamic default RingBuffer for BZip2
+        // Opening a .tar.bz2 from a non-seekable stream should succeed
+        // because the ring buffer is sized to hold the BZip2 block before calling IsTarFile.
+        using var fs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
+        using var nonSeekable = new ForwardOnlyStream(fs);
+        using var reader = ReaderFactory.OpenReader(nonSeekable);
+        var entryCount = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                entryCount++;
+            }
+        }
+        Assert.True(entryCount > 0);
+    }
+
+    [Fact]
+    public void TarWrapper_BZip2_MinimumRewindBufferSize_IsMaxBZip2BlockSize()
+    {
+        // The BZip2 TarWrapper must declare a MinimumRewindBufferSize large enough
+        // to hold an entire maximum-size compressed BZip2 block (9 × 100 000 bytes).
+        var bzip2Wrapper = Array.Find(
+            TarWrapper.Wrappers,
+            w => w.CompressionType == CompressionType.BZip2
+        );
+        Assert.NotNull(bzip2Wrapper);
+        Assert.Equal(BZip2Constants.baseBlockSize * 9, bzip2Wrapper.MinimumRewindBufferSize);
+    }
+
+    [Fact]
+    public void TarWrapper_Default_MinimumRewindBufferSize_Is_DefaultRewindableBufferSize()
+    {
+        // Non-BZip2 wrappers that don't specify a custom size default to
+        // Constants.RewindableBufferSize so existing behaviour is unchanged.
+        var noneWrapper = Array.Find(
+            TarWrapper.Wrappers,
+            w => w.CompressionType == CompressionType.None
+        );
+        Assert.NotNull(noneWrapper);
+        Assert.Equal(Common.Constants.RewindableBufferSize, noneWrapper.MinimumRewindBufferSize);
+    }
 
     [Fact]
     public void Tar_BZip2_Entry_Stream()

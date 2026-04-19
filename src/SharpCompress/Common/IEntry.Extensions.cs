@@ -23,17 +23,38 @@ internal static class EntryExtensions
             {
                 if (entry.CreatedTime.HasValue)
                 {
-                    nf.CreationTime = entry.CreatedTime.Value;
+                    try
+                    {
+                        nf.CreationTime = entry.CreatedTime.Value;
+                    }
+                    catch
+                    {
+                        // Invalid time or the OS rejected
+                    }
                 }
 
                 if (entry.LastModifiedTime.HasValue)
                 {
-                    nf.LastWriteTime = entry.LastModifiedTime.Value;
+                    try
+                    {
+                        nf.LastWriteTime = entry.LastModifiedTime.Value;
+                    }
+                    catch
+                    {
+                        // Invalid time or the OS rejected
+                    }
                 }
 
                 if (entry.LastAccessedTime.HasValue)
                 {
-                    nf.LastAccessTime = entry.LastAccessedTime.Value;
+                    try
+                    {
+                        nf.LastAccessTime = entry.LastAccessedTime.Value;
+                    }
+                    catch
+                    {
+                        // Invalid time or the OS rejected
+                    }
                 }
             }
 

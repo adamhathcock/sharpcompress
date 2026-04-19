@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Shrink;
 
@@ -10,18 +9,11 @@ internal partial class ShrinkStream : Stream
 {
     internal static async ValueTask<ShrinkStream> CreateAsync(
         Stream stream,
-        CompressionMode compressionMode,
-        long compressedSize,
         long uncompressedSize,
         CancellationToken cancellationToken = default
     )
     {
-        var shrinkStream = new ShrinkStream(
-            stream,
-            compressionMode,
-            compressedSize,
-            uncompressedSize
-        );
+        var shrinkStream = new ShrinkStream(stream, uncompressedSize);
         await shrinkStream.DecompressAsync(cancellationToken).ConfigureAwait(false);
         return shrinkStream;
     }
@@ -33,42 +25,16 @@ internal partial class ShrinkStream : Stream
             return;
         }
 
-        // Read all compressed data asynchronously
-        var src = new byte[_compressedSize];
-        int bytesRead = 0;
-        int totalBytesRead = 0;
-
-        while (totalBytesRead < (int)_compressedSize)
-        {
-            bytesRead = await inStream
-                .ReadAsync(
-                    src,
-                    totalBytesRead,
-                    (int)_compressedSize - totalBytesRead,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-            if (bytesRead == 0)
-            {
-                throw new IncompleteArchiveException(
-                    "Unexpected end of stream while reading compressed data"
-                );
-            }
-            totalBytesRead += bytesRead;
-        }
+        // Read actual compressed data from the stream rather than pre-allocating based on the
+        // declared compressed size, which may be crafted to cause an OutOfMemoryException.
+        // The stream is already bounded by ReadOnlySubStream in ZipFilePart.
+        using var srcMs = new MemoryStream();
+        await _inStream.CopyToAsync(srcMs, 81920, cancellationToken).ConfigureAwait(false);
+        var src = srcMs.ToArray();
+        var srcLen = src.Length;
 
         // Decompress synchronously (CPU-bound operation)
-        var srcUsed = 0;
-        var dstUsed = 0;
-
-        HwUnshrink.Unshrink(
-            src,
-            (int)_compressedSize,
-            out srcUsed,
-            _byteOut,
-            (int)_uncompressedSize,
-            out dstUsed
-        );
+        HwUnshrink.Unshrink(src, srcLen, out _, _byteOut, (int)_uncompressedSize, out var dstUsed);
         _outBytesCount = dstUsed;
         _decompressed = true;
     }
