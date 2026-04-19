@@ -151,7 +151,7 @@ public partial class TarArchive
 
                         using (var entryStream = entry.OpenEntryStream())
                         {
-                            using var memoryStream = new MemoryStream();
+                            using var memoryStream = new PooledMemoryStream();
                             entryStream.CopyTo(memoryStream, Constants.BufferSize);
                             memoryStream.Position = 0;
                             var bytes = memoryStream.ToArray();

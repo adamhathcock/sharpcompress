@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -158,7 +159,7 @@ internal sealed class Lzma2EncoderStream : Stream
         }
 
         using var inputMs = new MemoryStream(data.ToArray(), writable: false);
-        using var outputMs = new MemoryStream();
+        using var outputMs = new PooledMemoryStream();
 
         encoder.Code(inputMs, outputMs, data.Length, -1, null);
 
@@ -190,7 +191,7 @@ internal sealed class Lzma2EncoderStream : Stream
         decoder.SetDecoderProperties(props);
 
         using var input = new MemoryStream(compressedData);
-        using var output = new MemoryStream();
+        using var output = new PooledMemoryStream();
         decoder.Code(input, output, compressedData.Length, uncompressedSize, null);
 
         return (int)input.Position;
