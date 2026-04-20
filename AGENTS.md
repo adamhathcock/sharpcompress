@@ -126,10 +126,15 @@ SharpCompress supports multiple archive and compression formats:
 - See [docs/FORMATS.md](docs/FORMATS.md) for complete format support matrix
 
 ### Stream Handling Rules
-- **Disposal**: As of version 0.21, SharpCompress closes wrapped streams by default
-- Use `ReaderOptions` or `WriterOptions` with `LeaveStreamOpen = true` to control stream disposal
+- **Disposal**: As of version 0.21, SharpCompress **closes wrapped streams by default** (`LeaveStreamOpen = false`)
+  - File-based overloads (e.g., `OpenArchive(string filePath)`) use `ReaderOptions.ForFilePath` automatically
+  - Stream-based overloads (e.g., `OpenArchive(Stream stream)`) use `ReaderOptions.ForExternalStream` by default, which sets `LeaveStreamOpen = true`
+- **For caller-provided streams**: Use `ReaderOptions` with `LeaveStreamOpen = true` or the `ForExternalStream` preset to prevent automatic disposal
+  - Example: `var options = new ReaderOptions { LeaveStreamOpen = true };`
+  - Or: `var options = ReaderOptions.ForExternalStream;`
+- **For file paths**: SharpCompress manages the stream lifecycle; no manual disposal needed beyond the archive/reader itself
 - Use `NonDisposingStream` wrapper when working with compression streams directly to prevent disposal
-- Always dispose of readers, writers, and archives in `using` blocks
+- Always dispose of readers, writers, and archives in `using` / `await using` blocks
 - For forward-only operations, use Reader/Writer APIs; for random access, use Archive APIs
 
 ### Async/Await Patterns

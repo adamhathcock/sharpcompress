@@ -24,9 +24,36 @@ namespace SharpCompress.Readers;
 public sealed record ReaderOptions : IReaderOptions
 {
     /// <summary>
-    /// SharpCompress will keep the supplied streams open.  Default is true.
+    /// SharpCompress will keep the supplied streams open.
+    /// Default is false as of v0.21: streams are closed when the archive/reader is disposed.
+    /// Set to true when passing caller-owned streams that should not be disposed.
     /// </summary>
-    public bool LeaveStreamOpen { get; init; } = true;
+    /// <remarks>
+    /// <para>
+    /// <b>Default behavior (LeaveStreamOpen = false):</b>
+    /// When you open an archive from a file path (e.g., <c>GZipArchive.OpenArchive(filePath)</c>),
+    /// SharpCompress manages the stream lifetime and closes it on Dispose.
+    /// </para>
+    /// <para>
+    /// <b>Caller-provided streams (LeaveStreamOpen = true):</b>
+    /// When you pass a stream you created (FileStream, MemoryStream, NetworkStream, etc.),
+    /// set LeaveStreamOpen = true to prevent SharpCompress from disposing it.
+    /// Use <see cref="ForExternalStream"/> preset for convenience.
+    /// </para>
+    /// <para>
+    /// <b>Example:</b>
+    /// <code>
+    /// // File-based: stream managed by library
+    /// using var archive = GZipArchive.OpenArchive(filePath); // LeaveStreamOpen = false
+    ///
+    /// // Caller-provided stream: caller manages lifetime
+    /// using var stream = File.OpenRead(filePath);
+    /// var options = new ReaderOptions { LeaveStreamOpen = true };
+    /// using var archive = GZipArchive.OpenArchive(stream, options);
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public bool LeaveStreamOpen { get; init; } = false;
 
     /// <summary>
     /// Encoding to use for archive entry names.
