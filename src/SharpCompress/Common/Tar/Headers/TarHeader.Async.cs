@@ -200,9 +200,13 @@ internal sealed partial class TarHeader
             .ConfigureAwait(false);
     }
 
-    internal async ValueTask<bool> ReadAsync(AsyncBinaryReader reader)
+    internal async ValueTask<bool> ReadAsync(
+        AsyncBinaryReader reader,
+        PaxMetadata? globalPaxMetadata = null
+    )
     {
-        var pendingMetadata = new PendingTarMetadata();
+        globalPaxMetadata ??= new PaxMetadata();
+        var pendingMetadata = globalPaxMetadata.Clone();
         byte[] buffer;
         EntryType entryType;
 
@@ -236,6 +240,13 @@ internal sealed partial class TarHeader
             if (entryType == EntryType.LocalExtendedHeader)
             {
                 await ReadPaxMetadataAsync(reader, buffer, pendingMetadata).ConfigureAwait(false);
+                continue;
+            }
+
+            if (entryType == EntryType.GlobalExtendedHeader)
+            {
+                await ReadPaxMetadataAsync(reader, buffer, globalPaxMetadata).ConfigureAwait(false);
+                pendingMetadata = globalPaxMetadata.Clone();
                 continue;
             }
 
@@ -278,7 +289,7 @@ internal sealed partial class TarHeader
             }
         }
 
-        ApplyPendingMetadata(pendingMetadata);
+        pendingMetadata.ApplyTo(this);
 
         if (entryType == EntryType.Directory)
         {
@@ -329,7 +340,7 @@ internal sealed partial class TarHeader
     private async ValueTask ReadPaxMetadataAsync(
         AsyncBinaryReader reader,
         byte[] buffer,
-        PendingTarMetadata pendingMetadata
+        PaxMetadata pendingMetadata
     )
     {
         var payload = await ReadMetadataPayloadAsync(

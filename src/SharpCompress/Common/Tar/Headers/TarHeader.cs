@@ -43,7 +43,7 @@ internal sealed partial class TarHeader
     private const int MAX_LONG_NAME_SIZE = 32768;
     private const int MAX_PAX_HEADER_SIZE = 65536;
 
-    private sealed class PendingTarMetadata
+    internal sealed class PaxMetadata
     {
         internal string? Name { get; set; }
         internal string? LinkName { get; set; }
@@ -52,6 +52,56 @@ internal sealed partial class TarHeader
         internal long? GroupId { get; set; }
         internal long? Size { get; set; }
         internal DateTime? LastModifiedTime { get; set; }
+
+        internal PaxMetadata Clone() =>
+            new()
+            {
+                Name = Name,
+                LinkName = LinkName,
+                Mode = Mode,
+                UserId = UserId,
+                GroupId = GroupId,
+                Size = Size,
+                LastModifiedTime = LastModifiedTime,
+            };
+
+        internal void ApplyTo(TarHeader header)
+        {
+            if (Name is not null)
+            {
+                header.Name = Name;
+            }
+
+            if (LinkName is not null)
+            {
+                header.LinkName = LinkName;
+            }
+
+            if (Size.HasValue)
+            {
+                header.Size = Size.Value;
+            }
+
+            if (LastModifiedTime.HasValue)
+            {
+                header.LastModifiedTime = LastModifiedTime.Value;
+            }
+
+            if (Mode.HasValue)
+            {
+                header.Mode = Mode.Value;
+            }
+
+            if (UserId.HasValue)
+            {
+                header.UserId = UserId.Value;
+            }
+
+            if (GroupId.HasValue)
+            {
+                header.GroupId = GroupId.Value;
+            }
+        }
     }
 
     internal void Write(Stream output)
@@ -246,9 +296,10 @@ internal sealed partial class TarHeader
         output.Write(stackalloc byte[numPaddingBytes]);
     }
 
-    internal bool Read(BinaryReader reader)
+    internal bool Read(BinaryReader reader, PaxMetadata? globalPaxMetadata = null)
     {
-        var pendingMetadata = new PendingTarMetadata();
+        globalPaxMetadata ??= new PaxMetadata();
+        var pendingMetadata = globalPaxMetadata.Clone();
         byte[] buffer;
         EntryType entryType;
 
@@ -280,6 +331,13 @@ internal sealed partial class TarHeader
             if (entryType == EntryType.LocalExtendedHeader)
             {
                 ReadPaxMetadata(reader, buffer, pendingMetadata);
+                continue;
+            }
+
+            if (entryType == EntryType.GlobalExtendedHeader)
+            {
+                ReadPaxMetadata(reader, buffer, globalPaxMetadata);
+                pendingMetadata = globalPaxMetadata.Clone();
                 continue;
             }
 
@@ -322,7 +380,7 @@ internal sealed partial class TarHeader
             }
         }
 
-        ApplyPendingMetadata(pendingMetadata);
+        pendingMetadata.ApplyTo(this);
 
         if (entryType == EntryType.Directory)
         {
@@ -343,11 +401,7 @@ internal sealed partial class TarHeader
         return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
     }
 
-    private void ReadPaxMetadata(
-        BinaryReader reader,
-        byte[] buffer,
-        PendingTarMetadata pendingMetadata
-    )
+    private void ReadPaxMetadata(BinaryReader reader, byte[] buffer, PaxMetadata pendingMetadata)
     {
         var payload = ReadMetadataPayload(reader, buffer, MAX_PAX_HEADER_SIZE, "PAX header");
         ParsePaxRecords(payload, pendingMetadata);
@@ -403,7 +457,7 @@ internal sealed partial class TarHeader
         return remainder == 0 ? 0 : BLOCK_SIZE - remainder;
     }
 
-    private static void ParsePaxRecords(byte[] payload, PendingTarMetadata pendingMetadata)
+    private static void ParsePaxRecords(byte[] payload, PaxMetadata pendingMetadata)
     {
         var index = 0;
         while (index < payload.Length)
@@ -473,11 +527,7 @@ internal sealed partial class TarHeader
         return value;
     }
 
-    private static void ApplyPaxKeyValue(
-        PendingTarMetadata pendingMetadata,
-        string key,
-        string value
-    )
+    private static void ApplyPaxKeyValue(PaxMetadata pendingMetadata, string key, string value)
     {
         switch (key)
         {
@@ -576,44 +626,6 @@ internal sealed partial class TarHeader
         catch (ArgumentOutOfRangeException ex)
         {
             throw new InvalidFormatException($"Invalid PAX value for '{key}': '{value}'.", ex);
-        }
-    }
-
-    private void ApplyPendingMetadata(PendingTarMetadata pendingMetadata)
-    {
-        if (pendingMetadata.Name is not null)
-        {
-            Name = pendingMetadata.Name;
-        }
-
-        if (pendingMetadata.LinkName is not null)
-        {
-            LinkName = pendingMetadata.LinkName;
-        }
-
-        if (pendingMetadata.Size.HasValue)
-        {
-            Size = pendingMetadata.Size.Value;
-        }
-
-        if (pendingMetadata.LastModifiedTime.HasValue)
-        {
-            LastModifiedTime = pendingMetadata.LastModifiedTime.Value;
-        }
-
-        if (pendingMetadata.Mode.HasValue)
-        {
-            Mode = pendingMetadata.Mode.Value;
-        }
-
-        if (pendingMetadata.UserId.HasValue)
-        {
-            UserId = pendingMetadata.UserId.Value;
-        }
-
-        if (pendingMetadata.GroupId.HasValue)
-        {
-            GroupId = pendingMetadata.GroupId.Value;
         }
     }
 

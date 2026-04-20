@@ -270,6 +270,7 @@ Tar header parsing is implemented in `TarHeader.Read` and `TarHeader.ReadAsync`.
 | GNU long name (`L`) | Yes |
 | GNU long link (`K`) | Yes |
 | PAX local extended header (`x`) | Yes (selected keys) |
+| PAX global extended header (`g`) | Yes (selected keys) |
 | USTAR prefix reconstruction | Yes |
 | Binary size field parsing | Yes |
 | oldgnu uid/gid numeric quirk parsing | Yes |
@@ -317,6 +318,22 @@ Currently supported keys:
 - `mode`
 
 Unknown PAX keys are ignored.
+
+### PAX Global Header Reads
+
+SharpCompress consumes global PAX extended headers (`g`) and applies supported key overrides to subsequent entries.
+
+Supported keys match local PAX support:
+
+- `path`
+- `linkpath`
+- `size`
+- `mtime`
+- `uid`
+- `gid`
+- `mode`
+
+Global metadata is overridden by local per-entry metadata when both are present.
 
 ### Name Reconstruction
 
@@ -376,7 +393,7 @@ Async tar support is provided by:
 - `TarHeader.ReadAsync`
 - `TarHeader.WriteAsync`
 
-The async implementations generally mirror the sync implementations while using async header parsing, decompression, and stream copy paths. The most important current exception is `TarWriterOptions.HeaderFormat`, which is not consistently honored outside the synchronous file write path.
+The async implementations generally mirror the sync implementations while using async header parsing, decompression, and stream copy paths.
 
 ## Known Limitations
 
@@ -394,10 +411,8 @@ This section documents current implementation limits, not desired future behavio
 
 ### Read limitations or partial support
 
-- No PAX global extended header (`g`) support
-- Local PAX support is limited to selected keys (`path`, `linkpath`, `size`, `mtime`, `uid`, `gid`, `mode`)
+- PAX support is limited to selected keys (`path`, `linkpath`, `size`, `mtime`, `uid`, `gid`, `mode`)
 - No semantic sparse file handling beyond recognizing the entry type enum value
-- No semantic global extended header handling beyond recognizing the entry type enum value
 - No special device or FIFO object model beyond the raw entry type information available internally
 
 ### Archive behavior limitations
@@ -433,6 +448,8 @@ Representative tar test archives in `tests/TestArchives/Archives/`:
 - `very long filename.tar`
 - `ustar with long names.tar`
 - `Tar.LongPathsWithLongNameExtension.tar`
+- `Tar.PaxGlobalHeader.tar`
+- `Tar.PaxGlobalHeader.Link.tar`
 - `Tar.Empty.tar`
 - `TarCorrupted.tar`
 - `TarWithSymlink.tar.gz`

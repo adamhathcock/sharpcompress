@@ -13,6 +13,7 @@ internal static partial class TarHeaderFactory
         IArchiveEncoding archiveEncoding
     )
     {
+        var globalPaxMetadata = new TarHeader.PaxMetadata();
         while (true)
         {
             TarHeader? header = null;
@@ -21,7 +22,7 @@ internal static partial class TarHeaderFactory
                 var reader = new BinaryReader(stream, archiveEncoding.Default, leaveOpen: false);
                 header = new TarHeader(archiveEncoding);
 
-                if (!header.Read(reader))
+                if (!header.Read(reader, globalPaxMetadata))
                 {
                     yield break;
                 }

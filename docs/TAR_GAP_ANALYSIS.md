@@ -21,10 +21,14 @@ Primary references:
 
 - `Tar.XZ` is now documented as read-only (`Writer API = N/A`) in `docs/FORMATS.md`.
 - Local PAX extended headers (`x`) are now implemented on the read path for selected keys.
+- Global PAX extended headers (`g`) are now implemented on the read path for selected keys.
 - Tar tests now include local PAX coverage for reader/archive sync and async paths.
+- Tar tests now include global PAX coverage for reader/archive sync and async paths.
 - `TarWriterOptions.HeaderFormat` is now honored in sync and async file and directory write paths.
 - Tar tests now cover `USTAR` and `GNU_TAR_LONG_LINK`, including USTAR long-name failure scenarios.
 - Symlink coverage now includes `TarWithSymlink.tar.gz` for reader sync and async paths.
+- Sparse handling remains explicitly unsupported.
+- Non-modeled PAX keys remain explicitly unsupported.
 
 ## Claimed vs Actual Support
 
@@ -50,9 +54,9 @@ Recommended action:
 
 ## Read-Path Gaps
 
-### Local PAX headers are implemented; global PAX is still pending
+### Local and global PAX headers are implemented for selected keys
 
-Local POSIX PAX extended headers (`x`) are now supported on the read path.
+Local (`x`) and global (`g`) POSIX PAX extended headers are now supported on the read path.
 
 Supported keys in the current implementation:
 
@@ -66,16 +70,19 @@ Supported keys in the current implementation:
 
 Remaining gap:
 
-- global PAX extended headers (`g`) are still not semantically implemented
+- non-modeled PAX keys are still ignored
+- PAX sparse extensions are still unsupported
 
 Recommended action:
 
-- keep local PAX key support documented as implemented
-- implement global PAX (`g`) separately when cross-entry metadata state is added
+- keep supported-key boundaries documented and test-covered
+- keep unsupported-key behavior explicit in docs
 
 ### Sparse files are not semantically implemented
 
 `EntryType` defines `SparseFile`, but the read path does not contain sparse map handling or sparse reconstruction logic.
+
+PAX sparse extensions are also unsupported (for example `GNU.sparse.*` and similar sparse metadata keys).
 
 Evidence:
 
@@ -89,26 +96,25 @@ Impact:
 
 Recommended action:
 
-- document sparse support as unsupported or partial
-- add explicit tests if future support is added
+- keep sparse support explicitly documented as unsupported
+- add sparse fixtures and tests only when sparse reconstruction is implemented
 
-### Global extended headers are not semantically implemented
+### Non-modeled PAX keys are still unsupported
 
-`EntryType` defines `GlobalExtendedHeader`, but no semantic handling exists in the read pipeline.
+PAX parsing is intentionally limited to modeled keys (`path`, `linkpath`, `size`, `mtime`, `uid`, `gid`, `mode`).
 
-Evidence:
+Not currently modeled/supported:
 
-- `TarHeader.Read` does not special-case `GlobalExtendedHeader`
-- `TarEntry` does not surface a global-header model
-- no tests cover this case
-
-Impact:
-
-- global metadata records are not applied in a defined way
+- `uname`
+- `gname`
+- `atime`
+- `ctime`
+- device-specific values and vendor keys
 
 Recommended action:
 
-- document as unsupported until explicit behavior exists
+- keep unsupported-key behavior documented as ignored
+- add support only when there is a consumer-facing object model for it
 
 ### Device and FIFO semantics are not surfaced
 
@@ -215,12 +221,12 @@ Tar tests now cover:
 - long-name failure in USTAR mode
 - long-name success in GNU mode through sync and async writer paths
 
-### No tests for sparse or global PAX headers
+### No tests for sparse tar semantics
 
-Local PAX coverage now exists, but there is still no evidence of coverage for:
+Local and global PAX coverage now exists, but there is still no evidence of coverage for:
 
-- global extended headers
 - sparse tar entries
+- sparse PAX extensions
 
 Impact:
 
@@ -255,7 +261,7 @@ Missing implementation-specific details include:
 - GNU long-name and long-link support
 - USTAR prefix handling
 - oldgnu numeric quirk handling
-- partial PAX support boundaries (local supported, global pending)
+- partial PAX support boundaries (selected local/global keys supported)
 - missing sparse support
 - reader vs archive behavior differences for compressed tar
 - file-size requirements for writing from non-seekable sources
@@ -281,15 +287,10 @@ Recommended action:
 
 ### Priority 1
 
-- Implement and document global PAX (`g`) support
-- Decide and document the support position for sparse files
-- Decide and document support boundaries for non-modeled PAX keys (`uname`, `gname`, vendor keys)
-
-### Priority 2
-
 - Add negative writer tests for unsupported wrapper compressions
 - Evaluate whether sync and async archive open contracts should match exactly
 - Improve metadata round-trip behavior only if there is a consumer need
+- Evaluate whether non-modeled PAX keys should remain ignored or be surfaced in a future metadata API
 
 ## Summary
 
