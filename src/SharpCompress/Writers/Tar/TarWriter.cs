@@ -97,7 +97,7 @@ public partial class TarWriter : AbstractWriter
             return; // Skip empty or root directory
         }
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, headerFormat);
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = normalizedName;
         header.Size = 0;

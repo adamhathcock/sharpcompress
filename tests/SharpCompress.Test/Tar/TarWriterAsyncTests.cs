@@ -1,7 +1,10 @@
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -80,5 +83,75 @@ public class TarWriterAsyncTests : WriterTests
             ? paddedContentWithHeader + (512 * 2)
             : paddedContentWithHeader;
         Assert.Equal(expectedStreamLength, stream.Length);
+    }
+
+    [Fact]
+    public async ValueTask Tar_Ustar_HeaderFormat_WritesShortPath_Async()
+    {
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
+        using (var writer = new TarWriter(new AsyncOnlyStream(stream), options))
+        using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
+        {
+            await writer.WriteAsync("dir/file.txt", content, null);
+        }
+
+        stream.Position = 0;
+        using var archive = TarArchive.OpenArchive(stream);
+        Assert.Single(archive.Entries);
+        Assert.Equal("dir/file.txt", archive.Entries.Single().Key);
+    }
+
+    [Fact]
+    public async ValueTask Tar_Ustar_HeaderFormat_ThrowsForLongPath_Async()
+    {
+        var longName = new string('a', 160) + ".txt";
+
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
+        using var writer = new TarWriter(new AsyncOnlyStream(stream), options);
+        using var content = new MemoryStream(Encoding.UTF8.GetBytes("hello"));
+
+        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+            await writer.WriteAsync(longName, content, null)
+        );
+    }
+
+    [Fact]
+    public async ValueTask Tar_GnuLongLink_HeaderFormat_WritesLongPath_Async()
+    {
+        var longName = new string('a', 160) + ".txt";
+
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(
+            CompressionType.None,
+            true,
+            TarHeaderWriteFormat.GNU_TAR_LONG_LINK
+        );
+
+        using (var writer = new TarWriter(new AsyncOnlyStream(stream), options))
+        using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
+        {
+            await writer.WriteAsync(longName, content, null);
+        }
+
+        stream.Position = 0;
+        using var archive = TarArchive.OpenArchive(stream);
+        Assert.Single(archive.Entries);
+        Assert.Equal(longName, archive.Entries.Single().Key);
+    }
+
+    [Fact]
+    public async ValueTask Tar_Ustar_HeaderFormat_ThrowsForLongDirectory_Async()
+    {
+        var longDirectory = new string('a', 170);
+
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
+        using var writer = new TarWriter(new AsyncOnlyStream(stream), options);
+
+        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+            await writer.WriteDirectoryAsync(longDirectory, null)
+        );
     }
 }

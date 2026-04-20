@@ -22,6 +22,9 @@ Primary references:
 - `Tar.XZ` is now documented as read-only (`Writer API = N/A`) in `docs/FORMATS.md`.
 - Local PAX extended headers (`x`) are now implemented on the read path for selected keys.
 - Tar tests now include local PAX coverage for reader/archive sync and async paths.
+- `TarWriterOptions.HeaderFormat` is now honored in sync and async file and directory write paths.
+- Tar tests now cover `USTAR` and `GNU_TAR_LONG_LINK`, including USTAR long-name failure scenarios.
+- Symlink coverage now includes `TarWithSymlink.tar.gz` for reader sync and async paths.
 
 ## Claimed vs Actual Support
 
@@ -122,34 +125,16 @@ Recommended action:
 
 ## Write-Path Gaps
 
-### `HeaderFormat` is not honored consistently
+### `HeaderFormat` consistency is resolved
 
-`TarWriterOptions.HeaderFormat` exists and defaults to `GNU_TAR_LONG_LINK`, but the configured value is not consistently applied.
+`TarWriterOptions.HeaderFormat` is now applied across:
 
-### Sync directory write path
+- sync file writes
+- sync directory writes
+- async file writes
+- async directory writes
 
-`TarWriter.WriteDirectory` creates headers using:
-
-- `new TarHeader(WriterOptions.ArchiveEncoding)`
-
-This uses the default tar header format rather than the writer's configured `headerFormat` field.
-
-Impact:
-
-- directory entries written through the sync path do not follow `TarWriterOptions.HeaderFormat`
-
-### Async write path
-
-`TarWriter.WriteAsync` and `WriteDirectoryAsync` also create headers using the default constructor rather than the configured header format.
-
-Impact:
-
-- async writes ignore `TarWriterOptions.HeaderFormat` for both file and directory entries
-
-Recommended action:
-
-- pass the configured header format to all `TarHeader` constructions in sync and async write paths
-- add tests for both `GNU_TAR_LONG_LINK` and `USTAR`
+Regression tests now cover both `USTAR` and `GNU_TAR_LONG_LINK` behavior.
 
 ### No public link-writing support
 
@@ -207,49 +192,28 @@ Recommended action:
 
 - either align the contracts or document the difference explicitly
 
-### Async and sync write behavior do not align on header format handling
+### Header format alignment between sync and async is resolved
 
-This is the most visible sync/async inconsistency in the current Tar writer implementation.
-
-Recommended action:
-
-- fix the implementation first
-- add matching sync and async tests to keep the behavior aligned
+Sync and async Tar writer paths now both honor `TarWriterOptions.HeaderFormat`, and matching tests are present for both paths.
 
 ## Test Coverage Gaps
 
-### Symlink coverage exists in test data but not in assertions
+### Symlink coverage is now present for reader paths
 
-There is a tar archive containing symlinks:
+Symlink behavior is now asserted for sync and async reader paths using:
 
 - `tests/TestArchives/Archives/TarWithSymlink.tar.gz`
 
-Current Tar tests do not assert tar symlink behavior against that fixture.
+Archive-path symlink assertions currently rely on small tar fixtures rather than this large compressed sample.
 
-Impact:
+### Header format coverage is now present
 
-- the code claims practical read support for link targets, but coverage does not verify it
-
-Recommended action:
-
-- add reader and archive tests asserting `EntryType`-derived behavior and `LinkTarget`
-
-### No tests for `HeaderFormat`
-
-There are currently no tests covering:
+Tar tests now cover:
 
 - `TarWriterOptions.HeaderFormat = USTAR`
 - `TarWriterOptions.HeaderFormat = GNU_TAR_LONG_LINK`
-- long-name failures in USTAR mode
-- long-name success in GNU mode through the async writer path
-
-Impact:
-
-- the current header-format regressions were able to exist without test coverage
-
-Recommended action:
-
-- add dedicated sync and async writer tests for header format selection
+- long-name failure in USTAR mode
+- long-name success in GNU mode through sync and async writer paths
 
 ### No tests for sparse or global PAX headers
 
@@ -291,7 +255,7 @@ Missing implementation-specific details include:
 - GNU long-name and long-link support
 - USTAR prefix handling
 - oldgnu numeric quirk handling
-- missing PAX support
+- partial PAX support boundaries (local supported, global pending)
 - missing sparse support
 - reader vs archive behavior differences for compressed tar
 - file-size requirements for writing from non-seekable sources
@@ -317,17 +281,11 @@ Recommended action:
 
 ### Priority 1
 
-- Fix `TarWriterOptions.HeaderFormat` handling in sync and async writer paths
-- Add tests for header-format behavior
-- Add symlink coverage using `TarWithSymlink.tar.gz`
-
-### Priority 2
-
 - Implement and document global PAX (`g`) support
 - Decide and document the support position for sparse files
 - Decide and document support boundaries for non-modeled PAX keys (`uname`, `gname`, vendor keys)
 
-### Priority 3
+### Priority 2
 
 - Add negative writer tests for unsupported wrapper compressions
 - Evaluate whether sync and async archive open contracts should match exactly
@@ -339,7 +297,7 @@ The SharpCompress Tar implementation is strong on common read scenarios and basi
 
 - documentation overstating or under-describing support
 - incomplete feature coverage for less common tar dialect features
-- sync/async and file/directory inconsistencies in writer header-format handling
-- test coverage holes around links and advanced tar metadata features
+- archive/read behavioral differences that are not always explicit in docs
+- test coverage holes around advanced tar metadata features
 
 `docs/TAR_SPEC.md` should be treated as the implementation baseline. This document identifies where that baseline is incomplete, inconsistent, or incorrectly reflected elsewhere in the repository.

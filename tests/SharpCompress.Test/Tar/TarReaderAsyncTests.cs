@@ -204,6 +204,36 @@ public class TarReaderAsyncTests : ReaderTests
     }
 
     [Fact]
+    public async ValueTask Tar_WithSymlink_Reader_SurfacesLinkTargets_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        var foundVulkanToolsLink = false;
+        var foundVulkanSamplesLink = false;
+
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/Vulkan-Tools")
+            {
+                foundVulkanToolsLink = true;
+                Assert.Equal("../../External/Vulkan-Tools", reader.Entry.LinkTarget);
+            }
+
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/VulkanSamples")
+            {
+                foundVulkanSamplesLink = true;
+                Assert.Equal("../../External/VulkanSamples", reader.Entry.LinkTarget);
+            }
+        }
+
+        Assert.True(foundVulkanToolsLink);
+        Assert.True(foundVulkanSamplesLink);
+    }
+
+    [Fact]
     public void Tar_Containing_Rar_Reader_Async()
     {
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");

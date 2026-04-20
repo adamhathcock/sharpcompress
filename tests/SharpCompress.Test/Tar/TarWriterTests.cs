@@ -1,6 +1,9 @@
 using System.IO;
+using System.Linq;
 using System.Text;
+using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Writers.Tar;
 using Xunit;
 
@@ -74,5 +77,59 @@ public class TarWriterTests : WriterTests
             ? paddedContentWithHeader + (512 * 2)
             : paddedContentWithHeader;
         Assert.Equal(expectedStreamLength, stream.Length);
+    }
+
+    [Fact]
+    public void Tar_Ustar_HeaderFormat_WritesShortPath()
+    {
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
+        using (var writer = new TarWriter(stream, options))
+        using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
+        {
+            writer.Write("dir/file.txt", content, null);
+        }
+
+        stream.Position = 0;
+        using var archive = TarArchive.OpenArchive(stream);
+        Assert.Single(archive.Entries);
+        Assert.Equal("dir/file.txt", archive.Entries.Single().Key);
+    }
+
+    [Fact]
+    public void Tar_Ustar_HeaderFormat_ThrowsForLongPath()
+    {
+        var longName = new string('a', 160) + ".txt";
+
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
+        using var writer = new TarWriter(stream, options);
+        using var content = new MemoryStream(Encoding.UTF8.GetBytes("hello"));
+
+        Assert.Throws<InvalidFormatException>(() => writer.Write(longName, content, null));
+    }
+
+    [Fact]
+    public void Tar_GnuLongLink_HeaderFormat_WritesLongPath()
+    {
+        var longName = new string('a', 160) + ".txt";
+
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(
+            CompressionType.None,
+            true,
+            TarHeaderWriteFormat.GNU_TAR_LONG_LINK
+        );
+
+        using (var writer = new TarWriter(stream, options))
+        using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
+        {
+            writer.Write(longName, content, null);
+        }
+
+        stream.Position = 0;
+        using var archive = TarArchive.OpenArchive(stream);
+        Assert.Single(archive.Entries);
+        Assert.Equal(longName, archive.Entries.Single().Key);
     }
 }

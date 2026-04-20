@@ -224,6 +224,36 @@ public class TarReaderTests : ReaderTests
     }
 
     [Fact]
+    public void Tar_WithSymlink_Reader_SurfacesLinkTargets()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz");
+
+        using Stream stream = File.OpenRead(archivePath);
+        using var reader = TarReader.OpenReader(stream);
+
+        var foundVulkanToolsLink = false;
+        var foundVulkanSamplesLink = false;
+
+        while (reader.MoveToNextEntry())
+        {
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/Vulkan-Tools")
+            {
+                foundVulkanToolsLink = true;
+                Assert.Equal("../../External/Vulkan-Tools", reader.Entry.LinkTarget);
+            }
+
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/VulkanSamples")
+            {
+                foundVulkanSamplesLink = true;
+                Assert.Equal("../../External/VulkanSamples", reader.Entry.LinkTarget);
+            }
+        }
+
+        Assert.True(foundVulkanToolsLink);
+        Assert.True(foundVulkanSamplesLink);
+    }
+
+    [Fact]
     public void Tar_BZip2_Skip_Entry_Stream()
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
