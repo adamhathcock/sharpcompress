@@ -200,15 +200,17 @@ internal sealed partial class TarHeader
             .ConfigureAwait(false);
     }
 
-    internal async ValueTask<bool> ReadAsync(AsyncBinaryReader reader)
+    internal async ValueTask<bool> ReadAsync(
+        AsyncBinaryReader reader,
+        PaxMetadata? globalPaxMetadata = null
+    )
     {
-        string? longName = null;
-        string? longLinkName = null;
-        var hasLongValue = true;
+        globalPaxMetadata ??= new PaxMetadata();
+        var pendingMetadata = globalPaxMetadata.Clone();
         byte[] buffer;
         EntryType entryType;
 
-        do
+        while (true)
         {
             buffer = await ReadBlockAsync(reader).ConfigureAwait(false);
 
@@ -223,17 +225,33 @@ internal sealed partial class TarHeader
             // to apply to the header that follows them.
             if (entryType == EntryType.LongName)
             {
-                longName = await ReadLongNameAsync(reader, buffer).ConfigureAwait(false);
-                continue;
-            }
-            else if (entryType == EntryType.LongLink)
-            {
-                longLinkName = await ReadLongNameAsync(reader, buffer).ConfigureAwait(false);
+                pendingMetadata.Name = await ReadLongNameAsync(reader, buffer)
+                    .ConfigureAwait(false);
                 continue;
             }
 
-            hasLongValue = false;
-        } while (hasLongValue);
+            if (entryType == EntryType.LongLink)
+            {
+                pendingMetadata.LinkName = await ReadLongNameAsync(reader, buffer)
+                    .ConfigureAwait(false);
+                continue;
+            }
+
+            if (entryType == EntryType.LocalExtendedHeader)
+            {
+                await ReadPaxMetadataAsync(reader, buffer, pendingMetadata).ConfigureAwait(false);
+                continue;
+            }
+
+            if (entryType == EntryType.GlobalExtendedHeader)
+            {
+                await ReadPaxMetadataAsync(reader, buffer, globalPaxMetadata).ConfigureAwait(false);
+                pendingMetadata = globalPaxMetadata.Clone();
+                continue;
+            }
+
+            break;
+        }
 
         // Check header checksum
         if (!checkChecksum(buffer))
@@ -241,23 +259,18 @@ internal sealed partial class TarHeader
             return false;
         }
 
-        Name = longName ?? ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+        Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
         EntryType = entryType;
         Size = ReadSize(buffer);
+        LinkName = null;
 
         // for symlinks, additionally read the linkname
         if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
         {
-            LinkName = longLinkName ?? ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+            LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
         }
 
         Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-
-        if (entryType == EntryType.Directory)
-        {
-            Mode |= 0b1_000_000_000;
-        }
-
         UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
         GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
 
@@ -274,6 +287,13 @@ internal sealed partial class TarHeader
             {
                 Name = namePrefix + "/" + Name;
             }
+        }
+
+        pendingMetadata.ApplyTo(this);
+
+        if (entryType == EntryType.Directory)
+        {
+            Mode |= 0b1_000_000_000;
         }
 
         if (entryType != EntryType.LongName && Name.Length == 0)
@@ -306,44 +326,62 @@ internal sealed partial class TarHeader
 
     private async ValueTask<string> ReadLongNameAsync(AsyncBinaryReader reader, byte[] buffer)
     {
+        var nameBytes = await ReadMetadataPayloadAsync(
+                reader,
+                buffer,
+                MAX_LONG_NAME_SIZE,
+                "Long name"
+            )
+            .ConfigureAwait(false);
+
+        return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
+    }
+
+    private async ValueTask ReadPaxMetadataAsync(
+        AsyncBinaryReader reader,
+        byte[] buffer,
+        PaxMetadata pendingMetadata
+    )
+    {
+        var payload = await ReadMetadataPayloadAsync(
+                reader,
+                buffer,
+                MAX_PAX_HEADER_SIZE,
+                "PAX header"
+            )
+            .ConfigureAwait(false);
+
+        ParsePaxRecords(payload, pendingMetadata);
+    }
+
+    private async ValueTask<byte[]> ReadMetadataPayloadAsync(
+        AsyncBinaryReader reader,
+        byte[] buffer,
+        int maxSize,
+        string payloadName
+    )
+    {
         var size = ReadSize(buffer);
 
         // Validate size to prevent memory exhaustion from malformed headers
-        if (size < 0 || size > MAX_LONG_NAME_SIZE)
+        if (size < 0 || size > maxSize)
         {
             throw new InvalidFormatException(
-                $"Long name size {size} is invalid or exceeds maximum allowed size of {MAX_LONG_NAME_SIZE} bytes"
+                $"{payloadName} size {size} is invalid or exceeds maximum allowed size of {maxSize} bytes"
             );
         }
 
-        var nameLength = (int)size;
-        var nameBytes = ArrayPool<byte>.Shared.Rent(nameLength);
-        try
-        {
-            await reader.ReadBytesAsync(nameBytes, 0, nameLength).ConfigureAwait(false);
-            var remainingBytesToRead = BLOCK_SIZE - (nameLength % BLOCK_SIZE);
+        var payloadLength = (int)size;
+        var payload = new byte[payloadLength];
+        await reader.ReadBytesAsync(payload, 0, payloadLength).ConfigureAwait(false);
 
-            // Read the rest of the block and discard the data
-            if (remainingBytesToRead < BLOCK_SIZE)
-            {
-                var remainingBytes = ArrayPool<byte>.Shared.Rent(remainingBytesToRead);
-                try
-                {
-                    await reader
-                        .ReadBytesAsync(remainingBytes, 0, remainingBytesToRead)
-                        .ConfigureAwait(false);
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(remainingBytes);
-                }
-            }
-
-            return ArchiveEncoding.Decode(nameBytes, 0, nameLength).TrimNulls();
-        }
-        finally
+        var paddingLength = GetPaddingLength(payloadLength);
+        if (paddingLength > 0)
         {
-            ArrayPool<byte>.Shared.Return(nameBytes);
+            var padding = new byte[paddingLength];
+            await reader.ReadBytesAsync(padding, 0, paddingLength).ConfigureAwait(false);
         }
+
+        return payload;
     }
 }

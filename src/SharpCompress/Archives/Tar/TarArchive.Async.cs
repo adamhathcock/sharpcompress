@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Common.Tar;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -105,71 +104,29 @@ public partial class TarArchive
                 ? StreamingMode.Seekable
                 : StreamingMode.Streaming;
 
-        // Always use async header reading in LoadEntriesAsync for consistency
-        {
-            // Use async header reading for async-only streams
-            TarHeader? previousHeader = null;
-            await foreach (
-                var header in TarHeaderFactory.ReadHeaderAsync(
-                    streamingMode,
-                    stream,
-                    ReaderOptions.ArchiveEncoding
-                )
+        await foreach (
+            var header in TarHeaderFactory.ReadHeaderAsync(
+                streamingMode,
+                stream,
+                ReaderOptions.ArchiveEncoding
             )
+        )
+        {
+            if (header != null)
             {
-                if (header != null)
-                {
-                    if (header.EntryType == EntryType.LongName)
-                    {
-                        previousHeader = header;
-                    }
-                    else
-                    {
-                        if (previousHeader != null)
-                        {
-                            var entry = new TarArchiveEntry(
-                                this,
-                                new TarFilePart(
-                                    previousHeader,
-                                    _compressionType == CompressionType.None ? stream : null
-                                ),
-                                CompressionType.None,
-                                ReaderOptions
-                            );
-
-                            var oldStreamPos = stream.Position;
-
-                            using (var entryStream = entry.OpenEntryStream())
-                            {
-                                using var memoryStream = new PooledMemoryStream();
-                                await entryStream.CopyToAsync(memoryStream).ConfigureAwait(false);
-                                memoryStream.Position = 0;
-                                var bytes = memoryStream.ToArray();
-
-                                header.Name = ReaderOptions
-                                    .ArchiveEncoding.Decode(bytes)
-                                    .TrimNulls();
-                            }
-
-                            stream.Position = oldStreamPos;
-
-                            previousHeader = null;
-                        }
-                        yield return new TarArchiveEntry(
-                            this,
-                            new TarFilePart(
-                                header,
-                                _compressionType == CompressionType.None ? stream : null
-                            ),
-                            CompressionType.None,
-                            ReaderOptions
-                        );
-                    }
-                }
-                else
-                {
-                    throw new IncompleteArchiveException("Failed to read TAR header");
-                }
+                yield return new TarArchiveEntry(
+                    this,
+                    new TarFilePart(
+                        header,
+                        _compressionType == CompressionType.None ? stream : null
+                    ),
+                    CompressionType.None,
+                    ReaderOptions
+                );
+            }
+            else
+            {
+                throw new IncompleteArchiveException("Failed to read TAR header");
             }
         }
     }

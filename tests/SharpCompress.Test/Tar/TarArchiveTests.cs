@@ -175,6 +175,93 @@ public class TarArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void Tar_PaxLocalHeader_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var firstEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "pax/overridden-name.txt");
+        Assert.Equal(10, firstEntry.Size);
+        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(2345, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+
+        var expectedTime = DateTimeOffset.FromUnixTimeSeconds(1700000000).LocalDateTime;
+        Assert.Equal(expectedTime, firstEntry.LastModifiedTime);
+
+        var secondEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "second.txt");
+        Assert.Equal(2, secondEntry.Size);
+        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(22, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
+    }
+
+    [Fact]
+    public void Tar_PaxLocalHeader_Link_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.Link.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var entry = (TarArchiveEntry)archive.Entries.Single();
+        Assert.Equal("pax/link-entry", entry.Key);
+        Assert.Equal("pax/target-entry", entry.LinkTarget);
+    }
+
+    [Fact]
+    public void Tar_PaxGlobalHeader_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var globalTime = DateTimeOffset.FromUnixTimeSeconds(1700000100).LocalDateTime;
+        var localOverrideTime = DateTimeOffset.FromUnixTimeSeconds(1700000200).LocalDateTime;
+
+        var firstEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-one.txt");
+        Assert.Equal(4000, firstEntry.UserID);
+        Assert.Equal(5000, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+        Assert.Equal(globalTime, firstEntry.LastModifiedTime);
+
+        var secondEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-local-override.txt");
+        Assert.Equal(4010, secondEntry.UserID);
+        Assert.Equal(5010, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("600", 8), secondEntry.Mode);
+        Assert.Equal(localOverrideTime, secondEntry.LastModifiedTime);
+
+        var thirdEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-three.txt");
+        Assert.Equal(4000, thirdEntry.UserID);
+        Assert.Equal(5000, thirdEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), thirdEntry.Mode);
+        Assert.Equal(globalTime, thirdEntry.LastModifiedTime);
+    }
+
+    [Fact]
+    public void Tar_PaxGlobalHeader_Link_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.Link.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var globalLink = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-link");
+        Assert.Equal("global-target", globalLink.LinkTarget);
+        Assert.Equal(4100, globalLink.UserID);
+        Assert.Equal(5100, globalLink.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), globalLink.Mode);
+
+        var localOverrideLink = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "local-link-override");
+        Assert.Equal("local-target", localOverrideLink.LinkTarget);
+        Assert.Equal(4100, localOverrideLink.UserID);
+        Assert.Equal(5100, localOverrideLink.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), localOverrideLink.Mode);
+    }
+
+    [Fact]
     public void Tar_Create_New()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");

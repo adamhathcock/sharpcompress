@@ -17,6 +17,21 @@ Primary references:
 - `src/SharpCompress/Common/Tar/`
 - `tests/SharpCompress.Test/Tar/`
 
+## Implemented Since Baseline
+
+- `Tar.XZ` is now documented as read-only (`Writer API = N/A`) in `docs/FORMATS.md`.
+- Local PAX extended headers (`x`) are now implemented on the read path for selected keys.
+- Global PAX extended headers (`g`) are now implemented on the read path for selected keys.
+- Tar tests now include local PAX coverage for reader/archive sync and async paths.
+- Tar tests now include global PAX coverage for reader/archive sync and async paths.
+- `TarWriterOptions.HeaderFormat` is now honored in sync and async file and directory write paths.
+- Tar tests now cover `USTAR` and `GNU_TAR_LONG_LINK`, including USTAR long-name failure scenarios.
+- Symlink coverage now includes `TarWithSymlink.tar.gz` for reader sync and async paths.
+- Tar tests now explicitly cover unsupported tar wrapper compression writes (`Xz`, `ZStandard`, `Lzw`) for sync and async writer paths.
+- `TarArchive.OpenAsyncArchive(Stream)` now enforces the same seekable-stream contract as `TarArchive.OpenArchive(Stream)`.
+- Sparse handling remains explicitly unsupported.
+- Non-modeled PAX keys remain explicitly unsupported.
+
 ## Claimed vs Actual Support
 
 ### `Tar.XZ` is read-only
@@ -41,28 +56,35 @@ Recommended action:
 
 ## Read-Path Gaps
 
-### PAX headers are not implemented
+### Local and global PAX headers are implemented for selected keys
 
-There is no explicit support for POSIX PAX local extended headers.
+Local (`x`) and global (`g`) POSIX PAX extended headers are now supported on the read path.
 
-Evidence:
+Supported keys in the current implementation:
 
-- `EntryType` does not define the usual local PAX header type value
-- `TarHeader.Read` handles `LongName` and `LongLink`, but does not implement PAX record parsing
-- there are no tests or test archives covering PAX behavior
+- `path`
+- `linkpath`
+- `size`
+- `mtime`
+- `uid`
+- `gid`
+- `mode`
 
-Impact:
+Remaining gap:
 
-- archives relying on PAX for long names, metadata, or timestamps may not be interpreted correctly
+- non-modeled PAX keys are still ignored
+- PAX sparse extensions are still unsupported
 
 Recommended action:
 
-- decide whether PAX is intentionally unsupported or should be implemented
-- document that decision explicitly
+- keep supported-key boundaries documented and test-covered
+- keep unsupported-key behavior explicit in docs
 
 ### Sparse files are not semantically implemented
 
 `EntryType` defines `SparseFile`, but the read path does not contain sparse map handling or sparse reconstruction logic.
+
+PAX sparse extensions are also unsupported (for example `GNU.sparse.*` and similar sparse metadata keys).
 
 Evidence:
 
@@ -76,26 +98,25 @@ Impact:
 
 Recommended action:
 
-- document sparse support as unsupported or partial
-- add explicit tests if future support is added
+- keep sparse support explicitly documented as unsupported
+- add sparse fixtures and tests only when sparse reconstruction is implemented
 
-### Global extended headers are not semantically implemented
+### Non-modeled PAX keys are still unsupported
 
-`EntryType` defines `GlobalExtendedHeader`, but no semantic handling exists in the read pipeline.
+PAX parsing is intentionally limited to modeled keys (`path`, `linkpath`, `size`, `mtime`, `uid`, `gid`, `mode`).
 
-Evidence:
+Not currently modeled/supported:
 
-- `TarHeader.Read` does not special-case `GlobalExtendedHeader`
-- `TarEntry` does not surface a global-header model
-- no tests cover this case
-
-Impact:
-
-- global metadata records are not applied in a defined way
+- `uname`
+- `gname`
+- `atime`
+- `ctime`
+- device-specific values and vendor keys
 
 Recommended action:
 
-- document as unsupported until explicit behavior exists
+- keep unsupported-key behavior documented as ignored
+- add support only when there is a consumer-facing object model for it
 
 ### Device and FIFO semantics are not surfaced
 
@@ -112,34 +133,16 @@ Recommended action:
 
 ## Write-Path Gaps
 
-### `HeaderFormat` is not honored consistently
+### `HeaderFormat` consistency is resolved
 
-`TarWriterOptions.HeaderFormat` exists and defaults to `GNU_TAR_LONG_LINK`, but the configured value is not consistently applied.
+`TarWriterOptions.HeaderFormat` is now applied across:
 
-### Sync directory write path
+- sync file writes
+- sync directory writes
+- async file writes
+- async directory writes
 
-`TarWriter.WriteDirectory` creates headers using:
-
-- `new TarHeader(WriterOptions.ArchiveEncoding)`
-
-This uses the default tar header format rather than the writer's configured `headerFormat` field.
-
-Impact:
-
-- directory entries written through the sync path do not follow `TarWriterOptions.HeaderFormat`
-
-### Async write path
-
-`TarWriter.WriteAsync` and `WriteDirectoryAsync` also create headers using the default constructor rather than the configured header format.
-
-Impact:
-
-- async writes ignore `TarWriterOptions.HeaderFormat` for both file and directory entries
-
-Recommended action:
-
-- pass the configured header format to all `TarHeader` constructions in sync and async write paths
-- add tests for both `GNU_TAR_LONG_LINK` and `USTAR`
+Regression tests now cover both `USTAR` and `GNU_TAR_LONG_LINK` behavior.
 
 ### No public link-writing support
 
@@ -182,72 +185,41 @@ This is not inherently wrong, but it should be clearly documented everywhere sup
 
 ## Sync and Async API Inconsistencies
 
-### Seekability requirements differ at the API boundary
+### Seekability contract alignment is resolved
 
-Synchronous `TarArchive.OpenArchive(Stream)` explicitly throws if the stream is not seekable.
+`TarArchive.OpenArchive(Stream)` and `TarArchive.OpenAsyncArchive(Stream)` now both enforce the same seekable-stream contract and throw `ArgumentException` for non-seekable input.
 
-Asynchronous `TarArchive.OpenAsyncArchive(Stream)` does not perform the same public guard.
+Tar tests include an async regression case for non-seekable stream open.
 
-Impact:
+### Header format alignment between sync and async is resolved
 
-- callers do not see the same contract from sync and async overloads
-- behavior is harder to reason about from API docs alone
-
-Recommended action:
-
-- either align the contracts or document the difference explicitly
-
-### Async and sync write behavior do not align on header format handling
-
-This is the most visible sync/async inconsistency in the current Tar writer implementation.
-
-Recommended action:
-
-- fix the implementation first
-- add matching sync and async tests to keep the behavior aligned
+Sync and async Tar writer paths now both honor `TarWriterOptions.HeaderFormat`, and matching tests are present for both paths.
 
 ## Test Coverage Gaps
 
-### Symlink coverage exists in test data but not in assertions
+### Symlink coverage is now present for reader paths
 
-There is a tar archive containing symlinks:
+Symlink behavior is now asserted for sync and async reader paths using:
 
 - `tests/TestArchives/Archives/TarWithSymlink.tar.gz`
 
-Current Tar tests do not assert tar symlink behavior against that fixture.
+Archive-path symlink assertions currently rely on small tar fixtures rather than this large compressed sample.
 
-Impact:
+### Header format coverage is now present
 
-- the code claims practical read support for link targets, but coverage does not verify it
-
-Recommended action:
-
-- add reader and archive tests asserting `EntryType`-derived behavior and `LinkTarget`
-
-### No tests for `HeaderFormat`
-
-There are currently no tests covering:
+Tar tests now cover:
 
 - `TarWriterOptions.HeaderFormat = USTAR`
 - `TarWriterOptions.HeaderFormat = GNU_TAR_LONG_LINK`
-- long-name failures in USTAR mode
-- long-name success in GNU mode through the async writer path
+- long-name failure in USTAR mode
+- long-name success in GNU mode through sync and async writer paths
 
-Impact:
+### No tests for sparse tar semantics
 
-- the current header-format regressions were able to exist without test coverage
+Local and global PAX coverage now exists, but there is still no evidence of coverage for:
 
-Recommended action:
-
-- add dedicated sync and async writer tests for header format selection
-
-### No tests for PAX, sparse, or global headers
-
-There is no evidence of coverage for:
-
-- PAX local headers
-- global extended headers
 - sparse tar entries
+- sparse PAX extensions
 
 Impact:
 
@@ -257,19 +229,15 @@ Recommended action:
 
 - either add fixtures and tests or document these as unsupported with no test coverage
 
-### No tests for unsupported write wrappers
+### Unsupported-wrapper writer coverage is now present
 
-There are negative tests for an invalid `Rar` compression type, but not for unsupported tar wrappers that a user might reasonably infer from read support.
-
-Missing negative cases include:
+Tar writer tests now explicitly verify `InvalidFormatException` for unsupported tar wrapper compression types:
 
 - `CompressionType.Xz`
 - `CompressionType.ZStandard`
 - `CompressionType.Lzw`
 
-Recommended action:
-
-- add explicit negative tests so the supported write matrix stays intentional
+Coverage exists in both sync and async writer test paths.
 
 ## Documentation Gaps
 
@@ -282,7 +250,7 @@ Missing implementation-specific details include:
 - GNU long-name and long-link support
 - USTAR prefix handling
 - oldgnu numeric quirk handling
-- missing PAX support
+- partial PAX support boundaries (selected local/global keys supported)
 - missing sparse support
 - reader vs archive behavior differences for compressed tar
 - file-size requirements for writing from non-seekable sources
@@ -306,27 +274,10 @@ Recommended action:
 
 ## Recommended Follow-Ups
 
-### Priority 0
-
-- Correct `docs/FORMATS.md` for `Tar.XZ` write support
-
 ### Priority 1
 
-- Fix `TarWriterOptions.HeaderFormat` handling in sync and async writer paths
-- Add tests for header-format behavior
-- Add symlink coverage using `TarWithSymlink.tar.gz`
-
-### Priority 2
-
-- Decide and document the support position for PAX headers
-- Decide and document the support position for sparse files
-- Decide and document the support position for global extended headers
-
-### Priority 3
-
-- Add negative writer tests for unsupported wrapper compressions
-- Evaluate whether sync and async archive open contracts should match exactly
 - Improve metadata round-trip behavior only if there is a consumer need
+- Evaluate whether non-modeled PAX keys should remain ignored or be surfaced in a future metadata API
 
 ## Summary
 
@@ -334,7 +285,7 @@ The SharpCompress Tar implementation is strong on common read scenarios and basi
 
 - documentation overstating or under-describing support
 - incomplete feature coverage for less common tar dialect features
-- sync/async and file/directory inconsistencies in writer header-format handling
-- test coverage holes around links and advanced tar metadata features
+- intentionally deferred metadata and API-surface decisions
+- test coverage holes around advanced tar metadata features
 
 `docs/TAR_SPEC.md` should be treated as the implementation baseline. This document identifies where that baseline is incomplete, inconsistent, or incorrectly reflected elsewhere in the repository.

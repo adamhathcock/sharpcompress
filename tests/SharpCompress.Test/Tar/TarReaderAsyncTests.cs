@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
@@ -148,6 +149,153 @@ public class TarReaderAsyncTests : ReaderTests
             }
         }
         Assert.Equal(3, names.Count);
+    }
+
+    [Fact]
+    public async ValueTask Tar_PaxLocalHeader_Reader_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var firstEntry = (TarEntry)reader.Entry;
+        Assert.Equal("pax/overridden-name.txt", firstEntry.Key);
+        Assert.Equal(10, firstEntry.Size);
+        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(2345, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+
+        var expectedTime = DateTimeOffset.FromUnixTimeSeconds(1700000000).LocalDateTime;
+        Assert.Equal(expectedTime, firstEntry.LastModifiedTime);
+
+        using (var entryStream = await reader.OpenEntryStreamAsync())
+        using (var memoryStream = new MemoryStream())
+        {
+            await entryStream.CopyToAsync(memoryStream);
+            Assert.Equal(10, memoryStream.Length);
+        }
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var secondEntry = (TarEntry)reader.Entry;
+        Assert.Equal("second.txt", secondEntry.Key);
+        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(22, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
+        Assert.Equal(2, secondEntry.Size);
+
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
+
+    [Fact]
+    public async ValueTask Tar_PaxLocalHeader_Link_Reader_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.Link.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.Equal("pax/link-entry", reader.Entry.Key);
+        Assert.Equal("pax/target-entry", reader.Entry.LinkTarget);
+        Assert.False(reader.Entry.IsDirectory);
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
+
+    [Fact]
+    public async ValueTask Tar_PaxGlobalHeader_Reader_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        var globalTime = DateTimeOffset.FromUnixTimeSeconds(1700000100).LocalDateTime;
+        var localOverrideTime = DateTimeOffset.FromUnixTimeSeconds(1700000200).LocalDateTime;
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var firstEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-one.txt", firstEntry.Key);
+        Assert.Equal(4000, firstEntry.UserID);
+        Assert.Equal(5000, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+        Assert.Equal(globalTime, firstEntry.LastModifiedTime);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var secondEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-local-override.txt", secondEntry.Key);
+        Assert.Equal(4010, secondEntry.UserID);
+        Assert.Equal(5010, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("600", 8), secondEntry.Mode);
+        Assert.Equal(localOverrideTime, secondEntry.LastModifiedTime);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var thirdEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-three.txt", thirdEntry.Key);
+        Assert.Equal(4000, thirdEntry.UserID);
+        Assert.Equal(5000, thirdEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), thirdEntry.Mode);
+        Assert.Equal(globalTime, thirdEntry.LastModifiedTime);
+
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
+
+    [Fact]
+    public async ValueTask Tar_PaxGlobalHeader_Link_Reader_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.Link.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var firstEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-link", firstEntry.Key);
+        Assert.Equal("global-target", firstEntry.LinkTarget);
+        Assert.Equal(4100, firstEntry.UserID);
+        Assert.Equal(5100, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), firstEntry.Mode);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        var secondEntry = (TarEntry)reader.Entry;
+        Assert.Equal("local-link-override", secondEntry.Key);
+        Assert.Equal("local-target", secondEntry.LinkTarget);
+        Assert.Equal(4100, secondEntry.UserID);
+        Assert.Equal(5100, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), secondEntry.Mode);
+
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
+
+    [Fact]
+    public async ValueTask Tar_WithSymlink_Reader_SurfacesLinkTargets_Async()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz");
+
+        using Stream stream = File.OpenRead(archivePath);
+        await using var reader = await TarReader.OpenAsyncReader(stream);
+
+        var foundVulkanToolsLink = false;
+        var foundVulkanSamplesLink = false;
+
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/Vulkan-Tools")
+            {
+                foundVulkanToolsLink = true;
+                Assert.Equal("../../External/Vulkan-Tools", reader.Entry.LinkTarget);
+            }
+
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/VulkanSamples")
+            {
+                foundVulkanSamplesLink = true;
+                Assert.Equal("../../External/VulkanSamples", reader.Entry.LinkTarget);
+            }
+        }
+
+        Assert.True(foundVulkanToolsLink);
+        Assert.True(foundVulkanSamplesLink);
     }
 
     [Fact]

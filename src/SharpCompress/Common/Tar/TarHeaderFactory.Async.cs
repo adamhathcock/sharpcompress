@@ -19,13 +19,15 @@ internal static partial class TarHeaderFactory
         using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
 #endif
 
+        var globalPaxMetadata = new TarHeader.PaxMetadata();
+
         while (true)
         {
             TarHeader? header = null;
             try
             {
                 header = new TarHeader(archiveEncoding);
-                if (!await header.ReadAsync(reader).ConfigureAwait(false))
+                if (!await header.ReadAsync(reader, globalPaxMetadata).ConfigureAwait(false))
                 {
                     yield break;
                 }
