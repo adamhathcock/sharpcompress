@@ -126,10 +126,17 @@ SharpCompress supports multiple archive and compression formats:
 - See [docs/FORMATS.md](docs/FORMATS.md) for complete format support matrix
 
 ### Stream Handling Rules
-- **Disposal**: As of version 0.21, SharpCompress closes wrapped streams by default
-- Use `ReaderOptions` or `WriterOptions` with `LeaveStreamOpen = true` to control stream disposal
+- **Disposal semantics**: The default `ReaderOptions.LeaveStreamOpen` value is `false`, but effective stream ownership depends on which API overload you call
+  - File-based overloads (e.g., `OpenArchive(string filePath)`) open the file internally and own that stream, so it is closed by default with the archive/reader
+    - Do **not** rely on a specific `ReaderOptions` preset being used internally; some implementations may use `ReaderOptions.ForFilePath`, while others may use default `ReaderOptions` with the same ownership semantics
+  - Several high-level overloads that accept a caller-provided `Stream` use external-stream semantics by default (for example, `ReaderFactory.OpenReader(Stream)` / `ArchiveFactory.OpenArchive(Stream)`), so the caller's stream is typically left open unless you opt into different ownership behavior
+    - Do **not** assume every stream-based overload behaves identically; some APIs require you to pass stream ownership options explicitly
+- **For caller-provided streams**: When the overload accepts `ReaderOptions`, pass `ReaderOptions.ForExternalStream` or use `ReaderOptions` with `LeaveStreamOpen = true` whenever the caller must retain ownership of the stream
+  - Example: `var options = new ReaderOptions { LeaveStreamOpen = true };`
+  - Or: `var options = ReaderOptions.ForExternalStream;`
+- **For file paths**: SharpCompress manages the stream lifecycle for the internally opened file stream; no manual disposal is needed beyond the archive/reader itself
 - Use `NonDisposingStream` wrapper when working with compression streams directly to prevent disposal
-- Always dispose of readers, writers, and archives in `using` blocks
+- Always dispose of readers, writers, and archives in `using` / `await using` blocks
 - For forward-only operations, use Reader/Writer APIs; for random access, use Archive APIs
 
 ### Async/Await Patterns
