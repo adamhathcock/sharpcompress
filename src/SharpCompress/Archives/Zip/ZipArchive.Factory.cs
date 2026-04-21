@@ -41,7 +41,7 @@ public partial class ZipArchive
             new SourceStream(
                 fileInfo,
                 i => ZipArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
