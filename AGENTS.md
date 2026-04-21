@@ -127,7 +127,8 @@ SharpCompress supports multiple archive and compression formats:
 
 ### Stream Handling Rules
 - **Disposal**: As of version 0.21, SharpCompress **closes wrapped streams by default** (`LeaveStreamOpen = false`)
-  - File-based overloads (e.g., `OpenArchive(string filePath)`) use `ReaderOptions.ForFilePath` automatically
+  - File-based overloads (e.g., `OpenArchive(string filePath)`) open the file internally and own that stream, so it is closed by default with the archive/reader
+    - Do **not** rely on a specific `ReaderOptions` preset being used internally; some implementations may use `ReaderOptions.ForFilePath`, while others may use default `ReaderOptions` with the same ownership semantics
     - Do **not** assume every stream-based overload defaults to `ReaderOptions.ForExternalStream`; some APIs require you to pass stream ownership options explicitly
 - **For caller-provided streams**: Pass `ReaderOptions.ForExternalStream` or use `ReaderOptions` with `LeaveStreamOpen = true` whenever the caller must retain ownership of the stream
   - Example: `var options = new ReaderOptions { LeaveStreamOpen = true };`
