@@ -108,7 +108,7 @@ public class ProgressReportTests : TestBase
 
         // Now read it with progress reporting
         archiveStream.Position = 0;
-        var readerOptions = ReaderOptions.ForExternalStream with { Progress = progress };
+        var readerOptions = ReaderOptions.ForExternalStream.WithProgress(progress);
 
         using (var reader = ReaderFactory.OpenReader(archiveStream, readerOptions))
         {
@@ -324,7 +324,7 @@ public class ProgressReportTests : TestBase
 
         // Now read it with progress reporting
         archiveStream.Position = 0;
-        var readerOptions = ReaderOptions.ForExternalStream with { Progress = progress };
+        var readerOptions = ReaderOptions.ForExternalStream.WithProgress(progress);
 
         using (var reader = ReaderFactory.OpenReader(archiveStream, readerOptions))
         {
@@ -445,7 +445,7 @@ public class ProgressReportTests : TestBase
 
         // Now read it with progress reporting
         archiveStream.Position = 0;
-        var readerOptions = ReaderOptions.ForExternalStream with { Progress = progress };
+        var readerOptions = ReaderOptions.ForExternalStream.WithProgress(progress);
 
         using (var reader = ReaderFactory.OpenReader(archiveStream, readerOptions))
         {
@@ -538,7 +538,7 @@ public class ProgressReportTests : TestBase
 
         // Now read it with progress reporting
         archiveStream.Position = 0;
-        var readerOptions = ReaderOptions.ForExternalStream with { Progress = progress };
+        var readerOptions = ReaderOptions.ForExternalStream.WithProgress(progress);
 
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(

@@ -213,7 +213,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         }
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
-            var tropt = ReaderOptions.ForExternalStream with { ArchiveEncoding = enc };
+            var tropt = ReaderOptions.ForExternalStream.WithArchiveEncoding(enc);
             await using (
                 var tr = await ReaderFactory.OpenAsyncReader(
                     new AsyncOnlyStream(inputMemory),

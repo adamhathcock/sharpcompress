@@ -48,7 +48,7 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest() =>
         Assert.Throws<CryptographicException>(() =>
-            ArchiveFileRead("7Zip.LZMA.Aes.7z", ReaderOptions.ForFilePath with { Password = null })
+            ArchiveFileRead("7Zip.LZMA.Aes.7z", ReaderOptions.ForFilePath.WithPassword(null))
         ); //was failing with ArgumentNullException not CryptographicException like rar
 
     [Fact]
@@ -69,11 +69,19 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_StreamRead() =>
-        ArchiveStreamRead(new SevenZipFactory(), "7Zip.LZMA2.exe", ReaderOptions.ForExternalStream.WithLookForHeader(true));
+        ArchiveStreamRead(
+            new SevenZipFactory(),
+            "7Zip.LZMA2.exe",
+            ReaderOptions.ForExternalStream.WithLookForHeader(true)
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA2.exe", ReaderOptions.ForFilePath.WithLookForHeader(true), new SevenZipFactory());
+        ArchiveFileRead(
+            "7Zip.LZMA2.exe",
+            ReaderOptions.ForFilePath.WithLookForHeader(true),
+            new SevenZipFactory()
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>

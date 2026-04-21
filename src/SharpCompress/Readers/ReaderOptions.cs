@@ -153,7 +153,7 @@ public sealed record ReaderOptions : IReaderOptions
     /// </summary>
     internal static ReaderOptions Default => new();
 
-    public static ReaderOptions ForExternalStream => Default with { LeaveStreamOpen = true };
+    public static ReaderOptions ForExternalStream => Default.WithLeaveStreamOpen(true);
 
     /// <summary>
     /// Gets ReaderOptions configured for file-based overloads that open their own stream.

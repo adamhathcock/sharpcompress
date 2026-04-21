@@ -768,7 +768,7 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_MalformedArchive_NoInfiniteLoop()
     {
         var testFile = "Rar.malformed_512byte.rar";
-        var readerOptions = ReaderOptions.ForExternalStream with { LookForHeader = true };
+        var readerOptions = ReaderOptions.ForExternalStream.WithLookForHeader(true);
 
         // This should throw InvalidOperationException, not hang in an infinite loop
         var exception = Assert.Throws<ArchiveOperationException>(() =>

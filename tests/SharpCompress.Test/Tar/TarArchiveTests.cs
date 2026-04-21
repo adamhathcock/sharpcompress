@@ -262,7 +262,7 @@ public class TarArchiveTests : ArchiveTests
         }
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
-            var tropt = ReaderOptions.ForExternalStream with { ArchiveEncoding = enc };
+            var tropt = ReaderOptions.ForExternalStream.WithArchiveEncoding(enc);
             using (var tr = TarReader.OpenReader(inputMemory, tropt))
             {
                 while (tr.MoveToNextEntry())
