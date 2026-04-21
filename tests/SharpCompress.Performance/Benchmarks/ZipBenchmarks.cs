@@ -32,7 +32,7 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
         using var stream = new MemoryStream(_archiveBytes);
         using var archive = ZipArchive.OpenArchive(
             stream,
-            new ReaderOptions().WithProviders(
+            ReaderOptions.ForExternalStream.WithProviders(
                 CompressionProviderRegistry.Empty.With(new SystemDeflateCompressionProvider())
             )
         );
@@ -73,7 +73,7 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
         using var stream = new MemoryStream(_archiveBytes);
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions().WithProviders(
+            ReaderOptions.ForExternalStream.WithProviders(
                 CompressionProviderRegistry.Empty.With(new SystemDeflateCompressionProvider())
             )
         );

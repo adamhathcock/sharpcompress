@@ -69,11 +69,11 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_StreamRead() =>
-        ArchiveStreamRead(new SevenZipFactory(), "7Zip.LZMA2.exe", new() { LookForHeader = true });
+        ArchiveStreamRead(new SevenZipFactory(), "7Zip.LZMA2.exe", ReaderOptions.ForExternalStream.WithLookForHeader(true));
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA2.exe", new() { LookForHeader = true }, new SevenZipFactory());
+        ArchiveFileRead("7Zip.LZMA2.exe", ReaderOptions.ForFilePath.WithLookForHeader(true), new SevenZipFactory());
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>
