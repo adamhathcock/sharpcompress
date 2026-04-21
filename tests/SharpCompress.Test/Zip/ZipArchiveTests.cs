@@ -622,7 +622,7 @@ public class ZipArchiveTests : ArchiveTests
     {
         using var reader = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.zip"),
-            ReaderOptions.ForExternalStream with
+            ReaderOptions.ForFilePath with
             {
                 Password = "test",
             }

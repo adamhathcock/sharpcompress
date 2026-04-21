@@ -45,7 +45,7 @@ public sealed record ExtractionOptions : IExtractionOptions
     /// </summary>
     /// <remarks>
     /// <b>Breaking change:</b> Changed from field to init-only property in version 0.40.0.
-    /// The default handler logs a warning message.
+    /// If no handler is provided, symbolic links are silently skipped during extraction.
     /// </remarks>
     public Action<string, string>? SymbolicLinkHandler { get; init; }
 

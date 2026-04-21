@@ -330,7 +330,7 @@ public class RarArchiveAsyncTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
-                ReaderOptions.ForExternalStream with
+                ReaderOptions.ForFilePath with
                 {
                     LookForHeader = true,
                 }
