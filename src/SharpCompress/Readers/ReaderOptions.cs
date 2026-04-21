@@ -25,7 +25,7 @@ public sealed record ReaderOptions : IReaderOptions
 {
     /// <summary>
     /// Whether SharpCompress leaves the supplied streams open when the reader/archive is disposed.
-    /// Default is false as of v0.21: streams are closed when the archive/reader is disposed.
+    /// As of v0.21, the library is documented to close streams by default; this option now defaults to false.
     /// Set to true when passing caller-owned streams that should not be disposed.
     /// </summary>
     /// <remarks>

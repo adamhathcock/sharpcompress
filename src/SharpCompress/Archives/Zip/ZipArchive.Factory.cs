@@ -57,7 +57,7 @@ public partial class ZipArchive
             new SourceStream(
                 files[0],
                 i => i < files.Count ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
