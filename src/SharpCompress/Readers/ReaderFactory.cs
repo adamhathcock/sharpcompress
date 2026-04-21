@@ -12,7 +12,7 @@ public static partial class ReaderFactory
     public static IReader OpenReader(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenReader(new FileInfo(filePath), options);
+        return OpenReader(new FileInfo(filePath), options ?? ReaderOptions.ForFilePath);
     }
 
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)

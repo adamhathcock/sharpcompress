@@ -70,7 +70,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         using var stream = new MemoryStream(_tarBytes);
         using var archive = TarArchive.OpenArchive(
             stream,
-            new ReaderOptions().WithProviders(
+            ReaderOptions.ForExternalStream.WithProviders(
                 CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
             )
         );
@@ -87,7 +87,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         using var stream = new MemoryStream(_tarBytes);
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions().WithProviders(
+            ReaderOptions.ForExternalStream.WithProviders(
                 CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
             )
         );

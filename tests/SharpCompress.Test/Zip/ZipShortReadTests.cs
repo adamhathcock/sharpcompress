@@ -99,7 +99,10 @@ public class ZipShortReadTests : ReaderTests
         var names = new List<string>();
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LeaveStreamOpen = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LeaveStreamOpen = true,
+            }
         );
 
         while (reader.MoveToNextEntry())

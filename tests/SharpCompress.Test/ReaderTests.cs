@@ -32,12 +32,12 @@ public abstract class ReaderTests : TestBase
     )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        options ??= new ReaderOptions { BufferSize = 0x20000 };
+        options ??= ReaderOptions.ForFilePath.WithBufferSize(0x20000);
 
-        var optionsWithStreamOpen = options with { LeaveStreamOpen = true };
+        var optionsWithStreamOpen = options.WithLeaveStreamOpen(true);
         readImpl(testArchive, optionsWithStreamOpen);
 
-        var optionsWithStreamClosed = options with { LeaveStreamOpen = false };
+        var optionsWithStreamClosed = options.WithLeaveStreamOpen(false);
         readImpl(testArchive, optionsWithStreamClosed);
 
         VerifyFiles();
@@ -128,9 +128,9 @@ public abstract class ReaderTests : TestBase
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
 
-        options ??= new ReaderOptions() { BufferSize = 0x20000 };
+        options ??= ReaderOptions.ForExternalStream.WithBufferSize(0x20000);
 
-        var optionsWithStreamOpen = options with { LeaveStreamOpen = true };
+        var optionsWithStreamOpen = options.WithLeaveStreamOpen(true);
         await ReadImplAsync(
             testArchive,
             expectedCompression,
@@ -138,7 +138,7 @@ public abstract class ReaderTests : TestBase
             cancellationToken
         );
 
-        var optionsWithStreamClosed = options with { LeaveStreamOpen = false };
+        var optionsWithStreamClosed = options.WithLeaveStreamOpen(false);
         await ReadImplAsync(
             testArchive,
             expectedCompression,
@@ -215,7 +215,10 @@ public abstract class ReaderTests : TestBase
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
 
         while (reader.MoveToNextEntry())

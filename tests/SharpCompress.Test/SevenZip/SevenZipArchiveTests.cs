@@ -27,16 +27,28 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMAAES_StreamRead() =>
-        ArchiveStreamRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveStreamRead(
+            "7Zip.LZMA.Aes.7z",
+            ReaderOptions.ForExternalStream with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_LZMAAES_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveFileRead(
+            "7Zip.LZMA.Aes.7z",
+            ReaderOptions.ForFilePath with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest() =>
         Assert.Throws<CryptographicException>(() =>
-            ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = null })
+            ArchiveFileRead("7Zip.LZMA.Aes.7z", ReaderOptions.ForFilePath.WithPassword(null))
         ); //was failing with ArgumentNullException not CryptographicException like rar
 
     [Fact]
@@ -57,19 +69,39 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_StreamRead() =>
-        ArchiveStreamRead(new SevenZipFactory(), "7Zip.LZMA2.exe", new() { LookForHeader = true });
+        ArchiveStreamRead(
+            new SevenZipFactory(),
+            "7Zip.LZMA2.exe",
+            ReaderOptions.ForExternalStream.WithLookForHeader(true)
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA2.exe", new() { LookForHeader = true }, new SevenZipFactory());
+        ArchiveFileRead(
+            "7Zip.LZMA2.exe",
+            ReaderOptions.ForFilePath.WithLookForHeader(true),
+            new SevenZipFactory()
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>
-        ArchiveStreamRead("7Zip.LZMA2.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveStreamRead(
+            "7Zip.LZMA2.Aes.7z",
+            ReaderOptions.ForExternalStream with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA2.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveFileRead(
+            "7Zip.LZMA2.Aes.7z",
+            ReaderOptions.ForFilePath with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_BZip2_StreamRead() => ArchiveStreamRead("7Zip.BZip2.7z");

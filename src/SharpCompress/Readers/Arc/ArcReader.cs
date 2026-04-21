@@ -25,7 +25,7 @@ public partial class ArcReader : AbstractReader<ArcEntry, ArcVolume>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new ArcReader(stream, readerOptions ?? new ReaderOptions());
+        return new ArcReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
     protected override IEnumerable<ArcEntry> GetEntries(Stream stream)

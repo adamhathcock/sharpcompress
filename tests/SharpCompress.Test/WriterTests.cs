@@ -39,7 +39,7 @@ public class WriterTests : TestBase
 
         using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            var readerOptions = new ReaderOptions();
+            var readerOptions = ReaderOptions.ForExternalStream;
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
@@ -90,7 +90,7 @@ public class WriterTests : TestBase
 
         using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            var readerOptions = new ReaderOptions();
+            var readerOptions = ReaderOptions.ForExternalStream;
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 

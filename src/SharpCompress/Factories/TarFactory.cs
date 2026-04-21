@@ -317,7 +317,7 @@ public class TarFactory
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options)
     {
-        options ??= new ReaderOptions();
+        options ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = new SharpCompressStream(stream);
         sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
@@ -350,7 +350,7 @@ public class TarFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        options ??= new ReaderOptions();
+        options ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = new SharpCompressStream(stream);
         sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)

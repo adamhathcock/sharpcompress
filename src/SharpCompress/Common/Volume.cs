@@ -11,10 +11,10 @@ public abstract partial class Volume : IVolume, IAsyncDisposable
     private readonly Stream _baseStream;
     private readonly Stream _actualStream;
 
-    internal Volume(Stream stream, ReaderOptions? readerOptions, int index = 0)
+    internal Volume(Stream stream, ReaderOptions readerOptions, int index = 0)
     {
         Index = index;
-        ReaderOptions = readerOptions ?? new ReaderOptions();
+        ReaderOptions = readerOptions;
         _baseStream = stream;
 
         // Only rewind if it's a buffered SharpCompressStream (not passthrough)

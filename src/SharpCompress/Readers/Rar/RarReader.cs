@@ -72,7 +72,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new SingleVolumeRarReader(stream, readerOptions ?? new ReaderOptions());
+        return new SingleVolumeRarReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
     /// <summary>
@@ -84,7 +84,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
         streams.NotNull(nameof(streams));
-        return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
+        return new MultiVolumeRarReader(streams, options ?? ReaderOptions.ForExternalStream);
     }
 
     protected override IEnumerable<RarReaderEntry> GetEntries(Stream stream)

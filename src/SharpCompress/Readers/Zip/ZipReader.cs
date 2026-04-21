@@ -48,7 +48,7 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new ZipReader(stream, readerOptions ?? new ReaderOptions());
+        return new ZipReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
     public static IReader OpenReader(
@@ -58,7 +58,7 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
     )
     {
         stream.NotNull(nameof(stream));
-        return new ZipReader(stream, options ?? new ReaderOptions(), entries);
+        return new ZipReader(stream, options ?? ReaderOptions.ForExternalStream, entries);
     }
 
     #endregion Open

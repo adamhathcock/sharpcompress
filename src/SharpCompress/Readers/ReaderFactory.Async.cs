@@ -25,7 +25,11 @@ public static partial class ReaderFactory
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsyncReader(new FileInfo(filePath), options, cancellationToken);
+        return OpenAsyncReader(
+            new FileInfo(filePath),
+            options ?? ReaderOptions.ForFilePath,
+            cancellationToken
+        );
     }
 
     /// <summary>

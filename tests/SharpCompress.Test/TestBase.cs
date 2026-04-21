@@ -255,7 +255,7 @@ public class TestBase : IAsyncDisposable
 
     protected void CompareArchivesByPath(string file1, string file2, Encoding? encoding = null)
     {
-        var readerOptions = new ReaderOptions { LeaveStreamOpen = false };
+        var readerOptions = ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false);
         readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
         //don't compare the order.  OS X reads files from the file system in a different order therefore makes the archive ordering different
