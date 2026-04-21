@@ -1,7 +1,6 @@
 using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
-using SharpCompress.Compressors;
 using SharpCompress.Providers;
 using D = SharpCompress.Compressors.Deflate;
 
@@ -18,17 +17,10 @@ namespace SharpCompress.Writers;
 /// </remarks>
 public sealed record WriterOptions : IWriterOptions
 {
-    private CompressionType _compressionType;
-    private int _compressionLevel;
-
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
-    public CompressionType CompressionType
-    {
-        get => _compressionType;
-        init => _compressionType = value;
-    }
+    public CompressionType CompressionType { get; init; }
 
     /// <summary>
     /// The compression level to be used when the compression type supports variable levels.
@@ -40,11 +32,11 @@ public sealed record WriterOptions : IWriterOptions
     /// </summary>
     public int CompressionLevel
     {
-        get => _compressionLevel;
+        get;
         init
         {
             CompressionLevelValidation.Validate(CompressionType, value);
-            _compressionLevel = value;
+            field = value;
         }
     }
 

@@ -58,10 +58,7 @@ public sealed record ExtractionOptions : IExtractionOptions
     /// Creates a new ExtractionOptions instance with the specified overwrite behavior.
     /// </summary>
     /// <param name="overwrite">Whether to overwrite existing files.</param>
-    public ExtractionOptions(bool overwrite)
-    {
-        Overwrite = overwrite;
-    }
+    public ExtractionOptions(bool overwrite) => Overwrite = overwrite;
 
     /// <summary>
     /// Creates a new ExtractionOptions instance with the specified extraction path and overwrite behavior.
@@ -102,14 +99,4 @@ public sealed record ExtractionOptions : IExtractionOptions
     /// </summary>
     public static ExtractionOptions PreserveMetadata =>
         new() { PreserveFileTime = true, PreserveAttributes = true };
-
-    /// <summary>
-    /// Default symbolic link handler that logs a warning message.
-    /// </summary>
-    public static void DefaultSymbolicLinkHandler(string sourcePath, string targetPath)
-    {
-        Console.WriteLine(
-            $"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271"
-        );
-    }
 }
