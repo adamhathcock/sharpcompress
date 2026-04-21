@@ -24,7 +24,7 @@ namespace SharpCompress.Readers;
 public sealed record ReaderOptions : IReaderOptions
 {
     /// <summary>
-    /// SharpCompress will keep the supplied streams open.
+    /// Whether SharpCompress leaves the supplied streams open when the reader/archive is disposed.
     /// Default is false as of v0.21: streams are closed when the archive/reader is disposed.
     /// Set to true when passing caller-owned streams that should not be disposed.
     /// </summary>
