@@ -33,7 +33,11 @@ public static partial class ArchiveFactory
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsyncArchive(new FileInfo(filePath), options, cancellationToken);
+        return OpenAsyncArchive(
+            new FileInfo(filePath),
+            options ?? ReaderOptions.ForFilePath,
+            cancellationToken
+        );
     }
 
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(

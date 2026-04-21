@@ -32,7 +32,7 @@ public abstract class ReaderTests : TestBase
     )
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
-        options ??= new ReaderOptions { BufferSize = 0x20000 };
+        options ??= ReaderOptions.ForFilePath with { BufferSize = 0x20000 };
 
         var optionsWithStreamOpen = options with { LeaveStreamOpen = true };
         readImpl(testArchive, optionsWithStreamOpen);
@@ -128,7 +128,7 @@ public abstract class ReaderTests : TestBase
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
 
-        options ??= new ReaderOptions() { BufferSize = 0x20000 };
+        options ??= ReaderOptions.ForExternalStream with { BufferSize = 0x20000 };
 
         var optionsWithStreamOpen = options with { LeaveStreamOpen = true };
         await ReadImplAsync(
@@ -215,7 +215,10 @@ public abstract class ReaderTests : TestBase
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
 
         while (reader.MoveToNextEntry())

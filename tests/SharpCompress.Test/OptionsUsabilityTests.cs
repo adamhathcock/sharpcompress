@@ -160,8 +160,8 @@ public class OptionsUsabilityTests : TestBase
     [Fact]
     public void ReaderOptions_Fluent_Methods_Modify_Correctly()
     {
-        var options = new ReaderOptions()
-            .WithLeaveStreamOpen(false)
+        var options = ReaderOptions
+            .ForExternalStream.WithLeaveStreamOpen(false)
             .WithPassword("secret")
             .WithLookForHeader(true)
             .WithBufferSize(65536);
@@ -176,15 +176,15 @@ public class OptionsUsabilityTests : TestBase
     public void ReaderOptions_Fluent_And_Initializer_Equivalent()
     {
         // Fluent approach
-        var fluentApproach = new ReaderOptions()
-            .WithLeaveStreamOpen(false)
+        var fluentApproach = ReaderOptions
+            .ForExternalStream.WithLeaveStreamOpen(false)
             .WithPassword("secret")
             .WithLookForHeader(true)
             .WithBufferSize(65536)
             .WithDisableCheckIncomplete(true);
 
-        // Object initializer approach
-        var initializerApproach = new ReaderOptions
+        // Preset + with-expression approach
+        var initializerApproach = ReaderOptions.ForExternalStream with
         {
             LeaveStreamOpen = false,
             Password = "secret",

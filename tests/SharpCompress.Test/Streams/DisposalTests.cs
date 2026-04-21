@@ -76,7 +76,10 @@ public class DisposalTests
                 new SourceStream(
                     stream,
                     i => null,
-                    new ReaderOptions { LeaveStreamOpen = leaveOpen }
+                    ReaderOptions.ForExternalStream with
+                    {
+                        LeaveStreamOpen = leaveOpen,
+                    }
                 )
         );
     }

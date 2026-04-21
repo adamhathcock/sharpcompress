@@ -71,7 +71,11 @@ public class RarArchiveAsyncTests : ArchiveTests
         await using (
             var archive = await RarArchive.OpenAsyncArchive(
                 stream,
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
@@ -98,7 +102,11 @@ public class RarArchiveAsyncTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, archiveName),
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForFilePath with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
@@ -144,7 +152,13 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
         using (
-            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+            var archive = RarArchive.OpenArchive(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
+            )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -316,7 +330,10 @@ public class RarArchiveAsyncTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {

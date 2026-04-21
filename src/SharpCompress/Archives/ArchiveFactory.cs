@@ -37,7 +37,7 @@ public static partial class ArchiveFactory
     public static IArchive OpenArchive(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), options);
+        return OpenArchive(new FileInfo(filePath), options ?? ReaderOptions.ForFilePath);
     }
 
     public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? options = null)

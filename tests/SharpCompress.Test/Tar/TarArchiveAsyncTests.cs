@@ -57,7 +57,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         await using (
             var archive2 = await TarArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(File.OpenRead(unmodified)),
-                new ReaderOptions() { LeaveStreamOpen = false }
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
             )
         )
         {
@@ -115,7 +115,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         await using (
             var archive2 = await TarArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(File.OpenRead(unmodified)),
-                new ReaderOptions() { LeaveStreamOpen = false }
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
             )
         )
         {
@@ -213,7 +213,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         }
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
-            var tropt = new ReaderOptions { ArchiveEncoding = enc };
+            var tropt = ReaderOptions.ForExternalStream with { ArchiveEncoding = enc };
             await using (
                 var tr = await ReaderFactory.OpenAsyncReader(
                     new AsyncOnlyStream(inputMemory),

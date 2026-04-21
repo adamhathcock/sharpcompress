@@ -182,7 +182,15 @@ public class Zip64Tests : WriterTests
         long size = 0;
         IEntry? prev = null;
         using (var fs = File.OpenRead(filename))
-        using (var rd = ZipReader.OpenReader(fs, new ReaderOptions { LookForHeader = false }))
+        using (
+            var rd = ZipReader.OpenReader(
+                fs,
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = false,
+                }
+            )
+        )
         {
             while (rd.MoveToNextEntry())
             {

@@ -332,7 +332,10 @@ public class CompressionProviderTests
         );
 
         compressedStream.Position = 0;
-        var readerOptions = new ReaderOptions { ArchiveEncoding = archiveEncoding };
+        var readerOptions = ReaderOptions.ForExternalStream with
+        {
+            ArchiveEncoding = archiveEncoding,
+        };
         var context = CompressionContext.FromStream(compressedStream) with
         {
             ReaderOptions = readerOptions,
@@ -433,7 +436,7 @@ public class CompressionProviderTests
         archiveStream.Position = 0;
         var customProvider = new GZipCompressionProvider();
         var registry = CompressionProviderRegistry.Default.With(customProvider);
-        var readOptions = new ReaderOptions { Providers = registry };
+        var readOptions = ReaderOptions.ForExternalStream with { Providers = registry };
 
         using var reader = TarReader.OpenReader(archiveStream, readOptions);
         reader.MoveToNextEntry().Should().BeTrue();
@@ -462,7 +465,7 @@ public class CompressionProviderTests
 
         archiveStream.Position = 0;
         var registry = CompressionProviderRegistry.Default.With(new ContextRequiredGZipProvider());
-        var readOptions = new ReaderOptions { Providers = registry };
+        var readOptions = ReaderOptions.ForExternalStream with { Providers = registry };
 
         using var reader = TarReader.OpenReader(archiveStream, readOptions);
         reader.MoveToNextEntry().Should().BeTrue();
@@ -504,7 +507,11 @@ public class CompressionProviderTests
         var customProvider = new DeflateCompressionProvider();
         var registry = CompressionProviderRegistry.Default.With(customProvider);
 
-        var original = new ReaderOptions { Providers = registry, LeaveStreamOpen = false };
+        var original = ReaderOptions.ForExternalStream with
+        {
+            Providers = registry,
+            LeaveStreamOpen = false,
+        };
 
         // Clone using 'with' expression
         var clone = original with
@@ -533,7 +540,7 @@ public class CompressionProviderTests
 
         var trackingProvider = new TrackingCompressionProvider(new GZipCompressionProvider());
         var registry = CompressionProviderRegistry.Default.With(trackingProvider);
-        var readOptions = new ReaderOptions { Providers = registry };
+        var readOptions = ReaderOptions.ForExternalStream with { Providers = registry };
 
         archiveStream.Position = 0;
         using var archive = TarArchive.OpenArchive(archiveStream, readOptions);
@@ -562,7 +569,7 @@ public class CompressionProviderTests
 
         var trackingProvider = new TrackingCompressionProvider(new GZipCompressionProvider());
         var registry = CompressionProviderRegistry.Default.With(trackingProvider);
-        var readOptions = new ReaderOptions { Providers = registry };
+        var readOptions = ReaderOptions.ForExternalStream with { Providers = registry };
 
         archiveStream.Position = 0;
         await using var archive = await TarArchive.OpenAsyncArchive(archiveStream, readOptions);
@@ -600,7 +607,7 @@ public class CompressionProviderTests
 
         var trackingProvider = new TrackingCompressionProvider(new DeflateCompressionProvider());
         var registry = CompressionProviderRegistry.Default.With(trackingProvider);
-        var options = new ReaderOptions { Providers = registry };
+        var options = ReaderOptions.ForExternalStream with { Providers = registry };
 
         zipStream.Position = 0;
         await using var reader = await ReaderFactory.OpenAsyncReader(zipStream, options);
@@ -618,7 +625,7 @@ public class CompressionProviderTests
         var archivePath = Path.Combine(TestBase.TEST_ARCHIVES_PATH, "Tar.tar.Z");
         var trackingProvider = new TrackingCompressionProvider(new LzwCompressionProvider());
         var registry = CompressionProviderRegistry.Default.With(trackingProvider);
-        var options = new ReaderOptions { Providers = registry };
+        var options = ReaderOptions.ForExternalStream with { Providers = registry };
 
         using var stream = File.OpenRead(archivePath);
         using var reader = ReaderFactory.OpenReader(stream, options);
@@ -809,7 +816,7 @@ public class CompressionProviderTests
 
         // Read back using internal provider (should be compatible)
         archiveStream.Position = 0;
-        var readOptions = new ReaderOptions();
+        var readOptions = ReaderOptions.ForExternalStream;
         using var reader = TarReader.OpenReader(archiveStream, readOptions);
         reader.MoveToNextEntry().Should().BeTrue();
         using var entryStream = reader.OpenEntryStream();
