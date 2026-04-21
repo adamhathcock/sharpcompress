@@ -56,6 +56,6 @@ public partial class LzwReader
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new LzwReader(stream, readerOptions ?? new ReaderOptions());
+        return new LzwReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 }

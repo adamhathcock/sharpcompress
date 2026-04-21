@@ -5,7 +5,7 @@ namespace SharpCompress.Common.Lzw;
 
 public class LzwVolume : Volume
 {
-    public LzwVolume(Stream stream, ReaderOptions? options, int index)
+    public LzwVolume(Stream stream, ReaderOptions options, int index)
         : base(stream, options, index) { }
 
     public LzwVolume(FileInfo fileInfo, ReaderOptions options)

@@ -32,7 +32,7 @@ public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new SingleVolumeArjReader(stream, readerOptions ?? new ReaderOptions());
+        return new SingleVolumeArjReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public abstract partial class ArjReader : AbstractReader<ArjEntry, ArjVolume>
     public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
         streams.NotNull(nameof(streams));
-        return new MultiVolumeArjReader(streams, options ?? new ReaderOptions());
+        return new MultiVolumeArjReader(streams, options ?? ReaderOptions.ForExternalStream);
     }
 
     protected abstract void ValidateArchive(ArjVolume archive);

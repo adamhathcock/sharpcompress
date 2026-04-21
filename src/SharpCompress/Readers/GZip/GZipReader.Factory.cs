@@ -56,6 +56,6 @@ public partial class GZipReader
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
         stream.NotNull(nameof(stream));
-        return new GZipReader(stream, readerOptions ?? new ReaderOptions());
+        return new GZipReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 }
