@@ -62,6 +62,21 @@ public class TarWriterAsyncTests : WriterTests
         );
 
     [Theory]
+    [InlineData(CompressionType.Xz)]
+    [InlineData(CompressionType.ZStandard)]
+    [InlineData(CompressionType.Lzw)]
+    public async ValueTask Tar_UnsupportedWrapperCompression_Write_Async(
+        CompressionType compressionType
+    ) =>
+        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+            await WriteAsync(
+                compressionType,
+                "Zip.ppmd.noEmptyDirs.zip",
+                "Zip.ppmd.noEmptyDirs.zip"
+            )
+        );
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public async ValueTask Tar_Finalize_Archive_Async(bool finalizeArchive)

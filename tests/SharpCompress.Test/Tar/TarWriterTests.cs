@@ -56,6 +56,15 @@ public class TarWriterTests : WriterTests
         );
 
     [Theory]
+    [InlineData(CompressionType.Xz)]
+    [InlineData(CompressionType.ZStandard)]
+    [InlineData(CompressionType.Lzw)]
+    public void Tar_UnsupportedWrapperCompression_Write(CompressionType compressionType) =>
+        Assert.Throws<InvalidFormatException>(() =>
+            Write(compressionType, "Zip.ppmd.noEmptyDirs.zip", "Zip.ppmd.noEmptyDirs.zip")
+        );
+
+    [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void Tar_Finalize_Archive(bool finalizeArchive)

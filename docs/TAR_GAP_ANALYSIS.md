@@ -27,6 +27,8 @@ Primary references:
 - `TarWriterOptions.HeaderFormat` is now honored in sync and async file and directory write paths.
 - Tar tests now cover `USTAR` and `GNU_TAR_LONG_LINK`, including USTAR long-name failure scenarios.
 - Symlink coverage now includes `TarWithSymlink.tar.gz` for reader sync and async paths.
+- Tar tests now explicitly cover unsupported tar wrapper compression writes (`Xz`, `ZStandard`, `Lzw`) for sync and async writer paths.
+- `TarArchive.OpenAsyncArchive(Stream)` now enforces the same seekable-stream contract as `TarArchive.OpenArchive(Stream)`.
 - Sparse handling remains explicitly unsupported.
 - Non-modeled PAX keys remain explicitly unsupported.
 
@@ -183,20 +185,11 @@ This is not inherently wrong, but it should be clearly documented everywhere sup
 
 ## Sync and Async API Inconsistencies
 
-### Seekability requirements differ at the API boundary
+### Seekability contract alignment is resolved
 
-Synchronous `TarArchive.OpenArchive(Stream)` explicitly throws if the stream is not seekable.
+`TarArchive.OpenArchive(Stream)` and `TarArchive.OpenAsyncArchive(Stream)` now both enforce the same seekable-stream contract and throw `ArgumentException` for non-seekable input.
 
-Asynchronous `TarArchive.OpenAsyncArchive(Stream)` does not perform the same public guard.
-
-Impact:
-
-- callers do not see the same contract from sync and async overloads
-- behavior is harder to reason about from API docs alone
-
-Recommended action:
-
-- either align the contracts or document the difference explicitly
+Tar tests include an async regression case for non-seekable stream open.
 
 ### Header format alignment between sync and async is resolved
 
@@ -236,19 +229,15 @@ Recommended action:
 
 - either add fixtures and tests or document these as unsupported with no test coverage
 
-### No tests for unsupported write wrappers
+### Unsupported-wrapper writer coverage is now present
 
-There are negative tests for an invalid `Rar` compression type, but not for unsupported tar wrappers that a user might reasonably infer from read support.
-
-Missing negative cases include:
+Tar writer tests now explicitly verify `InvalidFormatException` for unsupported tar wrapper compression types:
 
 - `CompressionType.Xz`
 - `CompressionType.ZStandard`
 - `CompressionType.Lzw`
 
-Recommended action:
-
-- add explicit negative tests so the supported write matrix stays intentional
+Coverage exists in both sync and async writer test paths.
 
 ## Documentation Gaps
 
@@ -287,8 +276,6 @@ Recommended action:
 
 ### Priority 1
 
-- Add negative writer tests for unsupported wrapper compressions
-- Evaluate whether sync and async archive open contracts should match exactly
 - Improve metadata round-trip behavior only if there is a consumer need
 - Evaluate whether non-modeled PAX keys should remain ignored or be surfaced in a future metadata API
 
@@ -298,7 +285,7 @@ The SharpCompress Tar implementation is strong on common read scenarios and basi
 
 - documentation overstating or under-describing support
 - incomplete feature coverage for less common tar dialect features
-- archive/read behavioral differences that are not always explicit in docs
+- intentionally deferred metadata and API-surface decisions
 - test coverage holes around advanced tar metadata features
 
 `docs/TAR_SPEC.md` should be treated as the implementation baseline. This document identifies where that baseline is incomplete, inconsistent, or incorrectly reflected elsewhere in the repository.

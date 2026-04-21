@@ -149,11 +149,11 @@ Implementation files:
 
 ### Open Behavior
 
-Synchronous `TarArchive.OpenArchive(Stream)` requires a seekable stream and throws `ArgumentException` when `CanSeek` is `false`.
+`TarArchive.OpenArchive(Stream)` and `TarArchive.OpenAsyncArchive(Stream)` require a seekable stream and throw `ArgumentException` when `CanSeek` is `false`.
 
 `TarArchive.OpenArchive(FileInfo)` and the list-based overloads use `SourceStream` and determine wrapper compression by calling `TarFactory.GetCompressionType`.
 
-Asynchronous `OpenAsyncArchive` overloads use `TarFactory.GetCompressionTypeAsync` and do not enforce the same explicit seekability check at the public API boundary.
+Asynchronous `OpenAsyncArchive` overloads use `TarFactory.GetCompressionTypeAsync` for wrapper detection.
 
 ### Entry Loading
 
@@ -417,7 +417,7 @@ This section documents current implementation limits, not desired future behavio
 
 ### Archive behavior limitations
 
-- Sync archive open requires a seekable input stream
+- Stream-based archive open requires a seekable input stream
 - Compressed tar archive access is not full random-access in the same sense as uncompressed seekable tar
 
 ## Test Coverage Map

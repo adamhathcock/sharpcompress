@@ -103,6 +103,12 @@ public partial class TarArchive
     )
     {
         stream.NotNull(nameof(stream));
+
+        if (stream is not { CanSeek: true })
+        {
+            throw new ArgumentException("Stream must be seekable", nameof(stream));
+        }
+
         var sourceStream = new SourceStream(
             stream,
             i => null,
