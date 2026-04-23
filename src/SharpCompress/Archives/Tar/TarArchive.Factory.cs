@@ -67,7 +67,7 @@ public partial class TarArchive
     )
     {
         streams.NotNull(nameof(streams));
-        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
+        streams.RequireSeekable();
         var strms = streams;
         var sourceStream = new SourceStream(
             strms[0],
@@ -87,12 +87,7 @@ public partial class TarArchive
         ReaderOptions? readerOptions = null
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireSeekable();
 
         return OpenArchive([stream], readerOptions);
     }
@@ -104,10 +99,7 @@ public partial class TarArchive
     )
     {
         stream.NotNull(nameof(stream));
-        if (!stream.CanSeek)
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireSeekable();
         var sourceStream = new SourceStream(
             stream,
             i => null,
@@ -164,7 +156,7 @@ public partial class TarArchive
     {
         cancellationToken.ThrowIfCancellationRequested();
         streams.NotNull(nameof(streams));
-        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
+        streams.RequireSeekable();
         var strms = streams;
         var sourceStream = new SourceStream(
             strms[0],

@@ -58,12 +58,7 @@ public partial class RarArchive
 
     public static IRarArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireSeekable();
 
         return new RarArchive(
             new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
@@ -92,7 +87,7 @@ public partial class RarArchive
     )
     {
         streams.NotNull(nameof(streams));
-        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
+        streams.RequireSeekable();
         var strms = streams;
         return new RarArchive(
             new SourceStream(

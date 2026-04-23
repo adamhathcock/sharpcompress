@@ -13,22 +13,6 @@ namespace SharpCompress.Archives;
 
 public static partial class ArchiveFactory
 {
-    internal static void EnsureSeekable(Stream stream)
-    {
-        if (stream is null || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
-    }
-
-    internal static void EnsureSeekable(IReadOnlyList<Stream> streams)
-    {
-        foreach (var stream in streams)
-        {
-            EnsureSeekable(stream);
-        }
-    }
-
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
         readerOptions ??= ReaderOptions.ForExternalStream;
@@ -96,7 +80,7 @@ public static partial class ArchiveFactory
             throw new ArchiveOperationException("No streams");
         }
 
-        EnsureSeekable(streamsArray);
+        streamsArray.RequireSeekable();
 
         var firstStream = streamsArray[0];
         if (streamsArray.Count == 1)
@@ -139,11 +123,8 @@ public static partial class ArchiveFactory
     public static T FindFactory<T>(Stream stream)
         where T : IFactory
     {
-        stream.NotNull(nameof(stream));
-        if (!stream.CanRead || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream should be readable and seekable");
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         var factories = Factory.Factories.OfType<T>();
 
@@ -178,12 +159,8 @@ public static partial class ArchiveFactory
     public static bool IsArchive(Stream stream, out ArchiveType? type)
     {
         type = null;
-        stream.NotNull(nameof(stream));
-
-        if (!stream.CanRead || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream should be readable and seekable");
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         var startPosition = stream.Position;
 
@@ -217,12 +194,8 @@ public static partial class ArchiveFactory
         CancellationToken cancellationToken = default
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (!stream.CanRead || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream should be readable and seekable");
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         var startPosition = stream.Position;
 

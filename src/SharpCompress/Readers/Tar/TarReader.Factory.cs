@@ -170,7 +170,7 @@ public partial class TarReader
     /// <returns></returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         readerOptions ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = SharpCompressStream.Create(
             stream,

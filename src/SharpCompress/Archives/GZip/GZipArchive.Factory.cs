@@ -77,7 +77,7 @@ public partial class GZipArchive
     )
     {
         streams.NotNull(nameof(streams));
-        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
+        streams.RequireSeekable();
         var strms = streams;
         return new GZipArchive(
             new SourceStream(
@@ -93,12 +93,7 @@ public partial class GZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireSeekable();
 
         return new GZipArchive(
             new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)

@@ -68,7 +68,7 @@ public partial class ZipArchive
     )
     {
         streams.NotNull(nameof(streams));
-        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
+        streams.RequireSeekable();
         var strms = streams;
         return new ZipArchive(
             new SourceStream(
@@ -84,12 +84,7 @@ public partial class ZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireSeekable();
 
         return new ZipArchive(
             new SourceStream(stream, i => null, readerOptions ?? ReaderOptions.ForExternalStream)
@@ -133,7 +128,7 @@ public partial class ZipArchive
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
+        streams.RequireSeekable();
         return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(streams, readerOptions));
     }
 

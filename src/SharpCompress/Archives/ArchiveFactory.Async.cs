@@ -99,7 +99,7 @@ public static partial class ArchiveFactory
             throw new ArchiveOperationException("No streams");
         }
 
-        EnsureSeekable(streamsArray);
+        streamsArray.RequireSeekable();
 
         var firstStream = streamsArray[0];
         if (streamsArray.Count == 1)
@@ -145,11 +145,8 @@ public static partial class ArchiveFactory
     )
         where T : IFactory
     {
-        stream.NotNull(nameof(stream));
-        if (!stream.CanRead || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream should be readable and seekable");
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         var factories = Factory.Factories.OfType<T>();
 

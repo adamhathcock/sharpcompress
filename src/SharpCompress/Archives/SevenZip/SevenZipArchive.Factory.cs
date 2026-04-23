@@ -72,7 +72,7 @@ public partial class SevenZipArchive
     )
     {
         streams.NotNull(nameof(streams));
-        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
+        streams.RequireSeekable();
         var strms = streams;
         return new SevenZipArchive(
             new SourceStream(
@@ -85,12 +85,7 @@ public partial class SevenZipArchive
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireSeekable();
 
         return new SevenZipArchive(
             new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
