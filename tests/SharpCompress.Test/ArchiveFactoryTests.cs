@@ -93,6 +93,24 @@ public class ArchiveFactoryTests : TestBase
         );
     }
 
+    [Fact]
+    public void OpenArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => ArchiveFactory.OpenArchive(unreadable));
+    }
+
+    [Fact]
+    public async ValueTask OpenAsyncArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            ArchiveFactory.OpenAsyncArchive(unreadable).AsTask()
+        );
+    }
+
     [Theory]
     [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
     [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]

@@ -138,6 +138,14 @@ public class GZipArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void GZipArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => GZipArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
     public void GZip_Archive_NonSeekableStream()
     {
         // Test that GZip extraction works with non-seekable streams (like HttpBaseStream)

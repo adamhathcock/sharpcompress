@@ -58,6 +58,7 @@ public partial class RarArchive
 
     public static IRarArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
+        stream.RequireReadable();
         stream.RequireSeekable();
 
         return new RarArchive(
@@ -86,9 +87,8 @@ public partial class RarArchive
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        streams.RequireSeekable();
-        var strms = streams;
+        var strms = streams.RequireReadable();
+        strms.RequireSeekable();
         return new RarArchive(
             new SourceStream(
                 strms[0],

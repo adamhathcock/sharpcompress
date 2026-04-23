@@ -71,9 +71,8 @@ public partial class SevenZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        streams.RequireSeekable();
-        var strms = streams;
+        var strms = streams.RequireReadable();
+        strms.RequireSeekable();
         return new SevenZipArchive(
             new SourceStream(
                 strms[0],
@@ -85,6 +84,7 @@ public partial class SevenZipArchive
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
+        stream.RequireReadable();
         stream.RequireSeekable();
 
         return new SevenZipArchive(

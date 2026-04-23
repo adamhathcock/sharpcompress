@@ -35,6 +35,19 @@ public class TarArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void TarArchiveStreamRead_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")),
+            false,
+            true,
+            true
+        );
+
+        Assert.Throws<ArgumentException>(() => TarArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
     public void TarArchive_StreamCollection_Throws_On_NonSeekable_Stream()
     {
         using var nonSeekable = new ForwardOnlyStream(new MemoryStream());

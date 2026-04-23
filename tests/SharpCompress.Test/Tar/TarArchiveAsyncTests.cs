@@ -33,6 +33,16 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
+    public async ValueTask TarArchiveOpenAsyncStream_Throws_On_Unreadable_Stream()
+    {
+        using var stream = new TestStream(new MemoryStream(), false, true, true);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            TarArchive.OpenAsyncArchive(stream).AsTask()
+        );
+    }
+
+    [Fact]
     public async ValueTask Tar_FileName_Exactly_100_Characters_Async()
     {
         var archive = "Tar_FileName_Exactly_100_Characters.tar";

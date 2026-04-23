@@ -7,6 +7,7 @@ using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -35,6 +36,14 @@ public class ZipArchiveTests : ArchiveTests
         using var seekable = new MemoryStream();
 
         Assert.Throws<ArgumentException>(() => ZipArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
+    public void ZipArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => ZipArchive.OpenArchive(unreadable));
     }
 
     [Fact]

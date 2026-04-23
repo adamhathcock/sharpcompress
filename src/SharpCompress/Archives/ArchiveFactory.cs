@@ -73,14 +73,12 @@ public static partial class ArchiveFactory
 
     public static IArchive OpenArchive(IReadOnlyList<Stream> streams, ReaderOptions? options = null)
     {
-        streams.NotNull(nameof(streams));
-        var streamsArray = streams;
+        var streamsArray = streams.RequireReadable();
+        streamsArray.RequireSeekable();
         if (streamsArray.Count == 0)
         {
             throw new ArchiveOperationException("No streams");
         }
-
-        streamsArray.RequireSeekable();
 
         var firstStream = streamsArray[0];
         if (streamsArray.Count == 1)

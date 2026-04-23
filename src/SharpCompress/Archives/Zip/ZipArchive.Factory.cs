@@ -67,9 +67,8 @@ public partial class ZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        streams.RequireSeekable();
-        var strms = streams;
+        var strms = streams.RequireReadable();
+        strms.RequireSeekable();
         return new ZipArchive(
             new SourceStream(
                 strms[0],
@@ -84,6 +83,7 @@ public partial class ZipArchive
         ReaderOptions? readerOptions = null
     )
     {
+        stream.RequireReadable();
         stream.RequireSeekable();
 
         return new ZipArchive(
@@ -128,7 +128,6 @@ public partial class ZipArchive
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        streams.RequireSeekable();
         return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(streams, readerOptions));
     }
 

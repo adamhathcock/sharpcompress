@@ -38,6 +38,14 @@ public class SevenZipArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void SevenZipArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => SevenZipArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
     public void SevenZipArchive_LZMAAES_StreamRead() =>
         ArchiveStreamRead(
             "7Zip.LZMA.Aes.7z",

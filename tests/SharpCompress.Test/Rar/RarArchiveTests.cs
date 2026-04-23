@@ -132,6 +132,14 @@ public class RarArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void RarArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => RarArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
     public void Rar5_ArchiveStreamRead() => ArchiveStreamRead("Rar5.rar");
 
     [Fact]
