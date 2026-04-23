@@ -123,6 +123,23 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_ArchiveStreamRead() => ArchiveStreamRead("Rar.rar");
 
     [Fact]
+    public void RarArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => RarArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
+    public void RarArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => RarArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
     public void Rar5_ArchiveStreamRead() => ArchiveStreamRead("Rar5.rar");
 
     [Fact]

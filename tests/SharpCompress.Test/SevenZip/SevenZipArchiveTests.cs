@@ -7,6 +7,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.SevenZip;
@@ -24,6 +25,25 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMA_PathRead() => ArchiveFileRead("7Zip.LZMA.7z");
+
+    [Fact]
+    public void SevenZipArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() =>
+            SevenZipArchive.OpenArchive([nonSeekable, seekable])
+        );
+    }
+
+    [Fact]
+    public void SevenZipArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => SevenZipArchive.OpenArchive(unreadable));
+    }
 
     [Fact]
     public void SevenZipArchive_LZMAAES_StreamRead() =>

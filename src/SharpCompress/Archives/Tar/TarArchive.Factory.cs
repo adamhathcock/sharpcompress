@@ -66,8 +66,7 @@ public partial class TarArchive
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams;
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         var sourceStream = new SourceStream(
             strms[0],
             i => i < strms.Count ? strms[i] : null,
@@ -86,12 +85,8 @@ public partial class TarArchive
         ReaderOptions? readerOptions = null
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return OpenArchive([stream], readerOptions);
     }
@@ -102,7 +97,8 @@ public partial class TarArchive
         CancellationToken cancellationToken = default
     )
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
+        stream.RequireSeekable();
         var sourceStream = new SourceStream(
             stream,
             i => null,
@@ -158,8 +154,7 @@ public partial class TarArchive
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        streams.NotNull(nameof(streams));
-        var strms = streams;
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         var sourceStream = new SourceStream(
             strms[0],
             i => i < strms.Count ? strms[i] : null,

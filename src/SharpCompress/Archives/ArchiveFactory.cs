@@ -73,8 +73,7 @@ public static partial class ArchiveFactory
 
     public static IArchive OpenArchive(IReadOnlyList<Stream> streams, ReaderOptions? options = null)
     {
-        streams.NotNull(nameof(streams));
-        var streamsArray = streams;
+        var streamsArray = streams.RequireReadable().RequireSeekable().ToList();
         if (streamsArray.Count == 0)
         {
             throw new ArchiveOperationException("No streams");
@@ -121,11 +120,8 @@ public static partial class ArchiveFactory
     public static T FindFactory<T>(Stream stream)
         where T : IFactory
     {
-        stream.NotNull(nameof(stream));
-        if (!stream.CanRead || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream should be readable and seekable");
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         var factories = Factory.Factories.OfType<T>();
 
@@ -160,12 +156,8 @@ public static partial class ArchiveFactory
     public static bool IsArchive(Stream stream, out ArchiveType? type)
     {
         type = null;
-        stream.NotNull(nameof(stream));
-
-        if (!stream.CanRead || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream should be readable and seekable");
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         var startPosition = stream.Position;
 
@@ -199,12 +191,8 @@ public static partial class ArchiveFactory
         CancellationToken cancellationToken = default
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (!stream.CanRead || !stream.CanSeek)
-        {
-            throw new ArgumentException("Stream should be readable and seekable");
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         var startPosition = stream.Position;
 

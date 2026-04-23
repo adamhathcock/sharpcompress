@@ -75,6 +75,8 @@ public static class WriterFactory
         IWriterOptions writerOptions
     )
     {
+        stream.RequireWritable();
+
         var factory = Factories
             .Factory.Factories.OfType<IWriterFactory>()
             .FirstOrDefault(item => item.KnownArchiveType == archiveType);
@@ -102,6 +104,8 @@ public static class WriterFactory
         CancellationToken cancellationToken = default
     )
     {
+        stream.RequireWritable();
+
         var factory = Factories
             .Factory.Factories.OfType<IWriterFactory>()
             .FirstOrDefault(item => item.KnownArchiveType == archiveType);

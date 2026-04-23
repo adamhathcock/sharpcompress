@@ -29,7 +29,7 @@ public static partial class ReaderFactory
     /// <returns></returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
         var sharpCompressStream = SharpCompressStream.Create(

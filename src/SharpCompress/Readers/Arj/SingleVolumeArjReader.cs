@@ -12,7 +12,7 @@ internal class SingleVolumeArjReader : ArjReader
     internal SingleVolumeArjReader(Stream stream, ReaderOptions options)
         : base(options)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         _stream = stream;
     }
 

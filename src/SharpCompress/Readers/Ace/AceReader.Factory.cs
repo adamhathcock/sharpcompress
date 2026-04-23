@@ -19,7 +19,7 @@ public partial class AceReader
     /// <returns>An AceReader instance.</returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         return new SingleVolumeAceReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
@@ -31,8 +31,8 @@ public partial class AceReader
     /// <returns></returns>
     public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
-        streams.NotNull(nameof(streams));
-        return new MultiVolumeAceReader(streams, options ?? ReaderOptions.ForExternalStream);
+        var streamArray = streams.RequireReadable();
+        return new MultiVolumeAceReader(streamArray, options ?? ReaderOptions.ForExternalStream);
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
@@ -61,8 +61,8 @@ public partial class AceReader
         ReaderOptions? options = null
     )
     {
-        streams.NotNull(nameof(streams));
-        return new MultiVolumeAceReader(streams, options ?? ReaderOptions.ForExternalStream);
+        var streamArray = streams.RequireReadable();
+        return new MultiVolumeAceReader(streamArray, options ?? ReaderOptions.ForExternalStream);
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(

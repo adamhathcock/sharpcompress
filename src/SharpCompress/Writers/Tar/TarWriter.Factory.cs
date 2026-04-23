@@ -22,7 +22,7 @@ public partial class TarWriter : IWriterOpenable<TarWriterOptions>
 
     public static IWriter OpenWriter(Stream stream, TarWriterOptions writerOptions)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireWritable();
         return new TarWriter(stream, writerOptions);
     }
 

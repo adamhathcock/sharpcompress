@@ -56,7 +56,7 @@ public static partial class ReaderFactory
         CancellationToken cancellationToken = default
     )
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
         var sharpCompressStream = SharpCompressStream.Create(
