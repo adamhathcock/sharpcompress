@@ -13,11 +13,20 @@ internal static partial class TarHeaderFactory
         IArchiveEncoding archiveEncoding
     )
     {
+        // In streaming mode we track the previous entry's packed stream so we can
+        // advance past its data (and alignment padding) before reading the next header.
+        // Without this, the loop would re-read entry data bytes as a header.
+        TarReadOnlySubStream? previousPackedStream = null;
         while (true)
         {
             TarHeader? header = null;
             try
             {
+                // Dispose the previous packed stream so any unread entry data and its
+                // 512-byte alignment padding are skipped before we read the next header.
+                previousPackedStream?.Dispose();
+                previousPackedStream = null;
+
                 var reader = new BinaryReader(stream, archiveEncoding.Default, leaveOpen: false);
                 header = new TarHeader(archiveEncoding);
 
@@ -37,11 +46,9 @@ internal static partial class TarHeaderFactory
                         break;
                     case StreamingMode.Streaming:
                         {
-                            header.PackedStream = new TarReadOnlySubStream(
-                                stream,
-                                header.Size,
-                                false
-                            );
+                            var packedStream = new TarReadOnlySubStream(stream, header.Size, false);
+                            header.PackedStream = packedStream;
+                            previousPackedStream = packedStream;
                         }
                         break;
                     default:

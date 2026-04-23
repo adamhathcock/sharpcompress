@@ -109,6 +109,7 @@ public partial class TarArchive
         {
             // Use async header reading for async-only streams
             TarHeader? previousHeader = null;
+            string? previousLongName = null;
             await foreach (
                 var header in TarHeaderFactory.ReadHeaderAsync(
                     streamingMode,
@@ -121,18 +122,48 @@ public partial class TarArchive
                 {
                     if (header.EntryType == EntryType.LongName)
                     {
-                        previousHeader = header;
+                        if (_compressionType != CompressionType.None)
+                        {
+                            // Streaming (compressed) mode: read the long name immediately
+                            // from the PackedStream before the foreach loop advances and
+                            // ReadHeaderAsync disposes it while skipping to the next header.
+                            var longNameStream = header.PackedStream.NotNull();
+#if NET8_0_OR_GREATER
+                            await using (longNameStream.ConfigureAwait(false))
+#else
+                            using (longNameStream)
+#endif
+                            {
+                                using var memoryStream = new MemoryStream();
+                                await longNameStream
+                                    .CopyToAsync(memoryStream)
+                                    .ConfigureAwait(false);
+                                previousLongName = ReaderOptions
+                                    .ArchiveEncoding.Decode(memoryStream.ToArray())
+                                    .TrimNulls();
+                            }
+                        }
+                        else
+                        {
+                            // Seekable (uncompressed) mode: save the header; the long name
+                            // will be read after the next entry header has been parsed.
+                            previousHeader = header;
+                        }
                     }
                     else
                     {
-                        if (previousHeader != null)
+                        if (previousLongName != null)
                         {
+                            // Apply the long name that was pre-read in streaming mode.
+                            header.Name = previousLongName;
+                            previousLongName = null;
+                        }
+                        else if (previousHeader != null)
+                        {
+                            // Seekable mode: read the long name via the seekable stream now.
                             var entry = new TarArchiveEntry(
                                 this,
-                                new TarFilePart(
-                                    previousHeader,
-                                    _compressionType == CompressionType.None ? stream : null
-                                ),
+                                new TarFilePart(previousHeader, stream),
                                 CompressionType.None,
                                 ReaderOptions
                             );
