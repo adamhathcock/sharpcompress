@@ -99,6 +99,8 @@ public static partial class ArchiveFactory
             throw new ArchiveOperationException("No streams");
         }
 
+        EnsureSeekable(streamsArray);
+
         var firstStream = streamsArray[0];
         if (streamsArray.Count == 1)
         {

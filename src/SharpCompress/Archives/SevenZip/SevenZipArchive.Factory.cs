@@ -72,6 +72,7 @@ public partial class SevenZipArchive
     )
     {
         streams.NotNull(nameof(streams));
+        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
         var strms = streams;
         return new SevenZipArchive(
             new SourceStream(

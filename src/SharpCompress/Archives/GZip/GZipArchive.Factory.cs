@@ -77,6 +77,7 @@ public partial class GZipArchive
     )
     {
         streams.NotNull(nameof(streams));
+        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
         var strms = streams;
         return new GZipArchive(
             new SourceStream(

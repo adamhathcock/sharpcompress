@@ -5,6 +5,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers.GZip;
 using Xunit;
 
@@ -125,6 +126,15 @@ public class GZipArchiveTests : ArchiveTests
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.OpenArchive(stream);
         Assert.Equal(archive.Type, ArchiveType.GZip);
+    }
+
+    [Fact]
+    public void GZipArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => GZipArchive.OpenArchive([nonSeekable, seekable]));
     }
 
     [Fact]

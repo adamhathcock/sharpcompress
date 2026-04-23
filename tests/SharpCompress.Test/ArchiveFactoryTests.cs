@@ -1,9 +1,11 @@
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Factories;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test;
@@ -59,6 +61,26 @@ public class ArchiveFactoryTests : TestBase
 
         Assert.IsType(expectedFactoryType, factory);
         Assert.Equal(startPosition, stream.Position);
+    }
+
+    [Fact]
+    public void OpenArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => ArchiveFactory.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
+    public async ValueTask OpenAsyncArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            ArchiveFactory.OpenAsyncArchive([nonSeekable, seekable]).AsTask()
+        );
     }
 
     [Fact]

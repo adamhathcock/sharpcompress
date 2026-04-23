@@ -29,6 +29,15 @@ public class ZipArchiveTests : ArchiveTests
     public void Zip_BZip2_ArchiveStreamRead() => ArchiveStreamRead("Zip.bzip2.zip");
 
     [Fact]
+    public void ZipArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new NonSeekableMemoryStream();
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => ZipArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
     public void Zip_Deflate_Streamed2_ArchiveStreamRead() =>
         ArchiveStreamRead("Zip.deflate.dd-.zip");
 

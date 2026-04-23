@@ -92,6 +92,7 @@ public partial class RarArchive
     )
     {
         streams.NotNull(nameof(streams));
+        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
         var strms = streams;
         return new RarArchive(
             new SourceStream(

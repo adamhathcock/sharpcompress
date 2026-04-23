@@ -35,6 +35,15 @@ public class TarArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void TarArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => TarArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
     public void Tar_FileName_Exactly_100_Characters()
     {
         var archive = "Tar_FileName_Exactly_100_Characters.tar";

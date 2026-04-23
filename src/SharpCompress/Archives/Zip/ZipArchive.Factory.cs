@@ -68,6 +68,7 @@ public partial class ZipArchive
     )
     {
         streams.NotNull(nameof(streams));
+        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
         var strms = streams;
         return new ZipArchive(
             new SourceStream(
@@ -132,6 +133,7 @@ public partial class ZipArchive
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
+        SharpCompress.Archives.ArchiveFactory.EnsureSeekable(streams);
         return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(streams, readerOptions));
     }
 

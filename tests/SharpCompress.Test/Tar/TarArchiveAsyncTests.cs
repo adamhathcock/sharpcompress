@@ -23,6 +23,16 @@ public class TarArchiveAsyncTests : ArchiveTests
     public async ValueTask TarArchiveStreamRead_Async() => await ArchiveStreamReadAsync("Tar.tar");
 
     [Fact]
+    public async ValueTask TarArchiveOpenAsyncStream_Throws_On_NonSeekable_Stream()
+    {
+        using var stream = new ForwardOnlyStream(new MemoryStream());
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            TarArchive.OpenAsyncArchive(stream).AsTask()
+        );
+    }
+
+    [Fact]
     public async ValueTask Tar_FileName_Exactly_100_Characters_Async()
     {
         var archive = "Tar_FileName_Exactly_100_Characters.tar";
