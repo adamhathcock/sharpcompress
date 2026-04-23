@@ -92,13 +92,7 @@ public static partial class ArchiveFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var streamsArray = streams.RequireReadable();
-        streamsArray.RequireSeekable();
-        if (streamsArray.Count == 0)
-        {
-            throw new ArchiveOperationException("No streams");
-        }
-
+        var streamsArray = streams.RequireReadable().RequireSeekable().ToList();
         var firstStream = streamsArray[0];
         if (streamsArray.Count == 1)
         {

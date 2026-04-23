@@ -87,8 +87,7 @@ public partial class RarArchive
         ReaderOptions? readerOptions = null
     )
     {
-        var strms = streams.RequireReadable();
-        strms.RequireSeekable();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new RarArchive(
             new SourceStream(
                 strms[0],

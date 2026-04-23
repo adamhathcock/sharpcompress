@@ -34,6 +34,8 @@ public class ReaderFactoryTests
         using var unreadable = new TestStream(new MemoryStream(), false, true, true);
         using var readable = new MemoryStream();
 
-        Assert.Throws<ArgumentException>(() => RarReader.OpenReader([unreadable, readable]));
+        Assert.Throws<ArgumentException>(() =>
+            RarReader.OpenReader([unreadable, readable]).MoveToNextEntry()
+        );
     }
 }

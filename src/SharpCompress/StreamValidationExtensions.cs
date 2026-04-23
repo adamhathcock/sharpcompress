@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace SharpCompress;
 
 internal static class StreamValidationExtensions
 {
-    internal static Stream RequireReadable(this Stream stream)
+    internal static void RequireReadable(this Stream stream)
     {
         stream.NotNull(nameof(stream));
 
@@ -15,11 +14,9 @@ internal static class StreamValidationExtensions
         {
             throw new ArgumentException("Stream must be readable", nameof(stream));
         }
-
-        return stream;
     }
 
-    internal static Stream RequireSeekable(this Stream stream)
+    internal static void RequireSeekable(this Stream stream)
     {
         stream.NotNull(nameof(stream));
 
@@ -27,11 +24,9 @@ internal static class StreamValidationExtensions
         {
             throw new ArgumentException("Stream must be seekable", nameof(stream));
         }
-
-        return stream;
     }
 
-    internal static Stream RequireWritable(this Stream stream)
+    internal static void RequireWritable(this Stream stream)
     {
         stream.NotNull(nameof(stream));
 
@@ -39,32 +34,23 @@ internal static class StreamValidationExtensions
         {
             throw new ArgumentException("Stream must be writable", nameof(stream));
         }
-
-        return stream;
     }
 
-    internal static IReadOnlyList<Stream> RequireSeekable(this IReadOnlyList<Stream> streams)
+    internal static IEnumerable<Stream> RequireSeekable(this IEnumerable<Stream> streams)
     {
-        streams.NotNull(nameof(streams));
-
         foreach (var stream in streams)
         {
             stream.RequireSeekable();
+            yield return stream;
         }
-
-        return streams;
     }
 
-    internal static IReadOnlyList<Stream> RequireReadable(this IEnumerable<Stream> streams)
+    internal static IEnumerable<Stream> RequireReadable(this IEnumerable<Stream> streams)
     {
-        streams.NotNull(nameof(streams));
-
-        var streamArray = streams as IReadOnlyList<Stream> ?? streams.ToArray();
-        foreach (var stream in streamArray)
+        foreach (var stream in streams)
         {
             stream.RequireReadable();
+            yield return stream;
         }
-
-        return streamArray;
     }
 }

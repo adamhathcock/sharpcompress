@@ -76,8 +76,7 @@ public partial class GZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        var strms = streams.RequireReadable();
-        strms.RequireSeekable();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new GZipArchive(
             new SourceStream(
                 strms[0],

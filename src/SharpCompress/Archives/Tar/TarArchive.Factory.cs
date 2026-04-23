@@ -66,8 +66,7 @@ public partial class TarArchive
         ReaderOptions? readerOptions = null
     )
     {
-        var strms = streams.RequireReadable();
-        strms.RequireSeekable();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         var sourceStream = new SourceStream(
             strms[0],
             i => i < strms.Count ? strms[i] : null,
@@ -155,8 +154,7 @@ public partial class TarArchive
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var strms = streams.RequireReadable();
-        strms.RequireSeekable();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         var sourceStream = new SourceStream(
             strms[0],
             i => i < strms.Count ? strms[i] : null,
