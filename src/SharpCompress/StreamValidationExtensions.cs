@@ -31,6 +31,18 @@ internal static class StreamValidationExtensions
         return stream;
     }
 
+    internal static Stream RequireWritable(this Stream stream)
+    {
+        stream.NotNull(nameof(stream));
+
+        if (!stream.CanWrite)
+        {
+            throw new ArgumentException("Stream must be writable", nameof(stream));
+        }
+
+        return stream;
+    }
+
     internal static IReadOnlyList<Stream> RequireSeekable(this IReadOnlyList<Stream> streams)
     {
         streams.NotNull(nameof(streams));

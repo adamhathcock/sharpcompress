@@ -36,7 +36,7 @@ public partial class SevenZipWriter : IWriterOpenable<SevenZipWriterOptions>
     /// </summary>
     public static IWriter OpenWriter(Stream stream, SevenZipWriterOptions writerOptions)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireWritable();
         return new SevenZipWriter(stream, writerOptions);
     }
 
