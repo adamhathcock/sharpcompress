@@ -176,6 +176,44 @@ public static partial class ArchiveFactory
         return false;
     }
 
+    /// <summary>
+    /// Returns information about the archive at the given file path,
+    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// </summary>
+    /// <param name="filePath">Path to the archive file.</param>
+    public static ArchiveInformation? GetArchiveInformation(string filePath)
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        using Stream stream = File.OpenRead(filePath);
+        return GetArchiveInformation(stream);
+    }
+
+    /// <summary>
+    /// Returns information about the archive in the given stream,
+    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// </summary>
+    /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
+    public static ArchiveInformation? GetArchiveInformation(Stream stream)
+    {
+        stream.RequireReadable();
+        stream.RequireSeekable();
+
+        var startPosition = stream.Position;
+
+        foreach (var factory in Factory.Factories)
+        {
+            var isArchive = factory.IsArchive(stream);
+            stream.Position = startPosition;
+
+            if (isArchive)
+            {
+                return new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
+            }
+        }
+
+        return null;
+    }
+
     public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default

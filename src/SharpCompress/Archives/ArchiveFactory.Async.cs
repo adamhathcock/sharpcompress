@@ -110,6 +110,54 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Returns information about the archive at the given file path asynchronously,
+    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// </summary>
+    /// <param name="filePath">Path to the archive file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
+    {
+        filePath.NotNullOrEmpty(nameof(filePath));
+        using Stream stream = File.OpenRead(filePath);
+        return await GetArchiveInformationAsync(stream, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Returns information about the archive in the given stream asynchronously,
+    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// </summary>
+    /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        stream.RequireReadable();
+        stream.RequireSeekable();
+
+        var startPosition = stream.Position;
+
+        foreach (var factory in Factory.Factories)
+        {
+            var isArchive = await factory
+                .IsArchiveAsync(stream, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            stream.Position = startPosition;
+
+            if (isArchive)
+            {
+                return new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
+            }
+        }
+
+        return null;
+    }
+
     internal static ValueTask<T> FindFactoryAsync<T>(
         string filePath,
         CancellationToken cancellationToken = default
