@@ -140,22 +140,10 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var startPosition = stream.Position;
-
-        foreach (var factory in Factory.Factories)
-        {
-            var isArchive = await factory
-                .IsArchiveAsync(stream, cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-            stream.Position = startPosition;
-
-            if (isArchive)
-            {
-                return new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
-            }
-        }
-
-        return null;
+        var factory = await TryFindFactoryAsync(stream, cancellationToken).ConfigureAwait(false);
+        return factory is null
+            ? null
+            : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
     }
 
     internal static ValueTask<T> FindFactoryAsync<T>(
@@ -188,14 +176,39 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factories = Factory.Factories.OfType<T>();
+        // Use the shared async detection loop over all factories. If the matched factory
+        // implements T we return it; otherwise (or if nothing matched) we fall through
+        // to the same "unsupported format" exception that the original code produced,
+        // listing the T-typed factories as the hint for the caller.
+        var factory = await TryFindFactoryAsync(stream, cancellationToken).ConfigureAwait(false);
+        if (factory is T typedFactory)
+        {
+            return typedFactory;
+        }
 
+        var extensions = string.Join(", ", Factory.Factories.OfType<T>().Select(item => item.Name));
+
+        throw new ArchiveOperationException(
+            $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
+        );
+    }
+
+    /// <summary>
+    /// Async counterpart of <see cref="ArchiveFactory.TryFindFactory"/>.
+    /// Iterates all registered factories and returns the first one whose
+    /// <see cref="IFactory.IsArchiveAsync"/> recognises the stream, or <see langword="null"/>.
+    /// Stream position is restored to its value at entry on both success and failure.
+    /// </summary>
+    private static async ValueTask<IFactory?> TryFindFactoryAsync(
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
         var startPosition = stream.Position;
 
-        foreach (var factory in factories)
+        foreach (var factory in Factory.Factories)
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
-
             if (
                 await factory
                     .IsArchiveAsync(stream, cancellationToken: cancellationToken)
@@ -203,15 +216,11 @@ public static partial class ArchiveFactory
             )
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
-
                 return factory;
             }
         }
 
-        var extensions = string.Join(", ", factories.Select(item => item.Name));
-
-        throw new ArchiveOperationException(
-            $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
-        );
+        stream.Seek(startPosition, SeekOrigin.Begin);
+        return null;
     }
 }
