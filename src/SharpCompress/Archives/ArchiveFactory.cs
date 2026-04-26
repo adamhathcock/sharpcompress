@@ -157,67 +157,6 @@ public static partial class ArchiveFactory
         return factory is not null;
     }
 
-    /// <summary>
-    /// Returns information about the archive at the given file path,
-    /// or <see langword="null"/> if the file is not a recognized archive.
-    /// </summary>
-    /// <param name="filePath">Path to the archive file.</param>
-    public static ArchiveInformation? GetArchiveInformation(string filePath)
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        using Stream stream = File.OpenRead(filePath);
-        return GetArchiveInformation(stream);
-    }
-
-    /// <summary>
-    /// Returns information about the archive in the given stream,
-    /// or <see langword="null"/> if the stream is not a recognized archive.
-    /// </summary>
-    /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
-    public static ArchiveInformation? GetArchiveInformation(Stream stream)
-    {
-        stream.RequireReadable();
-        stream.RequireSeekable();
-
-        var factory = TryFindFactory(stream);
-        return factory is null
-            ? null
-            : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
-    }
-
-    /// <summary>
-    /// Iterates all registered factories and returns the first one whose
-    /// <see cref="IFactory.IsArchive"/> recognises the stream, or <see langword="null"/>.
-    /// Stream position is restored to its value at entry on both success and failure.
-    /// </summary>
-    /// <remarks>
-    /// This is the shared, seekable-stream detection core used by
-    /// <see cref="FindFactory{T}(Stream)"/>, <see cref="IsArchive(Stream, out ArchiveType?)"/>,
-    /// and <see cref="GetArchiveInformation(Stream)"/>.
-    /// <para>
-    /// <see cref="ReaderFactory.OpenReader(Stream, ReaderOptions)"/> uses a separate code path
-    /// based on <see cref="IO.SharpCompressStream"/> rewindable buffering, which supports
-    /// non-seekable streams and is therefore not unified with this helper.
-    /// </para>
-    /// </remarks>
-    private static IFactory? TryFindFactory(Stream stream)
-    {
-        var startPosition = stream.Position;
-
-        foreach (var factory in Factory.Factories)
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            if (factory.IsArchive(stream))
-            {
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                return factory;
-            }
-        }
-
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        return null;
-    }
-
     public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
