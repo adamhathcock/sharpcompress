@@ -19,11 +19,31 @@ public static partial class ArchiveFactory
     public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
         string filePath,
         CancellationToken cancellationToken = default
+    ) =>
+        await GetArchiveInformationAsync(filePath, ReaderOptions.ForFilePath, cancellationToken)
+            .ConfigureAwait(false);
+
+    /// <summary>
+    /// Returns information about the archive at the given file path asynchronously,
+    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// </summary>
+    /// <param name="filePath">Path to the archive file.</param>
+    /// <param name="readerOptions">Options controlling archive detection.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+        string filePath,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream stream = File.OpenRead(filePath);
-        return await GetArchiveInformationAsync(stream, cancellationToken).ConfigureAwait(false);
+        return await GetArchiveInformationAsync(
+                stream,
+                readerOptions ?? ReaderOptions.ForFilePath,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -35,12 +55,32 @@ public static partial class ArchiveFactory
     public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
         Stream stream,
         CancellationToken cancellationToken = default
+    ) =>
+        await GetArchiveInformationAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
+            .ConfigureAwait(false);
+
+    /// <summary>
+    /// Returns information about the archive in the given stream asynchronously,
+    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// </summary>
+    /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
+    /// <param name="readerOptions">Options controlling archive detection.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+        Stream stream,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
     )
     {
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = await TryFindFactoryAsync(stream, cancellationToken).ConfigureAwait(false);
+        var factory = await TryFindFactoryAsync(
+                stream,
+                readerOptions ?? ReaderOptions.ForExternalStream,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
         return factory is null
             ? null
             : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
@@ -102,6 +142,14 @@ public static partial class ArchiveFactory
     private static async ValueTask<IFactory?> TryFindFactoryAsync(
         Stream stream,
         CancellationToken cancellationToken
+    ) =>
+        await TryFindFactoryAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
+            .ConfigureAwait(false);
+
+    private static async ValueTask<IFactory?> TryFindFactoryAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        CancellationToken cancellationToken
     )
     {
         var startPosition = stream.Position;
@@ -109,11 +157,15 @@ public static partial class ArchiveFactory
         foreach (var factory in Factory.Factories)
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
-            if (
-                await factory
-                    .IsArchiveAsync(stream, cancellationToken: cancellationToken)
+            var isArchive = factory is Factory concreteFactory
+                ? await concreteFactory
+                    .IsArchiveAsyncWithOptions(stream, readerOptions, cancellationToken)
                     .ConfigureAwait(false)
-            )
+                : await factory
+                    .IsArchiveAsync(stream, readerOptions.Password, cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (isArchive)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
                 return factory;
@@ -129,11 +181,23 @@ public static partial class ArchiveFactory
     /// or <see langword="null"/> if the file is not a recognized archive.
     /// </summary>
     /// <param name="filePath">Path to the archive file.</param>
-    public static ArchiveInformation? GetArchiveInformation(string filePath)
+    public static ArchiveInformation? GetArchiveInformation(string filePath) =>
+        GetArchiveInformation(filePath, ReaderOptions.ForFilePath);
+
+    /// <summary>
+    /// Returns information about the archive at the given file path,
+    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// </summary>
+    /// <param name="filePath">Path to the archive file.</param>
+    /// <param name="readerOptions">Options controlling archive detection.</param>
+    public static ArchiveInformation? GetArchiveInformation(
+        string filePath,
+        ReaderOptions? readerOptions
+    )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream stream = File.OpenRead(filePath);
-        return GetArchiveInformation(stream);
+        return GetArchiveInformation(stream, readerOptions ?? ReaderOptions.ForFilePath);
     }
 
     /// <summary>
@@ -141,12 +205,24 @@ public static partial class ArchiveFactory
     /// or <see langword="null"/> if the stream is not a recognized archive.
     /// </summary>
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
-    public static ArchiveInformation? GetArchiveInformation(Stream stream)
+    public static ArchiveInformation? GetArchiveInformation(Stream stream) =>
+        GetArchiveInformation(stream, ReaderOptions.ForExternalStream);
+
+    /// <summary>
+    /// Returns information about the archive in the given stream,
+    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// </summary>
+    /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
+    /// <param name="readerOptions">Options controlling archive detection.</param>
+    public static ArchiveInformation? GetArchiveInformation(
+        Stream stream,
+        ReaderOptions? readerOptions
+    )
     {
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = TryFindFactory(stream);
+        var factory = TryFindFactory(stream, readerOptions ?? ReaderOptions.ForExternalStream);
         return factory is null
             ? null
             : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
@@ -167,14 +243,21 @@ public static partial class ArchiveFactory
     /// non-seekable streams and is therefore not unified with this helper.
     /// </para>
     /// </remarks>
-    private static IFactory? TryFindFactory(Stream stream)
+    private static IFactory? TryFindFactory(Stream stream) =>
+        TryFindFactory(stream, ReaderOptions.ForExternalStream);
+
+    private static IFactory? TryFindFactory(Stream stream, ReaderOptions readerOptions)
     {
         var startPosition = stream.Position;
 
         foreach (var factory in Factory.Factories)
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
-            if (factory.IsArchive(stream))
+            var isArchive = factory is Factory concreteFactory
+                ? concreteFactory.IsArchiveWithOptions(stream, readerOptions)
+                : factory.IsArchive(stream, readerOptions.Password);
+
+            if (isArchive)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
                 return factory;

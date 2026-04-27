@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Factories;
+using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using Xunit;
 
@@ -184,13 +185,16 @@ public class ArchiveFactoryTests : TestBase
     [Theory]
     [InlineData("7Zip.LZMA2.exe", ArchiveType.SevenZip, true)]
     [InlineData("Rar.jpeg.jpg", ArchiveType.Rar, true)]
-    public void GetArchiveInformation_WithLookForHeader_ReturnsExpectedInfo(
+    public void GetArchiveInformation_WithReaderOptions_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
         bool expectedRandomAccess
     )
     {
-        var info = ArchiveFactory.GetArchiveInformation(GetTestArchivePath(archiveName), true);
+        var info = ArchiveFactory.GetArchiveInformation(
+            GetTestArchivePath(archiveName),
+            ReaderOptions.ForFilePath.WithLookForHeader(true)
+        );
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.Type);
@@ -222,7 +226,7 @@ public class ArchiveFactoryTests : TestBase
     [Theory]
     [InlineData("7Zip.LZMA2.exe", ArchiveType.SevenZip, true)]
     [InlineData("Rar.jpeg.jpg", ArchiveType.Rar, true)]
-    public async ValueTask GetArchiveInformationAsync_WithLookForHeader_ReturnsExpectedInfo(
+    public async ValueTask GetArchiveInformationAsync_WithReaderOptions_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
         bool expectedRandomAccess
@@ -230,7 +234,7 @@ public class ArchiveFactoryTests : TestBase
     {
         var info = await ArchiveFactory.GetArchiveInformationAsync(
             GetTestArchivePath(archiveName),
-            true
+            ReaderOptions.ForFilePath.WithLookForHeader(true)
         );
 
         Assert.NotNull(info);

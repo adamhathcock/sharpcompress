@@ -56,11 +56,20 @@ public abstract class Factory : IFactory
     /// <inheritdoc/>
     public abstract bool IsArchive(Stream stream, string? password = null);
 
+    internal virtual bool IsArchiveWithOptions(Stream stream, ReaderOptions readerOptions) =>
+        IsArchive(stream, readerOptions.Password);
+
     public abstract ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
         CancellationToken cancellationToken = default
     );
+
+    internal virtual ValueTask<bool> IsArchiveAsyncWithOptions(
+        Stream stream,
+        ReaderOptions readerOptions,
+        CancellationToken cancellationToken = default
+    ) => IsArchiveAsync(stream, readerOptions.Password, cancellationToken);
 
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;

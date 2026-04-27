@@ -34,12 +34,21 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     public override bool IsArchive(Stream stream, string? password = null) =>
         RarArchive.IsRarFile(stream);
 
+    internal override bool IsArchiveWithOptions(Stream stream, ReaderOptions readerOptions) =>
+        RarArchive.IsRarFile(stream, readerOptions);
+
     /// <inheritdoc/>
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
         string? password = null,
         CancellationToken cancellationToken = default
     ) => RarArchive.IsRarFileAsync(stream, cancellationToken: cancellationToken);
+
+    internal override ValueTask<bool> IsArchiveAsyncWithOptions(
+        Stream stream,
+        ReaderOptions readerOptions,
+        CancellationToken cancellationToken = default
+    ) => RarArchive.IsRarFileAsync(stream, readerOptions, cancellationToken);
 
     /// <inheritdoc/>
     public override FileInfo? GetFilePart(int index, FileInfo part1) =>
