@@ -157,13 +157,9 @@ public static partial class ArchiveFactory
         foreach (var factory in Factory.Factories)
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
-            var isArchive = factory is Factory concreteFactory
-                ? await concreteFactory
-                    .IsArchiveAsyncWithOptions(stream, readerOptions, cancellationToken)
-                    .ConfigureAwait(false)
-                : await factory
-                    .IsArchiveAsync(stream, readerOptions.Password, cancellationToken)
-                    .ConfigureAwait(false);
+            var isArchive = await factory
+                .IsArchiveAsync(stream, readerOptions, cancellationToken)
+                .ConfigureAwait(false);
 
             if (isArchive)
             {
@@ -253,9 +249,7 @@ public static partial class ArchiveFactory
         foreach (var factory in Factory.Factories)
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
-            var isArchive = factory is Factory concreteFactory
-                ? concreteFactory.IsArchiveWithOptions(stream, readerOptions)
-                : factory.IsArchive(stream, readerOptions.Password);
+            var isArchive = factory.IsArchive(stream, readerOptions);
 
             if (isArchive)
             {

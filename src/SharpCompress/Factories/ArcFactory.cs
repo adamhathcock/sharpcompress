@@ -25,7 +25,7 @@ public class ArcFactory : Factory, IReaderFactory
         yield return "arc";
     }
 
-    public override bool IsArchive(Stream stream, string? password = null)
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions)
     {
         //You may have to use some(paranoid) checks to ensure that you actually are
         //processing an ARC file, since other archivers also adopted the idea of putting
@@ -63,7 +63,7 @@ public class ArcFactory : Factory, IReaderFactory
 
     public override async ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     )
     {

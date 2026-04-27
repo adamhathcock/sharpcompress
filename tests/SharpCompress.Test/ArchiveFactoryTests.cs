@@ -117,6 +117,72 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
     [InlineData("Rar.rar", ArchiveType.Rar)]
     [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip)]
+    public void IsArchive_String_ReturnsExpectedType(string archiveName, ArchiveType expectedType)
+    {
+        var result = ArchiveFactory.IsArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, archiveName),
+            out var type
+        );
+
+        Assert.True(result);
+        Assert.Equal(expectedType, type);
+    }
+
+    [Theory]
+    [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
+    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
+    public void IsArchive_Stream_PreservesPosition(string archiveName, ArchiveType expectedType)
+    {
+        using var stream = CreatePrefixedArchiveStream(archiveName, 11);
+        var startPosition = stream.Position;
+
+        var result = ArchiveFactory.IsArchive(stream, out var type);
+
+        Assert.True(result);
+        Assert.Equal(expectedType, type);
+        Assert.Equal(startPosition, stream.Position);
+    }
+
+    [Theory]
+    [InlineData("7Zip.LZMA2.exe", ArchiveType.SevenZip)]
+    [InlineData("Rar.jpeg.jpg", ArchiveType.Rar)]
+    public void IsArchive_WithReaderOptions_ReturnsExpectedType(
+        string archiveName,
+        ArchiveType expectedType
+    )
+    {
+        var result = ArchiveFactory.IsArchive(
+            GetTestArchivePath(archiveName),
+            ReaderOptions.ForFilePath.WithLookForHeader(true),
+            out var type
+        );
+
+        Assert.True(result);
+        Assert.Equal(expectedType, type);
+    }
+
+    [Theory]
+    [InlineData("7Zip.LZMA2.exe", ArchiveType.SevenZip)]
+    [InlineData("Rar.jpeg.jpg", ArchiveType.Rar)]
+    public async ValueTask IsArchiveAsync_WithReaderOptions_ReturnsExpectedType(
+        string archiveName,
+        ArchiveType expectedType
+    )
+    {
+        var result = await ArchiveFactory.IsArchiveAsync(
+            GetTestArchivePath(archiveName),
+            ReaderOptions.ForFilePath.WithLookForHeader(true)
+        );
+
+        Assert.True(result.IsArchive);
+        Assert.Equal(expectedType, result.Type);
+    }
+
+    [Theory]
+    [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
+    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
+    [InlineData("Rar.rar", ArchiveType.Rar)]
+    [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip)]
     public async ValueTask IsArchiveAsync_String_ReturnsExpectedType(
         string archiveName,
         ArchiveType expectedType

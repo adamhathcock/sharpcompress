@@ -23,12 +23,12 @@ public class AceFactory : Factory, IReaderFactory
         yield return "ace";
     }
 
-    public override bool IsArchive(Stream stream, string? password = null) =>
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions) =>
         AceHeader.IsArchive(stream);
 
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     ) => AceHeader.IsArchiveAsync(stream, cancellationToken);
 

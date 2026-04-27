@@ -43,10 +43,10 @@ public class ZipFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null)
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions)
     {
         var startPosition = stream.CanSeek ? stream.Position : -1;
-        if (ZipArchive.IsZipFile(stream, password))
+        if (ZipArchive.IsZipFile(stream, readerOptions.Password))
         {
             return true;
         }
@@ -61,7 +61,7 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (ZipArchive.IsZipMulti(stream, password))
+        if (ZipArchive.IsZipMulti(stream, readerOptions.Password))
         {
             return true;
         }
@@ -74,7 +74,7 @@ public class ZipFactory
     /// <inheritdoc/>
     public override async ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     )
     {
@@ -84,7 +84,7 @@ public class ZipFactory
         // probe for single volume zip
         if (
             await ZipArchive
-                .IsZipFileAsync(stream, password, cancellationToken)
+                .IsZipFileAsync(stream, readerOptions.Password, cancellationToken)
                 .ConfigureAwait(false)
         )
         {
@@ -102,7 +102,7 @@ public class ZipFactory
         //test the zip (last) file of a multipart zip
         if (
             await ZipArchive
-                .IsZipMultiAsync(stream, password, cancellationToken)
+                .IsZipMultiAsync(stream, readerOptions.Password, cancellationToken)
                 .ConfigureAwait(false)
         )
         {

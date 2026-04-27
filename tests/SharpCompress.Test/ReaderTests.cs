@@ -103,7 +103,7 @@ public abstract class ReaderTests : TestBase
         (
             await factory.IsArchiveAsync(
                 new FileInfo(testArchive).OpenRead(),
-                null,
+                ReaderOptions.ForExternalStream,
                 cancellationToken
             )
         )
@@ -112,6 +112,7 @@ public abstract class ReaderTests : TestBase
         (
             await factory.IsArchiveAsync(
                 new FileInfo(testArchive).OpenRead(),
+                ReaderOptions.ForExternalStream,
                 cancellationToken: cancellationToken
             )
         )

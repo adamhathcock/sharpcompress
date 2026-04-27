@@ -34,20 +34,11 @@ public class SevenZipFactory : Factory, IArchiveFactory, IMultiArchiveFactory, I
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null) =>
-        SevenZipArchive.IsSevenZipFile(stream);
-
-    internal override bool IsArchiveWithOptions(Stream stream, ReaderOptions readerOptions) =>
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions) =>
         SevenZipArchive.IsSevenZipFile(stream, readerOptions);
 
     /// <inheritdoc/>
     public override ValueTask<bool> IsArchiveAsync(
-        Stream stream,
-        string? password = null,
-        CancellationToken cancellationToken = default
-    ) => SevenZipArchive.IsSevenZipFileAsync(stream, cancellationToken);
-
-    internal override ValueTask<bool> IsArchiveAsyncWithOptions(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken = default

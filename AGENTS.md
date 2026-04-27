@@ -190,6 +190,7 @@ SharpCompress supports multiple archive and compression formats:
 
 ### Validation Expectations
 - Run targeted tests for the changed area first.
+- On non-Windows machines, avoid net48 test runs unless Mono is installed; use framework-specific validation such as `--framework net10.0` instead.
 - Run `dotnet csharpier format .` after code edits.
 - Run `dotnet csharpier check .` before handing off changes.
 
