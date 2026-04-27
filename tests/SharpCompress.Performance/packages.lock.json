@@ -22,12 +22,12 @@
       },
       "JetBrains.Profiler.SelfApi": {
         "type": "Direct",
-        "requested": "[2.5.16, )",
-        "resolved": "2.5.16",
-        "contentHash": "F8Tczi426PmDNZu0d88d60jVEQ/Tnvdi7LKnVLikTQ9hPqdzW7WOjj79S4XA2awbpTfCCU+eHL9MrUk6Yj90Zw==",
+        "requested": "[2.5.17, )",
+        "resolved": "2.5.17",
+        "contentHash": "WWMpZuUNja0KIsqJYXJfAFaVmDufVXm621l6JUtTpX/vrb8+yqXxn3QRwMyRIYTyQWTsURMFKjSe0FEHW7A2EQ==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.4.6",
-          "JetBrains.Profiler.Api": "1.4.11"
+          "JetBrains.HabitatDetector": "1.4.7",
+          "JetBrains.Profiler.Api": "1.4.12"
         }
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
@@ -82,18 +82,18 @@
       },
       "JetBrains.HabitatDetector": {
         "type": "Transitive",
-        "resolved": "1.4.6",
-        "contentHash": "kNN79C3hIt+1AzPNKbddouXXGaL84bi2T42Zsa2A0nXyatg1V5q+WLI9NddCtWjMdb9CLkDem2VIc/5lHWaXJQ==",
+        "resolved": "1.4.7",
+        "contentHash": "0/3hu7N5hmuQcQl7zjWNVxq+A3MRlWP3xD2VJbnAwxq/cTvWsiu6haVvBnPfCnAbAhH9CIccFyyZYn/Lh2IJ6Q==",
         "dependencies": {
           "JetBrains.FormatRipper": "2.4.0"
         }
       },
       "JetBrains.Profiler.Api": {
         "type": "Transitive",
-        "resolved": "1.4.11",
-        "contentHash": "4XOA72p49dmzT9k2NyhSVYnLxjw+OPJpXen2gNFsbWquZPjnpoPqXJosVfeONDOST52cgAg3c1q/cBa6/R3NLQ==",
+        "resolved": "1.4.12",
+        "contentHash": "t0XCp5eWvM8ZX28QPOBF+s25YOda+cRY2zP7TzTXGd+EL7INpxtloeI/V3/P+cGcPnyNCK5yPqv0Zr/dcm22hQ==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.4.6"
+          "JetBrains.HabitatDetector": "1.4.7"
         }
       },
       "Microsoft.Build.Tasks.Git": {
