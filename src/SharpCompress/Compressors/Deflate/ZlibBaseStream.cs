@@ -630,17 +630,17 @@ internal class ZlibBaseStream : Stream, IStreamStack
     //_outStream.Seek(offset, origin);
     public override void SetLength(Int64 value) => _stream.SetLength(value);
 
-#if NOT
-    public int Read()
+    public override int ReadByte()
     {
-        if (Read(_buf1, 0, 1) == 0)
-            return 0;
-        // calculate CRC after reading
-        if (crc != null)
-            crc.SlurpBlock(_buf1, 0, 1);
-        return (_buf1[0] & 0xFF);
+        var buffer = _buf1;
+        var n = Read(buffer, 0, 1);
+        if (n == 0)
+        {
+            return -1;
+        }
+
+        return buffer[0];
     }
-#endif
 
     private bool nomoreinput;
     private bool isDisposed;
@@ -987,6 +987,11 @@ internal class ZlibBaseStream : Stream, IStreamStack
             }
         }
 
+        // Save the inflate/deflate result code before overwriting rc with the
+        // byte count. Z_STREAM_END == 1, so when count == 1 and all bytes were
+        // produced, (count - AvailableBytesOut) == 1 which would falsely match
+        // Z_STREAM_END and trigger a spurious rewind.
+        var inflateResult = rc;
         rc = (count - _z.AvailableBytesOut);
 
         // calculate CRC after reading
@@ -995,11 +1000,19 @@ internal class ZlibBaseStream : Stream, IStreamStack
             crc.SlurpBlock(buffer, offset, rc);
         }
 
-        if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
+        if (
+            inflateResult == ZlibConstants.Z_STREAM_END
+            && z.AvailableBytesIn != 0
+            && !_wantCompress
+        )
         {
-            //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
+            // Rewind the buffer. Only clear AvailableBytesIn if rewind succeeded.
+            // If rewind fails (e.g., non-seekable stream), the trailer bytes are
+            // still in the working buffer and will be needed by finish().
+            if (this.Rewind(z.AvailableBytesIn))
+            {
+                z.AvailableBytesIn = 0;
+            }
         }
 
         return rc;
@@ -1181,6 +1194,11 @@ internal class ZlibBaseStream : Stream, IStreamStack
             }
         }
 
+        // Save the inflate/deflate result code before overwriting rc with the
+        // byte count. Z_STREAM_END == 1, so when count == 1 and all bytes were
+        // produced, (count - AvailableBytesOut) == 1 which would falsely match
+        // Z_STREAM_END and trigger a spurious rewind.
+        var inflateResult = rc;
         rc = (count - _z.AvailableBytesOut);
 
         // calculate CRC after reading
@@ -1189,11 +1207,19 @@ internal class ZlibBaseStream : Stream, IStreamStack
             crc.SlurpBlock(buffer, offset, rc);
         }
 
-        if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
+        if (
+            inflateResult == ZlibConstants.Z_STREAM_END
+            && z.AvailableBytesIn != 0
+            && !_wantCompress
+        )
         {
-            //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
+            // Rewind the buffer. Only clear AvailableBytesIn if rewind succeeded.
+            // If rewind fails (e.g., non-seekable stream), the trailer bytes are
+            // still in the working buffer and will be needed by finish().
+            if (this.Rewind(z.AvailableBytesIn))
+            {
+                z.AvailableBytesIn = 0;
+            }
         }
 
         return rc;

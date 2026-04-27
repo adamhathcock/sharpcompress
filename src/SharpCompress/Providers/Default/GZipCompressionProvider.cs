@@ -13,6 +13,16 @@ namespace SharpCompress.Providers.Default;
 /// </summary>
 public sealed class GZipCompressionProvider : CompressionProviderBase
 {
+    private readonly bool _leaveOpen;
+
+    public GZipCompressionProvider()
+        : this(leaveOpen: false) { }
+
+    public GZipCompressionProvider(bool leaveOpen)
+    {
+        _leaveOpen = leaveOpen;
+    }
+
     public override CompressionType CompressionType => CompressionType.GZip;
     public override bool SupportsCompression => true;
     public override bool SupportsDecompression => true;
@@ -20,7 +30,13 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
     public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         var level = (CompressionLevel)compressionLevel;
-        return new GZipStream(destination, CompressionMode.Compress, level, Encoding.UTF8);
+        return new GZipStream(
+            destination,
+            CompressionMode.Compress,
+            level,
+            _leaveOpen,
+            Encoding.UTF8
+        );
     }
 
     public override Stream CreateDecompressStream(Stream source)
