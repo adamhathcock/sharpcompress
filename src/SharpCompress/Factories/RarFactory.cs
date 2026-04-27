@@ -31,15 +31,15 @@ public class RarFactory : Factory, IArchiveFactory, IMultiArchiveFactory, IReade
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null) =>
-        RarArchive.IsRarFile(stream);
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions) =>
+        RarArchive.IsRarFile(stream, readerOptions);
 
     /// <inheritdoc/>
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
-    ) => RarArchive.IsRarFileAsync(stream, cancellationToken: cancellationToken);
+    ) => RarArchive.IsRarFileAsync(stream, readerOptions, cancellationToken);
 
     /// <inheritdoc/>
     public override FileInfo? GetFilePart(int index, FileInfo part1) =>

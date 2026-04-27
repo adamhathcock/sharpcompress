@@ -123,23 +123,17 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factories = Factory.Factories.OfType<T>();
-
-        var startPosition = stream.Position;
-
-        foreach (var factory in factories)
+        // Use the shared detection loop over all factories. If the matched factory
+        // implements T we return it; otherwise (or if nothing matched) we fall through
+        // to the same "unsupported format" exception that the original code produced,
+        // listing the T-typed factories as the hint for the caller.
+        var factory = TryFindFactory(stream);
+        if (factory is T typedFactory)
         {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-
-            if (factory.IsArchive(stream))
-            {
-                stream.Seek(startPosition, SeekOrigin.Begin);
-
-                return factory;
-            }
+            return typedFactory;
         }
 
-        var extensions = string.Join(", ", factories.Select(item => item.Name));
+        var extensions = string.Join(", ", Factory.Factories.OfType<T>().Select(item => item.Name));
 
         throw new ArchiveOperationException(
             $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
@@ -148,68 +142,81 @@ public static partial class ArchiveFactory
 
     public static bool IsArchive(string filePath, out ArchiveType? type)
     {
+        return IsArchive(filePath, ReaderOptions.ForFilePath, out type);
+    }
+
+    public static bool IsArchive(
+        string filePath,
+        ReaderOptions? readerOptions,
+        out ArchiveType? type
+    )
+    {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream s = File.OpenRead(filePath);
-        return IsArchive(s, out type);
+        return IsArchive(s, readerOptions ?? ReaderOptions.ForFilePath, out type);
     }
 
     public static bool IsArchive(Stream stream, out ArchiveType? type)
     {
-        type = null;
+        return IsArchive(stream, ReaderOptions.ForExternalStream, out type);
+    }
+
+    public static bool IsArchive(Stream stream, ReaderOptions? readerOptions, out ArchiveType? type)
+    {
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var startPosition = stream.Position;
-
-        foreach (var factory in Factory.Factories)
-        {
-            var isArchive = factory.IsArchive(stream);
-            stream.Position = startPosition;
-
-            if (isArchive)
-            {
-                type = factory.KnownArchiveType;
-                return true;
-            }
-        }
-
-        return false;
+        var factory = TryFindFactory(stream, readerOptions ?? ReaderOptions.ForExternalStream);
+        type = factory?.KnownArchiveType;
+        return factory is not null;
     }
 
     public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
+    ) =>
+        await IsArchiveAsync(filePath, ReaderOptions.ForFilePath, cancellationToken)
+            .ConfigureAwait(false);
+
+    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
+        string filePath,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream stream = File.OpenRead(filePath);
-        return await IsArchiveAsync(stream, cancellationToken).ConfigureAwait(false);
+        return await IsArchiveAsync(
+                stream,
+                readerOptions ?? ReaderOptions.ForFilePath,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         Stream stream,
+        CancellationToken cancellationToken = default
+    ) =>
+        await IsArchiveAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
+            .ConfigureAwait(false);
+
+    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
+        Stream stream,
+        ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
     )
     {
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var startPosition = stream.Position;
-
-        foreach (var factory in Factory.Factories)
-        {
-            var isArchive = await factory
-                .IsArchiveAsync(stream, cancellationToken: cancellationToken)
-                .ConfigureAwait(false);
-            stream.Position = startPosition;
-
-            if (isArchive)
-            {
-                return (true, factory.KnownArchiveType);
-            }
-        }
-
-        return (false, null);
+        var factory = await TryFindFactoryAsync(
+                stream,
+                readerOptions ?? ReaderOptions.ForExternalStream,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+        return (factory is not null, factory?.KnownArchiveType);
     }
 
     public static IEnumerable<string> GetFileParts(string part1)

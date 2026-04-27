@@ -143,11 +143,14 @@ public partial class SevenZipArchive
         return IsSevenZipFile(stream);
     }
 
-    public static bool IsSevenZipFile(Stream stream)
+    public static bool IsSevenZipFile(Stream stream) =>
+        IsSevenZipFile(stream, ReaderOptions.ForExternalStream);
+
+    public static bool IsSevenZipFile(Stream stream, ReaderOptions? readerOptions)
     {
         try
         {
-            return SignatureMatch(stream);
+            return SignatureMatch(stream, readerOptions?.LookForHeader ?? false);
         }
         catch
         {
@@ -158,12 +161,25 @@ public partial class SevenZipArchive
     public static async ValueTask<bool> IsSevenZipFileAsync(
         Stream stream,
         CancellationToken cancellationToken = default
+    ) =>
+        await IsSevenZipFileAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
+            .ConfigureAwait(false);
+
+    public static async ValueTask<bool> IsSevenZipFileAsync(
+        Stream stream,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            return await SignatureMatchAsync(stream, cancellationToken).ConfigureAwait(false);
+            return await SignatureMatchAsync(
+                    stream,
+                    readerOptions?.LookForHeader ?? false,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
         catch
         {
@@ -173,13 +189,29 @@ public partial class SevenZipArchive
 
     private static ReadOnlySpan<byte> Signature => [(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C];
 
-    private static bool SignatureMatch(Stream stream)
+    private static bool SignatureMatch(Stream stream, bool lookForHeader)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(6);
         try
         {
-            stream.ReadExact(buffer, 0, 6);
-            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
+            var maxScanOffset = lookForHeader ? 0x80000 - 20 : 0;
+            for (var offset = 0; offset <= maxScanOffset; offset++)
+            {
+                stream.ReadExact(buffer, 0, 6);
+                if (buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature))
+                {
+                    return true;
+                }
+
+                if (!lookForHeader || !stream.CanSeek || stream.Length - stream.Position < 6)
+                {
+                    return false;
+                }
+
+                stream.Position -= 5;
+            }
+
+            return false;
         }
         finally
         {
@@ -189,18 +221,39 @@ public partial class SevenZipArchive
 
     private static async ValueTask<bool> SignatureMatchAsync(
         Stream stream,
+        bool lookForHeader,
         CancellationToken cancellationToken
     )
     {
         var buffer = ArrayPool<byte>.Shared.Rent(6);
         try
         {
-            if (!await stream.ReadFullyAsync(buffer, 0, 6, cancellationToken).ConfigureAwait(false))
+            var maxScanOffset = lookForHeader ? 0x80000 - 20 : 0;
+            for (var offset = 0; offset <= maxScanOffset; offset++)
             {
-                return false;
+                if (
+                    !await stream
+                        .ReadFullyAsync(buffer, 0, 6, cancellationToken)
+                        .ConfigureAwait(false)
+                )
+                {
+                    return false;
+                }
+
+                if (buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature))
+                {
+                    return true;
+                }
+
+                if (!lookForHeader || !stream.CanSeek || stream.Length - stream.Position < 6)
+                {
+                    return false;
+                }
+
+                stream.Position -= 5;
             }
 
-            return buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature);
+            return false;
         }
         finally
         {

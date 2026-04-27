@@ -48,9 +48,9 @@ public class TarFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null)
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions)
     {
-        var providers = CompressionProviderRegistry.Default;
+        var providers = readerOptions.Providers;
         var sharpCompressStream = new SharpCompressStream(stream);
         sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
@@ -78,11 +78,11 @@ public class TarFactory
     /// <inheritdoc/>
     public override async ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     )
     {
-        var providers = CompressionProviderRegistry.Default;
+        var providers = readerOptions.Providers;
         var sharpCompressStream = new SharpCompressStream(stream);
         sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)

@@ -153,7 +153,7 @@ public partial class RarArchive
     {
         try
         {
-            MarkHeader.Read(stream, true, false);
+            MarkHeader.Read(stream, true, options?.LookForHeader ?? false);
             return true;
         }
         catch
@@ -172,7 +172,7 @@ public partial class RarArchive
         try
         {
             await MarkHeader
-                .ReadAsync(stream, true, false, cancellationToken)
+                .ReadAsync(stream, true, options?.LookForHeader ?? false, cancellationToken)
                 .ConfigureAwait(false);
             return true;
         }
