@@ -630,7 +630,7 @@ internal sealed partial class Unpack
             {
                 unpBlockType = BlockTypes.BLOCK_PPM;
                 return await ppm.DecodeInitAsync(this, PpmEscChar, cancellationToken)
-                                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
             }
 
             unpBlockType = BlockTypes.BLOCK_LZ;
@@ -678,7 +678,7 @@ internal sealed partial class Unpack
 
             var TableSize = PackDef.HUFF_TABLE_SIZE;
 
-            for (var i = 0; i < TableSize;)
+            for (var i = 0; i < TableSize; )
             {
                 if (inAddr > readTop - 5)
                 {
