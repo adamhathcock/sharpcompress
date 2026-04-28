@@ -70,7 +70,7 @@ internal partial class Unpack
             // So we can safefly use these tables below.
             if (
                 !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
-                || !ReadTables()
+                || !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
                 || !TablesRead5
             )
             {
@@ -101,7 +101,7 @@ internal partial class Unpack
                     }
                     if (
                         !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
-                        || !ReadTables()
+                        || !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
                     )
                     {
                         return;
