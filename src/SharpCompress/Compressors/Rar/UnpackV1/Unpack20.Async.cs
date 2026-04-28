@@ -45,7 +45,7 @@ internal partial class Unpack
             }
             if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 270 && wrPtr != unpPtr)
             {
-                oldUnpWriteBuf();
+                await oldUnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (suspended)
                 {
                     return;
@@ -157,8 +157,8 @@ internal partial class Unpack
                 CopyString20(2, Distance);
             }
         }
-        ReadLastTables();
-        oldUnpWriteBuf();
+        await ReadLastTablesAsync(cancellationToken).ConfigureAwait(false);
+        await oldUnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<bool> ReadTables20Async(CancellationToken cancellationToken = default)
@@ -271,5 +271,26 @@ internal partial class Unpack
             UnpOldTable20[i] = Table[i];
         }
         return true;
+    }
+
+    private async Task ReadLastTablesAsync(CancellationToken cancellationToken = default)
+    {
+        if (readTop >= inAddr + 5)
+        {
+            if (UnpAudioBlock != 0)
+            {
+                if (this.decodeNumber(MD[UnpCurChannel]) == 256)
+                {
+                    await ReadTables20Async(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                if (this.decodeNumber(LD) == 269)
+                {
+                    await ReadTables20Async(cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
     }
 }

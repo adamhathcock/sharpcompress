@@ -19,7 +19,7 @@ internal class RangeCoder
     private long _low,
         _code,
         _range;
-    private readonly IRarUnpack _unpackRead;
+    private IRarUnpack _unpackRead;
     private readonly Stream _stream;
 
     internal RangeCoder(IRarUnpack unpackRead)
@@ -36,6 +36,24 @@ internal class RangeCoder
 
     internal RangeCoder() { }
 
+    internal async ValueTask InitAsync(
+        IRarUnpack unpackRead,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _unpackRead = unpackRead;
+        SubRange = new SubRange();
+
+        _low = _code = 0L;
+        _range = 0xFFFFffffL;
+        for (var i = 0; i < 4; i++)
+        {
+            _code =
+                ((_code << 8) | await ReadCharAsync(cancellationToken).ConfigureAwait(false))
+                & UINT_MASK;
+        }
+    }
+
     private void Init()
     {
         SubRange = new SubRange();
@@ -44,7 +62,7 @@ internal class RangeCoder
         _range = 0xFFFFffffL;
         for (var i = 0; i < 4; i++)
         {
-            _code = ((_code << 8) | Char) & UINT_MASK;
+            _code = ((_code << 8) | ReadChar()) & UINT_MASK;
         }
     }
 
@@ -73,20 +91,17 @@ internal class RangeCoder
         }
     }
 
-    private long Char
+    private long ReadChar()
     {
-        get
+        if (_unpackRead != null)
         {
-            if (_unpackRead != null)
-            {
-                return (_unpackRead.Char);
-            }
-            if (_stream != null)
-            {
-                return _stream.ReadByte();
-            }
-            return -1;
+            return (_unpackRead.ReadChar());
         }
+        if (_stream != null)
+        {
+            return _stream.ReadByte();
+        }
+        return -1;
     }
 
     internal SubRange SubRange { get; private set; }
@@ -121,7 +136,7 @@ internal class RangeCoder
                 _range = (-_low & (BOT - 1)) & UINT_MASK;
                 c2 = false;
             }
-            _code = ((_code << 8) | Char) & UINT_MASK;
+            _code = ((_code << 8) | ReadChar()) & UINT_MASK;
             _range = (_range << 8) & UINT_MASK;
             _low = (_low << 8) & UINT_MASK;
         }
@@ -131,7 +146,7 @@ internal class RangeCoder
     {
         if (_unpackRead != null)
         {
-            return _unpackRead.Char;
+            return await _unpackRead.ReadCharAsync(cancellationToken).ConfigureAwait(false);
         }
         if (_stream != null)
         {

@@ -22,6 +22,7 @@ internal interface IRarUnpack
     bool Suspended { get; set; }
 
     long DestSize { get; }
-    int Char { get; }
+    int ReadChar();
+    ValueTask<int> ReadCharAsync(CancellationToken cancellationToken);
     int PpmEscChar { get; set; }
 }

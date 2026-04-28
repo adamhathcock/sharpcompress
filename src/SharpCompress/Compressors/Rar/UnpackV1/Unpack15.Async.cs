@@ -48,7 +48,7 @@ internal partial class Unpack
             }
             if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 270 && wrPtr != unpPtr)
             {
-                oldUnpWriteBuf();
+                await oldUnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (suspended)
                 {
                     return;
@@ -105,7 +105,7 @@ internal partial class Unpack
                 }
             }
         }
-        oldUnpWriteBuf();
+        await oldUnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<bool> unpReadBufAsync(CancellationToken cancellationToken = default)

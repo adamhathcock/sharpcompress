@@ -154,17 +154,25 @@ internal partial class Unpack : IRarUnpack
 
     public long DestSize => DestUnpSize;
 
-    public int Char
+    public int ReadChar()
     {
-        get
+        // TODO: coderb: not sure where the "MAXSIZE-30" comes from, ported from V1 code
+        if (InAddr > MAX_SIZE - 30)
         {
-            // TODO: coderb: not sure where the "MAXSIZE-30" comes from, ported from V1 code
-            if (InAddr > MAX_SIZE - 30)
-            {
-                UnpReadBuf();
-            }
-            return InBuf[InAddr++];
+            UnpReadBuf();
         }
+        return InBuf[InAddr++];
+    }
+
+    public async ValueTask<int> ReadCharAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // TODO: coderb: not sure where the "MAXSIZE-30" comes from, ported from V1 code
+        if (InAddr > MAX_SIZE - 30)
+        {
+            await UnpReadBufAsync(cancellationToken).ConfigureAwait(false);
+        }
+        return InBuf[InAddr++];
     }
 
     public int PpmEscChar

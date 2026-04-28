@@ -5,14 +5,9 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Test.Mocks;
 
-public class AsyncOnlyStream : Stream
+public class AsyncOnlyStream(Stream stream) : Stream
 {
-    private readonly Stream _stream;
-
-    public AsyncOnlyStream(Stream stream)
-    {
-        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-    }
+    private readonly Stream _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
     public override bool CanRead => _stream.CanRead;
     public override bool CanSeek => _stream.CanSeek;
