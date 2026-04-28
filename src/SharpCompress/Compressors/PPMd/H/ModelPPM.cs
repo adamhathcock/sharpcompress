@@ -281,13 +281,13 @@ internal class ModelPpm
 
     internal bool DecodeInit(IRarUnpack unpackRead, int escChar)
     {
-        var maxOrder = unpackRead.Char & 0xff;
+        var maxOrder = unpackRead.ReadChar() & 0xff;
         var reset = ((maxOrder & 0x20) != 0);
 
         var maxMb = 0;
         if (reset)
         {
-            maxMb = unpackRead.Char;
+            maxMb = unpackRead.ReadChar();
         }
         else
         {
@@ -298,7 +298,7 @@ internal class ModelPpm
         }
         if ((maxOrder & 0x40) != 0)
         {
-            escChar = unpackRead.Char;
+            escChar = unpackRead.ReadChar();
             unpackRead.PpmEscChar = escChar;
         }
         Coder = new RangeCoder(unpackRead);

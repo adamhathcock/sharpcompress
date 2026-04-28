@@ -62,7 +62,7 @@ internal class RangeCoder
         _range = 0xFFFFffffL;
         for (var i = 0; i < 4; i++)
         {
-            _code = ((_code << 8) | Char) & UINT_MASK;
+            _code = ((_code << 8) | ReadChar()) & UINT_MASK;
         }
     }
 
@@ -91,20 +91,17 @@ internal class RangeCoder
         }
     }
 
-    private long Char
+    private long ReadChar()
     {
-        get
+        if (_unpackRead != null)
         {
-            if (_unpackRead != null)
-            {
-                return (_unpackRead.Char);
-            }
-            if (_stream != null)
-            {
-                return _stream.ReadByte();
-            }
-            return -1;
+            return (_unpackRead.ReadChar());
         }
+        if (_stream != null)
+        {
+            return _stream.ReadByte();
+        }
+        return -1;
     }
 
     internal SubRange SubRange { get; private set; }
@@ -139,7 +136,7 @@ internal class RangeCoder
                 _range = (-_low & (BOT - 1)) & UINT_MASK;
                 c2 = false;
             }
-            _code = ((_code << 8) | Char) & UINT_MASK;
+            _code = ((_code << 8) | ReadChar()) & UINT_MASK;
             _range = (_range << 8) & UINT_MASK;
             _low = (_low << 8) & UINT_MASK;
         }
