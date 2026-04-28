@@ -82,7 +82,7 @@ public partial class GZipStream
             if (BaseStream._wantCompress)
             {
                 // first write in compression, therefore, emit the GZIP header
-                _headerByteCount = EmitHeader();
+                _headerByteCount = await EmitHeaderAsync(cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -108,7 +108,7 @@ public partial class GZipStream
             if (BaseStream._wantCompress)
             {
                 // first write in compression, therefore, emit the GZIP header
-                _headerByteCount = EmitHeader();
+                _headerByteCount = await EmitHeaderAsync(cancellationToken).ConfigureAwait(false);
             }
             else
             {

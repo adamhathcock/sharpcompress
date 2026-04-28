@@ -2,12 +2,23 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.BZip2;
 
 public sealed partial class BZip2Stream
 {
+    /// <summary>
+    /// Asynchronously finalizes the BZip2 compressed stream, flushing all pending data.
+    /// Use this instead of <see cref="IFinishable.Finish"/> when writing to an async-only stream.
+    /// </summary>
+    public async Task FinishAsync(CancellationToken cancellationToken = default)
+    {
+        if (stream is CBZip2OutputStream output)
+        {
+            await output.FinishAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     /// <summary>
     /// Create a BZip2Stream asynchronously
     /// </summary>
