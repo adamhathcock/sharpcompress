@@ -13,6 +13,32 @@ namespace SharpCompress.Test.Rar;
 
 public class RarArchiveTests : ArchiveTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar2.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public void Rar_Archive_Recently_Changed_Unpackers_Sync(string filename)
+    {
+        var extractedEntries = 0;
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        using var archive = RarArchive.OpenArchive(
+            stream,
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        {
+            using var output = new MemoryStream();
+            entry.WriteTo(output);
+            extractedEntries++;
+        }
+
+        Assert.True(extractedEntries > 0);
+    }
+
     [Fact]
     public void Rar_EncryptedFileAndHeader_Archive() =>
         ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");

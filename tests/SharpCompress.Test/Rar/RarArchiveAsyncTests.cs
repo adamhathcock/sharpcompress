@@ -13,6 +13,31 @@ namespace SharpCompress.Test.Rar;
 
 public class RarArchiveAsyncTests : ArchiveTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar2.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public async ValueTask Rar_Archive_Recently_Changed_Unpackers_Async(string filename)
+    {
+        var extractedEntries = 0;
+        await using var archive = await RarArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, filename),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
+        {
+            using var output = new SyncWriteNotSupportedStream(new MemoryStream());
+            await entry.WriteToAsync(output);
+            extractedEntries++;
+        }
+
+        Assert.True(extractedEntries > 0);
+    }
+
     [Fact]
     public async ValueTask Rar_EncryptedFileAndHeader_Archive_Async() =>
         await ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", "test");
