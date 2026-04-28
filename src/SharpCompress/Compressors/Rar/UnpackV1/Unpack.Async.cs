@@ -141,7 +141,7 @@ internal sealed partial class Unpack
 
             if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 260 && wrPtr != unpPtr)
             {
-                UnpWriteBuf();
+                await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (destUnpSize < 0)
                 {
                     return;
@@ -154,7 +154,7 @@ internal sealed partial class Unpack
             }
             if (unpBlockType == BlockTypes.BLOCK_PPM)
             {
-                var Ch = ppm.DecodeChar();
+                var Ch = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
                 if (Ch == -1)
                 {
                     ppmError = true;
@@ -162,7 +162,7 @@ internal sealed partial class Unpack
                 }
                 if (Ch == PpmEscChar)
                 {
-                    var NextCh = ppm.DecodeChar();
+                    var NextCh = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
                     if (NextCh == 0)
                     {
                         if (!await ReadTablesAsync(cancellationToken).ConfigureAwait(false))
@@ -177,7 +177,7 @@ internal sealed partial class Unpack
                     }
                     if (NextCh == 3)
                     {
-                        if (!ReadVMCodePPM())
+                        if (!await ReadVMCodePPMAsync(cancellationToken).ConfigureAwait(false))
                         {
                             break;
                         }
@@ -190,7 +190,8 @@ internal sealed partial class Unpack
                         var failed = false;
                         for (var I = 0; I < 4 && !failed; I++)
                         {
-                            var ch = ppm.DecodeChar();
+                            var ch = await ppm.DecodeCharAsync(cancellationToken)
+                                .ConfigureAwait(false);
                             if (ch == -1)
                             {
                                 failed = true;
@@ -216,7 +217,8 @@ internal sealed partial class Unpack
                     }
                     if (NextCh == 5)
                     {
-                        var Length = ppm.DecodeChar();
+                        var Length = await ppm.DecodeCharAsync(cancellationToken)
+                            .ConfigureAwait(false);
                         if (Length == -1)
                         {
                             break;
@@ -354,7 +356,7 @@ internal sealed partial class Unpack
                 CopyString(2, Distance);
             }
         }
-        UnpWriteBuf();
+        await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task UnpWriteBufAsync(CancellationToken cancellationToken = default)
@@ -622,7 +624,8 @@ internal sealed partial class Unpack
         if ((bitField & 0x8000) != 0)
         {
             unpBlockType = BlockTypes.BLOCK_PPM;
-            return ppm.DecodeInit(this, PpmEscChar);
+            return await ppm.DecodeInitAsync(this, PpmEscChar, cancellationToken)
+                .ConfigureAwait(false);
         }
         unpBlockType = BlockTypes.BLOCK_LZ;
 
@@ -790,6 +793,60 @@ internal sealed partial class Unpack
             }
             vmCode.Add((byte)(GetBits() >> 8));
             AddBits(8);
+        }
+        return AddVMCode(FirstByte, vmCode);
+    }
+
+    public async ValueTask<int> ReadCharAsync(CancellationToken cancellationToken = default)
+    {
+        if (inAddr > MAX_SIZE - 30)
+        {
+            await unpReadBufAsync(cancellationToken).ConfigureAwait(false);
+        }
+        return InBuf[inAddr++] & 0xff;
+    }
+
+    private async Task<bool> ReadVMCodePPMAsync(CancellationToken cancellationToken = default)
+    {
+        var FirstByte = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+        if (FirstByte == -1)
+        {
+            return false;
+        }
+        var Length = (FirstByte & 7) + 1;
+        if (Length == 7)
+        {
+            var B1 = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (B1 == -1)
+            {
+                return false;
+            }
+            Length = B1 + 7;
+        }
+        else if (Length == 8)
+        {
+            var B1 = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (B1 == -1)
+            {
+                return false;
+            }
+            var B2 = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (B2 == -1)
+            {
+                return false;
+            }
+            Length = (B1 * 256) + B2;
+        }
+
+        var vmCode = new List<byte>();
+        for (var I = 0; I < Length; I++)
+        {
+            var Ch = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (Ch == -1)
+            {
+                return false;
+            }
+            vmCode.Add((byte)Ch);
         }
         return AddVMCode(FirstByte, vmCode);
     }

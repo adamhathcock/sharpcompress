@@ -19,7 +19,7 @@ internal class RangeCoder
     private long _low,
         _code,
         _range;
-    private readonly IRarUnpack _unpackRead;
+    private IRarUnpack _unpackRead;
     private readonly Stream _stream;
 
     internal RangeCoder(IRarUnpack unpackRead)
@@ -35,6 +35,24 @@ internal class RangeCoder
     }
 
     internal RangeCoder() { }
+
+    internal async ValueTask InitAsync(
+        IRarUnpack unpackRead,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _unpackRead = unpackRead;
+        SubRange = new SubRange();
+
+        _low = _code = 0L;
+        _range = 0xFFFFffffL;
+        for (var i = 0; i < 4; i++)
+        {
+            _code =
+                ((_code << 8) | await ReadCharAsync(cancellationToken).ConfigureAwait(false))
+                & UINT_MASK;
+        }
+    }
 
     private void Init()
     {
@@ -131,7 +149,7 @@ internal class RangeCoder
     {
         if (_unpackRead != null)
         {
-            return _unpackRead.Char;
+            return await _unpackRead.ReadCharAsync(cancellationToken).ConfigureAwait(false);
         }
         if (_stream != null)
         {

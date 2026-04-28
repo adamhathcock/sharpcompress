@@ -14,6 +14,30 @@ namespace SharpCompress.Test.Rar;
 
 public class RarReaderAsyncTests : ReaderTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public async ValueTask Rar_Reader_Async_Uses_Only_Async_Stream_Operations(string filename)
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var output = new SyncWriteNotSupportedStream(new MemoryStream());
+                await reader.WriteEntryToAsync(output);
+            }
+        }
+    }
+
     [Fact]
     public async ValueTask Rar_Multi_Reader_Async() =>
         await DoRar_Multi_Reader_Async([
@@ -370,5 +394,57 @@ public class RarReaderAsyncTests : ReaderTests
             }
         }
         VerifyFiles();
+    }
+
+    private sealed class SyncWriteNotSupportedStream(Stream stream) : Stream
+    {
+        public override bool CanRead => stream.CanRead;
+
+        public override bool CanSeek => stream.CanSeek;
+
+        public override bool CanWrite => stream.CanWrite;
+
+        public override long Length => stream.Length;
+
+        public override long Position
+        {
+            get => stream.Position;
+            set => stream.Position = value;
+        }
+
+        public override void Flush() => stream.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            stream.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) => stream.Seek(offset, origin);
+
+        public override void SetLength(long value) => stream.SetLength(value);
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException("Synchronous Write is not supported");
+
+        public override Task WriteAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            System.Threading.CancellationToken cancellationToken
+        ) => stream.WriteAsync(buffer, offset, count, cancellationToken);
+
+#if NET8_0_OR_GREATER
+        public override ValueTask WriteAsync(
+            ReadOnlyMemory<byte> buffer,
+            System.Threading.CancellationToken cancellationToken = default
+        ) => stream.WriteAsync(buffer, cancellationToken);
+#endif
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                stream.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }
