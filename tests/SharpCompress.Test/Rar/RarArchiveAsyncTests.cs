@@ -30,7 +30,7 @@ public class RarArchiveAsyncTests : ArchiveTests
 
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
-            using var output = new SyncWriteNotSupportedStream(new MemoryStream());
+            using var output = new AsyncOnlyStream(new MemoryStream());
             await entry.WriteToAsync(output);
             extractedEntries++;
         }

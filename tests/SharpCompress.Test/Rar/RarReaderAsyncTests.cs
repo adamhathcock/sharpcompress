@@ -32,7 +32,7 @@ public class RarReaderAsyncTests : ReaderTests
         {
             if (!reader.Entry.IsDirectory)
             {
-                using var output = new SyncWriteNotSupportedStream(new MemoryStream());
+                using var output = new AsyncOnlyStream(new MemoryStream());
                 await reader.WriteEntryToAsync(output);
             }
         }
