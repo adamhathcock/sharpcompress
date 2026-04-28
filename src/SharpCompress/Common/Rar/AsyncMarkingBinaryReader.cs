@@ -45,7 +45,21 @@ internal class AsyncMarkingBinaryReader : IDisposable
     {
         CurrentReadByteCount += count;
         var bytes = new byte[count];
-        await _reader.ReadBytesAsync(bytes, 0, count, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await _reader.ReadBytesAsync(bytes, 0, count, cancellationToken).ConfigureAwait(false);
+        }
+        catch (IncompleteArchiveException ex)
+        {
+            throw new InvalidFormatException(
+                string.Format(
+                    Constants.DefaultCultureInfo,
+                    "Could not read the requested amount of bytes.  End of stream reached. Requested: {0}",
+                    count
+                ),
+                ex
+            );
+        }
         return bytes;
     }
 
