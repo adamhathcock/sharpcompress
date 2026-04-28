@@ -19,7 +19,11 @@ public class AsyncOnlyStream(Stream stream) : Stream
         set => _stream.Position = value;
     }
 
-    public override void Flush() => _stream.Flush();
+    public override void Flush() =>
+        throw new NotSupportedException("Synchronous Flush is not supported");
+
+    public override int ReadByte() =>
+        throw new NotSupportedException("Synchronous ReadByte is not supported");
 
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException("Synchronous Read is not supported");
@@ -57,7 +61,10 @@ public class AsyncOnlyStream(Stream stream) : Stream
 #endif
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        _stream.Write(buffer, offset, count);
+        throw new NotSupportedException("Synchronous Write is not supported");
+
+    public override void WriteByte(byte value) =>
+        throw new NotSupportedException("Synchronous WriteByte is not supported");
 
     protected override void Dispose(bool disposing)
     {

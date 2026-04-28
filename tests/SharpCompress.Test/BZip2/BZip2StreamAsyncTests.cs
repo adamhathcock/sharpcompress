@@ -40,7 +40,7 @@ public class BZip2StreamAsyncTests
             )
             {
                 await bzip2Stream.WriteAsync(testData, 0, testData.Length);
-                (bzip2Stream as BZip2Stream)?.Finish();
+                await (bzip2Stream as BZip2Stream)!.FinishAsync();
             }
             compressed = memoryStream.ToArray();
         }
@@ -101,7 +101,7 @@ public class BZip2StreamAsyncTests
             )
             {
                 await bzip2Stream.WriteAsync(testData, 0, testData.Length);
-                (bzip2Stream as BZip2Stream)?.Finish();
+                await (bzip2Stream as BZip2Stream)!.FinishAsync();
             }
             compressed = memoryStream.ToArray();
         }
@@ -148,7 +148,7 @@ public class BZip2StreamAsyncTests
                 await bzip2Stream.WriteAsync(data2, 0, data2.Length);
                 await bzip2Stream.WriteAsync(data3, 0, data3.Length);
 
-                (bzip2Stream as BZip2Stream)?.Finish();
+                await (bzip2Stream as BZip2Stream)!.FinishAsync();
             }
 
             var compressed = memoryStream.ToArray();
@@ -210,7 +210,7 @@ public class BZip2StreamAsyncTests
             )
             {
                 await bzip2Stream.WriteAsync(largeData, 0, largeData.Length);
-                (bzip2Stream as BZip2Stream)?.Finish();
+                await (bzip2Stream as BZip2Stream)!.FinishAsync();
             }
             compressed = memoryStream.ToArray();
         }

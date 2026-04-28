@@ -21,7 +21,7 @@ public abstract partial class AbstractWriter
         CancellationToken cancellationToken = default
     );
 
-    public ValueTask DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
         if (!_isDisposed)
         {

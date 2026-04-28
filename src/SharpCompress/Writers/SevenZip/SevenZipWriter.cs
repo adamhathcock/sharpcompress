@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA;
@@ -21,6 +23,7 @@ public partial class SevenZipWriter : AbstractWriter
     private readonly List<SevenZipWriteEntry> entries = [];
     private readonly List<PackedStream> packedStreams = [];
     private bool finalized;
+    private bool _placeholderWritten;
 
     /// <summary>
     /// Creates a new SevenZipWriter writing to the specified stream.
@@ -45,9 +48,36 @@ public partial class SevenZipWriter : AbstractWriter
         }
 
         InitializeStream(destination);
+    }
 
-        // Write placeholder signature header (32 bytes) - will be back-patched on finalize
-        SevenZipSignatureHeaderWriter.WritePlaceholder(OutputStream.NotNull());
+    /// <summary>
+    /// Ensures the placeholder signature header has been written synchronously.
+    /// Called before the first sync write.
+    /// </summary>
+    private void EnsurePlaceholderWritten()
+    {
+        if (!_placeholderWritten)
+        {
+            _placeholderWritten = true;
+            // Write placeholder signature header (32 bytes) - will be back-patched on finalize
+            SevenZipSignatureHeaderWriter.WritePlaceholder(OutputStream.NotNull());
+        }
+    }
+
+    /// <summary>
+    /// Ensures the placeholder signature header has been written asynchronously.
+    /// Called before the first async write.
+    /// </summary>
+    private async Task EnsurePlaceholderWrittenAsync(CancellationToken cancellationToken)
+    {
+        if (!_placeholderWritten)
+        {
+            _placeholderWritten = true;
+            // Write placeholder signature header (32 bytes) - will be back-patched on finalize
+            await SevenZipSignatureHeaderWriter
+                .WritePlaceholderAsync(OutputStream.NotNull(), cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -62,6 +92,8 @@ public partial class SevenZipWriter : AbstractWriter
                 "Cannot write to a finalized archive."
             );
         }
+
+        EnsurePlaceholderWritten();
 
         filename = NormalizeFilename(filename);
         var progressStream = WrapWithProgress(source, filename);
@@ -151,7 +183,7 @@ public partial class SevenZipWriter : AbstractWriter
     /// </summary>
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing && !finalized)
+        if (isDisposing && !finalized && !_isDisposed)
         {
             finalized = true;
             FinalizeArchive();

@@ -134,7 +134,7 @@ public partial class TarWriter : AbstractWriter
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing)
+        if (isDisposing && !_isDisposed)
         {
             if (finalizeArchiveOnClose)
             {
