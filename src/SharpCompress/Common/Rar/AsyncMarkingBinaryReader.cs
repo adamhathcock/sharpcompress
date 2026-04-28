@@ -54,7 +54,7 @@ internal class AsyncMarkingBinaryReader : IDisposable
             throw new InvalidFormatException(
                 string.Format(
                     Constants.DefaultCultureInfo,
-                    "Could not read the requested amount of bytes.  End of stream reached. Requested: {0}",
+                    "Could not read the requested amount of bytes. End of stream reached. Requested: {0}",
                     count
                 ),
                 ex
