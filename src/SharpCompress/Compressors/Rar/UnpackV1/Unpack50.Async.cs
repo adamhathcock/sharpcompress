@@ -70,7 +70,7 @@ internal partial class Unpack
             // So we can safefly use these tables below.
             if (
                 !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
-                || !ReadTables()
+                || !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
                 || !TablesRead5
             )
             {
@@ -101,7 +101,7 @@ internal partial class Unpack
                     }
                     if (
                         !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
-                        || !ReadTables()
+                        || !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
                     )
                     {
                         return;
@@ -118,7 +118,7 @@ internal partial class Unpack
                 && WriteBorder != UnpPtr
             )
             {
-                UnpWriteBuf();
+                await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (WrittenFileSize > DestUnpSize)
                 {
                     return;
@@ -197,7 +197,7 @@ internal partial class Unpack
                 var Filter = new UnpackFilter();
                 if (
                     !await ReadFilterAsync(Filter, cancellationToken).ConfigureAwait(false)
-                    || !AddFilter(Filter)
+                    || !await AddFilterAsync(Filter, cancellationToken).ConfigureAwait(false)
                 )
                 {
                     break;
@@ -232,7 +232,7 @@ internal partial class Unpack
                 continue;
             }
         }
-        UnpWriteBuf();
+        await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<bool> ReadBlockHeaderAsync(CancellationToken cancellationToken = default)
@@ -316,6 +316,26 @@ internal partial class Unpack
             Inp.faddbits(5);
         }
 
+        return true;
+    }
+
+    private async Task<bool> AddFilterAsync(
+        UnpackFilter Filter,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (Filters.Count >= MAX_UNPACK_FILTERS)
+        {
+            await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
+            if (Filters.Count >= MAX_UNPACK_FILTERS)
+            {
+                InitFilters();
+            }
+        }
+
+        Filter.NextWindow = WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
+        Filter.uBlockStart = (uint)((Filter.BlockStart + UnpPtr) & MaxWinMask);
+        Filters.Add(Filter);
         return true;
     }
 }

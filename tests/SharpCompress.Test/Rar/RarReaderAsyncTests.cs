@@ -14,6 +14,30 @@ namespace SharpCompress.Test.Rar;
 
 public class RarReaderAsyncTests : ReaderTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public async ValueTask Rar_Reader_Async_Uses_Only_Async_Stream_Operations(string filename)
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var output = new AsyncOnlyStream(new MemoryStream());
+                await reader.WriteEntryToAsync(output);
+            }
+        }
+    }
+
     [Fact]
     public async ValueTask Rar_Multi_Reader_Async() =>
         await DoRar_Multi_Reader_Async([

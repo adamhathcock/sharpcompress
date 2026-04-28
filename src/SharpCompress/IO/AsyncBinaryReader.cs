@@ -60,15 +60,10 @@ public sealed class AsyncBinaryReader : IDisposable
         int offset,
         int count,
         CancellationToken ct = default
-    )
-    {
-        await _stream.ReadExactAsync(bytes, offset, count, ct).ConfigureAwait(false);
-    }
+    ) => await _stream.ReadExactAsync(bytes, offset, count, ct).ConfigureAwait(false);
 
-    public async ValueTask SkipAsync(int count, CancellationToken ct = default)
-    {
+    public async ValueTask SkipAsync(int count, CancellationToken ct = default) =>
         await _stream.SkipAsync(count, ct).ConfigureAwait(false);
-    }
 
     public void Dispose()
     {

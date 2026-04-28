@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -112,7 +113,10 @@ internal sealed partial class Unpack
             {
                 return;
             }
-            if ((!solid || !tablesRead) && !ReadTables())
+            if (
+                (!solid || !tablesRead)
+                && !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
+            )
             {
                 return;
             }
@@ -137,7 +141,7 @@ internal sealed partial class Unpack
 
             if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 260 && wrPtr != unpPtr)
             {
-                UnpWriteBuf();
+                await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (destUnpSize < 0)
                 {
                     return;
@@ -150,7 +154,7 @@ internal sealed partial class Unpack
             }
             if (unpBlockType == BlockTypes.BLOCK_PPM)
             {
-                var Ch = ppm.DecodeChar();
+                var Ch = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
                 if (Ch == -1)
                 {
                     ppmError = true;
@@ -158,10 +162,10 @@ internal sealed partial class Unpack
                 }
                 if (Ch == PpmEscChar)
                 {
-                    var NextCh = ppm.DecodeChar();
+                    var NextCh = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
                     if (NextCh == 0)
                     {
-                        if (!ReadTables())
+                        if (!await ReadTablesAsync(cancellationToken).ConfigureAwait(false))
                         {
                             break;
                         }
@@ -173,7 +177,7 @@ internal sealed partial class Unpack
                     }
                     if (NextCh == 3)
                     {
-                        if (!ReadVMCodePPM())
+                        if (!await ReadVMCodePPMAsync(cancellationToken).ConfigureAwait(false))
                         {
                             break;
                         }
@@ -186,7 +190,8 @@ internal sealed partial class Unpack
                         var failed = false;
                         for (var I = 0; I < 4 && !failed; I++)
                         {
-                            var ch = ppm.DecodeChar();
+                            var ch = await ppm.DecodeCharAsync(cancellationToken)
+                                .ConfigureAwait(false);
                             if (ch == -1)
                             {
                                 failed = true;
@@ -212,7 +217,8 @@ internal sealed partial class Unpack
                     }
                     if (NextCh == 5)
                     {
-                        var Length = ppm.DecodeChar();
+                        var Length = await ppm.DecodeCharAsync(cancellationToken)
+                            .ConfigureAwait(false);
                         if (Length == -1)
                         {
                             break;
@@ -294,7 +300,7 @@ internal sealed partial class Unpack
             }
             if (Number == 256)
             {
-                if (!ReadEndOfBlock())
+                if (!await ReadEndOfBlockAsync(cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
@@ -302,7 +308,7 @@ internal sealed partial class Unpack
             }
             if (Number == 257)
             {
-                if (!ReadVMCode())
+                if (!await ReadVMCodeAsync(cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
@@ -350,7 +356,7 @@ internal sealed partial class Unpack
                 CopyString(2, Distance);
             }
         }
-        UnpWriteBuf();
+        await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task UnpWriteBufAsync(CancellationToken cancellationToken = default)
@@ -599,5 +605,268 @@ internal sealed partial class Unpack
 
         writtenFileSize += size;
         destUnpSize -= size;
+    }
+
+    private async Task<bool> ReadTablesAsync(CancellationToken cancellationToken = default)
+    {
+        var bitLengthArray = ArrayPool<byte>.Shared.Rent(PackDef.BC);
+        var bitLength = new Memory<byte>(bitLengthArray, 0, PackDef.BC);
+        var tableArray = ArrayPool<byte>.Shared.Rent(PackDef.HUFF_TABLE_SIZE);
+        var table = new Memory<byte>(tableArray, 0, PackDef.HUFF_TABLE_SIZE);
+
+        try
+        {
+            if (inAddr > readTop - 25)
+            {
+                if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    return false;
+                }
+            }
+
+            AddBits((8 - inBit) & 7);
+            long bitField = GetBits() & unchecked((int)0xffFFffFF);
+            if ((bitField & 0x8000) != 0)
+            {
+                unpBlockType = BlockTypes.BLOCK_PPM;
+                return await ppm.DecodeInitAsync(this, PpmEscChar, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            unpBlockType = BlockTypes.BLOCK_LZ;
+
+            prevLowDist = 0;
+            lowDistRepCount = 0;
+
+            if ((bitField & 0x4000) == 0)
+            {
+                new Span<byte>(unpOldTable).Clear();
+            }
+
+            AddBits(2);
+
+            for (var i = 0; i < PackDef.BC; i++)
+            {
+                var length = (Utility.URShift(GetBits(), 12)) & 0xFF;
+                AddBits(4);
+                if (length == 15)
+                {
+                    var zeroCount = (Utility.URShift(GetBits(), 12)) & 0xFF;
+                    AddBits(4);
+                    if (zeroCount == 0)
+                    {
+                        bitLength.Span[i] = 15;
+                    }
+                    else
+                    {
+                        zeroCount += 2;
+                        while (zeroCount-- > 0 && i < bitLength.Length)
+                        {
+                            bitLength.Span[i++] = 0;
+                        }
+
+                        i--;
+                    }
+                }
+                else
+                {
+                    bitLength.Span[i] = (byte)length;
+                }
+            }
+
+            UnpackUtility.makeDecodeTables(bitLength.Span, 0, BD, PackDef.BC);
+
+            var TableSize = PackDef.HUFF_TABLE_SIZE;
+
+            for (var i = 0; i < TableSize; )
+            {
+                if (inAddr > readTop - 5)
+                {
+                    if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        return false;
+                    }
+                }
+
+                var Number = this.decodeNumber(BD);
+                if (Number < 16)
+                {
+                    table.Span[i] = (byte)((Number + unpOldTable[i]) & 0xf);
+                    i++;
+                }
+                else if (Number < 18)
+                {
+                    int N;
+                    if (Number == 16)
+                    {
+                        N = (Utility.URShift(GetBits(), 13)) + 3;
+                        AddBits(3);
+                    }
+                    else
+                    {
+                        N = (Utility.URShift(GetBits(), 9)) + 11;
+                        AddBits(7);
+                    }
+
+                    while (N-- > 0 && i < TableSize)
+                    {
+                        table.Span[i] = table.Span[i - 1];
+                        i++;
+                    }
+                }
+                else
+                {
+                    int N;
+                    if (Number == 18)
+                    {
+                        N = (Utility.URShift(GetBits(), 13)) + 3;
+                        AddBits(3);
+                    }
+                    else
+                    {
+                        N = (Utility.URShift(GetBits(), 9)) + 11;
+                        AddBits(7);
+                    }
+
+                    while (N-- > 0 && i < TableSize)
+                    {
+                        table.Span[i++] = 0;
+                    }
+                }
+            }
+
+            tablesRead = true;
+            if (inAddr > readTop)
+            {
+                return false;
+            }
+
+            UnpackUtility.makeDecodeTables(table.Span, 0, LD, PackDef.NC);
+            UnpackUtility.makeDecodeTables(table.Span, PackDef.NC, DD, PackDef.DC);
+            UnpackUtility.makeDecodeTables(table.Span, PackDef.NC + PackDef.DC, LDD, PackDef.LDC);
+            UnpackUtility.makeDecodeTables(
+                table.Span,
+                PackDef.NC + PackDef.DC + PackDef.LDC,
+                RD,
+                PackDef.RC
+            );
+
+            table.Span.CopyTo(unpOldTable);
+            return true;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bitLengthArray);
+            ArrayPool<byte>.Shared.Return(tableArray);
+        }
+    }
+
+    private async Task<bool> ReadEndOfBlockAsync(CancellationToken cancellationToken = default)
+    {
+        var BitField = GetBits();
+        bool NewTable,
+            NewFile = false;
+        if ((BitField & 0x8000) != 0)
+        {
+            NewTable = true;
+            AddBits(1);
+        }
+        else
+        {
+            NewFile = true;
+            NewTable = (BitField & 0x4000) != 0;
+            AddBits(2);
+        }
+        tablesRead = !NewTable;
+        return !(
+            NewFile || NewTable && !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
+        );
+    }
+
+    private async Task<bool> ReadVMCodeAsync(CancellationToken cancellationToken = default)
+    {
+        var FirstByte = GetBits() >> 8;
+        AddBits(8);
+        var Length = (FirstByte & 7) + 1;
+        if (Length == 7)
+        {
+            Length = (GetBits() >> 8) + 7;
+            AddBits(8);
+        }
+        else if (Length == 8)
+        {
+            Length = GetBits();
+            AddBits(16);
+        }
+
+        var vmCode = new List<byte>();
+        for (var I = 0; I < Length; I++)
+        {
+            if (
+                inAddr >= readTop - 1
+                && !await unpReadBufAsync(cancellationToken).ConfigureAwait(false)
+                && I < Length - 1
+            )
+            {
+                return false;
+            }
+            vmCode.Add((byte)(GetBits() >> 8));
+            AddBits(8);
+        }
+        return AddVMCode(FirstByte, vmCode);
+    }
+
+    public async ValueTask<int> ReadCharAsync(CancellationToken cancellationToken = default)
+    {
+        if (inAddr > MAX_SIZE - 30)
+        {
+            await unpReadBufAsync(cancellationToken).ConfigureAwait(false);
+        }
+        return InBuf[inAddr++] & 0xff;
+    }
+
+    private async Task<bool> ReadVMCodePPMAsync(CancellationToken cancellationToken = default)
+    {
+        var FirstByte = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+        if (FirstByte == -1)
+        {
+            return false;
+        }
+        var Length = (FirstByte & 7) + 1;
+        if (Length == 7)
+        {
+            var B1 = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (B1 == -1)
+            {
+                return false;
+            }
+            Length = B1 + 7;
+        }
+        else if (Length == 8)
+        {
+            var B1 = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (B1 == -1)
+            {
+                return false;
+            }
+            var B2 = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (B2 == -1)
+            {
+                return false;
+            }
+            Length = (B1 * 256) + B2;
+        }
+
+        var vmCode = new List<byte>();
+        for (var I = 0; I < Length; I++)
+        {
+            var Ch = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
+            if (Ch == -1)
+            {
+                return false;
+            }
+            vmCode.Add((byte)Ch);
+        }
+        return AddVMCode(FirstByte, vmCode);
     }
 }

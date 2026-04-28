@@ -281,13 +281,13 @@ internal class ModelPpm
 
     internal bool DecodeInit(IRarUnpack unpackRead, int escChar)
     {
-        var maxOrder = unpackRead.Char & 0xff;
+        var maxOrder = unpackRead.ReadChar() & 0xff;
         var reset = ((maxOrder & 0x20) != 0);
 
         var maxMb = 0;
         if (reset)
         {
-            maxMb = unpackRead.Char;
+            maxMb = unpackRead.ReadChar();
         }
         else
         {
@@ -298,7 +298,7 @@ internal class ModelPpm
         }
         if ((maxOrder & 0x40) != 0)
         {
-            escChar = unpackRead.Char;
+            escChar = unpackRead.ReadChar();
             unpackRead.PpmEscChar = escChar;
         }
         Coder = new RangeCoder(unpackRead);
@@ -331,6 +331,65 @@ internal class ModelPpm
             StartModelRare(maxOrder);
         }
         return (_minContext.Address != 0);
+    }
+
+    internal async ValueTask<bool> DecodeInitAsync(
+        IRarUnpack unpackRead,
+        int escChar,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var maxOrder =
+            await unpackRead.ReadCharAsync(cancellationToken).ConfigureAwait(false) & 0xff;
+        var reset = ((maxOrder & 0x20) != 0);
+
+        var maxMb = 0;
+        if (reset)
+        {
+            maxMb = await unpackRead.ReadCharAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            if (SubAlloc.GetAllocatedMemory() == 0)
+            {
+                return false;
+            }
+        }
+        if ((maxOrder & 0x40) != 0)
+        {
+            escChar = await unpackRead.ReadCharAsync(cancellationToken).ConfigureAwait(false);
+            unpackRead.PpmEscChar = escChar;
+        }
+        Coder = new RangeCoder();
+        await Coder.InitAsync(unpackRead, cancellationToken).ConfigureAwait(false);
+        if (reset)
+        {
+            maxOrder = (maxOrder & 0x1f) + 1;
+            if (maxOrder > 16)
+            {
+                maxOrder = 16 + ((maxOrder - 16) * 3);
+            }
+            if (maxOrder == 1)
+            {
+                SubAlloc.StopSubAllocator();
+                return false;
+            }
+            SubAlloc.StartSubAllocator((maxMb + 1) << 20);
+            _minContext = new PpmContext(Heap);
+
+            _maxContext = new PpmContext(Heap);
+            FoundState = new State(Heap);
+            _dummySee2Cont = new See2Context();
+            for (var i = 0; i < 25; i++)
+            {
+                for (var j = 0; j < 16; j++)
+                {
+                    _see2Cont[i][j] = new See2Context();
+                }
+            }
+            StartModelRare(maxOrder);
+        }
+        return _minContext.Address != 0;
     }
 
     public virtual int DecodeChar()

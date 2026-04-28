@@ -49,7 +49,7 @@ internal partial class Unpack
 
             if (((WrPtr - UnpPtr) & MaxWinMask) < 270 && WrPtr != UnpPtr)
             {
-                UnpWriteBuf20();
+                await UnpWriteBuf20Async(cancellationToken).ConfigureAwait(false);
                 if (Suspended)
                 {
                     return;
@@ -165,8 +165,8 @@ internal partial class Unpack
                 continue;
             }
         }
-        ReadLastTables();
-        UnpWriteBuf20();
+        await ReadLastTables20Async(cancellationToken).ConfigureAwait(false);
+        await UnpWriteBuf20Async(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task UnpWriteBuf20Async(CancellationToken cancellationToken = default)
@@ -315,5 +315,23 @@ internal partial class Unpack
         }
         Array.Copy(Table, 0, this.UnpOldTable20, 0, UnpOldTable20.Length);
         return true;
+    }
+
+    private async Task ReadLastTables20Async(CancellationToken cancellationToken = default)
+    {
+        if (ReadTop >= Inp.InAddr + 5)
+        {
+            if (UnpAudioBlock)
+            {
+                if (DecodeNumber(Inp, MD[UnpCurChannel]) == 256)
+                {
+                    await ReadTables20Async(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else if (DecodeNumber(Inp, BlockTables.LD) == 269)
+            {
+                await ReadTables20Async(cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 }
