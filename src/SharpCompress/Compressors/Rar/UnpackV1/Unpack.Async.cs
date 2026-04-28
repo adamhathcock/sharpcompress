@@ -609,137 +609,156 @@ internal sealed partial class Unpack
 
     private async Task<bool> ReadTablesAsync(CancellationToken cancellationToken = default)
     {
-        var bitLength = new byte[PackDef.BC];
-        var table = new byte[PackDef.HUFF_TABLE_SIZE];
+        var bitLengthArray = ArrayPool<byte>.Shared.Rent(PackDef.BC);
+        var bitLength = new Memory<byte>(bitLengthArray, 0, PackDef.BC);
+        var tableArray = ArrayPool<byte>.Shared.Rent(PackDef.HUFF_TABLE_SIZE);
+        var table = new Memory<byte>(tableArray, 0, PackDef.HUFF_TABLE_SIZE);
 
-        if (inAddr > readTop - 25)
+        try
         {
-            if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
-            {
-                return false;
-            }
-        }
-        AddBits((8 - inBit) & 7);
-        long bitField = GetBits() & unchecked((int)0xffFFffFF);
-        if ((bitField & 0x8000) != 0)
-        {
-            unpBlockType = BlockTypes.BLOCK_PPM;
-            return await ppm.DecodeInitAsync(this, PpmEscChar, cancellationToken)
-                .ConfigureAwait(false);
-        }
-        unpBlockType = BlockTypes.BLOCK_LZ;
-
-        prevLowDist = 0;
-        lowDistRepCount = 0;
-
-        if ((bitField & 0x4000) == 0)
-        {
-            new Span<byte>(unpOldTable).Clear();
-        }
-        AddBits(2);
-
-        for (var i = 0; i < PackDef.BC; i++)
-        {
-            var length = (Utility.URShift(GetBits(), 12)) & 0xFF;
-            AddBits(4);
-            if (length == 15)
-            {
-                var zeroCount = (Utility.URShift(GetBits(), 12)) & 0xFF;
-                AddBits(4);
-                if (zeroCount == 0)
-                {
-                    bitLength[i] = 15;
-                }
-                else
-                {
-                    zeroCount += 2;
-                    while (zeroCount-- > 0 && i < bitLength.Length)
-                    {
-                        bitLength[i++] = 0;
-                    }
-                    i--;
-                }
-            }
-            else
-            {
-                bitLength[i] = (byte)length;
-            }
-        }
-
-        UnpackUtility.makeDecodeTables(bitLength, 0, BD, PackDef.BC);
-
-        var TableSize = PackDef.HUFF_TABLE_SIZE;
-
-        for (var i = 0; i < TableSize; )
-        {
-            if (inAddr > readTop - 5)
+            if (inAddr > readTop - 25)
             {
                 if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
                 {
                     return false;
                 }
             }
-            var Number = this.decodeNumber(BD);
-            if (Number < 16)
+
+            AddBits((8 - inBit) & 7);
+            long bitField = GetBits() & unchecked((int)0xffFFffFF);
+            if ((bitField & 0x8000) != 0)
             {
-                table[i] = (byte)((Number + unpOldTable[i]) & 0xf);
-                i++;
+                unpBlockType = BlockTypes.BLOCK_PPM;
+                return await ppm.DecodeInitAsync(this, PpmEscChar, cancellationToken)
+                                .ConfigureAwait(false);
             }
-            else if (Number < 18)
+
+            unpBlockType = BlockTypes.BLOCK_LZ;
+
+            prevLowDist = 0;
+            lowDistRepCount = 0;
+
+            if ((bitField & 0x4000) == 0)
             {
-                int N;
-                if (Number == 16)
+                new Span<byte>(unpOldTable).Clear();
+            }
+
+            AddBits(2);
+
+            for (var i = 0; i < PackDef.BC; i++)
+            {
+                var length = (Utility.URShift(GetBits(), 12)) & 0xFF;
+                AddBits(4);
+                if (length == 15)
                 {
-                    N = (Utility.URShift(GetBits(), 13)) + 3;
-                    AddBits(3);
+                    var zeroCount = (Utility.URShift(GetBits(), 12)) & 0xFF;
+                    AddBits(4);
+                    if (zeroCount == 0)
+                    {
+                        bitLength.Span[i] = 15;
+                    }
+                    else
+                    {
+                        zeroCount += 2;
+                        while (zeroCount-- > 0 && i < bitLength.Length)
+                        {
+                            bitLength.Span[i++] = 0;
+                        }
+
+                        i--;
+                    }
                 }
                 else
                 {
-                    N = (Utility.URShift(GetBits(), 9)) + 11;
-                    AddBits(7);
+                    bitLength.Span[i] = (byte)length;
                 }
-                while (N-- > 0 && i < TableSize)
+            }
+
+            UnpackUtility.makeDecodeTables(bitLength.Span, 0, BD, PackDef.BC);
+
+            var TableSize = PackDef.HUFF_TABLE_SIZE;
+
+            for (var i = 0; i < TableSize;)
+            {
+                if (inAddr > readTop - 5)
                 {
-                    table[i] = table[i - 1];
+                    if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        return false;
+                    }
+                }
+
+                var Number = this.decodeNumber(BD);
+                if (Number < 16)
+                {
+                    table.Span[i] = (byte)((Number + unpOldTable[i]) & 0xf);
                     i++;
                 }
-            }
-            else
-            {
-                int N;
-                if (Number == 18)
+                else if (Number < 18)
                 {
-                    N = (Utility.URShift(GetBits(), 13)) + 3;
-                    AddBits(3);
+                    int N;
+                    if (Number == 16)
+                    {
+                        N = (Utility.URShift(GetBits(), 13)) + 3;
+                        AddBits(3);
+                    }
+                    else
+                    {
+                        N = (Utility.URShift(GetBits(), 9)) + 11;
+                        AddBits(7);
+                    }
+
+                    while (N-- > 0 && i < TableSize)
+                    {
+                        table.Span[i] = table.Span[i - 1];
+                        i++;
+                    }
                 }
                 else
                 {
-                    N = (Utility.URShift(GetBits(), 9)) + 11;
-                    AddBits(7);
-                }
-                while (N-- > 0 && i < TableSize)
-                {
-                    table[i++] = 0;
+                    int N;
+                    if (Number == 18)
+                    {
+                        N = (Utility.URShift(GetBits(), 13)) + 3;
+                        AddBits(3);
+                    }
+                    else
+                    {
+                        N = (Utility.URShift(GetBits(), 9)) + 11;
+                        AddBits(7);
+                    }
+
+                    while (N-- > 0 && i < TableSize)
+                    {
+                        table.Span[i++] = 0;
+                    }
                 }
             }
-        }
-        tablesRead = true;
-        if (inAddr > readTop)
-        {
-            return false;
-        }
-        UnpackUtility.makeDecodeTables(table, 0, LD, PackDef.NC);
-        UnpackUtility.makeDecodeTables(table, PackDef.NC, DD, PackDef.DC);
-        UnpackUtility.makeDecodeTables(table, PackDef.NC + PackDef.DC, LDD, PackDef.LDC);
-        UnpackUtility.makeDecodeTables(
-            table,
-            PackDef.NC + PackDef.DC + PackDef.LDC,
-            RD,
-            PackDef.RC
-        );
 
-        new Span<byte>(table).CopyTo(unpOldTable);
-        return true;
+            tablesRead = true;
+            if (inAddr > readTop)
+            {
+                return false;
+            }
+
+            UnpackUtility.makeDecodeTables(table.Span, 0, LD, PackDef.NC);
+            UnpackUtility.makeDecodeTables(table.Span, PackDef.NC, DD, PackDef.DC);
+            UnpackUtility.makeDecodeTables(table.Span, PackDef.NC + PackDef.DC, LDD, PackDef.LDC);
+            UnpackUtility.makeDecodeTables(
+                table.Span,
+                PackDef.NC + PackDef.DC + PackDef.LDC,
+                RD,
+                PackDef.RC
+            );
+
+            table.Span.CopyTo(unpOldTable);
+            return true;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bitLengthArray);
+            ArrayPool<byte>.Shared.Return(tableArray);
+        }
     }
 
     private async Task<bool> ReadEndOfBlockAsync(CancellationToken cancellationToken = default)
