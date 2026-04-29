@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
@@ -186,7 +187,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         Assert.True(File.Exists(sourcePath));
 
         var archivePath = Path.Combine(SCRATCH_FILES_PATH, "Tar.source.tar");
-        
+
         await using (var archive = await TarArchive.CreateAsyncArchive())
         {
             await archive.AddEntryAsync("source.txt", sourcePath);
@@ -206,15 +207,39 @@ public class TarArchiveAsyncTests : ArchiveTests
             );
         }
 
+#if LEGACY_DOTNET
+        await Task.Delay(100);
+#endif
+
         // Assert: after the archive is disposed the source file should no longer be locked
-        try
+
+        // Windows enforces this through delete semantics; Unix-like platforms do not.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            File.Delete(archivePath);
-            File.Delete(sourcePath);
+            try
+            {
+                File.Delete(archivePath);
+                File.Delete(sourcePath);
+            }
+            catch (IOException ex)
+            {
+                Assert.True(
+                    false,
+                    "Source file is still locked after disposing archive: " + ex.Message
+                );
+            }
         }
-        catch (IOException ex)
+        else
         {
-            Assert.True(false, "Source file is still locked after disposing archive: " + ex.Message);
+            if (File.Exists(archivePath))
+            {
+                File.Delete(archivePath);
+            }
+
+            if (File.Exists(sourcePath))
+            {
+                File.Delete(sourcePath);
+            }
         }
 
         Assert.False(File.Exists(sourcePath));
