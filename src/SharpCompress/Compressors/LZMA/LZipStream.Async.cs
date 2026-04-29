@@ -4,19 +4,20 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Crypto;
+
 namespace SharpCompress.Compressors.LZMA;
 
 public sealed partial class LZipStream
 {
-    public static LZipStream Create(
-        Stream stream,
-        CompressionMode mode,
-        bool leaveOpen = false
-    )
+    public static LZipStream Create(Stream stream, CompressionMode mode, bool leaveOpen = false)
     {
-        WriteHeaderSize(stream);
+        if (mode == CompressionMode.Compress)
+        {
+            WriteHeaderSize(stream);
+        }
         return new LZipStream(stream, mode, leaveOpen);
     }
+
     public static async ValueTask<LZipStream> CreateAsync(
         Stream stream,
         CompressionMode mode,
@@ -25,7 +26,11 @@ public sealed partial class LZipStream
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        await WriteHeaderSizeAsync(stream).ConfigureAwait(false);
+
+        if (mode == CompressionMode.Compress)
+        {
+            await WriteHeaderSizeAsync(stream).ConfigureAwait(false);
+        }
         return new LZipStream(stream, mode, leaveOpen);
     }
 
@@ -68,6 +73,7 @@ public sealed partial class LZipStream
 
         _finished = true;
     }
+
     public static async ValueTask WriteHeaderSizeAsync(Stream stream) =>
         // hard coding the dictionary size encoding
         await stream.WriteAsync(headerBytes, 0, 6).ConfigureAwait(false);
