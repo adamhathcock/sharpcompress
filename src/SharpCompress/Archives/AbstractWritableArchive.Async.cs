@@ -122,6 +122,14 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
             .ConfigureAwait(false);
     }
 
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync().ConfigureAwait(false);
+        newEntries.Cast<Entry>().ForEach(x => x.Close());
+        removedEntries.Cast<Entry>().ForEach(x => x.Close());
+        modifiedEntries.Cast<Entry>().ForEach(x => x.Close());
+    }
+
     protected abstract ValueTask SaveToAsync(
         Stream stream,
         TOptions options,

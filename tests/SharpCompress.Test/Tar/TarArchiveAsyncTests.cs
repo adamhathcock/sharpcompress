@@ -177,6 +177,50 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
+    public async ValueTask TarAsync_AddEntryAndReleaseSourceFile()
+    {
+        // Arrange
+        var sourcePath = Path.Combine(SCRATCH_FILES_PATH, "Tar.source.txt");
+        const string content = "source file lock test";
+        File.WriteAllText(sourcePath, content);
+        Assert.True(File.Exists(sourcePath));
+
+        var archivePath = Path.Combine(SCRATCH_FILES_PATH, "Tar.source.tar");
+        
+        await using (var archive = await TarArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync("source.txt", sourcePath);
+
+            using var fileStream = new FileStream(
+                archivePath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 1024 * 1024,
+                FileOptions.SequentialScan
+            );
+
+            await archive.SaveToAsync(
+                fileStream,
+                new TarWriterOptions(CompressionType.None) { LeaveStreamOpen = false }
+            );
+        }
+
+        // Assert: after the archive is disposed the source file should no longer be locked
+        try
+        {
+            File.Delete(archivePath);
+            File.Delete(sourcePath);
+        }
+        catch (IOException ex)
+        {
+            Assert.True(false, "Source file is still locked after disposing archive: " + ex.Message);
+        }
+
+        Assert.False(File.Exists(sourcePath));
+    }
+
+    [Fact]
     public async ValueTask Tar_Random_Write_Remove_Async()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.mod.tar");
