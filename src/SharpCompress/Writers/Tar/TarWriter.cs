@@ -1,25 +1,21 @@
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
-using SharpCompress.Compressors;
-using SharpCompress.IO;
 using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
 public partial class TarWriter : AbstractWriter
 {
-    private readonly bool finalizeArchiveOnClose;
-    private TarHeaderWriteFormat headerFormat;
+    private readonly bool _finalizeArchiveOnClose;
+    private readonly TarHeaderWriteFormat _headerFormat;
 
     public TarWriter(Stream destination, TarWriterOptions options)
         : base(ArchiveType.Tar, options)
     {
-        finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
-        headerFormat = options.HeaderFormat;
+        _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        _headerFormat = options.HeaderFormat;
 
 
         InitializeStream(destination);
@@ -81,7 +77,7 @@ public partial class TarWriter : AbstractWriter
 
         var realSize = size ?? source.Length;
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding, headerFormat);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
 
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
@@ -103,7 +99,7 @@ public partial class TarWriter : AbstractWriter
     {
         if (isDisposing && !_isDisposed)
         {
-            if (finalizeArchiveOnClose)
+            if (_finalizeArchiveOnClose)
             {
                 OutputStream.NotNull().Write(stackalloc byte[1024]);
             }
@@ -112,6 +108,7 @@ public partial class TarWriter : AbstractWriter
             {
                 finishable.Finish();
             }
+            _isDisposed = true;
         }
         base.Dispose(isDisposing);
     }

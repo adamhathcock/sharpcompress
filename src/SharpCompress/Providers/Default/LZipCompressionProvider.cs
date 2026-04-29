@@ -18,7 +18,7 @@ public sealed class LZipCompressionProvider : CompressionProviderBase
 
     public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
-        return new LZipStream(destination, CompressionMode.Compress);
+        return LZipStream.Create(destination, CompressionMode.Compress);
     }
 
     public override async ValueTask<Stream> CreateCompressStreamAsync(
@@ -36,6 +36,14 @@ public sealed class LZipCompressionProvider : CompressionProviderBase
 
     public override Stream CreateDecompressStream(Stream source)
     {
-        return new LZipStream(source, CompressionMode.Decompress);
+        return LZipStream.Create(source, CompressionMode.Decompress);
     }
+
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(Stream source, CancellationToken cancellationToken = default) =>   await LZipStream
+                                                                                                                                           .CreateAsync(
+                                                                                                                                               source,
+                                                                                                                                               CompressionMode.Decompress,
+                                                                                                                                               cancellationToken: cancellationToken
+                                                                                                                                           )
+                                                                                                                                           .ConfigureAwait(false);
 }

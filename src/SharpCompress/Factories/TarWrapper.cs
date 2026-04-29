@@ -98,10 +98,9 @@ public class TarWrapper(
             CompressionType.LZip,
             LZipStream.IsLZipFile,
             LZipStream.IsLZipFileAsync,
-            (stream) => new LZipStream(stream, CompressionMode.Decompress),
-            (stream, _) =>
-                new ValueTask<Stream>(new LZipStream(stream, CompressionMode.Decompress)),
-            ["tar.lz"]
+            (stream) => LZipStream.Create(stream, CompressionMode.Decompress),
+            async (stream, _) =>await LZipStream.CreateAsync(stream, CompressionMode.Decompress).ConfigureAwait(false),
+                                                    ["tar.lz"]
         ),
         new(
             CompressionType.Xz,

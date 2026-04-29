@@ -23,7 +23,7 @@ public partial class TarWriter
         GC.SuppressFinalize(this);
         _isDisposed = true;
 
-        if (finalizeArchiveOnClose)
+        if (_finalizeArchiveOnClose)
         {
             await OutputStream.NotNull().WriteAsync(new byte[1024], 0, 1024).ConfigureAwait(false);
         }

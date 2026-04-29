@@ -4,13 +4,20 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Crypto;
-using SharpCompress.IO;
-
 namespace SharpCompress.Compressors.LZMA;
 
 public sealed partial class LZipStream
 {
-    public static ValueTask<LZipStream> CreateAsync(
+    public static LZipStream Create(
+        Stream stream,
+        CompressionMode mode,
+        bool leaveOpen = false
+    )
+    {
+        WriteHeaderSize(stream);
+        return new LZipStream(stream, mode, leaveOpen);
+    }
+    public static async ValueTask<LZipStream> CreateAsync(
         Stream stream,
         CompressionMode mode,
         bool leaveOpen = false,
@@ -18,18 +25,8 @@ public sealed partial class LZipStream
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        if (mode != CompressionMode.Compress)
-        {
-            return new ValueTask<LZipStream>(new LZipStream(stream, mode, leaveOpen));
-        }
-
-        // The LZMA encoder used for LZip currently finalizes synchronously, so the async
-        // creation path compresses to memory and writes the completed member asynchronously.
-        var compressedBuffer = new MemoryStream();
-        return new ValueTask<LZipStream>(
-            new LZipStream(compressedBuffer, mode, leaveOpen, stream, compressedBuffer)
-        );
+        await WriteHeaderSizeAsync(stream).ConfigureAwait(false);
+        return new LZipStream(stream, mode, leaveOpen);
     }
 
     public async ValueTask FinishAsync()
@@ -67,18 +64,13 @@ public sealed partial class LZipStream
                 .NotNull()
                 .WriteAsync(intBuf, 0, intBuf.Length, CancellationToken.None)
                 .ConfigureAwait(false);
-
-            if (_asyncCompressedBuffer is not null && _asyncFinalDestination is not null)
-            {
-                _asyncCompressedBuffer.Position = 0;
-                await _asyncCompressedBuffer
-                    .CopyToAsync(_asyncFinalDestination, 81920, CancellationToken.None)
-                    .ConfigureAwait(false);
-            }
         }
 
         _finished = true;
     }
+    public static async ValueTask WriteHeaderSizeAsync(Stream stream) =>
+        // hard coding the dictionary size encoding
+        await stream.WriteAsync(headerBytes, 0, 6).ConfigureAwait(false);
 
     private static void FinishWrappedStream(Crc32Stream crc32Stream)
     {
