@@ -404,19 +404,95 @@ public class TarFactory
                 nameof(writerOptions)
             ),
         };
+
+        if (!stream.CanWrite)
+        {
+            throw new ArgumentException("Tars require writable streams.");
+        }
+        if (writerOptions.LeaveStreamOpen)
+        {
+            stream = SharpCompressStream.CreateNonDisposing(stream);
+        }
+
+        var providers = writerOptions.Providers;
+
+        stream = writerOptions.CompressionType switch
+        {
+            CompressionType.None => stream,
+            CompressionType.BZip2 => providers.CreateCompressStream(
+                CompressionType.BZip2,
+                stream,
+                writerOptions.CompressionLevel
+            ),
+            CompressionType.GZip => providers.CreateCompressStream(
+                CompressionType.GZip,
+                stream,
+                writerOptions.CompressionLevel
+            ),
+            CompressionType.LZip => providers.CreateCompressStream(
+                CompressionType.LZip,
+                stream,
+                writerOptions.CompressionLevel
+            ),
+            _ => throw new InvalidFormatException(
+                "Tar does not support compression: " + writerOptions.CompressionType
+            ),
+        };
         return new TarWriter(stream, tarOptions);
     }
 
     /// <inheritdoc/>
-    public ValueTask<IAsyncWriter> OpenAsyncWriter(
+    public async ValueTask<IAsyncWriter> OpenAsyncWriter(
         Stream stream,
         IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var writer = OpenWriter(stream, writerOptions);
-        return new((IAsyncWriter)writer);
+        TarWriterOptions tarOptions = writerOptions switch
+        {
+            TarWriterOptions two => two,
+            WriterOptions wo => new TarWriterOptions(wo),
+            _ => throw new ArgumentException(
+                $"Expected WriterOptions or TarWriterOptions, got {writerOptions.GetType().Name}",
+                nameof(writerOptions)
+            ),
+        };
+
+        if (!stream.CanWrite)
+        {
+            throw new ArgumentException("Tars require writable streams.");
+        }
+        if (writerOptions.LeaveStreamOpen)
+        {
+            stream = SharpCompressStream.CreateNonDisposing(stream);
+        }
+
+        var providers = writerOptions.Providers;
+
+        stream = writerOptions.CompressionType switch
+        {
+            CompressionType.None => stream,
+            CompressionType.BZip2 => await providers.CreateCompressStreamAsync(
+                CompressionType.BZip2,
+                stream,
+                writerOptions.CompressionLevel,
+                cancellationToken).ConfigureAwait(false),
+            CompressionType.GZip => await providers.CreateCompressStreamAsync(
+                CompressionType.GZip,
+                stream,
+                writerOptions.CompressionLevel,
+                cancellationToken).ConfigureAwait(false),
+            CompressionType.LZip => await providers.CreateCompressStreamAsync(
+                CompressionType.LZip,
+                stream,
+                writerOptions.CompressionLevel,
+                cancellationToken).ConfigureAwait(false),
+            _ => throw new InvalidFormatException(
+                "Tar does not support compression: " + writerOptions.CompressionType
+            ),
+        };
+        return new TarWriter(stream, tarOptions);
     }
 
     #endregion

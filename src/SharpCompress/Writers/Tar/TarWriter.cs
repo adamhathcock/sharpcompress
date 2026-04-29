@@ -21,39 +21,6 @@ public partial class TarWriter : AbstractWriter
         finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
         headerFormat = options.HeaderFormat;
 
-        if (!destination.CanWrite)
-        {
-            throw new ArgumentException("Tars require writable streams.");
-        }
-        if (WriterOptions.LeaveStreamOpen)
-        {
-            destination = SharpCompressStream.CreateNonDisposing(destination);
-        }
-
-        var providers = options.Providers;
-
-        destination = options.CompressionType switch
-        {
-            CompressionType.None => destination,
-            CompressionType.BZip2 => providers.CreateCompressStream(
-                CompressionType.BZip2,
-                destination,
-                options.CompressionLevel
-            ),
-            CompressionType.GZip => providers.CreateCompressStream(
-                CompressionType.GZip,
-                destination,
-                options.CompressionLevel
-            ),
-            CompressionType.LZip => providers.CreateCompressStream(
-                CompressionType.LZip,
-                destination,
-                options.CompressionLevel
-            ),
-            _ => throw new InvalidFormatException(
-                "Tar does not support compression: " + options.CompressionType
-            ),
-        };
 
         InitializeStream(destination);
     }

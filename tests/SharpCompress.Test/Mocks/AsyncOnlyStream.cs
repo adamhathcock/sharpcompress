@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Test.Mocks;
 
-public class AsyncOnlyStream(Stream stream) : Stream
+public class AsyncOnlyStream(Stream stream, bool disposeStream = true) : Stream
 {
     private readonly Stream _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
@@ -71,7 +71,7 @@ public class AsyncOnlyStream(Stream stream) : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && disposeStream)
         {
             _stream.Dispose();
         }
