@@ -49,6 +49,8 @@ public sealed partial class BZip2Stream : Stream, IFinishable
         return bZip2Stream;
     }
 
+    public ValueTask FinishAsync() => (stream as CBZip2OutputStream)?.FinishAsync() ?? default;
+
     public void Finish() => (stream as CBZip2OutputStream)?.Finish();
 
     protected override void Dispose(bool disposing)

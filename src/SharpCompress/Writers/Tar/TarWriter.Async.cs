@@ -29,7 +29,7 @@ public partial class TarWriter
         }
         if (OutputStream is IFinishable finishable)
         {
-            finishable.Finish();
+            await finishable.FinishAsync().ConfigureAwait(false);
         }
         OutputStream?.Dispose();
         // base.DisposeAsync() is a no-op since _isDisposed is already set

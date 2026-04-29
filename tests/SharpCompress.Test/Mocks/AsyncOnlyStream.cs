@@ -19,6 +19,9 @@ public class AsyncOnlyStream(Stream stream) : Stream
         set => _stream.Position = value;
     }
 
+    public override Task FlushAsync(CancellationToken cancellationToken) =>
+        _stream.FlushAsync(cancellationToken);
+
     public override void Flush() =>
         throw new NotSupportedException("Synchronous Flush is not supported");
 

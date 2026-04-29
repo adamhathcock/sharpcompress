@@ -65,7 +65,7 @@ public class TarWriterAsyncTests : WriterTests
     {
         using var stream = new MemoryStream();
         using Stream content = File.OpenRead(Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg"));
-        using (
+        await using (
             var writer = new TarWriter(
                 new AsyncOnlyStream(stream),
                 new TarWriterOptions(CompressionType.None, finalizeArchive)

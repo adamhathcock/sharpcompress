@@ -2088,7 +2088,7 @@ internal sealed class CBZip2OutputStream : Stream
     /// Asynchronously finalizes the BZip2 compressed stream, flushing all pending data.
     /// Writes the remaining compressed data to the underlying stream using async I/O.
     /// </summary>
-    public async Task FinishAsync(CancellationToken cancellationToken = default)
+    public async ValueTask FinishAsync(CancellationToken cancellationToken = default)
     {
         if (finished)
         {

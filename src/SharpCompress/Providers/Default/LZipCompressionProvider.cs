@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.LZMA;
@@ -18,6 +20,19 @@ public sealed class LZipCompressionProvider : CompressionProviderBase
     {
         return new LZipStream(destination, CompressionMode.Compress);
     }
+
+    public override async ValueTask<Stream> CreateCompressStreamAsync(
+        Stream destination,
+        int compressionLevel,
+        CancellationToken cancellationToken = default
+    ) =>
+        await LZipStream
+            .CreateAsync(
+                destination,
+                CompressionMode.Compress,
+                cancellationToken: cancellationToken
+            )
+            .ConfigureAwait(false);
 
     public override Stream CreateDecompressStream(Stream source)
     {
