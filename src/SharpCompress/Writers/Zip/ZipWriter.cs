@@ -764,7 +764,11 @@ public partial class ZipWriter : AbstractWriter
                 .ConfigureAwait(false);
         }
 
+#if NET48 || NETSTANDARD2_0
+        public async ValueTask DisposeAsync()
+#else
         public override async ValueTask DisposeAsync()
+#endif
         {
             if (isDisposed)
             {
@@ -773,12 +777,20 @@ public partial class ZipWriter : AbstractWriter
 
             isDisposed = true;
 
+#if NET48 || NETSTANDARD2_0
+            writeStream.Dispose();
+#else
             await writeStream.DisposeAsync().ConfigureAwait(false);
+#endif
 
             if (limitsExceeded)
             {
                 // We have written invalid data into the archive, so destroy it
+#if NET48 || NETSTANDARD2_0
+                originalStream.Dispose();
+#else
                 await originalStream.DisposeAsync().ConfigureAwait(false);
+#endif
                 return;
             }
 
@@ -867,8 +879,10 @@ public partial class ZipWriter : AbstractWriter
                 writer.streamPosition += (long)entry.Compressed + 16;
             }
             writer.entries.Add(entry);
+#if !NET48 && !NETSTANDARD2_0
             // base.DisposeAsync() is a no-op since isDisposed is already set
             await base.DisposeAsync().ConfigureAwait(false);
+#endif
         }
 
         private static async Task WriteFooterAsync(
