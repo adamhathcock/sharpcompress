@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
@@ -174,6 +175,50 @@ public class TarArchiveAsyncTests : ArchiveTests
             );
         }
         CompareArchivesByPath(modified, scratchPath);
+    }
+
+    [Fact]
+    public async ValueTask Tar_Random_Write_Add_Releases_Source_File_Async()
+    {
+        var sourcePath = Path.Combine(SCRATCH_FILES_PATH, "Tar.source.txt");
+        var content = "source file lock test";
+
+        File.WriteAllText(sourcePath, content);
+
+        using var archiveStream = new MemoryStream();
+
+        await using (var archive = await TarArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync("source.txt", sourcePath);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                using var exclusiveHandle = File.Open(
+                    sourcePath,
+                    FileMode.Open,
+                    FileAccess.ReadWrite,
+                    FileShare.None
+                );
+            }
+
+            await archive.SaveToAsync(
+                archiveStream,
+                new TarWriterOptions(CompressionType.None, true)
+            );
+        }
+
+        archiveStream.Position = 0;
+
+        await using (var archive = await TarArchive.OpenAsyncArchive(archiveStream))
+        {
+            var entry = await archive.EntriesAsync.SingleAsync();
+
+            using var entryStream = await entry.OpenEntryStreamAsync();
+            using var reader = new StreamReader(entryStream);
+            Assert.Equal(content, await reader.ReadToEndAsync());
+        }
+
+        File.Delete(sourcePath);
     }
 
     [Fact]

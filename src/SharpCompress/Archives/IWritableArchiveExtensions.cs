@@ -25,13 +25,7 @@ public static class IWritableArchiveExtensions
                 )
                 {
                     var fileInfo = new FileInfo(filePath);
-                    writableArchive.AddEntry(
-                        filePath.Substring(directoryPath.Length),
-                        fileInfo.OpenRead(),
-                        true,
-                        fileInfo.Length,
-                        fileInfo.LastWriteTime
-                    );
+                    writableArchive.AddEntry(filePath.Substring(directoryPath.Length), fileInfo);
                 }
             }
         }
@@ -52,13 +46,27 @@ public static class IWritableArchiveExtensions
             {
                 throw new ArgumentException("FileInfo does not exist.");
             }
-            return writableArchive.AddEntry(
-                key,
-                fileInfo.OpenRead(),
-                true,
-                fileInfo.Length,
-                fileInfo.LastWriteTime
-            );
+
+            using var sourceStream = fileInfo.OpenRead();
+            var bufferedStream = new MemoryStream();
+
+            try
+            {
+                sourceStream.CopyTo(bufferedStream);
+                bufferedStream.Position = 0;
+                return writableArchive.AddEntry(
+                    key,
+                    bufferedStream,
+                    true,
+                    fileInfo.Length,
+                    fileInfo.LastWriteTime
+                );
+            }
+            catch
+            {
+                bufferedStream.Dispose();
+                throw;
+            }
         }
     }
 

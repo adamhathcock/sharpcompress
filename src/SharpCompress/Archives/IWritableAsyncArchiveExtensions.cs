@@ -28,13 +28,7 @@ public static class IWritableAsyncArchiveExtensions
                 {
                     var fileInfo = new FileInfo(filePath);
                     await writableArchive
-                        .AddEntryAsync(
-                            filePath.Substring(directoryPath.Length),
-                            fileInfo.OpenRead(),
-                            true,
-                            fileInfo.Length,
-                            fileInfo.LastWriteTime
-                        )
+                        .AddEntryAsync(filePath.Substring(directoryPath.Length), fileInfo)
                         .ConfigureAwait(false);
                 }
             }
@@ -56,13 +50,30 @@ public static class IWritableAsyncArchiveExtensions
             {
                 throw new ArgumentException("FileInfo does not exist.");
             }
-            return writableArchive.AddEntryAsync(
-                key,
-                fileInfo.OpenRead(),
-                true,
-                fileInfo.Length,
-                fileInfo.LastWriteTime
-            );
+
+            return AddEntryAsyncBuffered(fileInfo);
+
+            async ValueTask<IArchiveEntry> AddEntryAsyncBuffered(FileInfo info)
+            {
+                using var sourceStream = info.OpenRead();
+                var bufferedStream = new MemoryStream();
+
+                try
+                {
+                    await sourceStream.CopyToAsync(bufferedStream).ConfigureAwait(false);
+                    bufferedStream.Position = 0;
+                    return await writableArchive
+                        .AddEntryAsync(key, bufferedStream, true, info.Length, info.LastWriteTime)
+                        .ConfigureAwait(false);
+                }
+                catch
+                {
+#pragma warning disable VSTHRD103
+                    bufferedStream.Dispose();
+#pragma warning restore VSTHRD103
+                    throw;
+                }
+            }
         }
     }
 
