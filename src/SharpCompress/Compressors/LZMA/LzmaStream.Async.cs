@@ -389,7 +389,7 @@ public partial class LzmaStream
     }
 #endif
 
-    public override Task WriteAsync(
+    public override async Task WriteAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -397,7 +397,63 @@ public partial class LzmaStream
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        Write(buffer, offset, count);
-        return Task.CompletedTask;
+        if (_encoder != null)
+        {
+            _position = await _encoder
+                .CodeAsync(new MemoryStream(buffer, offset, count), false, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_encoder != null)
+        {
+            _position = await _encoder
+                .CodeAsync(new MemoryStream(buffer.ToArray()), false, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+#endif
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+    public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
+
+        if (_encoder != null)
+        {
+            _position = await _encoder.CodeAsync(null, true).ConfigureAwait(false);
+        }
+
+        if (!_leaveOpen)
+        {
+            if (_inputStream is IAsyncDisposable asyncDisposableInputStream)
+            {
+                await asyncDisposableInputStream.DisposeAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                _inputStream?.Dispose();
+            }
+        }
+        await _outWindow.DisposeAsync().ConfigureAwait(false);
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+        await base.DisposeAsync().ConfigureAwait(false);
+#endif
+        GC.SuppressFinalize(this);
     }
 }
