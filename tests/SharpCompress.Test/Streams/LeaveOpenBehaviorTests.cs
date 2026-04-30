@@ -130,7 +130,9 @@ public class LeaveOpenBehaviorTests
     public void LZipStream_Compress_LeaveOpen_False()
     {
         using var innerStream = new TestStream(new MemoryStream());
-        using (var lzip = LZipStream.Create(innerStream, CompressionMode.Compress, leaveOpen: false))
+        using (
+            var lzip = LZipStream.Create(innerStream, CompressionMode.Compress, leaveOpen: false)
+        )
         {
             lzip.Write(CreateTestData(), 0, CreateTestData().Length);
             lzip.Finish();
@@ -177,7 +179,9 @@ public class LeaveOpenBehaviorTests
         using var innerStream = new TestStream(memStream);
         var decompressed = new byte[CreateTestData().Length];
 
-        using (var lzip = LZipStream.Create(innerStream, CompressionMode.Decompress, leaveOpen: false))
+        using (
+            var lzip = LZipStream.Create(innerStream, CompressionMode.Decompress, leaveOpen: false)
+        )
         {
             lzip.Read(decompressed, 0, decompressed.Length);
         }
@@ -201,7 +205,9 @@ public class LeaveOpenBehaviorTests
         using var innerStream = new TestStream(memStream);
         var decompressed = new byte[CreateTestData().Length];
 
-        using (var lzip = LZipStream.Create(innerStream, CompressionMode.Decompress, leaveOpen: true))
+        using (
+            var lzip = LZipStream.Create(innerStream, CompressionMode.Decompress, leaveOpen: true)
+        )
         {
             lzip.Read(decompressed, 0, decompressed.Length);
         }

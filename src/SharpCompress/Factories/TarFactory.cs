@@ -473,21 +473,30 @@ public class TarFactory
         stream = writerOptions.CompressionType switch
         {
             CompressionType.None => stream,
-            CompressionType.BZip2 => await providers.CreateCompressStreamAsync(
-                CompressionType.BZip2,
-                stream,
-                writerOptions.CompressionLevel,
-                cancellationToken).ConfigureAwait(false),
-            CompressionType.GZip => await providers.CreateCompressStreamAsync(
-                CompressionType.GZip,
-                stream,
-                writerOptions.CompressionLevel,
-                cancellationToken).ConfigureAwait(false),
-            CompressionType.LZip => await providers.CreateCompressStreamAsync(
-                CompressionType.LZip,
-                stream,
-                writerOptions.CompressionLevel,
-                cancellationToken).ConfigureAwait(false),
+            CompressionType.BZip2 => await providers
+                .CreateCompressStreamAsync(
+                    CompressionType.BZip2,
+                    stream,
+                    writerOptions.CompressionLevel,
+                    cancellationToken
+                )
+                .ConfigureAwait(false),
+            CompressionType.GZip => await providers
+                .CreateCompressStreamAsync(
+                    CompressionType.GZip,
+                    stream,
+                    writerOptions.CompressionLevel,
+                    cancellationToken
+                )
+                .ConfigureAwait(false),
+            CompressionType.LZip => await providers
+                .CreateCompressStreamAsync(
+                    CompressionType.LZip,
+                    stream,
+                    writerOptions.CompressionLevel,
+                    cancellationToken
+                )
+                .ConfigureAwait(false),
             _ => throw new InvalidFormatException(
                 "Tar does not support compression: " + writerOptions.CompressionType
             ),

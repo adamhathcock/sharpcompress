@@ -39,11 +39,11 @@ public sealed class LZipCompressionProvider : CompressionProviderBase
         return LZipStream.Create(source, CompressionMode.Decompress);
     }
 
-    public override async ValueTask<Stream> CreateDecompressStreamAsync(Stream source, CancellationToken cancellationToken = default) =>   await LZipStream
-                                                                                                                                           .CreateAsync(
-                                                                                                                                               source,
-                                                                                                                                               CompressionMode.Decompress,
-                                                                                                                                               cancellationToken: cancellationToken
-                                                                                                                                           )
-                                                                                                                                           .ConfigureAwait(false);
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
+        Stream source,
+        CancellationToken cancellationToken = default
+    ) =>
+        await LZipStream
+            .CreateAsync(source, CompressionMode.Decompress, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
 }

@@ -392,13 +392,14 @@ public partial class ZipWriter : AbstractWriter
         private readonly CRC32 crc = new();
         private readonly ZipCentralDirectoryEntry entry;
         private readonly Stream originalStream;
-        private readonly Stream writeStream;
+        private Stream writeStream;
         private readonly ZipWriter writer;
         private readonly ZipCompressionMethod zipCompressionMethod;
         private readonly int compressionLevel;
         private ICompressionProviderHooks? compressionProviderHooks;
         private CompressionContext? compressionContext;
         private CountingStream? counting;
+        private MemoryStream? asyncCompressionBuffer;
         private ulong decompressed;
 
         // Flag to prevent throwing exceptions on Dispose
@@ -410,7 +411,8 @@ public partial class ZipWriter : AbstractWriter
             Stream originalStream,
             ZipCentralDirectoryEntry entry,
             ZipCompressionMethod zipCompressionMethod,
-            int compressionLevel
+            int compressionLevel,
+            Stream? compressionStream = null
         )
         {
             this.writer = writer;
@@ -419,7 +421,42 @@ public partial class ZipWriter : AbstractWriter
             this.entry = entry;
             this.zipCompressionMethod = zipCompressionMethod;
             this.compressionLevel = compressionLevel;
-            writeStream = GetWriteStream(originalStream);
+            writeStream = GetWriteStream(compressionStream ?? originalStream);
+        }
+
+        internal static async Task<ZipWritingStream> CreateAsync(
+            ZipWriter writer,
+            Stream originalStream,
+            ZipCentralDirectoryEntry entry,
+            ZipCompressionMethod zipCompressionMethod,
+            int compressionLevel,
+            CancellationToken cancellationToken
+        )
+        {
+            var compressionStream = originalStream;
+            MemoryStream? asyncCompressionBuffer = null;
+            if (
+                zipCompressionMethod
+                is ZipCompressionMethod.BZip2
+                    or ZipCompressionMethod.LZMA
+                    or ZipCompressionMethod.PPMd
+            )
+            {
+                asyncCompressionBuffer = new MemoryStream();
+                compressionStream = asyncCompressionBuffer;
+            }
+
+            var stream = new ZipWritingStream(
+                writer,
+                originalStream,
+                entry,
+                zipCompressionMethod,
+                compressionLevel,
+                compressionStream
+            );
+            stream.asyncCompressionBuffer = asyncCompressionBuffer;
+            await Task.CompletedTask.ConfigureAwait(false);
+            return stream;
         }
 
         public override bool CanRead => false;
@@ -674,43 +711,98 @@ public partial class ZipWriter : AbstractWriter
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            // We check the limits first, because we can keep the archive consistent
-            // if we can prevent the writes from happening
-            if (entry.Zip64HeaderOffset == 0)
-            {
-                var countingCount = counting?.BytesWritten ?? 0;
-                // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
-                if (
-                    limitsExceeded
-                    || ((decompressed + (uint)count) > uint.MaxValue)
-                    || (countingCount + (uint)count) > uint.MaxValue
-                )
-                {
-                    throw new NotSupportedException(
-                        "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
-                    );
-                }
-            }
+            CheckWriteLimits(count);
 
             decompressed += (uint)count;
             crc.SlurpBlock(buffer, offset, count);
             writeStream.Write(buffer, offset, count);
 
-            if (entry.Zip64HeaderOffset == 0)
+            CheckPostWriteLimits();
+        }
+
+        public override async Task WriteAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CheckWriteLimits(count);
+
+            decompressed += (uint)count;
+            crc.SlurpBlock(buffer, offset, count);
+            await writeStream
+                .WriteAsync(buffer, offset, count, cancellationToken)
+                .ConfigureAwait(false);
+
+            CheckPostWriteLimits();
+        }
+
+#if !LEGACY_DOTNET
+        public override async ValueTask WriteAsync(
+            ReadOnlyMemory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            CheckWriteLimits(buffer.Length);
+
+            decompressed += (uint)buffer.Length;
+            if (System.Runtime.InteropServices.MemoryMarshal.TryGetArray(buffer, out var segment))
             {
-                var countingCount = counting?.BytesWritten ?? 0;
-                // Post-check, this is accurate
-                if ((decompressed > uint.MaxValue) || countingCount > uint.MaxValue)
-                {
-                    // We have written the data, so the archive is now broken
-                    // Throwing the exception here, allows us to avoid
-                    // throwing an exception in Dispose() which is discouraged
-                    // as it can mask other errors
-                    limitsExceeded = true;
-                    throw new NotSupportedException(
-                        "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
-                    );
-                }
+                crc.SlurpBlock(segment.Array!, segment.Offset, segment.Count);
+            }
+            else
+            {
+                var array = buffer.ToArray();
+                crc.SlurpBlock(array, 0, array.Length);
+            }
+            await writeStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+
+            CheckPostWriteLimits();
+        }
+#endif
+
+        private void CheckWriteLimits(int count)
+        {
+            // We check the limits first, because we can keep the archive consistent
+            // if we can prevent the writes from happening. The compressed byte count
+            // is only an estimate until compression has actually happened.
+            if (entry.Zip64HeaderOffset != 0)
+            {
+                return;
+            }
+
+            var countingCount = counting?.BytesWritten ?? 0;
+            if (
+                limitsExceeded
+                || ((decompressed + (uint)count) > uint.MaxValue)
+                || (countingCount + (uint)count) > uint.MaxValue
+            )
+            {
+                throw new NotSupportedException(
+                    "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
+                );
+            }
+        }
+
+        private void CheckPostWriteLimits()
+        {
+            if (entry.Zip64HeaderOffset != 0)
+            {
+                return;
+            }
+
+            var countingCount = counting?.BytesWritten ?? 0;
+            if ((decompressed > uint.MaxValue) || countingCount > uint.MaxValue)
+            {
+                // We have written the data, so the archive is now broken. Throwing
+                // here avoids throwing from Dispose(), which can mask other errors.
+                limitsExceeded = true;
+                throw new NotSupportedException(
+                    "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
+                );
             }
         }
 
@@ -777,20 +869,26 @@ public partial class ZipWriter : AbstractWriter
 
             isDisposed = true;
 
-#if NET48 || NETSTANDARD2_0
-            writeStream.Dispose();
-#else
-            await writeStream.DisposeAsync().ConfigureAwait(false);
-#endif
+            if (writeStream is IAsyncDisposable asyncDisposableWriteStream)
+            {
+                await asyncDisposableWriteStream.DisposeAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                writeStream.Dispose();
+            }
 
             if (limitsExceeded)
             {
                 // We have written invalid data into the archive, so destroy it
-#if NET48 || NETSTANDARD2_0
-                originalStream.Dispose();
-#else
-                await originalStream.DisposeAsync().ConfigureAwait(false);
-#endif
+                if (originalStream is IAsyncDisposable asyncDisposableOriginalStream)
+                {
+                    await asyncDisposableOriginalStream.DisposeAsync().ConfigureAwait(false);
+                }
+                else
+                {
+                    originalStream.Dispose();
+                }
                 return;
             }
 
@@ -804,6 +902,14 @@ public partial class ZipWriter : AbstractWriter
             var zip64 = entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
             var compressedvalue = zip64 ? uint.MaxValue : (uint)countingCount;
             var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
+
+            if (asyncCompressionBuffer is not null)
+            {
+                asyncCompressionBuffer.Position = 0;
+                await asyncCompressionBuffer
+                    .CopyToAsync(originalStream, 81920, CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
 
             if (originalStream.CanSeek)
             {

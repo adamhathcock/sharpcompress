@@ -17,7 +17,6 @@ public partial class TarWriter : AbstractWriter
         _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
         _headerFormat = options.HeaderFormat;
 
-
         InitializeStream(destination);
     }
 

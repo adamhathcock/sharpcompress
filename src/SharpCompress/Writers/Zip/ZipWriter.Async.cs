@@ -87,7 +87,12 @@ public partial class ZipWriter
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
+        options.ValidateWithFallback(compressionType, compressionLevel);
         var compression = ToZipCompressionMethod(options.CompressionType ?? compressionType);
+
+        entryPath = NormalizeFilename(entryPath);
+        options.ModificationDateTime ??= DateTime.Now;
+        options.EntryComment ??= string.Empty;
         var entry = new ZipCentralDirectoryEntry(
             compression,
             entryPath,
@@ -109,13 +114,16 @@ public partial class ZipWriter
             await WriteHeaderAsync(entryPath, options, entry, useZip64, cancellationToken)
                 .ConfigureAwait(false);
         streamPosition += headersize;
-        return new ZipWritingStream(
-            this,
-            OutputStream.NotNull(),
-            entry,
-            compression,
-            options.CompressionLevel ?? compressionLevel
-        );
+        return await ZipWritingStream
+            .CreateAsync(
+                this,
+                OutputStream.NotNull(),
+                entry,
+                compression,
+                options.CompressionLevel ?? compressionLevel,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     private async Task<int> WriteHeaderAsync(
