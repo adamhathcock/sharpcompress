@@ -49,12 +49,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-#if NETFRAMEWORK
-        using (
-#else
-        await using (
-#endif
-            var writer = new GZipWriter(new AsyncOnlyStream(stream)))
+        await using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
         {
             await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }

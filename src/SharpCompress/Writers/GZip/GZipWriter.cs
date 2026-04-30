@@ -5,6 +5,7 @@ using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.GZip;
 
@@ -59,13 +60,14 @@ public sealed partial class GZipWriter : AbstractWriter
 
         GC.SuppressFinalize(this);
         _isDisposed = true;
-
-#if !LEGACY_DOTNET || NETSTANDARD2_1
-        await OutputStream.NotNull().DisposeAsync().ConfigureAwait(false);
-#else
-        OutputStream.NotNull().Dispose();
-        await Task.CompletedTask.ConfigureAwait(false);
-#endif
+        if (OutputStream is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            OutputStream.NotNull().Dispose();
+        }
     }
 #pragma warning restore CA2215
 

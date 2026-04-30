@@ -38,6 +38,9 @@ using SharpCompress.Common.Options;
 namespace SharpCompress.Compressors.Deflate;
 
 public partial class GZipStream : Stream
+#if LEGACY_DOTNET
+        , IAsyncDisposable
+#endif
 {
     internal static readonly DateTime UNIX_EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 

@@ -35,6 +35,9 @@ using SharpCompress.IO;
 namespace SharpCompress.Compressors.Deflate;
 
 public partial class DeflateStream : Stream, IStreamStack
+#if LEGACY_DOTNET
+        , IAsyncDisposable
+#endif
 {
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;
