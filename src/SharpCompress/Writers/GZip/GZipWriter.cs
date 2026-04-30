@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
@@ -47,6 +48,26 @@ public sealed partial class GZipWriter : AbstractWriter
         }
         base.Dispose(isDisposing);
     }
+
+#pragma warning disable CA2215 // base.DisposeAsync() calls the sync Dispose path for writers.
+    public override async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        GC.SuppressFinalize(this);
+        _isDisposed = true;
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+        await OutputStream.NotNull().DisposeAsync().ConfigureAwait(false);
+#else
+        OutputStream.NotNull().Dispose();
+        await Task.CompletedTask.ConfigureAwait(false);
+#endif
+    }
+#pragma warning restore CA2215
 
     public override void Write(string filename, Stream source, DateTime? modificationTime)
     {

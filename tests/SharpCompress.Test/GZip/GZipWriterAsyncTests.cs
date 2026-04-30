@@ -23,7 +23,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (
+        await using (
             var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
@@ -49,7 +49,12 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
+#if NETFRAMEWORK
+        using (
+#else
+        await using (
+#endif
+            var writer = new GZipWriter(new AsyncOnlyStream(stream)))
         {
             await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }

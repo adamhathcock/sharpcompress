@@ -100,11 +100,10 @@ public class AsyncTests : TestBase
 
 #if NETFRAMEWORK
         using (var stream = File.Create(outputPath))
-        using (
 #else
         await using (var stream = File.Create(outputPath))
-        await using (
 #endif
+        await using (
             var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.Zip,
