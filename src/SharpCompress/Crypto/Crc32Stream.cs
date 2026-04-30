@@ -27,11 +27,6 @@ public sealed class Crc32Stream : Stream
         this.seed = seed;
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-    }
-
     public Stream WrappedStream => stream;
 
     public override void Flush() => stream.Flush();

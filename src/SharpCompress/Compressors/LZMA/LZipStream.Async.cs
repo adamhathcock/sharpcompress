@@ -44,7 +44,7 @@ public sealed partial class LZipStream
         if (Mode == CompressionMode.Compress)
         {
             var crc32Stream = (Crc32Stream)_stream;
-            FinishWrappedStream(crc32Stream);
+            await FinishWrappedStreamAsync(crc32Stream).ConfigureAwait(false);
             var compressedCount = _countingWritableSubStream.NotNull().BytesWritten;
 
             var intBuf = new byte[8];
@@ -78,10 +78,19 @@ public sealed partial class LZipStream
         // hard coding the dictionary size encoding
         await stream.WriteAsync(headerBytes, 0, 6).ConfigureAwait(false);
 
-    private static void FinishWrappedStream(Crc32Stream crc32Stream)
+    private static async ValueTask FinishWrappedStreamAsync(Crc32Stream crc32Stream)
     {
-        crc32Stream.WrappedStream.Dispose();
-        crc32Stream.Dispose();
+        if (crc32Stream.WrappedStream is IAsyncDisposable asyncDisposableWrappedStream)
+        {
+            await asyncDisposableWrappedStream.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+#pragma warning disable VSTHRD103 // Fallback for streams that do not support async disposal.
+            crc32Stream.WrappedStream.Dispose();
+            crc32Stream.Dispose();
+#pragma warning restore VSTHRD103
+        }
     }
 
     /// <summary>
