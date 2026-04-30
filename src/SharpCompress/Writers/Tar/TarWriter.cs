@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Compressors;
+using SharpCompress.IO;
 using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
@@ -12,12 +14,60 @@ public partial class TarWriter : AbstractWriter
     private readonly TarHeaderWriteFormat _headerFormat;
 
     public TarWriter(Stream destination, TarWriterOptions options)
-        : base(ArchiveType.Tar, options)
+        : base(ArchiveType.Tar, GetEffectiveOptions(options))
     {
         _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
         _headerFormat = options.HeaderFormat;
 
-        InitializeStream(destination);
+        InitializeStream(CreateOutputStream(destination, options));
+    }
+
+    internal TarWriter(Stream destination, TarWriterOptions options, bool streamIsPrepared)
+        : base(ArchiveType.Tar, GetEffectiveOptions(options))
+    {
+        _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        _headerFormat = options.HeaderFormat;
+
+        InitializeStream(streamIsPrepared ? destination : CreateOutputStream(destination, options));
+    }
+
+    private static TarWriterOptions GetEffectiveOptions(TarWriterOptions options) =>
+        options with
+        {
+            CompressionType = CompressionType.None,
+            LeaveStreamOpen = false,
+        };
+
+    private static Stream CreateOutputStream(Stream destination, TarWriterOptions options)
+    {
+        if (options.LeaveStreamOpen)
+        {
+            destination = SharpCompressStream.CreateNonDisposing(destination);
+        }
+
+        var providers = options.Providers;
+        return options.CompressionType switch
+        {
+            CompressionType.None => destination,
+            CompressionType.BZip2 => providers.CreateCompressStream(
+                CompressionType.BZip2,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.GZip => providers.CreateCompressStream(
+                CompressionType.GZip,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.LZip => providers.CreateCompressStream(
+                CompressionType.LZip,
+                destination,
+                options.CompressionLevel
+            ),
+            _ => throw new InvalidFormatException(
+                "Tar does not support compression: " + options.CompressionType
+            ),
+        };
     }
 
     public override void Write(string filename, Stream source, DateTime? modificationTime) =>
