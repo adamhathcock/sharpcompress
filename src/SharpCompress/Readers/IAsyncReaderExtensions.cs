@@ -17,9 +17,8 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToDirectoryAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToDirectoryAsync(
                     destinationDirectory,
                     options,
                     async (path, ct) =>
@@ -36,9 +35,8 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToFileAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToFileAsync(
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>
@@ -72,9 +70,8 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToFileAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToFileAsync(
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>

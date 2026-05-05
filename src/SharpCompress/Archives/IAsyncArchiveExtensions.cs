@@ -70,9 +70,8 @@ public static class IAsyncArchiveExtensions
 
                 if (entry.IsDirectory)
                 {
-                    await ExtractionMethods
+                    await entry
                         .WriteEntryToDirectoryAsyncCore(
-                            entry,
                             fullDestinationDirectoryPath,
                             options,
                             (_, _) => new ValueTask(),
@@ -82,9 +81,8 @@ public static class IAsyncArchiveExtensions
                     continue;
                 }
 
-                await ExtractionMethods
+                await entry
                     .WriteEntryToDirectoryAsyncCore(
-                        entry,
                         fullDestinationDirectoryPath,
                         options,
                         async (path, ct) =>

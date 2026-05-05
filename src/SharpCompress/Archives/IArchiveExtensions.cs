@@ -49,8 +49,7 @@ public static class IArchiveExtensions
             {
                 if (entry.IsDirectory)
                 {
-                    ExtractionMethods.WriteEntryToDirectoryCore(
-                        entry,
+                    entry.WriteEntryToDirectoryCore(
                         fullDestinationDirectoryPath,
                         options,
                         _ => { }
@@ -58,8 +57,7 @@ public static class IArchiveExtensions
                     continue;
                 }
 
-                ExtractionMethods.WriteEntryToDirectoryCore(
-                    entry,
+                entry.WriteEntryToDirectoryCore(
                     fullDestinationDirectoryPath,
                     options,
                     path => entry.WriteToFile(path, options)

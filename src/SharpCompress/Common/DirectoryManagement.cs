@@ -4,7 +4,6 @@ namespace SharpCompress.Common;
 
 internal static class DirectoryManagement
 {
-
     internal const string CreateDirectoryOutsideDestinationMessage =
         "Entry is trying to create a directory outside of the destination directory.";
     internal const string WriteFileOutsideDestinationMessage =
@@ -59,8 +58,6 @@ internal static class DirectoryManagement
         throw new ExtractionException(exceptionMessage);
     }
 
-
-
     private static bool IsDirectorySeparator(char value) =>
         value == Path.DirectorySeparatorChar || value == Path.AltDirectorySeparatorChar;
 
@@ -77,5 +74,4 @@ internal static class DirectoryManagement
 
         return end == path.Length ? path : path.Substring(0, end);
     }
-
 }
