@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -15,7 +13,6 @@ public static class IAsyncArchiveExtensions
         /// <summary>
         /// Extract to specific directory asynchronously with progress reporting and cancellation support
         /// </summary>
-        /// <param name="archive">The archive to extract.</param>
         /// <param name="destinationDirectory">The folder to extract into.</param>
         /// <param name="options">Extraction options.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
@@ -59,28 +56,13 @@ public static class IAsyncArchiveExtensions
             CancellationToken cancellationToken
         )
         {
-            var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
             options ??= new ExtractionOptions();
-
-            //check for trailing slash.
-            if (
-                fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1]
-                != Path.DirectorySeparatorChar
-            )
-            {
-                fullDestinationDirectoryPath += Path.DirectorySeparatorChar;
-            }
-
-            if (!Directory.Exists(fullDestinationDirectoryPath))
-            {
-                throw new ExtractionException(
-                    $"Directory does not exist to extract to: {fullDestinationDirectoryPath}"
-                );
-            }
+            var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
+                destinationDirectory
+            );
 
             var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
             var bytesRead = 0L;
-            var seenDirectories = new HashSet<string>();
 
             await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
             {
@@ -88,28 +70,27 @@ public static class IAsyncArchiveExtensions
 
                 if (entry.IsDirectory)
                 {
-                    var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
-                        .NotNull("Directory is null");
-                    var destdir = Path.GetFullPath(
-                        Path.Combine(fullDestinationDirectoryPath, folder)
-                    );
-
-                    if (!Directory.Exists(destdir) && seenDirectories.Add(destdir))
-                    {
-                        if (!destdir.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
-                        {
-                            throw new ExtractionException(
-                                "Entry is trying to create a directory outside of the destination directory."
-                            );
-                        }
-
-                        Directory.CreateDirectory(destdir);
-                    }
+                    await ExtractionMethods
+                        .WriteEntryToDirectoryAsyncCore(
+                            entry,
+                            fullDestinationDirectoryPath,
+                            options,
+                            (_, _) => new ValueTask(),
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
                     continue;
                 }
 
-                await entry
-                    .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                await ExtractionMethods
+                    .WriteEntryToDirectoryAsyncCore(
+                        entry,
+                        fullDestinationDirectoryPath,
+                        options,
+                        async (path, ct) =>
+                            await entry.WriteToFileAsync(path, options, ct).ConfigureAwait(false),
+                        cancellationToken
+                    )
                     .ConfigureAwait(false);
 
                 bytesRead += entry.Size;

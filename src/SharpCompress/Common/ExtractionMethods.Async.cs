@@ -15,67 +15,59 @@ internal static partial class ExtractionMethods
         CancellationToken cancellationToken = default
     )
     {
-        string destinationFileName;
-        var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
         options ??= new ExtractionOptions();
+        var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(destinationDirectory);
 
-        //check for trailing slash.
-        if (
-            fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1]
-            != Path.DirectorySeparatorChar
-        )
-        {
-            fullDestinationDirectoryPath += Path.DirectorySeparatorChar;
-        }
+        await WriteEntryToDirectoryAsyncCore(
+                entry,
+                fullDestinationDirectoryPath,
+                options,
+                writeAsync,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+    }
 
-        if (!Directory.Exists(fullDestinationDirectoryPath))
-        {
-            throw new ExtractionException(
-                $"Directory does not exist to extract to: {fullDestinationDirectoryPath}"
-            );
-        }
-
-        var file = Path.GetFileName(entry.Key.NotNull("Entry Key is null")).NotNull("File is null");
-        file = Utility.ReplaceInvalidFileNameChars(file);
-        if (options.ExtractFullPath)
-        {
-            var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
-                .NotNull("Directory is null");
-            var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
-
-            if (!Directory.Exists(destdir))
-            {
-                if (!destdir.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
-                {
-                    throw new ExtractionException(
-                        "Entry is trying to create a directory outside of the destination directory."
-                    );
-                }
-
-                Directory.CreateDirectory(destdir);
-            }
-            destinationFileName = Path.Combine(destdir, file);
-        }
-        else
-        {
-            destinationFileName = Path.Combine(fullDestinationDirectoryPath, file);
-        }
+    internal static async ValueTask WriteEntryToDirectoryAsyncCore(
+        IEntry entry,
+        string fullDestinationDirectoryPath,
+        ExtractionOptions options,
+        Func<string, CancellationToken, ValueTask> writeAsync,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var destinationFileName = GetEntryDestinationFileName(
+            entry,
+            fullDestinationDirectoryPath,
+            options
+        );
 
         if (!entry.IsDirectory)
         {
             destinationFileName = Path.GetFullPath(destinationFileName);
 
-            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
-            {
-                throw new ExtractionException(
-                    "Entry is trying to write a file outside of the destination directory."
-                );
-            }
+            DirectoryManagement.EnsurePathInDestinationDirectory(
+                destinationFileName,
+                fullDestinationDirectoryPath,
+                DirectoryManagement.WriteFileOutsideDestinationMessage
+            );
+
             await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
         }
-        else if (options.ExtractFullPath && !Directory.Exists(destinationFileName))
+        else if (options.ExtractFullPath)
         {
-            Directory.CreateDirectory(destinationFileName);
+            destinationFileName = Path.GetFullPath(destinationFileName);
+
+            DirectoryManagement.EnsurePathInDestinationDirectory(
+                destinationFileName,
+                fullDestinationDirectoryPath,
+                DirectoryManagement.CreateDirectoryOutsideDestinationMessage
+            );
+
+            if (!Directory.Exists(destinationFileName))
+            {
+                Directory.CreateDirectory(destinationFileName);
+            }
         }
     }
 

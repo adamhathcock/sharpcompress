@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
@@ -39,54 +37,33 @@ public static class IArchiveExtensions
             IProgress<ProgressReport>? progress
         )
         {
-            var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
             options ??= new ExtractionOptions();
-
-            //check for trailing slash.
-            if (
-                fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1]
-                != Path.DirectorySeparatorChar
-            )
-            {
-                fullDestinationDirectoryPath += Path.DirectorySeparatorChar;
-            }
-
-            if (!Directory.Exists(fullDestinationDirectoryPath))
-            {
-                throw new ExtractionException(
-                    $"Directory does not exist to extract to: {fullDestinationDirectoryPath}"
-                );
-            }
+            var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
+                destinationDirectory
+            );
 
             var totalBytes = archive.TotalUncompressedSize;
             var bytesRead = 0L;
-            var seenDirectories = new HashSet<string>();
 
             foreach (var entry in archive.Entries)
             {
                 if (entry.IsDirectory)
                 {
-                    var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
-                        .NotNull("Directory is null");
-                    var destdir = Path.GetFullPath(
-                        Path.Combine(fullDestinationDirectoryPath, folder)
+                    ExtractionMethods.WriteEntryToDirectoryCore(
+                        entry,
+                        fullDestinationDirectoryPath,
+                        options,
+                        _ => { }
                     );
-
-                    if (!Directory.Exists(destdir) && seenDirectories.Add(destdir))
-                    {
-                        if (!destdir.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
-                        {
-                            throw new ExtractionException(
-                                "Entry is trying to create a directory outside of the destination directory."
-                            );
-                        }
-
-                        Directory.CreateDirectory(destdir);
-                    }
                     continue;
                 }
 
-                entry.WriteToDirectory(destinationDirectory, options);
+                ExtractionMethods.WriteEntryToDirectoryCore(
+                    entry,
+                    fullDestinationDirectoryPath,
+                    options,
+                    path => entry.WriteToFile(path, options)
+                );
 
                 bytesRead += entry.Size;
                 progress?.Report(
