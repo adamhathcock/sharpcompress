@@ -41,7 +41,7 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
+                        using var fs = File.Open(x, fm);
                         await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
                     },
                     cancellationToken
@@ -76,7 +76,7 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
+                        using var fs = File.Open(x, fm);
                         await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
                     },
                     cancellationToken

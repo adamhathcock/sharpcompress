@@ -45,6 +45,7 @@ internal static partial class IEntryExtensions
                     fullDestinationDirectoryPath,
                     DirectoryManagement.WriteFileOutsideDestinationMessage
                 );
+                write?.Invoke(destinationFileName);
             }
             else if (options.ExtractFullPath)
             {
@@ -61,7 +62,6 @@ internal static partial class IEntryExtensions
                     Directory.CreateDirectory(destinationFileName);
                 }
             }
-            write?.Invoke(destinationFileName);
         }
 
         private string GetEntryDestinationFileName(

@@ -53,6 +53,11 @@ internal static partial class IEntryExtensions
                     fullDestinationDirectoryPath,
                     DirectoryManagement.WriteFileOutsideDestinationMessage
                 );
+
+                if (writeAsync != null)
+                {
+                    await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
+                }
             }
             else if (options.ExtractFullPath)
             {
@@ -68,11 +73,6 @@ internal static partial class IEntryExtensions
                 {
                     Directory.CreateDirectory(destinationFileName);
                 }
-            }
-
-            if (writeAsync != null)
-            {
-                await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
             }
         }
 
