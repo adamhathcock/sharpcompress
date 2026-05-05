@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
@@ -8,6 +9,15 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveExtensions
 {
+
+    /// <summary>
+    /// Gets the appropriate StringComparison for path checks based on the file system.
+    /// Windows uses case-insensitive file systems, while Unix-like systems use case-sensitive file systems.
+    /// </summary>
+    private static StringComparison PathComparison =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
     extension(IArchive archive)
     {
         /// <summary>
@@ -39,6 +49,25 @@ public static class IArchiveExtensions
             IProgress<ProgressReport>? progress
         )
         {
+            var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
+            options ??= new ExtractionOptions();
+
+            //check for trailing slash.
+            if (
+                fullDestinationDirectoryPath[fullDestinationDirectoryPath.Length - 1]
+                != Path.DirectorySeparatorChar
+            )
+            {
+                fullDestinationDirectoryPath += Path.DirectorySeparatorChar;
+            }
+
+            if (!Directory.Exists(fullDestinationDirectoryPath))
+            {
+                throw new ExtractionException(
+                    $"Directory does not exist to extract to: {fullDestinationDirectoryPath}"
+                );
+            }
+
             var totalBytes = archive.TotalUncompressedSize;
             var bytesRead = 0L;
             var seenDirectories = new HashSet<string>();
@@ -47,16 +76,21 @@ public static class IArchiveExtensions
             {
                 if (entry.IsDirectory)
                 {
-                    var dirPath = Path.Combine(
-                        destinationDirectory,
-                        entry.Key.NotNull("Entry Key is null")
-                    );
-                    if (
-                        Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
-                        && seenDirectories.Add(dirPath)
-                    )
+
+                    var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
+                                     .NotNull("Directory is null");
+                    var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
+
+                    if (!Directory.Exists(destdir) &&  seenDirectories.Add(destdir))
                     {
-                        Directory.CreateDirectory(parentDirectory);
+                        if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
+                        {
+                            throw new ExtractionException(
+                                "Entry is trying to create a directory outside of the destination directory."
+                            );
+                        }
+
+                        Directory.CreateDirectory(destdir);
                     }
                     continue;
                 }
