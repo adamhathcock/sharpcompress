@@ -9,7 +9,6 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveExtensions
 {
-
     /// <summary>
     /// Gets the appropriate StringComparison for path checks based on the file system.
     /// Windows uses case-insensitive file systems, while Unix-like systems use case-sensitive file systems.
@@ -76,12 +75,13 @@ public static class IArchiveExtensions
             {
                 if (entry.IsDirectory)
                 {
-
                     var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
-                                     .NotNull("Directory is null");
-                    var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
+                        .NotNull("Directory is null");
+                    var destdir = Path.GetFullPath(
+                        Path.Combine(fullDestinationDirectoryPath, folder)
+                    );
 
-                    if (!Directory.Exists(destdir) &&  seenDirectories.Add(destdir))
+                    if (!Directory.Exists(destdir) && seenDirectories.Add(destdir))
                     {
                         if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
                         {

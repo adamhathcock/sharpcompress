@@ -67,7 +67,8 @@ public static class IAsyncArchiveExtensions
             IProgress<ProgressReport>? progress,
             CancellationToken cancellationToken
         )
-        {      var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
+        {
+            var fullDestinationDirectoryPath = Path.GetFullPath(destinationDirectory);
             options ??= new ExtractionOptions();
 
             //check for trailing slash.
@@ -97,10 +98,12 @@ public static class IAsyncArchiveExtensions
                 if (entry.IsDirectory)
                 {
                     var folder = Path.GetDirectoryName(entry.Key.NotNull("Entry Key is null"))
-                                     .NotNull("Directory is null");
-                    var destdir = Path.GetFullPath(Path.Combine(fullDestinationDirectoryPath, folder));
+                        .NotNull("Directory is null");
+                    var destdir = Path.GetFullPath(
+                        Path.Combine(fullDestinationDirectoryPath, folder)
+                    );
 
-                    if (!Directory.Exists(destdir) &&  seenDirectories.Add(destdir))
+                    if (!Directory.Exists(destdir) && seenDirectories.Add(destdir))
                     {
                         if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
                         {
