@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -15,7 +13,6 @@ public static class IAsyncArchiveExtensions
         /// <summary>
         /// Extract to specific directory asynchronously with progress reporting and cancellation support
         /// </summary>
-        /// <param name="archive">The archive to extract.</param>
         /// <param name="destinationDirectory">The folder to extract into.</param>
         /// <param name="options">Extraction options.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
@@ -59,9 +56,13 @@ public static class IAsyncArchiveExtensions
             CancellationToken cancellationToken
         )
         {
+            options ??= new ExtractionOptions();
+            var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
+                destinationDirectory
+            );
+
             var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
             var bytesRead = 0L;
-            var seenDirectories = new HashSet<string>();
 
             await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
             {
@@ -69,22 +70,25 @@ public static class IAsyncArchiveExtensions
 
                 if (entry.IsDirectory)
                 {
-                    var dirPath = Path.Combine(
-                        destinationDirectory,
-                        entry.Key.NotNull("Entry Key is null")
-                    );
-                    if (
-                        Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
-                        && seenDirectories.Add(dirPath)
-                    )
-                    {
-                        Directory.CreateDirectory(parentDirectory);
-                    }
+                    await entry
+                        .WriteEntryToDirectoryAsyncCore(
+                            fullDestinationDirectoryPath,
+                            options,
+                            null,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
                     continue;
                 }
 
                 await entry
-                    .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                    .WriteEntryToDirectoryAsyncCore(
+                        fullDestinationDirectoryPath,
+                        options,
+                        async (path, ct) =>
+                            await entry.WriteToFileAsync(path, options, ct).ConfigureAwait(false),
+                        cancellationToken
+                    )
                     .ConfigureAwait(false);
 
                 bytesRead += entry.Size;
