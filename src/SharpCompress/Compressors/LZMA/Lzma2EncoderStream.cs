@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -77,6 +79,56 @@ internal sealed class Lzma2EncoderStream : Stream
         }
     }
 
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        while (count > 0)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            Buffer.BlockCopy(buffer, offset, _buffer, _bufferPosition, toCopy);
+            _bufferPosition += toCopy;
+            offset += toCopy;
+            count -= toCopy;
+
+            if (_bufferPosition == _buffer.Length)
+            {
+                await FlushChunkAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var offset = 0;
+        var count = buffer.Length;
+        while (count > 0)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            buffer.Slice(offset, toCopy).Span.CopyTo(_buffer.AsSpan(_bufferPosition, toCopy));
+            _bufferPosition += toCopy;
+            offset += toCopy;
+            count -= toCopy;
+
+            if (_bufferPosition == _buffer.Length)
+            {
+                await FlushChunkAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+#endif
+
     public override void Flush() { }
 
     public override int Read(byte[] buffer, int offset, int count) =>
@@ -102,6 +154,29 @@ internal sealed class Lzma2EncoderStream : Stream
             _output.WriteByte(0x00);
         }
         base.Dispose(disposing);
+    }
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+    public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
+    {
+        if (!_isDisposed)
+        {
+            _isDisposed = true;
+
+            if (_bufferPosition > 0)
+            {
+                await FlushChunkAsync().ConfigureAwait(false);
+            }
+
+            await _output.WriteAsync(new byte[] { 0x00 }, 0, 1).ConfigureAwait(false);
+        }
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+        await base.DisposeAsync().ConfigureAwait(false);
+#endif
     }
 
     private void FlushChunk()
@@ -138,6 +213,43 @@ internal sealed class Lzma2EncoderStream : Stream
         else
         {
             WriteUncompressedChunks(uncompressedData);
+        }
+    }
+
+    private async ValueTask FlushChunkAsync(CancellationToken cancellationToken = default)
+    {
+        if (_bufferPosition == 0)
+        {
+            return;
+        }
+
+        var uncompressedData = _buffer.AsMemory(0, _bufferPosition);
+        _bufferPosition = 0;
+
+        byte[] compressed;
+        try
+        {
+            compressed = CompressBlock(uncompressedData.Span);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+        {
+            await WriteUncompressedChunksAsync(uncompressedData, cancellationToken)
+                .ConfigureAwait(false);
+            return;
+        }
+
+        if (
+            compressed.Length <= MAX_COMPRESSED_CHUNK_SIZE
+            && compressed.Length < uncompressedData.Length
+        )
+        {
+            await WriteCompressedChunkAsync(uncompressedData.Length, compressed, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            await WriteUncompressedChunksAsync(uncompressedData, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 
@@ -225,6 +337,32 @@ internal sealed class Lzma2EncoderStream : Stream
         _output.Write(compressedData, 0, compressedData.Length);
     }
 
+    private async ValueTask WriteCompressedChunkAsync(
+        int uncompressedSize,
+        byte[] compressedData,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var uncompSizeMinus1 = uncompressedSize - 1;
+        var compSizeMinus1 = compressedData.Length - 1;
+        var control = (byte)(0xE0 | ((uncompSizeMinus1 >> 16) & 0x1F));
+        _isFirstChunk = false;
+
+        var header = new[]
+        {
+            control,
+            (byte)((uncompSizeMinus1 >> 8) & 0xFF),
+            (byte)(uncompSizeMinus1 & 0xFF),
+            (byte)((compSizeMinus1 >> 8) & 0xFF),
+            (byte)(compSizeMinus1 & 0xFF),
+            _lzmaPropertiesByte,
+        };
+        await _output.WriteAsync(header, 0, header.Length, cancellationToken).ConfigureAwait(false);
+        await _output
+            .WriteAsync(compressedData, 0, compressedData.Length, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Writes data as uncompressed LZMA2 sub-chunks (max 64KB each).
     /// Header: [control] [size_hi] [size_lo]
@@ -255,6 +393,46 @@ internal sealed class Lzma2EncoderStream : Stream
             _output.WriteByte((byte)(sizeMinus1 & 0xFF));
 
             _output.Write(data.Slice(offset, chunkSize));
+            offset += chunkSize;
+        }
+    }
+
+    private async ValueTask WriteUncompressedChunksAsync(
+        ReadOnlyMemory<byte> data,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var offset = 0;
+        while (offset < data.Length)
+        {
+            var chunkSize = Math.Min(data.Length - offset, MAX_UNCOMPRESSED_SUBCHUNK_SIZE);
+            var sizeMinus1 = chunkSize - 1;
+
+            byte control;
+            if (_isFirstChunk)
+            {
+                control = 0x01;
+                _isFirstChunk = false;
+            }
+            else
+            {
+                control = 0x02;
+            }
+
+            var header = new[]
+            {
+                control,
+                (byte)((sizeMinus1 >> 8) & 0xFF),
+                (byte)(sizeMinus1 & 0xFF),
+            };
+            await _output
+                .WriteAsync(header, 0, header.Length, cancellationToken)
+                .ConfigureAwait(false);
+
+            var chunk = data.Slice(offset, chunkSize).ToArray();
+            await _output
+                .WriteAsync(chunk, 0, chunk.Length, cancellationToken)
+                .ConfigureAwait(false);
             offset += chunkSize;
         }
     }

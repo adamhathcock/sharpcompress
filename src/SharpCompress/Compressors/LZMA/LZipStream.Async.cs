@@ -1,14 +1,98 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Crypto;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
 public sealed partial class LZipStream
 {
+    public static LZipStream Create(Stream stream, CompressionMode mode, bool leaveOpen = false)
+    {
+        if (mode == CompressionMode.Compress)
+        {
+            WriteHeaderSize(stream);
+        }
+        return new LZipStream(stream, mode, leaveOpen);
+    }
+
+    public static async ValueTask<LZipStream> CreateAsync(
+        Stream stream,
+        CompressionMode mode,
+        bool leaveOpen = false,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (mode == CompressionMode.Compress)
+        {
+            await WriteHeaderSizeAsync(stream).ConfigureAwait(false);
+        }
+        return new LZipStream(stream, mode, leaveOpen);
+    }
+
+    public async ValueTask FinishAsync()
+    {
+        if (_finished)
+        {
+            return;
+        }
+
+        if (Mode == CompressionMode.Compress)
+        {
+            var crc32Stream = (Crc32Stream)_stream;
+            await FinishWrappedStreamAsync(crc32Stream).ConfigureAwait(false);
+            var compressedCount = _countingWritableSubStream.NotNull().BytesWritten;
+
+            var intBuf = new byte[8];
+            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
+            await _countingWritableSubStream
+                .NotNull()
+                .WriteAsync(intBuf, 0, 4, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            BinaryPrimitives.WriteInt64LittleEndian(intBuf, _writeCount);
+            await _countingWritableSubStream
+                .NotNull()
+                .WriteAsync(intBuf, 0, intBuf.Length, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            // Total member size includes the 6-byte header and 20-byte trailer.
+            BinaryPrimitives.WriteUInt64LittleEndian(
+                intBuf,
+                (ulong)compressedCount + (ulong)(6 + 20)
+            );
+            await _countingWritableSubStream
+                .NotNull()
+                .WriteAsync(intBuf, 0, intBuf.Length, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+
+        _finished = true;
+    }
+
+    public static async ValueTask WriteHeaderSizeAsync(Stream stream) =>
+        // hard coding the dictionary size encoding
+        await stream.WriteAsync(headerBytes, 0, 6).ConfigureAwait(false);
+
+    private static async ValueTask FinishWrappedStreamAsync(Crc32Stream crc32Stream)
+    {
+        if (crc32Stream.WrappedStream is IAsyncDisposable asyncDisposableWrappedStream)
+        {
+            await asyncDisposableWrappedStream.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+#pragma warning disable VSTHRD103 // Fallback for streams that do not support async disposal.
+            crc32Stream.WrappedStream.Dispose();
+            crc32Stream.Dispose();
+#pragma warning restore VSTHRD103
+        }
+    }
+
     /// <summary>
     /// Asynchronously determines if the given stream is positioned at the start of a v1 LZip
     /// file, as indicated by the ASCII characters "LZIP" and a version byte

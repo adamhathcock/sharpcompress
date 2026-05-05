@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
@@ -12,27 +10,43 @@ namespace SharpCompress.Writers.Tar;
 
 public partial class TarWriter : AbstractWriter
 {
-    private readonly bool finalizeArchiveOnClose;
-    private TarHeaderWriteFormat headerFormat;
+    private readonly bool _finalizeArchiveOnClose;
+    private readonly TarHeaderWriteFormat _headerFormat;
 
     public TarWriter(Stream destination, TarWriterOptions options)
-        : base(ArchiveType.Tar, options)
+        : base(ArchiveType.Tar, GetEffectiveOptions(options))
     {
-        finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
-        headerFormat = options.HeaderFormat;
+        _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        _headerFormat = options.HeaderFormat;
 
-        if (!destination.CanWrite)
+        InitializeStream(CreateOutputStream(destination, options));
+    }
+
+    internal TarWriter(Stream destination, TarWriterOptions options, bool streamIsPrepared)
+        : base(ArchiveType.Tar, GetEffectiveOptions(options))
+    {
+        _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        _headerFormat = options.HeaderFormat;
+
+        InitializeStream(streamIsPrepared ? destination : CreateOutputStream(destination, options));
+    }
+
+    private static TarWriterOptions GetEffectiveOptions(TarWriterOptions options) =>
+        options with
         {
-            throw new ArgumentException("Tars require writable streams.");
-        }
-        if (WriterOptions.LeaveStreamOpen)
+            CompressionType = CompressionType.None,
+            LeaveStreamOpen = false,
+        };
+
+    private static Stream CreateOutputStream(Stream destination, TarWriterOptions options)
+    {
+        if (options.LeaveStreamOpen)
         {
             destination = SharpCompressStream.CreateNonDisposing(destination);
         }
 
         var providers = options.Providers;
-
-        destination = options.CompressionType switch
+        return options.CompressionType switch
         {
             CompressionType.None => destination,
             CompressionType.BZip2 => providers.CreateCompressStream(
@@ -54,8 +68,6 @@ public partial class TarWriter : AbstractWriter
                 "Tar does not support compression: " + options.CompressionType
             ),
         };
-
-        InitializeStream(destination);
     }
 
     public override void Write(string filename, Stream source, DateTime? modificationTime) =>
@@ -114,7 +126,7 @@ public partial class TarWriter : AbstractWriter
 
         var realSize = size ?? source.Length;
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding, headerFormat);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
 
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
@@ -134,9 +146,9 @@ public partial class TarWriter : AbstractWriter
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing)
+        if (isDisposing && !_isDisposed)
         {
-            if (finalizeArchiveOnClose)
+            if (_finalizeArchiveOnClose)
             {
                 OutputStream.NotNull().Write(stackalloc byte[1024]);
             }
@@ -145,6 +157,7 @@ public partial class TarWriter : AbstractWriter
             {
                 finishable.Finish();
             }
+            _isDisposed = true;
         }
         base.Dispose(isDisposing);
     }

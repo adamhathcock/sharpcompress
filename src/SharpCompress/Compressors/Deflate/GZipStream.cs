@@ -38,6 +38,9 @@ using SharpCompress.Common.Options;
 namespace SharpCompress.Compressors.Deflate;
 
 public partial class GZipStream : Stream
+#if LEGACY_DOTNET
+        , IAsyncDisposable
+#endif
 {
     internal static readonly DateTime UNIX_EPOCH = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -430,7 +433,7 @@ public partial class GZipStream : Stream
 
     public int Crc32 { get; private set; }
 
-    private int EmitHeader()
+    private byte[] BuildHeader()
     {
         var commentBytes = (Comment is null) ? null : _encoding.GetBytes(Comment);
         var filenameBytes = (FileName is null) ? null : _encoding.GetBytes(FileName);
@@ -494,8 +497,22 @@ public partial class GZipStream : Stream
             header[i++] = 0; // terminate
         }
 
-        BaseStream._stream.Write(header, 0, header.Length);
+        return header;
+    }
 
+    private int EmitHeader()
+    {
+        var header = BuildHeader();
+        BaseStream._stream.Write(header, 0, header.Length);
+        return header.Length; // bytes written
+    }
+
+    private async Task<int> EmitHeaderAsync(CancellationToken cancellationToken)
+    {
+        var header = BuildHeader();
+        await BaseStream
+            ._stream.WriteAsync(header, 0, header.Length, cancellationToken)
+            .ConfigureAwait(false);
         return header.Length; // bytes written
     }
 }

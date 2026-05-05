@@ -29,7 +29,7 @@ public sealed partial class LZipStream : Stream, IFinishable
     private readonly Stream? _originalStream;
     private readonly bool _leaveOpen;
 
-    public LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
+    private LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
     {
         Mode = mode;
         _originalStream = stream;
@@ -49,8 +49,6 @@ public sealed partial class LZipStream : Stream, IFinishable
         {
             //default
             var dSize = 104 * 1024;
-            WriteHeaderSize(stream);
-
             _countingWritableSubStream = new CountingStream(
                 SharpCompressStream.CreateNonDisposing(stream)
             );

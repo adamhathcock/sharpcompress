@@ -550,15 +550,20 @@ internal class ZlibBaseStream : Stream, IStreamStack
         }
     }
 
-#if !LEGACY_DOTNET
+#if !LEGACY_DOTNET || NETSTANDARD2_1
     public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
     {
         if (isDisposed)
         {
             return;
         }
         isDisposed = true;
+#if !LEGACY_DOTNET || NETSTANDARD2_1
         await base.DisposeAsync().ConfigureAwait(false);
+#endif
         if (_stream is null)
         {
             return;
@@ -574,13 +579,19 @@ internal class ZlibBaseStream : Stream, IStreamStack
             {
                 if (!_leaveOpen)
                 {
-                    await _stream.DisposeAsync().ConfigureAwait(false);
+                    if (_stream is IAsyncDisposable asyncDisposableStream)
+                    {
+                        await asyncDisposableStream.DisposeAsync().ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        _stream.Dispose();
+                    }
                 }
                 _stream = null;
             }
         }
     }
-#endif
 
     public override void Flush()
     {

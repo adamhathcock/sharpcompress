@@ -4,11 +4,45 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
 public partial class TarWriter
 {
+    /// <summary>
+    /// Asynchronously disposes the writer, writing the archive finalization record if required.
+    /// </summary>
+    public override async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+        GC.SuppressFinalize(this);
+        _isDisposed = true;
+
+        if (_finalizeArchiveOnClose)
+        {
+            await OutputStream.NotNull().WriteAsync(new byte[1024], 0, 1024).ConfigureAwait(false);
+        }
+        if (OutputStream is IFinishable finishable)
+        {
+            await finishable.FinishAsync().ConfigureAwait(false);
+        }
+        if (OutputStream is IAsyncDisposable asyncDisposableOutputStream)
+        {
+            await asyncDisposableOutputStream.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            OutputStream?.Dispose();
+        }
+        // base.DisposeAsync() is a no-op since _isDisposed is already set
+        await base.DisposeAsync().ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Asynchronously writes a directory entry to the TAR archive.
     /// </summary>

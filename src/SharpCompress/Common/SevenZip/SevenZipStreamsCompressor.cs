@@ -122,7 +122,7 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
             uint inputCrc2;
             long inputSize2;
             {
-                using var lzma2Stream = new Lzma2EncoderStream(
+                await using var lzma2Stream = new Lzma2EncoderStream(
                     outCrcStream,
                     encoderProperties.DictionarySize,
                     encoderProperties.NumFastBytes
@@ -152,7 +152,7 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
         uint inputCrc;
         long inputSize;
         {
-            using var lzmaStream = LzmaStream.Create(encoderProperties, false, outCrcStream);
+            await using var lzmaStream = LzmaStream.Create(encoderProperties, false, outCrcStream);
             properties = lzmaStream.Properties;
 
             (inputCrc, inputSize) = await CopyWithCrcAsync(

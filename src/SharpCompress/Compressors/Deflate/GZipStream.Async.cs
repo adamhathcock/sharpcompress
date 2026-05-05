@@ -82,7 +82,7 @@ public partial class GZipStream
             if (BaseStream._wantCompress)
             {
                 // first write in compression, therefore, emit the GZIP header
-                _headerByteCount = EmitHeader();
+                _headerByteCount = await EmitHeaderAsync(cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -108,7 +108,7 @@ public partial class GZipStream
             if (BaseStream._wantCompress)
             {
                 // first write in compression, therefore, emit the GZIP header
-                _headerByteCount = EmitHeader();
+                _headerByteCount = await EmitHeaderAsync(cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -118,19 +118,27 @@ public partial class GZipStream
 
         await BaseStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
     }
+#endif
 
+#if !LEGACY_DOTNET || NETSTANDARD2_1
     public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
     {
         if (_disposed)
         {
             return;
         }
+
         _disposed = true;
         if (BaseStream != null)
         {
             await BaseStream.DisposeAsync().ConfigureAwait(false);
         }
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
         await base.DisposeAsync().ConfigureAwait(false);
-    }
 #endif
+    }
 }

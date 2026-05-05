@@ -12,7 +12,7 @@ public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions wr
     : IWriter,
         IAsyncWriter
 {
-    private bool _isDisposed;
+    protected bool _isDisposed;
 
     //always initializes the stream
 
@@ -53,7 +53,7 @@ public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions wr
 
     protected virtual void Dispose(bool isDisposing)
     {
-        if (isDisposing)
+        if (isDisposing && !WriterOptions.LeaveStreamOpen)
         {
             OutputStream?.Dispose();
         }

@@ -11,12 +11,8 @@ public sealed partial class BZip2Stream : Stream, IFinishable
 {
     private Stream stream = default!;
     private bool isDisposed;
-    private readonly bool leaveOpen;
 
-    private BZip2Stream(bool leaveOpen)
-    {
-        this.leaveOpen = leaveOpen;
-    }
+    private BZip2Stream() { }
 
     /// <summary>
     /// Create a BZip2Stream
@@ -31,11 +27,11 @@ public sealed partial class BZip2Stream : Stream, IFinishable
         bool leaveOpen = false
     )
     {
-        var bZip2Stream = new BZip2Stream(leaveOpen);
+        var bZip2Stream = new BZip2Stream();
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {
-            bZip2Stream.stream = new CBZip2OutputStream(stream);
+            bZip2Stream.stream = new CBZip2OutputStream(stream, leaveOpen);
         }
         else
         {
@@ -49,11 +45,13 @@ public sealed partial class BZip2Stream : Stream, IFinishable
         return bZip2Stream;
     }
 
+    public ValueTask FinishAsync() => (stream as CBZip2OutputStream)?.FinishAsync() ?? default;
+
     public void Finish() => (stream as CBZip2OutputStream)?.Finish();
 
     protected override void Dispose(bool disposing)
     {
-        if (isDisposed || leaveOpen)
+        if (isDisposed)
         {
             base.Dispose(disposing);
             return;

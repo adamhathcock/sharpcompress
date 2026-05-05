@@ -6,30 +6,18 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Writers;
 
-public abstract partial class AbstractWriter
+public interface IAsyncWriter : IAsyncDisposable
 {
-    public abstract ValueTask WriteAsync(
+    ArchiveType WriterType { get; }
+    ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
     );
-
-    public abstract ValueTask WriteDirectoryAsync(
+    ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
     );
-
-    public virtual ValueTask DisposeAsync()
-    {
-        if (!_isDisposed)
-        {
-            GC.SuppressFinalize(this);
-            Dispose(true);
-            _isDisposed = true;
-        }
-
-        return new();
-    }
 }

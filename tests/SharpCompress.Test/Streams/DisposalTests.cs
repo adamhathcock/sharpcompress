@@ -156,7 +156,7 @@ public class DisposalTests
         // LZipStream now supports leaveOpen parameter
         // Use Compress mode to avoid need for valid input header
         VerifyStreamDisposal(
-            (stream, leaveOpen) => new LZipStream(stream, CompressionMode.Compress, leaveOpen)
+            (stream, leaveOpen) => LZipStream.Create(stream, CompressionMode.Compress, leaveOpen)
         );
     }
 

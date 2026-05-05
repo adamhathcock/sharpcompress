@@ -332,9 +332,6 @@ internal sealed class CBZip2OutputStream : Stream
         zptr = null;
         ftab = null;
 
-        inStream.WriteByte((byte)'B');
-        inStream.WriteByte((byte)'Z');
-
         BsSetStream(inStream);
 
         workFactor = 50;
@@ -348,9 +345,11 @@ internal sealed class CBZip2OutputStream : Stream
         }
         blockSize100k = inBlockSize;
         AllocateCompressStructures();
-        Initialize();
-        InitBlock();
+        // Defer Initialize() and InitBlock() to EnsureStreamHeaderWritten/Async:
+        // they write to the underlying stream which may be async-only.
     }
+
+    private bool _streamHeaderWritten;
 
     /**
     *
@@ -358,8 +357,53 @@ internal sealed class CBZip2OutputStream : Stream
     *
     */
 
+    /// <summary>
+    /// Ensures the BZip2 stream header ('B', 'Z', 'h', blocksize) has been written
+    /// synchronously before the first compressed byte is written.
+    /// </summary>
+    private void EnsureStreamHeaderWritten()
+    {
+        if (!_streamHeaderWritten)
+        {
+            _streamHeaderWritten = true;
+            bsStream.WriteByte((byte)'B');
+            bsStream.WriteByte((byte)'Z');
+            Initialize();
+            InitBlock();
+        }
+    }
+
+    /// <summary>
+    /// Ensures the BZip2 stream header ('B', 'Z', 'h', blocksize) has been written
+    /// asynchronously before the first compressed byte is written.
+    /// </summary>
+    private async Task EnsureStreamHeaderWrittenAsync(CancellationToken cancellationToken)
+    {
+        if (!_streamHeaderWritten)
+        {
+            _streamHeaderWritten = true;
+            // Write 'B', 'Z', 'h' async, then set up bit buffer as Initialize() would.
+            // Initialize() calls BsPutUChar('h') then BsPutUChar('0'+N):
+            //   - First call buffers 'h' (bsLive=8)
+            //   - Second call flushes 'h' to stream, then buffers '0'+N (bsLive=8)
+            // So after Initialize(), stream has 'h' and bit buffer has '0'+N with bsLive=8.
+            var header = new byte[] { (byte)'B', (byte)'Z', (byte)'h' };
+            await bsStream
+                .WriteAsync(header, 0, header.Length, cancellationToken)
+                .ConfigureAwait(false);
+            // Replicate the bit buffer state that Initialize() leaves:
+            bytesOut = 1; // 'h' was written via BsW (Initialize increments bytesOut via BsW)
+            nBlocksRandomised = 0;
+            combinedCRC = 0;
+            bsBuff = (blockSize100k + '0') << 24;
+            bsLive = 8;
+            InitBlock();
+        }
+    }
+
     public override void WriteByte(byte bv)
     {
+        EnsureStreamHeaderWritten();
         var b = (256 + bv) % 256;
         if (currentChar != -1)
         {
@@ -471,6 +515,7 @@ internal sealed class CBZip2OutputStream : Stream
             return;
         }
 
+        EnsureStreamHeaderWritten();
         if (runLength > 0)
         {
             WriteRun();
@@ -2002,25 +2047,116 @@ internal sealed class CBZip2OutputStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count)
     {
+        EnsureStreamHeaderWritten();
         for (var k = 0; k < count; ++k)
         {
             WriteByte(buffer[k + offset]);
         }
     }
 
-    public override Task WriteAsync(
+    public override async Task WriteAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken = default
     )
     {
+        await EnsureStreamHeaderWrittenAsync(cancellationToken).ConfigureAwait(false);
         for (var k = 0; k < count; ++k)
         {
             cancellationToken.ThrowIfCancellationRequested();
             WriteByte(buffer[k + offset]);
         }
-        return Task.CompletedTask;
+    }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await EnsureStreamHeaderWrittenAsync(cancellationToken).ConfigureAwait(false);
+        for (var k = 0; k < buffer.Length; ++k)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            WriteByte(buffer.Span[k]);
+        }
+    }
+#endif
+
+    /// <summary>
+    /// Asynchronously finalizes the BZip2 compressed stream, flushing all pending data.
+    /// Writes the remaining compressed data to the underlying stream using async I/O.
+    /// </summary>
+    public async ValueTask FinishAsync(CancellationToken cancellationToken = default)
+    {
+        if (finished)
+        {
+            return;
+        }
+
+        await EnsureStreamHeaderWrittenAsync(cancellationToken).ConfigureAwait(false);
+
+        // Run the CPU-bound finalization synchronously into a temporary MemoryStream
+        // to avoid synchronous writes to the potentially async-only underlying stream.
+        using var tempStream = new MemoryStream();
+        var realStream = bsStream;
+        bsStream = tempStream;
+
+        try
+        {
+            if (runLength > 0)
+            {
+                WriteRun();
+            }
+            currentChar = -1;
+            EndBlock();
+            EndCompression();
+            finished = true;
+        }
+        finally
+        {
+            bsStream = realStream;
+        }
+
+        // Async-copy the buffered compressed data to the real stream
+        tempStream.Position = 0;
+        await tempStream.CopyToAsync(realStream, 81920, cancellationToken).ConfigureAwait(false);
+        await realStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+    public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        await FinishAsync().ConfigureAwait(false);
+        disposed = true;
+        if (!leaveOpen && bsStream is not null)
+        {
+            if (bsStream is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                bsStream.Dispose();
+            }
+        }
+        bsStream = null;
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+        await base.DisposeAsync().ConfigureAwait(false);
+#else
+        await Task.CompletedTask.ConfigureAwait(false);
+#endif
+        GC.SuppressFinalize(this);
     }
 
     public override bool CanRead => false;

@@ -1,6 +1,8 @@
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.SevenZip;
@@ -41,6 +43,28 @@ internal static class SevenZipSignatureHeaderWriter
     }
 
     /// <summary>
+    /// Asynchronously writes a placeholder signature header (all zeros for CRC/offset fields).
+    /// Call this at the start of archive creation to reserve space.
+    /// </summary>
+    public static async Task WritePlaceholderAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var header = new byte[HeaderSize];
+
+        // magic signature
+        Array.Copy(Signature, 0, header, 0, Signature.Length);
+
+        // version: major=0, minor=2 (standard 7z format)
+        header[6] = 0;
+        header[7] = 2;
+
+        // remaining 24 bytes are zero (placeholder for CRC and StartHeader)
+        await stream.WriteAsync(header, 0, header.Length, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Writes the final signature header with correct offsets and CRCs.
     /// The stream must be seekable; this method seeks to position 0.
     /// </summary>
@@ -50,6 +74,38 @@ internal static class SevenZipSignatureHeaderWriter
     /// <param name="nextHeaderCrc">CRC32 of the metadata header bytes.</param>
     public static void WriteFinal(
         Stream stream,
+        ulong nextHeaderOffset,
+        ulong nextHeaderSize,
+        uint nextHeaderCrc
+    )
+    {
+        var header = BuildFinalHeader(nextHeaderOffset, nextHeaderSize, nextHeaderCrc);
+
+        // Write at position 0
+        stream.Position = 0;
+        stream.Write(header, 0, header.Length);
+    }
+
+    /// <summary>
+    /// Asynchronously writes the final signature header with correct offsets and CRCs.
+    /// The stream must be seekable; this method seeks to position 0.
+    /// </summary>
+    public static async Task WriteFinalAsync(
+        Stream stream,
+        ulong nextHeaderOffset,
+        ulong nextHeaderSize,
+        uint nextHeaderCrc,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var header = BuildFinalHeader(nextHeaderOffset, nextHeaderSize, nextHeaderCrc);
+
+        // Write at position 0
+        stream.Position = 0;
+        await stream.WriteAsync(header, 0, header.Length, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static byte[] BuildFinalHeader(
         ulong nextHeaderOffset,
         ulong nextHeaderSize,
         uint nextHeaderCrc
@@ -84,8 +140,6 @@ internal static class SevenZipSignatureHeaderWriter
         // StartHeader
         Array.Copy(startHeader, 0, header, 12, startHeader.Length);
 
-        // Write at position 0
-        stream.Position = 0;
-        stream.Write(header, 0, header.Length);
+        return header;
     }
 }
