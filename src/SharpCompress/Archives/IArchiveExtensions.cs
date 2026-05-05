@@ -49,11 +49,7 @@ public static class IArchiveExtensions
             {
                 if (entry.IsDirectory)
                 {
-                    entry.WriteEntryToDirectoryCore(
-                        fullDestinationDirectoryPath,
-                        options,
-                        _ => { }
-                    );
+                    entry.WriteEntryToDirectoryCore(fullDestinationDirectoryPath, options, null);
                     continue;
                 }
 

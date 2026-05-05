@@ -74,7 +74,7 @@ public static class IAsyncArchiveExtensions
                         .WriteEntryToDirectoryAsyncCore(
                             fullDestinationDirectoryPath,
                             options,
-                            (_, _) => new ValueTask(),
+                            null,
                             cancellationToken
                         )
                         .ConfigureAwait(false);

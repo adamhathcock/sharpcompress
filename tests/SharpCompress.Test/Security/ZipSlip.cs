@@ -23,13 +23,19 @@ public class ZipSlip : TestBase
 
         BuildMaliciousZip(archivePath);
 
-        using var archive = ArchiveFactory.OpenArchive(archivePath);
-
-        var ex = Assert.Throws<ExtractionException>(() =>
-            archive.WriteToDirectory(extractDir, new ExtractionOptions { ExtractFullPath = true })
-        );
-        ex.Message.Should()
-            .Contain("Entry is trying to create a directory outside of the destination directory");
+        using (var archive = ArchiveFactory.OpenArchive(archivePath))
+        {
+            var ex = Assert.Throws<ExtractionException>(() =>
+                archive.WriteToDirectory(
+                    extractDir,
+                    new ExtractionOptions { ExtractFullPath = true }
+                )
+            );
+            ex.Message.Should()
+                .Contain(
+                    "Entry is trying to create a directory outside of the destination directory"
+                );
+        }
 
         CheckResults(archivePath, parentDir, extractDir);
     }
@@ -79,10 +85,10 @@ public class ZipSlip : TestBase
         zip.CreateEntry("safe_subdir/");
     }
 
-    static (string extractDir, string parentDir) SetupDirs(string label)
+    private (string extractDir, string parentDir) SetupDirs(string label)
     {
         var parentDir = Path.Combine(
-            TEST_ARCHIVES_PATH,
+            SCRATCH_FILES_PATH,
             $"sc_poc_{label}_{Path.GetRandomFileName()}"
         );
         Directory.CreateDirectory(parentDir);

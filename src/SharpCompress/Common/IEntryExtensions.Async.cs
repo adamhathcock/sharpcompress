@@ -34,7 +34,7 @@ internal static partial class IEntryExtensions
         internal async ValueTask WriteEntryToDirectoryAsyncCore(
             string fullDestinationDirectoryPath,
             ExtractionOptions options,
-            Func<string, CancellationToken, ValueTask> writeAsync,
+            Func<string, CancellationToken, ValueTask>? writeAsync,
             CancellationToken cancellationToken = default
         )
         {
@@ -53,8 +53,6 @@ internal static partial class IEntryExtensions
                     fullDestinationDirectoryPath,
                     DirectoryManagement.WriteFileOutsideDestinationMessage
                 );
-
-                await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
             }
             else if (options.ExtractFullPath)
             {
@@ -70,6 +68,11 @@ internal static partial class IEntryExtensions
                 {
                     Directory.CreateDirectory(destinationFileName);
                 }
+            }
+
+            if (writeAsync != null)
+            {
+                await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
             }
         }
 

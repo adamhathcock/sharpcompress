@@ -27,7 +27,7 @@ internal static partial class IEntryExtensions
         internal void WriteEntryToDirectoryCore(
             string fullDestinationDirectoryPath,
             ExtractionOptions options,
-            Action<string> write
+            Action<string>? write
         )
         {
             var destinationFileName = GetEntryDestinationFileName(
@@ -45,8 +45,6 @@ internal static partial class IEntryExtensions
                     fullDestinationDirectoryPath,
                     DirectoryManagement.WriteFileOutsideDestinationMessage
                 );
-
-                write(destinationFileName);
             }
             else if (options.ExtractFullPath)
             {
@@ -63,6 +61,7 @@ internal static partial class IEntryExtensions
                     Directory.CreateDirectory(destinationFileName);
                 }
             }
+            write?.Invoke(destinationFileName);
         }
 
         private string GetEntryDestinationFileName(
