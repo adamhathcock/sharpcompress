@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
@@ -9,14 +8,6 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveExtensions
 {
-    /// <summary>
-    /// Gets the appropriate StringComparison for path checks based on the file system.
-    /// Windows uses case-insensitive file systems, while Unix-like systems use case-sensitive file systems.
-    /// </summary>
-    private static StringComparison PathComparison =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
     extension(IArchive archive)
     {
         /// <summary>
@@ -83,7 +74,7 @@ public static class IArchiveExtensions
 
                     if (!Directory.Exists(destdir) && seenDirectories.Add(destdir))
                     {
-                        if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
+                        if (!destdir.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
                         {
                             throw new ExtractionException(
                                 "Entry is trying to create a directory outside of the destination directory."

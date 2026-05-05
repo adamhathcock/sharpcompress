@@ -1,20 +1,10 @@
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace SharpCompress.Common;
 
 internal static partial class ExtractionMethods
 {
-    /// <summary>
-    /// Gets the appropriate StringComparison for path checks based on the file system.
-    /// Windows uses case-insensitive file systems, while Unix-like systems use case-sensitive file systems.
-    /// </summary>
-    private static StringComparison PathComparison =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-
     /// <summary>
     /// Extract to specific directory, retaining filename
     /// </summary>
@@ -55,7 +45,7 @@ internal static partial class ExtractionMethods
 
             if (!Directory.Exists(destdir))
             {
-                if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
+                if (!destdir.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
                 {
                     throw new ExtractionException(
                         "Entry is trying to create a directory outside of the destination directory."
@@ -75,7 +65,7 @@ internal static partial class ExtractionMethods
         {
             destinationFileName = Path.GetFullPath(destinationFileName);
 
-            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
+            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
             {
                 throw new ExtractionException(
                     "Entry is trying to write a file outside of the destination directory."

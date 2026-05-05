@@ -45,7 +45,7 @@ internal static partial class ExtractionMethods
 
             if (!Directory.Exists(destdir))
             {
-                if (!destdir.StartsWith(fullDestinationDirectoryPath, PathComparison))
+                if (!destdir.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
                 {
                     throw new ExtractionException(
                         "Entry is trying to create a directory outside of the destination directory."
@@ -65,7 +65,7 @@ internal static partial class ExtractionMethods
         {
             destinationFileName = Path.GetFullPath(destinationFileName);
 
-            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, PathComparison))
+            if (!destinationFileName.StartsWith(fullDestinationDirectoryPath, Utility.PathComparison))
             {
                 throw new ExtractionException(
                     "Entry is trying to write a file outside of the destination directory."

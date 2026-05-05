@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,15 @@ namespace SharpCompress;
 
 internal static partial class Utility
 {
+    /// <summary>
+    /// Gets the appropriate StringComparison for path checks based on the file system.
+    /// Windows uses case-insensitive file systems, while Unix-like systems use case-sensitive file systems.
+    /// </summary>
+    internal static StringComparison PathComparison =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
     public static bool UseSyncOverAsyncDispose()
     {
         var useSyncOverAsync = false;
