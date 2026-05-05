@@ -2095,6 +2095,8 @@ internal sealed class CBZip2OutputStream : Stream
             return;
         }
 
+        await EnsureStreamHeaderWrittenAsync(cancellationToken).ConfigureAwait(false);
+
         // Run the CPU-bound finalization synchronously into a temporary MemoryStream
         // to avoid synchronous writes to the potentially async-only underlying stream.
         using var tempStream = new MemoryStream();
@@ -2121,6 +2123,40 @@ internal sealed class CBZip2OutputStream : Stream
         tempStream.Position = 0;
         await tempStream.CopyToAsync(realStream, 81920, cancellationToken).ConfigureAwait(false);
         await realStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+    public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        await FinishAsync().ConfigureAwait(false);
+        disposed = true;
+        if (!leaveOpen && bsStream is not null)
+        {
+            if (bsStream is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                bsStream.Dispose();
+            }
+        }
+        bsStream = null;
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+        await base.DisposeAsync().ConfigureAwait(false);
+#else
+        await Task.CompletedTask.ConfigureAwait(false);
+#endif
+        GC.SuppressFinalize(this);
     }
 
     public override bool CanRead => false;

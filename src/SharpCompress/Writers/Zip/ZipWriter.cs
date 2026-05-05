@@ -399,7 +399,6 @@ public partial class ZipWriter : AbstractWriter
         private ICompressionProviderHooks? compressionProviderHooks;
         private CompressionContext? compressionContext;
         private CountingStream? counting;
-        private MemoryStream? asyncCompressionBuffer;
         private ulong decompressed;
 
         // Flag to prevent throwing exceptions on Dispose
@@ -417,7 +416,6 @@ public partial class ZipWriter : AbstractWriter
         {
             this.writer = writer;
             this.originalStream = originalStream;
-            this.writer = writer;
             this.entry = entry;
             this.zipCompressionMethod = zipCompressionMethod;
             this.compressionLevel = compressionLevel;
@@ -434,17 +432,6 @@ public partial class ZipWriter : AbstractWriter
         )
         {
             var compressionStream = originalStream;
-            MemoryStream? asyncCompressionBuffer = null;
-            if (
-                zipCompressionMethod
-                is ZipCompressionMethod.BZip2
-                    or ZipCompressionMethod.LZMA
-                    or ZipCompressionMethod.PPMd
-            )
-            {
-                asyncCompressionBuffer = new MemoryStream();
-                compressionStream = asyncCompressionBuffer;
-            }
 
             var stream = new ZipWritingStream(
                 writer,
@@ -454,7 +441,6 @@ public partial class ZipWriter : AbstractWriter
                 compressionLevel,
                 compressionStream
             );
-            stream.asyncCompressionBuffer = asyncCompressionBuffer;
             await Task.CompletedTask.ConfigureAwait(false);
             return stream;
         }
@@ -902,14 +888,6 @@ public partial class ZipWriter : AbstractWriter
             var zip64 = entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
             var compressedvalue = zip64 ? uint.MaxValue : (uint)countingCount;
             var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
-
-            if (asyncCompressionBuffer is not null)
-            {
-                asyncCompressionBuffer.Position = 0;
-                await asyncCompressionBuffer
-                    .CopyToAsync(originalStream, 81920, CancellationToken.None)
-                    .ConfigureAwait(false);
-            }
 
             if (originalStream.CanSeek)
             {

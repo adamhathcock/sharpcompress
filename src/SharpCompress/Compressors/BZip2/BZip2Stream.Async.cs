@@ -34,11 +34,11 @@ public sealed partial class BZip2Stream
         CancellationToken cancellationToken = default
     )
     {
-        var bZip2Stream = new BZip2Stream(leaveOpen);
+        var bZip2Stream = new BZip2Stream();
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {
-            bZip2Stream.stream = new CBZip2OutputStream(stream);
+            bZip2Stream.stream = new CBZip2OutputStream(stream, leaveOpen);
         }
         else
         {
@@ -98,4 +98,33 @@ public sealed partial class BZip2Stream
         int count,
         CancellationToken cancellationToken = default
     ) => await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+    public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
+    {
+        if (isDisposed)
+        {
+            return;
+        }
+
+        isDisposed = true;
+        if (stream is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            stream.Dispose();
+        }
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+        await base.DisposeAsync().ConfigureAwait(false);
+#else
+        await Task.CompletedTask.ConfigureAwait(false);
+#endif
+        GC.SuppressFinalize(this);
+    }
 }
