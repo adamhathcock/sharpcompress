@@ -275,4 +275,23 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         Assert.Equal(2, numberOfEntries);
     }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    public async ValueTask TarArchive_CompressedTar_AllEntriesCanBeEnumerated_Async(
+        string archiveFileName
+    )
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveFileName));
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
+
+        Assert.Equal(ArchiveType.Tar, archive.Type);
+        // The compressed archives contain 6 entries (directories + files).
+        // This test verifies that entry enumeration does not fail after the first
+        // non-empty entry, which was broken for compressed (streaming) tars.
+        Assert.Equal(6, await archive.EntriesAsync.CountAsync());
+    }
 }

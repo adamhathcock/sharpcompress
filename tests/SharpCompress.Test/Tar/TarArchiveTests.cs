@@ -330,6 +330,49 @@ public class TarArchiveTests : ArchiveTests
         Assert.NotEmpty(archive.Entries);
     }
 
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    public void TarArchive_CompressedTar_AllEntriesCanBeEnumerated(string archiveFileName)
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveFileName));
+        using var archive = ArchiveFactory.OpenArchive(stream);
+
+        Assert.Equal(ArchiveType.Tar, archive.Type);
+        // The compressed archives contain 6 entries (directories + files).
+        // This test verifies that entry enumeration does not fail after the first
+        // non-empty entry, which was broken for compressed (streaming) tars.
+        Assert.Equal(6, archive.Entries.Count());
+    }
+
+    [Theory]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    public void TarArchive_CompressedTar_EntryContentsCanBeReadDuringIteration(
+        string archiveFileName
+    )
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveFileName));
+        using var archive = ArchiveFactory.OpenArchive(stream);
+
+        // Compressed (streaming) tars must be read in order: open and read each
+        // entry's content before advancing to the next entry.
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.IsDirectory)
+            {
+                using var entryStream = entry.OpenEntryStream();
+                using var buffer = new MemoryStream();
+                entryStream.CopyTo(buffer);
+                Assert.Equal(entry.Size, buffer.Length);
+            }
+        }
+    }
+
     [Fact]
     public void TarReaderStreamRead_Autodetect_CompressedTar()
     {
