@@ -6,6 +6,8 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Compressors.Deflate;
+using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers.GZip;
 using Xunit;
@@ -180,5 +182,38 @@ public class GZipArchiveAsyncTests : ArchiveTests
 #endif
         await using var archive = await GZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
         Assert.Equal(archive.Type, ArchiveType.GZip);
+    }
+
+    [Fact]
+    public async ValueTask GZip_Create_New_Async()
+    {
+        var scratchPath = Path.Combine(SCRATCH_FILES_PATH, Guid.NewGuid().ToString());
+        var filePath = Path.Combine(scratchPath, "test.gz");
+        if (!Directory.Exists(scratchPath))
+        {
+            Directory.CreateDirectory(scratchPath);
+        }
+        await using (var archive = (GZipArchive)await GZipArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+            await archive.SaveToAsync(filePath, new GZipWriterOptions(CompressionLevel.BestSpeed));
+        }
+        var scratchPath2 = Path.Combine(SCRATCH_FILES_PATH, Guid.NewGuid().ToString());
+        if (!Directory.Exists(scratchPath2))
+        {
+            Directory.CreateDirectory(scratchPath2);
+        }
+
+        await using var archive2 = await GZipArchive.OpenAsyncArchive(
+            new AsyncOnlyStream(File.OpenRead(filePath))
+        );
+        await foreach (var entry in archive2.EntriesAsync)
+        {
+            await entry.WriteToDirectoryAsync(scratchPath2);
+        }
+        CompareFilesByPath(
+            Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"),
+            Path.Combine(scratchPath2, "Tar.tar")
+        );
     }
 }
