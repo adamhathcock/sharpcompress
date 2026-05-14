@@ -14,7 +14,7 @@ internal sealed partial class CBZip2OutputStream
     /// Ensures the BZip2 stream header ('B', 'Z', 'h', blocksize) has been written
     /// asynchronously before the first compressed byte is written.
     /// </summary>
-    private async Task EnsureStreamHeaderWrittenAsync(CancellationToken cancellationToken)
+    private async ValueTask EnsureStreamHeaderWrittenAsync(CancellationToken cancellationToken)
     {
         if (!_streamHeaderWritten)
         {

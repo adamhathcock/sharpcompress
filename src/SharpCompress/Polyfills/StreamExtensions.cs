@@ -25,13 +25,13 @@ public static class StreamExtensions
 
         public void Skip() => stream.CopyTo(Stream.Null);
 
-        public Task SkipAsync(CancellationToken cancellationToken = default)
+        public async ValueTask SkipAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 #if NET5_0_OR_GREATER
-            return stream.CopyToAsync(Stream.Null, cancellationToken);
+            await stream.CopyToAsync(Stream.Null, cancellationToken).ConfigureAwait(false);
 #else
-            return stream.CopyToAsync(Stream.Null);
+            await stream.CopyToAsync(Stream.Null).ConfigureAwait(false);
 #endif
         }
 

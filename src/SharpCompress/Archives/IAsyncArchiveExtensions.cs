@@ -64,7 +64,11 @@ public static class IAsyncArchiveExtensions
             var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
             var bytesRead = 0L;
 
-            await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
+            await foreach (
+                var entry in archive
+                    .EntriesAsync.WithCancellation(cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 cancellationToken.ThrowIfCancellationRequested();
 

@@ -507,7 +507,7 @@ public partial class GZipStream : Stream
         return header.Length; // bytes written
     }
 
-    private async Task<int> EmitHeaderAsync(CancellationToken cancellationToken)
+    private async ValueTask<int> EmitHeaderAsync(CancellationToken cancellationToken)
     {
         var header = BuildHeader();
         await BaseStream

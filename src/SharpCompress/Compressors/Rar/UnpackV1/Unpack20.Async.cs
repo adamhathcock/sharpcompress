@@ -7,7 +7,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1;
 
 internal partial class Unpack
 {
-    private async Task unpack20Async(bool solid, CancellationToken cancellationToken = default)
+    private async ValueTask unpack20Async(bool solid, CancellationToken cancellationToken = default)
     {
         int Bits;
 
@@ -161,7 +161,7 @@ internal partial class Unpack
         await oldUnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<bool> ReadTables20Async(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> ReadTables20Async(CancellationToken cancellationToken = default)
     {
         byte[] BitLength = new byte[PackDef.BC20];
         byte[] Table = new byte[PackDef.MC20 * 4];
@@ -273,7 +273,7 @@ internal partial class Unpack
         return true;
     }
 
-    private async Task ReadLastTablesAsync(CancellationToken cancellationToken = default)
+    private async ValueTask ReadLastTablesAsync(CancellationToken cancellationToken = default)
     {
         if (readTop >= inAddr + 5)
         {

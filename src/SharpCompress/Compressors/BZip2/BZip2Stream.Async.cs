@@ -11,7 +11,7 @@ public sealed partial class BZip2Stream
     /// Asynchronously finalizes the BZip2 compressed stream, flushing all pending data.
     /// Use this instead of <see cref="IFinishable.Finish"/> when writing to an async-only stream.
     /// </summary>
-    public async Task FinishAsync(CancellationToken cancellationToken = default)
+    public async ValueTask FinishAsync(CancellationToken cancellationToken = default)
     {
         if (stream is CBZip2OutputStream output)
         {

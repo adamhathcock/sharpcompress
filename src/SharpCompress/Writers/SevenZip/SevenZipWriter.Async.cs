@@ -34,7 +34,7 @@ public partial class SevenZipWriter
         await base.DisposeAsync().ConfigureAwait(false);
     }
 
-    private async Task FinalizeArchiveAsync()
+    private async ValueTask FinalizeArchiveAsync()
     {
         var output = OutputStream.NotNull();
 
@@ -60,7 +60,7 @@ public partial class SevenZipWriter
         }
     }
 
-    private async Task WriteCompressedHeaderAsync(
+    private async ValueTask WriteCompressedHeaderAsync(
         MemoryStream rawHeaderStream,
         long endOfPackedData
     )
@@ -115,7 +115,7 @@ public partial class SevenZipWriter
         output.Seek(0, SeekOrigin.End);
     }
 
-    private async Task WriteRawHeaderToOutputAsync(
+    private async ValueTask WriteRawHeaderToOutputAsync(
         MemoryStream rawHeaderStream,
         long endOfPackedData
     )

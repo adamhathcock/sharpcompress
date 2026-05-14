@@ -80,7 +80,7 @@ public partial class ZipWriter
         await progressStream.CopyToAsync(output, 81920, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<ZipWritingStream> WriteToStreamAsync(
+    private async ValueTask<ZipWritingStream> WriteToStreamAsync(
         string entryPath,
         ZipWriterEntryOptions options,
         CancellationToken cancellationToken
@@ -126,7 +126,7 @@ public partial class ZipWriter
             .ConfigureAwait(false);
     }
 
-    private async Task<int> WriteHeaderAsync(
+    private async ValueTask<int> WriteHeaderAsync(
         string filename,
         ZipWriterEntryOptions zipWriterEntryOptions,
         ZipCentralDirectoryEntry entry,

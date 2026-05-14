@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Compressors.Rar;
@@ -100,7 +101,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     protected override async IAsyncEnumerable<RarReaderEntry> GetEntriesAsync(Stream stream)
     {
         volume = new RarReaderVolume(stream, Options, 0);
-        await foreach (var fp in volume.ReadFilePartsAsync())
+        await foreach (var fp in volume.ReadFilePartsAsync().ConfigureAwait(false))
         {
             ValidateArchive(volume);
             yield return new RarReaderEntry(volume.IsSolidArchive, fp, Options);

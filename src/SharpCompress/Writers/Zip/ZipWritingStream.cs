@@ -62,7 +62,7 @@ public partial class ZipWriter
             writeStream = Stream.Null;
         }
 
-        internal static async Task<ZipWritingStream> CreateAsync(
+        internal static async ValueTask<ZipWritingStream> CreateAsync(
             ZipWriter writer,
             Stream originalStream,
             ZipCentralDirectoryEntry entry,
@@ -206,7 +206,7 @@ public partial class ZipWriter
             }
         }
 
-        private async Task<Stream> GetWriteStreamAsync(
+        private async ValueTask<Stream> GetWriteStreamAsync(
             Stream writeStream,
             CancellationToken cancellationToken
         )
@@ -580,7 +580,7 @@ public partial class ZipWriter
             counting.Write(postData, 0, postData.Length);
         }
 
-        private async Task WritePostCompressionDataAsync(CancellationToken cancellationToken)
+        private async ValueTask WritePostCompressionDataAsync(CancellationToken cancellationToken)
         {
             if (
                 compressionProviderHooks is null
@@ -733,7 +733,7 @@ public partial class ZipWriter
 #endif
         }
 
-        private static async Task WriteFooterAsync(
+        private static async ValueTask WriteFooterAsync(
             Stream stream,
             uint crc,
             uint compressed,

@@ -68,7 +68,7 @@ public partial class SevenZipWriter : AbstractWriter
     /// Ensures the placeholder signature header has been written asynchronously.
     /// Called before the first async write.
     /// </summary>
-    private async Task EnsurePlaceholderWrittenAsync(CancellationToken cancellationToken)
+    private async ValueTask EnsurePlaceholderWrittenAsync(CancellationToken cancellationToken)
     {
         if (!_placeholderWritten)
         {

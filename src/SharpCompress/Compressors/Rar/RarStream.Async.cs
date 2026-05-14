@@ -39,7 +39,7 @@ internal partial class RarStream
     /// <summary>
     /// Internal async implementation of ReadAsync.
     /// </summary>
-    private async Task<int> ReadImplAsync(
+    private async ValueTask<int> ReadImplAsync(
         byte[] buffer,
         int offset,
         int count,

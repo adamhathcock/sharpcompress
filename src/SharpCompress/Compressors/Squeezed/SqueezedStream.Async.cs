@@ -45,7 +45,7 @@ public partial class SqueezeStream
     }
 #endif
 
-    private async Task<Stream> BuildDecodedStreamAsync(CancellationToken cancellationToken)
+    private async ValueTask<Stream> BuildDecodedStreamAsync(CancellationToken cancellationToken)
     {
         byte[] numNodesBytes = new byte[2];
         int bytesRead = await _stream

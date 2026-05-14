@@ -46,7 +46,7 @@ internal static class SevenZipSignatureHeaderWriter
     /// Asynchronously writes a placeholder signature header (all zeros for CRC/offset fields).
     /// Call this at the start of archive creation to reserve space.
     /// </summary>
-    public static async Task WritePlaceholderAsync(
+    public static async ValueTask WritePlaceholderAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     )
@@ -90,7 +90,7 @@ internal static class SevenZipSignatureHeaderWriter
     /// Asynchronously writes the final signature header with correct offsets and CRCs.
     /// The stream must be seekable; this method seeks to position 0.
     /// </summary>
-    public static async Task WriteFinalAsync(
+    public static async ValueTask WriteFinalAsync(
         Stream stream,
         ulong nextHeaderOffset,
         ulong nextHeaderSize,
