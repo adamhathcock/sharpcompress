@@ -24,7 +24,7 @@ public class GZipArchiveEntry : GZipEntry, IArchiveEntry
         return Parts.Single().GetCompressedStream().NotNull();
     }
 
-    public async ValueTask<Stream> OpenEntryStreamAsync(
+    public virtual async ValueTask<Stream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
     )
     {
