@@ -6,7 +6,7 @@ using static SharpCompress.Compressors.ZStandard.UnsafeHelper;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 using System.Runtime.Intrinsics.Arm;
 #endif
 
@@ -1172,7 +1172,7 @@ public static unsafe partial class Methods
     {
         assert(rowEntries == 16 || rowEntries == 32 || rowEntries == 64);
         assert(rowEntries <= 64);
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         if (AdvSimd.IsSupported && BitConverter.IsLittleEndian)
         {
             if (rowEntries == 16)
@@ -1272,7 +1272,7 @@ public static unsafe partial class Methods
         }
 #endif
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         if (AdvSimd.IsSupported && BitConverter.IsLittleEndian)
         {
             if (rowEntries == 16)

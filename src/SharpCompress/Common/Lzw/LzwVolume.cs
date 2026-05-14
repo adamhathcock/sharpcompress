@@ -5,11 +5,11 @@ namespace SharpCompress.Common.Lzw;
 
 public class LzwVolume : Volume
 {
-    public LzwVolume(Stream stream, ReaderOptions? options, int index)
+    public LzwVolume(Stream stream, ReaderOptions options, int index)
         : base(stream, options, index) { }
 
     public LzwVolume(FileInfo fileInfo, ReaderOptions options)
-        : base(fileInfo.OpenRead(), options with { LeaveStreamOpen = false }) { }
+        : base(fileInfo.OpenRead(), options.WithLeaveStreamOpen(false)) { }
 
     public override bool IsFirstVolume => true;
 

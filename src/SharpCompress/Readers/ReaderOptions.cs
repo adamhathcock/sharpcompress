@@ -24,9 +24,36 @@ namespace SharpCompress.Readers;
 public sealed record ReaderOptions : IReaderOptions
 {
     /// <summary>
-    /// SharpCompress will keep the supplied streams open.  Default is true.
+    /// Whether SharpCompress leaves the supplied streams open when the reader/archive is disposed.
+    /// As of v0.21, the library is documented to close streams by default; this option now defaults to false.
+    /// Set to true when passing caller-owned streams that should not be disposed.
     /// </summary>
-    public bool LeaveStreamOpen { get; init; } = true;
+    /// <remarks>
+    /// <para>
+    /// <b>Default behavior (LeaveStreamOpen = false):</b>
+    /// When you open an archive from a file path (e.g., <c>GZipArchive.OpenArchive(filePath)</c>),
+    /// SharpCompress manages the stream lifetime and closes it on Dispose.
+    /// </para>
+    /// <para>
+    /// <b>Caller-provided streams (LeaveStreamOpen = true):</b>
+    /// When you pass a stream you created (FileStream, MemoryStream, NetworkStream, etc.),
+    /// set LeaveStreamOpen = true to prevent SharpCompress from disposing it.
+    /// Use <see cref="ForExternalStream"/> preset for convenience.
+    /// </para>
+    /// <para>
+    /// <b>Example:</b>
+    /// <code>
+    /// // File-based: stream managed by library
+    /// using var archive = GZipArchive.OpenArchive(filePath); // LeaveStreamOpen = false
+    ///
+    /// // Caller-provided stream: caller manages lifetime
+    /// using var stream = File.OpenRead(filePath);
+    /// var options = new ReaderOptions { LeaveStreamOpen = true };
+    /// using var archive = GZipArchive.OpenArchive(stream, options);
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public bool LeaveStreamOpen { get; init; } = false;
 
     /// <summary>
     /// Encoding to use for archive entry names.
@@ -124,35 +151,34 @@ public sealed record ReaderOptions : IReaderOptions
     /// <summary>
     /// Gets ReaderOptions configured for caller-provided streams.
     /// </summary>
-    public static ReaderOptions ForExternalStream => new() { LeaveStreamOpen = true };
+    internal static ReaderOptions Default => new();
+
+    public static ReaderOptions ForExternalStream => Default.WithLeaveStreamOpen(true);
 
     /// <summary>
     /// Gets ReaderOptions configured for file-based overloads that open their own stream.
     /// </summary>
-    public static ReaderOptions ForFilePath => new() { LeaveStreamOpen = false };
+    public static ReaderOptions ForFilePath => Default;
 
     /// <summary>
     /// Creates ReaderOptions for reading encrypted archives.
     /// </summary>
     /// <param name="password">The password for encrypted archives.</param>
     public static ReaderOptions ForEncryptedArchive(string? password = null) =>
-        new ReaderOptions().WithPassword(password);
+        Default.WithPassword(password);
 
     /// <summary>
     /// Creates ReaderOptions for archives with custom character encoding.
     /// </summary>
     /// <param name="encoding">The encoding for archive entry names.</param>
     public static ReaderOptions ForEncoding(IArchiveEncoding encoding) =>
-        new ReaderOptions().WithArchiveEncoding(encoding);
+        Default.WithArchiveEncoding(encoding);
 
     /// <summary>
     /// Creates ReaderOptions for self-extracting archives that require header search.
     /// </summary>
     public static ReaderOptions ForSelfExtractingArchive(string? password = null) =>
-        new ReaderOptions()
-            .WithLookForHeader(true)
-            .WithPassword(password)
-            .WithRewindableBufferSize(1_048_576); // 1MB for SFX archives
+        Default.WithLookForHeader(true).WithPassword(password).WithRewindableBufferSize(1_048_576); // 1MB for SFX archives
 
     // Note: Parameterized constructors have been removed.
     // Use fluent With*() helpers or object initializers instead:

@@ -72,13 +72,13 @@ public partial class TarReader
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
-        path.NotNullOrEmpty(nameof(path));
-        return OpenAsyncReader(new FileInfo(path), readerOptions, cancellationToken);
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return OpenAsyncReader(new FileInfo(filePath), readerOptions, cancellationToken);
     }
 
     public static async ValueTask<IAsyncReader> OpenAsyncReader(
@@ -89,7 +89,7 @@ public partial class TarReader
     {
         cancellationToken.ThrowIfCancellationRequested();
         stream.NotNull(nameof(stream));
-        readerOptions ??= new ReaderOptions();
+        readerOptions ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
             bufferSize: Math.Max(
@@ -143,7 +143,7 @@ public partial class TarReader
         CancellationToken cancellationToken = default
     )
     {
-        readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
+        readerOptions ??= ReaderOptions.ForFilePath;
         var stream = fileInfo.OpenAsyncReadStream(cancellationToken);
         return await OpenAsyncReader(stream, readerOptions, cancellationToken)
             .ConfigureAwait(false);
@@ -158,7 +158,7 @@ public partial class TarReader
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
-        readerOptions ??= new ReaderOptions() { LeaveStreamOpen = false };
+        readerOptions ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 
@@ -170,8 +170,8 @@ public partial class TarReader
     /// <returns></returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-        readerOptions ??= new ReaderOptions();
+        stream.RequireReadable();
+        readerOptions ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
             bufferSize: Math.Max(

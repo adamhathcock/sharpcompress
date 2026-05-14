@@ -1182,7 +1182,7 @@ internal partial class ArchiveReader
             }
             else
             {
-                _stream = new MemoryStream();
+                _stream = new PooledMemoryStream();
             }
             _rem = _db._files[index].Size;
         }

@@ -19,8 +19,8 @@ public partial class AceReader
     /// <returns>An AceReader instance.</returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-        return new SingleVolumeAceReader(stream, readerOptions ?? new ReaderOptions());
+        stream.RequireReadable();
+        return new SingleVolumeAceReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
     /// <summary>
@@ -31,19 +31,19 @@ public partial class AceReader
     /// <returns></returns>
     public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
-        streams.NotNull(nameof(streams));
-        return new MultiVolumeAceReader(streams, options ?? new ReaderOptions());
+        var streamArray = streams.RequireReadable();
+        return new MultiVolumeAceReader(streamArray, options ?? ReaderOptions.ForExternalStream);
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return new((IAsyncReader)OpenReader(new FileInfo(path), readerOptions));
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return new((IAsyncReader)OpenReader(new FileInfo(filePath), readerOptions));
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
@@ -61,8 +61,8 @@ public partial class AceReader
         ReaderOptions? options = null
     )
     {
-        streams.NotNull(nameof(streams));
-        return new MultiVolumeAceReader(streams, options ?? new ReaderOptions());
+        var streamArray = streams.RequireReadable();
+        return new MultiVolumeAceReader(streamArray, options ?? ReaderOptions.ForExternalStream);
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(
@@ -84,6 +84,7 @@ public partial class AceReader
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
+        readerOptions ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 }

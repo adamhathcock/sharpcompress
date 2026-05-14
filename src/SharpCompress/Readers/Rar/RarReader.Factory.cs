@@ -9,14 +9,14 @@ namespace SharpCompress.Readers.Rar;
 public partial class RarReader : IReaderOpenable
 {
     public static ValueTask<IAsyncReader> OpenAsyncReader(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return new((IAsyncReader)OpenReader(new FileInfo(path), readerOptions));
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return new((IAsyncReader)OpenReader(new FileInfo(filePath), readerOptions));
     }
 
     public static ValueTask<IAsyncReader> OpenAsyncReader(

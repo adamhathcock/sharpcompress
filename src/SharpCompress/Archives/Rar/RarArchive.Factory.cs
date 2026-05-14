@@ -21,14 +21,14 @@ public partial class RarArchive
 #endif
 {
     public static ValueTask<IRarAsyncArchive> OpenAsyncArchive(
-        string path,
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return new((IRarAsyncArchive)OpenArchive(new FileInfo(path), readerOptions));
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return new((IRarAsyncArchive)OpenArchive(new FileInfo(filePath), readerOptions));
     }
 
     public static IRarArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
@@ -39,7 +39,7 @@ public partial class RarArchive
             new SourceStream(
                 fileInfo,
                 i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
@@ -51,53 +51,48 @@ public partial class RarArchive
             new SourceStream(
                 fileInfo,
                 i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IRarArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return new RarArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 
     public static IRarArchive OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new RarArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < files.Count ? files[i] : null,
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IRarArchive OpenArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new RarArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }
@@ -158,7 +153,7 @@ public partial class RarArchive
     {
         try
         {
-            MarkHeader.Read(stream, true, false);
+            MarkHeader.Read(stream, true, options?.LookForHeader ?? false);
             return true;
         }
         catch
@@ -177,7 +172,7 @@ public partial class RarArchive
         try
         {
             await MarkHeader
-                .ReadAsync(stream, true, false, cancellationToken)
+                .ReadAsync(stream, true, options?.LookForHeader ?? false, cancellationToken)
                 .ConfigureAwait(false);
             return true;
         }

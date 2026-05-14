@@ -15,16 +15,15 @@ namespace SharpCompress.Archives.Rar;
 internal class FileInfoRarArchiveVolume : RarVolume
 {
     internal FileInfoRarArchiveVolume(FileInfo fileInfo, ReaderOptions options, int index)
-        : base(StreamingMode.Seekable, fileInfo.OpenRead(), FixOptions(options), index)
+        : base(
+            StreamingMode.Seekable,
+            fileInfo.OpenRead(),
+            options.WithLeaveStreamOpen(false),
+            index
+        )
     {
         FileInfo = fileInfo;
         FileParts = GetVolumeFileParts().ToArray().ToReadOnly();
-    }
-
-    private static ReaderOptions FixOptions(ReaderOptions options)
-    {
-        //make sure we're closing streams with fileinfo
-        return options with { LeaveStreamOpen = false };
     }
 
     internal ReadOnlyCollection<RarFilePart> FileParts { get; }

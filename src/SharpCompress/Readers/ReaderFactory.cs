@@ -12,7 +12,7 @@ public static partial class ReaderFactory
     public static IReader OpenReader(string filePath, ReaderOptions? options = null)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenReader(new FileInfo(filePath), options);
+        return OpenReader(new FileInfo(filePath), options ?? ReaderOptions.ForFilePath);
     }
 
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
@@ -29,7 +29,7 @@ public static partial class ReaderFactory
     /// <returns></returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
         var sharpCompressStream = SharpCompressStream.Create(
