@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Readers;
 using Xunit;
@@ -31,70 +30,40 @@ public class TestBase : IAsyncDisposable
         MISC_TEST_FILES_PATH = Path.Combine(SOLUTION_BASE_PATH, "TestArchives", "MiscTest");
     }
 
-    private readonly Guid _testGuid = Guid.NewGuid();
-    private readonly string _testTempDirectory;
+    private readonly TempDirectory _tempDirectory;
     protected readonly string SCRATCH_FILES_PATH;
     protected readonly string SCRATCH2_FILES_PATH;
 
     protected TestBase()
     {
-        _testTempDirectory = Path.Combine(Path.GetTempPath(), $"SharpCompress.Test.{_testGuid:N}");
-        SCRATCH_FILES_PATH = Path.Combine(_testTempDirectory, "Scratch");
-        SCRATCH2_FILES_PATH = Path.Combine(_testTempDirectory, "Scratch2");
-
-        Directory.CreateDirectory(SCRATCH_FILES_PATH);
-        Directory.CreateDirectory(SCRATCH2_FILES_PATH);
+        _tempDirectory = new TempDirectory("SharpCompress.Test");
+        SCRATCH_FILES_PATH = _tempDirectory.GetDirectory("Scratch");
+        SCRATCH2_FILES_PATH = _tempDirectory.GetDirectory("Scratch2");
     }
 
-    //always use async dispose since we have I/O and sync Dispose doesn't wait when using xunit
-    public async ValueTask DisposeAsync()
-    {
-        await Task.CompletedTask;
-        DeleteScratchDirectory(_testTempDirectory);
-    }
+    // Always use async dispose since we have I/O and sync Dispose doesn't wait when using xunit.
+    public ValueTask DisposeAsync() => _tempDirectory.DisposeAsync();
 
     public void CleanScratch()
     {
-        ResetScratchDirectory(SCRATCH_FILES_PATH);
-        ResetScratchDirectory(SCRATCH2_FILES_PATH);
+        _tempDirectory.ResetDirectory("Scratch");
+        _tempDirectory.ResetDirectory("Scratch2");
     }
 
-    private static void ResetScratchDirectory(string path)
-    {
-        if (Directory.Exists(path))
-        {
-            Directory.Delete(path, true);
-        }
+    protected string CreateScratchDirectory(string name) =>
+        _tempDirectory.CreateDirectory(Path.Combine("Scratch", name));
 
-        Directory.CreateDirectory(path);
-    }
+    protected string CreateScratch2Directory(string name) =>
+        _tempDirectory.CreateDirectory(Path.Combine("Scratch2", name));
 
-    private static void DeleteScratchDirectory(string path)
-    {
-        if (!Directory.Exists(path))
-        {
-            return;
-        }
+    protected string GetScratchPath(params string[] parts) =>
+        CombinePath(SCRATCH_FILES_PATH, parts);
 
-        try
-        {
-            Directory.Delete(path, true);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            throw new InvalidOperationException(
-                $"Failed to clean up temp test directory '{path}'.",
-                ex
-            );
-        }
+    protected string GetScratch2Path(params string[] parts) =>
+        CombinePath(SCRATCH2_FILES_PATH, parts);
 
-        if (Directory.Exists(path))
-        {
-            throw new InvalidOperationException(
-                $"Temp test directory '{path}' was not cleaned up."
-            );
-        }
-    }
+    private static string CombinePath(string root, string[] parts) =>
+        parts.Length == 0 ? root : Path.Combine(root, Path.Combine(parts));
 
     public void VerifyFiles()
     {

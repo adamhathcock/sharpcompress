@@ -239,7 +239,7 @@ internal partial class Unpack
     {
         Header.HeaderSize = 0;
 
-        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 7)
+        if (Inp.InAddr > ReadTop - 7)
         {
             if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -292,7 +292,7 @@ internal partial class Unpack
         CancellationToken cancellationToken = default
     )
     {
-        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 16)
+        if (Inp.InAddr > ReadTop - 16)
         {
             if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {

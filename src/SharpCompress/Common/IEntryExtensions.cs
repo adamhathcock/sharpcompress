@@ -10,7 +10,7 @@ internal static partial class IEntryExtensions
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public void WriteEntryToDirectory(
+        internal void WriteEntryToDirectory(
             string destinationDirectory,
             ExtractionOptions? options,
             Action<string> write

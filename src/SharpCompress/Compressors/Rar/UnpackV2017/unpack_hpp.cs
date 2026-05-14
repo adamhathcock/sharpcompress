@@ -156,40 +156,24 @@ if (Decoded!=NULL)
 //struct UnpackFilter
 internal class UnpackFilter
 {
-    public byte Type;
-    public uint BlockStart;
-    public uint BlockLength;
-    public byte Channels;
+    internal byte Type;
+    internal uint BlockStart;
+    internal uint BlockLength;
+    internal byte Channels;
 
     //  uint Width;
     //  byte PosR;
-    public bool NextWindow;
-};
-
-//struct UnpackFilter30
-internal class UnpackFilter30
-{
-    public uint BlockStart;
-    public uint BlockLength;
-    public bool NextWindow;
-
-    // Position of parent filter in Filters array used as prototype for filter
-    // in PrgStack array. Not defined for filters in Filters array.
-    public uint ParentFilter;
-
-    /*#if !RarV2017_RAR5ONLY
-      public VM_PreparedProgram Prg;
-    #endif*/
+    internal bool NextWindow;
 };
 
 internal class AudioVariables // For RAR 2.0 archives only.
 {
-    public int K1,
+    internal int K1,
         K2,
         K3,
         K4,
         K5;
-    public int D1,
+    internal int D1,
         D2,
         D3,
         D4;
@@ -369,8 +353,6 @@ internal partial class Unpack
     #endif*/
     private int PPMEscChar;
 
-    private readonly byte[] UnpOldTable = new byte[HUFF_TABLE_SIZE30];
-
     // If we already read decoding tables for Unpack v2,v3,v5.
     // We should not use a single variable for all algorithm versions,
     // because we can have a corrupt archive with one algorithm file
@@ -378,26 +360,6 @@ internal partial class Unpack
     // want to reuse tables from one algorithm in another.
     private bool TablesRead2,
         TablesRead5;
-
-    // Virtual machine to execute filters code.
-    /*#if !RarV2017_RAR5ONLY
-        RarVM VM;
-    #endif*/
-
-    // Buffer to read VM filters code. We moved it here from AddVMCode
-    // function to reduce time spent in BitInput constructor.
-    private readonly BitInput VMCodeInp = new(true);
-
-    // Filters code, one entry per filter.
-    private readonly List<UnpackFilter30> Filters30 = new();
-
-    // Filters stack, several entrances of same filter are possible.
-    private readonly List<UnpackFilter30> PrgStack = new();
-
-    // Lengths of preceding data blocks, one length of one last block
-    // for every filter. Used to reduce the size required to write
-    // the data block length if lengths are repeating.
-    private readonly List<int> OldFilterLengths = new();
 
     /*#if RarV2017_RAR_SMP
     // More than 8 threads are unlikely to provide a noticeable gain
