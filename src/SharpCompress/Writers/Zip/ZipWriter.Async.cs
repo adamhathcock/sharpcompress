@@ -155,7 +155,53 @@ public partial class ZipWriter
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        WriteDirectory(directoryName, modificationTime);
-        await Task.CompletedTask.ConfigureAwait(false);
+
+        var normalizedName = NormalizeDirectoryName(directoryName);
+        if (string.IsNullOrEmpty(normalizedName))
+        {
+            return;
+        }
+
+        var options = new ZipWriterEntryOptions { ModificationDateTime = modificationTime };
+        await WriteDirectoryEntryAsync(normalizedName, options, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private async ValueTask WriteDirectoryEntryAsync(
+        string directoryPath,
+        ZipWriterEntryOptions options,
+        CancellationToken cancellationToken
+    )
+    {
+        var compression = ZipCompressionMethod.None;
+
+        options.ModificationDateTime ??= DateTime.Now;
+        options.EntryComment ??= string.Empty;
+
+        var entry = new ZipCentralDirectoryEntry(
+            compression,
+            directoryPath,
+            (ulong)streamPosition,
+            WriterOptions.ArchiveEncoding
+        )
+        {
+            Comment = options.EntryComment,
+            ModificationTime = options.ModificationDateTime,
+            Crc = 0,
+            Compressed = 0,
+            Decompressed = 0,
+        };
+
+        var useZip64 = isZip64;
+        if (options.EnableZip64.HasValue)
+        {
+            useZip64 = options.EnableZip64.Value;
+        }
+
+        var headersize = (uint)
+            await WriteHeaderAsync(directoryPath, options, entry, useZip64, cancellationToken)
+                .ConfigureAwait(false);
+        streamPosition += headersize;
+        entries.Add(entry);
     }
 }
