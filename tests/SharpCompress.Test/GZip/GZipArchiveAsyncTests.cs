@@ -204,8 +204,9 @@ public class GZipArchiveAsyncTests : ArchiveTests
             Directory.CreateDirectory(scratchPath2);
         }
 
+        await using var fileStream = File.OpenRead(filePath);
         await using var archive2 = await GZipArchive.OpenAsyncArchive(
-            new AsyncOnlyStream(File.OpenRead(filePath))
+            new AsyncOnlyStream(fileStream)
         );
         await foreach (var entry in archive2.EntriesAsync)
         {
