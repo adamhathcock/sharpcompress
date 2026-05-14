@@ -35,6 +35,28 @@ public class TarArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void TarArchiveStreamRead_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")),
+            false,
+            true,
+            true
+        );
+
+        Assert.Throws<ArgumentException>(() => TarArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
+    public void TarArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => TarArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
     public void Tar_FileName_Exactly_100_Characters()
     {
         var archive = "Tar_FileName_Exactly_100_Characters.tar";
@@ -262,7 +284,7 @@ public class TarArchiveTests : ArchiveTests
         }
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
-            var tropt = new ReaderOptions { ArchiveEncoding = enc };
+            var tropt = ReaderOptions.ForExternalStream.WithArchiveEncoding(enc);
             using (var tr = TarReader.OpenReader(inputMemory, tropt))
             {
                 while (tr.MoveToNextEntry())
@@ -336,7 +358,7 @@ public class TarArchiveTests : ArchiveTests
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var reader = ReaderFactory.OpenReader(stream);
 
-        Assert.Equal(ArchiveType.Tar, reader.ArchiveType);
+        Assert.Equal(ArchiveType.Tar, reader.Type);
         Assert.True(reader.MoveToNextEntry());
     }
 }

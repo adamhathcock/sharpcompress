@@ -89,7 +89,7 @@ internal sealed partial class TarHeader
             int splitIndex = -1;
             for (int i = 0; i < dirSeps.Count; i++)
             {
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
                 int count = ArchiveEncoding
                     .GetEncoding()
                     .GetByteCount(fullName.AsSpan(0, dirSeps[i]));

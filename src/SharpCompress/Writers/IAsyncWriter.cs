@@ -8,7 +8,7 @@ namespace SharpCompress.Writers;
 
 public interface IAsyncWriter : IAsyncDisposable
 {
-    ArchiveType WriterType { get; }
+    ArchiveType Type { get; }
     ValueTask WriteAsync(
         string filename,
         Stream source,

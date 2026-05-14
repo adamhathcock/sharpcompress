@@ -16,7 +16,10 @@ public class RarHeaderFactoryTest : TestBase
     public RarHeaderFactoryTest() =>
         _rarHeaderFactory = new RarHeaderFactory(
             StreamingMode.Seekable,
-            new ReaderOptions { LeaveStreamOpen = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LeaveStreamOpen = true,
+            }
         );
 
     [Fact]

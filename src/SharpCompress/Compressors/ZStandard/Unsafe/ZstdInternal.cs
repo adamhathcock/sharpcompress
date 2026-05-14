@@ -5,7 +5,7 @@ using static SharpCompress.Compressors.ZStandard.UnsafeHelper;
 #if NETCOREAPP3_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 using System.Runtime.Intrinsics.Arm;
 #endif
 
@@ -554,7 +554,7 @@ public static unsafe partial class Methods
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ZSTD_copy16(void* dst, void* src)
     {
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         if (AdvSimd.IsSupported)
         {
             AdvSimd.Store((byte*)dst, AdvSimd.LoadVector128((byte*)src));

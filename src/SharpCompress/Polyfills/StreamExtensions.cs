@@ -28,7 +28,7 @@ public static class StreamExtensions
         public async ValueTask SkipAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
             await stream.CopyToAsync(Stream.Null, cancellationToken).ConfigureAwait(false);
 #else
             await stream.CopyToAsync(Stream.Null).ConfigureAwait(false);

@@ -86,18 +86,7 @@ internal static partial class IEntryExtensions
             options ??= new ExtractionOptions();
             if (entry.LinkTarget != null)
             {
-                if (options.SymbolicLinkHandler is not null)
-                {
-                    options.SymbolicLinkHandler(destinationFileName, entry.LinkTarget);
-                }
-                else
-                {
-                    ExtractionOptions.DefaultSymbolicLinkHandler(
-                        destinationFileName,
-                        entry.LinkTarget
-                    );
-                }
-                return;
+                options.SymbolicLinkHandler?.Invoke(destinationFileName, entry.LinkTarget);
             }
             else
             {

@@ -73,7 +73,7 @@ public class AceReaderAsyncTests : ReaderTests
         using Stream stream = File.OpenRead(testArchive);
         await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            new ReaderOptions()
+            ReaderOptions.ForExternalStream
         );
         while (await reader.MoveToNextEntryAsync())
         {
@@ -95,7 +95,10 @@ public class AceReaderAsyncTests : ReaderTests
         using Stream stream = File.OpenRead(testArchive);
         await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (await reader.MoveToNextEntryAsync())
         {

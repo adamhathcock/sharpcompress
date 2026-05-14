@@ -97,7 +97,10 @@ public class RarReaderAsyncTests : ReaderTests
                     archives
                         .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                         .Select(p => File.OpenRead(p)),
-                    new ReaderOptions { Password = "test" }
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
                 )
             )
             {
@@ -211,7 +214,10 @@ public class RarReaderAsyncTests : ReaderTests
         await ReadAsync(
             testArchive,
             CompressionType.Rar,
-            new ReaderOptions { Password = password }
+            ReaderOptions.ForFilePath with
+            {
+                Password = password,
+            }
         );
 
     [Fact]
@@ -272,7 +278,10 @@ public class RarReaderAsyncTests : ReaderTests
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
@@ -295,7 +304,10 @@ public class RarReaderAsyncTests : ReaderTests
         using (
             IReader baseReader = RarReader.OpenReader(
                 stream,
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
@@ -338,7 +350,10 @@ public class RarReaderAsyncTests : ReaderTests
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
         await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (await reader.MoveToNextEntryAsync())
         {
@@ -361,7 +376,10 @@ public class RarReaderAsyncTests : ReaderTests
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
         await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (await reader.MoveToNextEntryAsync())
         {
@@ -383,7 +401,7 @@ public class RarReaderAsyncTests : ReaderTests
         using Stream stream = File.OpenRead(testArchive);
         await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            readerOptions ?? new ReaderOptions()
+            readerOptions ?? ReaderOptions.ForExternalStream
         );
         while (await reader.MoveToNextEntryAsync())
         {

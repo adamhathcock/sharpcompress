@@ -20,7 +20,7 @@ public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions wr
 
     protected Stream? OutputStream { get; private set; }
 
-    public ArchiveType WriterType { get; } = type;
+    public ArchiveType Type { get; } = type;
 
     protected IWriterOptions WriterOptions { get; } = writerOptions;
 

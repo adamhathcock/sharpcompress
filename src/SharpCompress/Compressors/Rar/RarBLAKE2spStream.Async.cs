@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -32,12 +31,12 @@ internal partial class RarBLAKE2spStream : RarStream
             .ConfigureAwait(false);
         if (result != 0)
         {
-            Update(_blake2sp, new ReadOnlySpan<byte>(buffer, offset, result), result);
+            Update(_blake2sp!, new ReadOnlySpan<byte>(buffer, offset, result));
         }
         else
         {
-            _hash = Final(_blake2sp);
-            if (!disableCRCCheck && !(GetCrc().SequenceEqual(readStream.CurrentCrc)) && count != 0)
+            EnsureHash();
+            if (!disableCRCCheck && !GetCrc().SequenceEqual(readStream.CurrentCrc) && count != 0)
             {
                 // NOTE: we use the last FileHeader in a multipart volume to check CRC
                 throw new InvalidFormatException("file crc mismatch");
@@ -56,14 +55,14 @@ internal partial class RarBLAKE2spStream : RarStream
         var result = await base.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (result != 0)
         {
-            Update(_blake2sp, buffer.Span.Slice(0, result), result);
+            Update(_blake2sp!, buffer.Span.Slice(0, result));
         }
         else
         {
-            _hash = Final(_blake2sp);
+            EnsureHash();
             if (
                 !disableCRCCheck
-                && !(GetCrc().SequenceEqual(readStream.CurrentCrc))
+                && !GetCrc().SequenceEqual(readStream.CurrentCrc)
                 && buffer.Length != 0
             )
             {

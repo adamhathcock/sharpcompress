@@ -3,7 +3,7 @@ using SharpCompress.Common.Options;
 namespace SharpCompress.Archives;
 
 /// <summary>
-/// Decorator for <see cref="Factories.Factory"/> used to declare an archive format as able to create writeable archives
+/// Decorator for <see cref="Factories.Factory"/> used to declare an archive format as able to create writable archives.
 /// </summary>
 /// <remarks>
 /// Implemented by:<br/>
@@ -12,7 +12,8 @@ namespace SharpCompress.Archives;
 /// <item><see cref="Factories.ZipFactory"/></item>
 /// <item><see cref="Factories.GZipFactory"/></item>
 /// </list>
-public interface IWriteableArchiveFactory<TOptions> : Factories.IFactory
+/// </remarks>
+public interface IWritableArchiveFactory<TOptions> : Factories.IFactory
     where TOptions : IWriterOptions
 {
     /// <summary>
