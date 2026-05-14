@@ -9,7 +9,7 @@ internal static partial class IEntryExtensions
 {
     extension(IEntry entry)
     {
-        public async ValueTask WriteEntryToDirectoryAsync(
+        internal async ValueTask WriteEntryToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options,
             Func<string, CancellationToken, ValueTask> writeAsync,
