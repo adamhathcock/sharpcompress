@@ -177,7 +177,7 @@ public class GZipArchiveAsyncTests : ArchiveTests
     {
 #if NETFRAMEWORK
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
-        #else
+#else
         await using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
 #endif
         await using var archive = await GZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
