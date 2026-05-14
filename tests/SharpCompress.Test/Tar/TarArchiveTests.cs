@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -310,6 +311,62 @@ public class TarArchiveTests : ArchiveTests
         }
 
         Assert.Equal(2, numberOfEntries);
+    }
+
+    [Fact]
+    public void Tar_Read_One_At_A_Time_Without_Disposing_Entry_Stream()
+    {
+        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
+        var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)
+        {
+            ArchiveEncoding = archiveEncoding,
+        };
+        var testBytes = Encoding.UTF8.GetBytes("This is a test.");
+
+        using var memoryStream = new MemoryStream();
+        using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
+        using (var testFileStream = new MemoryStream(testBytes))
+        {
+            tarWriter.Write("file0.txt", testFileStream);
+            testFileStream.Position = 0;
+            tarWriter.Write("file1.txt", testFileStream);
+            tarWriter.WriteDirectory("folder0", null);
+            testFileStream.Position = 0;
+            tarWriter.Write("folder0/file_in_folder0.txt", testFileStream);
+        }
+
+        memoryStream.Position = 0;
+
+        var entryKeys = new List<string?>();
+        var openEntryStreams = new List<Stream>();
+
+        using (var archive = ArchiveFactory.OpenArchive(memoryStream))
+        {
+            foreach (var entry in archive.Entries)
+            {
+                entryKeys.Add(entry.Key);
+                if (entry.IsDirectory)
+                {
+                    continue;
+                }
+
+                var tarEntryStream = entry.OpenEntryStream();
+                openEntryStreams.Add(tarEntryStream);
+
+                using var testFileStream = new MemoryStream();
+                tarEntryStream.CopyTo(testFileStream);
+                Assert.Equal(testBytes.Length, testFileStream.Length);
+            }
+
+            Assert.Equal(4, archive.Entries.Count());
+        }
+
+        openEntryStreams.ForEach(stream => stream.Dispose());
+
+        Assert.Equal(
+            ["file0.txt", "file1.txt", "folder0/", "folder0/file_in_folder0.txt"],
+            entryKeys
+        );
     }
 
     [Fact]
