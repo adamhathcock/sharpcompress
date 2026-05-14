@@ -58,7 +58,14 @@ internal sealed class RarCryptoWrapper : Stream
         return count;
     }
 
-    public override async Task<int> ReadAsync(
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => ReadAndDecryptAsync(buffer, offset, count, cancellationToken);
+
+    private async Task<int> ReadAndDecryptAsync(
         byte[] buffer,
         int offset,
         int count,

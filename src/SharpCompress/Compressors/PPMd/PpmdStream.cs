@@ -10,7 +10,7 @@ using SharpCompress.Compressors.PPMd.I1;
 
 namespace SharpCompress.Compressors.PPMd;
 
-public class PpmdStream : Stream
+public class PpmdStream : Stream, IAsyncDisposable
 {
     private readonly PpmdProperties _properties;
     private readonly Stream _stream;

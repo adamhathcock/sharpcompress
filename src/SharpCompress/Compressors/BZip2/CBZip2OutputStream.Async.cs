@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.BZip2;
 
-internal sealed partial class CBZip2OutputStream
+internal sealed partial class CBZip2OutputStream : IAsyncDisposable
 {
     private readonly byte[] bsAsyncWriteBuffer = new byte[1];
 

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Compressors.BZip2;
 
-public sealed partial class BZip2Stream
+public sealed partial class BZip2Stream : IAsyncDisposable
 {
     /// <summary>
     /// Asynchronously finalizes the BZip2 compressed stream, flushing all pending data.
