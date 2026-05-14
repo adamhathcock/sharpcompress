@@ -40,8 +40,7 @@ public static class IReaderExtensions
             string destinationDirectory,
             ExtractionOptions? options = null
         ) =>
-            ExtractionMethods.WriteEntryToDirectory(
-                reader.Entry,
+            reader.Entry.WriteEntryToDirectory(
                 destinationDirectory,
                 options,
                 (path) => reader.WriteEntryToFile(path, options)
@@ -54,8 +53,7 @@ public static class IReaderExtensions
             string destinationFileName,
             ExtractionOptions? options = null
         ) =>
-            ExtractionMethods.WriteEntryToFile(
-                reader.Entry,
+            reader.Entry.WriteEntryToFile(
                 destinationFileName,
                 options,
                 (x, fm) =>

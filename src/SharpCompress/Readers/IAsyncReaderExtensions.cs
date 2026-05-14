@@ -17,9 +17,8 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToDirectoryAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToDirectoryAsync(
                     destinationDirectory,
                     options,
                     async (path, ct) =>
@@ -36,14 +35,13 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToFileAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToFileAsync(
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
+                        using var fs = File.Open(x, fm);
                         await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
                     },
                     cancellationToken
@@ -72,14 +70,13 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToFileAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToFileAsync(
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
+                        using var fs = File.Open(x, fm);
                         await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
                     },
                     cancellationToken

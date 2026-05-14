@@ -106,8 +106,7 @@ public static class IArchiveEntryExtensions
             string destinationDirectory,
             ExtractionOptions? options = null
         ) =>
-            ExtractionMethods.WriteEntryToDirectory(
-                entry,
+            entry.WriteEntryToDirectory(
                 destinationDirectory,
                 options,
                 (path) => entry.WriteToFile(path, options)
@@ -121,9 +120,8 @@ public static class IArchiveEntryExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
+            await entry
                 .WriteEntryToDirectoryAsync(
-                    entry,
                     destinationDirectory,
                     options,
                     async (path, ct) =>
@@ -136,8 +134,7 @@ public static class IArchiveEntryExtensions
         /// Extract to specific file
         /// </summary>
         public void WriteToFile(string destinationFileName, ExtractionOptions? options = null) =>
-            ExtractionMethods.WriteEntryToFile(
-                entry,
+            entry.WriteEntryToFile(
                 destinationFileName,
                 options,
                 (x, fm) =>
@@ -155,9 +152,8 @@ public static class IArchiveEntryExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
+            await entry
                 .WriteEntryToFileAsync(
-                    entry,
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>

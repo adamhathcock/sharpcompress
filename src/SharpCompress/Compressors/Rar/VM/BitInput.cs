@@ -22,8 +22,7 @@ internal class BitInput : IDisposable
         get => inBit;
         set => inBit = value;
     }
-    public bool ExternalBuffer;
-    private byte[] _privateBuffer = ArrayPool<byte>.Shared.Rent(MAX_SIZE);
+    private readonly byte[] _privateBuffer = ArrayPool<byte>.Shared.Rent(MAX_SIZE);
     private bool _disposed;
 
     /// <summary>  </summary>
