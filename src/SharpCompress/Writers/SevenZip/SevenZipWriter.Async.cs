@@ -29,7 +29,14 @@ public partial class SevenZipWriter
             finalized = true;
             await FinalizeArchiveAsync().ConfigureAwait(false);
         }
-        OutputStream?.Dispose();
+        if (OutputStream is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            OutputStream?.Dispose();
+        }
         // base.DisposeAsync() is a no-op since _isDisposed is already set
         await base.DisposeAsync().ConfigureAwait(false);
     }

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Providers;
@@ -19,5 +20,5 @@ public interface IFinishable
     /// </summary>
     void Finish();
 
-    ValueTask FinishAsync();
+    ValueTask FinishAsync(CancellationToken cancellationToken);
 }

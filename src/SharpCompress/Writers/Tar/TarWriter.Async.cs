@@ -29,7 +29,7 @@ public partial class TarWriter
         }
         if (OutputStream is IFinishable finishable)
         {
-            await finishable.FinishAsync().ConfigureAwait(false);
+            await finishable.FinishAsync(CancellationToken.None).ConfigureAwait(false);
         }
         if (OutputStream is IAsyncDisposable asyncDisposableOutputStream)
         {

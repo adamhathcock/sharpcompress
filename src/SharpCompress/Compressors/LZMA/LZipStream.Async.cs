@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
@@ -34,7 +35,7 @@ public sealed partial class LZipStream
         return new LZipStream(stream, mode, leaveOpen);
     }
 
-    public async ValueTask FinishAsync()
+    public async ValueTask FinishAsync(CancellationToken cancellationToken)
     {
         if (_finished)
         {
@@ -43,32 +44,40 @@ public sealed partial class LZipStream
 
         if (Mode == CompressionMode.Compress)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var crc32Stream = (Crc32Stream)_stream;
             await FinishWrappedStreamAsync(crc32Stream).ConfigureAwait(false);
             var compressedCount = _countingWritableSubStream.NotNull().BytesWritten;
 
-            var intBuf = new byte[8];
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
-            await _countingWritableSubStream
-                .NotNull()
-                .WriteAsync(intBuf, 0, 4, CancellationToken.None)
-                .ConfigureAwait(false);
+            var intBuf = ArrayPool<byte>.Shared.Rent(8);
+            try
+            {
+                BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
+                await _countingWritableSubStream
+                    .NotNull()
+                    .WriteAsync(intBuf, 0, 4, cancellationToken)
+                    .ConfigureAwait(false);
 
-            BinaryPrimitives.WriteInt64LittleEndian(intBuf, _writeCount);
-            await _countingWritableSubStream
-                .NotNull()
-                .WriteAsync(intBuf, 0, intBuf.Length, CancellationToken.None)
-                .ConfigureAwait(false);
+                BinaryPrimitives.WriteInt64LittleEndian(intBuf, _writeCount);
+                await _countingWritableSubStream
+                    .NotNull()
+                    .WriteAsync(intBuf, 0, 8, cancellationToken)
+                    .ConfigureAwait(false);
 
-            // Total member size includes the 6-byte header and 20-byte trailer.
-            BinaryPrimitives.WriteUInt64LittleEndian(
-                intBuf,
-                (ulong)compressedCount + (ulong)(6 + 20)
-            );
-            await _countingWritableSubStream
-                .NotNull()
-                .WriteAsync(intBuf, 0, intBuf.Length, CancellationToken.None)
-                .ConfigureAwait(false);
+                // Total member size includes the 6-byte header and 20-byte trailer.
+                BinaryPrimitives.WriteUInt64LittleEndian(
+                    intBuf,
+                    (ulong)compressedCount + (ulong)(6 + 20)
+                );
+                await _countingWritableSubStream
+                    .NotNull()
+                    .WriteAsync(intBuf, 0, 8, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(intBuf);
+            }
         }
 
         _finished = true;

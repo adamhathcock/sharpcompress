@@ -157,6 +157,8 @@ internal sealed class Lzma2EncoderStream : Stream
         base.Dispose(disposing);
     }
 
+    private static readonly byte[] _endMarker = [0x00];
+
 #if !LEGACY_DOTNET || NETSTANDARD2_1
     public override async ValueTask DisposeAsync()
 #else
@@ -171,8 +173,12 @@ internal sealed class Lzma2EncoderStream : Stream
             {
                 await FlushChunkAsync().ConfigureAwait(false);
             }
+#if !LEGACY_DOTNET || NETSTANDARD2_1
 
-            await _output.WriteAsync(new byte[] { 0x00 }, 0, 1).ConfigureAwait(false);
+            await _output.WriteAsync(new Memory<byte>(_endMarker)).ConfigureAwait(false);
+#else
+            await _output.WriteAsync(_endMarker, 0, 1).ConfigureAwait(false);
+#endif
         }
 
 #if !LEGACY_DOTNET || NETSTANDARD2_1
