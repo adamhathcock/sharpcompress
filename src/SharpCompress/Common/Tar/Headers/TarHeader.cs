@@ -469,14 +469,14 @@ internal sealed partial class TarHeader
             }
 
             var recordLength = ParsePaxRecordLength(payload, index, spaceIndex - index);
-            var recordEnd = index + recordLength;
-            if (recordEnd > payload.Length)
+            if (recordLength <= 0 || recordLength > payload.Length - index)
             {
                 throw new InvalidFormatException(
                     "Invalid PAX record: record length exceeds payload."
                 );
             }
 
+            var recordEnd = index + recordLength;
             if (payload[recordEnd - 1] != (byte)'\n')
             {
                 throw new InvalidFormatException(

@@ -207,50 +207,52 @@ internal sealed partial class TarHeader
     {
         globalPaxMetadata ??= new PaxMetadata();
         var pendingMetadata = globalPaxMetadata.Clone();
-        byte[] buffer;
+        var buffer = ArrayPool<byte>.Shared.Rent(BLOCK_SIZE);
         EntryType entryType;
-
-        while (true)
+        try
         {
-            buffer = await ReadBlockAsync(reader).ConfigureAwait(false);
-
-            if (buffer.Length == 0)
+            while (true)
             {
-                return false;
+                await reader.ReadBytesAsync(buffer, 0, BLOCK_SIZE).ConfigureAwait(false);
+                entryType = ReadEntryType(buffer);
+
+                // LongName and LongLink headers can follow each other and need
+                // to apply to the header that follows them.
+                if (entryType == EntryType.LongName)
+                {
+                    pendingMetadata.Name = await ReadLongNameAsync(reader, buffer)
+                        .ConfigureAwait(false);
+                    continue;
+                }
+
+                if (entryType == EntryType.LongLink)
+                {
+                    pendingMetadata.LinkName = await ReadLongNameAsync(reader, buffer)
+                        .ConfigureAwait(false);
+                    continue;
+                }
+
+                if (entryType == EntryType.LocalExtendedHeader)
+                {
+                    await ReadPaxMetadataAsync(reader, buffer, pendingMetadata)
+                        .ConfigureAwait(false);
+                    continue;
+                }
+
+                if (entryType == EntryType.GlobalExtendedHeader)
+                {
+                    await ReadPaxMetadataAsync(reader, buffer, globalPaxMetadata)
+                        .ConfigureAwait(false);
+                    pendingMetadata = globalPaxMetadata.Clone();
+                    continue;
+                }
+
+                break;
             }
-
-            entryType = ReadEntryType(buffer);
-
-            // LongName and LongLink headers can follow each other and need
-            // to apply to the header that follows them.
-            if (entryType == EntryType.LongName)
-            {
-                pendingMetadata.Name = await ReadLongNameAsync(reader, buffer)
-                    .ConfigureAwait(false);
-                continue;
-            }
-
-            if (entryType == EntryType.LongLink)
-            {
-                pendingMetadata.LinkName = await ReadLongNameAsync(reader, buffer)
-                    .ConfigureAwait(false);
-                continue;
-            }
-
-            if (entryType == EntryType.LocalExtendedHeader)
-            {
-                await ReadPaxMetadataAsync(reader, buffer, pendingMetadata).ConfigureAwait(false);
-                continue;
-            }
-
-            if (entryType == EntryType.GlobalExtendedHeader)
-            {
-                await ReadPaxMetadataAsync(reader, buffer, globalPaxMetadata).ConfigureAwait(false);
-                pendingMetadata = globalPaxMetadata.Clone();
-                continue;
-            }
-
-            break;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         // Check header checksum
@@ -304,19 +306,12 @@ internal sealed partial class TarHeader
         return true;
     }
 
-    private static async ValueTask<byte[]> ReadBlockAsync(AsyncBinaryReader reader)
+    private static async ValueTask ReadLengthAsync(AsyncBinaryReader reader, int length)
     {
-        var buffer = ArrayPool<byte>.Shared.Rent(BLOCK_SIZE);
+        var buffer = ArrayPool<byte>.Shared.Rent(length);
         try
         {
-            await reader.ReadBytesAsync(buffer, 0, BLOCK_SIZE).ConfigureAwait(false);
-
-            if (buffer.Length != 0 && buffer.Length < BLOCK_SIZE)
-            {
-                throw new InvalidFormatException("Buffer is invalid size");
-            }
-
-            return buffer;
+            await reader.ReadBytesAsync(buffer, 0, length).ConfigureAwait(false);
         }
         finally
         {
@@ -378,8 +373,7 @@ internal sealed partial class TarHeader
         var paddingLength = GetPaddingLength(payloadLength);
         if (paddingLength > 0)
         {
-            var padding = new byte[paddingLength];
-            await reader.ReadBytesAsync(padding, 0, paddingLength).ConfigureAwait(false);
+            await ReadLengthAsync(reader, paddingLength).ConfigureAwait(false);
         }
 
         return payload;
