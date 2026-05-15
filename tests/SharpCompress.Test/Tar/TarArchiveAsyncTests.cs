@@ -25,12 +25,13 @@ public class TarArchiveAsyncTests : ArchiveTests
     [Fact]
     public async ValueTask TarArchiveOpenAsyncStream_Throws_On_NonSeekable_Stream()
     {
-          using Stream stream = new ForwardOnlyStream(
+        using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
         );
 
         await Assert.ThrowsAsync<ArgumentException>(async () =>
             await TarArchive.OpenAsyncArchive(new AsyncOnlyStream(stream))
+        );
     }
 
     [Fact]

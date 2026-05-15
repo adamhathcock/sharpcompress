@@ -105,7 +105,7 @@ public class TarWriterAsyncTests : WriterTests
     {
         using var stream = new MemoryStream();
         var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
-        using (var writer = new TarWriter(new AsyncOnlyStream(stream), options))
+        await using (var writer = new TarWriter(new AsyncOnlyStream(stream), options))
         using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
         {
             await writer.WriteAsync("dir/file.txt", content, null);
@@ -124,7 +124,7 @@ public class TarWriterAsyncTests : WriterTests
 
         using var stream = new MemoryStream();
         var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
-        using var writer = new TarWriter(new AsyncOnlyStream(stream), options);
+        await using var writer = new TarWriter(new AsyncOnlyStream(stream), options);
         using var content = new MemoryStream(Encoding.UTF8.GetBytes("hello"));
 
         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
@@ -144,7 +144,7 @@ public class TarWriterAsyncTests : WriterTests
             TarHeaderWriteFormat.GNU_TAR_LONG_LINK
         );
 
-        using (var writer = new TarWriter(new AsyncOnlyStream(stream), options))
+        await using (var writer = new TarWriter(new AsyncOnlyStream(stream), options))
         using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
         {
             await writer.WriteAsync(longName, content, null);
@@ -163,7 +163,7 @@ public class TarWriterAsyncTests : WriterTests
 
         using var stream = new MemoryStream();
         var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
-        using var writer = new TarWriter(new AsyncOnlyStream(stream), options);
+        await using var writer = new TarWriter(new AsyncOnlyStream(stream), options);
 
         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             await writer.WriteDirectoryAsync(longDirectory, null)
