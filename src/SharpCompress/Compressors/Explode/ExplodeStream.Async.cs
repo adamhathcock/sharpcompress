@@ -28,7 +28,7 @@ public partial class ExplodeStream
         return ex;
     }
 
-    private async Task<int> get_tree_async(
+    private async ValueTask<int> get_tree_async(
         int[] arrBitLengths,
         int numberExpected,
         CancellationToken cancellationToken
@@ -55,7 +55,7 @@ public partial class ExplodeStream
         return outIndex != numberExpected ? 4 : 0;
     }
 
-    private async Task<int> ReadSingleByteAsync(CancellationToken cancellationToken)
+    private async ValueTask<int> ReadSingleByteAsync(CancellationToken cancellationToken)
     {
         var buffer = new byte[1];
         int bytesRead = await inStream
@@ -68,7 +68,7 @@ public partial class ExplodeStream
         return buffer[0];
     }
 
-    private async Task<int> explode_SetTables_async(CancellationToken cancellationToken)
+    private async ValueTask<int> explode_SetTables_async(CancellationToken cancellationToken)
     {
         int returnCode;
         int[] arrBitLengthsForCodes = new int[256];
@@ -206,7 +206,7 @@ public partial class ExplodeStream
         return returnCode;
     }
 
-    private async Task NeedBitsAsync(int numberOfBits, CancellationToken cancellationToken)
+    private async ValueTask NeedBitsAsync(int numberOfBits, CancellationToken cancellationToken)
     {
         while (bitBufferCount < (numberOfBits))
         {
@@ -216,7 +216,7 @@ public partial class ExplodeStream
         }
     }
 
-    private async Task<(int returnCode, huftNode huftPointer, int e)> DecodeHuftAsync(
+    private async ValueTask<(int returnCode, huftNode huftPointer, int e)> DecodeHuftAsync(
         huftNode[] htab,
         int bits,
         uint mask,

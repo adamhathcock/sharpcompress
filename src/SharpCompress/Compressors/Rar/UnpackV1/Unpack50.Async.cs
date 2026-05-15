@@ -7,7 +7,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1;
 
 internal partial class Unpack
 {
-    private async Task<bool> UnpReadBufAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> UnpReadBufAsync(CancellationToken cancellationToken = default)
     {
         var DataSize = ReadTop - Inp.InAddr; // Data left to process.
         if (DataSize < 0)
@@ -53,7 +53,7 @@ internal partial class Unpack
         return ReadCode != -1;
     }
 
-    public async Task Unpack5Async(bool Solid, CancellationToken cancellationToken = default)
+    public async ValueTask Unpack5Async(bool Solid, CancellationToken cancellationToken = default)
     {
         FileExtracted = true;
 
@@ -70,7 +70,7 @@ internal partial class Unpack
             // So we can safefly use these tables below.
             if (
                 !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
-                || !ReadTables()
+                || !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
                 || !TablesRead5
             )
             {
@@ -101,7 +101,7 @@ internal partial class Unpack
                     }
                     if (
                         !await ReadBlockHeaderAsync(cancellationToken).ConfigureAwait(false)
-                        || !ReadTables()
+                        || !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
                     )
                     {
                         return;
@@ -118,7 +118,7 @@ internal partial class Unpack
                 && WriteBorder != UnpPtr
             )
             {
-                UnpWriteBuf();
+                await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (WrittenFileSize > DestUnpSize)
                 {
                     return;
@@ -197,7 +197,7 @@ internal partial class Unpack
                 var Filter = new UnpackFilter();
                 if (
                     !await ReadFilterAsync(Filter, cancellationToken).ConfigureAwait(false)
-                    || !AddFilter(Filter)
+                    || !await AddFilterAsync(Filter, cancellationToken).ConfigureAwait(false)
                 )
                 {
                     break;
@@ -232,14 +232,16 @@ internal partial class Unpack
                 continue;
             }
         }
-        UnpWriteBuf();
+        await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<bool> ReadBlockHeaderAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> ReadBlockHeaderAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         Header.HeaderSize = 0;
 
-        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 7)
+        if (Inp.InAddr > ReadTop - 7)
         {
             if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -287,12 +289,12 @@ internal partial class Unpack
         return true;
     }
 
-    private async Task<bool> ReadFilterAsync(
+    private async ValueTask<bool> ReadFilterAsync(
         UnpackFilter Filter,
         CancellationToken cancellationToken = default
     )
     {
-        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 16)
+        if (Inp.InAddr > ReadTop - 16)
         {
             if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -316,6 +318,26 @@ internal partial class Unpack
             Inp.faddbits(5);
         }
 
+        return true;
+    }
+
+    private async ValueTask<bool> AddFilterAsync(
+        UnpackFilter Filter,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (Filters.Count >= MAX_UNPACK_FILTERS)
+        {
+            await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
+            if (Filters.Count >= MAX_UNPACK_FILTERS)
+            {
+                InitFilters();
+            }
+        }
+
+        Filter.NextWindow = WrPtr != UnpPtr && ((WrPtr - UnpPtr) & MaxWinMask) <= Filter.BlockStart;
+        Filter.uBlockStart = (uint)((Filter.BlockStart + UnpPtr) & MaxWinMask);
+        Filters.Add(Filter);
         return true;
     }
 }

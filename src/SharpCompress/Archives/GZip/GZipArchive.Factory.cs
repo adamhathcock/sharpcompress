@@ -76,8 +76,7 @@ public partial class GZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams;
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new GZipArchive(
             new SourceStream(
                 strms[0],
@@ -92,12 +91,8 @@ public partial class GZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return new GZipArchive(
             new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)

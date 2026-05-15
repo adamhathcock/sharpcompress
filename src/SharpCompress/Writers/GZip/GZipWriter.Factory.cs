@@ -22,7 +22,7 @@ public partial class GZipWriter : IWriterOpenable<GZipWriterOptions>
 
     public static IWriter OpenWriter(Stream stream, GZipWriterOptions writerOptions)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireWritable();
         return new GZipWriter(stream, writerOptions);
     }
 

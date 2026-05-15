@@ -23,14 +23,23 @@ public class TarArchiveAsyncTests : ArchiveTests
     public async ValueTask TarArchiveStreamRead_Async() => await ArchiveStreamReadAsync("Tar.tar");
 
     [Fact]
-    public async ValueTask TarArchiveStreamRead_Async_Throws_On_NonSeekable_Stream()
+    public async ValueTask TarArchiveOpenAsyncStream_Throws_On_NonSeekable_Stream()
     {
-        using Stream stream = new ForwardOnlyStream(
+          using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
         );
 
         await Assert.ThrowsAsync<ArgumentException>(async () =>
             await TarArchive.OpenAsyncArchive(new AsyncOnlyStream(stream))
+    }
+
+    [Fact]
+    public async ValueTask TarArchiveOpenAsyncStream_Throws_On_Unreadable_Stream()
+    {
+        using var stream = new TestStream(new MemoryStream(), false, true, true);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            TarArchive.OpenAsyncArchive(stream).AsTask()
         );
     }
 
@@ -46,7 +55,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            using (
+            await using (
                 var writer = await WriterFactory.OpenAsyncWriter(
                     new AsyncOnlyStream(stream),
                     ArchiveType.Tar,
@@ -69,7 +78,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         await using (
             var archive2 = await TarArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(File.OpenRead(unmodified)),
-                new ReaderOptions() { LeaveStreamOpen = false }
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
             )
         )
         {
@@ -105,7 +114,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (
+        await using (
             var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.Tar,
@@ -127,7 +136,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         await using (
             var archive2 = await TarArchive.OpenAsyncArchive(
                 new AsyncOnlyStream(File.OpenRead(unmodified)),
-                new ReaderOptions() { LeaveStreamOpen = false }
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
             )
         )
         {
@@ -225,7 +234,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         }
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
-            var tropt = new ReaderOptions { ArchiveEncoding = enc };
+            var tropt = ReaderOptions.ForExternalStream.WithArchiveEncoding(enc);
             await using (
                 var tr = await ReaderFactory.OpenAsyncReader(
                     new AsyncOnlyStream(inputMemory),

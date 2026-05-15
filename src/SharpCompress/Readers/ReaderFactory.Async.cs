@@ -25,7 +25,11 @@ public static partial class ReaderFactory
     )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenAsyncReader(new FileInfo(filePath), options, cancellationToken);
+        return OpenAsyncReader(
+            new FileInfo(filePath),
+            options ?? ReaderOptions.ForFilePath,
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -52,7 +56,7 @@ public static partial class ReaderFactory
         CancellationToken cancellationToken = default
     )
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
         var sharpCompressStream = SharpCompressStream.Create(

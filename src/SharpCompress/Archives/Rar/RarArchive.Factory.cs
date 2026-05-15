@@ -51,22 +51,18 @@ public partial class RarArchive
             new SourceStream(
                 fileInfo,
                 i => RarArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IRarArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return new RarArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 
@@ -91,8 +87,7 @@ public partial class RarArchive
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams;
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new RarArchive(
             new SourceStream(
                 strms[0],
@@ -158,7 +153,7 @@ public partial class RarArchive
     {
         try
         {
-            MarkHeader.Read(stream, true, false);
+            MarkHeader.Read(stream, true, options?.LookForHeader ?? false);
             return true;
         }
         catch
@@ -177,7 +172,7 @@ public partial class RarArchive
         try
         {
             await MarkHeader
-                .ReadAsync(stream, true, false, cancellationToken)
+                .ReadAsync(stream, true, options?.LookForHeader ?? false, cancellationToken)
                 .ConfigureAwait(false);
             return true;
         }

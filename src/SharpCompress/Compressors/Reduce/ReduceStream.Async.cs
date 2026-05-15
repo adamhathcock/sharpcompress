@@ -22,7 +22,7 @@ public partial class ReduceStream
         return stream;
     }
 
-    private async Task<int> NEXTBYTEAsync(CancellationToken cancellationToken)
+    private async ValueTask<int> NEXTBYTEAsync(CancellationToken cancellationToken)
     {
         if (inByteCount == compressedSize)
         {
@@ -44,7 +44,7 @@ public partial class ReduceStream
         return buffer[0];
     }
 
-    private async Task<byte> READBITSAsync(int nbits, CancellationToken cancellationToken)
+    private async ValueTask<byte> READBITSAsync(int nbits, CancellationToken cancellationToken)
     {
         if (nbits > bitBufferCount)
         {
@@ -66,7 +66,7 @@ public partial class ReduceStream
         return zdest;
     }
 
-    private async Task LoadNextByteTableAsync(CancellationToken cancellationToken)
+    private async ValueTask LoadNextByteTableAsync(CancellationToken cancellationToken)
     {
         nextByteTable = new byte[256][];
         for (int x = 255; x >= 0; x--)
@@ -81,7 +81,7 @@ public partial class ReduceStream
         }
     }
 
-    private async Task<byte> GetNextByteAsync(CancellationToken cancellationToken)
+    private async ValueTask<byte> GetNextByteAsync(CancellationToken cancellationToken)
     {
         if (nextByteTable[outByte].Length == 0)
         {

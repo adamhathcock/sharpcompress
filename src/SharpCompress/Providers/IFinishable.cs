@@ -1,3 +1,6 @@
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace SharpCompress.Providers;
 
 /// <summary>
@@ -16,4 +19,6 @@ public interface IFinishable
     /// and writing format-specific trailer/footer bytes.
     /// </summary>
     void Finish();
+
+    ValueTask FinishAsync(CancellationToken cancellationToken);
 }

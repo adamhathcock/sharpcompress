@@ -229,6 +229,76 @@ internal partial class Model
         _coder.RangeEncoderFlush(target);
     }
 
+    internal async ValueTask EncodeBlockAsync(
+        Stream target,
+        Stream source,
+        bool final,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _minimumContext = _maximumContext;
+            _numberStatistics = _minimumContext.NumberStatistics;
+
+            var c = source.ReadByte();
+            if (c < 0 && !final)
+            {
+                return;
+            }
+
+            if (_numberStatistics != 0)
+            {
+                EncodeSymbol1(c, _minimumContext);
+                _coder.RangeEncodeSymbol();
+            }
+            else
+            {
+                EncodeBinarySymbol(c, _minimumContext);
+                _coder.RangeShiftEncodeSymbol(TOTAL_BIT_COUNT);
+            }
+
+            while (_foundState == PpmState.ZERO)
+            {
+                await _coder
+                    .RangeEncoderNormalizeAsync(target, cancellationToken)
+                    .ConfigureAwait(false);
+                do
+                {
+                    _orderFall++;
+                    _minimumContext = _minimumContext.Suffix;
+                    if (_minimumContext == PpmContext.ZERO)
+                    {
+                        goto StopEncoding;
+                    }
+                } while (_minimumContext.NumberStatistics == _numberMasked);
+                EncodeSymbol2(c, _minimumContext);
+                _coder.RangeEncodeSymbol();
+            }
+
+            if (_orderFall == 0 && (Pointer)_foundState.Successor >= _allocator._baseUnit)
+            {
+                _maximumContext = _foundState.Successor;
+            }
+            else
+            {
+                UpdateModel(_minimumContext);
+                if (_escapeCount == 0)
+                {
+                    ClearMask();
+                }
+            }
+
+            await _coder
+                .RangeEncoderNormalizeAsync(target, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        StopEncoding:
+        await _coder.RangeEncoderFlushAsync(target, cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Dencode (ie. decompress) a given source stream, writing the decoded result to the target stream.
     /// </summary>

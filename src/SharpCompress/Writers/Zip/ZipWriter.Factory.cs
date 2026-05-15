@@ -22,7 +22,7 @@ public partial class ZipWriter : IWriterOpenable<ZipWriterOptions>
 
     public static IWriter OpenWriter(Stream stream, ZipWriterOptions writerOptions)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireWritable();
         return new ZipWriter(stream, writerOptions);
     }
 

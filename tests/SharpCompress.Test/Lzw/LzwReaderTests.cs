@@ -37,7 +37,10 @@ public class LzwReaderTests : ReaderTests
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.Z"));
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LeaveStreamOpen = false }
+            ReaderOptions.ForExternalStream with
+            {
+                LeaveStreamOpen = false,
+            }
         );
 
         // Should detect as Tar archive with Lzw compression

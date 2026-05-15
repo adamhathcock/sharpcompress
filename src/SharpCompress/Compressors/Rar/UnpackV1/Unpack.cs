@@ -55,16 +55,13 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
         set => suspended = value;
     }
 
-    public int Char
+    public int ReadChar()
     {
-        get
+        if (inAddr > MAX_SIZE - 30)
         {
-            if (inAddr > MAX_SIZE - 30)
-            {
-                unpReadBuf();
-            }
-            return (InBuf[inAddr++] & 0xff);
+            unpReadBuf();
         }
+        return (InBuf[inAddr++] & 0xff);
     }
 
     public int PpmEscChar { get; set; }

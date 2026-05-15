@@ -7,6 +7,7 @@ using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
@@ -27,6 +28,23 @@ public class ZipArchiveTests : ArchiveTests
 
     [Fact]
     public void Zip_BZip2_ArchiveStreamRead() => ArchiveStreamRead("Zip.bzip2.zip");
+
+    [Fact]
+    public void ZipArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new NonSeekableMemoryStream();
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => ZipArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
+    public void ZipArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => ZipArchive.OpenArchive(unreadable));
+    }
 
     [Fact]
     public void Zip_Deflate_Streamed2_ArchiveStreamRead() =>
@@ -465,7 +483,10 @@ public class ZipArchiveTests : ArchiveTests
         using (
             var reader = ZipArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"),
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForFilePath with
+                {
+                    Password = "test",
+                }
             )
         )
         {
@@ -482,7 +503,10 @@ public class ZipArchiveTests : ArchiveTests
     {
         using var reader = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES2.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         foreach (var entry in reader.Entries.Where(x => !x.IsDirectory))
         {
@@ -499,7 +523,10 @@ public class ZipArchiveTests : ArchiveTests
         // Test that WinZip AES encrypted entries correctly report their compression type
         using var deflateArchive = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         foreach (var entry in deflateArchive.Entries.Where(x => !x.IsDirectory))
         {
@@ -509,7 +536,10 @@ public class ZipArchiveTests : ArchiveTests
 
         using var lzmaArchive = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.WinzipAES.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         foreach (var entry in lzmaArchive.Entries.Where(x => !x.IsDirectory))
         {
@@ -523,7 +553,10 @@ public class ZipArchiveTests : ArchiveTests
     {
         using var archive = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.zstd.WinzipAES.mixed.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
 
         VerifyMixedZstandardArchive(archive);
@@ -535,7 +568,13 @@ public class ZipArchiveTests : ArchiveTests
         using var stream = File.OpenRead(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.zstd.WinzipAES.mixed.zip")
         );
-        using var archive = ZipArchive.OpenArchive(stream, new ReaderOptions { Password = "test" });
+        using var archive = ZipArchive.OpenArchive(
+            stream,
+            ReaderOptions.ForExternalStream with
+            {
+                Password = "test",
+            }
+        );
 
         VerifyMixedZstandardArchive(archive);
     }
@@ -571,7 +610,10 @@ public class ZipArchiveTests : ArchiveTests
         // Test that Pkware encrypted entries correctly report their compression type
         using var deflateArchive = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.pkware.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         foreach (var entry in deflateArchive.Entries.Where(x => !x.IsDirectory))
         {
@@ -581,7 +623,10 @@ public class ZipArchiveTests : ArchiveTests
 
         using var bzip2Archive = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         foreach (var entry in bzip2Archive.Entries.Where(x => !x.IsDirectory))
         {
@@ -595,7 +640,10 @@ public class ZipArchiveTests : ArchiveTests
     {
         using var reader = ZipArchive.OpenArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.zip64.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         var isComplete = reader.IsComplete;
         Assert.Equal(1, reader.Volumes.Count());
@@ -611,7 +659,10 @@ public class ZipArchiveTests : ArchiveTests
         using (
             var reader = ZipArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"),
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForFilePath with
+                {
+                    Password = "test",
+                }
             )
         )
         {
@@ -673,7 +724,10 @@ public class ZipArchiveTests : ArchiveTests
         using var fileStream = File.OpenRead(zipFile);
         using var archive = ArchiveFactory.OpenArchive(
             fileStream,
-            new ReaderOptions { Password = "12345678" }
+            ReaderOptions.ForExternalStream with
+            {
+                Password = "12345678",
+            }
         );
         var entries = archive.Entries.Where(entry => !entry.IsDirectory);
         foreach (var entry in entries)
@@ -881,7 +935,7 @@ public class ZipArchiveTests : ArchiveTests
         {
             var reader = ReaderFactory.OpenReader(
                 stream,
-                new ReaderOptions
+                ReaderOptions.ForExternalStream with
                 {
                     ArchiveEncoding = new ArchiveEncoding
                     {
@@ -896,7 +950,7 @@ public class ZipArchiveTests : ArchiveTests
         {
             var reader = ReaderFactory.OpenReader(
                 stream,
-                new ReaderOptions
+                ReaderOptions.ForExternalStream with
                 {
                     ArchiveEncoding = new ArchiveEncoding
                     {

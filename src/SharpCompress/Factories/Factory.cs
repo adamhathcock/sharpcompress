@@ -54,11 +54,10 @@ public abstract class Factory : IFactory
     public abstract IEnumerable<string> GetSupportedExtensions();
 
     /// <inheritdoc/>
-    public abstract bool IsArchive(Stream stream, string? password = null);
-
+    public abstract bool IsArchive(Stream stream, ReaderOptions readerOptions);
     public abstract ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     );
 
@@ -86,7 +85,7 @@ public abstract class Factory : IFactory
         if (this is IReaderFactory readerFactory)
         {
             stream.Rewind();
-            if (IsArchive(stream, options.Password))
+            if (IsArchive(stream, options))
             {
                 stream.Rewind(true);
                 reader = readerFactory.OpenReader(stream, options);
@@ -106,10 +105,7 @@ public abstract class Factory : IFactory
         if (this is IReaderFactory readerFactory)
         {
             stream.Rewind();
-            if (
-                await IsArchiveAsync(stream, options.Password, cancellationToken)
-                    .ConfigureAwait(false)
-            )
+            if (await IsArchiveAsync(stream, options, cancellationToken).ConfigureAwait(false))
             {
                 stream.Rewind(true);
                 return await readerFactory

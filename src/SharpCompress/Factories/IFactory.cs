@@ -37,18 +37,18 @@ public interface IFactory
     /// Returns true if the stream represents an archive of the format defined by this type.
     /// </summary>
     /// <param name="stream">A stream, pointing to the beginning of the archive.</param>
-    /// <param name="password">optional password</param>
-    bool IsArchive(Stream stream, string? password = null);
+    /// <param name="readerOptions">Options controlling archive detection.</param>
+    bool IsArchive(Stream stream, ReaderOptions readerOptions);
 
     /// <summary>
     /// Returns true if the stream represents an archive of the format defined by this type asynchronously.
     /// </summary>
     /// <param name="stream">A stream, pointing to the beginning of the archive.</param>
-    /// <param name="password">optional password</param>
+    /// <param name="readerOptions">Options controlling archive detection.</param>
     /// <param name="cancellationToken">cancellation token</param>
     ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     );
 

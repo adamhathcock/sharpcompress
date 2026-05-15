@@ -7,7 +7,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1;
 
 internal partial class Unpack
 {
-    private async Task unpack15Async(bool solid, CancellationToken cancellationToken = default)
+    private async ValueTask unpack15Async(bool solid, CancellationToken cancellationToken = default)
     {
         if (suspended)
         {
@@ -48,7 +48,7 @@ internal partial class Unpack
             }
             if (((wrPtr - unpPtr) & PackDef.MAXWINMASK) < 270 && wrPtr != unpPtr)
             {
-                oldUnpWriteBuf();
+                await oldUnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
                 if (suspended)
                 {
                     return;
@@ -105,10 +105,10 @@ internal partial class Unpack
                 }
             }
         }
-        oldUnpWriteBuf();
+        await oldUnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<bool> unpReadBufAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> unpReadBufAsync(CancellationToken cancellationToken = default)
     {
         var dataSize = readTop - inAddr;
         if (dataSize < 0)
@@ -140,7 +140,7 @@ internal partial class Unpack
         return readCode != -1;
     }
 
-    private async Task oldUnpWriteBufAsync(CancellationToken cancellationToken = default)
+    private async ValueTask oldUnpWriteBufAsync(CancellationToken cancellationToken = default)
     {
         if (unpPtr < wrPtr)
         {

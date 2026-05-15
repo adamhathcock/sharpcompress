@@ -8,7 +8,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack
 {
-    private async Task Unpack20Async(bool Solid, CancellationToken cancellationToken = default)
+    private async ValueTask Unpack20Async(bool Solid, CancellationToken cancellationToken = default)
     {
         uint Bits;
 
@@ -49,7 +49,7 @@ internal partial class Unpack
 
             if (((WrPtr - UnpPtr) & MaxWinMask) < 270 && WrPtr != UnpPtr)
             {
-                UnpWriteBuf20();
+                await UnpWriteBuf20Async(cancellationToken).ConfigureAwait(false);
                 if (Suspended)
                 {
                     return;
@@ -165,11 +165,11 @@ internal partial class Unpack
                 continue;
             }
         }
-        ReadLastTables();
-        UnpWriteBuf20();
+        await ReadLastTables20Async(cancellationToken).ConfigureAwait(false);
+        await UnpWriteBuf20Async(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task UnpWriteBuf20Async(CancellationToken cancellationToken = default)
+    private async ValueTask UnpWriteBuf20Async(CancellationToken cancellationToken = default)
     {
         if (UnpPtr != WrPtr)
         {
@@ -197,7 +197,7 @@ internal partial class Unpack
         WrPtr = UnpPtr;
     }
 
-    private async Task<bool> ReadTables20Async(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> ReadTables20Async(CancellationToken cancellationToken = default)
     {
         byte[] BitLength = new byte[checked((int)BC20)];
         byte[] Table = new byte[checked((int)MC20 * 4)];
@@ -315,5 +315,23 @@ internal partial class Unpack
         }
         Array.Copy(Table, 0, this.UnpOldTable20, 0, UnpOldTable20.Length);
         return true;
+    }
+
+    private async ValueTask ReadLastTables20Async(CancellationToken cancellationToken = default)
+    {
+        if (ReadTop >= Inp.InAddr + 5)
+        {
+            if (UnpAudioBlock)
+            {
+                if (DecodeNumber(Inp, MD[UnpCurChannel]) == 256)
+                {
+                    await ReadTables20Async(cancellationToken).ConfigureAwait(false);
+                }
+            }
+            else if (DecodeNumber(Inp, BlockTables.LD) == 269)
+            {
+                await ReadTables20Async(cancellationToken).ConfigureAwait(false);
+            }
+        }
     }
 }

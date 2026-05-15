@@ -372,7 +372,7 @@ internal partial class Unpack
 
     private bool ReadFilter(UnpackFilter Filter)
     {
-        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 16)
+        if (Inp.InAddr > ReadTop - 16)
         {
             if (!UnpReadBuf())
             {
@@ -762,7 +762,7 @@ internal partial class Unpack
     {
         Header.HeaderSize = 0;
 
-        if (!Inp.ExternalBuffer && Inp.InAddr > ReadTop - 7)
+        if (Inp.InAddr > ReadTop - 7)
         {
             if (!UnpReadBuf())
             {

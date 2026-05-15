@@ -44,13 +44,13 @@ public class GZipFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(Stream stream, string? password = null) =>
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions) =>
         GZipArchive.IsGZipFile(stream);
 
     /// <inheritdoc/>
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     ) => GZipArchive.IsGZipFileAsync(stream, cancellationToken);
 

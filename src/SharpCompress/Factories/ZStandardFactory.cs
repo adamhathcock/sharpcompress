@@ -21,12 +21,12 @@ internal class ZStandardFactory : Factory
         yield return "zstd";
     }
 
-    public override bool IsArchive(Stream stream, string? password = null) =>
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions) =>
         ZStandardStream.IsZStandard(stream);
 
     public override ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     ) => ZStandardStream.IsZStandardAsync(stream, cancellationToken);
 }

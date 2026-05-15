@@ -89,7 +89,7 @@ public partial class TarReader
     {
         cancellationToken.ThrowIfCancellationRequested();
         stream.NotNull(nameof(stream));
-        readerOptions ??= new ReaderOptions();
+        readerOptions ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
             bufferSize: Math.Max(
@@ -170,8 +170,8 @@ public partial class TarReader
     /// <returns></returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-        readerOptions ??= new ReaderOptions();
+        stream.RequireReadable();
+        readerOptions ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
             bufferSize: Math.Max(

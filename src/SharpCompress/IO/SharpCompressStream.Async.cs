@@ -8,7 +8,7 @@ namespace SharpCompress.IO;
 
 public partial class SharpCompressStream
 {
-    public override Task<int> ReadAsync(
+    public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
@@ -17,25 +17,17 @@ public partial class SharpCompressStream
     {
         if (count == 0)
         {
-            return Task.FromResult(0);
+            return 0;
         }
 
         // In passthrough mode, delegate directly to underlying stream
         if (_isPassthrough)
         {
-            return stream.ReadAsync(buffer, offset, count, cancellationToken);
+            return await stream
+                .ReadAsync(buffer, offset, count, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        return ReadAsyncCore(buffer, offset, count, cancellationToken);
-    }
-
-    private async Task<int> ReadAsyncCore(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
         // If ring buffer is enabled, use ring buffer logic
         if (_ringBuffer is not null)
         {
@@ -55,7 +47,7 @@ public partial class SharpCompressStream
     /// <summary>
     /// Async version of ReadWithRingBuffer.
     /// </summary>
-    private async Task<int> ReadWithRingBufferAsync(
+    private async ValueTask<int> ReadWithRingBufferAsync(
         byte[] buffer,
         int offset,
         int count,

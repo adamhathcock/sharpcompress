@@ -129,7 +129,15 @@ public class ZipReaderTests : ReaderTests
         using (
             Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"))
         )
-        using (var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            var reader = ZipReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
@@ -152,7 +160,7 @@ public class ZipReaderTests : ReaderTests
         using (
             var reader = ReaderFactory.OpenReader(
                 stream,
-                new ReaderOptions().WithLeaveStreamOpen(false)
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
             )
         )
         {
@@ -194,7 +202,13 @@ public class ZipReaderTests : ReaderTests
                 )
             )
             using (
-                var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" })
+                var reader = ZipReader.OpenReader(
+                    stream,
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
+                )
             )
             {
                 while (reader.MoveToNextEntry())
@@ -217,7 +231,15 @@ public class ZipReaderTests : ReaderTests
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
             )
         )
-        using (var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            var reader = ZipReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
@@ -236,7 +258,15 @@ public class ZipReaderTests : ReaderTests
     {
         var count = 0;
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
-        using (var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            var reader = ZipReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
@@ -402,7 +432,10 @@ public class ZipReaderTests : ReaderTests
     {
         using var reader = ReaderFactory.OpenReader(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.encrypted.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         reader.MoveToNextEntry();
         Assert.Equal("first.txt", reader.Entry.Key);

@@ -12,7 +12,7 @@ internal class SingleVolumeAceReader : AceReader
     internal SingleVolumeAceReader(Stream stream, ReaderOptions options)
         : base(options)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireReadable();
         _stream = stream;
     }
 

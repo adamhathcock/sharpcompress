@@ -97,7 +97,7 @@ public class BinaryReaderParityTests : TestBase
     }
 
     [Fact]
-    public void Position_Parity()
+    public async Task Position_Parity()
     {
         using var syncStream = new MemoryStream(_testData);
         using var asyncStream = new MemoryStream(_testData);
@@ -107,7 +107,7 @@ public class BinaryReaderParityTests : TestBase
         // Read some bytes
         syncReader.ReadBytes(10);
         var asyncBuffer = new byte[10];
-        asyncReader.ReadBytesAsync(asyncBuffer, 0, 10).AsTask().Wait();
+        await asyncReader.ReadBytesAsync(asyncBuffer, 0, 10);
 
         Assert.Equal(syncStream.Position, asyncStream.Position);
         Assert.Equal(syncReader.BaseStream.Position, asyncReader.BaseStream.Position);

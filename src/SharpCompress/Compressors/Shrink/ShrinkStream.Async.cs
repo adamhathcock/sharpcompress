@@ -18,7 +18,7 @@ internal partial class ShrinkStream : Stream
         return shrinkStream;
     }
 
-    private async Task DecompressAsync(CancellationToken cancellationToken)
+    private async ValueTask DecompressAsync(CancellationToken cancellationToken)
     {
         if (_decompressed)
         {

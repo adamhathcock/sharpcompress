@@ -13,6 +13,31 @@ namespace SharpCompress.Test.Rar;
 
 public class RarArchiveAsyncTests : ArchiveTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar2.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public async ValueTask Rar_Archive_Recently_Changed_Unpackers_Async(string filename)
+    {
+        var extractedEntries = 0;
+        await using var archive = await RarArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, filename),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
+        {
+            using var output = new AsyncOnlyStream(new MemoryStream());
+            await entry.WriteToAsync(output);
+            extractedEntries++;
+        }
+
+        Assert.True(extractedEntries > 0);
+    }
+
     [Fact]
     public async ValueTask Rar_EncryptedFileAndHeader_Archive_Async() =>
         await ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", "test");
@@ -71,7 +96,11 @@ public class RarArchiveAsyncTests : ArchiveTests
         await using (
             var archive = await RarArchive.OpenAsyncArchive(
                 stream,
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
@@ -98,7 +127,11 @@ public class RarArchiveAsyncTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, archiveName),
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForFilePath with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
@@ -144,7 +177,13 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
         using (
-            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+            var archive = RarArchive.OpenArchive(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
+            )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -316,7 +355,10 @@ public class RarArchiveAsyncTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForFilePath with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {

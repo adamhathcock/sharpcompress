@@ -41,7 +41,7 @@ public partial class ZipArchive
             new SourceStream(
                 fileInfo,
                 i => ZipArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
@@ -57,7 +57,7 @@ public partial class ZipArchive
             new SourceStream(
                 files[0],
                 i => i < files.Count ? files[i] : null,
-                readerOptions ?? new ReaderOptions() { LeaveStreamOpen = false }
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
@@ -67,8 +67,7 @@ public partial class ZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams;
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new ZipArchive(
             new SourceStream(
                 strms[0],
@@ -83,12 +82,8 @@ public partial class ZipArchive
         ReaderOptions? readerOptions = null
     )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return new ZipArchive(
             new SourceStream(stream, i => null, readerOptions ?? ReaderOptions.ForExternalStream)
