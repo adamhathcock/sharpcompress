@@ -133,7 +133,7 @@ public partial class Decoder : IAsyncDisposable
                 .ConfigureAwait(false);
     }
 
-    public async Task CodeAsync(
+    public async ValueTask CodeAsync(
         Stream inStream,
         Stream outStream,
         long inSize,

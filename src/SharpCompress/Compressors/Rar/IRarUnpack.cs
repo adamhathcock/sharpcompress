@@ -10,13 +10,13 @@ internal interface IRarUnpack
     void DoUnpack(FileHeader fileHeader, Stream readStream, Stream writeStream);
     void DoUnpack();
 
-    Task DoUnpackAsync(
+    ValueTask DoUnpackAsync(
         FileHeader fileHeader,
         Stream readStream,
         Stream writeStream,
         CancellationToken cancellationToken
     );
-    Task DoUnpackAsync(CancellationToken cancellationToken);
+    ValueTask DoUnpackAsync(CancellationToken cancellationToken);
 
     // eg u/i pause/resume button
     bool Suspended { get; set; }

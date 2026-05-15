@@ -8,6 +8,9 @@ using SharpCompress.Compressors.ZStandard.Unsafe;
 namespace SharpCompress.Compressors.ZStandard;
 
 public partial class CompressionStream : Stream
+#if LEGACY_DOTNET
+        , IAsyncDisposable
+#endif
 {
     private readonly Stream innerStream;
     private readonly byte[] outputBuffer;

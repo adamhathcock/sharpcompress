@@ -54,7 +54,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            using (
+            await using (
                 var writer = await WriterFactory.OpenAsyncWriter(
                     new AsyncOnlyStream(stream),
                     ArchiveType.Tar,
@@ -113,7 +113,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (
+        await using (
             var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.Tar,

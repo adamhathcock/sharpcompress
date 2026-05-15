@@ -6,7 +6,7 @@ using SharpCompress.Compressors.ZStandard.Unsafe;
 
 namespace SharpCompress.Compressors.ZStandard;
 
-public partial class CompressionStream : Stream
+public partial class CompressionStream
 {
 #if !LEGACY_DOTNET || NETSTANDARD2_1
     public override async ValueTask DisposeAsync()

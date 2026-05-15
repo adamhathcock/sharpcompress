@@ -11,7 +11,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.PPMd;
 
-public class PpmdStream : Stream
+public class PpmdStream : Stream, IAsyncDisposable
 {
     private readonly PpmdProperties _properties;
     private readonly Stream _stream;
@@ -186,6 +186,28 @@ public class PpmdStream : Stream
         base.Dispose(disposing);
     }
 
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+    public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        _isDisposed = true;
+        if (_compress)
+        {
+            await _model.EncodeBlockAsync(_stream, new MemoryStream(), true).ConfigureAwait(false);
+        }
+
+#if !LEGACY_DOTNET || NETSTANDARD2_1
+        await base.DisposeAsync().ConfigureAwait(false);
+#endif
+    }
+
     public override long Length => throw new NotSupportedException();
 
     public override long Position
@@ -350,4 +372,46 @@ public class PpmdStream : Stream
             _model.EncodeBlock(_stream, new MemoryStream(buffer, offset, count), false);
         }
     }
+
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_compress)
+        {
+            await _model
+                .EncodeBlockAsync(
+                    _stream,
+                    new MemoryStream(buffer, offset, count),
+                    false,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+    }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_compress)
+        {
+            await _model
+                .EncodeBlockAsync(
+                    _stream,
+                    new MemoryStream(buffer.ToArray()),
+                    false,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+    }
+#endif
 }

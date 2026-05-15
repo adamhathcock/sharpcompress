@@ -23,7 +23,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Compressors.ADC;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Crypto;
@@ -121,4 +124,36 @@ public class AdcTest : TestBase
         Assert.Equal(crc32, crc32A);
         Assert.Equal(crc32, crc32B);
     }
+
+    [Fact]
+    public async Task TestCrc32StreamWriteAsync()
+    {
+        var buffer = File.ReadAllBytes(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+        var crc32 = Crc32Stream.Compute(buffer);
+
+        using var memory = new MemoryStream();
+        using var crcStream = new Crc32Stream(memory, 0xEDB88320, 0xFFFFFFFF);
+
+        await crcStream.WriteAsync(buffer, 0, buffer.Length, CancellationToken.None);
+
+        Assert.Equal(buffer, memory.ToArray());
+        Assert.Equal(crc32, crcStream.Crc);
+    }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public async Task TestCrc32StreamWriteMemoryAsync()
+    {
+        var buffer = File.ReadAllBytes(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+        var crc32 = Crc32Stream.Compute(buffer);
+
+        using var memory = new MemoryStream();
+        using var crcStream = new Crc32Stream(memory, 0xEDB88320, 0xFFFFFFFF);
+
+        await crcStream.WriteAsync(buffer.AsMemory(), CancellationToken.None);
+
+        Assert.Equal(buffer, memory.ToArray());
+        Assert.Equal(crc32, crcStream.Crc);
+    }
+#endif
 }

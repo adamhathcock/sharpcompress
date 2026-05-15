@@ -27,7 +27,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         hasModifications = true;
         newEntries.RemoveAll(v => removedEntries.Contains(v));
         modifiedEntries.Clear();
-        await foreach (var entry in OldEntriesAsync)
+        await foreach (var entry in OldEntriesAsync.ConfigureAwait(false))
         {
             modifiedEntries.Add(entry);
         }

@@ -198,7 +198,7 @@ internal sealed partial class Unpack : BitInput
         }
     }
 
-    private async Task DoUnpackAsync(
+    private async ValueTask DoUnpackAsync(
         uint Method,
         bool Solid,
         CancellationToken cancellationToken = default

@@ -11,7 +11,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack
 {
-    private async Task Unpack5Async(bool Solid, CancellationToken cancellationToken = default)
+    private async ValueTask Unpack5Async(bool Solid, CancellationToken cancellationToken = default)
     {
         FileExtracted = true;
 
@@ -218,7 +218,7 @@ internal partial class Unpack
         await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<bool> ReadFilterAsync(
+    private async ValueTask<bool> ReadFilterAsync(
         BitInput Inp,
         UnpackFilter Filter,
         CancellationToken cancellationToken = default
@@ -251,7 +251,7 @@ internal partial class Unpack
         return true;
     }
 
-    private async Task<bool> UnpReadBufAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> UnpReadBufAsync(CancellationToken cancellationToken = default)
     {
         var DataSize = ReadTop - Inp.InAddr; // Data left to process.
         if (DataSize < 0)
@@ -301,7 +301,7 @@ internal partial class Unpack
         return ReadCode != -1;
     }
 
-    private async Task UnpWriteBufAsync(CancellationToken cancellationToken = default)
+    private async ValueTask UnpWriteBufAsync(CancellationToken cancellationToken = default)
     {
         var WrittenBorder = WrPtr;
         var FullWriteSize = (UnpPtr - WrittenBorder) & MaxWinMask;
@@ -456,7 +456,7 @@ internal partial class Unpack
         }
     }
 
-    private async Task UnpWriteAreaAsync(
+    private async ValueTask UnpWriteAreaAsync(
         size_t StartPtr,
         size_t EndPtr,
         CancellationToken cancellationToken = default
@@ -498,7 +498,7 @@ internal partial class Unpack
         }
     }
 
-    private async Task UnpWriteDataAsync(
+    private async ValueTask UnpWriteDataAsync(
         byte[] Data,
         size_t offset,
         size_t Size,
@@ -521,7 +521,7 @@ internal partial class Unpack
         WrittenFileSize += Size;
     }
 
-    private async Task<bool> ReadBlockHeaderAsync(
+    private async ValueTask<bool> ReadBlockHeaderAsync(
         BitInput Inp,
         CancellationToken cancellationToken = default
     )
@@ -576,7 +576,7 @@ internal partial class Unpack
         return true;
     }
 
-    private async Task<bool> ReadTablesAsync(
+    private async ValueTask<bool> ReadTablesAsync(
         BitInput Inp,
         CancellationToken cancellationToken = default
     )

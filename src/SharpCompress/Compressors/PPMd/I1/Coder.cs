@@ -47,6 +47,24 @@ internal class Coder
         }
     }
 
+    public async ValueTask RangeEncoderNormalizeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (
+            (_low ^ (_low + _range)) < RANGE_TOP
+            || _range < RANGE_BOTTOM && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
+        )
+        {
+            await stream
+                .WriteAsync(new[] { (byte)(_low >> 24) }, 0, 1, cancellationToken)
+                .ConfigureAwait(false);
+            _range <<= 8;
+            _low <<= 8;
+        }
+    }
+
     public void RangeEncodeSymbol()
     {
         _low += _lowCount * (_range /= _scale);
@@ -66,6 +84,21 @@ internal class Coder
             stream.WriteByte((byte)(_low >> 24));
             _low <<= 8;
         }
+    }
+
+    public async ValueTask RangeEncoderFlushAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var buffer = new byte[4];
+        for (var index = 0; index < buffer.Length; index++)
+        {
+            buffer[index] = (byte)(_low >> 24);
+            _low <<= 8;
+        }
+
+        await stream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
     }
 
     public void RangeDecoderInitialize(Stream stream)

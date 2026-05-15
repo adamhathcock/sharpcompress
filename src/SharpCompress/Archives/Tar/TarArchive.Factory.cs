@@ -55,7 +55,7 @@ public partial class TarArchive
         );
         var compressionType = TarFactory.GetCompressionType(
             sourceStream,
-            sourceStream.ReaderOptions.Providers
+            sourceStream.ReaderOptions
         );
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);
@@ -74,7 +74,7 @@ public partial class TarArchive
         );
         var compressionType = TarFactory.GetCompressionType(
             sourceStream,
-            sourceStream.ReaderOptions.Providers
+            sourceStream.ReaderOptions
         );
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);
@@ -105,11 +105,7 @@ public partial class TarArchive
             readerOptions ?? ReaderOptions.ForExternalStream
         );
         var compressionType = await TarFactory
-            .GetCompressionTypeAsync(
-                sourceStream,
-                sourceStream.ReaderOptions.Providers,
-                cancellationToken
-            )
+            .GetCompressionTypeAsync(sourceStream, sourceStream.ReaderOptions, cancellationToken)
             .ConfigureAwait(false);
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);
@@ -137,11 +133,7 @@ public partial class TarArchive
         readerOptions ??= ReaderOptions.ForFilePath;
         var sourceStream = new SourceStream(fileInfo, i => null, readerOptions);
         var compressionType = await TarFactory
-            .GetCompressionTypeAsync(
-                sourceStream,
-                sourceStream.ReaderOptions.Providers,
-                cancellationToken
-            )
+            .GetCompressionTypeAsync(sourceStream, sourceStream.ReaderOptions, cancellationToken)
             .ConfigureAwait(false);
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);
@@ -161,11 +153,7 @@ public partial class TarArchive
             readerOptions ?? ReaderOptions.ForExternalStream
         );
         var compressionType = await TarFactory
-            .GetCompressionTypeAsync(
-                sourceStream,
-                sourceStream.ReaderOptions.Providers,
-                cancellationToken
-            )
+            .GetCompressionTypeAsync(sourceStream, sourceStream.ReaderOptions, cancellationToken)
             .ConfigureAwait(false);
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);
@@ -186,11 +174,7 @@ public partial class TarArchive
             readerOptions ?? ReaderOptions.ForFilePath
         );
         var compressionType = await TarFactory
-            .GetCompressionTypeAsync(
-                sourceStream,
-                sourceStream.ReaderOptions.Providers,
-                cancellationToken
-            )
+            .GetCompressionTypeAsync(sourceStream, sourceStream.ReaderOptions, cancellationToken)
             .ConfigureAwait(false);
         sourceStream.Seek(0, SeekOrigin.Begin);
         return new TarArchive(sourceStream, compressionType);

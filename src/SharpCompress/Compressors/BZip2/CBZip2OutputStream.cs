@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
  *
@@ -39,7 +37,7 @@ namespace SharpCompress.Compressors.BZip2;
   * start of the BZIP2 stream to make it compatible with other PGP programs.
   */
 
-internal sealed class CBZip2OutputStream : Stream
+internal sealed partial class CBZip2OutputStream : Stream
 {
     private const int SETMASK = (1 << 21);
     private const int CLEARMASK = (~SETMASK);
@@ -332,9 +330,6 @@ internal sealed class CBZip2OutputStream : Stream
         zptr = null;
         ftab = null;
 
-        inStream.WriteByte((byte)'B');
-        inStream.WriteByte((byte)'Z');
-
         BsSetStream(inStream);
 
         workFactor = 50;
@@ -348,9 +343,11 @@ internal sealed class CBZip2OutputStream : Stream
         }
         blockSize100k = inBlockSize;
         AllocateCompressStructures();
-        Initialize();
-        InitBlock();
+        // Defer Initialize() and InitBlock() to EnsureStreamHeaderWritten/Async:
+        // they write to the underlying stream which may be async-only.
     }
+
+    private bool _streamHeaderWritten;
 
     /**
     *
@@ -358,8 +355,25 @@ internal sealed class CBZip2OutputStream : Stream
     *
     */
 
+    /// <summary>
+    /// Ensures the BZip2 stream header ('B', 'Z', 'h', blocksize) has been written
+    /// synchronously before the first compressed byte is written.
+    /// </summary>
+    private void EnsureStreamHeaderWritten()
+    {
+        if (!_streamHeaderWritten)
+        {
+            _streamHeaderWritten = true;
+            bsStream.WriteByte((byte)'B');
+            bsStream.WriteByte((byte)'Z');
+            Initialize();
+            InitBlock();
+        }
+    }
+
     public override void WriteByte(byte bv)
     {
+        EnsureStreamHeaderWritten();
         var b = (256 + bv) % 256;
         if (currentChar != -1)
         {
@@ -471,6 +485,7 @@ internal sealed class CBZip2OutputStream : Stream
             return;
         }
 
+        EnsureStreamHeaderWritten();
         if (runLength > 0)
         {
             WriteRun();
@@ -2002,25 +2017,11 @@ internal sealed class CBZip2OutputStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count)
     {
+        EnsureStreamHeaderWritten();
         for (var k = 0; k < count; ++k)
         {
             WriteByte(buffer[k + offset]);
         }
-    }
-
-    public override Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        for (var k = 0; k < count; ++k)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            WriteByte(buffer[k + offset]);
-        }
-        return Task.CompletedTask;
     }
 
     public override bool CanRead => false;

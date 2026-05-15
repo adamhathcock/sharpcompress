@@ -14,7 +14,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV1;
 
 internal sealed partial class Unpack
 {
-    public async Task DoUnpackAsync(
+    public async ValueTask DoUnpackAsync(
         FileHeader fileHeader,
         Stream readStream,
         Stream writeStream,
@@ -33,7 +33,7 @@ internal sealed partial class Unpack
         await DoUnpackAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task DoUnpackAsync(CancellationToken cancellationToken = default)
+    public async ValueTask DoUnpackAsync(CancellationToken cancellationToken = default)
     {
         if (fileHeader.CompressionMethod == 0)
         {
@@ -63,7 +63,7 @@ internal sealed partial class Unpack
         }
     }
 
-    private async Task UnstoreFileAsync(CancellationToken cancellationToken = default)
+    private async ValueTask UnstoreFileAsync(CancellationToken cancellationToken = default)
     {
         var buffer = new byte[(int)Math.Min(0x10000, destUnpSize)];
         do
@@ -81,7 +81,7 @@ internal sealed partial class Unpack
         } while (!suspended && destUnpSize > 0);
     }
 
-    private async Task Unpack29Async(bool solid, CancellationToken cancellationToken = default)
+    private async ValueTask Unpack29Async(bool solid, CancellationToken cancellationToken = default)
     {
         int[] DDecode = new int[PackDef.DC];
         byte[] DBits = new byte[PackDef.DC];
@@ -359,7 +359,7 @@ internal sealed partial class Unpack
         await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task UnpWriteBufAsync(CancellationToken cancellationToken = default)
+    private async ValueTask UnpWriteBufAsync(CancellationToken cancellationToken = default)
     {
         var WrittenBorder = wrPtr;
         var WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
@@ -559,7 +559,7 @@ internal sealed partial class Unpack
         wrPtr = unpPtr;
     }
 
-    private async Task UnpWriteAreaAsync(
+    private async ValueTask UnpWriteAreaAsync(
         int startPtr,
         int endPtr,
         CancellationToken cancellationToken = default
@@ -583,7 +583,7 @@ internal sealed partial class Unpack
         }
     }
 
-    private async Task UnpWriteDataAsync(
+    private async ValueTask UnpWriteDataAsync(
         byte[] data,
         int offset,
         int size,
@@ -607,7 +607,7 @@ internal sealed partial class Unpack
         destUnpSize -= size;
     }
 
-    private async Task<bool> ReadTablesAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> ReadTablesAsync(CancellationToken cancellationToken = default)
     {
         var bitLengthArray = ArrayPool<byte>.Shared.Rent(PackDef.BC);
         var bitLength = new Memory<byte>(bitLengthArray, 0, PackDef.BC);
@@ -761,7 +761,7 @@ internal sealed partial class Unpack
         }
     }
 
-    private async Task<bool> ReadEndOfBlockAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> ReadEndOfBlockAsync(CancellationToken cancellationToken = default)
     {
         var BitField = GetBits();
         bool NewTable,
@@ -783,7 +783,7 @@ internal sealed partial class Unpack
         );
     }
 
-    private async Task<bool> ReadVMCodeAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> ReadVMCodeAsync(CancellationToken cancellationToken = default)
     {
         var FirstByte = GetBits() >> 8;
         AddBits(8);
@@ -825,7 +825,7 @@ internal sealed partial class Unpack
         return InBuf[inAddr++] & 0xff;
     }
 
-    private async Task<bool> ReadVMCodePPMAsync(CancellationToken cancellationToken = default)
+    private async ValueTask<bool> ReadVMCodePPMAsync(CancellationToken cancellationToken = default)
     {
         var FirstByte = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
         if (FirstByte == -1)
