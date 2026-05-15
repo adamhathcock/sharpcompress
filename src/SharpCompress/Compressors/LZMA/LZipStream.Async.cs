@@ -74,7 +74,7 @@ public sealed partial class LZipStream
         _finished = true;
     }
 
-    public static async ValueTask WriteHeaderSizeAsync(Stream stream) =>
+    private static async ValueTask WriteHeaderSizeAsync(Stream stream) =>
         // hard coding the dictionary size encoding
         await stream.WriteAsync(headerBytes, 0, 6).ConfigureAwait(false);
 
