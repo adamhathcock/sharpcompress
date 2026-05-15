@@ -149,11 +149,11 @@ Implementation files:
 
 ### Open Behavior
 
-Synchronous `TarArchive.OpenArchive(Stream)` requires a seekable stream and throws `ArgumentException` when `CanSeek` is `false`.
+`TarArchive.OpenArchive(Stream)` and `TarArchive.OpenAsyncArchive(Stream)` require a seekable stream and throw `ArgumentException` when `CanSeek` is `false`.
 
 `TarArchive.OpenArchive(FileInfo)` and the list-based overloads use `SourceStream` and determine wrapper compression by calling `TarFactory.GetCompressionType`.
 
-Asynchronous `OpenAsyncArchive` overloads use `TarFactory.GetCompressionTypeAsync` and do not enforce the same explicit seekability check at the public API boundary.
+Asynchronous `OpenAsyncArchive` overloads use `TarFactory.GetCompressionTypeAsync` for wrapper detection.
 
 ### Entry Loading
 
@@ -269,6 +269,8 @@ Tar header parsing is implemented in `TarHeader.Read` and `TarHeader.ReadAsync`.
 | Hard link target reading | Yes |
 | GNU long name (`L`) | Yes |
 | GNU long link (`K`) | Yes |
+| PAX local extended header (`x`) | Yes (selected keys) |
+| PAX global extended header (`g`) | Yes (selected keys) |
 | USTAR prefix reconstruction | Yes |
 | Binary size field parsing | Yes |
 | oldgnu uid/gid numeric quirk parsing | Yes |
@@ -290,6 +292,7 @@ Tar header parsing is implemented in `TarHeader.Read` and `TarHeader.ReadAsync`.
 - `LongName`
 - `SparseFile`
 - `VolumeHeader`
+- `LocalExtendedHeader`
 - `GlobalExtendedHeader`
 
 SharpCompress currently has explicit handling for only a subset of those values during read and write.
@@ -299,6 +302,38 @@ SharpCompress currently has explicit handling for only a subset of those values 
 When `TarHeader.Read` encounters `EntryType.LongName` or `EntryType.LongLink`, it reads the payload and applies it to the next real header.
 
 Long-name payload reads are capped at `32768` bytes to avoid memory exhaustion from malformed archives.
+
+### PAX Local Header Reads
+
+SharpCompress now consumes local PAX extended headers (`x`) and applies supported key overrides to the next real entry.
+
+Currently supported keys:
+
+- `path`
+- `linkpath`
+- `size`
+- `mtime`
+- `uid`
+- `gid`
+- `mode`
+
+Unknown PAX keys are ignored.
+
+### PAX Global Header Reads
+
+SharpCompress consumes global PAX extended headers (`g`) and applies supported key overrides to subsequent entries.
+
+Supported keys match local PAX support:
+
+- `path`
+- `linkpath`
+- `size`
+- `mtime`
+- `uid`
+- `gid`
+- `mode`
+
+Global metadata is overridden by local per-entry metadata when both are present.
 
 ### Name Reconstruction
 
@@ -358,7 +393,7 @@ Async tar support is provided by:
 - `TarHeader.ReadAsync`
 - `TarHeader.WriteAsync`
 
-The async implementations generally mirror the sync implementations while using async header parsing, decompression, and stream copy paths. The most important current exception is `TarWriterOptions.HeaderFormat`, which is not consistently honored outside the synchronous file write path.
+The async implementations generally mirror the sync implementations while using async header parsing, decompression, and stream copy paths.
 
 ## Known Limitations
 
@@ -376,14 +411,13 @@ This section documents current implementation limits, not desired future behavio
 
 ### Read limitations or partial support
 
-- No explicit PAX local header support
+- PAX support is limited to selected keys (`path`, `linkpath`, `size`, `mtime`, `uid`, `gid`, `mode`)
 - No semantic sparse file handling beyond recognizing the entry type enum value
-- No semantic global extended header handling beyond recognizing the entry type enum value
 - No special device or FIFO object model beyond the raw entry type information available internally
 
 ### Archive behavior limitations
 
-- Sync archive open requires a seekable input stream
+- Stream-based archive open requires a seekable input stream
 - Compressed tar archive access is not full random-access in the same sense as uncompressed seekable tar
 
 ## Test Coverage Map
@@ -414,6 +448,8 @@ Representative tar test archives in `tests/TestArchives/Archives/`:
 - `very long filename.tar`
 - `ustar with long names.tar`
 - `Tar.LongPathsWithLongNameExtension.tar`
+- `Tar.PaxGlobalHeader.tar`
+- `Tar.PaxGlobalHeader.Link.tar`
 - `Tar.Empty.tar`
 - `TarCorrupted.tar`
 - `TarWithSymlink.tar.gz`
@@ -427,4 +463,5 @@ SharpCompress Tar support is centered around:
 - seekable archive support for uncompressed tar and archive rewrite workflows
 - narrower write support than read support
 - GNU long-name and USTAR write support
+- PAX local header (`x`) read support for selected metadata keys
 - partial coverage for less common tar dialect features

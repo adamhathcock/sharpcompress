@@ -6,13 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
-using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Writers.Tar;
-using Constants = SharpCompress.Common.Constants;
 
 namespace SharpCompress.Archives.Tar;
 
@@ -116,7 +114,6 @@ public partial class TarArchive
         {
             stream.Position = 0;
         }
-        TarHeader? previousHeader = null;
         foreach (
             var header in TarHeaderFactory.ReadHeader(
                 _compressionType == CompressionType.None
@@ -129,50 +126,15 @@ public partial class TarArchive
         {
             if (header != null)
             {
-                if (header.EntryType == EntryType.LongName)
-                {
-                    previousHeader = header;
-                }
-                else
-                {
-                    if (previousHeader != null)
-                    {
-                        var entry = new TarArchiveEntry(
-                            this,
-                            new TarFilePart(
-                                previousHeader,
-                                _compressionType == CompressionType.None ? stream : null
-                            ),
-                            CompressionType.None,
-                            ReaderOptions
-                        );
-
-                        var oldStreamPos = stream.Position;
-
-                        using (var entryStream = entry.OpenEntryStream())
-                        {
-                            using var memoryStream = new PooledMemoryStream();
-                            entryStream.CopyTo(memoryStream, Constants.BufferSize);
-                            memoryStream.Position = 0;
-                            var bytes = memoryStream.ToArray();
-
-                            header.Name = ReaderOptions.ArchiveEncoding.Decode(bytes).TrimNulls();
-                        }
-
-                        stream.Position = oldStreamPos;
-
-                        previousHeader = null;
-                    }
-                    yield return new TarArchiveEntry(
-                        this,
-                        new TarFilePart(
-                            header,
-                            _compressionType == CompressionType.None ? stream : null
-                        ),
-                        CompressionType.None,
-                        ReaderOptions
-                    );
-                }
+                yield return new TarArchiveEntry(
+                    this,
+                    new TarFilePart(
+                        header,
+                        _compressionType == CompressionType.None ? stream : null
+                    ),
+                    CompressionType.None,
+                    ReaderOptions
+                );
             }
             else
             {

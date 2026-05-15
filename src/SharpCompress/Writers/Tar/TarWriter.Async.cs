@@ -58,7 +58,7 @@ public partial class TarWriter
             return;
         }
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = normalizedName;
         header.Size = 0;
@@ -96,7 +96,7 @@ public partial class TarWriter
 
         var realSize = size ?? source.Length;
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
 
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
