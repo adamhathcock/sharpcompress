@@ -13,7 +13,7 @@ namespace SharpCompress.Writers.Zip;
 /// Options for configuring Zip writer behavior.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// Configure zip writing with constructors, property setters, or the <c>with</c> expression:
 /// <code>
 /// var options = new ZipWriterOptions(CompressionType.Zip);
 /// options = options with { UseZip64 = true };
@@ -30,7 +30,7 @@ public sealed record ZipWriterOptions : IWriterOptions
     public CompressionType CompressionType
     {
         get => _compressionType;
-        init => _compressionType = value;
+        set => _compressionType = value;
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public sealed record ZipWriterOptions : IWriterOptions
     public int CompressionLevel
     {
         get => _compressionLevel;
-        init
+        set
         {
             CompressionLevelValidation.Validate(CompressionType, value);
             _compressionLevel = value;
@@ -49,29 +49,29 @@ public sealed record ZipWriterOptions : IWriterOptions
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.
     /// </summary>
-    public bool LeaveStreamOpen { get; init; } = true;
+    public bool LeaveStreamOpen { get; set; } = true;
 
     /// <summary>
     /// Encoding to use for archive entry names.
     /// </summary>
-    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
 
     /// <summary>
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; init; }
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; init; } =
+    public CompressionProviderRegistry Providers { get; set; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>
     /// Optional comment for the archive.
     /// </summary>
-    public string? ArchiveComment { get; init; }
+    public string? ArchiveComment { get; set; }
 
     /// <summary>
     /// Sets a value indicating if zip64 support is enabled.
@@ -80,7 +80,7 @@ public sealed record ZipWriterOptions : IWriterOptions
     /// Archives larger than 4GiB are supported as long as all streams
     /// are less than 4GiB in length.
     /// </summary>
-    public bool UseZip64 { get; init; }
+    public bool UseZip64 { get; set; }
 
     /// <summary>
     /// Creates a new ZipWriterOptions instance with the specified compression type.

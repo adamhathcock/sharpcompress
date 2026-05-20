@@ -12,7 +12,7 @@ namespace SharpCompress.Writers.GZip;
 /// Options for configuring GZip writer behavior.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use factory methods for creation:
+/// Use factory methods, property setters, or fluent helpers for creation:
 /// <code>
 /// var options = WriterOptions.ForGZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
 /// </code>
@@ -27,7 +27,7 @@ public sealed record GZipWriterOptions : IWriterOptions
     public CompressionType CompressionType
     {
         get => CompressionType.GZip;
-        init
+        set
         {
             if (value != CompressionType.GZip)
             {
@@ -46,7 +46,7 @@ public sealed record GZipWriterOptions : IWriterOptions
     public int CompressionLevel
     {
         get => _compressionLevel;
-        init
+        set
         {
             CompressionLevelValidation.Validate(CompressionType.GZip, value);
             _compressionLevel = value;
@@ -56,24 +56,24 @@ public sealed record GZipWriterOptions : IWriterOptions
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.
     /// </summary>
-    public bool LeaveStreamOpen { get; init; } = true;
+    public bool LeaveStreamOpen { get; set; } = true;
 
     /// <summary>
     /// Encoding to use for archive entry names.
     /// </summary>
-    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
 
     /// <summary>
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; init; }
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; init; } =
+    public CompressionProviderRegistry Providers { get; set; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>

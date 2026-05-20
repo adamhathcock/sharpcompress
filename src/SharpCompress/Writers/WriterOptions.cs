@@ -10,7 +10,7 @@ namespace SharpCompress.Writers;
 /// Options for configuring writer behavior when creating archives.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use factory methods for creation:
+/// Use factory methods, property setters, or fluent helpers for creation:
 /// <code>
 /// var options = WriterOptions.ForZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
 /// </code>
@@ -20,7 +20,7 @@ public sealed record WriterOptions : IWriterOptions
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
-    public CompressionType CompressionType { get; init; }
+    public CompressionType CompressionType { get; set; }
 
     /// <summary>
     /// The compression level to be used when the compression type supports variable levels.
@@ -33,7 +33,7 @@ public sealed record WriterOptions : IWriterOptions
     public int CompressionLevel
     {
         get;
-        init
+        set
         {
             CompressionLevelValidation.Validate(CompressionType, value);
             field = value;
@@ -43,25 +43,25 @@ public sealed record WriterOptions : IWriterOptions
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.
     /// </summary>
-    public bool LeaveStreamOpen { get; init; } = true;
+    public bool LeaveStreamOpen { get; set; } = true;
 
     /// <summary>
     /// Encoding to use for archive entry names.
     /// </summary>
-    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
 
     /// <summary>
     /// An optional progress reporter for tracking compression operations.
     /// When set, progress updates will be reported as entries are written.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; init; }
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; init; } =
+    public CompressionProviderRegistry Providers { get; set; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>

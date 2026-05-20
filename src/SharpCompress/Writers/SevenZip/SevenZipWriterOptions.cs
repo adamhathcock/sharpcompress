@@ -20,7 +20,7 @@ public sealed record SevenZipWriterOptions : IWriterOptions
     public CompressionType CompressionType
     {
         get => _compressionType;
-        init
+        set
         {
             if (value != CompressionType.LZMA && value != CompressionType.LZMA2)
             {
@@ -39,41 +39,41 @@ public sealed record SevenZipWriterOptions : IWriterOptions
     public int CompressionLevel
     {
         get => _compressionLevel;
-        init => _compressionLevel = value;
+        set => _compressionLevel = value;
     }
 
     /// <summary>
     /// SharpCompress will keep the supplied streams open. Default is true.
     /// </summary>
-    public bool LeaveStreamOpen { get; init; } = true;
+    public bool LeaveStreamOpen { get; set; } = true;
 
     /// <summary>
     /// Encoding to use for archive entry names.
     /// </summary>
-    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
 
     /// <summary>
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; init; }
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; init; } =
+    public CompressionProviderRegistry Providers { get; set; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>
     /// Whether to compress the archive header itself using LZMA.
     /// Default is true, matching standard 7-Zip behavior.
     /// </summary>
-    public bool CompressHeader { get; init; } = true;
+    public bool CompressHeader { get; set; } = true;
 
     /// <summary>
     /// Custom LZMA encoder properties. Null uses defaults (1MB dictionary, 32 fast bytes).
     /// </summary>
-    public LzmaEncoderProperties? LzmaProperties { get; init; }
+    public LzmaEncoderProperties? LzmaProperties { get; set; }
 
     /// <summary>
     /// Creates a new SevenZipWriterOptions instance with LZMA2 compression (default).
