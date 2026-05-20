@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -226,6 +229,26 @@ public class OptionsUsabilityTests : TestBase
         var preserveMetadata = ExtractionOptions.PreserveMetadata;
         Assert.True(preserveMetadata.PreserveFileTime);
         Assert.True(preserveMetadata.PreserveAttributes);
+    }
+
+    [Fact]
+    public void Public_Option_Surface_Does_Not_Require_Init_Only_Setters()
+    {
+        var initOnlyProperties = typeof(ReaderOptions)
+            .Assembly.GetExportedTypes()
+            .SelectMany(type =>
+                type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(property => property.SetMethod?.IsPublic == true)
+                    .Where(property =>
+                        property
+                            .SetMethod!.ReturnParameter.GetRequiredCustomModifiers()
+                            .Contains(typeof(IsExternalInit))
+                    )
+                    .Select(property => $"{type.FullName}.{property.Name}")
+            )
+            .ToArray();
+
+        Assert.Empty(initOnlyProperties);
     }
 
     [Fact]

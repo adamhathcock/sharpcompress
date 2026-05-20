@@ -10,7 +10,7 @@ namespace SharpCompress.Readers;
 /// Options for configuring reader behavior when opening archives.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use preset properties and fluent helpers for common configurations:
+/// Use preset properties, setters, and fluent helpers for common configurations:
 /// <code>
 /// var options = ReaderOptions.ForExternalStream
 ///     .WithPassword("secret")
@@ -53,43 +53,43 @@ public sealed record ReaderOptions : IReaderOptions
     /// </code>
     /// </para>
     /// </remarks>
-    public bool LeaveStreamOpen { get; init; } = false;
+    public bool LeaveStreamOpen { get; set; } = false;
 
     /// <summary>
     /// Encoding to use for archive entry names.
     /// </summary>
-    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
 
     /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)
     /// </summary>
-    public bool LookForHeader { get; init; }
+    public bool LookForHeader { get; set; }
 
     /// <summary>
     /// Password for encrypted archives.
     /// </summary>
-    public string? Password { get; init; }
+    public string? Password { get; set; }
 
     /// <summary>
     /// Disable checking for incomplete archives.
     /// </summary>
-    public bool DisableCheckIncomplete { get; init; }
+    public bool DisableCheckIncomplete { get; set; }
 
     /// <summary>
     /// Buffer size for stream operations.
     /// </summary>
-    public int BufferSize { get; init; } = Constants.BufferSize;
+    public int BufferSize { get; set; } = Constants.BufferSize;
 
     /// <summary>
     /// Provide a hint for the extension of the archive being read, can speed up finding the correct decoder.  Should be without the leading period in the form like: tar.gz or zip
     /// </summary>
-    public string? ExtensionHint { get; init; }
+    public string? ExtensionHint { get; set; }
 
     /// <summary>
     /// An optional progress reporter for tracking extraction operations.
     /// When set, progress updates will be reported as entries are extracted.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; init; }
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
     /// Size of the rewindable buffer for non-seekable streams.
@@ -133,14 +133,14 @@ public sealed record ReaderOptions : IReaderOptions
     /// using var reader = ReaderFactory.OpenReader(networkStream, options);
     /// </code>
     /// </example>
-    public int? RewindableBufferSize { get; init; }
+    public int? RewindableBufferSize { get; set; }
 
     /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; init; } =
+    public CompressionProviderRegistry Providers { get; set; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>
