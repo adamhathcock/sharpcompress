@@ -7,7 +7,7 @@ namespace SharpCompress.Common;
 /// Options for configuring extraction behavior when extracting archive entries.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// Configure extraction behavior with constructors, property setters, or the <c>with</c> expression:
 /// <code>
 /// var options = new ExtractionOptions { Overwrite = false };
 /// options = options with { PreserveFileTime = true };
@@ -19,24 +19,24 @@ public sealed record ExtractionOptions : IExtractionOptions
     /// Overwrite target if it exists.
     /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
     /// </summary>
-    public bool Overwrite { get; init; } = true;
+    public bool Overwrite { get; set; } = true;
 
     /// <summary>
     /// Extract with internal directory structure.
     /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
     /// </summary>
-    public bool ExtractFullPath { get; init; } = true;
+    public bool ExtractFullPath { get; set; } = true;
 
     /// <summary>
     /// Preserve file time.
     /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
     /// </summary>
-    public bool PreserveFileTime { get; init; } = true;
+    public bool PreserveFileTime { get; set; } = true;
 
     /// <summary>
     /// Preserve windows file attributes.
     /// </summary>
-    public bool PreserveAttributes { get; init; }
+    public bool PreserveAttributes { get; set; }
 
     /// <summary>
     /// Delegate for writing symbolic links to disk.
@@ -44,10 +44,10 @@ public sealed record ExtractionOptions : IExtractionOptions
     /// The second parameter is the target path (what the symlink refers to).
     /// </summary>
     /// <remarks>
-    /// <b>Breaking change:</b> Changed from field to init-only property in version 0.40.0.
+    /// <b>Breaking change:</b> Changed from field to property in version 0.40.0.
     /// If no handler is provided, symbolic links are silently skipped during extraction.
     /// </remarks>
-    public Action<string, string>? SymbolicLinkHandler { get; init; }
+    public Action<string, string>? SymbolicLinkHandler { get; set; }
 
     /// <summary>
     /// Creates a new ExtractionOptions instance with default values.

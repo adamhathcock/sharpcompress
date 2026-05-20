@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -226,6 +229,65 @@ public class OptionsUsabilityTests : TestBase
         var preserveMetadata = ExtractionOptions.PreserveMetadata;
         Assert.True(preserveMetadata.PreserveFileTime);
         Assert.True(preserveMetadata.PreserveAttributes);
+    }
+
+    [Fact]
+    public void Public_Api_Does_Not_Expose_CSharp_9_Required_Metadata()
+    {
+        var assembly = typeof(ReaderOptions).Assembly;
+        const string RequiredMemberAttributeName =
+            "System.Runtime.CompilerServices.RequiredMemberAttribute";
+        const string SetsRequiredMembersAttributeName =
+            "System.Diagnostics.CodeAnalysis.SetsRequiredMembersAttribute";
+        var initOnlyProperties = assembly
+            .GetExportedTypes()
+            .SelectMany(type =>
+                type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(property => property.SetMethod?.IsPublic == true)
+                    .Where(property =>
+                        property
+                            .SetMethod!.ReturnParameter.GetRequiredCustomModifiers()
+                            .Contains(typeof(IsExternalInit))
+                    )
+                    .Select(property => $"{type.FullName}.{property.Name}")
+            )
+            .ToArray();
+
+        Assert.Empty(initOnlyProperties);
+
+        var requiredMembers = assembly
+            .GetExportedTypes()
+            .SelectMany(type =>
+                type.GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public)
+                    .Where(member =>
+                        member
+                            .GetCustomAttributesData()
+                            .Any(attribute =>
+                                attribute.AttributeType.FullName == RequiredMemberAttributeName
+                            )
+                    )
+                    .Select(member => $"{type.FullName}.{member.Name}")
+            )
+            .ToArray();
+
+        Assert.Empty(requiredMembers);
+
+        var constructorsWithRequiredMembers = assembly
+            .GetExportedTypes()
+            .SelectMany(type =>
+                type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(constructor =>
+                        constructor
+                            .GetCustomAttributesData()
+                            .Any(attribute =>
+                                attribute.AttributeType.FullName == SetsRequiredMembersAttributeName
+                            )
+                    )
+                    .Select(_ => $"{type.FullName}.ctor")
+            )
+            .ToArray();
+
+        Assert.Empty(constructorsWithRequiredMembers);
     }
 
     [Fact]

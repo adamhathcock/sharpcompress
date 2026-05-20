@@ -18,5 +18,6 @@
       Include="Microsoft.VisualStudio.Threading.Analyzers"
       Version="17.14.15"
     />
+    <GlobalPackageReference Include="PolySharp" Version="1.15.0" />
   </ItemGroup>
 </Project>
