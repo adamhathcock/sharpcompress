@@ -204,6 +204,7 @@ SharpCompress supports multiple archive and compression formats:
 - Preserve existing public method signatures and behavior when possible.
 - If a breaking change is unavoidable, document it and provide a migration path.
 - Add or update tests that cover backward compatibility expectations.
+- Avoid exposing public `init` setters, positional records, `required` members, or other metadata that forces consumers onto newer C# language versions; validate older-consumer compatibility with tests when changing exported APIs.
 
 ### Stream Ownership and Position Checklist
 - Verify `LeaveStreamOpen` behavior for externally owned streams.
