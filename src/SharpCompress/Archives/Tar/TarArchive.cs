@@ -117,6 +117,7 @@ public partial class TarArchive
             stream.Position = 0;
         }
         TarHeader? previousHeader = null;
+        string? previousLongName = null;
         foreach (
             var header in TarHeaderFactory.ReadHeader(
                 _compressionType == CompressionType.None
@@ -131,18 +132,39 @@ public partial class TarArchive
             {
                 if (header.EntryType == EntryType.LongName)
                 {
-                    previousHeader = header;
+                    if (_compressionType != CompressionType.None)
+                    {
+                        // Streaming (compressed) mode: read the long name immediately
+                        // from the PackedStream before the foreach loop advances and
+                        // ReadHeader disposes it while skipping to the next header.
+                        using var longNameStream = header.PackedStream.NotNull();
+                        using var memoryStream = new MemoryStream();
+                        longNameStream.CopyTo(memoryStream, Constants.BufferSize);
+                        previousLongName = ReaderOptions
+                            .ArchiveEncoding.Decode(memoryStream.ToArray())
+                            .TrimNulls();
+                    }
+                    else
+                    {
+                        // Seekable (uncompressed) mode: save the header; the long name
+                        // will be read after the next entry header has been parsed.
+                        previousHeader = header;
+                    }
                 }
                 else
                 {
-                    if (previousHeader != null)
+                    if (previousLongName != null)
                     {
+                        // Apply the long name that was pre-read in streaming mode.
+                        header.Name = previousLongName;
+                        previousLongName = null;
+                    }
+                    else if (previousHeader != null)
+                    {
+                        // Seekable mode: read the long name via the seekable stream now.
                         var entry = new TarArchiveEntry(
                             this,
-                            new TarFilePart(
-                                previousHeader,
-                                _compressionType == CompressionType.None ? stream : null
-                            ),
+                            new TarFilePart(previousHeader, stream),
                             CompressionType.None,
                             ReaderOptions
                         );
