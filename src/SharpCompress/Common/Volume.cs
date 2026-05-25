@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -42,7 +43,9 @@ public abstract partial class Volume : IVolume, IAsyncDisposable
 
     public virtual int Index { get; internal set; }
 
-    public string? FileName => (_baseStream as FileStream)?.Name;
+    public string? FileName =>
+        (_baseStream as FileStream)?.Name
+        ?? (_baseStream as SourceStream)?.Files.FirstOrDefault()?.FullName;
 
     /// <summary>
     /// RarArchive is part of a multi-part archive.
