@@ -113,6 +113,20 @@ public class ArchiveFactoryTests : TestBase
     }
 
     [Theory]
+    [InlineData("Zip.deflate.zip")]
+    [InlineData("Tar.noEmptyDirs.tar")]
+    [InlineData("Rar.rar")]
+    [InlineData("7Zip.nonsolid.7z")]
+    public void OpenArchive_SingleVolume_VolumeFileName_MatchesPath(string archiveName)
+    {
+        var archivePath = GetTestArchivePath(archiveName);
+        using var archive = ArchiveFactory.OpenArchive(archivePath);
+
+        var volume = Assert.Single(archive.Volumes);
+        Assert.Equal(archivePath, volume.FileName);
+    }
+
+    [Theory]
     [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
     [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
     [InlineData("Rar.rar", ArchiveType.Rar)]
