@@ -14,7 +14,7 @@
 | Arc                | None, Packed, Squeezed, Crunched                                    | Decompress          | N/A             | ArcReader  | N/A             |
 | Arj                | None                                                                | Decompress          | N/A             | ArjReader  | N/A             |
 | Rar                | Rar                                                                 | Decompress          | RarArchive      | RarReader  | N/A             |
-| Zip (2)            | None, Shrink, Reduce, Implode, DEFLATE, Deflate64, BZip2, LZMA/LZMA2, PPMd, ZStandard, XZ | Both                | ZipArchive      | ZipReader  | ZipWriter       |
+| Zip (2)            | None, Shrink, Reduce, Implode, DEFLATE, Deflate64, BZip2, LZMA, PPMd, ZStandard, XZ | Both                | ZipArchive      | ZipReader  | ZipWriter       |
 | Tar                | None                                                                | Both                | TarArchive      | TarReader  | TarWriter (3)   |
 | Tar.GZip           | DEFLATE                                                             | Both                | TarArchive      | TarReader  | TarWriter (3)   |
 | Tar.BZip2          | BZip2                                                               | Both                | TarArchive      | TarReader  | TarWriter (3)   |
