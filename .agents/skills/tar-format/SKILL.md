@@ -1,6 +1,6 @@
 ---
 name: tar-format
-description: Reference the Tar/USTAR/PAX/GNU tar archive container format. Use when Codex needs to answer questions or make code changes involving tar headers, 512-byte blocks, checksums, typeflags, USTAR prefixes, PAX local/global extended headers, GNU long names/links, sparse entries, wrapper compression, or SharpCompress Tar parsing and writing behavior.
+description: Reference the Tar/USTAR/PAX/GNU tar archive container format. Use when an AI agent needs to answer questions or make code changes involving tar headers, 512-byte blocks, checksums, typeflags, USTAR prefixes, PAX local/global extended headers, GNU long names/links, sparse entries, wrapper compression, or SharpCompress Tar parsing and writing behavior.
 ---
 
 # Tar Format
