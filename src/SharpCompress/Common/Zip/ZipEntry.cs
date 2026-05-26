@@ -57,6 +57,7 @@ public class ZipEntry : Entry
                 ZipCompressionMethod.Reduce4 => CompressionType.Reduce4,
                 ZipCompressionMethod.Explode => CompressionType.Explode,
                 ZipCompressionMethod.ZStandard => CompressionType.ZStandard,
+                ZipCompressionMethod.Xz => CompressionType.Xz,
                 _ => CompressionType.Unknown,
             };
         }

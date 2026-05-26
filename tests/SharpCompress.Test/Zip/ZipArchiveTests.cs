@@ -101,6 +101,19 @@ public class ZipArchiveTests : ArchiveTests
     public void WinZip27_X_XZ_ArchiveFileRead() => ArchiveFileRead("WinZip27_XZ.zipx");
 
     [Fact]
+    public void WinZip27_X_XZ_Reports_CompressionType_Xz()
+    {
+        using var archive = ArchiveFactory.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "WinZip27_XZ.zipx")
+        );
+
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        {
+            Assert.Equal(CompressionType.Xz, entry.CompressionType);
+        }
+    }
+
+    [Fact]
     public void Zip_Deflate_Streamed2_ArchiveFileRead() => ArchiveFileRead("Zip.deflate.dd-.zip");
 
     [Fact]
