@@ -1,6 +1,6 @@
 ---
 name: sevenzip-format
-description: Reference the 7z/7zip archive container format. Use when Codex needs to answer questions or make code changes involving 7z signatures, headers, encoded headers, NID/property IDs, packed streams, folders/coders, bind pairs, substreams, file metadata properties, or SharpCompress 7Zip parsing behavior.
+description: Reference the 7z/7zip archive container format. Use when an AI agent needs to answer questions or make code changes involving 7z signatures, headers, encoded headers, NID/property IDs, packed streams, folders/coders, bind pairs, substreams, file metadata properties, or SharpCompress 7Zip parsing behavior.
 ---
 
 # Sevenzip Format
