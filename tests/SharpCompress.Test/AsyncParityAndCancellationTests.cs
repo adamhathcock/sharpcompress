@@ -102,12 +102,19 @@ public class AsyncParityAndCancellationTests : TestBase
         );
         var stream = new TestStream(new MemoryStream(archiveBytes));
 
-        await using (var reader = await ReaderFactory.OpenAsyncReader(stream))
+        try
         {
-            Assert.True(await reader.MoveToNextEntryAsync());
-        }
+            await using (var reader = await ReaderFactory.OpenAsyncReader(stream))
+            {
+                Assert.True(await reader.MoveToNextEntryAsync());
+            }
 
-        Assert.False(stream.IsDisposed);
+            Assert.False(stream.IsDisposed);
+        }
+        finally
+        {
+            stream.Dispose();
+        }
     }
 
     [Fact]
