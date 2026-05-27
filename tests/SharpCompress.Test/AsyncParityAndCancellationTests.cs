@@ -125,15 +125,22 @@ public class AsyncParityAndCancellationTests : TestBase
         );
         var stream = new TestStream(new MemoryStream(archiveBytes));
 
-        await using (var archive = await ArchiveFactory.OpenAsyncArchive(stream))
+        try
         {
-            await foreach (var _ in archive.EntriesAsync)
+            await using (var archive = await ArchiveFactory.OpenAsyncArchive(stream))
             {
-                break;
+                await foreach (var _ in archive.EntriesAsync)
+                {
+                    break;
+                }
             }
-        }
 
-        Assert.False(stream.IsDisposed);
+            Assert.False(stream.IsDisposed);
+        }
+        finally
+        {
+            await stream.DisposeAsync();
+        }
     }
 
     private static List<EntrySnapshot> ReadArchiveEntries(string archivePath)
