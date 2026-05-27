@@ -308,6 +308,21 @@ public class AsyncParityAndCancellationTests : TestBase
             CancellationToken cancellationToken
         ) => ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                stream.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            await stream.DisposeAsync().ConfigureAwait(false);
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+
         public override long Seek(long offset, SeekOrigin origin) => stream.Seek(offset, origin);
 
         public override void SetLength(long value) => throw new NotSupportedException();
