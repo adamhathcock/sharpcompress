@@ -63,7 +63,7 @@ internal sealed class TarFilePart : FilePart
 
             // Fall back to existing behavior for stream-based sources
             _seekableStream.Position = Header.DataStartPosition ?? 0;
-            return new TarReadOnlySubStream(_seekableStream, Header.Size, false);
+            return new TarReadOnlySubStream(_seekableStream, Header.Size);
         }
         return Header.PackedStream.NotNull();
     }
@@ -74,13 +74,9 @@ internal sealed class TarFilePart : FilePart
     {
         if (_seekableStream != null)
         {
-            var useSyncOverAsync = false;
-#if LEGACY_DOTNET
-            useSyncOverAsync = true;
-#endif
             _seekableStream.Position = Header.DataStartPosition ?? 0;
             return new ValueTask<Stream?>(
-                new TarReadOnlySubStream(_seekableStream, Header.Size, useSyncOverAsync)
+                new TarReadOnlySubStream(_seekableStream, Header.Size)
             );
         }
         return new ValueTask<Stream?>(Header.PackedStream.NotNull());

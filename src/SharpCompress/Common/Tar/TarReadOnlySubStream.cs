@@ -10,7 +10,7 @@ internal class TarReadOnlySubStream : Stream
     private bool _isDisposed;
     private long _amountRead;
 
-    public TarReadOnlySubStream(Stream stream, long bytesToRead, bool useSyncOverAsyncDispose)
+    public TarReadOnlySubStream(Stream stream, long bytesToRead)
     {
         _stream = stream;
         BytesLeftToRead = bytesToRead;

@@ -1,6 +1,6 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors;
+using SharpCompress.IO;
 using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Zip;
@@ -10,7 +10,6 @@ internal partial class SeekableZipFilePart : ZipFilePart
     private volatile bool _isLocalHeaderLoaded;
     private readonly SeekableZipHeaderFactory _headerFactory;
     private readonly object _headerLock = new();
-    private readonly SemaphoreSlim _asyncHeaderSemaphore = new(1, 1);
 
     internal SeekableZipFilePart(
         SeekableZipHeaderFactory headerFactory,
@@ -36,8 +35,59 @@ internal partial class SeekableZipFilePart : ZipFilePart
         return base.GetCompressedStream();
     }
 
-    private void LoadLocalHeader() =>
-        Header = _headerFactory.GetLocalHeader(BaseStream, (DirectoryEntryHeader)Header);
+    private void LoadLocalHeader()
+    {
+        // Use an independent stream for loading the header if multi-threading is enabled
+        Stream streamToUse = BaseStream;
+        bool disposeStream = false;
+
+        if (
+            BaseStream is SourceStream sourceStream
+            && sourceStream.IsFileMode
+            && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
+        )
+        {
+            var independentStream = sourceStream.CreateIndependentStream(0);
+            if (independentStream is not null)
+            {
+                streamToUse = independentStream;
+                disposeStream = true;
+            }
+        }
+        else
+        {
+            // Check if BaseStream wraps a FileStream
+            Stream? underlyingStream = BaseStream;
+            if (BaseStream is IStreamStack streamStack)
+            {
+                underlyingStream = streamStack.BaseStream();
+            }
+
+            if (underlyingStream is FileStream fileStream)
+            {
+                streamToUse = new FileStream(
+                    fileStream.Name,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read
+                );
+                disposeStream = true;
+            }
+        }
+
+        try
+        {
+            Header = _headerFactory.GetLocalHeader(streamToUse, (DirectoryEntryHeader)Header);
+        }
+        finally
+        {
+            if (disposeStream)
+            {
+                streamToUse.Dispose();
+            }
+        }
+    }
+
 
     protected override Stream CreateBaseStream()
     {
