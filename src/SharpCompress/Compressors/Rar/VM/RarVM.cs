@@ -31,6 +31,17 @@ internal sealed class RarVM : BitInput
     public const int VM_FIXEDGLOBALSIZE = 64;
 
     private const int regCount = 8;
+    private static readonly VMStandardFilterSignature[] StandardFilterSignatures =
+    {
+        new(53, 0xad576887, VMStandardFilters.VMSF_E8),
+        new(57, 0x3cd7e57e, VMStandardFilters.VMSF_E8E9),
+        new(120, 0x3769893f, VMStandardFilters.VMSF_ITANIUM),
+        new(29, 0x0e06077d, VMStandardFilters.VMSF_DELTA),
+        new(149, 0x1c2c5dc8, VMStandardFilters.VMSF_RGB),
+        new(216, 0xbc85e701, VMStandardFilters.VMSF_AUDIO),
+        new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE),
+    };
+
     private readonly int[] R = new int[regCount];
 
     private VMFlags flags;
@@ -1116,22 +1127,15 @@ internal sealed class RarVM : BitInput
 
     private VMStandardFilters IsStandardFilter(ReadOnlySpan<byte> code)
     {
-        VMStandardFilterSignature[] stdList =
-        {
-            new(53, 0xad576887, VMStandardFilters.VMSF_E8),
-            new(57, 0x3cd7e57e, VMStandardFilters.VMSF_E8E9),
-            new(120, 0x3769893f, VMStandardFilters.VMSF_ITANIUM),
-            new(29, 0x0e06077d, VMStandardFilters.VMSF_DELTA),
-            new(149, 0x1c2c5dc8, VMStandardFilters.VMSF_RGB),
-            new(216, 0xbc85e701, VMStandardFilters.VMSF_AUDIO),
-            new(40, 0x46b9c560, VMStandardFilters.VMSF_UPCASE),
-        };
         var CodeCRC = RarCRC.CheckCrc(0xffffffff, code, 0, code.Length) ^ 0xffffffff;
-        for (var i = 0; i < stdList.Length; i++)
+        for (var i = 0; i < StandardFilterSignatures.Length; i++)
         {
-            if (stdList[i].CRC == CodeCRC && stdList[i].Length == code.Length)
+            if (
+                StandardFilterSignatures[i].CRC == CodeCRC
+                && StandardFilterSignatures[i].Length == code.Length
+            )
             {
-                return (stdList[i].Type);
+                return (StandardFilterSignatures[i].Type);
             }
         }
         return (VMStandardFilters.VMSF_NONE);

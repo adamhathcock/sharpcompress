@@ -164,12 +164,13 @@ internal partial class Unpack
             }
             if (MainSlot == 256)
             {
-                var Filter = new UnpackFilter();
+                var Filter = RentFilter();
                 if (
                     !await ReadFilterAsync(Inp, Filter, cancellationToken).ConfigureAwait(false)
                     || !AddFilter(Filter)
                 )
                 {
+                    ReturnFilter(Filter);
                     break;
                 }
                 continue;
@@ -430,6 +431,7 @@ internal partial class Unpack
 
             if (Filters[I].Type == FILTER_NONE)
             {
+                ReturnFilter(Filters[I]);
                 EmptyCount++;
             }
         }

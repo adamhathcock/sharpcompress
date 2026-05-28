@@ -156,9 +156,10 @@ internal partial class Unpack
             }
             if (MainSlot == 256)
             {
-                var Filter = new UnpackFilter();
+                var Filter = RentFilter();
                 if (!ReadFilter(Inp, Filter) || !AddFilter(Filter))
                 {
+                    ReturnFilter(Filter);
                     break;
                 }
 
@@ -487,6 +488,7 @@ internal partial class Unpack
 
             if (Filters[I].Type == FILTER_NONE)
             {
+                ReturnFilter(Filters[I]);
                 EmptyCount++;
             }
         }
@@ -857,7 +859,35 @@ internal partial class Unpack
         return true;
     }
 
-    private void InitFilters() =>
-        //Filters.SoftReset();
+    private UnpackFilter RentFilter()
+    {
+        if (FilterPool.Count == 0)
+        {
+            return new UnpackFilter();
+        }
+
+        var last = FilterPool.Count - 1;
+        var filter = FilterPool[last];
+        FilterPool.RemoveAt(last);
+        return filter;
+    }
+
+    private void ReturnFilter(UnpackFilter filter)
+    {
+        filter.Type = FILTER_NONE;
+        filter.BlockStart = 0;
+        filter.BlockLength = 0;
+        filter.Channels = 0;
+        filter.NextWindow = false;
+        FilterPool.Add(filter);
+    }
+
+    private void InitFilters()
+    {
+        for (var i = 0; i < Filters.Count; i++)
+        {
+            ReturnFilter(Filters[i]);
+        }
         Filters.Clear();
+    }
 }

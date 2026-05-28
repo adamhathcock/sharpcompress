@@ -63,15 +63,39 @@ internal partial class RarBLAKE2spStream : RarStream
 
     private sealed class BLAKE2SP
     {
-        internal readonly BLAKE2S[] S;
+        internal readonly BLAKE2S S0 = new();
+        internal readonly BLAKE2S S1 = new();
+        internal readonly BLAKE2S S2 = new();
+        internal readonly BLAKE2S S3 = new();
+        internal readonly BLAKE2S S4 = new();
+        internal readonly BLAKE2S S5 = new();
+        internal readonly BLAKE2S S6 = new();
+        internal readonly BLAKE2S S7 = new();
+        internal readonly BLAKE2S Root;
         internal int bufferPosition;
 
-        public BLAKE2SP()
+        public BLAKE2SP() => Root = new BLAKE2S();
+
+        internal BLAKE2S GetLeaf(int index)
         {
-            S = new BLAKE2S[BLAKE2SP_PARALLEL_DEGREE];
-            for (var i = 0; i < S.Length; i++)
+            switch (index)
             {
-                S[i] = new BLAKE2S();
+                case 0:
+                    return S0;
+                case 1:
+                    return S1;
+                case 2:
+                    return S2;
+                case 3:
+                    return S3;
+                case 4:
+                    return S4;
+                case 5:
+                    return S5;
+                case 6:
+                    return S6;
+                default:
+                    return S7;
             }
         }
     };
@@ -250,7 +274,7 @@ internal partial class RarBLAKE2spStream : RarStream
 
         for (var i = 0; i < BLAKE2SP_PARALLEL_DEGREE; i++)
         {
-            var blake2S = blake2sp.S[i];
+            var blake2S = blake2sp.GetLeaf(i);
             ResetCrc(blake2S);
 
             var h = blake2S.h;
@@ -262,7 +286,7 @@ internal partial class RarBLAKE2spStream : RarStream
             h[3] ^= BLAKE2S_DIGEST_SIZE << 24;
         }
 
-        blake2sp.S[BLAKE2SP_PARALLEL_DEGREE - 1].lastNodeFlag = BLAKE2S_FINAL_FLAG;
+        blake2sp.GetLeaf(BLAKE2SP_PARALLEL_DEGREE - 1).lastNodeFlag = BLAKE2S_FINAL_FLAG;
         return blake2sp;
     }
 
@@ -277,7 +301,7 @@ internal partial class RarBLAKE2spStream : RarStream
             {
                 chunkSize = data.Length;
             }
-            Update(hash.S[index], data.Slice(0, chunkSize));
+            Update(hash.GetLeaf(index), data.Slice(0, chunkSize));
             data = data.Slice(chunkSize);
             pos = (pos + chunkSize) & (BLAKE2S_BLOCK_SIZE * BLAKE2SP_PARALLEL_DEGREE - 1);
         }
@@ -286,7 +310,7 @@ internal partial class RarBLAKE2spStream : RarStream
 
     private static byte[] Final(BLAKE2SP blake2sp)
     {
-        var blake2s = new BLAKE2S();
+        var blake2s = blake2sp.Root;
         ResetCrc(blake2s);
 
         var h = blake2s.h;
@@ -299,7 +323,7 @@ internal partial class RarBLAKE2spStream : RarStream
         Span<byte> digest = stackalloc byte[BLAKE2S_DIGEST_SIZE];
         for (var i = 0; i < BLAKE2SP_PARALLEL_DEGREE; i++)
         {
-            Final(blake2sp.S[i], digest);
+            Final(blake2sp.GetLeaf(i), digest);
             Update(blake2s, digest);
         }
 
