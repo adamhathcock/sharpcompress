@@ -10,6 +10,7 @@ namespace SharpCompress.Common.Zip;
 internal partial class SeekableZipFilePart : IDisposable
 {
     private readonly SemaphoreSlim _asyncHeaderSemaphore = new(1, 1);
+
     internal override async ValueTask<Stream?> GetCompressedStreamAsync(
         CancellationToken cancellationToken = default
     )
@@ -75,10 +76,9 @@ internal partial class SeekableZipFilePart : IDisposable
 
         try
         {
-            Header = await _headerFactory.GetLocalHeaderAsync(
-                streamToUse,
-                (DirectoryEntryHeader)Header
-            ).ConfigureAwait(false);
+            Header = await _headerFactory
+                .GetLocalHeaderAsync(streamToUse, (DirectoryEntryHeader)Header)
+                .ConfigureAwait(false);
         }
         finally
         {
@@ -99,5 +99,4 @@ internal partial class SeekableZipFilePart : IDisposable
     }
 
     public void Dispose() => _asyncHeaderSemaphore.Dispose();
-
 }

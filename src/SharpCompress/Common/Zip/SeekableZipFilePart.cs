@@ -88,7 +88,6 @@ internal partial class SeekableZipFilePart : ZipFilePart
         }
     }
 
-
     protected override Stream CreateBaseStream()
     {
         // If BaseStream is a SourceStream in file mode with multi-threading enabled,

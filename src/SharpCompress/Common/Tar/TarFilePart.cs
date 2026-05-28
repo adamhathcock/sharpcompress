@@ -75,9 +75,7 @@ internal sealed class TarFilePart : FilePart
         if (_seekableStream != null)
         {
             _seekableStream.Position = Header.DataStartPosition ?? 0;
-            return new ValueTask<Stream?>(
-                new TarReadOnlySubStream(_seekableStream, Header.Size)
-            );
+            return new ValueTask<Stream?>(new TarReadOnlySubStream(_seekableStream, Header.Size));
         }
         return new ValueTask<Stream?>(Header.PackedStream.NotNull());
     }
