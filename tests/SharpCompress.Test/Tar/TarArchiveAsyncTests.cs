@@ -180,6 +180,28 @@ public class TarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
+    public async ValueTask Tar_Async_Dispose_Closes_New_Entry_Stream()
+    {
+        var entryStream = new TestStream(new MemoryStream(Encoding.UTF8.GetBytes("test")));
+
+        await using (var archive = await TarArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync(
+                "test.txt",
+                entryStream,
+                closeStream: true,
+                size: entryStream.Length
+            );
+            await archive.SaveToAsync(
+                new MemoryStream(),
+                new TarWriterOptions(CompressionType.None, true)
+            );
+        }
+
+        Assert.True(entryStream.IsDisposed);
+    }
+
+    [Fact]
     public async ValueTask Tar_Random_Write_Add_Async()
     {
         var jpg = Path.Combine(ORIGINAL_FILES_PATH, "jpg", "test.jpg");
