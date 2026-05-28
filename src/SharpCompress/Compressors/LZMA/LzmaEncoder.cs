@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,14 +87,19 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
         public partial struct Encoder2
         {
             private BitEncoder[] _encoders;
+            private int _baseIndex;
 
-            public void Create() => _encoders = new BitEncoder[0x300];
+            public void Create(BitEncoder[] encoders, int baseIndex)
+            {
+                _encoders = encoders;
+                _baseIndex = baseIndex;
+            }
 
             public void Init()
             {
                 for (var i = 0; i < 0x300; i++)
                 {
-                    _encoders[i].Init();
+                    _encoders[_baseIndex + i].Init();
                 }
             }
 
@@ -103,7 +109,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                 for (var i = 7; i >= 0; i--)
                 {
                     var bit = (uint)((symbol >> i) & 1);
-                    _encoders[context].Encode(rangeEncoder, bit);
+                    _encoders[_baseIndex + context].Encode(rangeEncoder, bit);
                     context = (context << 1) | bit;
                 }
             }
@@ -118,7 +124,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                 for (var i = 7; i >= 0; i--)
                 {
                     var bit = (uint)((symbol >> i) & 1);
-                    await _encoders[context]
+                    await _encoders[_baseIndex + context]
                         .EncodeAsync(rangeEncoder, bit, cancellationToken)
                         .ConfigureAwait(false);
                     context = (context << 1) | bit;
@@ -139,7 +145,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                         state += ((1 + matchBit) << 8);
                         same = (matchBit == bit);
                     }
-                    _encoders[state].Encode(rangeEncoder, bit);
+                    _encoders[_baseIndex + state].Encode(rangeEncoder, bit);
                     context = (context << 1) | bit;
                 }
             }
@@ -163,7 +169,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                         state += ((1 + matchBit) << 8);
                         same = matchBit == bit;
                     }
-                    await _encoders[state]
+                    await _encoders[_baseIndex + state]
                         .EncodeAsync(rangeEncoder, bit, cancellationToken)
                         .ConfigureAwait(false);
                     context = (context << 1) | bit;
@@ -181,7 +187,8 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                     {
                         var matchBit = (uint)(matchByte >> i) & 1;
                         var bit = (uint)(symbol >> i) & 1;
-                        price += _encoders[((1 + matchBit) << 8) + context].GetPrice(bit);
+                        price += _encoders[_baseIndex + ((1 + matchBit) << 8) + context]
+                            .GetPrice(bit);
                         context = (context << 1) | bit;
                         if (matchBit != bit)
                         {
@@ -193,7 +200,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                 for (; i >= 0; i--)
                 {
                     var bit = (uint)(symbol >> i) & 1;
-                    price += _encoders[context].GetPrice(bit);
+                    price += _encoders[_baseIndex + context].GetPrice(bit);
                     context = (context << 1) | bit;
                 }
                 return price;
@@ -201,6 +208,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
         }
 
         private Encoder2[] _coders;
+        private BitEncoder[] _models;
         private int _numPrevBits;
         private int _numPosBits;
         private uint _posMask;
@@ -215,11 +223,28 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
             _posMask = ((uint)1 << numPosBits) - 1;
             _numPrevBits = numPrevBits;
             var numStates = (uint)1 << (_numPrevBits + _numPosBits);
+            if (_models is not null)
+            {
+                ArrayPool<BitEncoder>.Shared.Return(_models);
+            }
+            _models = ArrayPool<BitEncoder>.Shared.Rent(checked((int)(numStates * 0x300)));
             _coders = new Encoder2[numStates];
             for (uint i = 0; i < numStates; i++)
             {
-                _coders[i].Create();
+                _coders[i].Create(_models, checked((int)(i * 0x300)));
             }
+        }
+
+        public void Dispose()
+        {
+            if (_models is null)
+            {
+                return;
+            }
+
+            ArrayPool<BitEncoder>.Shared.Return(_models);
+            _models = null;
+            _coders = null;
         }
 
         public void Init()
@@ -423,7 +448,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
 
     private const uint K_NUM_OPTS = 1 << 12;
 
-    private class Optimal
+    private struct Optimal
     {
         public Base.State _state;
 
@@ -564,10 +589,6 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
 
     public Encoder()
     {
-        for (var i = 0; i < K_NUM_OPTS; i++)
-        {
-            _optimum[i] = new Optimal();
-        }
         for (var i = 0; i < Base.K_NUM_LEN_TO_POS_STATES; i++)
         {
             _posSlotEncoder[i] = new BitTreeEncoder(Base.K_NUM_POS_SLOT_BITS);
@@ -576,6 +597,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
 
     public void Dispose()
     {
+        _literalEncoder.Dispose();
         _matchFinder?.Dispose();
         _matchFinder = null;
     }
@@ -865,7 +887,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
             do
             {
                 var curAndLenPrice = price + _repMatchLenEncoder.GetPrice(repLen - 2, posState);
-                var optimum = _optimum[repLen];
+                ref var optimum = ref _optimum[repLen];
                 if (curAndLenPrice < optimum._price)
                 {
                     optimum._price = curAndLenPrice;
@@ -890,7 +912,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
             {
                 var distance = _matchDistances[offs + 1];
                 var curAndLenPrice = normalMatchPrice + GetPosLenPrice(distance, len, posState);
-                var optimum = _optimum[len];
+                ref var optimum = ref _optimum[len];
                 if (curAndLenPrice < optimum._price)
                 {
                     optimum._price = curAndLenPrice;
@@ -1045,7 +1067,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                     .GetSubCoder(position, _matchFinder.GetIndexByte(0 - 2))
                     .GetPrice(!state.IsCharState(), matchByte, currentByte);
 
-            var nextOptimum = _optimum[cur + 1];
+            ref var nextOptimum = ref _optimum[cur + 1];
 
             var nextIsChar = false;
             if (curAnd1Price < nextOptimum._price)
@@ -1111,7 +1133,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                         }
                         var curAndLenPrice =
                             nextRepMatchPrice + GetRepPrice(0, lenTest2, state2, posStateNext);
-                        var optimum = _optimum[offset];
+                        ref var optimum = ref _optimum[offset];
                         if (curAndLenPrice < optimum._price)
                         {
                             optimum._price = curAndLenPrice;
@@ -1142,7 +1164,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                     }
                     var curAndLenPrice =
                         repMatchPrice + GetRepPrice(repIndex, lenTest, state, posState);
-                    var optimum = _optimum[cur + lenTest];
+                    ref var optimum = ref _optimum[cur + lenTest];
                     if (curAndLenPrice < optimum._price)
                     {
                         optimum._price = curAndLenPrice;
@@ -1206,7 +1228,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                             }
                             var curAndLenPrice =
                                 nextRepMatchPrice + GetRepPrice(0, lenTest2, state2, posStateNext);
-                            var optimum = _optimum[cur + offset];
+                            ref var optimum = ref _optimum[cur + offset];
                             if (curAndLenPrice < optimum._price)
                             {
                                 optimum._price = curAndLenPrice;
@@ -1255,7 +1277,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                     var curBack = _matchDistances[offs + 1];
                     var curAndLenPrice =
                         normalMatchPrice + GetPosLenPrice(curBack, lenTest, posState);
-                    var optimum = _optimum[cur + lenTest];
+                    ref var optimum = ref _optimum[cur + lenTest];
                     if (curAndLenPrice < optimum._price)
                     {
                         optimum._price = curAndLenPrice;
@@ -1314,7 +1336,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
                                 curAndLenPrice =
                                     nextRepMatchPrice
                                     + GetRepPrice(0, lenTest2, state2, posStateNext);
-                                optimum = _optimum[cur + offset];
+                                optimum = ref _optimum[cur + offset];
                                 if (curAndLenPrice < optimum._price)
                                 {
                                     optimum._price = curAndLenPrice;

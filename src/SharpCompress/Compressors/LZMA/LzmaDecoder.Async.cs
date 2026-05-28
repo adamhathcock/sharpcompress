@@ -72,7 +72,7 @@ public partial class Decoder : IAsyncDisposable
                 {
                     symbol =
                         (symbol << 1)
-                        | await _decoders[symbol]
+                        | await _decoders[_baseIndex + symbol]
                             .DecodeAsync(rangeDecoder, cancellationToken)
                             .ConfigureAwait(false);
                 } while (symbol < 0x100);
@@ -90,7 +90,7 @@ public partial class Decoder : IAsyncDisposable
                 {
                     var matchBit = (uint)(matchByte >> 7) & 1;
                     matchByte <<= 1;
-                    var bit = await _decoders[((1 + matchBit) << 8) + symbol]
+                    var bit = await _decoders[_baseIndex + ((1 + matchBit) << 8) + symbol]
                         .DecodeAsync(rangeDecoder, cancellationToken)
                         .ConfigureAwait(false);
                     symbol = (symbol << 1) | bit;
@@ -100,7 +100,7 @@ public partial class Decoder : IAsyncDisposable
                         {
                             symbol =
                                 (symbol << 1)
-                                | await _decoders[symbol]
+                                | await _decoders[_baseIndex + symbol]
                                     .DecodeAsync(rangeDecoder, cancellationToken)
                                     .ConfigureAwait(false);
                         }
