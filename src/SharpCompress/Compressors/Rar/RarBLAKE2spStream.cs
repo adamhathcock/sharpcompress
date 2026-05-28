@@ -100,7 +100,6 @@ internal partial class RarBLAKE2spStream : RarStream
     )
     {
         var stream = new RarBLAKE2spStream(unpack, fileHeader, readStream);
-        stream.Initialize();
         return stream;
     }
 

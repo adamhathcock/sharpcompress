@@ -1,6 +1,8 @@
-﻿namespace SharpCompress.Compressors.Rar.UnpackV2017;
+﻿using System;
 
-internal partial class BitInput
+namespace SharpCompress.Compressors.Rar.UnpackV2017;
+
+internal partial class BitInput : IDisposable
 {
     public const int MAX_SIZE = 0x8000; // Size of input buffer.
 

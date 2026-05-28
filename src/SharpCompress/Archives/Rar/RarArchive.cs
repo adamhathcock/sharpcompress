@@ -45,6 +45,10 @@ public partial class RarArchive
             {
                 unpackV1.Dispose();
             }
+            if (UnpackV2017.IsValueCreated && UnpackV2017.Value is IDisposable unpackV2017)
+            {
+                unpackV2017.Dispose();
+            }
 
             _disposed = true;
             base.Dispose();

@@ -13,6 +13,8 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal sealed partial class Unpack : BitInput
 {
+    private bool disposed;
+
     public Unpack( /* ComprDataIO *DataIO */
     )
         //:Inp(true),VMCodeInp(true)
@@ -44,19 +46,32 @@ internal sealed partial class Unpack : BitInput
         InitHuff();
     }
 
-    // later: may need Dispose() if we support thread pool
-    //Unpack::~Unpack()
-    //{
-    //  InitFilters30(false);
-    //
-    //  if (Window!=null)
-    //    free(Window);
-    //#if RarV2017_RAR_SMP
-    //  DestroyThreadPool(UnpThreadPool);
-    //  delete[] ReadBufMT;
-    //  delete[] UnpThreadData;
-    //#endif
-    //}
+    public override void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        base.Dispose();
+        if (Window != null)
+        {
+            ArrayPool<byte>.Shared.Return(Window);
+            Window = null;
+        }
+        FragWindow.Reset();
+        if (FilterSrcMemory.Length != 0)
+        {
+            ArrayPool<byte>.Shared.Return(FilterSrcMemory);
+            FilterSrcMemory = Array.Empty<byte>();
+        }
+        if (FilterDstMemory.Length != 0)
+        {
+            ArrayPool<byte>.Shared.Return(FilterDstMemory);
+            FilterDstMemory = Array.Empty<byte>();
+        }
+        disposed = true;
+    }
 
     private void Init(size_t WinSize, bool Solid)
     {
@@ -150,8 +165,10 @@ internal sealed partial class Unpack : BitInput
                 }
             }
 
-            //if (Window!=null)
-            //  free(Window);
+            if (Window != null)
+            {
+                ArrayPool<byte>.Shared.Return(Window);
+            }
             Window = NewWindow;
         }
 
@@ -290,7 +307,7 @@ internal sealed partial class Unpack : BitInput
         Dec.MaxNum = Size;
 
         // Calculate how many entries for every bit length in LengthTable we have.
-        var LengthCount = new uint[16];
+        Span<uint> LengthCount = stackalloc uint[16];
         //memset(LengthCount,0,sizeof(LengthCount));
         for (size_t I = 0; I < Size; I++)
         {
@@ -334,9 +351,9 @@ internal sealed partial class Unpack : BitInput
 
         // Prepare the copy of DecodePos. We'll modify this copy below,
         // so we cannot use the original DecodePos.
-        var CopyDecodePos = new uint[Dec.DecodePos.Length];
+        Span<uint> CopyDecodePos = stackalloc uint[16];
         //memcpy(CopyDecodePos,Dec->DecodePos,sizeof(CopyDecodePos));
-        Array.Copy(Dec.DecodePos, CopyDecodePos, CopyDecodePos.Length);
+        Dec.DecodePos.AsSpan().CopyTo(CopyDecodePos);
 
         // For every bit length in the bit length table and so for every item
         // of alphabet.

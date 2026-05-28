@@ -65,20 +65,29 @@ internal sealed partial class Unpack
 
     private async ValueTask UnstoreFileAsync(CancellationToken cancellationToken = default)
     {
-        var buffer = new byte[(int)Math.Min(0x10000, destUnpSize)];
-        do
+        var buffer = ArrayPool<byte>.Shared.Rent((int)Math.Min(0x10000, destUnpSize));
+        try
         {
-            var code = await readStream
-                .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
-                .ConfigureAwait(false);
-            if (code == 0 || code == -1)
+            do
             {
-                break;
-            }
-            code = code < destUnpSize ? code : (int)destUnpSize;
-            await writeStream.WriteAsync(buffer, 0, code, cancellationToken).ConfigureAwait(false);
-            destUnpSize -= code;
-        } while (!suspended && destUnpSize > 0);
+                var code = await readStream
+                    .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                    .ConfigureAwait(false);
+                if (code == 0 || code == -1)
+                {
+                    break;
+                }
+                code = code < destUnpSize ? code : (int)destUnpSize;
+                await writeStream
+                    .WriteAsync(buffer, 0, code, cancellationToken)
+                    .ConfigureAwait(false);
+                destUnpSize -= code;
+            } while (!suspended && destUnpSize > 0);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     private async ValueTask Unpack29Async(bool solid, CancellationToken cancellationToken = default)
