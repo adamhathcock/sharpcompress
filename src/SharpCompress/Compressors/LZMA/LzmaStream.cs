@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
@@ -33,6 +34,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
     private bool _needProps = true;
 
     private readonly Encoder? _encoder;
+    private byte[]? _asyncHeaderBuffer;
     private bool _isDisposed;
 
     private LzmaStream(
@@ -205,14 +207,29 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             if (_encoder != null)
             {
                 _position = _encoder.Code(null, true);
+                _encoder.Dispose();
             }
             if (!_leaveOpen)
             {
                 _inputStream?.Dispose();
             }
             _outWindow.Dispose();
+            ReturnAsyncHeaderBuffer();
         }
         base.Dispose(disposing);
+    }
+
+    private byte[] GetAsyncHeaderBuffer() => _asyncHeaderBuffer ??= ArrayPool<byte>.Shared.Rent(6);
+
+    private void ReturnAsyncHeaderBuffer()
+    {
+        if (_asyncHeaderBuffer is null)
+        {
+            return;
+        }
+
+        ArrayPool<byte>.Shared.Return(_asyncHeaderBuffer);
+        _asyncHeaderBuffer = null;
     }
 
     public override long Length => _position + _availableBytes;

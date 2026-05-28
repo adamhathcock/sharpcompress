@@ -33,7 +33,7 @@ public class Program
     private static async Task RunWithProfiler(string[] args)
     {
         var profileType = "cpu"; // Default to CPU profiling
-        var outputPath = "./profiler-snapshots";l
+        var outputPath = "./profiler-snapshots";
 
         // Parse arguments
         for (int i = 1; i < args.Length; i++)

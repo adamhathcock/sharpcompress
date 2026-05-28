@@ -15,8 +15,7 @@ internal partial class Encoder
     public uint _range;
     private uint _cacheSize;
     private byte _cache;
-
-    //long StartPosition;
+    private byte[] _singleByteBuffer;
 
     public void SetStream(Stream stream) => _stream = stream;
 
@@ -88,6 +87,7 @@ internal partial class Decoder
 
     public Stream _stream;
     public long _total;
+    private byte[] _singleByteBuffer;
 
     public void Init(Stream stream)
     {
@@ -180,6 +180,4 @@ internal partial class Decoder
     }
 
     public bool IsFinished => _code == 0;
-
-    // ulong GetProcessedSize() {return Stream.GetProcessedSize(); }
 }

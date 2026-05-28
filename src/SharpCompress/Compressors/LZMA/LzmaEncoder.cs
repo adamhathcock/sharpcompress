@@ -10,7 +10,7 @@ using SharpCompress.Compressors.LZMA.RangeCoder;
 
 namespace SharpCompress.Compressors.LZMA;
 
-internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties
+internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties, IDisposable
 {
     private enum EMatchFinderType
     {
@@ -572,6 +572,12 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
         {
             _posSlotEncoder[i] = new BitTreeEncoder(Base.K_NUM_POS_SLOT_BITS);
         }
+    }
+
+    public void Dispose()
+    {
+        _matchFinder?.Dispose();
+        _matchFinder = null;
     }
 
     private void SetWriteEndMarkerMode(bool writeEndMarker) => _writeEndMark = writeEndMarker;

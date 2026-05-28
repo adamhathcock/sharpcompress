@@ -83,11 +83,11 @@ public partial class LzmaStream
 
     private async ValueTask DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
     {
-        var controlBuffer = new byte[1];
+        var headerBuffer = GetAsyncHeaderBuffer();
         await _inputStream!
-            .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
+            .ReadExactAsync(headerBuffer, 0, 1, cancellationToken)
             .ConfigureAwait(false);
-        var control = controlBuffer[0];
+        var control = headerBuffer[0];
         _inputPosition++;
 
         if (control == 0x00)
@@ -112,26 +112,25 @@ public partial class LzmaStream
             _uncompressedChunk = false;
 
             _availableBytes = (control & 0x1F) << 16;
-            var buffer = new byte[2];
             await _inputStream!
-                .ReadExactAsync(buffer, 0, 2, cancellationToken)
+                .ReadExactAsync(headerBuffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
-            _availableBytes += (buffer[0] << 8) + buffer[1] + 1;
+            _availableBytes += (headerBuffer[0] << 8) + headerBuffer[1] + 1;
             _inputPosition += 2;
 
             await _inputStream!
-                .ReadExactAsync(buffer, 0, 2, cancellationToken)
+                .ReadExactAsync(headerBuffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
-            _rangeDecoderLimit = (buffer[0] << 8) + buffer[1] + 1;
+            _rangeDecoderLimit = (headerBuffer[0] << 8) + headerBuffer[1] + 1;
             _inputPosition += 2;
 
             if (control >= 0xC0)
             {
                 _needProps = false;
                 await _inputStream!
-                    .ReadExactAsync(controlBuffer, 0, 1, cancellationToken)
+                    .ReadExactAsync(headerBuffer, 0, 1, cancellationToken)
                     .ConfigureAwait(false);
-                Properties[0] = controlBuffer[0];
+                Properties[0] = headerBuffer[0];
                 _inputPosition++;
 
                 _decoder = new Decoder();
@@ -156,11 +155,10 @@ public partial class LzmaStream
         else
         {
             _uncompressedChunk = true;
-            var buffer = new byte[2];
             await _inputStream!
-                .ReadExactAsync(buffer, 0, 2, cancellationToken)
+                .ReadExactAsync(headerBuffer, 0, 2, cancellationToken)
                 .ConfigureAwait(false);
-            _availableBytes = (buffer[0] << 8) + buffer[1] + 1;
+            _availableBytes = (headerBuffer[0] << 8) + headerBuffer[1] + 1;
             _inputPosition += 2;
         }
     }
@@ -436,6 +434,7 @@ public partial class LzmaStream
         if (_encoder != null)
         {
             _position = await _encoder.CodeAsync(null, true).ConfigureAwait(false);
+            _encoder.Dispose();
         }
 
         if (!_leaveOpen)
@@ -450,6 +449,7 @@ public partial class LzmaStream
             }
         }
         await _outWindow.DisposeAsync().ConfigureAwait(false);
+        ReturnAsyncHeaderBuffer();
 
 #if !LEGACY_DOTNET || NETSTANDARD2_1
         await base.DisposeAsync().ConfigureAwait(false);

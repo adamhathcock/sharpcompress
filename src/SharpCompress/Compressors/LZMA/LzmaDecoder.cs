@@ -446,7 +446,10 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         return false;
     }
 
-    public void SetDecoderProperties(byte[] properties)
+    public void SetDecoderProperties(byte[] properties) =>
+        SetDecoderProperties(properties.AsSpan());
+
+    internal void SetDecoderProperties(ReadOnlySpan<byte> properties)
     {
         if (properties.Length < 1)
         {
