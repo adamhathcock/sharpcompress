@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
@@ -8,12 +9,12 @@ namespace SharpCompress.Performance;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         // Check if profiling mode is requested
         if (args.Length > 0 && args[0].Equals("--profile", StringComparison.OrdinalIgnoreCase))
         {
-            RunWithProfiler(args);
+            await RunWithProfiler(args);
             return;
         }
 
@@ -29,10 +30,10 @@ public class Program
         BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
     }
 
-    private static void RunWithProfiler(string[] args)
+    private static async Task RunWithProfiler(string[] args)
     {
         var profileType = "cpu"; // Default to CPU profiling
-        var outputPath = "./profiler-snapshots";
+        var outputPath = "./profiler-snapshots";l
 
         // Parse arguments
         for (int i = 1; i < args.Length; i++)
@@ -59,16 +60,11 @@ public class Program
         Console.WriteLine();
 
         // Run a sample benchmark with profiling
-        RunSampleBenchmarkWithProfiler(profileType, outputPath);
+        await RunSampleBenchmarkWithProfiler(profileType, outputPath);
     }
 
-    private static void RunSampleBenchmarkWithProfiler(string profileType, string outputPath)
+    private static async Task RunSampleBenchmarkWithProfiler(string profileType, string outputPath)
     {
-        Console.WriteLine("Running sample benchmark with profiler...");
-        Console.WriteLine("Note: JetBrains profiler requires the profiler tools to be installed.");
-        Console.WriteLine("Install from: https://www.jetbrains.com/profiler/");
-        Console.WriteLine();
-
         try
         {
             IDisposable? profiler = null;
@@ -85,13 +81,13 @@ public class Program
             using (profiler)
             {
                 // Run a simple benchmark iteration
-                var zipBenchmark = new Benchmarks.ZipBenchmarks();
+                var zipBenchmark = new Benchmarks.SevenZipBenchmarks();
                 zipBenchmark.Setup();
 
                 Console.WriteLine("Running benchmark iterations...");
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 100; i++)
                 {
-                    zipBenchmark.ZipExtractArchiveApi();
+                    await zipBenchmark.SevenZipLzma2ExtractAsync_Reader();
                     if (i % 3 == 0)
                     {
                         Console.Write(".");
