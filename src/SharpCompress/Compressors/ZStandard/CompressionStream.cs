@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.IO;
 using System.Threading;
@@ -7,7 +7,10 @@ using SharpCompress.Compressors.ZStandard.Unsafe;
 
 namespace SharpCompress.Compressors.ZStandard;
 
-public class CompressionStream : Stream
+public partial class CompressionStream : Stream
+#if LEGACY_DOTNET
+        , IAsyncDisposable
+#endif
 {
     private readonly Stream innerStream;
     private readonly byte[] outputBuffer;
@@ -32,14 +35,14 @@ public class CompressionStream : Stream
         bool leaveOpen = true
     )
     {
-        if (stream == null)
-            throw new ArgumentNullException(nameof(stream));
+        SharpCompress.ThrowHelper.ThrowIfNull(stream);
 
         if (!stream.CanWrite)
+        {
             throw new ArgumentException("Stream is not writable", nameof(stream));
+        }
 
-        if (bufferSize < 0)
-            throw new ArgumentOutOfRangeException(nameof(bufferSize));
+        SharpCompress.ThrowHelper.ThrowIfNegative(bufferSize);
 
         innerStream = stream;
         this.compressor = compressor;
@@ -74,40 +77,26 @@ public class CompressionStream : Stream
 
     ~CompressionStream() => Dispose(false);
 
-#if !LEGACY_DOTNET
-    public override async ValueTask DisposeAsync()
-#else
-    public async ValueTask DisposeAsync()
-#endif
-    {
-        if (compressor == null)
-            return;
-
-        try
-        {
-            await FlushInternalAsync(ZSTD_EndDirective.ZSTD_e_end).ConfigureAwait(false);
-        }
-        finally
-        {
-            ReleaseUnmanagedResources();
-            GC.SuppressFinalize(this);
-        }
-    }
-
     protected override void Dispose(bool disposing)
     {
         if (compressor == null)
+        {
+            base.Dispose(disposing);
             return;
+        }
 
         try
         {
             if (disposing)
+            {
                 FlushInternal(ZSTD_EndDirective.ZSTD_e_end);
+            }
         }
         finally
         {
             ReleaseUnmanagedResources();
         }
+        base.Dispose(disposing);
     }
 
     private void ReleaseUnmanagedResources()
@@ -131,21 +120,13 @@ public class CompressionStream : Stream
 
     public override void Flush() => FlushInternal(ZSTD_EndDirective.ZSTD_e_flush);
 
-    public override async Task FlushAsync(CancellationToken cancellationToken) =>
-        await FlushInternalAsync(ZSTD_EndDirective.ZSTD_e_flush, cancellationToken)
-            .ConfigureAwait(false);
-
-    private void FlushInternal(ZSTD_EndDirective directive) => WriteInternal(null, directive);
-
-    private async ValueTask FlushInternalAsync(
-        ZSTD_EndDirective directive,
-        CancellationToken cancellationToken = default
-    ) => await WriteInternalAsync(null, directive, cancellationToken).ConfigureAwait(false);
+    private void FlushInternal(ZSTD_EndDirective directive) =>
+        WriteInternal(ReadOnlySpan<byte>.Empty, directive);
 
     public override void Write(byte[] buffer, int offset, int count) =>
         Write(new ReadOnlySpan<byte>(buffer, offset, count));
 
-#if !LEGACY_DOTNET
+#if !LEGACY_DOTNET || NETSTANDARD2_1
     public override void Write(ReadOnlySpan<byte> buffer) =>
         WriteInternal(buffer, ZSTD_EndDirective.ZSTD_e_continue);
 #else
@@ -157,11 +138,7 @@ public class CompressionStream : Stream
     {
         EnsureNotDisposed();
 
-        var input = new ZSTD_inBuffer_s
-        {
-            pos = 0,
-            size = buffer != null ? (nuint)buffer.Length : 0,
-        };
+        var input = new ZSTD_inBuffer_s { pos = 0, size = (nuint)buffer.Length };
         nuint remaining;
         do
         {
@@ -170,87 +147,13 @@ public class CompressionStream : Stream
 
             var written = (int)output.pos;
             if (written > 0)
+            {
                 innerStream.Write(outputBuffer, 0, written);
+            }
         } while (
             directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0
         );
     }
-
-#if !LEGACY_DOTNET
-    private async ValueTask WriteInternalAsync(
-        ReadOnlyMemory<byte>? buffer,
-        ZSTD_EndDirective directive,
-        CancellationToken cancellationToken = default
-    )
-#else
-    private async ValueTask WriteInternalAsync(
-        ReadOnlyMemory<byte>? buffer,
-        ZSTD_EndDirective directive,
-        CancellationToken cancellationToken = default
-    )
-#endif
-
-    {
-        EnsureNotDisposed();
-
-        var input = new ZSTD_inBuffer_s
-        {
-            pos = 0,
-            size = buffer.HasValue ? (nuint)buffer.Value.Length : 0,
-        };
-        nuint remaining;
-        do
-        {
-            output.pos = 0;
-            remaining = CompressStream(
-                ref input,
-                buffer.HasValue ? buffer.Value.Span : null,
-                directive
-            );
-
-            var written = (int)output.pos;
-            if (written > 0)
-                await innerStream
-                    .WriteAsync(outputBuffer, 0, written, cancellationToken)
-                    .ConfigureAwait(false);
-        } while (
-            directive == ZSTD_EndDirective.ZSTD_e_continue ? input.pos < input.size : remaining > 0
-        );
-    }
-
-#if !LEGACY_DOTNET
-
-    public override Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    ) => WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken).AsTask();
-
-    public override async ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default
-    ) =>
-        await WriteInternalAsync(buffer, ZSTD_EndDirective.ZSTD_e_continue, cancellationToken)
-            .ConfigureAwait(false);
-#else
-
-    public override async Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    ) =>
-        await WriteAsync(new ReadOnlyMemory<byte>(buffer, offset, count), cancellationToken)
-            .ConfigureAwait(false);
-
-    public async ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default
-    ) =>
-        await WriteInternalAsync(buffer, ZSTD_EndDirective.ZSTD_e_continue, cancellationToken)
-            .ConfigureAwait(false);
-#endif
 
     internal unsafe nuint CompressStream(
         ref ZSTD_inBuffer_s input,
@@ -292,7 +195,9 @@ public class CompressionStream : Stream
     private void EnsureNotDisposed()
     {
         if (compressor == null)
+        {
             throw new ObjectDisposedException(nameof(CompressionStream));
+        }
     }
 
     public void SetPledgedSrcSize(ulong pledgedSrcSize)

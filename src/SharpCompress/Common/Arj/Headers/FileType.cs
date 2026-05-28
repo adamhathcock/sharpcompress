@@ -1,13 +1,12 @@
-namespace SharpCompress.Common.Arj.Headers
+namespace SharpCompress.Common.Arj.Headers;
+
+public enum FileType : byte
 {
-    public enum FileType : byte
-    {
-        Binary = 0,
-        Text7Bit = 1,
-        CommentHeader = 2,
-        Directory = 3,
-        VolumeLabel = 4,
-        ChapterLabel = 5,
-        Unknown = 255,
-    }
+    Binary = 0,
+    Text7Bit = 1,
+    CommentHeader = 2,
+    Directory = 3,
+    VolumeLabel = 4,
+    ChapterLabel = 5,
+    Unknown = 255,
 }

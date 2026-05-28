@@ -30,35 +30,14 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ADC;
 
 /// <summary>
 /// Provides a forward readable only stream that decompresses ADC data
 /// </summary>
-public sealed class ADCStream : Stream, IStreamStack
+public sealed partial class ADCStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     /// <summary>
     /// This stream holds the compressed data
     /// </summary>
@@ -97,9 +76,6 @@ public sealed class ADCStream : Stream, IStreamStack
         }
 
         _stream = stream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ADCStream));
-#endif
     }
 
     public override bool CanRead => _stream.CanRead;
@@ -125,9 +101,6 @@ public sealed class ADCStream : Stream, IStreamStack
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ADCStream));
-#endif
         base.Dispose(disposing);
     }
 
@@ -137,18 +110,9 @@ public sealed class ADCStream : Stream, IStreamStack
         {
             return 0;
         }
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-        if (offset < buffer.GetLowerBound(0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
+        ThrowHelper.ThrowIfNegative(count);
+        ThrowHelper.ThrowIfLessThan(offset, buffer.GetLowerBound(0));
         if ((offset + count) > buffer.GetLength(0))
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -177,76 +141,6 @@ public sealed class ADCStream : Stream, IStreamStack
             size = ADCBase.Decompress(_stream, out _outBuffer);
             _outPosition = 0;
             if (size == 0 || _outBuffer is null || _outBuffer.Length == 0)
-            {
-                return copied;
-            }
-        }
-
-        Array.Copy(_outBuffer, _outPosition, buffer, inPosition, toCopy);
-        _outPosition += toCopy;
-        _position += toCopy;
-        copied += toCopy;
-        return copied;
-    }
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (count == 0)
-        {
-            return 0;
-        }
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-        if (offset < buffer.GetLowerBound(0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-        if ((offset + count) > buffer.GetLength(0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-
-        if (_outBuffer is null)
-        {
-            var result = await ADCBase.DecompressAsync(
-                _stream,
-                cancellationToken: cancellationToken
-            );
-            _outBuffer = result.Output;
-            _outPosition = 0;
-        }
-
-        var inPosition = offset;
-        var toCopy = count;
-        var copied = 0;
-
-        while (_outPosition + toCopy >= _outBuffer.Length)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var piece = _outBuffer.Length - _outPosition;
-            Array.Copy(_outBuffer, _outPosition, buffer, inPosition, piece);
-            inPosition += piece;
-            copied += piece;
-            _position += piece;
-            toCopy -= piece;
-            var result = await ADCBase.DecompressAsync(
-                _stream,
-                cancellationToken: cancellationToken
-            );
-            _outBuffer = result.Output;
-            _outPosition = 0;
-            if (result.BytesRead == 0 || _outBuffer is null || _outBuffer.Length == 0)
             {
                 return copied;
             }

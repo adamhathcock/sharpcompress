@@ -3,11 +3,12 @@ using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Xz;
 
 [CLSCompliant(false)]
-public static class BinaryUtils
+public static partial class BinaryUtils
 {
     public static int ReadLittleEndianInt32(this BinaryReader reader)
     {
@@ -24,35 +25,13 @@ public static class BinaryUtils
         var read = stream.ReadFully(bytes);
         if (!read)
         {
-            throw new EndOfStreamException();
+            throw new IncompleteArchiveException("Unexpected end of stream.");
         }
         return BinaryPrimitives.ReadInt32LittleEndian(bytes);
     }
 
     internal static uint ReadLittleEndianUInt32(this Stream stream) =>
         unchecked((uint)ReadLittleEndianInt32(stream));
-
-    public static async Task<int> ReadLittleEndianInt32Async(
-        this Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var bytes = new byte[4];
-        var read = await stream.ReadFullyAsync(bytes, cancellationToken).ConfigureAwait(false);
-        if (!read)
-        {
-            throw new EndOfStreamException();
-        }
-        return BinaryPrimitives.ReadInt32LittleEndian(bytes);
-    }
-
-    internal static async Task<uint> ReadLittleEndianUInt32Async(
-        this Stream stream,
-        CancellationToken cancellationToken = default
-    ) =>
-        unchecked(
-            (uint)await ReadLittleEndianInt32Async(stream, cancellationToken).ConfigureAwait(false)
-        );
 
     internal static byte[] ToBigEndianBytes(this uint uint32)
     {

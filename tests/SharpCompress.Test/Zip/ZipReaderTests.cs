@@ -71,10 +71,28 @@ public class ZipReaderTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void Zip_Deflate_Streamed2_Skip()
+    {
+        using Stream stream = new ForwardOnlyStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd-.zip"))
+        );
+        using var reader = ReaderFactory.OpenReader(stream);
+        var x = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                x++;
+                if (x % 2 == 0)
+                {
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -111,17 +129,22 @@ public class ZipReaderTests : ReaderTests
         using (
             Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.bzip2.pkware.zip"))
         )
-        using (var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            var reader = ZipReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -134,16 +157,18 @@ public class ZipReaderTests : ReaderTests
         using var stream = new TestStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        using (var reader = ReaderFactory.OpenReader(stream))
+        using (
+            var reader = ReaderFactory.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -161,10 +186,7 @@ public class ZipReaderTests : ReaderTests
         {
             if (!reader.Entry.IsDirectory)
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         Assert.False(stream.IsDisposed);
@@ -180,18 +202,21 @@ public class ZipReaderTests : ReaderTests
                 )
             )
             using (
-                var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" })
+                var reader = ZipReader.OpenReader(
+                    stream,
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
+                )
             )
             {
                 while (reader.MoveToNextEntry())
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                        reader.WriteEntryToDirectory(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
+                        Assert.Equal(CompressionType.LZMA, reader.Entry.CompressionType);
+                        reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                     }
                 }
             }
@@ -206,17 +231,22 @@ public class ZipReaderTests : ReaderTests
                 Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip")
             )
         )
-        using (var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            var reader = ZipReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    Assert.Equal(CompressionType.Deflate, reader.Entry.CompressionType);
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -228,17 +258,22 @@ public class ZipReaderTests : ReaderTests
     {
         var count = 0;
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip")))
-        using (var reader = ZipReader.OpenReader(stream, new ReaderOptions { Password = "test" }))
+        using (
+            var reader = ZipReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
         {
             while (reader.MoveToNextEntry())
             {
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                     count++;
                 }
             }
@@ -262,7 +297,7 @@ public class ZipReaderTests : ReaderTests
             var zipWriter = WriterFactory.OpenWriter(
                 stream,
                 ArchiveType.Zip,
-                CompressionType.Deflate
+                new WriterOptions(CompressionType.Deflate)
             )
         )
         {
@@ -274,7 +309,7 @@ public class ZipReaderTests : ReaderTests
         File.WriteAllBytes(Path.Combine(SCRATCH_FILES_PATH, "foo.zip"), memory.ToArray());
 
         using IReader zipReader = ZipReader.OpenReader(
-            SharpCompressStream.Create(stream, leaveOpen: true, throwOnDispose: true)
+            SharpCompressStream.CreateNonDisposing(stream)
         );
         var i = 0;
         while (zipReader.MoveToNextEntry())
@@ -397,7 +432,10 @@ public class ZipReaderTests : ReaderTests
     {
         using var reader = ReaderFactory.OpenReader(
             Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.encrypted.zip"),
-            new ReaderOptions { Password = "test" }
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
         );
         reader.MoveToNextEntry();
         Assert.Equal("first.txt", reader.Entry.Key);
@@ -443,5 +481,122 @@ public class ZipReaderTests : ReaderTests
             Assert.Equal(archiveKeys.Count, readerKeys.Count);
             Assert.Equal(archiveKeys.OrderBy(k => k), readerKeys.OrderBy(k => k));
         }
+    }
+
+    [Fact]
+    public void EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_Deflate()
+    {
+        // Since version 0.41.0: EntryStream.Dispose() should not throw NotSupportedException
+        // when Flush() fails on non-seekable streams (Deflate compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        // This should not throw, even if internal Flush() fails
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var entryStream = reader.OpenEntryStream();
+                // Read some data
+                var buffer = new byte[1024];
+                entryStream.Read(buffer, 0, buffer.Length);
+                // Dispose should not throw NotSupportedException
+            }
+        }
+    }
+
+    [Fact]
+    public void EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_LZMA()
+    {
+        // Since version 0.41.0: EntryStream.Dispose() should not throw NotSupportedException
+        // when Flush() fails on non-seekable streams (LZMA compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        // This should not throw, even if internal Flush() fails
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var entryStream = reader.OpenEntryStream();
+                // Read some data
+                var buffer = new byte[1024];
+                entryStream.Read(buffer, 0, buffer.Length);
+                // Dispose should not throw NotSupportedException
+            }
+        }
+    }
+
+    [Fact]
+    public void Archive_Iteration_DoesNotBreak_WhenFlushThrows_Deflate()
+    {
+        // Regression test: since 0.41.0, archive iteration would silently break
+        // when the input stream throws NotSupportedException in Flush().
+        // Only the first entry would be returned, then iteration would stop without exception.
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ThrowOnFlushStream(fileStream);
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        var count = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+            }
+        }
+
+        // Should iterate through all entries, not just the first one
+        Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
+    }
+
+    [Fact]
+    public void Archive_Iteration_DoesNotBreak_WhenFlushThrows_LZMA()
+    {
+        // Regression test: since 0.41.0, archive iteration would silently break
+        // when the input stream throws NotSupportedException in Flush().
+        // Only the first entry would be returned, then iteration would stop without exception.
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ThrowOnFlushStream(fileStream);
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        var count = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+            }
+        }
+
+        // Should iterate through all entries, not just the first one
+        Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
+    }
+
+    [Fact]
+    public void Zip_LZMA_ZeroSizeEntry_CanExtract_Streaming()
+    {
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.empty.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ForwardOnlyStream(fileStream);
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        var count = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+                Assert.Equal(0, reader.Entry.Size);
+                var outStream = new MemoryStream();
+                reader.WriteEntryTo(outStream);
+                Assert.Equal(0, outStream.Length);
+            }
+        }
+        Assert.Equal(1, count);
     }
 }

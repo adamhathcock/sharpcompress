@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.GZip;
 
@@ -16,16 +18,26 @@ public sealed partial class GZipWriter : AbstractWriter
     {
         if (WriterOptions.LeaveStreamOpen)
         {
-            destination = SharpCompressStream.Create(destination, leaveOpen: true);
+            destination = SharpCompressStream.CreateNonDisposing(destination);
         }
-        InitializeStream(
-            new GZipStream(
-                destination,
-                CompressionMode.Compress,
-                (CompressionLevel)(options?.CompressionLevel ?? (int)CompressionLevel.Default),
-                WriterOptions.ArchiveEncoding.GetEncoding()
-            )
+
+        // Use the configured compression providers
+        var providers = WriterOptions.Providers;
+
+        // Create the GZip stream using the provider
+        var compressionStream = providers.CreateCompressStream(
+            CompressionType.GZip,
+            destination,
+            WriterOptions.CompressionLevel
         );
+
+        // If using internal GZipStream, set the encoding for header filename
+        if (compressionStream is GZipStream gzipStream)
+        {
+            // Note: FileName and LastModified will be set in Write()
+        }
+
+        InitializeStream(compressionStream);
     }
 
     protected override void Dispose(bool isDisposing)
@@ -33,10 +45,31 @@ public sealed partial class GZipWriter : AbstractWriter
         if (isDisposing)
         {
             //dispose here to finish the GZip, GZip won't close the underlying stream
-            OutputStream.Dispose();
+            OutputStream.NotNull().Dispose();
         }
         base.Dispose(isDisposing);
     }
+
+#pragma warning disable CA2215 // base.DisposeAsync() calls the sync Dispose path for writers.
+    public override async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        GC.SuppressFinalize(this);
+        _isDisposed = true;
+        if (OutputStream is IAsyncDisposable asyncDisposable)
+        {
+            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            OutputStream.NotNull().Dispose();
+        }
+    }
+#pragma warning restore CA2215
 
     public override void Write(string filename, Stream source, DateTime? modificationTime)
     {
@@ -44,11 +77,16 @@ public sealed partial class GZipWriter : AbstractWriter
         {
             throw new ArgumentException("Can only write a single stream to a GZip file.");
         }
-        var stream = (GZipStream)OutputStream;
-        stream.FileName = filename;
-        stream.LastModified = modificationTime;
+
+        // Set metadata on the stream if it's the internal GZipStream
+        if (OutputStream is GZipStream gzipStream)
+        {
+            gzipStream.FileName = filename;
+            gzipStream.LastModified = modificationTime;
+        }
+
         var progressStream = WrapWithProgress(source, filename);
-        progressStream.CopyTo(stream);
+        progressStream.CopyTo(OutputStream.NotNull(), Constants.BufferSize);
         _wroteToStream = true;
     }
 

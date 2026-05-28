@@ -1,11 +1,74 @@
 using System;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
+using SharpCompress.Providers;
 using D = SharpCompress.Compressors.Deflate;
 
 namespace SharpCompress.Writers;
 
-public class WriterOptions : OptionsBase
+/// <summary>
+/// Options for configuring writer behavior when creating archives.
+/// </summary>
+/// <remarks>
+/// Use factory methods, property setters, or fluent helpers for creation:
+/// <code>
+/// var options = WriterOptions.ForZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
+/// </code>
+/// </remarks>
+public sealed record WriterOptions : IWriterOptions
 {
+    /// <summary>
+    /// The compression type to use for the archive.
+    /// </summary>
+    public CompressionType CompressionType { get; set; }
+
+    /// <summary>
+    /// The compression level to be used when the compression type supports variable levels.
+    /// Valid ranges depend on the compression algorithm:
+    /// - Deflate/GZip: 0-9 (0=no compression, 6=default, 9=best compression)
+    /// - ZStandard: 1-22 (1=fastest, 3=default, 22=best compression)
+    /// Note: BZip2 and LZMA do not support compression levels in this implementation.
+    /// Defaults are set automatically based on compression type in the constructor.
+    /// </summary>
+    public int CompressionLevel
+    {
+        get;
+        set
+        {
+            CompressionLevelValidation.Validate(CompressionType, value);
+            field = value;
+        }
+    }
+
+    /// <summary>
+    /// SharpCompress will keep the supplied streams open.  Default is true.
+    /// </summary>
+    public bool LeaveStreamOpen { get; set; } = true;
+
+    /// <summary>
+    /// Encoding to use for archive entry names.
+    /// </summary>
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
+
+    /// <summary>
+    /// An optional progress reporter for tracking compression operations.
+    /// When set, progress updates will be reported as entries are written.
+    /// </summary>
+    public IProgress<ProgressReport>? Progress { get; set; }
+
+    /// <summary>
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
+    /// System.IO.Compression for Deflate/GZip on modern .NET.
+    /// </summary>
+    public CompressionProviderRegistry Providers { get; set; } =
+        CompressionProviderRegistry.Default;
+
+    /// <summary>
+    /// Creates a new WriterOptions instance with the specified compression type.
+    /// Compression level is automatically set based on the compression type.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive.</param>
     public WriterOptions(CompressionType compressionType)
     {
         CompressionType = compressionType;
@@ -19,30 +82,46 @@ public class WriterOptions : OptionsBase
         };
     }
 
+    /// <summary>
+    /// Creates a new WriterOptions instance with the specified compression type and level.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive.</param>
+    /// <param name="compressionLevel">The compression level (algorithm-specific).</param>
     public WriterOptions(CompressionType compressionType, int compressionLevel)
     {
         CompressionType = compressionType;
         CompressionLevel = compressionLevel;
     }
 
-    public CompressionType CompressionType { get; set; }
+    // Note: Constructors with boolean leaveStreamOpen parameter removed.
+    // Use the fluent WithLeaveStreamOpen() helper or object initializer instead:
+    // new WriterOptions(type) { LeaveStreamOpen = false }
+    // or
+    // WriterOptions.ForZip().WithLeaveStreamOpen(false)
 
     /// <summary>
-    /// The compression level to be used when the compression type supports variable levels.
-    /// Valid ranges depend on the compression algorithm:
-    /// - Deflate/GZip: 0-9 (0=no compression, 6=default, 9=best compression)
-    /// - ZStandard: 1-22 (1=fastest, 3=default, 22=best compression)
-    /// Note: BZip2 and LZMA do not support compression levels in this implementation.
-    /// Defaults are set automatically based on compression type in the constructor.
+    /// Implicit conversion from CompressionType to WriterOptions.
     /// </summary>
-    public int CompressionLevel { get; set; }
-
-    /// <summary>
-    /// An optional progress reporter for tracking compression operations.
-    /// When set, progress updates will be reported as entries are written.
-    /// </summary>
-    public IProgress<ProgressReport>? Progress { get; set; }
-
+    /// <param name="compressionType">The compression type.</param>
     public static implicit operator WriterOptions(CompressionType compressionType) =>
         new(compressionType);
+
+    /// <summary>
+    /// Creates a new ZipWriterOptions for writing ZIP archives.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive. Defaults to Deflate.</param>
+    public static WriterOptions ForZip(CompressionType compressionType = CompressionType.Deflate) =>
+        new(compressionType);
+
+    /// <summary>
+    /// Creates a new WriterOptions for writing TAR archives.
+    /// </summary>
+    /// <param name="compressionType">The compression type for the archive. Defaults to None.</param>
+    public static WriterOptions ForTar(CompressionType compressionType = CompressionType.None) =>
+        new(compressionType);
+
+    /// <summary>
+    /// Creates a new WriterOptions for writing GZip compressed files.
+    /// </summary>
+    public static WriterOptions ForGZip() => new(CompressionType.GZip);
 }

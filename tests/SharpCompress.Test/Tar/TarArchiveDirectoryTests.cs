@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Writers.Tar;
 using Xunit;
 
 namespace SharpCompress.Test.Tar;
@@ -80,7 +81,7 @@ public class TarArchiveDirectoryTests : TestBase
 
             using (var fileStream = File.Create(scratchPath))
             {
-                archive.SaveTo(fileStream, CompressionType.None);
+                archive.SaveTo(fileStream, new TarWriterOptions(CompressionType.None, true));
             }
         }
 

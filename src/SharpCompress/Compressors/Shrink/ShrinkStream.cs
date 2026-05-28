@@ -1,65 +1,33 @@
 using System;
 using System.IO;
-using SharpCompress.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Shrink;
 
-internal class ShrinkStream : Stream, IStreamStack
+internal partial class ShrinkStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
+    private readonly Stream _inStream;
 
-    Stream IStreamStack.BaseStream() => inStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
-    private Stream inStream;
-    private CompressionMode _compressionMode;
-
-    private ulong _compressedSize;
-    private long _uncompressedSize;
-    private byte[] _byteOut;
+    private readonly long _uncompressedSize;
+    private readonly byte[] _byteOut;
     private long _outBytesCount;
+    private bool _decompressed;
+    private long _position;
 
-    public ShrinkStream(
-        Stream stream,
-        CompressionMode compressionMode,
-        long compressedSize,
-        long uncompressedSize
-    )
+    public ShrinkStream(Stream stream, long uncompressedSize)
     {
-        inStream = stream;
-        _compressionMode = compressionMode;
+        if (uncompressedSize > int.MaxValue)
+        {
+            throw new InvalidFormatException(
+                $"Shrink: declared uncompressed size {uncompressedSize} exceeds maximum supported size."
+            );
+        }
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ShrinkStream));
-#endif
+        _inStream = stream;
 
-        _compressedSize = (ulong)compressedSize;
         _uncompressedSize = uncompressedSize;
-        _byteOut = new byte[_uncompressedSize];
+        _byteOut = new byte[(int)_uncompressedSize];
         _outBytesCount = 0L;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ShrinkStream));
-#endif
-        base.Dispose(disposing);
     }
 
     public override bool CanRead => true;
@@ -72,7 +40,7 @@ internal class ShrinkStream : Stream, IStreamStack
 
     public override long Position
     {
-        get => _outBytesCount;
+        get => _position;
         set => throw new NotImplementedException();
     }
 
@@ -80,32 +48,39 @@ internal class ShrinkStream : Stream, IStreamStack
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (inStream.Position == (long)_compressedSize)
+        if (!_decompressed)
+        {
+            // Read actual compressed data from the stream rather than pre-allocating based on the
+            // declared compressed size, which may be crafted to cause an OutOfMemoryException.
+            // The stream is already bounded by ReadOnlySubStream in ZipFilePart.
+            using var srcMs = new MemoryStream();
+            _inStream.CopyTo(srcMs);
+            var src = srcMs.ToArray();
+            var srcLen = src.Length;
+
+            HwUnshrink.Unshrink(
+                src,
+                srcLen,
+                out _,
+                _byteOut,
+                (int)_uncompressedSize,
+                out var dstUsed
+            );
+            _outBytesCount = dstUsed;
+            _decompressed = true;
+            _position = 0;
+        }
+
+        long remaining = _outBytesCount - _position;
+        if (remaining <= 0)
         {
             return 0;
         }
-        var src = new byte[_compressedSize];
-        inStream.Read(src, offset, (int)_compressedSize);
-        var srcUsed = 0;
-        var dstUsed = 0;
 
-        HwUnshrink.Unshrink(
-            src,
-            (int)_compressedSize,
-            out srcUsed,
-            _byteOut,
-            (int)_uncompressedSize,
-            out dstUsed
-        );
-        _outBytesCount = _byteOut.Length;
-
-        for (var index = 0; index < _outBytesCount; ++index)
-        {
-            buffer[offset + index] = _byteOut[index];
-        }
-        var tmp = _outBytesCount;
-        _outBytesCount = 0;
-        return (int)tmp;
+        int toCopy = (int)Math.Min(count, remaining);
+        Buffer.BlockCopy(_byteOut, (int)_position, buffer, offset, toCopy);
+        _position += toCopy;
+        return toCopy;
     }
 
     public override long Seek(long offset, SeekOrigin origin) =>

@@ -123,7 +123,10 @@ public static unsafe partial class Methods
             customMem
         );
         if (ret == null)
+        {
             return null;
+        }
+
         ret->ddictPtrTable = (ZSTD_DDict_s**)ZSTD_customCalloc(
             (nuint)(64 * sizeof(ZSTD_DDict_s*)),
             customMem
@@ -190,7 +193,10 @@ public static unsafe partial class Methods
     public static nuint ZSTD_sizeof_DCtx(ZSTD_DCtx_s* dctx)
     {
         if (dctx == null)
+        {
             return 0;
+        }
+
         return (nuint)sizeof(ZSTD_DCtx_s)
             + ZSTD_sizeof_DDict(dctx->ddictLocal)
             + dctx->inBuffSize
@@ -246,9 +252,15 @@ public static unsafe partial class Methods
     {
         ZSTD_DCtx_s* dctx = (ZSTD_DCtx_s*)workspace;
         if (((nuint)workspace & 7) != 0)
+        {
             return null;
+        }
+
         if (workspaceSize < (nuint)sizeof(ZSTD_DCtx_s))
+        {
             return null;
+        }
+
         ZSTD_initDCtx_internal(dctx);
         dctx->staticSize = workspaceSize;
         dctx->inBuff = (sbyte*)(dctx + 1);
@@ -258,14 +270,20 @@ public static unsafe partial class Methods
     private static ZSTD_DCtx_s* ZSTD_createDCtx_internal(ZSTD_customMem customMem)
     {
         if (((customMem.customAlloc == null ? 1 : 0) ^ (customMem.customFree == null ? 1 : 0)) != 0)
+        {
             return null;
+        }
+
         {
             ZSTD_DCtx_s* dctx = (ZSTD_DCtx_s*)ZSTD_customMalloc(
                 (nuint)sizeof(ZSTD_DCtx_s),
                 customMem
             );
             if (dctx == null)
+            {
                 return null;
+            }
+
             dctx->customMem = customMem;
             ZSTD_initDCtx_internal(dctx);
             return dctx;
@@ -293,7 +311,10 @@ public static unsafe partial class Methods
     public static nuint ZSTD_freeDCtx(ZSTD_DCtx_s* dctx)
     {
         if (dctx == null)
+        {
             return 0;
+        }
+
         if (dctx->staticSize != 0)
         {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
@@ -357,13 +378,21 @@ public static unsafe partial class Methods
     public static uint ZSTD_isFrame(void* buffer, nuint size)
     {
         if (size < 4)
+        {
             return 0;
+        }
+
         {
             uint magic = MEM_readLE32(buffer);
             if (magic == 0xFD2FB528)
+            {
                 return 1;
+            }
+
             if ((magic & 0xFFFFFFF0) == 0x184D2A50)
+            {
                 return 1;
+            }
         }
 
         return 0;
@@ -376,11 +405,16 @@ public static unsafe partial class Methods
     public static uint ZSTD_isSkippableFrame(void* buffer, nuint size)
     {
         if (size < 4)
+        {
             return 0;
+        }
+
         {
             uint magic = MEM_readLE32(buffer);
             if ((magic & 0xFFFFFFF0) == 0x184D2A50)
+            {
                 return 1;
+            }
         }
 
         return 0;
@@ -481,7 +515,10 @@ public static unsafe partial class Methods
             if ((MEM_readLE32(src) & 0xFFFFFFF0) == 0x184D2A50)
             {
                 if (srcSize < 8)
+                {
                     return 8;
+                }
+
                 *zfhPtr = new ZSTD_frameHeader
                 {
                     frameType = ZSTD_frameType_e.ZSTD_skippableFrame,
@@ -498,7 +535,10 @@ public static unsafe partial class Methods
         {
             nuint fhsize = ZSTD_frameHeaderSize_internal(src, srcSize, format);
             if (srcSize < fhsize)
+            {
                 return fhsize;
+            }
+
             zfhPtr->headerSize = (uint)fhsize;
         }
 
@@ -562,7 +602,10 @@ public static unsafe partial class Methods
                     goto case 0;
                 case 0:
                     if (singleSegment != 0)
+                    {
                         frameContentSize = ip[pos];
+                    }
+
                     break;
                 case 1:
                     frameContentSize = (ulong)(MEM_readLE16(ip + pos) + 256);
@@ -576,7 +619,10 @@ public static unsafe partial class Methods
             }
 
             if (singleSegment != 0)
+            {
                 windowSize = frameContentSize;
+            }
+
             zfhPtr->frameType = ZSTD_frameType_e.ZSTD_frame;
             zfhPtr->frameContentSize = frameContentSize;
             zfhPtr->windowSize = windowSize;
@@ -608,7 +654,10 @@ public static unsafe partial class Methods
     {
         ZSTD_frameHeader zfh;
         if (ZSTD_getFrameHeader(&zfh, src, srcSize) != 0)
+        {
             return unchecked(0UL - 2);
+        }
+
         if (zfh.frameType == ZSTD_frameType_e.ZSTD_skippableFrame)
         {
             return 0;
@@ -691,9 +740,15 @@ public static unsafe partial class Methods
             }
 
             if (skippableContentSize > 0 && dst != null)
+            {
                 memcpy(dst, (byte*)src + 8, (uint)skippableContentSize);
+            }
+
             if (magicVariant != null)
+            {
                 *magicVariant = magicNumber - 0x184D2A50;
+            }
+
             return skippableContentSize;
         }
     }
@@ -713,7 +768,10 @@ public static unsafe partial class Methods
             {
                 nuint skippableSize = readSkippableFrameSize(src, srcSize);
                 if (ERR_isError(skippableSize))
+                {
                     return unchecked(0UL - 2);
+                }
+
                 assert(skippableSize <= srcSize);
                 src = (byte*)src + skippableSize;
                 srcSize -= skippableSize;
@@ -723,16 +781,25 @@ public static unsafe partial class Methods
             {
                 ulong fcs = ZSTD_getFrameContentSize(src, srcSize);
                 if (fcs >= unchecked(0UL - 2))
+                {
                     return fcs;
+                }
+
                 if (totalDstSize + fcs < totalDstSize)
+                {
                     return unchecked(0UL - 2);
+                }
+
                 totalDstSize += fcs;
             }
 
             {
                 nuint frameSrcSize = ZSTD_findFrameCompressedSize(src, srcSize);
                 if (ERR_isError(frameSrcSize))
+                {
                     return unchecked(0UL - 2);
+                }
+
                 assert(frameSrcSize <= srcSize);
                 src = (byte*)src + frameSrcSize;
                 srcSize -= frameSrcSize;
@@ -740,7 +807,10 @@ public static unsafe partial class Methods
         }
 
         if (srcSize != 0)
+        {
             return unchecked(0UL - 2);
+        }
+
         return totalDstSize;
     }
 
@@ -766,7 +836,10 @@ public static unsafe partial class Methods
     {
         nuint result = ZSTD_getFrameHeader_advanced(&dctx->fParams, src, headerSize, dctx->format);
         if (ERR_isError(result))
+        {
             return result;
+        }
+
         if (result > 0)
         {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
@@ -789,7 +862,10 @@ public static unsafe partial class Methods
             dctx->fParams.checksumFlag != 0 && dctx->forceIgnoreChecksum == default ? 1 : 0
         );
         if (dctx->validateChecksum != 0)
+        {
             ZSTD_XXH64_reset(&dctx->xxhState, 0);
+        }
+
         dctx->processedCSize += headerSize;
         return 0;
     }
@@ -833,11 +909,16 @@ public static unsafe partial class Methods
             {
                 nuint ret = ZSTD_getFrameHeader_advanced(&zfh, src, srcSize, format);
                 if (ERR_isError(ret))
+                {
                     return ZSTD_errorFrameSizeInfo(ret);
+                }
+
                 if (ret > 0)
+                {
                     return ZSTD_errorFrameSizeInfo(
                         unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong))
                     );
+                }
             }
 
             ip += zfh.headerSize;
@@ -847,24 +928,35 @@ public static unsafe partial class Methods
                 blockProperties_t blockProperties;
                 nuint cBlockSize = ZSTD_getcBlockSize(ip, remainingSize, &blockProperties);
                 if (ERR_isError(cBlockSize))
+                {
                     return ZSTD_errorFrameSizeInfo(cBlockSize);
+                }
+
                 if (ZSTD_blockHeaderSize + cBlockSize > remainingSize)
+                {
                     return ZSTD_errorFrameSizeInfo(
                         unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong))
                     );
+                }
+
                 ip += ZSTD_blockHeaderSize + cBlockSize;
                 remainingSize -= ZSTD_blockHeaderSize + cBlockSize;
                 nbBlocks++;
                 if (blockProperties.lastBlock != 0)
+                {
                     break;
+                }
             }
 
             if (zfh.checksumFlag != 0)
             {
                 if (remainingSize < 4)
+                {
                     return ZSTD_errorFrameSizeInfo(
                         unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong))
                     );
+                }
+
                 ip += 4;
             }
 
@@ -915,7 +1007,10 @@ public static unsafe partial class Methods
             nuint compressedSize = frameSizeInfo.compressedSize;
             ulong decompressedBound = frameSizeInfo.decompressedBound;
             if (ERR_isError(compressedSize) || decompressedBound == unchecked(0UL - 2))
+            {
                 return unchecked(0UL - 2);
+            }
+
             assert(srcSize >= compressedSize);
             src = (byte*)src + compressedSize;
             srcSize -= compressedSize;
@@ -971,7 +1066,10 @@ public static unsafe partial class Methods
             }
 
             if (ERR_isError(compressedSize) || decompressedBound == unchecked(0UL - 2))
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             if (zfh.frameType == ZSTD_frameType_e.ZSTD_frame)
             {
                 margin += zfh.headerSize;
@@ -1013,7 +1111,10 @@ public static unsafe partial class Methods
         if (dst == null)
         {
             if (srcSize == 0)
+            {
                 return 0;
+            }
+
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstBuffer_null));
         }
 
@@ -1031,7 +1132,10 @@ public static unsafe partial class Methods
         if (dst == null)
         {
             if (regenSize == 0)
+            {
                 return 0;
+            }
+
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstBuffer_null));
         }
 
@@ -1079,7 +1183,10 @@ public static unsafe partial class Methods
                 dctx->format
             );
             if (ERR_isError(frameHeaderSize))
+            {
                 return frameHeaderSize;
+            }
+
             if (remainingSrcSize < frameHeaderSize + ZSTD_blockHeaderSize)
             {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
@@ -1098,10 +1205,13 @@ public static unsafe partial class Methods
         }
 
         if (dctx->maxBlockSizeParam != 0)
+        {
             dctx->fParams.blockSizeMax =
                 dctx->fParams.blockSizeMax < (uint)dctx->maxBlockSizeParam
                     ? dctx->fParams.blockSizeMax
                     : (uint)dctx->maxBlockSizeParam;
+        }
+
         while (true)
         {
             byte* oBlockEnd = oend;
@@ -1109,7 +1219,10 @@ public static unsafe partial class Methods
             blockProperties_t blockProperties;
             nuint cBlockSize = ZSTD_getcBlockSize(ip, remainingSrcSize, &blockProperties);
             if (ERR_isError(cBlockSize))
+            {
                 return cBlockSize;
+            }
+
             ip += ZSTD_blockHeaderSize;
             remainingSrcSize -= ZSTD_blockHeaderSize;
             if (cBlockSize > remainingSrcSize)
@@ -1173,7 +1286,9 @@ public static unsafe partial class Methods
             ip += cBlockSize;
             remainingSrcSize -= cBlockSize;
             if (blockProperties.lastBlock != 0)
+            {
                 break;
+            }
         }
 
         if (dctx->fParams.frameContentSize != unchecked(0UL - 1))
@@ -1288,10 +1403,16 @@ public static unsafe partial class Methods
                 }
 
                 if (ERR_isError(res))
+                {
                     return res;
+                }
+
                 assert(res <= dstCapacity);
                 if (res != 0)
+                {
                     dst = (byte*)dst + res;
+                }
+
                 dstCapacity -= res;
             }
 
@@ -1428,9 +1549,15 @@ public static unsafe partial class Methods
                 || dctx->stage == ZSTD_dStage.ZSTDds_decompressLastBlock
             )
         )
+        {
             return dctx->expected;
+        }
+
         if (dctx->bType != blockType_e.bt_raw)
+        {
             return dctx->expected;
+        }
+
         return inputSize <= 1 ? 1
             : inputSize <= dctx->expected ? inputSize
             : dctx->expected;
@@ -1502,7 +1629,10 @@ public static unsafe partial class Methods
 
                 dctx->headerSize = ZSTD_frameHeaderSize_internal(src, srcSize, dctx->format);
                 if (ERR_isError(dctx->headerSize))
+                {
                     return dctx->headerSize;
+                }
+
                 memcpy(dctx->headerBuffer, src, (uint)srcSize);
                 dctx->expected = dctx->headerSize - srcSize;
                 dctx->stage = ZSTD_dStage.ZSTDds_decodeFrameHeader;
@@ -1531,7 +1661,10 @@ public static unsafe partial class Methods
                 blockProperties_t bp;
                 nuint cBlockSize = ZSTD_getcBlockSize(src, ZSTD_blockHeaderSize, &bp);
                 if (ERR_isError(cBlockSize))
+                {
                     return cBlockSize;
+                }
+
                 if (cBlockSize > dctx->fParams.blockSizeMax)
                 {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
@@ -1630,7 +1763,10 @@ public static unsafe partial class Methods
 
                 dctx->decodedSize += rSize;
                 if (dctx->validateChecksum != 0)
+                {
                     ZSTD_XXH64_update(&dctx->xxhState, dst, rSize);
+                }
+
                 dctx->previousDstEnd = (sbyte*)dst + rSize;
                 if (dctx->expected > 0)
                 {
@@ -1913,7 +2049,10 @@ public static unsafe partial class Methods
     )
     {
         if (dictSize < 8)
+        {
             return ZSTD_refDictContent(dctx, dict, dictSize);
+        }
+
         {
             uint magic = MEM_readLE32(dict);
             if (magic != 0xEC30A437)
@@ -1977,10 +2116,12 @@ public static unsafe partial class Methods
         }
 
         if (dict != null && dictSize != 0)
+        {
             if (ERR_isError(ZSTD_decompress_insertDictionary(dctx, dict, dictSize)))
             {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
             }
+        }
 
         return 0;
     }
@@ -2020,9 +2161,15 @@ public static unsafe partial class Methods
     public static uint ZSTD_getDictID_fromDict(void* dict, nuint dictSize)
     {
         if (dictSize < 8)
+        {
             return 0;
+        }
+
         if (MEM_readLE32(dict) != 0xEC30A437)
+        {
             return 0;
+        }
+
         return MEM_readLE32((sbyte*)dict + 4);
     }
 
@@ -2055,7 +2202,10 @@ public static unsafe partial class Methods
         };
         nuint hError = ZSTD_getFrameHeader(&zfp, src, srcSize);
         if (ERR_isError(hError))
+        {
             return 0;
+        }
+
         return zfp.dictID;
     }
 
@@ -2492,11 +2642,20 @@ public static unsafe partial class Methods
     {
         ZSTD_bounds bounds = ZSTD_dParam_getBounds(dParam);
         if (ERR_isError(bounds.error))
+        {
             return 0;
+        }
+
         if (value < bounds.lowerBound)
+        {
             return 0;
+        }
+
         if (value > bounds.upperBound)
+        {
             return 0;
+        }
+
         return 1;
     }
 
@@ -2555,7 +2714,9 @@ public static unsafe partial class Methods
         {
             case ZSTD_dParameter.ZSTD_d_windowLogMax:
                 if (value == 0)
+                {
                     value = 27;
+                }
 
                 {
                     if (ZSTD_dParam_withinBounds(ZSTD_dParameter.ZSTD_d_windowLogMax, value) == 0)
@@ -2765,7 +2926,10 @@ public static unsafe partial class Methods
         ZSTD_frameHeader zfh;
         nuint err = ZSTD_getFrameHeader(&zfh, src, srcSize);
         if (ERR_isError(err))
+        {
             return err;
+        }
+
         if (err > 0)
         {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
@@ -2800,9 +2964,13 @@ public static unsafe partial class Methods
     )
     {
         if (ZSTD_DCtx_isOverflow(zds, neededInBuffSize, neededOutBuffSize) != 0)
+        {
             zds->oversizedDuration++;
+        }
         else
+        {
             zds->oversizedDuration = 0;
+        }
     }
 
     private static int ZSTD_DCtx_isOversizedTooLong(ZSTD_DCtx_s* zds)
@@ -2815,11 +2983,20 @@ public static unsafe partial class Methods
     {
         ZSTD_outBuffer_s expect = zds->expectedOutBuffer;
         if (zds->outBufferMode != ZSTD_bufferMode_e.ZSTD_bm_stable)
+        {
             return 0;
+        }
+
         if (zds->streamStage == ZSTD_dStreamStage.zdss_init)
+        {
             return 0;
+        }
+
         if (expect.dst == output->dst && expect.pos == output->pos && expect.size == output->size)
+        {
             return 0;
+        }
+
         return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstBuffer_wrong));
     }
 
@@ -3047,7 +3224,10 @@ public static unsafe partial class Methods
                                 ZSTD_getDDict(zds)
                             );
                             if (ERR_isError(decompressedSize))
+                            {
                                 return decompressedSize;
+                            }
+
                             assert(istart != null);
                             ip = istart + cSize;
                             op = op != null ? op + decompressedSize : op;
@@ -3112,10 +3292,12 @@ public static unsafe partial class Methods
                     }
 
                     if (zds->maxBlockSizeParam != 0)
+                    {
                         zds->fParams.blockSizeMax =
                             zds->fParams.blockSizeMax < (uint)zds->maxBlockSizeParam
                                 ? zds->fParams.blockSizeMax
                                 : (uint)zds->maxBlockSizeParam;
+                    }
 
                     {
                         /* frame checksum */

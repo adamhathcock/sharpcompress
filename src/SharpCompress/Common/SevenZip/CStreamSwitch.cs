@@ -15,9 +15,6 @@ internal struct CStreamSwitch : IDisposable
         if (_active)
         {
             _active = false;
-#if DEBUG
-            Log.WriteLine("[end of switch]");
-#endif
         }
 
         if (_needRemove)
@@ -47,22 +44,14 @@ internal struct CStreamSwitch : IDisposable
             var dataIndex = archive.ReadNum();
             if (dataIndex < 0 || dataIndex >= dataVector.Count)
             {
-                throw new InvalidOperationException();
+                throw new ArchiveOperationException();
             }
 
-#if DEBUG
-            Log.WriteLine("[switch to stream {0}]", dataIndex);
-#endif
             _archive = archive;
             _archive.AddByteStream(dataVector[dataIndex], 0, dataVector[dataIndex].Length);
             _needRemove = true;
             _active = true;
         }
-        else
-        {
-#if DEBUG
-            Log.WriteLine("[inline data]");
-#endif
-        }
+        else { }
     }
 }

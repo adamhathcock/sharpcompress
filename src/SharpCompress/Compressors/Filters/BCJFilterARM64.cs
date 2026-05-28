@@ -30,7 +30,9 @@ internal class BCJFilterARM64 : Filter
 
                 pc >>= 2;
                 if (!_isEncoder)
+                {
                     pc = 0U - pc;
+                }
 
                 instr |= (src + pc) & 0x03FFFFFF;
                 BinaryPrimitives.WriteUInt32LittleEndian(new Span<byte>(buffer, i, 4), instr);
@@ -40,13 +42,17 @@ internal class BCJFilterARM64 : Filter
                 uint src = ((instr >> 29) & 3) | ((instr >> 3) & 0x001FFFFC);
 
                 if (((src + 0x00020000) & 0x001C0000) != 0)
+                {
                     continue;
+                }
 
                 instr &= 0x9000001F;
 
                 pc >>= 12;
                 if (!_isEncoder)
+                {
                     pc = 0U - pc;
+                }
 
                 uint dest = src + pc;
                 instr |= (dest & 3) << 29;

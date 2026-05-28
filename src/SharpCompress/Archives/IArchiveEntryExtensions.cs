@@ -9,8 +9,6 @@ namespace SharpCompress.Archives;
 
 public static class IArchiveEntryExtensions
 {
-    private const int BufferSize = 81920;
-
     /// <param name="archiveEntry">The archive entry to extract.</param>
     extension(IArchiveEntry archiveEntry)
     {
@@ -28,7 +26,7 @@ public static class IArchiveEntryExtensions
 
             using var entryStream = archiveEntry.OpenEntryStream();
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
-            sourceStream.CopyTo(streamToWriteTo, BufferSize);
+            sourceStream.CopyTo(streamToWriteTo, Constants.BufferSize);
         }
 
         /// <summary>
@@ -48,10 +46,18 @@ public static class IArchiveEntryExtensions
                 throw new ExtractionException("Entry is a file directory and cannot be extracted.");
             }
 
-            using var entryStream = await archiveEntry.OpenEntryStreamAsync(cancellationToken);
+#if LEGACY_DOTNET
+            using var entryStream = await archiveEntry
+                .OpenEntryStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
+#else
+            await using var entryStream = await archiveEntry
+                .OpenEntryStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
+#endif
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
             await sourceStream
-                .CopyToAsync(streamToWriteTo, BufferSize, cancellationToken)
+                .CopyToAsync(streamToWriteTo, Constants.BufferSize, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
@@ -100,11 +106,10 @@ public static class IArchiveEntryExtensions
             string destinationDirectory,
             ExtractionOptions? options = null
         ) =>
-            ExtractionMethods.WriteEntryToDirectory(
-                entry,
+            entry.WriteEntryToDirectory(
                 destinationDirectory,
                 options,
-                entry.WriteToFile
+                (path) => entry.WriteToFile(path, options)
             );
 
         /// <summary>
@@ -115,12 +120,12 @@ public static class IArchiveEntryExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
+            await entry
                 .WriteEntryToDirectoryAsync(
-                    entry,
                     destinationDirectory,
                     options,
-                    entry.WriteToFileAsync,
+                    async (path, ct) =>
+                        await entry.WriteToFileAsync(path, options, ct).ConfigureAwait(false),
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -129,8 +134,7 @@ public static class IArchiveEntryExtensions
         /// Extract to specific file
         /// </summary>
         public void WriteToFile(string destinationFileName, ExtractionOptions? options = null) =>
-            ExtractionMethods.WriteEntryToFile(
-                entry,
+            entry.WriteEntryToFile(
                 destinationFileName,
                 options,
                 (x, fm) =>
@@ -148,9 +152,8 @@ public static class IArchiveEntryExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
+            await entry
                 .WriteEntryToFileAsync(
-                    entry,
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>

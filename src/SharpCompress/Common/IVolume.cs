@@ -2,7 +2,7 @@ using System;
 
 namespace SharpCompress.Common;
 
-public interface IVolume : IDisposable
+public interface IVolume : IDisposable, IAsyncDisposable
 {
     int Index { get; }
 

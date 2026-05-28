@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static SharpCompress.Compressors.ZStandard.UnsafeHelper;
 
@@ -7,7 +6,6 @@ namespace SharpCompress.Compressors.ZStandard.Unsafe;
 public static unsafe partial class Methods
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Conditional("DEBUG")]
     private static void ZSTD_cwksp_assert_internal_consistency(ZSTD_cwksp* ws)
     {
         assert(ws->workspace <= ws->objectEnd);
@@ -47,7 +45,10 @@ public static unsafe partial class Methods
     private static nuint ZSTD_cwksp_alloc_size(nuint size)
     {
         if (size == 0)
+        {
             return 0;
+        }
+
         return size;
     }
 
@@ -360,9 +361,15 @@ public static unsafe partial class Methods
         nuint surplus = alignment > (nuint)sizeof(void*) ? alignment - (nuint)sizeof(void*) : 0;
         void* start = ZSTD_cwksp_reserve_object(ws, byteSize + surplus);
         if (start == null)
+        {
             return null;
+        }
+
         if (surplus == 0)
+        {
             return start;
+        }
+
         assert(ZSTD_isPower2(alignment) != 0);
         return (void*)((nuint)start + surplus & ~mask);
     }

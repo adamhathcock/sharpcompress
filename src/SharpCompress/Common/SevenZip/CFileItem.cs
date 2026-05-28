@@ -1,5 +1,3 @@
-﻿#nullable disable
-
 using System;
 
 namespace SharpCompress.Common.SevenZip;
@@ -10,7 +8,7 @@ internal class CFileItem
     public uint? Attrib { get; internal set; }
     public uint? ExtendedAttrib { get; internal set; }
     public uint? Crc { get; internal set; }
-    public string Name { get; internal set; }
+    public string Name { get; internal set; } = string.Empty;
 
     public bool HasStream { get; internal set; }
     public bool IsDir { get; internal set; }

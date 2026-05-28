@@ -5,6 +5,8 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Test.Mocks;
+using SharpCompress.Writers.GZip;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -17,7 +19,7 @@ public class GZipArchiveTests : ArchiveTests
     public void GZip_Archive_Generic()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")))
-        using (var archive = ArchiveFactory.OpenArchive(stream))
+        using (var archive = GZipArchive.OpenArchive(stream))
         {
             var entry = archive.Entries.First();
             entry.WriteToFile(Path.Combine(SCRATCH_FILES_PATH, entry.Key.NotNull()));
@@ -64,7 +66,7 @@ public class GZipArchiveTests : ArchiveTests
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.OpenArchive(stream);
         Assert.Throws<InvalidFormatException>(() => archive.AddEntry("jpg\\test.jpg", jpg));
-        archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"));
+        archive.SaveTo(Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"), new GZipWriterOptions());
     }
 
     [Fact]
@@ -124,6 +126,23 @@ public class GZipArchiveTests : ArchiveTests
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
         using var archive = GZipArchive.OpenArchive(stream);
         Assert.Equal(archive.Type, ArchiveType.GZip);
+    }
+
+    [Fact]
+    public void GZipArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => GZipArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
+    public void GZipArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => GZipArchive.OpenArchive(unreadable));
     }
 
     [Fact]

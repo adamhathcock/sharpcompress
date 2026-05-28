@@ -10,10 +10,13 @@ public static unsafe partial class Methods
     private static void* ZSTD_customMalloc(nuint size, ZSTD_customMem customMem)
     {
         if (customMem.customAlloc != null)
+        {
             return ((delegate* managed<void*, nuint, void*>)customMem.customAlloc)(
                 customMem.opaque,
                 size
             );
+        }
+
         return malloc(size);
     }
 
@@ -41,12 +44,16 @@ public static unsafe partial class Methods
         if (ptr != null)
         {
             if (customMem.customFree != null)
+            {
                 ((delegate* managed<void*, void*, void>)customMem.customFree)(
                     customMem.opaque,
                     ptr
                 );
+            }
             else
+            {
                 free(ptr);
+            }
         }
     }
 }

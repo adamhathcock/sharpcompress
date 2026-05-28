@@ -170,9 +170,14 @@ public static unsafe partial class Methods
         }
 
         if (lastSubBlock == 0)
+        {
             assert(litLengthSum == litSize);
+        }
         else
+        {
             assert(litLengthSum <= litSize);
+        }
+
         return matchLengthSum + litSize;
     }
 
@@ -214,7 +219,9 @@ public static unsafe partial class Methods
         }
 
         if (nbSeq < 128)
+        {
             *op++ = (byte)nbSeq;
+        }
         else if (nbSeq < 0x7F00)
         {
             op[0] = (byte)((nbSeq >> 8) + 0x80);
@@ -342,7 +349,10 @@ public static unsafe partial class Methods
             }
 
             if (cLitSize == 0)
+            {
                 return 0;
+            }
+
             op += cLitSize;
         }
 
@@ -371,7 +381,10 @@ public static unsafe partial class Methods
             }
 
             if (cSeqSize == 0)
+            {
                 return 0;
+            }
+
             op += cSeqSize;
         }
 
@@ -400,9 +413,13 @@ public static unsafe partial class Methods
         /* Use hard coded size of 3 bytes */
         nuint literalSectionHeaderSize = 3;
         if (hufMetadata->hType == SymbolEncodingType_e.set_basic)
+        {
             return litSize;
+        }
         else if (hufMetadata->hType == SymbolEncodingType_e.set_rle)
+        {
             return 1;
+        }
         else if (
             hufMetadata->hType == SymbolEncodingType_e.set_compressed
             || hufMetadata->hType == SymbolEncodingType_e.set_repeat
@@ -417,7 +434,10 @@ public static unsafe partial class Methods
                 wkspSize
             );
             if (ERR_isError(largest))
+            {
                 return litSize;
+            }
+
             {
                 nuint cLitSizeEstimate = HUF_estimateCompressedSize(
                     &huf->CTable.e0,
@@ -425,7 +445,10 @@ public static unsafe partial class Methods
                     maxSymbolValue
                 );
                 if (writeEntropy != 0)
+                {
                     cLitSizeEstimate += hufMetadata->hufDesSize;
+                }
+
                 return cLitSizeEstimate + literalSectionHeaderSize;
             }
         }
@@ -476,13 +499,21 @@ public static unsafe partial class Methods
         }
 
         if (ERR_isError(cSymbolTypeSizeEstimateInBits))
+        {
             return nbSeq * 10;
+        }
+
         while (ctp < ctEnd)
         {
             if (additionalBits != null)
+            {
                 cSymbolTypeSizeEstimateInBits += additionalBits[*ctp];
+            }
             else
+            {
                 cSymbolTypeSizeEstimateInBits += *ctp;
+            }
+
             ctp++;
         }
 
@@ -505,7 +536,10 @@ public static unsafe partial class Methods
         const nuint sequencesSectionHeaderSize = 3;
         nuint cSeqSizeEstimate = 0;
         if (nbSeq == 0)
+        {
             return sequencesSectionHeaderSize;
+        }
+
         cSeqSizeEstimate += ZSTD_estimateSubBlockSize_symbolType(
             fseMetadata->ofType,
             ofCodeTable,
@@ -546,7 +580,10 @@ public static unsafe partial class Methods
             wkspSize
         );
         if (writeEntropy != 0)
+        {
             cSeqSizeEstimate += fseMetadata->fseTablesSize;
+        }
+
         return cSeqSizeEstimate + sequencesSectionHeaderSize;
     }
 
@@ -596,17 +633,26 @@ public static unsafe partial class Methods
             fseMetadata->llType == SymbolEncodingType_e.set_compressed
             || fseMetadata->llType == SymbolEncodingType_e.set_rle
         )
+        {
             return 1;
+        }
+
         if (
             fseMetadata->mlType == SymbolEncodingType_e.set_compressed
             || fseMetadata->mlType == SymbolEncodingType_e.set_rle
         )
+        {
             return 1;
+        }
+
         if (
             fseMetadata->ofType == SymbolEncodingType_e.set_compressed
             || fseMetadata->ofType == SymbolEncodingType_e.set_rle
         )
+        {
             return 1;
+        }
+
         return 0;
     }
 
@@ -641,7 +687,10 @@ public static unsafe partial class Methods
         budget += headerSize;
         budget += sp[0].litLength * avgLitCost + avgSeqCost;
         if (budget > targetBudget)
+        {
             return 1;
+        }
+
         inSize = (nuint)(sp[0].litLength + (sp[0].mlBase + 3));
         for (n = 1; n < nbSeqs; n++)
         {
@@ -649,7 +698,9 @@ public static unsafe partial class Methods
             budget += currentCost;
             inSize += (nuint)(sp[n].litLength + (sp[n].mlBase + 3));
             if (budget > targetBudget && budget < inSize * 256)
+            {
                 break;
+            }
         }
 
         return n;
@@ -730,7 +781,10 @@ public static unsafe partial class Methods
                 blockBudgetSupp = 0;
             avgBlockBudget = ebs.estBlockSize * 256 / nbSubBlocks;
             if (ebs.estBlockSize > srcSize)
+            {
                 return 0;
+            }
+
             assert(nbSubBlocks > 0);
             for (n = 0; n < nbSubBlocks - 1; n++)
             {
@@ -745,7 +799,10 @@ public static unsafe partial class Methods
                 );
                 assert(seqCount <= (nuint)(send - sp));
                 if (sp + seqCount == send)
+                {
                     break;
+                }
+
                 assert(seqCount > 0);
                 {
                     int litEntropyWritten = 0;

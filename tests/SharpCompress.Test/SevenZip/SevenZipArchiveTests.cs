@@ -4,8 +4,10 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Common.SevenZip;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.SevenZip;
@@ -25,18 +27,48 @@ public class SevenZipArchiveTests : ArchiveTests
     public void SevenZipArchive_LZMA_PathRead() => ArchiveFileRead("7Zip.LZMA.7z");
 
     [Fact]
+    public void SevenZipArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() =>
+            SevenZipArchive.OpenArchive([nonSeekable, seekable])
+        );
+    }
+
+    [Fact]
+    public void SevenZipArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => SevenZipArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
     public void SevenZipArchive_LZMAAES_StreamRead() =>
-        ArchiveStreamRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveStreamRead(
+            "7Zip.LZMA.Aes.7z",
+            ReaderOptions.ForExternalStream with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_LZMAAES_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveFileRead(
+            "7Zip.LZMA.Aes.7z",
+            ReaderOptions.ForFilePath with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_LZMAAES_NoPasswordExceptionTest() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ArchiveFileRead("7Zip.LZMA.Aes.7z", new ReaderOptions { Password = null })
+        Assert.Throws<CryptographicException>(() =>
+            ArchiveFileRead("7Zip.LZMA.Aes.7z", ReaderOptions.ForFilePath.WithPassword(null))
         ); //was failing with ArgumentNullException not CryptographicException like rar
 
     [Fact]
@@ -57,19 +89,39 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_StreamRead() =>
-        ArchiveStreamRead(new SevenZipFactory(), "7Zip.LZMA2.exe", new() { LookForHeader = true });
+        ArchiveStreamRead(
+            new SevenZipFactory(),
+            "7Zip.LZMA2.exe",
+            ReaderOptions.ForExternalStream.WithLookForHeader(true)
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2_EXE_PathRead() =>
-        ArchiveFileRead(new SevenZipFactory(), "7Zip.LZMA2.exe", new() { LookForHeader = true });
+        ArchiveFileRead(
+            "7Zip.LZMA2.exe",
+            ReaderOptions.ForFilePath.WithLookForHeader(true),
+            new SevenZipFactory()
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>
-        ArchiveStreamRead("7Zip.LZMA2.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveStreamRead(
+            "7Zip.LZMA2.Aes.7z",
+            ReaderOptions.ForExternalStream with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_LZMA2AES_PathRead() =>
-        ArchiveFileRead("7Zip.LZMA2.Aes.7z", new ReaderOptions { Password = "testpassword" });
+        ArchiveFileRead(
+            "7Zip.LZMA2.Aes.7z",
+            ReaderOptions.ForFilePath with
+            {
+                Password = "testpassword",
+            }
+        );
 
     [Fact]
     public void SevenZipArchive_BZip2_StreamRead() => ArchiveStreamRead("7Zip.BZip2.7z");
@@ -83,8 +135,9 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_BZip2_Split() =>
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ArchiveOperationException>(() =>
             ArchiveStreamRead(
+                ".001",
                 null,
                 "Original.7z.001",
                 "Original.7z.002",
@@ -99,15 +152,18 @@ public class SevenZipArchiveTests : ArchiveTests
     //Same as archive as Original.7z.001 ... 007 files without the root directory 'Original\' in the archive - this caused the verify to fail
     [Fact]
     public void SevenZipArchive_BZip2_Split_Working() =>
-        ArchiveStreamMultiRead(
-            null,
-            "7Zip.BZip2.split.001",
-            "7Zip.BZip2.split.002",
-            "7Zip.BZip2.split.003",
-            "7Zip.BZip2.split.004",
-            "7Zip.BZip2.split.005",
-            "7Zip.BZip2.split.006",
-            "7Zip.BZip2.split.007"
+        Assert.Throws<ArchiveOperationException>(() =>
+            ArchiveStreamRead(
+                ".001",
+                null,
+                "7Zip.BZip2.split.001",
+                "7Zip.BZip2.split.002",
+                "7Zip.BZip2.split.003",
+                "7Zip.BZip2.split.004",
+                "7Zip.BZip2.split.005",
+                "7Zip.BZip2.split.006",
+                "7Zip.BZip2.split.007"
+            )
         );
 
     //will detect and load other files
@@ -149,16 +205,14 @@ public class SevenZipArchiveTests : ArchiveTests
 
     [Fact]
     public void SevenZipArchive_ZSTD_Split() =>
-        Assert.Throws<InvalidOperationException>(() =>
-            ArchiveStreamRead(
-                null,
-                "7Zip.ZSTD.Split.7z.001",
-                "7Zip.ZSTD.Split.7z.002",
-                "7Zip.ZSTD.Split.7z.003",
-                "7Zip.ZSTD.Split.7z.004",
-                "7Zip.ZSTD.Split.7z.005",
-                "7Zip.ZSTD.Split.7z.006"
-            )
+        ArchiveStreamMultiRead(
+            null,
+            "7Zip.ZSTD.Split.7z.001",
+            "7Zip.ZSTD.Split.7z.002",
+            "7Zip.ZSTD.Split.7z.003",
+            "7Zip.ZSTD.Split.7z.004",
+            "7Zip.ZSTD.Split.7z.005",
+            "7Zip.ZSTD.Split.7z.006"
         );
 
     [Fact]
@@ -250,5 +304,145 @@ public class SevenZipArchiveTests : ArchiveTests
             Path.Combine(TEST_ARCHIVES_PATH, "7Zip.nonsolid.7z")
         );
         Assert.False(nonSolidArchive.IsSolid);
+    }
+
+    [Fact]
+    public void SevenZipArchive_Solid_ExtractAllEntries_Contiguous()
+    {
+        // This test verifies that solid archives iterate entries as contiguous streams
+        // rather than recreating the decompression stream for each entry
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
+        Assert.True(archive.IsSolid);
+
+        using var reader = archive.ExtractAllEntries();
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
+            }
+        }
+
+        VerifyFiles();
+    }
+
+    [Fact]
+    public void SevenZipArchive_Solid_VerifyStreamReuse()
+    {
+        // This test verifies that the folder stream is reused within each folder
+        // and not recreated for each entry in solid archives
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
+        Assert.True(archive.IsSolid);
+
+        using var reader = archive.ExtractAllEntries();
+
+        var sevenZipReader = Assert.IsType<SevenZipArchive.SevenZipReader>(reader);
+        sevenZipReader.DiagnosticsEnabled = true;
+
+        Stream? currentFolderStreamInstance = null;
+        object? currentFolder = null;
+        var entryCount = 0;
+        var entriesInCurrentFolder = 0;
+        var streamRecreationsWithinFolder = 0;
+
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                // Extract the entry to trigger GetEntryStream
+                using var entryStream = reader.OpenEntryStream();
+                var buffer = new byte[4096];
+                while (entryStream.Read(buffer, 0, buffer.Length) > 0)
+                {
+                    // Read the stream to completion
+                }
+
+                entryCount++;
+
+                var folderStream = sevenZipReader.DiagnosticsCurrentFolderStream;
+                var folder = sevenZipReader.DiagnosticsCurrentFolder;
+
+                Assert.NotNull(folderStream); // Folder stream should exist
+
+                // Check if we're in a new folder
+                if (currentFolder == null || !ReferenceEquals(currentFolder, folder))
+                {
+                    // Starting a new folder
+                    currentFolder = folder;
+                    currentFolderStreamInstance = folderStream;
+                    entriesInCurrentFolder = 1;
+                }
+                else
+                {
+                    // Same folder - verify stream wasn't recreated
+                    entriesInCurrentFolder++;
+
+                    if (!ReferenceEquals(currentFolderStreamInstance, folderStream))
+                    {
+                        // Stream was recreated within the same folder - this is the bug we're testing for!
+                        streamRecreationsWithinFolder++;
+                    }
+
+                    currentFolderStreamInstance = folderStream;
+                }
+            }
+        }
+
+        // Verify we actually tested multiple entries
+        Assert.True(entryCount > 1, "Test should have multiple entries to verify stream reuse");
+
+        // The critical check: within a single folder, the stream should NEVER be recreated
+        Assert.Equal(0, streamRecreationsWithinFolder); // Folder stream should remain the same for all entries in the same folder
+    }
+
+    [Fact]
+    public void SevenZipArchive_EmptyStream_WriteToDirectory()
+    {
+        // This test specifically verifies that archives with empty-stream entries
+        // (files with size 0 and no compressed data) can be extracted without throwing
+        // NullReferenceException. This was previously failing because the folder was null
+        // for empty-stream entries.
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.EmptyStream.7z");
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
+
+        var emptyStreamFileCount = 0;
+        foreach (var entry in archive.Entries)
+        {
+            if (!entry.IsDirectory)
+            {
+                // Verify this is actually an empty-stream entry (HasStream == false)
+                var sevenZipEntry = entry as SevenZipEntry;
+                if (sevenZipEntry?.FilePart.Header.HasStream == false)
+                {
+                    emptyStreamFileCount++;
+                }
+
+                // This should not throw NullReferenceException
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
+            }
+        }
+
+        // Ensure we actually tested empty-stream entries
+        Assert.True(
+            emptyStreamFileCount > 0,
+            "Test archive should contain at least one empty-stream entry"
+        );
+
+        // Verify that empty files were created
+        var extractedFiles = Directory.GetFiles(
+            SCRATCH_FILES_PATH,
+            "*",
+            SearchOption.AllDirectories
+        );
+        Assert.NotEmpty(extractedFiles);
+
+        // All extracted files should be empty (0 bytes)
+        foreach (var file in extractedFiles)
+        {
+            var fileInfo = new FileInfo(file);
+            Assert.Equal(0, fileInfo.Length);
+        }
     }
 }

@@ -14,7 +14,7 @@ public class XzHeaderAsyncTests : XzTestsBase
         var bytes = (byte[])Compressed.Clone();
         bytes[3]++;
         using Stream badMagicNumberStream = new MemoryStream(bytes);
-        var br = new BinaryReader(badMagicNumberStream);
+        using var br = new BinaryReader(badMagicNumberStream);
         var header = new XZHeader(br);
         var ex = await Assert.ThrowsAsync<InvalidFormatException>(async () =>
         {
@@ -29,7 +29,7 @@ public class XzHeaderAsyncTests : XzTestsBase
         var bytes = (byte[])Compressed.Clone();
         bytes[8]++;
         using Stream badCrcStream = new MemoryStream(bytes);
-        var br = new BinaryReader(badCrcStream);
+        using var br = new BinaryReader(badCrcStream);
         var header = new XZHeader(br);
         var ex = await Assert.ThrowsAsync<InvalidFormatException>(async () =>
         {
@@ -47,7 +47,7 @@ public class XzHeaderAsyncTests : XzTestsBase
         streamFlags.CopyTo(bytes, 6);
         crc.CopyTo(bytes, 8);
         using Stream badFlagStream = new MemoryStream(bytes);
-        var br = new BinaryReader(badFlagStream);
+        using var br = new BinaryReader(badFlagStream);
         var header = new XZHeader(br);
         var ex = await Assert.ThrowsAsync<InvalidFormatException>(async () =>
         {
@@ -59,7 +59,7 @@ public class XzHeaderAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask ProcessesBlockCheckTypeAsync()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var header = new XZHeader(br);
         await header.ProcessAsync().ConfigureAwait(false);
         Assert.Equal(CheckType.CRC64, header.BlockCheckType);
@@ -68,7 +68,7 @@ public class XzHeaderAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask CanCalculateBlockCheckSizeAsync()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var header = new XZHeader(br);
         await header.ProcessAsync().ConfigureAwait(false);
         Assert.Equal(8, header.BlockCheckSize);

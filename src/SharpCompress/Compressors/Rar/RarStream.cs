@@ -3,35 +3,13 @@
 using System;
 using System.Buffers;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
-using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Rar;
 
-internal class RarStream : Stream, IStreamStack
+internal partial class RarStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => readStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly IRarUnpack unpack;
     private readonly FileHeader fileHeader;
     private readonly Stream readStream;
@@ -54,10 +32,6 @@ internal class RarStream : Stream, IStreamStack
         this.unpack = unpack;
         this.fileHeader = fileHeader;
         this.readStream = readStream;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(RarStream));
-#endif
     }
 
     public void Initialize()
@@ -68,23 +42,12 @@ internal class RarStream : Stream, IStreamStack
         _position = 0;
     }
 
-    public async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
-    {
-        fetch = true;
-        await unpack.DoUnpackAsync(fileHeader, readStream, this, cancellationToken);
-        fetch = false;
-        _position = 0;
-    }
-
     protected override void Dispose(bool disposing)
     {
         if (!isDisposed)
         {
             if (disposing)
             {
-#if DEBUG_STREAMS
-                this.DebugDispose(typeof(RarStream));
-#endif
                 ArrayPool<byte>.Shared.Return(this.tmpBuffer);
                 this.tmpBuffer = null;
                 readStream.Dispose();
@@ -137,79 +100,12 @@ internal class RarStream : Stream, IStreamStack
         if (count > 0 && outTotal == 0 && _position < Length)
         {
             // sanity check, eg if we try to decompress a redir entry
-            throw new InvalidOperationException(
+            throw new ArchiveOperationException(
                 $"unpacked file size does not match header: expected {Length} found {_position}"
             );
         }
         return outTotal;
     }
-
-    public override async System.Threading.Tasks.Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        System.Threading.CancellationToken cancellationToken
-    ) => await ReadImplAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-
-    private async System.Threading.Tasks.Task<int> ReadImplAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        System.Threading.CancellationToken cancellationToken
-    )
-    {
-        outTotal = 0;
-        if (tmpCount > 0)
-        {
-            var toCopy = tmpCount < count ? tmpCount : count;
-            Buffer.BlockCopy(tmpBuffer, tmpOffset, buffer, offset, toCopy);
-            tmpOffset += toCopy;
-            tmpCount -= toCopy;
-            offset += toCopy;
-            count -= toCopy;
-            outTotal += toCopy;
-        }
-        if (count > 0 && unpack.DestSize > 0)
-        {
-            outBuffer = buffer;
-            outOffset = offset;
-            outCount = count;
-            fetch = true;
-            await unpack.DoUnpackAsync(cancellationToken).ConfigureAwait(false);
-            fetch = false;
-        }
-        _position += outTotal;
-        if (count > 0 && outTotal == 0 && _position < Length)
-        {
-            // sanity check, eg if we try to decompress a redir entry
-            throw new InvalidOperationException(
-                $"unpacked file size does not match header: expected {Length} found {_position}"
-            );
-        }
-        return outTotal;
-    }
-
-#if !LEGACY_DOTNET
-    public override async System.Threading.Tasks.ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        System.Threading.CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
-        try
-        {
-            var bytesRead = await ReadImplAsync(array, 0, buffer.Length, cancellationToken)
-                .ConfigureAwait(false);
-            new ReadOnlySpan<byte>(array, 0, bytesRead).CopyTo(buffer.Span);
-            return bytesRead;
-        }
-        finally
-        {
-            System.Buffers.ArrayPool<byte>.Shared.Return(array);
-        }
-    }
-#endif
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
@@ -243,18 +139,6 @@ internal class RarStream : Stream, IStreamStack
         {
             unpack.Suspended = false;
         }
-    }
-
-    public override System.Threading.Tasks.Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        System.Threading.CancellationToken cancellationToken
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        Write(buffer, offset, count);
-        return System.Threading.Tasks.Task.CompletedTask;
     }
 
     private void EnsureBufferCapacity(int count)

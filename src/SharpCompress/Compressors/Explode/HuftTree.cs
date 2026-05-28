@@ -46,7 +46,9 @@ public static class HuftTree
 
         int[] arrBitLengthCount = new int[BMAX + 1];
         for (int i = 0; i < BMAX + 1; i++)
+        {
             arrBitLengthCount[i] = 0;
+        }
 
         int pIndex = 0;
         int counterCurrentCode = numberOfCodes;
@@ -64,20 +66,32 @@ public static class HuftTree
         /* Find minimum and maximum length, bound *outBitsForTable by those */
         int counter;
         for (counter = 1; counter <= BMAX; counter++)
+        {
             if (arrBitLengthCount[counter] != 0)
+            {
                 break;
+            }
+        }
 
         int numberOfBitsInCurrentCode = counter; /* minimum code length */
         if (outBitsForTable < counter)
+        {
             outBitsForTable = counter;
+        }
 
         for (counterCurrentCode = BMAX; counterCurrentCode != 0; counterCurrentCode--)
+        {
             if (arrBitLengthCount[counterCurrentCode] != 0)
+            {
                 break;
+            }
+        }
 
         int maximumCodeLength = counterCurrentCode; /* maximum code length */
         if (outBitsForTable > counterCurrentCode)
+        {
             outBitsForTable = counterCurrentCode;
+        }
 
         /* Adjust last length count to fill out codes, if needed */
         int numberOfDummyCodesAdded;
@@ -86,11 +100,17 @@ public static class HuftTree
             counter < counterCurrentCode;
             counter++, numberOfDummyCodesAdded <<= 1
         )
+        {
             if ((numberOfDummyCodesAdded -= arrBitLengthCount[counter]) < 0)
+            {
                 return 2; /* bad input: more codes than bits */
+            }
+        }
 
         if ((numberOfDummyCodesAdded -= arrBitLengthCount[counterCurrentCode]) < 0)
+        {
             return 2;
+        }
 
         arrBitLengthCount[counterCurrentCode] += numberOfDummyCodesAdded;
 
@@ -108,14 +128,18 @@ public static class HuftTree
         /* Make a table of values in order of bit lengths */
         int[] arrValuesInOrderOfBitLength = new int[N_MAX];
         for (int i = 0; i < N_MAX; i++)
+        {
             arrValuesInOrderOfBitLength[i] = 0;
+        }
 
         pIndex = 0;
         counterCurrentCode = 0;
         do
         {
             if ((counter = arrBitLengthForCodes[pIndex++]) != 0)
+            {
                 arrValuesInOrderOfBitLength[bitOffset[counter]++] = counterCurrentCode;
+            }
         } while (++counterCurrentCode < numberOfCodes);
 
         numberOfCodes = bitOffset[maximumCodeLength]; /* set numberOfCodes to length of v */
@@ -165,7 +189,10 @@ public static class HuftTree
                         while (++counter < numberOfEntriesInCurrentTable) /* try smaller tables up to z bits */
                         {
                             if ((fBitCounter1 <<= 1) <= arrBitLengthCount[++xIndex])
+                            {
                                 break; /* enough codes to use up j bits */
+                            }
+
                             fBitCounter1 -= arrBitLengthCount[xIndex]; /* else deduct codes from patterns */
                         }
                     }
@@ -173,7 +200,9 @@ public static class HuftTree
                         bitsBeforeThisTable + counter > lengthOfEOBcode
                         && bitsBeforeThisTable < lengthOfEOBcode
                     )
+                    {
                         counter = lengthOfEOBcode - bitsBeforeThisTable; /* make EOB code end at table */
+                    }
 
                     numberOfEntriesInCurrentTable = 1 << counter; /* table entries for j-bit table */
                     arrLX[stackOfBitsPerTable + tableLevel] = counter; /* set table size in stack */
@@ -216,7 +245,9 @@ public static class HuftTree
                 };
 
                 if (pIndex >= numberOfCodes)
+                {
                     vHuft1.NumberOfExtraBits = INVALID_CODE; /* out of values--invalid code */
+                }
                 else if (arrValuesInOrderOfBitLength[pIndex] < numberOfSimpleValueCodes)
                 {
                     vHuft1.NumberOfExtraBits = (
@@ -241,7 +272,9 @@ public static class HuftTree
                     counter < numberOfEntriesInCurrentTable;
                     counter += fBitCounter2
                 )
+                {
                     pointerToCurrentTable[counter] = vHuft1;
+                }
 
                 /* backwards increment the k-bit code i */
                 for (
@@ -249,14 +282,19 @@ public static class HuftTree
                     (counterCurrentCode & counter) != 0;
                     counter >>= 1
                 )
+                {
                     counterCurrentCode ^= counter;
+                }
+
                 counterCurrentCode ^= counter;
 
                 /* backup over finished tables */
                 while (
                     (counterCurrentCode & ((1 << bitsBeforeThisTable) - 1)) != bitOffset[tableLevel]
                 )
+                {
                     bitsBeforeThisTable -= arrLX[stackOfBitsPerTable + (--tableLevel)];
+                }
             }
         }
 

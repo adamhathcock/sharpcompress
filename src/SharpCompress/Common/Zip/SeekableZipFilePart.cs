@@ -1,12 +1,11 @@
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.IO;
+using SharpCompress.Compressors;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Zip;
 
-internal class SeekableZipFilePart : ZipFilePart
+internal partial class SeekableZipFilePart : ZipFilePart
 {
     private volatile bool _isLocalHeaderLoaded;
     private readonly SeekableZipHeaderFactory _headerFactory;
@@ -16,9 +15,10 @@ internal class SeekableZipFilePart : ZipFilePart
     internal SeekableZipFilePart(
         SeekableZipHeaderFactory headerFactory,
         DirectoryEntryHeader header,
-        Stream stream
+        Stream stream,
+        CompressionProviderRegistry compressionProviders
     )
-        : base(header, stream) => _headerFactory = headerFactory;
+        : base(header, stream, compressionProviders) => _headerFactory = headerFactory;
 
     internal override Stream GetCompressedStream()
     {
@@ -36,137 +36,8 @@ internal class SeekableZipFilePart : ZipFilePart
         return base.GetCompressedStream();
     }
 
-    internal override async ValueTask<Stream?> GetCompressedStreamAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (!_isLocalHeaderLoaded)
-        {
-            await _asyncHeaderSemaphore.WaitAsync(cancellationToken);
-            try
-            {
-                if (!_isLocalHeaderLoaded)
-                {
-                    await LoadLocalHeaderAsync(cancellationToken);
-                    _isLocalHeaderLoaded = true;
-                }
-            }
-            finally
-            {
-                _asyncHeaderSemaphore.Release();
-            }
-        }
-        return await base.GetCompressedStreamAsync(cancellationToken);
-    }
-
-    private void LoadLocalHeader()
-    {
-        // Use an independent stream for loading the header if multi-threading is enabled
-        Stream streamToUse = BaseStream;
-        bool disposeStream = false;
-
-        if (
-            BaseStream is SourceStream sourceStream
-            && sourceStream.IsFileMode
-            && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
-        )
-        {
-            var independentStream = sourceStream.CreateIndependentStream(0);
-            if (independentStream is not null)
-            {
-                streamToUse = independentStream;
-                disposeStream = true;
-            }
-        }
-        else
-        {
-            // Check if BaseStream wraps a FileStream
-            Stream? underlyingStream = BaseStream;
-            if (BaseStream is IStreamStack streamStack)
-            {
-                underlyingStream = streamStack.BaseStream();
-            }
-
-            if (underlyingStream is FileStream fileStream)
-            {
-                streamToUse = new FileStream(
-                    fileStream.Name,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.Read
-                );
-                disposeStream = true;
-            }
-        }
-
-        try
-        {
-            Header = _headerFactory.GetLocalHeader(streamToUse, (DirectoryEntryHeader)Header);
-        }
-        finally
-        {
-            if (disposeStream)
-            {
-                streamToUse.Dispose();
-            }
-        }
-    }
-
-    private async ValueTask LoadLocalHeaderAsync(CancellationToken cancellationToken = default)
-    {
-        // Use an independent stream for loading the header if multi-threading is enabled
-        Stream streamToUse = BaseStream;
-        bool disposeStream = false;
-
-        if (
-            BaseStream is SourceStream sourceStream
-            && sourceStream.IsFileMode
-            && sourceStream.ReaderOptions.EnableMultiThreadedExtraction
-        )
-        {
-            var independentStream = sourceStream.CreateIndependentStream(0);
-            if (independentStream is not null)
-            {
-                streamToUse = independentStream;
-                disposeStream = true;
-            }
-        }
-        else
-        {
-            // Check if BaseStream wraps a FileStream
-            Stream? underlyingStream = BaseStream;
-            if (BaseStream is IStreamStack streamStack)
-            {
-                underlyingStream = streamStack.BaseStream();
-            }
-
-            if (underlyingStream is FileStream fileStream)
-            {
-                streamToUse = new FileStream(
-                    fileStream.Name,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.Read
-                );
-                disposeStream = true;
-            }
-        }
-
-        try
-        {
-            Header = await _headerFactory.GetLocalHeaderAsync(
-                streamToUse,
-                (DirectoryEntryHeader)Header
-            );
-        }
-        finally
-        {
-            if (disposeStream)
-            {
-                streamToUse.Dispose();
-            }
-        }
-    }
+    private void LoadLocalHeader() =>
+        Header = _headerFactory.GetLocalHeader(BaseStream, (DirectoryEntryHeader)Header);
 
     protected override Stream CreateBaseStream()
     {

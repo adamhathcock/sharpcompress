@@ -5,13 +5,13 @@ using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.Filters;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Compressors.PPMd;
 using SharpCompress.Compressors.ZStandard;
 
 namespace SharpCompress.Compressors.LZMA;
 
-internal static class DecoderRegistry
+internal static partial class DecoderRegistry
 {
     private const uint K_COPY = 0x0;
     private const uint K_DELTA = 0x3;
@@ -34,7 +34,7 @@ internal static class DecoderRegistry
     internal static Stream CreateDecoderStream(
         CMethodId id,
         Stream[] inStreams,
-        byte[] info,
+        byte[]? info,
         IPasswordProvider pass,
         long limit
     )
@@ -48,16 +48,16 @@ internal static class DecoderRegistry
                 }
                 return inStreams.Single();
             case K_DELTA:
-                return new DeltaFilter(false, inStreams.Single(), info);
+                return new DeltaFilter(false, inStreams.Single(), info.NotNull());
             case K_LZMA:
             case K_LZMA2:
-                return new LzmaStream(info, inStreams.Single(), -1, limit);
+                return LzmaStream.Create(info.NotNull(), inStreams.Single(), -1, limit);
             case CMethodId.K_AES_ID:
-                return new AesDecoderStream(inStreams.Single(), info, pass, limit);
+                return new AesDecoderStream(inStreams.Single(), info.NotNull(), pass, limit);
             case K_BCJ:
                 return new BCJFilter(false, inStreams.Single());
             case K_BCJ2:
-                return new Bcj2DecoderStream(inStreams, info, limit);
+                return new Bcj2DecoderStream(inStreams);
             case K_PPC:
                 return new BCJFilterPPC(false, inStreams.Single());
             case K_IA64:
@@ -73,9 +73,13 @@ internal static class DecoderRegistry
             case K_RISCV:
                 return new BCJFilterRISCV(false, inStreams.Single());
             case K_B_ZIP2:
-                return new BZip2Stream(inStreams.Single(), CompressionMode.Decompress, true);
+                return BZip2Stream.Create(inStreams.Single(), CompressionMode.Decompress, true);
             case K_PPMD:
-                return new PpmdStream(new PpmdProperties(info), inStreams.Single(), false);
+                return PpmdStream.Create(
+                    new PpmdProperties(info.NotNull()),
+                    inStreams.Single(),
+                    false
+                );
             case K_DEFLATE:
                 return new DeflateStream(inStreams.Single(), CompressionMode.Decompress);
             case K_ZSTD:

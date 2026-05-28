@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
@@ -22,7 +22,11 @@ public class GZipWriterTests : WriterTests
             )
         )
         using (
-            var writer = WriterFactory.OpenWriter(stream, ArchiveType.GZip, CompressionType.GZip)
+            var writer = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.GZip,
+                new WriterOptions(CompressionType.GZip)
+            )
         )
         {
             writer.Write("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
@@ -61,7 +65,7 @@ public class GZipWriterTests : WriterTests
             using var writer = WriterFactory.OpenWriter(
                 stream,
                 ArchiveType.GZip,
-                CompressionType.BZip2
+                new WriterOptions(CompressionType.BZip2)
             );
         });
 

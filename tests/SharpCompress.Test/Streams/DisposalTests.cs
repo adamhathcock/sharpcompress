@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
+using SharpCompress.Compressors.BZip2;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.Lzw;
@@ -75,7 +76,10 @@ public class DisposalTests
                 new SourceStream(
                     stream,
                     i => null,
-                    new ReaderOptions { LeaveStreamOpen = leaveOpen }
+                    ReaderOptions.ForExternalStream with
+                    {
+                        LeaveStreamOpen = leaveOpen,
+                    }
                 )
         );
     }
@@ -135,7 +139,7 @@ public class DisposalTests
         // PpmdStream seems to not dispose inner stream based on code analysis
         // It takes PpmdProperties which we need to mock or create.
         var props = new PpmdProperties();
-        VerifyNeverDispose(stream => new PpmdStream(props, stream, false));
+        VerifyNeverDispose(stream => PpmdStream.Create(props, stream, false));
     }
 
     [Fact]
@@ -146,22 +150,34 @@ public class DisposalTests
         // 5 bytes: 1 byte properties + 4 bytes dictionary size (little endian)
         // Dictionary size = 1024 (0x400) -> 00 04 00 00
         var lzmaProps = new byte[] { 0, 0, 4, 0, 0 };
-        VerifyAlwaysDispose(stream => new LzmaStream(lzmaProps, stream));
+        VerifyAlwaysDispose(stream => LzmaStream.Create(lzmaProps, stream));
     }
 
     [Fact]
     public void LZipStream_Disposal()
     {
-        // LZipStream always disposes inner stream
+        // LZipStream now supports leaveOpen parameter
         // Use Compress mode to avoid need for valid input header
-        VerifyAlwaysDispose(stream => new LZipStream(stream, CompressionMode.Compress));
+        VerifyStreamDisposal(
+            (stream, leaveOpen) => LZipStream.Create(stream, CompressionMode.Compress, leaveOpen)
+        );
+    }
+
+    [Fact]
+    public void BZip2Stream_Disposal()
+    {
+        // BZip2Stream now supports leaveOpen parameter
+        VerifyStreamDisposal(
+            (stream, leaveOpen) =>
+                BZip2Stream.Create(stream, CompressionMode.Compress, false, leaveOpen)
+        );
     }
 
     [Fact]
     public void ReduceStream_Disposal()
     {
         // ReduceStream does not dispose inner stream
-        VerifyNeverDispose(stream => new ReduceStream(stream, 0, 0, 1));
+        VerifyNeverDispose(stream => ReduceStream.Create(stream, 0, 0, 1));
     }
 
     [Fact]

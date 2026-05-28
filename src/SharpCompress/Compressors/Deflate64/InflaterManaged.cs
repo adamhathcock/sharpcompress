@@ -572,7 +572,6 @@ internal sealed class InflaterManaged
                                 throw new ZlibException("Deflate64: invalid data");
                             }
                             _extraBits = S_EXTRA_LENGTH_BITS[symbol];
-                            Debug.Assert(_extraBits != 0, "We handle other cases separately!");
                         }
                         _length = symbol;
                         goto case InflaterState.HaveInitialLength;

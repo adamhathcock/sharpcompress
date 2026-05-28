@@ -1,40 +1,102 @@
 using System;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Common;
 
-public class ExtractionOptions
+/// <summary>
+/// Options for configuring extraction behavior when extracting archive entries.
+/// </summary>
+/// <remarks>
+/// Configure extraction behavior with constructors, property setters, or the <c>with</c> expression:
+/// <code>
+/// var options = new ExtractionOptions { Overwrite = false };
+/// options = options with { PreserveFileTime = true };
+/// </code>
+/// </remarks>
+public sealed record ExtractionOptions : IExtractionOptions
 {
     /// <summary>
-    /// overwrite target if it exists
+    /// Overwrite target if it exists.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
     /// </summary>
-    public bool Overwrite { get; set; }
+    public bool Overwrite { get; set; } = true;
 
     /// <summary>
-    /// extract with internal directory structure
+    /// Extract with internal directory structure.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
     /// </summary>
-    public bool ExtractFullPath { get; set; }
+    public bool ExtractFullPath { get; set; } = true;
 
     /// <summary>
-    /// preserve file time
+    /// Preserve file time.
+    /// <para><b>Breaking change:</b> Default changed from false to true in version 0.40.0.</para>
     /// </summary>
-    public bool PreserveFileTime { get; set; }
+    public bool PreserveFileTime { get; set; } = true;
 
     /// <summary>
-    /// preserve windows file attributes
+    /// Preserve windows file attributes.
     /// </summary>
     public bool PreserveAttributes { get; set; }
 
     /// <summary>
     /// Delegate for writing symbolic links to disk.
-    /// sourcePath is where the symlink is created.
-    /// targetPath is what the symlink refers to.
+    /// The first parameter is the source path (where the symlink is created).
+    /// The second parameter is the target path (what the symlink refers to).
     /// </summary>
-    public delegate void SymbolicLinkWriterDelegate(string sourcePath, string targetPath);
+    /// <remarks>
+    /// <b>Breaking change:</b> Changed from field to property in version 0.40.0.
+    /// If no handler is provided, symbolic links are silently skipped during extraction.
+    /// </remarks>
+    public Action<string, string>? SymbolicLinkHandler { get; set; }
 
-    public SymbolicLinkWriterDelegate WriteSymbolicLink = (sourcePath, targetPath) =>
+    /// <summary>
+    /// Creates a new ExtractionOptions instance with default values.
+    /// </summary>
+    public ExtractionOptions() { }
+
+    /// <summary>
+    /// Creates a new ExtractionOptions instance with the specified overwrite behavior.
+    /// </summary>
+    /// <param name="overwrite">Whether to overwrite existing files.</param>
+    public ExtractionOptions(bool overwrite) => Overwrite = overwrite;
+
+    /// <summary>
+    /// Creates a new ExtractionOptions instance with the specified extraction path and overwrite behavior.
+    /// </summary>
+    /// <param name="extractFullPath">Whether to preserve directory structure.</param>
+    /// <param name="overwrite">Whether to overwrite existing files.</param>
+    public ExtractionOptions(bool extractFullPath, bool overwrite)
     {
-        Console.WriteLine(
-            $"Could not write symlink {sourcePath} -> {targetPath}, for more information please see https://github.com/dotnet/runtime/issues/24271"
-        );
-    };
+        ExtractFullPath = extractFullPath;
+        Overwrite = overwrite;
+    }
+
+    /// <summary>
+    /// Creates a new ExtractionOptions instance with the specified extraction path, overwrite behavior, and file time preservation.
+    /// </summary>
+    /// <param name="extractFullPath">Whether to preserve directory structure.</param>
+    /// <param name="overwrite">Whether to overwrite existing files.</param>
+    /// <param name="preserveFileTime">Whether to preserve file modification times.</param>
+    public ExtractionOptions(bool extractFullPath, bool overwrite, bool preserveFileTime)
+    {
+        ExtractFullPath = extractFullPath;
+        Overwrite = overwrite;
+        PreserveFileTime = preserveFileTime;
+    }
+
+    /// <summary>
+    /// Gets an ExtractionOptions instance configured for safe extraction (no overwrite).
+    /// </summary>
+    public static ExtractionOptions SafeExtract => new(overwrite: false);
+
+    /// <summary>
+    /// Gets an ExtractionOptions instance configured for flat extraction (no directory structure).
+    /// </summary>
+    public static ExtractionOptions FlatExtract => new(extractFullPath: false, overwrite: true);
+
+    /// <summary>
+    /// Gets an ExtractionOptions instance configured to preserve timestamps and attributes.
+    /// </summary>
+    public static ExtractionOptions PreserveMetadata =>
+        new() { PreserveFileTime = true, PreserveAttributes = true };
 }

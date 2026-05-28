@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.Deflate;
@@ -16,7 +17,8 @@ using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Archives.Zip;
 
-public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVolume>
+public partial class ZipArchive
+    : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>
 {
     private readonly SeekableZipHeaderFactory? headerFactory;
 
@@ -32,21 +34,24 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
     internal ZipArchive()
         : base(ArchiveType.Zip) { }
 
-    protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream stream)
+    protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream sourceStream)
     {
-        stream.LoadAllParts();
-        stream.Position = 0;
+        sourceStream.LoadAllParts();
+        //stream.Position = 0;
 
-        var streams = stream.Streams.ToList();
+        var streams = sourceStream.Streams.ToList();
         var idx = 0;
-        if (streams.Count() > 1)
+        if (streams.Count > 1)
         {
-            streams[1].Position += 4;
-            var isZip = IsZipFile(streams[1], ReaderOptions.Password, ReaderOptions.BufferSize);
-            streams[1].Position -= 4;
+            //check if second stream is zip header without changing position
+            var headerProbeStream = streams[1];
+            var startPosition = headerProbeStream.Position;
+            headerProbeStream.Position = startPosition + 4;
+            var isZip = IsZipFile(headerProbeStream, ReaderOptions.Password);
+            headerProbeStream.Position = startPosition;
             if (isZip)
             {
-                stream.IsVolumes = true;
+                sourceStream.IsVolumes = true;
 
                 var tmp = streams[0];
                 streams.RemoveAt(0);
@@ -56,15 +61,13 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
             }
         }
 
-        return new ZipVolume(stream, ReaderOptions, idx++).AsEnumerable();
+        return new ZipVolume(sourceStream, ReaderOptions, idx++).AsEnumerable();
     }
 
     protected override IEnumerable<ZipArchiveEntry> LoadEntries(IEnumerable<ZipVolume> volumes)
     {
         var vols = volumes.ToArray();
-        foreach (
-            var h in headerFactory.NotNull().ReadSeekableHeader(vols.Last().Stream, useSync: true)
-        )
+        foreach (var h in headerFactory.NotNull().ReadSeekableHeader(vols.Last().Stream))
         {
             if (h != null)
             {
@@ -83,7 +86,7 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
                                 s = new SourceStream(
                                     v[0].Stream,
                                     i => i < v.Length ? v[i].Stream : null,
-                                    new ReaderOptions() { LeaveStreamOpen = true }
+                                    ReaderOptions.ForExternalStream
                                 );
                             }
                             else
@@ -93,7 +96,13 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
 
                             yield return new ZipArchiveEntry(
                                 this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
+                                new SeekableZipFilePart(
+                                    headerFactory.NotNull(),
+                                    deh,
+                                    s,
+                                    ReaderOptions.Providers
+                                ),
+                                ReaderOptions
                             );
                         }
                         break;
@@ -108,69 +117,17 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
         }
     }
 
-    protected override async IAsyncEnumerable<ZipArchiveEntry> LoadEntriesAsync(
-        IAsyncEnumerable<ZipVolume> volumes
-    )
-    {
-        var vols = await volumes.ToListAsync();
-        var volsArray = vols.ToArray();
-
-        await foreach (
-            var h in headerFactory.NotNull().ReadSeekableHeaderAsync(volsArray.Last().Stream)
-        )
-        {
-            if (h != null)
-            {
-                switch (h.ZipHeaderType)
-                {
-                    case ZipHeaderType.DirectoryEntry:
-                        {
-                            var deh = (DirectoryEntryHeader)h;
-                            Stream s;
-                            if (
-                                deh.RelativeOffsetOfEntryHeader + deh.CompressedSize
-                                > volsArray[deh.DiskNumberStart].Stream.Length
-                            )
-                            {
-                                var v = volsArray.Skip(deh.DiskNumberStart).ToArray();
-                                s = new SourceStream(
-                                    v[0].Stream,
-                                    i => i < v.Length ? v[i].Stream : null,
-                                    new ReaderOptions() { LeaveStreamOpen = true }
-                                );
-                            }
-                            else
-                            {
-                                s = volsArray[deh.DiskNumberStart].Stream;
-                            }
-
-                            yield return new ZipArchiveEntry(
-                                this,
-                                new SeekableZipFilePart(headerFactory.NotNull(), deh, s)
-                            );
-                        }
-                        break;
-                    case ZipHeaderType.DirectoryEnd:
-                    {
-                        var bytes = ((DirectoryEndHeader)h).Comment ?? Array.Empty<byte>();
-                        volsArray.Last().Comment = ReaderOptions.ArchiveEncoding.Decode(bytes);
-                        yield break;
-                    }
-                }
-            }
-        }
-    }
-
-    public void SaveTo(Stream stream) => SaveTo(stream, new WriterOptions(CompressionType.Deflate));
+    public void SaveTo(Stream stream) =>
+        SaveTo(stream, new ZipWriterOptions(CompressionType.Deflate));
 
     protected override void SaveTo(
         Stream stream,
-        WriterOptions options,
+        ZipWriterOptions options,
         IEnumerable<ZipArchiveEntry> oldEntries,
         IEnumerable<ZipArchiveEntry> newEntries
     )
     {
-        using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
+        using var writer = new ZipWriter(stream, options);
         foreach (var entry in oldEntries.Concat(newEntries))
         {
             if (entry.IsDirectory)
@@ -192,58 +149,21 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
         }
     }
 
-    protected override async ValueTask SaveToAsync(
-        Stream stream,
-        WriterOptions options,
-        IEnumerable<ZipArchiveEntry> oldEntries,
-        IEnumerable<ZipArchiveEntry> newEntries,
-        CancellationToken cancellationToken = default
-    )
-    {
-        using var writer = new ZipWriter(stream, new ZipWriterOptions(options));
-        foreach (var entry in oldEntries.Concat(newEntries))
-        {
-            if (entry.IsDirectory)
-            {
-                await writer
-                    .WriteDirectoryAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entry.LastModifiedTime,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                using var entryStream = entry.OpenEntryStream();
-                await writer
-                    .WriteAsync(
-                        entry.Key.NotNull("Entry Key is null"),
-                        entryStream,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-            }
-        }
-    }
-
     protected override ZipArchiveEntry CreateEntryInternal(
-        string filePath,
+        string key,
         Stream source,
         long size,
         DateTime? modified,
         bool closeStream
-    ) => new ZipWritableArchiveEntry(this, source, filePath, size, modified, closeStream);
+    ) => new ZipWritableArchiveEntry(this, source, key, size, modified, closeStream);
 
-    protected override ZipArchiveEntry CreateDirectoryEntry(
-        string directoryPath,
-        DateTime? modified
-    ) => new ZipWritableArchiveEntry(this, directoryPath, modified);
+    protected override ZipArchiveEntry CreateDirectoryEntry(string key, DateTime? modified) =>
+        new ZipWritableArchiveEntry(this, key, modified);
 
     protected override IReader CreateReaderForSolidExtraction()
     {
         var stream = Volumes.Single().Stream;
-        ((IStreamStack)stream).StackSeek(0);
+        //stream.Position = 0;
         return ZipReader.OpenReader(stream, ReaderOptions, Entries);
     }
 
@@ -251,6 +171,6 @@ public partial class ZipArchive : AbstractWritableArchive<ZipArchiveEntry, ZipVo
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)ZipReader.OpenReader(stream));
+        return new((IAsyncReader)ZipReader.OpenReader(stream, ReaderOptions, Entries));
     }
 }

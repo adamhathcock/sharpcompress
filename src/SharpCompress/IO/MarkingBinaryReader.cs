@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Text;
 using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-internal class MarkingBinaryReader : BinaryReader
+internal class MarkingBinaryReader(Stream stream)
+    : BinaryReader(stream, Encoding.UTF8, leaveOpen: true) //always leave the stream open
 {
-    public MarkingBinaryReader(Stream stream)
-        : base(stream) { }
-
     public virtual long CurrentReadByteCount { get; protected set; }
 
     public virtual void Mark() => CurrentReadByteCount = 0;
@@ -47,6 +46,7 @@ internal class MarkingBinaryReader : BinaryReader
         {
             throw new InvalidFormatException(
                 string.Format(
+                    Constants.DefaultCultureInfo,
                     "Could not read the requested amount of bytes.  End of stream reached. Requested: {0} Read: {1}",
                     count,
                     bytes.Length
@@ -115,7 +115,7 @@ internal class MarkingBinaryReader : BinaryReader
             shift += 7;
         } while (shift <= maxShift);
 
-        throw new FormatException("malformed vint");
+        throw new InvalidFormatException("malformed vint");
     }
 
     public uint ReadRarVIntUInt32(int maxBytes = 5) =>
@@ -153,6 +153,6 @@ internal class MarkingBinaryReader : BinaryReader
             shift += 7;
         } while (shift <= maxShift);
 
-        throw new FormatException("malformed vint");
+        throw new InvalidFormatException("malformed vint");
     }
 }

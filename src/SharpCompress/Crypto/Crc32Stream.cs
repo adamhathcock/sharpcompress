@@ -1,34 +1,13 @@
-#nullable disable
-
 using System;
 using System.IO;
-using SharpCompress.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Crypto;
 
 [CLSCompliant(false)]
-public sealed class Crc32Stream : Stream, IStreamStack
+public sealed class Crc32Stream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly Stream stream;
     private readonly uint[] _table;
     private uint seed;
@@ -36,7 +15,7 @@ public sealed class Crc32Stream : Stream, IStreamStack
     public const uint DEFAULT_POLYNOMIAL = 0xedb88320u;
     public const uint DEFAULT_SEED = 0xffffffffu;
 
-    private static uint[] _defaultTable;
+    private static uint[]? _defaultTable;
 
     public Crc32Stream(Stream stream)
         : this(stream, DEFAULT_POLYNOMIAL, DEFAULT_SEED) { }
@@ -46,25 +25,31 @@ public sealed class Crc32Stream : Stream, IStreamStack
         this.stream = stream;
         _table = InitializeTable(polynomial);
         this.seed = seed;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(Crc32Stream));
-#endif
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(Crc32Stream));
-#endif
-        base.Dispose(disposing);
     }
 
     public Stream WrappedStream => stream;
 
     public override void Flush() => stream.Flush();
 
+    public override async Task FlushAsync(CancellationToken cancellationToken) =>
+        await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
+
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => throw new NotSupportedException();
+
+#if !LEGACY_DOTNET
+    public override ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    ) => throw new NotSupportedException();
+#endif
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
@@ -85,6 +70,28 @@ public sealed class Crc32Stream : Stream, IStreamStack
         stream.Write(buffer, offset, count);
         seed = CalculateCrc(_table, seed, buffer.AsSpan(offset, count));
     }
+
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
+        await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+        seed = CalculateCrc(_table, seed, buffer.AsSpan(offset, count));
+    }
+
+#if !LEGACY_DOTNET
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await stream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+        seed = CalculateCrc(_table, seed, buffer.Span);
+    }
+#endif
 
     public override void WriteByte(byte value)
     {

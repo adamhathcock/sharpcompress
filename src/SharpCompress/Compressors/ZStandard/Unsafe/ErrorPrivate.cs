@@ -14,7 +14,10 @@ public static unsafe partial class Methods
     private static ZSTD_ErrorCode ERR_getErrorCode(nuint code)
     {
         if (!ERR_isError(code))
+        {
             return 0;
+        }
+
         return (ZSTD_ErrorCode)(0 - code);
     }
 

@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
+using SharpCompress.Compressors.BZip2;
+using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
@@ -31,10 +34,7 @@ public class TarReaderTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -60,6 +60,52 @@ public class TarReaderTests : ReaderTests
 
     [Fact]
     public void Tar_GZip_OldGnu_Reader() => Read("Tar.oldgnu.tar.gz", CompressionType.GZip);
+
+    [Fact]
+    public void Tar_BZip2_Reader_NonSeekable()
+    {
+        // Regression test for: Dynamic default RingBuffer for BZip2
+        // Opening a .tar.bz2 from a non-seekable stream should succeed
+        // because the ring buffer is sized to hold the BZip2 block before calling IsTarFile.
+        using var fs = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
+        using var nonSeekable = new ForwardOnlyStream(fs);
+        using var reader = ReaderFactory.OpenReader(nonSeekable);
+        var entryCount = 0;
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                entryCount++;
+            }
+        }
+        Assert.True(entryCount > 0);
+    }
+
+    [Fact]
+    public void TarWrapper_BZip2_MinimumRewindBufferSize_IsMaxBZip2BlockSize()
+    {
+        // The BZip2 TarWrapper must declare a MinimumRewindBufferSize large enough
+        // to hold an entire maximum-size compressed BZip2 block (9 × 100 000 bytes).
+        var bzip2Wrapper = Array.Find(
+            TarWrapper.Wrappers,
+            w => w.CompressionType == CompressionType.BZip2
+        );
+        Assert.NotNull(bzip2Wrapper);
+        Assert.Equal(BZip2Constants.baseBlockSize * 9, bzip2Wrapper.MinimumRewindBufferSize);
+    }
+
+    [Fact]
+    public void TarWrapper_Default_MinimumRewindBufferSize_Is_DefaultRewindableBufferSize()
+    {
+        // Non-BZip2 wrappers that don't specify a custom size default to
+        // Constants.RewindableBufferSize so existing behaviour is unchanged.
+        var noneWrapper = Array.Find(
+            TarWrapper.Wrappers,
+            w => w.CompressionType == CompressionType.None
+        );
+        Assert.NotNull(noneWrapper);
+        Assert.Equal(Common.Constants.RewindableBufferSize, noneWrapper.MinimumRewindBufferSize);
+    }
 
     [Fact]
     public void Tar_BZip2_Entry_Stream()
@@ -126,6 +172,153 @@ public class TarReaderTests : ReaderTests
     }
 
     [Fact]
+    public void Tar_PaxLocalHeader_Reader()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        using var reader = TarReader.OpenReader(stream);
+
+        Assert.True(reader.MoveToNextEntry());
+        var firstEntry = (TarEntry)reader.Entry;
+        Assert.Equal("pax/overridden-name.txt", firstEntry.Key);
+        Assert.Equal(10, firstEntry.Size);
+        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(2345, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+
+        var expectedTime = DateTimeOffset.FromUnixTimeSeconds(1700000000).LocalDateTime;
+        Assert.Equal(expectedTime, firstEntry.LastModifiedTime);
+
+        using (var entryStream = reader.OpenEntryStream())
+        using (var memoryStream = new MemoryStream())
+        {
+            entryStream.CopyTo(memoryStream);
+            Assert.Equal(10, memoryStream.Length);
+        }
+
+        Assert.True(reader.MoveToNextEntry());
+        var secondEntry = (TarEntry)reader.Entry;
+        Assert.Equal("second.txt", secondEntry.Key);
+        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(22, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
+        Assert.Equal(2, secondEntry.Size);
+
+        Assert.False(reader.MoveToNextEntry());
+    }
+
+    [Fact]
+    public void Tar_PaxLocalHeader_Link_Reader()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.Link.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        using var reader = TarReader.OpenReader(stream);
+
+        Assert.True(reader.MoveToNextEntry());
+        Assert.Equal("pax/link-entry", reader.Entry.Key);
+        Assert.Equal("pax/target-entry", reader.Entry.LinkTarget);
+        Assert.False(reader.Entry.IsDirectory);
+        Assert.False(reader.MoveToNextEntry());
+    }
+
+    [Fact]
+    public void Tar_PaxGlobalHeader_Reader()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        using var reader = TarReader.OpenReader(stream);
+
+        var globalTime = DateTimeOffset.FromUnixTimeSeconds(1700000100).LocalDateTime;
+        var localOverrideTime = DateTimeOffset.FromUnixTimeSeconds(1700000200).LocalDateTime;
+
+        Assert.True(reader.MoveToNextEntry());
+        var firstEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-one.txt", firstEntry.Key);
+        Assert.Equal(4000, firstEntry.UserID);
+        Assert.Equal(5000, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+        Assert.Equal(globalTime, firstEntry.LastModifiedTime);
+
+        Assert.True(reader.MoveToNextEntry());
+        var secondEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-local-override.txt", secondEntry.Key);
+        Assert.Equal(4010, secondEntry.UserID);
+        Assert.Equal(5010, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("600", 8), secondEntry.Mode);
+        Assert.Equal(localOverrideTime, secondEntry.LastModifiedTime);
+
+        Assert.True(reader.MoveToNextEntry());
+        var thirdEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-three.txt", thirdEntry.Key);
+        Assert.Equal(4000, thirdEntry.UserID);
+        Assert.Equal(5000, thirdEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), thirdEntry.Mode);
+        Assert.Equal(globalTime, thirdEntry.LastModifiedTime);
+
+        Assert.False(reader.MoveToNextEntry());
+    }
+
+    [Fact]
+    public void Tar_PaxGlobalHeader_Link_Reader()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.Link.tar");
+
+        using Stream stream = File.OpenRead(archivePath);
+        using var reader = TarReader.OpenReader(stream);
+
+        Assert.True(reader.MoveToNextEntry());
+        var firstEntry = (TarEntry)reader.Entry;
+        Assert.Equal("global-link", firstEntry.Key);
+        Assert.Equal("global-target", firstEntry.LinkTarget);
+        Assert.Equal(4100, firstEntry.UserID);
+        Assert.Equal(5100, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), firstEntry.Mode);
+
+        Assert.True(reader.MoveToNextEntry());
+        var secondEntry = (TarEntry)reader.Entry;
+        Assert.Equal("local-link-override", secondEntry.Key);
+        Assert.Equal("local-target", secondEntry.LinkTarget);
+        Assert.Equal(4100, secondEntry.UserID);
+        Assert.Equal(5100, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), secondEntry.Mode);
+
+        Assert.False(reader.MoveToNextEntry());
+    }
+
+    [Fact]
+    public void Tar_WithSymlink_Reader_SurfacesLinkTargets()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz");
+
+        using Stream stream = File.OpenRead(archivePath);
+        using var reader = TarReader.OpenReader(stream);
+
+        var foundVulkanToolsLink = false;
+        var foundVulkanSamplesLink = false;
+
+        while (reader.MoveToNextEntry())
+        {
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/Vulkan-Tools")
+            {
+                foundVulkanToolsLink = true;
+                Assert.Equal("../../External/Vulkan-Tools", reader.Entry.LinkTarget);
+            }
+
+            if (reader.Entry.Key == "MoltenVK-1.0.21/Demos/LunarG-VulkanSamples/VulkanSamples")
+            {
+                foundVulkanSamplesLink = true;
+                Assert.Equal("../../External/VulkanSamples", reader.Entry.LinkTarget);
+            }
+        }
+
+        Assert.True(foundVulkanToolsLink);
+        Assert.True(foundVulkanSamplesLink);
+    }
+
+    [Fact]
     public void Tar_BZip2_Skip_Entry_Stream()
     {
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.bz2"));
@@ -150,7 +343,7 @@ public class TarReaderTests : ReaderTests
         var archiveFullPath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.ContainsRar.tar");
         using Stream stream = File.OpenRead(archiveFullPath);
         using var reader = ReaderFactory.OpenReader(stream);
-        Assert.True(reader.ArchiveType == ArchiveType.Tar);
+        Assert.True(reader.Type == ArchiveType.Tar);
     }
 
     [Fact]
@@ -200,60 +393,6 @@ public class TarReaderTests : ReaderTests
         stream.Close();
         Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
     }
-
-#if LINUX
-    [Fact]
-    public void Tar_GZip_With_Symlink_Entries()
-    {
-        using Stream stream = File.OpenRead(
-            Path.Combine(TEST_ARCHIVES_PATH, "TarWithSymlink.tar.gz")
-        );
-        using var reader = TarReader.OpenReader(stream);
-        while (reader.MoveToNextEntry())
-        {
-            if (reader.Entry.IsDirectory)
-            {
-                continue;
-            }
-            reader.WriteEntryToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions
-                {
-                    ExtractFullPath = true,
-                    Overwrite = true,
-                    WriteSymbolicLink = (sourcePath, targetPath) =>
-                    {
-                        var link = new Mono.Unix.UnixSymbolicLinkInfo(sourcePath);
-                        if (File.Exists(sourcePath))
-                        {
-                            link.Delete(); // equivalent to ln -s -f
-                        }
-                        link.CreateSymbolicLinkTo(targetPath);
-                    },
-                }
-            );
-            if (reader.Entry.LinkTarget != null)
-            {
-                var path = Path.Combine(SCRATCH_FILES_PATH, reader.Entry.Key.NotNull());
-                var link = new Mono.Unix.UnixSymbolicLinkInfo(path);
-                if (link.HasContents)
-                {
-                    // need to convert the link to an absolute path for comparison
-                    var target = reader.Entry.LinkTarget;
-                    var realTarget = Path.GetFullPath(
-                        Path.Combine($"{Path.GetDirectoryName(path)}", target)
-                    );
-
-                    Assert.Equal(realTarget, link.GetContents().ToString());
-                }
-                else
-                {
-                    Assert.True(false, "Symlink has no target");
-                }
-            }
-        }
-    }
-#endif
 
     [Fact]
     public void Tar_Malformed_LongName_Excessive_Size()

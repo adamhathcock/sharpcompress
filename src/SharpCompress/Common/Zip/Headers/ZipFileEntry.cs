@@ -2,12 +2,10 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip.Headers;
 
-internal abstract class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiveEncoding)
+internal abstract partial class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiveEncoding)
     : ZipHeader(type)
 {
     internal bool IsDirectory
@@ -46,31 +44,10 @@ internal abstract class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiv
 
     internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
     {
-        if (archiveStream is null)
-        {
-            throw new ArgumentNullException(nameof(archiveStream));
-        }
+        ThrowHelper.ThrowIfNull(archiveStream);
 
         var buffer = new byte[12];
         archiveStream.ReadFully(buffer);
-
-        var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
-
-        return encryptionData;
-    }
-
-    internal async ValueTask<PkwareTraditionalEncryptionData> ComposeEncryptionDataAsync(
-        Stream archiveStream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (archiveStream is null)
-        {
-            throw new ArgumentNullException(nameof(archiveStream));
-        }
-
-        var buffer = new byte[12];
-        await archiveStream.ReadFullyAsync(buffer, 0, 12, cancellationToken).ConfigureAwait(false);
 
         var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 
@@ -115,7 +92,7 @@ internal abstract class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiv
             }
 
             var type = (ExtraDataType)BinaryPrimitives.ReadUInt16LittleEndian(extra.AsSpan(i));
-            if (!Enum.IsDefined(typeof(ExtraDataType), type))
+            if (!IsDefined(type))
             {
                 type = ExtraDataType.NotImplementedExtraData;
             }
@@ -137,7 +114,7 @@ internal abstract class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiv
             if (i + 4 + length > extra.Length)
             {
                 // incomplete or corrupt field
-                break; // allow processing optional other blocks
+                break; // allow processing other blocks
             }
 
             var data = new byte[length];
@@ -155,4 +132,13 @@ internal abstract class ZipFileEntry(ZipHeaderType type, IArchiveEncoding archiv
     internal uint ExternalFileAttributes { get; set; }
 
     internal string? Comment { get; set; }
+
+    private static bool IsDefined(ExtraDataType type)
+    {
+#if LEGACY_DOTNET
+        return Enum.IsDefined(typeof(ExtraDataType), type);
+#else
+        return Enum.IsDefined(type);
+#endif
+    }
 }

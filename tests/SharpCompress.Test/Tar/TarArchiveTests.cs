@@ -7,6 +7,7 @@ using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
+using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.Tar;
 using Xunit;
@@ -24,6 +25,38 @@ public class TarArchiveTests : ArchiveTests
     public void TarArchivePathRead() => ArchiveFileRead("Tar.tar");
 
     [Fact]
+    public void TarArchiveStreamRead_Throws_On_NonSeekable_Stream()
+    {
+        using Stream stream = new ForwardOnlyStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"))
+        );
+
+        Assert.Throws<ArgumentException>(() => ArchiveFactory.OpenArchive(stream));
+    }
+
+    [Fact]
+    public void TarArchiveStreamRead_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")),
+            false,
+            true,
+            true
+        );
+
+        Assert.Throws<ArgumentException>(() => TarArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
+    public void TarArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => TarArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
     public void Tar_FileName_Exactly_100_Characters()
     {
         var archive = "Tar_FileName_Exactly_100_Characters.tar";
@@ -34,7 +67,13 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with the test name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.Tar,
+                new WriterOptions(CompressionType.None)
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -47,17 +86,17 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.OpenArchive(unmodified))
+        using (var archive2 = ArchiveFactory.OpenArchive(unmodified))
         {
             Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(filename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    new StreamReader(entry.OpenEntryStream()).ReadLine()
-                );
+                using (var sr = new StreamReader(entry.OpenEntryStream()))
+                {
+                    Assert.Equal("dummy filecontent", sr.ReadLine());
+                }
             }
         }
     }
@@ -66,7 +105,7 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_NonUstarArchiveWithLongNameDoesNotSkipEntriesAfterTheLongOne()
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "very long filename.tar");
-        using var archive = TarArchive.OpenArchive(unmodified);
+        using var archive = ArchiveFactory.OpenArchive(unmodified);
         Assert.Equal(5, archive.Entries.Count());
         Assert.Contains("very long filename/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
@@ -94,7 +133,13 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 1: create a tar file containing a file with a long name
         using (Stream stream = File.OpenWrite(Path.Combine(SCRATCH2_FILES_PATH, archive)))
-        using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, CompressionType.None))
+        using (
+            var writer = WriterFactory.OpenWriter(
+                stream,
+                ArchiveType.Tar,
+                new WriterOptions(CompressionType.None)
+            )
+        )
         using (Stream inputStream = new MemoryStream())
         {
             var sw = new StreamWriter(inputStream);
@@ -107,17 +152,17 @@ public class TarArchiveTests : ArchiveTests
 
         // Step 2: check if the written tar file can be read correctly
         var unmodified = Path.Combine(SCRATCH2_FILES_PATH, archive);
-        using (var archive2 = TarArchive.OpenArchive(unmodified))
+        using (var archive2 = ArchiveFactory.OpenArchive(unmodified))
         {
             Assert.Equal(1, archive2.Entries.Count());
             Assert.Contains(longFilename, archive2.Entries.Select(entry => entry.Key));
 
             foreach (var entry in archive2.Entries)
             {
-                Assert.Equal(
-                    "dummy filecontent",
-                    new StreamReader(entry.OpenEntryStream()).ReadLine()
-                );
+                using (var sr = new StreamReader(entry.OpenEntryStream()))
+                {
+                    Assert.Equal("dummy filecontent", sr.ReadLine());
+                }
             }
         }
     }
@@ -126,7 +171,7 @@ public class TarArchiveTests : ArchiveTests
     public void Tar_UstarArchivePathReadLongName()
     {
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "ustar with long names.tar");
-        using var archive = TarArchive.OpenArchive(unmodified);
+        using var archive = ArchiveFactory.OpenArchive(unmodified);
         Assert.Equal(6, archive.Entries.Count());
         Assert.Contains("Directory/", archive.Entries.Select(entry => entry.Key));
         Assert.Contains(
@@ -152,6 +197,93 @@ public class TarArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void Tar_PaxLocalHeader_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var firstEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "pax/overridden-name.txt");
+        Assert.Equal(10, firstEntry.Size);
+        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(2345, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+
+        var expectedTime = DateTimeOffset.FromUnixTimeSeconds(1700000000).LocalDateTime;
+        Assert.Equal(expectedTime, firstEntry.LastModifiedTime);
+
+        var secondEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "second.txt");
+        Assert.Equal(2, secondEntry.Size);
+        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(22, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
+    }
+
+    [Fact]
+    public void Tar_PaxLocalHeader_Link_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxLocalHeader.Link.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var entry = (TarArchiveEntry)archive.Entries.Single();
+        Assert.Equal("pax/link-entry", entry.Key);
+        Assert.Equal("pax/target-entry", entry.LinkTarget);
+    }
+
+    [Fact]
+    public void Tar_PaxGlobalHeader_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var globalTime = DateTimeOffset.FromUnixTimeSeconds(1700000100).LocalDateTime;
+        var localOverrideTime = DateTimeOffset.FromUnixTimeSeconds(1700000200).LocalDateTime;
+
+        var firstEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-one.txt");
+        Assert.Equal(4000, firstEntry.UserID);
+        Assert.Equal(5000, firstEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
+        Assert.Equal(globalTime, firstEntry.LastModifiedTime);
+
+        var secondEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-local-override.txt");
+        Assert.Equal(4010, secondEntry.UserID);
+        Assert.Equal(5010, secondEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("600", 8), secondEntry.Mode);
+        Assert.Equal(localOverrideTime, secondEntry.LastModifiedTime);
+
+        var thirdEntry = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-three.txt");
+        Assert.Equal(4000, thirdEntry.UserID);
+        Assert.Equal(5000, thirdEntry.GroupId);
+        Assert.Equal(Convert.ToInt64("640", 8), thirdEntry.Mode);
+        Assert.Equal(globalTime, thirdEntry.LastModifiedTime);
+    }
+
+    [Fact]
+    public void Tar_PaxGlobalHeader_Link_Archive()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Tar.PaxGlobalHeader.Link.tar");
+        using var archive = TarArchive.OpenArchive(archivePath);
+
+        var globalLink = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "global-link");
+        Assert.Equal("global-target", globalLink.LinkTarget);
+        Assert.Equal(4100, globalLink.UserID);
+        Assert.Equal(5100, globalLink.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), globalLink.Mode);
+
+        var localOverrideLink = (TarArchiveEntry)
+            archive.Entries.Single(entry => entry.Key == "local-link-override");
+        Assert.Equal("local-target", localOverrideLink.LinkTarget);
+        Assert.Equal(4100, localOverrideLink.UserID);
+        Assert.Equal(5100, localOverrideLink.GroupId);
+        Assert.Equal(Convert.ToInt64("777", 8), localOverrideLink.Mode);
+    }
+
+    [Fact]
     public void Tar_Create_New()
     {
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Tar.tar");
@@ -162,8 +294,10 @@ public class TarArchiveTests : ArchiveTests
         using (var archive = TarArchive.CreateArchive())
         {
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
-            var twopt = new TarWriterOptions(CompressionType.None, true);
-            twopt.ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) };
+            var twopt = new TarWriterOptions(CompressionType.None, true)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
             archive.SaveTo(scratchPath, twopt);
         }
         CompareArchivesByPath(unmodified, scratchPath);
@@ -180,7 +314,7 @@ public class TarArchiveTests : ArchiveTests
         using (var archive = TarArchive.OpenArchive(unmodified))
         {
             archive.AddEntry("jpg\\test.jpg", jpg);
-            archive.SaveTo(scratchPath, CompressionType.None);
+            archive.SaveTo(scratchPath, new TarWriterOptions(CompressionType.None, true));
         }
         CompareArchivesByPath(modified, scratchPath);
     }
@@ -198,7 +332,7 @@ public class TarArchiveTests : ArchiveTests
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
             archive.RemoveEntry(entry);
-            archive.SaveTo(scratchPath, CompressionType.None);
+            archive.SaveTo(scratchPath, new TarWriterOptions(CompressionType.None, true));
         }
         CompareArchivesByPath(modified, scratchPath);
     }
@@ -228,8 +362,7 @@ public class TarArchiveTests : ArchiveTests
     {
         using var mstm = new MemoryStream();
         var enc = new ArchiveEncoding { Default = Encoding.UTF8 };
-        var twopt = new TarWriterOptions(CompressionType.None, true);
-        twopt.ArchiveEncoding = enc;
+        var twopt = new TarWriterOptions(CompressionType.None, true) { ArchiveEncoding = enc };
         var fname = new string((char)0x3042, length);
         using (var tw = new TarWriter(mstm, twopt))
         using (var input = new MemoryStream(new byte[32]))
@@ -238,7 +371,7 @@ public class TarArchiveTests : ArchiveTests
         }
         using (var inputMemory = new MemoryStream(mstm.ToArray()))
         {
-            var tropt = new ReaderOptions { ArchiveEncoding = enc };
+            var tropt = ReaderOptions.ForExternalStream.WithArchiveEncoding(enc);
             using (var tr = TarReader.OpenReader(inputMemory, tropt))
             {
                 while (tr.MoveToNextEntry())
@@ -272,9 +405,9 @@ public class TarArchiveTests : ArchiveTests
 
         var numberOfEntries = 0;
 
-        using (var archiveFactory = TarArchive.OpenArchive(memoryStream))
+        using (var archive = ArchiveFactory.OpenArchive(memoryStream))
         {
-            foreach (var entry in archiveFactory.Entries)
+            foreach (var entry in archive.Entries)
             {
                 ++numberOfEntries;
 
@@ -294,5 +427,25 @@ public class TarArchiveTests : ArchiveTests
         var isTar = TarArchive.IsTarFile(Path.Combine(TEST_ARCHIVES_PATH, "false.positive.tar"));
 
         Assert.False(isTar);
+    }
+
+    [Fact]
+    public void TarArchiveStreamRead_Autodetect_CompressedTar()
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var archive = ArchiveFactory.OpenArchive(stream);
+
+        Assert.Equal(ArchiveType.Tar, archive.Type);
+        Assert.NotEmpty(archive.Entries);
+    }
+
+    [Fact]
+    public void TarReaderStreamRead_Autodetect_CompressedTar()
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var reader = ReaderFactory.OpenReader(stream);
+
+        Assert.Equal(ArchiveType.Tar, reader.Type);
+        Assert.True(reader.MoveToNextEntry());
     }
 }

@@ -80,7 +80,10 @@ public static unsafe partial class Methods
     private static nuint POOL_sizeof(void* ctx)
     {
         if (ctx == null)
+        {
             return 0;
+        }
+
         var jobThreadPool = GetThreadPool(ctx);
         return (nuint)jobThreadPool.Size();
     }
@@ -89,7 +92,10 @@ public static unsafe partial class Methods
     private static int POOL_resize(void* ctx, nuint numThreads)
     {
         if (ctx == null)
+        {
             return 1;
+        }
+
         var jobThreadPool = GetThreadPool(ctx);
         jobThreadPool.Resize((int)numThreads);
         return 0;

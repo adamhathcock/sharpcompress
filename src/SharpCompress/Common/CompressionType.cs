@@ -9,6 +9,7 @@ public enum CompressionType
     Deflate,
     Rar,
     LZMA,
+    LZMA2,
     BCJ,
     BCJ2,
     LZip,

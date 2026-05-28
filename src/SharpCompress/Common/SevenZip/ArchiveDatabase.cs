@@ -1,14 +1,12 @@
-﻿#nullable disable
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 
 namespace SharpCompress.Common.SevenZip;
 
-internal class ArchiveDatabase
+internal partial class ArchiveDatabase
 {
     internal byte _majorVersion;
     internal byte _minorVersion;
@@ -18,7 +16,7 @@ internal class ArchiveDatabase
     internal List<long> _packSizes = new();
     internal List<uint?> _packCrCs = new();
     internal List<CFolder> _folders = new();
-    internal List<int> _numUnpackStreamsVector;
+    internal List<int> _numUnpackStreamsVector = null!;
     internal List<CFileItem> _files = new();
 
     internal List<long> _packStreamStartPositions = new();
@@ -35,7 +33,7 @@ internal class ArchiveDatabase
         _packSizes.Clear();
         _packCrCs.Clear();
         _folders.Clear();
-        _numUnpackStreamsVector = null;
+        _numUnpackStreamsVector = null!;
         _files.Clear();
 
         _packStreamStartPositions.Clear();
@@ -89,7 +87,7 @@ internal class ArchiveDatabase
                 {
                     if (folderIndex >= _folders.Count)
                     {
-                        throw new InvalidOperationException();
+                        throw new ArchiveOperationException();
                     }
 
                     _folderStartFileIndex.Add(i); // check it

@@ -1,10 +1,11 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
+using SharpCompress.Common;
 
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
@@ -40,32 +41,12 @@ namespace SharpCompress.Compressors.BZip2;
   * start of the BZIP2 stream to make it compatible with other PGP programs.
   */
 
-internal class CBZip2InputStream : Stream, IStreamStack
+internal partial class CBZip2InputStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => bsStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private static void Cadvise()
     {
         //System.out.Println("CRC Error");
-        throw new InvalidOperationException("BZip2 error");
+        throw new ArchiveOperationException("BZip2 error");
     }
 
     private static void BadBGLengths() => Cadvise();
@@ -74,7 +55,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
 
     private static void CompressedStreamEOF()
     {
-        throw new InvalidOperationException("BZip2 compressed file ends unexpectedly");
+        throw new ArchiveOperationException("BZip2 compressed file ends unexpectedly");
     }
 
     private void MakeMaps()
@@ -168,6 +149,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
     private int computedBlockCRC,
         computedCombinedCRC;
     private readonly bool decompressConcatenated;
+    private readonly bool leaveOpen;
 
     private int i2,
         count,
@@ -181,31 +163,38 @@ internal class CBZip2InputStream : Stream, IStreamStack
     private char z;
     private bool isDisposed;
 
-    public CBZip2InputStream(Stream zStream, bool decompressConcatenated)
+    private CBZip2InputStream(bool decompressConcatenated, bool leaveOpen)
     {
         this.decompressConcatenated = decompressConcatenated;
-        ll8 = null;
-        tt = null;
-        BsSetStream(zStream);
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(CBZip2InputStream));
-#endif
+        this.leaveOpen = leaveOpen;
+    }
 
-        Initialize(true);
-        InitBlock();
-        SetupBlock();
+    public static CBZip2InputStream Create(
+        Stream zStream,
+        bool decompressConcatenated,
+        bool leaveOpen
+    )
+    {
+        var cbZip2InputStream = new CBZip2InputStream(decompressConcatenated, leaveOpen);
+        cbZip2InputStream.ll8 = null;
+        cbZip2InputStream.tt = null;
+        cbZip2InputStream.BsSetStream(zStream);
+        if (!cbZip2InputStream.Initialize(true))
+        {
+            throw new InvalidFormatException("Not a valid BZip2 stream");
+        }
+        cbZip2InputStream.InitBlock();
+        cbZip2InputStream.SetupBlock();
+        return cbZip2InputStream;
     }
 
     protected override void Dispose(bool disposing)
     {
-        if (isDisposed)
+        if (isDisposed || leaveOpen)
         {
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(CBZip2InputStream));
-#endif
         base.Dispose(disposing);
         bsStream?.Dispose();
     }
@@ -274,7 +263,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
         if (magic0 != 'B' || magic1 != 'Z' || magic2 != 'h')
         {
-            throw new IOException("Not a BZIP2 marked stream");
+            throw new InvalidFormatException("Not a BZIP2 marked stream");
         }
         var magic3 = bsStream.ReadByte();
         if (magic3 < '1' || magic3 > '9')
@@ -398,7 +387,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
 
     private void BsFinishedWithStream()
     {
-        bsStream?.Dispose();
+        if (!leaveOpen)
+        {
+            bsStream?.Dispose();
+        }
         bsStream = null;
     }
 
@@ -414,6 +406,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
         int v;
         while (bsLive < n)
         {
+            if (bsStream is null)
+            {
+                CompressedStreamEOF();
+            }
             int zzi;
             int thech = '\0';
             try
@@ -488,6 +484,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
         }
         for (i = 0; i < alphaSize; i++)
         {
+            if (length[i] >= BZip2Constants.MAX_CODE_LEN)
+            {
+                throw new InvalidFormatException("BZip2: invalid Huffman code length");
+            }
             basev[length[i] + 1]++;
         }
 
@@ -564,6 +564,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
 
         /* Now the selectors */
         nGroups = BsR(3);
+        if (nGroups < 2 || nGroups > BZip2Constants.N_GROUPS)
+        {
+            throw new InvalidFormatException("BZip2: invalid number of Huffman trees");
+        }
         nSelectors = BsR(15);
         for (i = 0; i < nSelectors; i++)
         {
@@ -571,6 +575,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
             while (BsR(1) == 1)
             {
                 j++;
+                if (j >= nGroups)
+                {
+                    throw new InvalidFormatException("BZip2: invalid selector MTF value");
+                }
             }
             if (i < BZip2Constants.MAX_SELECTORS)
             {
@@ -593,6 +601,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
             for (i = 0; i < nSelectors; i++)
             {
                 v = selectorMtf[i];
+                if (v >= nGroups)
+                {
+                    throw new InvalidFormatException("BZip2: selector MTF value out of range");
+                }
                 tmp = pos[v];
                 while (v > 0)
                 {
@@ -694,12 +706,20 @@ internal class CBZip2InputStream : Stream, IStreamStack
                 groupPos = BZip2Constants.G_SIZE;
             }
             groupPos--;
+            if (groupNo < 0 || groupNo >= selector.Length)
+            {
+                throw new InvalidFormatException("BZip2: group selector out of range");
+            }
             zt = selector[groupNo];
             zn = minLens[zt];
             zvec = BsR(zn);
             while (zvec > limit[zt][zn])
             {
                 zn++;
+                if (zn >= BZip2Constants.MAX_CODE_LEN)
+                {
+                    throw new InvalidFormatException("BZip2: Huffman code too long");
+                }
                 {
                     {
                         while (bsLive < 1)
@@ -728,7 +748,14 @@ internal class CBZip2InputStream : Stream, IStreamStack
                 }
                 zvec = (zvec << 1) | zj;
             }
-            nextSym = perm[zt][zvec - basev[zt][zn]];
+            {
+                int permIdx = zvec - basev[zt][zn];
+                if (permIdx < 0 || permIdx >= perm[zt].Length)
+                {
+                    throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                }
+                nextSym = perm[zt][permIdx];
+            }
         }
 
         while (true)
@@ -765,12 +792,20 @@ internal class CBZip2InputStream : Stream, IStreamStack
                             groupPos = BZip2Constants.G_SIZE;
                         }
                         groupPos--;
+                        if (groupNo < 0 || groupNo >= selector.Length)
+                        {
+                            throw new InvalidFormatException("BZip2: group selector out of range");
+                        }
                         zt = selector[groupNo];
                         zn = minLens[zt];
                         zvec = BsR(zn);
                         while (zvec > limit[zt][zn])
                         {
                             zn++;
+                            if (zn >= BZip2Constants.MAX_CODE_LEN)
+                            {
+                                throw new InvalidFormatException("BZip2: Huffman code too long");
+                            }
                             {
                                 {
                                     while (bsLive < 1)
@@ -799,7 +834,14 @@ internal class CBZip2InputStream : Stream, IStreamStack
                             }
                             zvec = (zvec << 1) | zj;
                         }
-                        nextSym = perm[zt][zvec - basev[zt][zn]];
+                        {
+                            int permIdx = zvec - basev[zt][zn];
+                            if (permIdx < 0 || permIdx >= perm[zt].Length)
+                            {
+                                throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                            }
+                            nextSym = perm[zt][permIdx];
+                        }
                     }
                 } while (nextSym == BZip2Constants.RUNA || nextSym == BZip2Constants.RUNB);
 
@@ -828,6 +870,10 @@ internal class CBZip2InputStream : Stream, IStreamStack
                     BlockOverrun();
                 }
 
+                if (nextSym - 1 < 0 || nextSym - 1 >= yy.Length)
+                {
+                    throw new InvalidFormatException("BZip2: symbol out of range");
+                }
                 tmp = yy[nextSym - 1];
                 unzftab[seqToUnseq[tmp]]++;
                 ll8[last] = seqToUnseq[tmp];
@@ -864,12 +910,20 @@ internal class CBZip2InputStream : Stream, IStreamStack
                         groupPos = BZip2Constants.G_SIZE;
                     }
                     groupPos--;
+                    if (groupNo < 0 || groupNo >= selector.Length)
+                    {
+                        throw new InvalidFormatException("BZip2: group selector out of range");
+                    }
                     zt = selector[groupNo];
                     zn = minLens[zt];
                     zvec = BsR(zn);
                     while (zvec > limit[zt][zn])
                     {
                         zn++;
+                        if (zn >= BZip2Constants.MAX_CODE_LEN)
+                        {
+                            throw new InvalidFormatException("BZip2: Huffman code too long");
+                        }
                         {
                             {
                                 while (bsLive < 1)
@@ -894,7 +948,14 @@ internal class CBZip2InputStream : Stream, IStreamStack
                         }
                         zvec = (zvec << 1) | zj;
                     }
-                    nextSym = perm[zt][zvec - basev[zt][zn]];
+                    {
+                        int permIdx = zvec - basev[zt][zn];
+                        if (permIdx < 0 || permIdx >= perm[zt].Length)
+                        {
+                            throw new InvalidFormatException("BZip2: invalid Huffman symbol");
+                        }
+                        nextSym = perm[zt][permIdx];
+                    }
                 }
             }
         }
@@ -918,10 +979,18 @@ internal class CBZip2InputStream : Stream, IStreamStack
         for (i = 0; i <= last; i++)
         {
             ch = ll8[i];
+            if (cftab[ch] < 0 || cftab[ch] >= tt.Length)
+            {
+                throw new InvalidFormatException("BZip2: block data out of bounds");
+            }
             tt[cftab[ch]] = i;
             cftab[ch]++;
         }
 
+        if (origPtr < 0 || origPtr >= tt.Length)
+        {
+            throw new InvalidFormatException("BZip2: origPtr out of bounds");
+        }
         tPos = tt[origPtr];
 
         count = 0;
@@ -1096,7 +1165,7 @@ internal class CBZip2InputStream : Stream, IStreamStack
     {
         if (!(0 <= newSize100k && newSize100k <= 9 && 0 <= blockSize100k && blockSize100k <= 9))
         {
-            // throw new IOException("Invalid block size");
+            // throw new InvalidFormatException("Invalid block size");
         }
 
         blockSize100k = newSize100k;
@@ -1127,28 +1196,6 @@ internal class CBZip2InputStream : Stream, IStreamStack
             buffer[k + offset] = (byte)c;
         }
         return k;
-    }
-
-    public override Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var c = -1;
-        int k;
-        for (k = 0; k < count; ++k)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            c = ReadByte();
-            if (c == -1)
-            {
-                break;
-            }
-            buffer[k + offset] = (byte)c;
-        }
-        return Task.FromResult(k);
     }
 
     public override long Seek(long offset, SeekOrigin origin) => 0;

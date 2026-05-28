@@ -1,63 +1,73 @@
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Compressors.LZMA;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
 public partial class TarWriter : AbstractWriter
 {
-    private readonly bool finalizeArchiveOnClose;
-    private TarHeaderWriteFormat headerFormat;
+    private readonly bool _finalizeArchiveOnClose;
+    private readonly TarHeaderWriteFormat _headerFormat;
 
     public TarWriter(Stream destination, TarWriterOptions options)
-        : base(ArchiveType.Tar, options)
+        : base(ArchiveType.Tar, GetEffectiveOptions(options))
     {
-        finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
-        headerFormat = options.HeaderFormat;
+        _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        _headerFormat = options.HeaderFormat;
 
-        if (!destination.CanWrite)
+        InitializeStream(CreateOutputStream(destination, options));
+    }
+
+    internal TarWriter(Stream destination, TarWriterOptions options, bool streamIsPrepared)
+        : base(ArchiveType.Tar, GetEffectiveOptions(options))
+    {
+        _finalizeArchiveOnClose = options.FinalizeArchiveOnClose;
+        _headerFormat = options.HeaderFormat;
+
+        InitializeStream(streamIsPrepared ? destination : CreateOutputStream(destination, options));
+    }
+
+    private static TarWriterOptions GetEffectiveOptions(TarWriterOptions options) =>
+        options with
         {
-            throw new ArgumentException("Tars require writable streams.");
-        }
-        if (WriterOptions.LeaveStreamOpen)
+            CompressionType = CompressionType.None,
+            LeaveStreamOpen = false,
+        };
+
+    private static Stream CreateOutputStream(Stream destination, TarWriterOptions options)
+    {
+        if (options.LeaveStreamOpen)
         {
-            destination = SharpCompressStream.Create(destination, leaveOpen: true);
+            destination = SharpCompressStream.CreateNonDisposing(destination);
         }
-        switch (options.CompressionType)
+
+        var providers = options.Providers;
+        return options.CompressionType switch
         {
-            case CompressionType.None:
-                break;
-            case CompressionType.BZip2:
-                {
-                    destination = new BZip2Stream(destination, CompressionMode.Compress, false);
-                }
-                break;
-            case CompressionType.GZip:
-                {
-                    destination = new GZipStream(destination, CompressionMode.Compress);
-                }
-                break;
-            case CompressionType.LZip:
-                {
-                    destination = new LZipStream(destination, CompressionMode.Compress);
-                }
-                break;
-            default:
-            {
-                throw new InvalidFormatException(
-                    "Tar does not support compression: " + options.CompressionType
-                );
-            }
-        }
-        InitializeStream(destination);
+            CompressionType.None => destination,
+            CompressionType.BZip2 => providers.CreateCompressStream(
+                CompressionType.BZip2,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.GZip => providers.CreateCompressStream(
+                CompressionType.GZip,
+                destination,
+                options.CompressionLevel
+            ),
+            CompressionType.LZip => providers.CreateCompressStream(
+                CompressionType.LZip,
+                destination,
+                options.CompressionLevel
+            ),
+            _ => throw new InvalidFormatException(
+                "Tar does not support compression: " + options.CompressionType
+            ),
+        };
     }
 
     public override void Write(string filename, Stream source, DateTime? modificationTime) =>
@@ -67,7 +77,11 @@ public partial class TarWriter : AbstractWriter
     {
         filename = filename.Replace('\\', '/');
 
+#if LEGACY_DOTNET
         var pos = filename.IndexOf(':');
+#else
+        var pos = filename.IndexOf(':', StringComparison.Ordinal);
+#endif
         if (pos >= 0)
         {
             filename = filename.Remove(0, pos + 1);
@@ -95,23 +109,12 @@ public partial class TarWriter : AbstractWriter
             return; // Skip empty or root directory
         }
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = normalizedName;
         header.Size = 0;
         header.EntryType = EntryType.Directory;
-        header.Write(OutputStream);
-    }
-
-    public override async ValueTask WriteDirectoryAsync(
-        string directoryName,
-        DateTime? modificationTime,
-        CancellationToken cancellationToken = default
-    )
-    {
-        // Synchronous implementation is sufficient for header-only write
-        WriteDirectory(directoryName, modificationTime);
-        await Task.CompletedTask.ConfigureAwait(false);
+        header.Write(OutputStream.NotNull());
     }
 
     public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
@@ -123,80 +126,38 @@ public partial class TarWriter : AbstractWriter
 
         var realSize = size ?? source.Length;
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding, headerFormat);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
 
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
-        header.Write(OutputStream);
+        header.Write(OutputStream.NotNull());
         var progressStream = WrapWithProgress(source, filename);
-        size = progressStream.TransferTo(OutputStream, realSize);
+        size = progressStream.TransferTo(OutputStream.NotNull(), realSize);
         PadTo512(size.Value);
-    }
-
-    public override async ValueTask WriteAsync(
-        string filename,
-        Stream source,
-        DateTime? modificationTime,
-        CancellationToken cancellationToken = default
-    ) => await WriteAsync(filename, source, modificationTime, null, cancellationToken);
-
-    public async ValueTask WriteAsync(
-        string filename,
-        Stream source,
-        DateTime? modificationTime,
-        long? size,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (!source.CanSeek && size is null)
-        {
-            throw new ArgumentException("Seekable stream is required if no size is given.");
-        }
-
-        var realSize = size ?? source.Length;
-
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
-
-        header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
-        header.Name = NormalizeFilename(filename);
-        header.Size = realSize;
-        header.Write(OutputStream);
-        var progressStream = WrapWithProgress(source, filename);
-        var written = await progressStream
-            .TransferToAsync(OutputStream, realSize, cancellationToken)
-            .ConfigureAwait(false);
-        PadTo512(written);
     }
 
     private void PadTo512(long size)
     {
         var zeros = unchecked((int)(((size + 511L) & ~511L) - size));
 
-        OutputStream.Write(stackalloc byte[zeros]);
+        OutputStream.NotNull().Write(stackalloc byte[zeros]);
     }
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing)
+        if (isDisposing && !_isDisposed)
         {
-            if (finalizeArchiveOnClose)
+            if (_finalizeArchiveOnClose)
             {
-                OutputStream.Write(stackalloc byte[1024]);
+                OutputStream.NotNull().Write(stackalloc byte[1024]);
             }
-            switch (OutputStream)
+            // Use IFinishable interface for generic finalization
+            if (OutputStream is IFinishable finishable)
             {
-                case BZip2Stream b:
-                {
-                    b.Finish();
-                    break;
-                }
-                case LZipStream l:
-                {
-                    l.Finish();
-                    break;
-                }
+                finishable.Finish();
             }
+            _isDisposed = true;
         }
         base.Dispose(isDisposing);
     }

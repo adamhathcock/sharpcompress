@@ -6,40 +6,40 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-internal class BufferedSubStream : SharpCompressStream, IStreamStack
+internal partial class BufferedSubStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
+    Stream IStreamStack.BaseStream() => _stream;
 
-    Stream IStreamStack.BaseStream() => base.Stream;
+    private readonly Stream _stream;
 
     public BufferedSubStream(Stream stream, long origin, long bytesToRead)
-        : base(stream, leaveOpen: true, throwOnDispose: false)
     {
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(BufferedSubStream));
-#endif
+        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         this.origin = origin;
         this.BytesLeftToRead = bytesToRead;
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(BufferedSubStream));
-#endif
-        if (disposing)
+        if (_isDisposed)
+        {
+            return;
+        }
+        _isDisposed = true;
+
+        if (disposing && _cache is not null)
         {
             ArrayPool<byte>.Shared.Return(_cache);
+            _cache = null;
         }
         base.Dispose(disposing);
     }
 
     private int _cacheOffset;
     private int _cacheLength;
-    private readonly byte[] _cache = ArrayPool<byte>.Shared.Rent(32 << 10);
+    private byte[]? _cache = ArrayPool<byte>.Shared.Rent(81920);
     private long origin;
+    private bool _isDisposed;
 
     private long BytesLeftToRead { get; set; }
 
@@ -61,32 +61,27 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
 
     private void RefillCache()
     {
-        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
-        _cacheOffset = 0;
-        if (count == 0)
+        if (_isDisposed)
         {
-            _cacheLength = 0;
-            return;
+            throw new ObjectDisposedException(nameof(BufferedSubStream));
         }
-        Stream.Position = origin;
-        _cacheLength = Stream.Read(_cache, 0, count);
-        origin += _cacheLength;
-        BytesLeftToRead -= _cacheLength;
-    }
 
-    private async ValueTask RefillCacheAsync(CancellationToken cancellationToken)
-    {
-        var count = (int)Math.Min(BytesLeftToRead, _cache.Length);
+        var count = (int)Math.Min(BytesLeftToRead, _cache!.Length);
         _cacheOffset = 0;
         if (count == 0)
         {
             _cacheLength = 0;
             return;
         }
-        Stream.Position = origin;
-        _cacheLength = await Stream
-            .ReadAsync(_cache, 0, count, cancellationToken)
-            .ConfigureAwait(false);
+
+        // Only seek if we're not already at the correct position
+        // This avoids expensive seek operations when reading sequentially
+        if (_stream.CanSeek && _stream.Position != origin)
+        {
+            _stream.Position = origin;
+        }
+
+        _cacheLength = _stream.Read(_cache, 0, count);
         origin += _cacheLength;
         BytesLeftToRead -= _cacheLength;
     }
@@ -106,7 +101,7 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             }
 
             count = Math.Min(count, _cacheLength - _cacheOffset);
-            Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
+            Buffer.BlockCopy(_cache!, _cacheOffset, buffer, offset, count);
             _cacheOffset += count;
         }
 
@@ -124,63 +119,8 @@ internal class BufferedSubStream : SharpCompressStream, IStreamStack
             }
         }
 
-        return _cache[_cacheOffset++];
+        return _cache![_cacheOffset++];
     }
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (count > Length)
-        {
-            count = (int)Length;
-        }
-
-        if (count > 0)
-        {
-            if (_cacheOffset == _cacheLength)
-            {
-                await RefillCacheAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            count = Math.Min(count, _cacheLength - _cacheOffset);
-            Buffer.BlockCopy(_cache, _cacheOffset, buffer, offset, count);
-            _cacheOffset += count;
-        }
-
-        return count;
-    }
-
-#if !LEGACY_DOTNET
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var count = buffer.Length;
-        if (count > Length)
-        {
-            count = (int)Length;
-        }
-
-        if (count > 0)
-        {
-            if (_cacheOffset == _cacheLength)
-            {
-                await RefillCacheAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            count = Math.Min(count, _cacheLength - _cacheOffset);
-            _cache.AsSpan(_cacheOffset, count).CopyTo(buffer.Span);
-            _cacheOffset += count;
-        }
-
-        return count;
-    }
-#endif
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 

@@ -148,7 +148,10 @@ public static unsafe partial class Methods
     private static void COVER_best_init(COVER_best_s* best)
     {
         if (best == null)
+        {
             return;
+        }
+
         SynchronizationWrapper.Init(&best->mutex);
         best->liveJobs = 0;
         best->dict = null;

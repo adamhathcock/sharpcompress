@@ -1,13 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net10.0;net48</TargetFrameworks>
+    <OutputType>Exe</OutputType>
     <AssemblyName>SharpCompress.Test</AssemblyName>
     <PackageId>SharpCompress.Test</PackageId>
     <AssemblyOriginatorKeyFile>SharpCompress.Test.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|AnyCPU'">
-    <DefineConstants>$(DefineConstants);DEBUG_STREAMS</DefineConstants>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <DefineConstants>$(DefineConstants);LEGACY_DOTNET</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))">
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
@@ -22,9 +23,6 @@
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="xunit" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(VersionlessImplicitFrameworkDefine)' != 'NETFRAMEWORK' ">
-    <PackageReference Include="Mono.Posix.NETStandard" />
+    <PackageReference Include="xunit.v3" />
   </ItemGroup>
 </Project>

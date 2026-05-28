@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using SharpCompress.Archives.GZip;
-using SharpCompress.Archives.Tar;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Compressors;
@@ -13,6 +13,7 @@ using SharpCompress.Compressors.Lzw;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Readers.Tar;
 
@@ -32,96 +33,83 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
     protected override Stream RequestInitialStream()
     {
         var stream = base.RequestInitialStream();
+
+        var providers = Options.Providers;
+
         return compressionType switch
         {
-            CompressionType.BZip2 => new BZip2Stream(stream, CompressionMode.Decompress, false),
-            CompressionType.GZip => new GZipStream(stream, CompressionMode.Decompress),
-            CompressionType.ZStandard => new ZStandardStream(stream),
-            CompressionType.LZip => new LZipStream(stream, CompressionMode.Decompress),
-            CompressionType.Xz => new XZStream(stream),
-            CompressionType.Lzw => new LzwStream(stream),
+            CompressionType.BZip2 => providers.CreateDecompressStream(
+                CompressionType.BZip2,
+                stream
+            ),
+            CompressionType.GZip => providers.CreateDecompressStream(
+                CompressionType.GZip,
+                stream,
+                CompressionContext.FromStream(stream).WithReaderOptions(Options)
+            ),
+            CompressionType.ZStandard => providers.CreateDecompressStream(
+                CompressionType.ZStandard,
+                stream
+            ),
+            CompressionType.LZip => providers.CreateDecompressStream(CompressionType.LZip, stream),
+            CompressionType.Xz => providers.CreateDecompressStream(CompressionType.Xz, stream),
+            CompressionType.Lzw => providers.CreateDecompressStream(CompressionType.Lzw, stream),
             CompressionType.None => stream,
             _ => throw new NotSupportedException("Invalid compression type: " + compressionType),
         };
     }
 
-    #region OpenReader
-
-    /// <summary>
-    /// Opens a TarReader for Non-seeking usage with a single volume
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="options"></param>
-    /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
+    protected override ValueTask<Stream> RequestInitialStreamAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        stream.NotNull(nameof(stream));
-        options = options ?? new ReaderOptions();
-        var rewindableStream = new SharpCompressStream(stream);
+        var stream = base.RequestInitialStream();
+        var providers = Options.Providers;
 
-        long pos = ((IStreamStack)rewindableStream).GetPosition();
-
-        if (GZipArchive.IsGZipFile(rewindableStream))
+        return compressionType switch
         {
-            ((IStreamStack)rewindableStream).StackSeek(pos);
-            var testStream = new GZipStream(rewindableStream, CompressionMode.Decompress);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                ((IStreamStack)rewindableStream).StackSeek(pos);
-                return new TarReader(rewindableStream, options, CompressionType.GZip);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-
-        ((IStreamStack)rewindableStream).StackSeek(pos);
-        if (BZip2Stream.IsBZip2(rewindableStream))
-        {
-            ((IStreamStack)rewindableStream).StackSeek(pos);
-            var testStream = new BZip2Stream(rewindableStream, CompressionMode.Decompress, false);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                ((IStreamStack)rewindableStream).StackSeek(pos);
-                return new TarReader(rewindableStream, options, CompressionType.BZip2);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-
-        ((IStreamStack)rewindableStream).StackSeek(pos);
-        if (ZStandardStream.IsZStandard(rewindableStream))
-        {
-            ((IStreamStack)rewindableStream).StackSeek(pos);
-            var testStream = new ZStandardStream(rewindableStream);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                ((IStreamStack)rewindableStream).StackSeek(pos);
-                return new TarReader(rewindableStream, options, CompressionType.ZStandard);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-        ((IStreamStack)rewindableStream).StackSeek(pos);
-        if (LZipStream.IsLZipFile(rewindableStream))
-        {
-            ((IStreamStack)rewindableStream).StackSeek(pos);
-            var testStream = new LZipStream(rewindableStream, CompressionMode.Decompress);
-            if (TarArchive.IsTarFile(testStream))
-            {
-                ((IStreamStack)rewindableStream).StackSeek(pos);
-                return new TarReader(rewindableStream, options, CompressionType.LZip);
-            }
-            throw new InvalidFormatException("Not a tar file.");
-        }
-
-        ((IStreamStack)rewindableStream).StackSeek(pos);
-        return new TarReader(rewindableStream, options, CompressionType.None);
+            CompressionType.BZip2 => providers.CreateDecompressStreamAsync(
+                CompressionType.BZip2,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.GZip => providers.CreateDecompressStreamAsync(
+                CompressionType.GZip,
+                stream,
+                CompressionContext.FromStream(stream).WithReaderOptions(Options),
+                cancellationToken
+            ),
+            CompressionType.ZStandard => providers.CreateDecompressStreamAsync(
+                CompressionType.ZStandard,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.LZip => providers.CreateDecompressStreamAsync(
+                CompressionType.LZip,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.Xz => providers.CreateDecompressStreamAsync(
+                CompressionType.Xz,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.Lzw => providers.CreateDecompressStreamAsync(
+                CompressionType.Lzw,
+                stream,
+                cancellationToken
+            ),
+            CompressionType.None => new ValueTask<Stream>(stream),
+            _ => throw new NotSupportedException("Invalid compression type: " + compressionType),
+        };
     }
-
-    #endregion OpenReader
 
     protected override IEnumerable<TarEntry> GetEntries(Stream stream) =>
         TarEntry.GetEntries(
             StreamingMode.Streaming,
             stream,
             compressionType,
-            Options.ArchiveEncoding
+            Options.ArchiveEncoding,
+            Options
         );
 }

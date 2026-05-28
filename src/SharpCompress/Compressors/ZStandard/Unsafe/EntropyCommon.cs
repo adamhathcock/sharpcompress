@@ -71,9 +71,15 @@ public static unsafe partial class Methods
                     sizeof(sbyte) * 8
                 );
                 if (FSE_isError(countSize))
+                {
                     return countSize;
+                }
+
                 if (countSize > hbSize)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
+
                 return countSize;
             }
         }
@@ -83,7 +89,10 @@ public static unsafe partial class Methods
         bitStream = MEM_readLE32(ip);
         nbBits = (int)((bitStream & 0xF) + 5);
         if (nbBits > 15)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         bitStream >>= 4;
         bitCount = 4;
         *tableLogPtr = (uint)nbBits;
@@ -125,7 +134,10 @@ public static unsafe partial class Methods
                 charnum += bitStream & 3;
                 bitCount += 2;
                 if (charnum >= maxSV1)
+                {
                     break;
+                }
+
                 if (ip <= iend - 7 || ip + (bitCount >> 3) <= iend - 4)
                 {
                     assert(bitCount >> 3 <= 3);
@@ -154,7 +166,10 @@ public static unsafe partial class Methods
                 {
                     count = (int)(bitStream & (uint)(2 * threshold - 1));
                     if (count >= threshold)
+                    {
                         count -= max;
+                    }
+
                     bitCount += nbBits;
                 }
 
@@ -175,13 +190,19 @@ public static unsafe partial class Methods
                 if (remaining < threshold)
                 {
                     if (remaining <= 1)
+                    {
                         break;
+                    }
+
                     nbBits = (int)(ZSTD_highbit32((uint)remaining) + 1);
                     threshold = 1 << nbBits - 1;
                 }
 
                 if (charnum >= maxSV1)
+                {
                     break;
+                }
+
                 if (ip <= iend - 7 || ip + (bitCount >> 3) <= iend - 4)
                 {
                     ip += bitCount >> 3;
@@ -199,11 +220,20 @@ public static unsafe partial class Methods
         }
 
         if (remaining != 1)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         if (charnum > maxSV1)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
+        }
+
         if (bitCount > 32)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         *maxSVPtr = charnum - 1;
         ip += bitCount + 7 >> 3;
         return (nuint)(ip - istart);
@@ -316,16 +346,25 @@ public static unsafe partial class Methods
         nuint iSize;
         nuint oSize;
         if (srcSize == 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        }
+
         iSize = ip[0];
         if (iSize >= 128)
         {
             oSize = iSize - 127;
             iSize = (oSize + 1) / 2;
             if (iSize + 1 > srcSize)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            }
+
             if (oSize >= hwSize)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             ip += 1;
             {
                 uint n;
@@ -339,7 +378,10 @@ public static unsafe partial class Methods
         else
         {
             if (iSize + 1 > srcSize)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+            }
+
             oSize = FSE_decompress_wksp_bmi2(
                 huffWeight,
                 hwSize - 1,
@@ -351,7 +393,9 @@ public static unsafe partial class Methods
                 bmi2
             );
             if (FSE_isError(oSize))
+            {
                 return oSize;
+            }
         }
 
         memset(rankStats, 0, (12 + 1) * sizeof(uint));
@@ -361,18 +405,27 @@ public static unsafe partial class Methods
             for (n = 0; n < oSize; n++)
             {
                 if (huffWeight[n] > 12)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
+
                 rankStats[huffWeight[n]]++;
                 weightTotal += (uint)(1 << huffWeight[n] >> 1);
             }
         }
 
         if (weightTotal == 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         {
             uint tableLog = ZSTD_highbit32(weightTotal) + 1;
             if (tableLog > 12)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+            }
+
             *tableLogPtr = tableLog;
             {
                 uint total = (uint)(1 << (int)tableLog);
@@ -380,14 +433,20 @@ public static unsafe partial class Methods
                 uint verif = (uint)(1 << (int)ZSTD_highbit32(rest));
                 uint lastWeight = ZSTD_highbit32(rest) + 1;
                 if (verif != rest)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+                }
+
                 huffWeight[oSize] = (byte)lastWeight;
                 rankStats[lastWeight]++;
             }
         }
 
         if (rankStats[1] < 2 || (rankStats[1] & 1) != 0)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_corruption_detected));
+        }
+
         *nbSymbolsPtr = (uint)(oSize + 1);
         return iSize + 1;
     }

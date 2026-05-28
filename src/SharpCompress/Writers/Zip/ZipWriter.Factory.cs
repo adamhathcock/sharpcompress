@@ -1,6 +1,7 @@
 #if NET8_0_OR_GREATER
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Writers.Zip;
@@ -16,43 +17,43 @@ public partial class ZipWriter : IWriterOpenable<ZipWriterOptions>
     public static IWriter OpenWriter(FileInfo fileInfo, ZipWriterOptions writerOptions)
     {
         fileInfo.NotNull(nameof(fileInfo));
-        return new ZipWriter(fileInfo.OpenWrite(), writerOptions);
+        return new ZipWriter(fileInfo.OpenWrite(), writerOptions with { LeaveStreamOpen = false });
     }
 
     public static IWriter OpenWriter(Stream stream, ZipWriterOptions writerOptions)
     {
-        stream.NotNull(nameof(stream));
+        stream.RequireWritable();
         return new ZipWriter(stream, writerOptions);
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
-        string path,
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
+        string filePath,
         ZipWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncWriter)OpenWriter(path, writerOptions);
+        return new((IAsyncWriter)OpenWriter(filePath, writerOptions));
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
         Stream stream,
         ZipWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncWriter)OpenWriter(stream, writerOptions);
+        return new((IAsyncWriter)OpenWriter(stream, writerOptions));
     }
 
-    public static IAsyncWriter OpenAsyncWriter(
+    public static ValueTask<IAsyncWriter> OpenAsyncWriter(
         FileInfo fileInfo,
         ZipWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncWriter)OpenWriter(fileInfo, writerOptions);
+        return new((IAsyncWriter)OpenWriter(fileInfo, writerOptions));
     }
 }
 #endif

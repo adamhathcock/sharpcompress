@@ -21,10 +21,9 @@ public class ExtractAllTests : TestBase
     public async ValueTask ExtractAllEntriesAsync(string archivePath)
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
-        var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };
 
         await using var archive = await ArchiveFactory.OpenAsyncArchive(testArchive);
-        await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, options);
+        await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
     }
 
     [Theory]
@@ -38,9 +37,8 @@ public class ExtractAllTests : TestBase
     public void ExtractAllEntriesSync(string archivePath)
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, archivePath);
-        var options = new ExtractionOptions() { ExtractFullPath = true, Overwrite = true };
 
         using var archive = ArchiveFactory.OpenArchive(testArchive);
-        archive.WriteToDirectory(SCRATCH_FILES_PATH, options);
+        archive.WriteToDirectory(SCRATCH_FILES_PATH);
     }
 }

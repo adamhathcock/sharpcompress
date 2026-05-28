@@ -9,22 +9,29 @@ using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
+using SharpCompress.Writers.Zip;
 
 namespace SharpCompress.Archives.Zip;
 
 public partial class ZipArchive
 #if NET8_0_OR_GREATER
-    : IWritableArchiveOpenable,
-        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+    : IWritableArchiveOpenable<ZipWriterOptions>,
+        IMultiArchiveOpenable<
+            IWritableArchive<ZipWriterOptions>,
+            IWritableAsyncArchive<ZipWriterOptions>
+        >
 #endif
 {
-    public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<ZipWriterOptions> OpenArchive(
+        string filePath,
+        ReaderOptions? readerOptions = null
+    )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        return OpenArchive(new FileInfo(filePath), readerOptions);
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<ZipWriterOptions> OpenArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null
     )
@@ -34,141 +41,123 @@ public partial class ZipArchive
             new SourceStream(
                 fileInfo,
                 i => ZipArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
-    public static IWritableArchive OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+    public static IWritableArchive<ZipWriterOptions> OpenArchive(
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new ZipArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < files.Count ? files[i] : null,
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
-    public static IWritableArchive OpenArchive(
-        IEnumerable<Stream> streams,
+    public static IWritableArchive<ZipWriterOptions> OpenArchive(
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new ZipArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }
 
-    public static IWritableArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<ZipWriterOptions> OpenArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null
+    )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return new ZipArchive(
-            new SourceStream(stream, i => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, i => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
-        string path,
+    public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> OpenAsyncArchive(
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(path, readerOptions);
+        return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(filePath, readerOptions));
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(stream, readerOptions);
+        return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(stream, readerOptions));
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(fileInfo, readerOptions);
+        return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(fileInfo, readerOptions));
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(streams, readerOptions);
+        return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(streams, readerOptions));
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        return new((IWritableAsyncArchive<ZipWriterOptions>)OpenArchive(fileInfos, readerOptions));
     }
 
-    public static bool IsZipFile(
-        string filePath,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => IsZipFile(new FileInfo(filePath), password, bufferSize);
+    public static bool IsZipFile(string filePath, string? password = null) =>
+        IsZipFile(new FileInfo(filePath), password);
 
-    public static bool IsZipFile(
-        FileInfo fileInfo,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipFile(FileInfo fileInfo, string? password = null)
     {
         if (!fileInfo.Exists)
         {
             return false;
         }
         using Stream stream = fileInfo.OpenRead();
-        return IsZipFile(stream, password, bufferSize);
+        return IsZipFile(stream, password);
     }
 
-    public static bool IsZipFile(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipFile(Stream stream, string? password = null)
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
@@ -176,7 +165,7 @@ public partial class ZipArchive
             {
                 return false;
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -188,20 +177,11 @@ public partial class ZipArchive
         }
     }
 
-    public static bool IsZipMulti(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public static bool IsZipMulti(Stream stream, string? password = null)
     {
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
             var header = headerFactory
                 .ReadStreamHeader(stream)
                 .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
@@ -210,7 +190,7 @@ public partial class ZipArchive
                 if (stream.CanSeek)
                 {
                     var z = new SeekableZipHeaderFactory(password, new ArchiveEncoding());
-                    var x = z.ReadSeekableHeader(stream, useSync: true).FirstOrDefault();
+                    var x = z.ReadSeekableHeader(stream).FirstOrDefault();
                     return x?.ZipHeaderType == ZipHeaderType.DirectoryEntry;
                 }
                 else
@@ -218,7 +198,7 @@ public partial class ZipArchive
                     return false;
                 }
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -233,7 +213,6 @@ public partial class ZipArchive
     public static async ValueTask<bool> IsZipFileAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
         CancellationToken cancellationToken = default
     )
     {
@@ -241,20 +220,16 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
             var header = await headerFactory
                 .ReadStreamHeaderAsync(stream)
                 .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
             if (header is null)
             {
                 return false;
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -266,14 +241,14 @@ public partial class ZipArchive
         }
     }
 
-    public static IWritableArchive CreateArchive() => new ZipArchive();
+    public static IWritableArchive<ZipWriterOptions> CreateArchive() => new ZipArchive();
 
-    public static IWritableAsyncArchive CreateAsyncArchive() => new ZipArchive();
+    public static ValueTask<IWritableAsyncArchive<ZipWriterOptions>> CreateAsyncArchive() =>
+        new(new ZipArchive());
 
     public static async ValueTask<bool> IsZipMultiAsync(
         Stream stream,
         string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
         CancellationToken cancellationToken = default
     )
     {
@@ -281,14 +256,11 @@ public partial class ZipArchive
         var headerFactory = new StreamingZipHeaderFactory(password, new ArchiveEncoding(), null);
         try
         {
-            if (stream is not SharpCompressStream)
-            {
-                stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-            }
-
-            var header = headerFactory
-                .ReadStreamHeader(stream)
-                .FirstOrDefault(x => x.ZipHeaderType != ZipHeaderType.Split);
+            var header = await headerFactory
+                .ReadStreamHeaderAsync(stream)
+                .Where(x => x.ZipHeaderType != ZipHeaderType.Split)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
             if (header is null)
             {
                 if (stream.CanSeek)
@@ -298,6 +270,7 @@ public partial class ZipArchive
                     await foreach (
                         var h in z.ReadSeekableHeaderAsync(stream)
                             .WithCancellation(cancellationToken)
+                            .ConfigureAwait(false)
                     )
                     {
                         x = h;
@@ -310,7 +283,7 @@ public partial class ZipArchive
                     return false;
                 }
             }
-            return Enum.IsDefined(typeof(ZipHeaderType), header.ZipHeaderType);
+            return IsDefined(header.ZipHeaderType);
         }
         catch (CryptographicException)
         {
@@ -320,5 +293,14 @@ public partial class ZipArchive
         {
             return false;
         }
+    }
+
+    private static bool IsDefined(ZipHeaderType value)
+    {
+#if LEGACY_DOTNET
+        return Enum.IsDefined(typeof(ZipHeaderType), value);
+#else
+        return Enum.IsDefined(value);
+#endif
     }
 }

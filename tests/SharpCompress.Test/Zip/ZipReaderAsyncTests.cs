@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -20,7 +21,7 @@ public class ZipReaderAsyncTests : ReaderTests
     {
         var path = Path.Combine(TEST_ARCHIVES_PATH, "PrePostHeaders.zip");
         using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
         var count = 0;
         while (await reader.MoveToNextEntryAsync())
         {
@@ -65,7 +66,7 @@ public class ZipReaderAsyncTests : ReaderTests
         using Stream stream = new ForwardOnlyStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        await using var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
         var x = 0;
         while (await reader.MoveToNextEntryAsync())
         {
@@ -74,10 +75,28 @@ public class ZipReaderAsyncTests : ReaderTests
                 x++;
                 if (x % 2 == 0)
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public async ValueTask Zip_Deflate_Streamed2_Skip_Async()
+    {
+        using Stream stream = new ForwardOnlyStream(
+            File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd-.zip"))
+        );
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+        var x = 0;
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                x++;
+                if (x % 2 == 0)
+                {
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -124,7 +143,10 @@ public class ZipReaderAsyncTests : ReaderTests
         using (
             IReader baseReader = ZipReader.OpenReader(
                 stream,
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
             )
         )
         {
@@ -134,10 +156,7 @@ public class ZipReaderAsyncTests : ReaderTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -150,16 +169,18 @@ public class ZipReaderAsyncTests : ReaderTests
         using var stream = new TestStream(
             File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
         );
-        await using (var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream)))
+        await using (
+            var reader = await ReaderFactory.OpenAsyncReader(
+                new AsyncOnlyStream(stream),
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
+            )
+        )
         {
             while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -174,15 +195,12 @@ public class ZipReaderAsyncTests : ReaderTests
                 File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"))
             )
         );
-        await using var reader = ReaderFactory.OpenAsyncReader(stream);
+        await using var reader = await ReaderFactory.OpenAsyncReader(stream);
         while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         Assert.False(stream.IsDisposed);
@@ -200,7 +218,10 @@ public class ZipReaderAsyncTests : ReaderTests
             using (
                 IReader baseReader = ZipReader.OpenReader(
                     stream,
-                    new ReaderOptions { Password = "test" }
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
                 )
             )
             {
@@ -209,11 +230,8 @@ public class ZipReaderAsyncTests : ReaderTests
                 {
                     if (!reader.Entry.IsDirectory)
                     {
-                        Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                        await reader.WriteEntryToDirectoryAsync(
-                            SCRATCH_FILES_PATH,
-                            new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                        );
+                        Assert.Equal(CompressionType.LZMA, reader.Entry.CompressionType);
+                        await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                     }
                 }
             }
@@ -228,23 +246,23 @@ public class ZipReaderAsyncTests : ReaderTests
                 File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.WinzipAES.zip"))
             )
         )
-        using (
-            IReader baseReader = ZipReader.OpenReader(
+
+        await using (
+            var reader = await ReaderFactory.OpenAsyncReader(
                 stream,
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
             )
         )
         {
-            IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
-                    Assert.Equal(CompressionType.Unknown, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    Assert.Equal(CompressionType.Deflate, reader.Entry.CompressionType);
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -260,27 +278,128 @@ public class ZipReaderAsyncTests : ReaderTests
                 File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "zipcrypto.zip"))
             )
         )
-        using (
-            IReader baseReader = ZipReader.OpenReader(
+        await using (
+            var reader = await ReaderFactory.OpenAsyncReader(
                 stream,
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
             )
         )
         {
-            IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.None, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                     count++;
                 }
             }
         }
         Assert.Equal(8, count);
+    }
+
+    [Fact]
+    public async ValueTask EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_Deflate_Async()
+    {
+        // Since version 0.41.0: EntryStream.DisposeAsync() should not throw NotSupportedException
+        // when FlushAsync() fails on non-seekable streams (Deflate compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+
+        // This should not throw, even if internal FlushAsync() fails
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+#if LEGACY_DOTNET
+                using var entryStream = await reader.OpenEntryStreamAsync();
+#else
+                await using var entryStream = await reader.OpenEntryStreamAsync();
+#endif
+                // Read some data
+                var buffer = new byte[1024];
+                await entryStream.ReadAsync(buffer, 0, buffer.Length);
+                // DisposeAsync should not throw NotSupportedException
+            }
+        }
+    }
+
+    [Fact]
+    public async ValueTask EntryStream_Dispose_DoesNotThrow_OnNonSeekableStream_LZMA_Async()
+    {
+        // Since version 0.41.0: EntryStream.DisposeAsync() should not throw NotSupportedException
+        // when FlushAsync() fails on non-seekable streams (LZMA compression)
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
+        using Stream stream = new ForwardOnlyStream(File.OpenRead(path));
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+
+        // This should not throw, even if internal FlushAsync() fails
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+#if LEGACY_DOTNET
+                using var entryStream = await reader.OpenEntryStreamAsync();
+#else
+                await using var entryStream = await reader.OpenEntryStreamAsync();
+#endif
+                // Read some data
+                var buffer = new byte[1024];
+                await entryStream.ReadAsync(buffer, 0, buffer.Length);
+                // DisposeAsync should not throw NotSupportedException
+            }
+        }
+    }
+
+    [Fact]
+    public async ValueTask Archive_Iteration_DoesNotBreak_WhenFlushThrows_Deflate_Async()
+    {
+        // Regression test: since 0.41.0, archive iteration would silently break
+        // when the input stream throws NotSupportedException in Flush().
+        // Only the first entry would be returned, then iteration would stop without exception.
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ThrowOnFlushStream(fileStream);
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+
+        var count = 0;
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+            }
+        }
+
+        // Should iterate through all entries, not just the first one
+        Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
+    }
+
+    [Fact]
+    public async ValueTask Archive_Iteration_DoesNotBreak_WhenFlushThrows_LZMA_Async()
+    {
+        // Regression test: since 0.41.0, archive iteration would silently break
+        // when the input stream throws NotSupportedException in Flush().
+        // Only the first entry would be returned, then iteration would stop without exception.
+        var path = Path.Combine(TEST_ARCHIVES_PATH, "Zip.lzma.dd.zip");
+        using var fileStream = File.OpenRead(path);
+        using Stream stream = new ThrowOnFlushStream(fileStream);
+        await using var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream));
+
+        var count = 0;
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                count++;
+            }
+        }
+
+        // Should iterate through all entries, not just the first one
+        Assert.True(count > 1, $"Expected more than 1 entry, but got {count}");
     }
 }

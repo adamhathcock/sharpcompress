@@ -29,7 +29,7 @@ public class XzBlockTests : XzTestsBase
     {
         var bytes = new byte[] { 0 };
         using Stream indexBlockStream = new MemoryStream(bytes);
-        var xzBlock = new XZBlock(indexBlockStream, CheckType.CRC64, 8);
+        using var xzBlock = new XZBlock(indexBlockStream, CheckType.CRC64, 8);
         Assert.Throws<XZIndexMarkerReachedException>(() =>
         {
             ReadBytes(xzBlock, 1);
@@ -43,7 +43,7 @@ public class XzBlockTests : XzTestsBase
         bytes[20]++;
         using Stream badCrcStream = new MemoryStream(bytes);
         Rewind(badCrcStream);
-        var xzBlock = new XZBlock(badCrcStream, CheckType.CRC64, 8);
+        using var xzBlock = new XZBlock(badCrcStream, CheckType.CRC64, 8);
         var ex = Assert.Throws<InvalidFormatException>(() =>
         {
             ReadBytes(xzBlock, 1);
@@ -54,14 +54,14 @@ public class XzBlockTests : XzTestsBase
     [Fact]
     public void CanReadM()
     {
-        var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+        using var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
         Assert.Equal(Encoding.ASCII.GetBytes("M"), ReadBytes(xzBlock, 1));
     }
 
     [Fact]
     public void CanReadMary()
     {
-        var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+        using var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
         Assert.Equal(Encoding.ASCII.GetBytes("M"), ReadBytes(xzBlock, 1));
         Assert.Equal(Encoding.ASCII.GetBytes("a"), ReadBytes(xzBlock, 1));
         Assert.Equal(Encoding.ASCII.GetBytes("ry"), ReadBytes(xzBlock, 2));
@@ -71,7 +71,7 @@ public class XzBlockTests : XzTestsBase
     public void CanReadPoemWithStreamReader()
     {
         var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
-        var sr = new StreamReader(xzBlock);
+        using var sr = new StreamReader(xzBlock);
         Assert.Equal(sr.ReadToEnd(), Original);
     }
 
@@ -79,8 +79,8 @@ public class XzBlockTests : XzTestsBase
     public void NoopWhenNoPadding()
     {
         // CompressedStream's only block has no padding.
-        var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
-        var sr = new StreamReader(xzBlock);
+        using var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
+        using var sr = new StreamReader(xzBlock);
         sr.ReadToEnd();
         Assert.Equal(0L, CompressedStream.Position % 4L);
     }
@@ -89,8 +89,8 @@ public class XzBlockTests : XzTestsBase
     public void SkipsPaddingWhenPresent()
     {
         // CompressedIndexedStream's first block has 1-byte padding.
-        var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
-        var sr = new StreamReader(xzBlock);
+        using var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
+        using var sr = new StreamReader(xzBlock);
         sr.ReadToEnd();
         Assert.Equal(0L, CompressedIndexedStream.Position % 4L);
     }
@@ -104,8 +104,8 @@ public class XzBlockTests : XzTestsBase
         compressedUnalignedStream.Position = 13;
 
         // Compressed's only block has no padding.
-        var xzBlock = new XZBlock(compressedUnalignedStream, CheckType.CRC64, 8);
-        var sr = new StreamReader(xzBlock);
+        using var xzBlock = new XZBlock(compressedUnalignedStream, CheckType.CRC64, 8);
+        using var sr = new StreamReader(xzBlock);
         sr.ReadToEnd();
         Assert.Equal(1L, compressedUnalignedStream.Position % 4L);
     }

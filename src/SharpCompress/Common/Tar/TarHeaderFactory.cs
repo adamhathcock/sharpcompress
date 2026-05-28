@@ -5,7 +5,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
-internal static class TarHeaderFactory
+internal static partial class TarHeaderFactory
 {
     internal static IEnumerable<TarHeader?> ReadHeader(
         StreamingMode mode,
@@ -13,15 +13,16 @@ internal static class TarHeaderFactory
         IArchiveEncoding archiveEncoding
     )
     {
+        var globalPaxMetadata = new TarHeader.PaxMetadata();
         while (true)
         {
             TarHeader? header = null;
             try
             {
-                var reader = new BinaryReader(stream);
+                var reader = new BinaryReader(stream, archiveEncoding.Default, leaveOpen: false);
                 header = new TarHeader(archiveEncoding);
 
-                if (!header.Read(reader))
+                if (!header.Read(reader, globalPaxMetadata))
                 {
                     yield break;
                 }
@@ -29,15 +30,19 @@ internal static class TarHeaderFactory
                 {
                     case StreamingMode.Seekable:
                         {
-                            header.DataStartPosition = reader.BaseStream.Position;
+                            header.DataStartPosition = stream.Position;
 
                             //skip to nearest 512
-                            reader.BaseStream.Position += PadTo512(header.Size);
+                            stream.Position += PadTo512(header.Size);
                         }
                         break;
                     case StreamingMode.Streaming:
                         {
-                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
+                            header.PackedStream = new TarReadOnlySubStream(
+                                stream,
+                                header.Size,
+                                false
+                            );
                         }
                         break;
                     default:
@@ -53,6 +58,8 @@ internal static class TarHeaderFactory
             yield return header;
         }
     }
+
+    // Async methods moved to TarHeaderFactory.Async.cs
 
     private static long PadTo512(long size)
     {

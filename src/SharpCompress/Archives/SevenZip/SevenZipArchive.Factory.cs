@@ -1,12 +1,10 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common;
-using SharpCompress.Common.SevenZip;
-using SharpCompress.Compressors.LZMA.Utilites;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -18,119 +16,119 @@ public partial class SevenZipArchive
         IMultiArchiveOpenable<IArchive, IAsyncArchive>
 #endif
 {
-    public static IAsyncArchive OpenAsyncArchive(
-        string path,
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty("path");
-        return (IAsyncArchive)OpenArchive(new FileInfo(path), readerOptions ?? new ReaderOptions());
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return new(
+            (IAsyncArchive)OpenArchive(
+                new FileInfo(filePath),
+                readerOptions ?? ReaderOptions.ForFilePath
+            )
+        );
     }
 
     public static IArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
     {
-        filePath.NotNullOrEmpty("filePath");
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return OpenArchive(new FileInfo(filePath), readerOptions ?? ReaderOptions.ForFilePath);
     }
 
     public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        fileInfo.NotNull("fileInfo");
+        fileInfo.NotNull(nameof(fileInfo));
         return new SevenZipArchive(
             new SourceStream(
                 fileInfo,
                 i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IArchive OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new SevenZipArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < files.Count ? files[i] : null,
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
     public static IArchive OpenArchive(
-        IEnumerable<Stream> streams,
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new SevenZipArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull("stream");
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return new SevenZipArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(stream, readerOptions);
+        return new((IAsyncArchive)OpenArchive(stream, readerOptions));
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
+        return new((IAsyncArchive)OpenArchive(fileInfo, readerOptions));
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(streams, readerOptions);
+        return new((IAsyncArchive)OpenArchive(streams, readerOptions));
     }
 
-    public static IAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        return new((IAsyncArchive)OpenArchive(fileInfos, readerOptions));
     }
 
     public static bool IsSevenZipFile(string filePath) => IsSevenZipFile(new FileInfo(filePath));
@@ -145,11 +143,14 @@ public partial class SevenZipArchive
         return IsSevenZipFile(stream);
     }
 
-    public static bool IsSevenZipFile(Stream stream)
+    public static bool IsSevenZipFile(Stream stream) =>
+        IsSevenZipFile(stream, ReaderOptions.ForExternalStream);
+
+    public static bool IsSevenZipFile(Stream stream, ReaderOptions? readerOptions)
     {
         try
         {
-            return SignatureMatch(stream);
+            return SignatureMatch(stream, readerOptions?.LookForHeader ?? false);
         }
         catch
         {
@@ -157,13 +158,106 @@ public partial class SevenZipArchive
         }
     }
 
-    private static ReadOnlySpan<byte> Signature =>
-        new byte[] { (byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C };
+    public static async ValueTask<bool> IsSevenZipFileAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    ) =>
+        await IsSevenZipFileAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
+            .ConfigureAwait(false);
 
-    private static bool SignatureMatch(Stream stream)
+    public static async ValueTask<bool> IsSevenZipFileAsync(
+        Stream stream,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
+    )
     {
-        var reader = new BinaryReader(stream);
-        ReadOnlySpan<byte> signatureBytes = reader.ReadBytes(6);
-        return signatureBytes.SequenceEqual(Signature);
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            return await SignatureMatchAsync(
+                    stream,
+                    readerOptions?.LookForHeader ?? false,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static ReadOnlySpan<byte> Signature => [(byte)'7', (byte)'z', 0xBC, 0xAF, 0x27, 0x1C];
+
+    private static bool SignatureMatch(Stream stream, bool lookForHeader)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(6);
+        try
+        {
+            var maxScanOffset = lookForHeader ? 0x80000 - 20 : 0;
+            for (var offset = 0; offset <= maxScanOffset; offset++)
+            {
+                stream.ReadExact(buffer, 0, 6);
+                if (buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature))
+                {
+                    return true;
+                }
+
+                if (!lookForHeader || !stream.CanSeek || stream.Length - stream.Position < 6)
+                {
+                    return false;
+                }
+
+                stream.Position -= 5;
+            }
+
+            return false;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    private static async ValueTask<bool> SignatureMatchAsync(
+        Stream stream,
+        bool lookForHeader,
+        CancellationToken cancellationToken
+    )
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(6);
+        try
+        {
+            var maxScanOffset = lookForHeader ? 0x80000 - 20 : 0;
+            for (var offset = 0; offset <= maxScanOffset; offset++)
+            {
+                if (
+                    !await stream
+                        .ReadFullyAsync(buffer, 0, 6, cancellationToken)
+                        .ConfigureAwait(false)
+                )
+                {
+                    return false;
+                }
+
+                if (buffer.AsSpan().Slice(0, 6).SequenceEqual(Signature))
+                {
+                    return true;
+                }
+
+                if (!lookForHeader || !stream.CanSeek || stream.Length - stream.Position < 6)
+                {
+                    return false;
+                }
+
+                stream.Position -= 5;
+            }
+
+            return false;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 }

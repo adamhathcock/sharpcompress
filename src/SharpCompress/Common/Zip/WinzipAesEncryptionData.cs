@@ -1,10 +1,16 @@
 using System;
 using System.Buffers.Binary;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace SharpCompress.Common.Zip;
 
+[SuppressMessage(
+    "Security",
+    "CA5379:Rfc2898DeriveBytes might be using a weak hash algorithm",
+    Justification = "WinZip AES specification requires PBKDF2 with SHA-1."
+)]
 internal class WinzipAesEncryptionData
 {
     private const int RFC2898_ITERATIONS = 1000;
@@ -70,6 +76,6 @@ internal class WinzipAesEncryptionData
             WinzipAesKeySize.KeySize128 => 16,
             WinzipAesKeySize.KeySize192 => 24,
             WinzipAesKeySize.KeySize256 => 32,
-            _ => throw new InvalidOperationException(),
+            _ => throw new ArchiveOperationException(),
         };
 }

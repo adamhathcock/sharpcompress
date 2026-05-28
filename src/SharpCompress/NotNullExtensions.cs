@@ -52,7 +52,7 @@ internal static class NotNullExtensions
     )
         where T : class
     {
-        ArgumentNullException.ThrowIfNull(obj, paramName);
+        ThrowHelper.ThrowIfNull(obj, paramName);
         return obj;
     }
 
@@ -63,7 +63,11 @@ internal static class NotNullExtensions
     )
         where T : struct
     {
-        ArgumentNullException.ThrowIfNull(obj, paramName);
+        if (!obj.HasValue)
+        {
+            throw new ArgumentNullException(paramName);
+        }
+
         return obj.Value;
     }
 #endif

@@ -40,12 +40,12 @@ public abstract class BlockFilter : ReadOnlyStream
     public static BlockFilter Read(BinaryReader reader)
     {
         var filterType = (FilterTypes)reader.ReadXZInteger();
-        if (!FILTER_MAP.ContainsKey(filterType))
+        if (!FILTER_MAP.TryGetValue(filterType, out var createFilter))
         {
             throw new NotImplementedException($"Filter {filterType} has not yet been implemented");
         }
 
-        var filter = FILTER_MAP[filterType]();
+        var filter = createFilter();
 
         var sizeOfProperties = reader.ReadXZInteger();
         if (sizeOfProperties > int.MaxValue)

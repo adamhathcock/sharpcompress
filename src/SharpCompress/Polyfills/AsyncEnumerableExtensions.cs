@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress;
 
@@ -12,7 +11,7 @@ public static class AsyncEnumerableEx
     public static async IAsyncEnumerable<T> Empty<T>()
         where T : notnull
     {
-        await Task.CompletedTask;
+        await Task.Yield();
         yield break;
     }
 }
@@ -21,7 +20,7 @@ public static class EnumerableExtensions
 {
     public static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(this IEnumerable<T> source)
     {
-        await Task.CompletedTask;
+        await Task.Yield();
         foreach (var item in source)
         {
             yield return item;
@@ -36,7 +35,7 @@ public static class AsyncEnumerableExtensions
     {
         public async IAsyncEnumerable<TResult> Select<TResult>(Func<T, TResult> selector)
         {
-            await foreach (var element in source)
+            await foreach (var element in source.ConfigureAwait(false))
             {
                 yield return selector(element);
             }
@@ -47,7 +46,7 @@ public static class AsyncEnumerableExtensions
             await using var e = source.GetAsyncEnumerator(cancellationToken);
 
             var count = 0;
-            while (await e.MoveNextAsync())
+            while (await e.MoveNextAsync().ConfigureAwait(false))
             {
                 checked
                 {
@@ -60,7 +59,7 @@ public static class AsyncEnumerableExtensions
 
         public async IAsyncEnumerable<T> Take(int count)
         {
-            await foreach (var element in source)
+            await foreach (var element in source.ConfigureAwait(false))
             {
                 yield return element;
 
@@ -74,7 +73,7 @@ public static class AsyncEnumerableExtensions
         public async ValueTask<List<T>> ToListAsync()
         {
             var list = new List<T>();
-            await foreach (var item in source)
+            await foreach (var item in source.ConfigureAwait(false))
             {
                 list.Add(item);
             }
@@ -83,7 +82,7 @@ public static class AsyncEnumerableExtensions
 
         public async ValueTask<bool> AllAsync(Func<T, bool> predicate)
         {
-            await foreach (var item in source)
+            await foreach (var item in source.ConfigureAwait(false))
             {
                 if (!predicate(item))
                 {
@@ -96,7 +95,7 @@ public static class AsyncEnumerableExtensions
 
         public async IAsyncEnumerable<T> Where(Func<T, bool> predicate)
         {
-            await foreach (var item in source)
+            await foreach (var item in source.ConfigureAwait(false))
             {
                 if (predicate(item))
                 {
@@ -117,14 +116,14 @@ public static class AsyncEnumerableExtensions
                 enumerator = source.Where(predicate).GetAsyncEnumerator();
             }
 
-            if (!await enumerator.MoveNextAsync())
+            if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
-                throw new InvalidOperationException("The source sequence is empty.");
+                throw new ArchiveOperationException("The source sequence is empty.");
             }
             var value = enumerator.Current;
-            if (await enumerator.MoveNextAsync())
+            if (await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
-                throw new InvalidOperationException(
+                throw new ArchiveOperationException(
                     "The source sequence contains more than one element."
                 );
             }
@@ -133,18 +132,20 @@ public static class AsyncEnumerableExtensions
 
         public async ValueTask<T> FirstAsync()
         {
-            await foreach (var item in source)
+            await foreach (var item in source.ConfigureAwait(false))
             {
                 return item;
             }
-            throw new InvalidOperationException("The source sequence is empty.");
+            throw new ArchiveOperationException("The source sequence is empty.");
         }
 
         public async ValueTask<T?> FirstOrDefaultAsync(
             CancellationToken cancellationToken = default
         )
         {
-            await foreach (var item in source.WithCancellation(cancellationToken))
+            await foreach (
+                var item in source.WithCancellation(cancellationToken).ConfigureAwait(false)
+            )
             {
                 return item;
             }
@@ -159,7 +160,7 @@ public static class AsyncEnumerableExtensions
     )
         where TResult : class
     {
-        await foreach (var item in source)
+        await foreach (var item in source.ConfigureAwait(false))
         {
             yield return (item as TResult).NotNull();
         }
@@ -172,7 +173,7 @@ public static class AsyncEnumerableExtensions
     )
     {
         var result = seed;
-        await foreach (var element in source)
+        await foreach (var element in source.ConfigureAwait(false))
         {
             result = func(result, element);
         }

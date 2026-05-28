@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 
@@ -33,9 +34,12 @@ public interface IMultiArchiveFactory : IFactory
     /// </summary>
     /// <param name="streams"></param>
     /// <param name="readerOptions">reading options.</param>
-    IAsyncArchive OpenAsyncArchive(
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="ValueTask{TResult}"/> containing the opened async archive.</returns>
+    ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
     );
 
     /// <summary>
@@ -51,7 +55,8 @@ public interface IMultiArchiveFactory : IFactory
     /// <param name="fileInfos"></param>
     /// <param name="readerOptions">reading options.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    IAsyncArchive OpenAsyncArchive(
+    /// <returns>A <see cref="ValueTask{TResult}"/> containing the opened async archive.</returns>
+    ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default

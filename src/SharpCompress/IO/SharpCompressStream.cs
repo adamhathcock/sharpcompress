@@ -1,454 +1,451 @@
 using System;
-using System.Buffers;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using SharpCompress.Common;
 
 namespace SharpCompress.IO;
 
-public class SharpCompressStream : Stream, IStreamStack
+/// <summary>
+/// Stream wrapper that provides optional ring-buffered reading for non-seekable
+/// or forward-only streams, enabling limited backward seeking required by some
+/// decompressors and archive formats.
+/// </summary>
+/// <remarks>
+/// In most cases, callers should obtain an instance via the static
+/// <c>SharpCompressStream.Create(...)</c> methods rather than constructing this
+/// class directly. The <c>Create</c> methods select an appropriate configuration
+/// (such as passthrough vs buffered mode and buffer size) for the underlying
+/// stream and usage scenario.
+/// </remarks>
+public partial class SharpCompressStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
+    public virtual Stream BaseStream() => stream;
 
-    Stream IStreamStack.BaseStream() => Stream;
+    private readonly Stream stream;
+    private bool isDisposed;
+    private long streamPosition;
 
-    // Buffering fields
-    private int _bufferSize;
-    private byte[]? _buffer;
-    private int _bufferPosition;
-    private int _bufferedLength;
-    private bool _bufferingEnabled;
-    private long _baseInitialPos;
+    // Ring buffer for recording mode and over-read protection.
+    // Single unified buffering mechanism for both use cases.
+    private RingBuffer? _ringBuffer;
+    private long _logicalPosition; // The current logical read position (can be behind streamPosition)
 
-    private void ValidateBufferState()
+    // Recording state: anchor position when StartRecording was called
+    private long? _recordingStartPosition;
+    private bool _isRecording;
+
+    // Passthrough mode - no buffering, delegates CanSeek to underlying stream
+    private readonly bool _isPassthrough;
+
+    /// <summary>
+    /// Gets whether this stream is in passthrough mode (no buffering, delegates to underlying stream).
+    /// </summary>
+    internal bool IsPassthrough => _isPassthrough;
+
+    /// <summary>
+    /// Gets whether to leave the underlying stream open when disposed.
+    /// </summary>
+    public virtual bool LeaveStreamOpen { get; }
+
+    /// <summary>
+    /// Gets or sets whether to throw an exception when Dispose is called.
+    /// Useful for testing to ensure streams are not disposed prematurely.
+    /// </summary>
+    internal bool ThrowOnDispose { get; set; }
+
+    public SharpCompressStream(Stream stream)
     {
-        if (_bufferPosition < 0 || _bufferPosition > _bufferedLength)
-        {
-            throw new InvalidOperationException(
-                "Buffer state is inconsistent: _bufferPosition is out of range."
-            );
-        }
+        this.stream = stream;
+        _logicalPosition = 0;
     }
 
-    int IStreamStack.BufferSize
-    {
-        get => _bufferingEnabled ? _bufferSize : 0;
-        set //need to adjust an already existing buffer
-        {
-            if (_bufferSize != value)
-            {
-                _bufferSize = value;
-                _bufferingEnabled = _bufferSize > 0;
-                if (_bufferingEnabled)
-                {
-                    if (_buffer is not null)
-                    {
-                        ArrayPool<byte>.Shared.Return(_buffer);
-                    }
-                    _buffer = ArrayPool<byte>.Shared.Rent(_bufferSize);
-                    _bufferPosition = 0;
-                    _bufferedLength = 0;
-                    if (_bufferingEnabled)
-                    {
-                        ValidateBufferState(); // Add here
-                    }
-                    // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
-                    _internalPosition = Stream.CanSeek ? Stream.Position : 0;
-                }
-            }
-        }
-    }
-
-    int IStreamStack.BufferPosition
-    {
-        get => _bufferingEnabled ? _bufferPosition : 0;
-        set
-        {
-            if (_bufferingEnabled)
-            {
-                if (value < 0 || value > _bufferedLength)
-                    throw new ArgumentOutOfRangeException(nameof(value));
-                _internalPosition = _internalPosition - _bufferPosition + value;
-                _bufferPosition = value;
-                ValidateBufferState(); // Add here
-            }
-        }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
-    public Stream Stream { get; }
-
-    private bool _readOnly; //some archive detection requires seek to be disabled to cause it to exception to try the next arc type
-
-    //private bool _isRewound;
-    private bool _isDisposed;
-    private long _internalPosition = 0;
-
-    public bool ThrowOnDispose { get; set; }
-    public bool LeaveOpen { get; set; }
-
-    public long InternalPosition => _internalPosition;
-
-    public static SharpCompressStream Create(
+    /// <summary>
+    /// Private constructor for passthrough mode.
+    /// </summary>
+    protected SharpCompressStream(
         Stream stream,
-        bool leaveOpen = false,
-        bool throwOnDispose = false,
-        int bufferSize = 0,
-        bool forceBuffer = false
+        bool leaveStreamOpen,
+        bool passthrough,
+        int? bufferSize
     )
     {
-        if (
-            stream is SharpCompressStream sc
-            && sc.LeaveOpen == leaveOpen
-            && sc.ThrowOnDispose == throwOnDispose
-        )
+        this.stream = stream;
+        LeaveStreamOpen = leaveStreamOpen;
+        _isPassthrough = passthrough;
+        _logicalPosition = 0;
+
+        if (bufferSize.HasValue && bufferSize.Value > 0)
         {
-            if (bufferSize != 0)
-                ((IStreamStack)stream).SetBuffer(bufferSize, forceBuffer);
-            return sc;
+            _ringBuffer = new RingBuffer(bufferSize.Value);
         }
-        return new SharpCompressStream(stream, leaveOpen, throwOnDispose, bufferSize, forceBuffer);
     }
 
-    public SharpCompressStream(
-        Stream stream,
-        bool leaveOpen = false,
-        bool throwOnDispose = false,
-        int bufferSize = 0,
-        bool forceBuffer = false
-    )
-    {
-        Stream = stream;
-        this.LeaveOpen = leaveOpen;
-        this.ThrowOnDispose = throwOnDispose;
-        _readOnly = !Stream.CanSeek;
-
-        ((IStreamStack)this).SetBuffer(bufferSize, forceBuffer);
-        // Check CanSeek before accessing Position to avoid exception overhead on non-seekable streams.
-        _baseInitialPos = Stream.CanSeek ? Stream.Position : 0;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(SharpCompressStream));
-#endif
-    }
+    /// <summary>
+    /// Gets whether the stream is actively recording reads to the ring buffer.
+    /// </summary>
+    internal virtual bool IsRecording => _isRecording;
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(SharpCompressStream));
-#endif
-        if (_isDisposed)
-        {
-            return;
-        }
-        _isDisposed = true;
-        base.Dispose(disposing);
-
-        if (this.LeaveOpen)
+        if (isDisposed)
         {
             return;
         }
         if (ThrowOnDispose)
         {
-            throw new InvalidOperationException(
-                $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is {ThrowOnDispose}"
+            throw new ArchiveOperationException(
+                $"Attempt to dispose of a {nameof(SharpCompressStream)} when {nameof(ThrowOnDispose)} is true"
             );
         }
+        isDisposed = true;
+        base.Dispose(disposing);
         if (disposing)
         {
-            Stream.Dispose();
-            if (_buffer != null)
+            if (!LeaveStreamOpen)
             {
-                ArrayPool<byte>.Shared.Return(_buffer);
-                _buffer = null;
+                stream.Dispose();
             }
+            _ringBuffer?.Dispose();
+            _ringBuffer = null;
         }
     }
 
-    public override bool CanRead => Stream.CanRead;
+    public void Rewind() => Rewind(false);
 
-    public override bool CanSeek => !_readOnly && Stream.CanSeek;
+    public virtual void Rewind(bool stopRecording)
+    {
+        if (_isPassthrough)
+        {
+            throw new ArchiveOperationException(
+                "Rewind cannot be called on a passthrough stream. Use Create() first."
+            );
+        }
 
-    public override bool CanWrite => !_readOnly && Stream.CanWrite;
+        if (_recordingStartPosition is null)
+        {
+            throw new ArchiveOperationException(
+                "Rewind can only be called after StartRecording() has been called."
+            );
+        }
+
+        // Verify recording anchor is within ring buffer range
+        long anchorAge = streamPosition - _recordingStartPosition.Value;
+        if (anchorAge > _ringBuffer!.Length)
+        {
+            throw new ArchiveOperationException(
+                $"Cannot rewind: recording anchor is {anchorAge} bytes behind current position, "
+                    + $"but ring buffer only holds {_ringBuffer.Length} bytes. "
+                    + $"Recording buffer overflow - increase DefaultRollingBufferSize or reduce format detection reads."
+            );
+        }
+
+        // Rewind logical position to recording anchor
+        _logicalPosition = _recordingStartPosition.Value;
+
+        if (stopRecording)
+        {
+            _isRecording = false;
+            // Note: We keep _recordingStartPosition so Rewind() can be called again
+            // (frozen recording mode). The anchor is only cleared when a new recording
+            // starts or the stream is disposed.
+        }
+    }
+
+    public virtual void StopRecording()
+    {
+        if (_isPassthrough)
+        {
+            throw new ArchiveOperationException(
+                "StopRecording cannot be called on a passthrough stream. Use Create() first."
+            );
+        }
+        if (!IsRecording)
+        {
+            throw new ArchiveOperationException(
+                "StopRecording can only be called when recording is active."
+            );
+        }
+
+        // Mark that we're no longer actively recording
+        _isRecording = false;
+
+        // Rewind to recording anchor position
+        _logicalPosition = _recordingStartPosition!.Value;
+
+        // Note: We keep _recordingStartPosition so future Rewind() calls still work
+        // (frozen recording mode) until Rewind(stopRecording: true) is called
+    }
+
+    /// <summary>
+    /// Begins recording reads so that <see cref="Rewind()"/> can replay them.
+    /// </summary>
+    /// <param name="minBufferSize">
+    /// Minimum ring buffer capacity in bytes. When provided and larger than
+    /// <see cref="Common.Constants.RewindableBufferSize"/>, the ring buffer is allocated
+    /// with this size. Pass the largest amount of compressed data that may be consumed
+    /// during format detection before the first rewind. Defaults to
+    /// <see cref="Common.Constants.RewindableBufferSize"/> when null or not supplied.
+    /// </param>
+    public virtual void StartRecording(int? minBufferSize = null)
+    {
+        if (_isPassthrough)
+        {
+            throw new ArchiveOperationException(
+                "StartRecording cannot be called on a passthrough stream. Use Create() first."
+            );
+        }
+        if (IsRecording)
+        {
+            throw new ArchiveOperationException(
+                "StartRecording can only be called when not already recording."
+            );
+        }
+
+        // Allocate ring buffer with the requested minimum size (at least the global default).
+        if (_ringBuffer is null)
+        {
+            var requiredSize =
+                minBufferSize.GetValueOrDefault() > Constants.RewindableBufferSize
+                    ? minBufferSize.GetValueOrDefault()
+                    : Constants.RewindableBufferSize;
+            _ringBuffer = new RingBuffer(requiredSize);
+        }
+        else if (minBufferSize.HasValue && minBufferSize.Value > _ringBuffer.Capacity)
+        {
+            throw new ArchiveOperationException(
+                $"StartRecording requires a ring buffer of at least {minBufferSize.Value} bytes, but the stream was created with capacity {_ringBuffer.Capacity}."
+            );
+        }
+
+        // Mark current position as recording anchor
+        _recordingStartPosition = streamPosition;
+        _logicalPosition = streamPosition;
+        _isRecording = true;
+    }
+
+    public override bool CanRead => true;
+
+    public override bool CanSeek => !_isPassthrough || stream.CanSeek;
+
+    public override bool CanWrite => _isPassthrough && stream.CanWrite;
 
     public override void Flush()
     {
-        Stream.Flush();
+        if (_isPassthrough)
+        {
+            stream.Flush();
+            return;
+        }
+        throw new NotSupportedException();
     }
 
     public override long Length
     {
-        get { return Stream.Length; }
+        get
+        {
+            if (_isPassthrough)
+            {
+                return stream.Length;
+            }
+
+            if (_ringBuffer is not null)
+            {
+                return _ringBuffer.Length;
+            }
+            throw new NotSupportedException();
+        }
     }
 
     public override long Position
     {
         get
         {
-            long pos = _internalPosition; // Stream.Position + _bufferStream.Position - _bufferStream.Length;
-            return pos;
+            // In passthrough mode, delegate to underlying stream
+            if (_isPassthrough)
+            {
+                return stream.Position;
+            }
+            // Use logical position (same for both recording and ring buffer modes)
+            return _logicalPosition;
         }
-        set { Seek(value, SeekOrigin.Begin); }
+        set
+        {
+            // In passthrough mode, delegate to underlying stream
+            if (_isPassthrough)
+            {
+                stream.Position = value;
+                return;
+            }
+            SeekToPosition(value);
+        }
+    }
+
+    private void SeekToPosition(long targetPosition)
+    {
+        // If we have a recording anchor, allow seeking within the recorded range
+        if (_recordingStartPosition is not null)
+        {
+            if (targetPosition >= _recordingStartPosition.Value && targetPosition <= streamPosition)
+            {
+                _logicalPosition = targetPosition;
+                return;
+            }
+            throw new NotSupportedException(
+                $"Cannot seek to position {targetPosition}. Valid recorded range: "
+                    + $"[{_recordingStartPosition.Value}, {streamPosition}]"
+            );
+        }
+
+        // If ring buffer is enabled (and not recording), check if we can seek within it
+        if (_ringBuffer is not null)
+        {
+            long ringBufferStart = streamPosition - _ringBuffer.Length;
+            if (targetPosition >= ringBufferStart && targetPosition <= streamPosition)
+            {
+                _logicalPosition = targetPosition;
+                return;
+            }
+            throw new NotSupportedException(
+                $"Cannot seek to position {targetPosition}. Valid ring buffer range: "
+                    + $"[{ringBufferStart}, {streamPosition}]"
+            );
+        }
+
+        // No buffering available
+        throw new NotSupportedException("Cannot seek on non-buffered stream.");
     }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
         if (count == 0)
+        {
             return 0;
-
-        if (_bufferingEnabled)
-        {
-            ValidateBufferState();
-
-            // Fill buffer if needed
-            if (_bufferedLength == 0)
-            {
-                _bufferedLength = Stream.Read(_buffer!, 0, _bufferSize);
-                _bufferPosition = 0;
-            }
-            int available = _bufferedLength - _bufferPosition;
-            int toRead = Math.Min(count, available);
-            if (toRead > 0)
-            {
-                Array.Copy(_buffer!, _bufferPosition, buffer, offset, toRead);
-                _bufferPosition += toRead;
-                _internalPosition += toRead;
-                return toRead;
-            }
-            // If buffer exhausted, refill
-            int r = Stream.Read(_buffer!, 0, _bufferSize);
-            if (r == 0)
-                return 0;
-            _bufferedLength = r;
-            _bufferPosition = 0;
-            if (_bufferedLength == 0)
-            {
-                return 0;
-            }
-            toRead = Math.Min(count, _bufferedLength);
-            Array.Copy(_buffer!, 0, buffer, offset, toRead);
-            _bufferPosition = toRead;
-            _internalPosition += toRead;
-            return toRead;
         }
-        else
+
+        // In passthrough mode, delegate directly to underlying stream
+        if (_isPassthrough)
         {
-            if (count == 0)
-            {
-                return 0;
-            }
-            int read;
-            read = Stream.Read(buffer, offset, count);
-            _internalPosition += read;
-            return read;
+            return stream.Read(buffer, offset, count);
         }
+
+        // If ring buffer exists, use unified buffered read logic
+        if (_ringBuffer is not null)
+        {
+            return ReadWithRingBuffer(buffer, offset, count);
+        }
+
+        // No buffering - read directly from stream
+        int read = stream.Read(buffer, offset, count);
+        streamPosition += read;
+        _logicalPosition = streamPosition;
+        return read;
+    }
+
+    /// <summary>
+    /// Reads data using the ring buffer. If logical position is behind stream position,
+    /// serves data from the ring buffer first. Handles both recording mode and
+    /// over-read protection uniformly.
+    /// </summary>
+    private int ReadWithRingBuffer(byte[] buffer, int offset, int count)
+    {
+        int totalRead = 0;
+
+        // If logical position is behind stream position, read from ring buffer first
+        while (count > 0 && _logicalPosition < streamPosition)
+        {
+            long bytesFromEnd = streamPosition - _logicalPosition;
+
+            // Verify data is available in ring buffer
+            if (!_ringBuffer!.CanReadFromEnd(bytesFromEnd))
+            {
+                throw new ArchiveOperationException(
+                    $"Ring buffer underflow: trying to read {bytesFromEnd} bytes back, "
+                        + $"but buffer only holds {_ringBuffer.Length} bytes."
+                );
+            }
+
+            int available = _ringBuffer.ReadFromEnd(bytesFromEnd, buffer, offset, count);
+            totalRead += available;
+            offset += available;
+            count -= available;
+            _logicalPosition += available;
+        }
+
+        // If more data needed and we're caught up, read from underlying stream
+        if (count > 0 && _logicalPosition == streamPosition)
+        {
+            // Use async read if stream doesn't support sync reads (e.g., AsyncOnlyStream)
+            int read = stream.Read(buffer, offset, count);
+            if (read > 0)
+            {
+                _ringBuffer!.Write(buffer, offset, read);
+                streamPosition += read;
+                _logicalPosition += read;
+                totalRead += read;
+            }
+        }
+
+        return totalRead;
     }
 
     public override long Seek(long offset, SeekOrigin origin)
     {
-        if (_bufferingEnabled)
+        // In passthrough mode, delegate to underlying stream
+        if (_isPassthrough)
         {
-            ValidateBufferState();
+            return stream.Seek(offset, origin);
         }
 
-        long orig = _internalPosition;
-        long targetPos;
-        // Calculate the absolute target position based on origin
-        switch (origin)
+        long targetPosition = origin switch
         {
-            case SeekOrigin.Begin:
-                targetPos = offset;
-                break;
-            case SeekOrigin.Current:
-                targetPos = _internalPosition + offset;
-                break;
-            case SeekOrigin.End:
-                targetPos = this.Length + offset;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(origin), origin, null);
-        }
+            SeekOrigin.Begin => offset,
+            SeekOrigin.Current => Position + offset,
+            SeekOrigin.End => throw new NotSupportedException("Seeking from end is not supported."),
+            _ => throw new ArgumentOutOfRangeException(nameof(origin)),
+        };
 
-        long bufferPos = _internalPosition - _bufferPosition;
-
-        if (targetPos >= bufferPos && targetPos <= bufferPos + _bufferedLength)
-        {
-            _bufferPosition = (int)(targetPos - bufferPos); //repoint within the buffer
-            _internalPosition = targetPos;
-        }
-        else
-        {
-            long newStreamPos =
-                Stream.Seek(targetPos + _baseInitialPos, SeekOrigin.Begin) - _baseInitialPos;
-            _internalPosition = newStreamPos;
-            _bufferPosition = 0;
-            _bufferedLength = 0;
-        }
-
-        return _internalPosition;
+        SeekToPosition(targetPosition);
+        return targetPosition;
     }
 
     public override void SetLength(long value)
     {
+        if (_isPassthrough)
+        {
+            stream.SetLength(value);
+            return;
+        }
         throw new NotSupportedException();
-    }
-
-    public override void WriteByte(byte value)
-    {
-        Stream.WriteByte(value);
-        ++_internalPosition;
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
-        Stream.Write(buffer, offset, count);
-        _internalPosition += count;
-    }
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (count == 0)
-            return 0;
-
-        if (_bufferingEnabled)
+        if (_isPassthrough)
         {
-            ValidateBufferState();
-
-            // Fill buffer if needed
-            if (_bufferedLength == 0)
-            {
-                _bufferedLength = await Stream
-                    .ReadAsync(_buffer!, 0, _bufferSize, cancellationToken)
-                    .ConfigureAwait(false);
-                _bufferPosition = 0;
-            }
-            int available = _bufferedLength - _bufferPosition;
-            int toRead = Math.Min(count, available);
-            if (toRead > 0)
-            {
-                Array.Copy(_buffer!, _bufferPosition, buffer, offset, toRead);
-                _bufferPosition += toRead;
-                _internalPosition += toRead;
-                return toRead;
-            }
-            // If buffer exhausted, refill
-            int r = await Stream
-                .ReadAsync(_buffer!, 0, _bufferSize, cancellationToken)
-                .ConfigureAwait(false);
-            if (r == 0)
-                return 0;
-            _bufferedLength = r;
-            _bufferPosition = 0;
-            if (_bufferedLength == 0)
-            {
-                return 0;
-            }
-            toRead = Math.Min(count, _bufferedLength);
-            Array.Copy(_buffer!, 0, buffer, offset, toRead);
-            _bufferPosition = toRead;
-            _internalPosition += toRead;
-            return toRead;
+            stream.Write(buffer, offset, count);
+            return;
         }
-        else
-        {
-            int read = await Stream
-                .ReadAsync(buffer, offset, count, cancellationToken)
-                .ConfigureAwait(false);
-            _internalPosition += read;
-            return read;
-        }
-    }
-
-    public override async Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        await Stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-        _internalPosition += count;
-    }
-
-    public override async Task FlushAsync(CancellationToken cancellationToken)
-    {
-        await Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        throw new NotSupportedException();
     }
 
 #if !LEGACY_DOTNET
-
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
+    public override int Read(Span<byte> buffer)
     {
-        if (buffer.Length == 0)
-            return 0;
-
-        if (_bufferingEnabled)
+        if (_isPassthrough)
         {
-            ValidateBufferState();
-
-            // Fill buffer if needed
-            if (_bufferedLength == 0)
-            {
-                _bufferedLength = await Stream
-                    .ReadAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
-                    .ConfigureAwait(false);
-                _bufferPosition = 0;
-            }
-            int available = _bufferedLength - _bufferPosition;
-            int toRead = Math.Min(buffer.Length, available);
-            if (toRead > 0)
-            {
-                _buffer.AsSpan(_bufferPosition, toRead).CopyTo(buffer.Span);
-                _bufferPosition += toRead;
-                _internalPosition += toRead;
-                return toRead;
-            }
-            // If buffer exhausted, refill
-            int r = await Stream
-                .ReadAsync(_buffer.AsMemory(0, _bufferSize), cancellationToken)
-                .ConfigureAwait(false);
-            if (r == 0)
-                return 0;
-            _bufferedLength = r;
-            _bufferPosition = 0;
-            if (_bufferedLength == 0)
-            {
-                return 0;
-            }
-            toRead = Math.Min(buffer.Length, _bufferedLength);
-            _buffer.AsSpan(0, toRead).CopyTo(buffer.Span);
-            _bufferPosition = toRead;
-            _internalPosition += toRead;
-            return toRead;
+            return stream.Read(buffer);
         }
-        else
-        {
-            int read = await Stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-            _internalPosition += read;
-            return read;
-        }
+        // Fall back to base implementation for buffered modes
+        return base.Read(buffer);
     }
 
-    public override async ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
+    public override void Write(ReadOnlySpan<byte> buffer)
     {
-        await Stream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
-        _internalPosition += buffer.Length;
+        if (_isPassthrough)
+        {
+            stream.Write(buffer);
+            return;
+        }
+        throw new NotSupportedException();
     }
-
 #endif
 }

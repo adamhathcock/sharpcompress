@@ -1,11 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using SharpCompress.Common.Options;
 
 namespace SharpCompress.Common.SevenZip;
 
 public class SevenZipEntry : Entry
 {
-    internal SevenZipEntry(SevenZipFilePart filePart) => FilePart = filePart;
+    internal SevenZipEntry(SevenZipFilePart filePart, IReaderOptions readerOptions)
+        : base(readerOptions)
+    {
+        FilePart = filePart;
+    }
 
     internal SevenZipFilePart FilePart { get; }
 

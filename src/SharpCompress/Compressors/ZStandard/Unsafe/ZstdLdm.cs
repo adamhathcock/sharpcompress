@@ -100,7 +100,9 @@ public static unsafe partial class Methods
                     splits[*numSplits] = n;
                     *numSplits += 1;
                     if (*numSplits == 64)
+                    {
                         goto done;
+                    }
                 }
             }
 
@@ -112,7 +114,9 @@ public static unsafe partial class Methods
                     splits[*numSplits] = n;
                     *numSplits += 1;
                     if (*numSplits == 64)
+                    {
                         goto done;
+                    }
                 }
             }
 
@@ -124,7 +128,9 @@ public static unsafe partial class Methods
                     splits[*numSplits] = n;
                     *numSplits += 1;
                     if (*numSplits == 64)
+                    {
                         goto done;
+                    }
                 }
             }
 
@@ -136,7 +142,9 @@ public static unsafe partial class Methods
                     splits[*numSplits] = n;
                     *numSplits += 1;
                     if (*numSplits == 64)
+                    {
                         goto done;
+                    }
                 }
             }
         }
@@ -150,7 +158,9 @@ public static unsafe partial class Methods
                 splits[*numSplits] = n;
                 *numSplits += 1;
                 if (*numSplits == 64)
+                {
                     goto done;
+                }
             }
         }
 
@@ -226,7 +236,9 @@ public static unsafe partial class Methods
         {
             @params->minMatchLength = 64;
             if (cParams->strategy >= ZSTD_strategy.ZSTD_btultra)
+            {
                 @params->minMatchLength /= 2;
+            }
         }
 
         if (@params->bucketSizeLog == 0)
@@ -481,7 +493,10 @@ public static unsafe partial class Methods
         ldmMatchCandidate_t* candidates = &ldmState->matchCandidates.e0;
         uint numSplits;
         if (srcSize < minMatchLength)
+        {
             return (nuint)(iend - anchor);
+        }
+
         ZSTD_ldm_gear_init(&hashState, @params);
         ZSTD_ldm_gear_reset(&hashState, ip, minMatchLength);
         ip += minMatchLength;
@@ -605,7 +620,10 @@ public static unsafe partial class Methods
                 {
                     rawSeq* seq = rawSeqStore->seq + rawSeqStore->size;
                     if (rawSeqStore->size == rawSeqStore->capacity)
+                    {
                         return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+                    }
+
                     seq->litLength = (uint)(split - backwardMatchLength - anchor);
                     seq->matchLength = (uint)mLength;
                     seq->offset = offset;
@@ -636,9 +654,13 @@ public static unsafe partial class Methods
         for (u = 0; u < size; u++)
         {
             if (table[u].offset < reducerValue)
+            {
                 table[u].offset = 0;
+            }
             else
+            {
                 table[u].offset -= reducerValue;
+            }
         }
     }
 
@@ -724,7 +746,10 @@ public static unsafe partial class Methods
                 chunkSize
             );
             if (ERR_isError(newLeftoverSize))
+            {
                 return newLeftoverSize;
+            }
+
             if (prevSize < sequences->size)
             {
                 sequences->seq[prevSize].litLength += (uint)leftoverSize;
@@ -909,7 +934,10 @@ public static unsafe partial class Methods
             /* maybeSplitSequence updates rawSeqStore->pos */
             rawSeq sequence = maybeSplitSequence(rawSeqStore, (uint)(iend - ip), minMatch);
             if (sequence.offset == 0)
+            {
                 break;
+            }
+
             assert(ip + sequence.litLength + sequence.matchLength <= iend);
             ZSTD_ldm_limitTableUpdate(ms, ip);
             ZSTD_ldm_fillFastTables(ms, ip);
@@ -918,7 +946,10 @@ public static unsafe partial class Methods
                 nuint newLitLength = blockCompressor(ms, seqStore, rep, ip, sequence.litLength);
                 ip += sequence.litLength;
                 for (i = 3 - 1; i > 0; i--)
+                {
                     rep[i] = rep[i - 1];
+                }
+
                 rep[0] = sequence.offset;
                 assert(sequence.offset > 0);
                 ZSTD_storeSeq(

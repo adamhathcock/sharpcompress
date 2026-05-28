@@ -1,27 +1,32 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public abstract class Volume : IVolume
+public abstract partial class Volume : IVolume, IAsyncDisposable
 {
     private readonly Stream _baseStream;
     private readonly Stream _actualStream;
 
-    internal Volume(Stream stream, ReaderOptions? readerOptions, int index = 0)
+    internal Volume(Stream stream, ReaderOptions readerOptions, int index = 0)
     {
         Index = index;
-        ReaderOptions = readerOptions ?? new ReaderOptions();
+        ReaderOptions = readerOptions;
         _baseStream = stream;
+
+        // Only rewind if it's a buffered SharpCompressStream (not passthrough)
+        if (stream is SharpCompressStream ss && !ss.IsPassthrough)
+        {
+            ss.Rewind();
+        }
         if (ReaderOptions.LeaveStreamOpen)
         {
-            stream = SharpCompressStream.Create(stream, leaveOpen: true);
+            stream = SharpCompressStream.CreateNonDisposing(stream);
         }
-
-        if (stream is IStreamStack ss)
-            ss.SetBuffer(ReaderOptions.BufferSize, true);
 
         _actualStream = stream;
     }
@@ -38,7 +43,9 @@ public abstract class Volume : IVolume
 
     public virtual int Index { get; internal set; }
 
-    public string? FileName => (_baseStream as FileStream)?.Name;
+    public string? FileName =>
+        (_baseStream as FileStream)?.Name
+        ?? (_baseStream as SourceStream)?.Files.FirstOrDefault()?.FullName;
 
     /// <summary>
     /// RarArchive is part of a multi-part archive.

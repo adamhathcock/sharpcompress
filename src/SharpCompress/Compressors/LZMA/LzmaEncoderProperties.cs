@@ -12,6 +12,16 @@ public class LzmaEncoderProperties
     internal ReadOnlySpan<object> Properties => _properties;
     private readonly object[] _properties;
 
+    /// <summary>
+    /// The dictionary size configured for this encoder.
+    /// </summary>
+    internal int DictionarySize { get; }
+
+    /// <summary>
+    /// The number of fast bytes configured for this encoder.
+    /// </summary>
+    internal int NumFastBytes { get; }
+
     public LzmaEncoderProperties()
         : this(false) { }
 
@@ -23,6 +33,8 @@ public class LzmaEncoderProperties
 
     public LzmaEncoderProperties(bool eos, int dictionary, int numFastBytes)
     {
+        DictionarySize = dictionary;
+        NumFastBytes = numFastBytes;
         var posStateBits = 2;
         var litContextBits = 3;
         var litPosBits = 0;

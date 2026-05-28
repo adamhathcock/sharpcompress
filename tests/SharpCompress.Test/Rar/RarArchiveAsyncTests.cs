@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -13,6 +13,31 @@ namespace SharpCompress.Test.Rar;
 
 public class RarArchiveAsyncTests : ArchiveTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar2.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public async ValueTask Rar_Archive_Recently_Changed_Unpackers_Async(string filename)
+    {
+        var extractedEntries = 0;
+        await using var archive = await RarArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, filename),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
+        {
+            using var output = new AsyncOnlyStream(new MemoryStream());
+            await entry.WriteToAsync(output);
+            extractedEntries++;
+        }
+
+        Assert.True(extractedEntries > 0);
+    }
+
     [Fact]
     public async ValueTask Rar_EncryptedFileAndHeader_Archive_Async() =>
         await ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", "test");
@@ -68,22 +93,23 @@ public class RarArchiveAsyncTests : ArchiveTests
     private async ValueTask ReadRarPasswordAsync(string testArchive, string? password)
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
-        using (
-            var archive = RarArchive.OpenArchive(
+        await using (
+            var archive = await RarArchive.OpenAsyncArchive(
                 stream,
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
-            foreach (var entry in archive.Entries)
+            await foreach (var entry in archive.EntriesAsync)
             {
                 if (!entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.Rar, entry.CompressionType);
-                    await entry.WriteToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -101,16 +127,17 @@ public class RarArchiveAsyncTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, archiveName),
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForFilePath with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                await entry.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -141,10 +168,7 @@ public class RarArchiveAsyncTests : ArchiveTests
         using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            await entry.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
         }
     }
 
@@ -153,15 +177,18 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
         using (
-            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+            var archive = RarArchive.OpenArchive(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
+            )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                await entry.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -183,10 +210,7 @@ public class RarArchiveAsyncTests : ArchiveTests
             Assert.False(archive.IsSolid);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                await entry.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -268,15 +292,15 @@ public class RarArchiveAsyncTests : ArchiveTests
     private async ValueTask DoRar_Multi_ArchiveStreamReadAsync(string[] archives, bool isSolid)
     {
         using var archive = RarArchive.OpenArchive(
-            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+            archives
+                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .Select(File.OpenRead)
+                .ToArray()
         );
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            await entry.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
         }
     }
 
@@ -331,16 +355,16 @@ public class RarArchiveAsyncTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForFilePath with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                await entry.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -639,10 +663,7 @@ public class RarArchiveAsyncTests : ArchiveTests
         using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            await entry.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -665,10 +686,7 @@ public class RarArchiveAsyncTests : ArchiveTests
                 if (!reader.Entry.IsDirectory)
                 {
                     Assert.Equal(compression, reader.Entry.CompressionType);
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -676,10 +694,7 @@ public class RarArchiveAsyncTests : ArchiveTests
 
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
-            await entry.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -690,10 +705,7 @@ public class RarArchiveAsyncTests : ArchiveTests
         using var archive = ArchiveFactory.OpenArchive(testArchive);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            await entry.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -705,17 +717,55 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
         using var archive = ArchiveFactory.OpenArchive(
-            paths.Select(a => new FileInfo(a)),
+            paths.Select(a => new FileInfo(a)).ToArray(),
             readerOptions
         );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            await entry.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
+    }
+
+    /// <summary>
+    /// Tests for Issue #1050 - RAR extraction with WriteToDirectoryAsync creates folders
+    /// but places all files at the top level instead of in their subdirectories.
+    /// </summary>
+    [Fact]
+    public async ValueTask Rar_Issue1050_WriteToDirectoryAsync_ExtractsToSubdirectories()
+    {
+        var testFile = "Rar.issue1050.rar";
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+        await using var archive = await RarArchive.OpenAsyncArchive(fileStream);
+
+        // Extract using archive.WriteToDirectoryAsync without explicit options
+        await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
+
+        // Verify files are in their subdirectories, not at the root
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "PhysicsBraid", "263825.tr11dtp")),
+            "File should be in PhysicsBraid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Animations", "15441.tr11anim")),
+            "File should be in Animations subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766728.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "HeadBraid", "321353.tr11modeldata")),
+            "File should be in HeadBraid subdirectory"
+        );
+
+        // NOTE: The file size check is omitted because there's a separate pre-existing bug
+        // in the async RAR stream implementation that causes incorrect file sizes.
+        // This test only verifies the directory structure fix.
     }
 
     private async ValueTask ArchiveOpenStreamReadAsync(
@@ -725,15 +775,12 @@ public class RarArchiveAsyncTests : ArchiveTests
     {
         var paths = testArchives.Select(x => Path.Combine(TEST_ARCHIVES_PATH, x));
         using var archive = ArchiveFactory.OpenArchive(
-            paths.Select(f => new FileInfo(f)),
+            paths.Select(f => new FileInfo(f)).ToArray(),
             readerOptions
         );
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            await entry.WriteToDirectoryAsync(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }

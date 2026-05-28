@@ -90,7 +90,8 @@ Common types, options, and enumerations used across formats.
 - `ArchiveType.cs` - Enum for archive formats
 - `CompressionType.cs` - Enum for compression methods
 - `ArchiveEncoding.cs` - Character encoding configuration
-- `ExtractionOptions.cs` - Extraction configuration
+- `IExtractionOptions.cs` - Interface for extraction configuration
+- `ExtractionOptions.cs` - Extraction behavior options for file extraction APIs
 - Format-specific headers: `Zip/Headers/`, `Tar/Headers/`, `Rar/Headers/`, etc.
 
 #### `Compressors/` - Compression Algorithms
@@ -215,13 +216,13 @@ using (var compressor = new DeflateStream(nonDisposingStream))
 public abstract class AbstractArchive : IArchive
 {
     // Template methods
-    public virtual void WriteToDirectory(string destinationDirectory, ExtractionOptions options)
+    public virtual void WriteToDirectory(string destinationDirectory)
     {
         // Common extraction logic
         foreach (var entry in Entries)
         {
             // Call subclass method
-            entry.WriteToFile(destinationPath, options);
+            entry.WriteToFile(destinationPath);
         }
     }
     
@@ -267,8 +268,7 @@ public interface IArchive : IDisposable
 {
     IEnumerable<IEntry> Entries { get; }
     
-    void WriteToDirectory(string destinationDirectory, 
-                         ExtractionOptions options = null);
+    void WriteToDirectory(string destinationDirectory);
     
     IEntry FirstOrDefault(Func<IEntry, bool> predicate);
     
@@ -287,8 +287,7 @@ public interface IReader : IDisposable
     
     bool MoveToNextEntry();
     
-    void WriteEntryToDirectory(string destinationDirectory,
-                              ExtractionOptions options = null);
+    void WriteEntryToDirectory(string destinationDirectory);
     
     Stream OpenEntryStream();
     
@@ -327,7 +326,7 @@ public interface IEntry
     DateTime? LastModifiedTime { get; }
     CompressionType CompressionType { get; }
     
-    void WriteToFile(string fullPath, ExtractionOptions options = null);
+    void WriteToFile(string fullPath);
     void WriteToStream(Stream destinationStream);
     Stream OpenEntryStream();
     

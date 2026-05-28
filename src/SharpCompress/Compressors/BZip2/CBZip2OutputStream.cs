@@ -1,9 +1,5 @@
 using System;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using SharpCompress.IO;
-
 /*
  * Copyright 2001,2004-2005 The Apache Software Foundation
  *
@@ -41,28 +37,8 @@ namespace SharpCompress.Compressors.BZip2;
   * start of the BZIP2 stream to make it compatible with other PGP programs.
   */
 
-internal sealed class CBZip2OutputStream : Stream, IStreamStack
+internal sealed partial class CBZip2OutputStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => bsStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private const int SETMASK = (1 << 21);
     private const int CLEARMASK = (~SETMASK);
     private const int GREATER_ICOST = 15;
@@ -341,25 +317,20 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
 
     private int currentChar = -1;
     private int runLength;
+    private readonly bool leaveOpen;
 
-    public CBZip2OutputStream(Stream inStream)
-        : this(inStream, 9) { }
+    public CBZip2OutputStream(Stream inStream, bool leaveOpen = false)
+        : this(inStream, 9, leaveOpen) { }
 
-    public CBZip2OutputStream(Stream inStream, int inBlockSize)
+    public CBZip2OutputStream(Stream inStream, int inBlockSize, bool leaveOpen = false)
     {
+        this.leaveOpen = leaveOpen;
         block = null;
         quadrant = null;
         zptr = null;
         ftab = null;
 
-        inStream.WriteByte((byte)'B');
-        inStream.WriteByte((byte)'Z');
-
         BsSetStream(inStream);
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(CBZip2OutputStream));
-#endif
 
         workFactor = 50;
         if (inBlockSize > 9)
@@ -372,9 +343,11 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
         }
         blockSize100k = inBlockSize;
         AllocateCompressStructures();
-        Initialize();
-        InitBlock();
+        // Defer Initialize() and InitBlock() to EnsureStreamHeaderWritten/Async:
+        // they write to the underlying stream which may be async-only.
     }
+
+    private bool _streamHeaderWritten;
 
     /**
     *
@@ -382,8 +355,25 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
     *
     */
 
+    /// <summary>
+    /// Ensures the BZip2 stream header ('B', 'Z', 'h', blocksize) has been written
+    /// synchronously before the first compressed byte is written.
+    /// </summary>
+    private void EnsureStreamHeaderWritten()
+    {
+        if (!_streamHeaderWritten)
+        {
+            _streamHeaderWritten = true;
+            bsStream.WriteByte((byte)'B');
+            bsStream.WriteByte((byte)'Z');
+            Initialize();
+            InitBlock();
+        }
+    }
+
     public override void WriteByte(byte bv)
     {
+        EnsureStreamHeaderWritten();
         var b = (256 + bv) % 256;
         if (currentChar != -1)
         {
@@ -471,19 +461,21 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
         {
             if (disposed)
             {
+                base.Dispose(disposing);
                 return;
             }
 
             Finish();
 
             disposed = true;
-#if DEBUG_STREAMS
-            this.DebugDispose(typeof(CBZip2OutputStream));
-#endif
             Dispose();
-            bsStream?.Dispose();
+            if (!leaveOpen)
+            {
+                bsStream?.Dispose();
+            }
             bsStream = null;
         }
+        base.Dispose(disposing);
     }
 
     public void Finish()
@@ -493,6 +485,7 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
             return;
         }
 
+        EnsureStreamHeaderWritten();
         if (runLength > 0)
         {
             WriteRun();
@@ -2024,25 +2017,11 @@ internal sealed class CBZip2OutputStream : Stream, IStreamStack
 
     public override void Write(byte[] buffer, int offset, int count)
     {
+        EnsureStreamHeaderWritten();
         for (var k = 0; k < count; ++k)
         {
             WriteByte(buffer[k + offset]);
         }
-    }
-
-    public override Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    )
-    {
-        for (var k = 0; k < count; ++k)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            WriteByte(buffer[k + offset]);
-        }
-        return Task.CompletedTask;
     }
 
     public override bool CanRead => false;

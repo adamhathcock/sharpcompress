@@ -3,32 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.LZMA;
 
-internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
+internal class Bcj2DecoderStream : DecoderStream2
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _mMainStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private const int K_NUM_TOP_BITS = 24;
     private const uint K_TOP_VALUE = (1 << K_NUM_TOP_BITS);
 
@@ -53,7 +33,7 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
             var bt = _mStream.ReadByte();
             if (bt < 0)
             {
-                throw new EndOfStreamException();
+                throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
             return (byte)bt;
@@ -109,13 +89,8 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
     private bool _mFinished;
     private bool _isDisposed;
 
-    public Bcj2DecoderStream(Stream[] streams, byte[] info, long limit)
+    public Bcj2DecoderStream(Stream[] streams)
     {
-        if (info != null && info.Length > 0)
-        {
-            throw new NotSupportedException();
-        }
-
         if (streams.Length != 4)
         {
             throw new NotSupportedException();
@@ -132,10 +107,6 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
             _mStatusDecoder[i] = new StatusDecoder();
         }
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(Bcj2DecoderStream));
-#endif
-
         _mIter = Run().GetEnumerator();
     }
 
@@ -146,9 +117,6 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(Bcj2DecoderStream));
-#endif
         base.Dispose(disposing);
         _mMainStream.Dispose();
         _mCallStream.Dispose();
@@ -266,7 +234,7 @@ internal class Bcj2DecoderStream : DecoderStream2, IStreamStack
                     var b0 = s.ReadByte();
                     if (b0 < 0)
                     {
-                        throw new EndOfStreamException();
+                        throw new IncompleteArchiveException("Unexpected end of stream.");
                     }
 
                     src <<= 8;

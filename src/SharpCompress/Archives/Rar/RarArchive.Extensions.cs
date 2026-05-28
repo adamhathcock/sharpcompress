@@ -25,12 +25,16 @@ public static class RarArchiveExtensions
         /// RarArchive is the first volume of a multi-part archive.  If MultipartVolume is true and IsFirstVolume is false then the first volume file must be missing.
         /// </summary>
         public async ValueTask<bool> IsFirstVolumeAsync() =>
-            (await archive.VolumesAsync.CastAsync<RarVolume>().FirstAsync()).IsFirstVolume;
+            (
+                await archive.VolumesAsync.CastAsync<RarVolume>().FirstAsync().ConfigureAwait(false)
+            ).IsFirstVolume;
 
         /// <summary>
         /// RarArchive is part of a multi-part archive.
         /// </summary>
         public async ValueTask<bool> IsMultipartVolumeAsync() =>
-            (await archive.VolumesAsync.CastAsync<RarVolume>().FirstAsync()).IsMultiVolume;
+            (
+                await archive.VolumesAsync.CastAsync<RarVolume>().FirstAsync().ConfigureAwait(false)
+            ).IsMultiVolume;
     }
 }

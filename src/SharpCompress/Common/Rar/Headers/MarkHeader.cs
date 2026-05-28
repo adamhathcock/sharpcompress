@@ -1,9 +1,11 @@
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Rar.Headers;
 
-internal class MarkHeader : IRarHeader
+internal partial class MarkHeader : IRarHeader
 {
     private const int MAX_SFX_SIZE = 0x80000 - 16; //archive.cpp line 136
 
@@ -22,7 +24,7 @@ internal class MarkHeader : IRarHeader
         {
             return (byte)b;
         }
-        throw new EndOfStreamException();
+        throw new IncompleteArchiveException("Unexpected end of stream.");
     }
 
     public static MarkHeader Read(Stream stream, bool leaveStreamOpen, bool lookForHeader)

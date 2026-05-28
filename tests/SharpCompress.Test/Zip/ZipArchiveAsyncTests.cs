@@ -126,15 +126,17 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
 
-        await using (var archive = ZipArchive.OpenAsyncArchive(unmodified))
+        await using (var archive = await ZipArchive.OpenAsyncArchive(unmodified))
         {
             var entry = await archive.EntriesAsync.SingleAsync(x =>
                 x.Key.NotNull().EndsWith("jpg", StringComparison.OrdinalIgnoreCase)
             );
-            archive.RemoveEntry(entry);
+            await archive.RemoveEntryAsync(entry);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
 
             await archive.SaveToAsync(scratchPath, writerOptions);
         }
@@ -149,12 +151,14 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.mod.zip");
         var modified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        await using (var archive = ZipArchive.OpenAsyncArchive(unmodified))
+        await using (var archive = await ZipArchive.OpenAsyncArchive(unmodified))
         {
-            archive.AddEntry("jpg\\test.jpg", jpg);
+            await archive.AddEntryAsync("jpg\\test.jpg", jpg);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.GetEncoding(866);
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(866) },
+            };
 
             await archive.SaveToAsync(scratchPath, writerOptions);
         }
@@ -167,13 +171,15 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var scratchPath = Path.Combine(SCRATCH_FILES_PATH, "Zip.deflate.noEmptyDirs.zip");
         var unmodified = Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.noEmptyDirs.zip");
 
-        await using (var archive = (ZipArchive)ZipArchive.CreateAsyncArchive())
+        await using (var archive = (ZipArchive)await ZipArchive.CreateAsyncArchive())
         {
             archive.DeflateCompressionLevel = CompressionLevel.BestSpeed;
             archive.AddAllFromDirectory(ORIGINAL_FILES_PATH);
 
-            WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate);
-            writerOptions.ArchiveEncoding.Default = Encoding.UTF8;
+            var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+            {
+                ArchiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 },
+            };
 
             await archive.SaveToAsync(scratchPath, writerOptions);
         }
@@ -185,15 +191,12 @@ public class ZipArchiveAsyncTests : ArchiveTests
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
         {
-            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
+            IAsyncArchive archive = await ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
             try
             {
                 await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
                 {
-                    await entry.WriteToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await entry.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
             finally
@@ -209,13 +212,10 @@ public class ZipArchiveAsyncTests : ArchiveTests
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
         {
-            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
+            IAsyncArchive archive = await ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
             try
             {
-                await archive.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH);
             }
             finally
             {
@@ -231,23 +231,21 @@ public class ZipArchiveAsyncTests : ArchiveTests
         var progressReports = new System.Collections.Generic.List<ProgressReport>();
         var progress = new Progress<ProgressReport>(report => progressReports.Add(report));
 
+#if NETFRAMEWORK
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))
+#else
+        await using (
+            Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip"))
+        )
+#endif
         {
-            IAsyncArchive archive = ZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream));
-            try
-            {
-                await archive.WriteToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-                    progress
-                );
-            }
-            finally
-            {
-                await archive.DisposeAsync();
-            }
+            await using IAsyncArchive archive = await ZipArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(stream)
+            );
+            await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, progress: progress);
         }
 
+        await Task.Delay(1000);
         VerifyFiles();
         Assert.True(progressReports.Count > 0, "Progress reports should be generated");
     }

@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 
@@ -61,9 +63,27 @@ internal sealed class TarFilePart : FilePart
 
             // Fall back to existing behavior for stream-based sources
             _seekableStream.Position = Header.DataStartPosition ?? 0;
-            return new TarReadOnlySubStream(_seekableStream, Header.Size);
+            return new TarReadOnlySubStream(_seekableStream, Header.Size, false);
         }
         return Header.PackedStream.NotNull();
+    }
+
+    internal override ValueTask<Stream?> GetCompressedStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_seekableStream != null)
+        {
+            var useSyncOverAsync = false;
+#if LEGACY_DOTNET
+            useSyncOverAsync = true;
+#endif
+            _seekableStream.Position = Header.DataStartPosition ?? 0;
+            return new ValueTask<Stream?>(
+                new TarReadOnlySubStream(_seekableStream, Header.Size, useSyncOverAsync)
+            );
+        }
+        return new ValueTask<Stream?>(Header.PackedStream.NotNull());
     }
 
     internal override Stream? GetRawStream() => null;

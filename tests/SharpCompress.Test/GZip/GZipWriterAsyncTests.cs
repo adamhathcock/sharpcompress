@@ -23,11 +23,11 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (
-            var writer = WriterFactory.OpenAsyncWriter(
+        await using (
+            var writer = await WriterFactory.OpenAsyncWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
-                CompressionType.GZip
+                new WriterOptions(CompressionType.GZip)
             )
         )
         {
@@ -49,7 +49,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
+        await using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
         {
             await writer.WriteAsync("Tar.tar", Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
         }
@@ -67,7 +67,7 @@ public class GZipWriterAsyncTests : WriterTests
             using var writer = WriterFactory.OpenWriter(
                 new AsyncOnlyStream(stream),
                 ArchiveType.GZip,
-                CompressionType.BZip2
+                new WriterOptions(CompressionType.BZip2)
             );
         });
 
@@ -81,7 +81,7 @@ public class GZipWriterAsyncTests : WriterTests
                 FileAccess.Write
             )
         )
-        using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
+        await using (var writer = new GZipWriter(new AsyncOnlyStream(stream)))
         {
             var path = Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar");
             await writer.WriteAsync(path, path);

@@ -2,6 +2,9 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.Common;
 
 // This is a port of Dmitry Shkarin's PPMd Variant I Revision 1.
 // Ported by Michael Bone (mjbone03@yahoo.com.au).
@@ -149,15 +152,9 @@ internal partial class Model
     /// </summary>
     public void Encode(Stream target, Stream source, PpmdProperties properties)
     {
-        if (target is null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
+        ThrowHelper.ThrowIfNull(target);
 
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowHelper.ThrowIfNull(source);
 
         EncodeStart(properties);
         EncodeBlock(target, source, true);
@@ -232,20 +229,84 @@ internal partial class Model
         _coder.RangeEncoderFlush(target);
     }
 
+    internal async ValueTask EncodeBlockAsync(
+        Stream target,
+        Stream source,
+        bool final,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _minimumContext = _maximumContext;
+            _numberStatistics = _minimumContext.NumberStatistics;
+
+            var c = source.ReadByte();
+            if (c < 0 && !final)
+            {
+                return;
+            }
+
+            if (_numberStatistics != 0)
+            {
+                EncodeSymbol1(c, _minimumContext);
+                _coder.RangeEncodeSymbol();
+            }
+            else
+            {
+                EncodeBinarySymbol(c, _minimumContext);
+                _coder.RangeShiftEncodeSymbol(TOTAL_BIT_COUNT);
+            }
+
+            while (_foundState == PpmState.ZERO)
+            {
+                await _coder
+                    .RangeEncoderNormalizeAsync(target, cancellationToken)
+                    .ConfigureAwait(false);
+                do
+                {
+                    _orderFall++;
+                    _minimumContext = _minimumContext.Suffix;
+                    if (_minimumContext == PpmContext.ZERO)
+                    {
+                        goto StopEncoding;
+                    }
+                } while (_minimumContext.NumberStatistics == _numberMasked);
+                EncodeSymbol2(c, _minimumContext);
+                _coder.RangeEncodeSymbol();
+            }
+
+            if (_orderFall == 0 && (Pointer)_foundState.Successor >= _allocator._baseUnit)
+            {
+                _maximumContext = _foundState.Successor;
+            }
+            else
+            {
+                UpdateModel(_minimumContext);
+                if (_escapeCount == 0)
+                {
+                    ClearMask();
+                }
+            }
+
+            await _coder
+                .RangeEncoderNormalizeAsync(target, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        StopEncoding:
+        await _coder.RangeEncoderFlushAsync(target, cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Dencode (ie. decompress) a given source stream, writing the decoded result to the target stream.
     /// </summary>
     public void Decode(Stream target, Stream source, PpmdProperties properties)
     {
-        if (target is null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
+        ThrowHelper.ThrowIfNull(target);
 
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowHelper.ThrowIfNull(source);
 
         DecodeStart(source, properties);
         var buffer = new byte[65536];
@@ -263,6 +324,29 @@ internal partial class Model
         _coder.RangeDecoderInitialize(source);
         StartModel(properties.ModelOrder, properties.RestorationMethod);
         _minimumContext = _maximumContext;
+        if (_minimumContext == PpmContext.ZERO)
+        {
+            throw new InvalidFormatException("PPMd: model context not initialized");
+        }
+        _numberStatistics = _minimumContext.NumberStatistics;
+        return _coder;
+    }
+
+    internal async ValueTask<Coder> DecodeStartAsync(
+        Stream source,
+        PpmdProperties properties,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _allocator = properties._allocator;
+        _coder = new Coder();
+        await _coder.RangeDecoderInitializeAsync(source, cancellationToken).ConfigureAwait(false);
+        StartModel(properties.ModelOrder, properties.RestorationMethod);
+        _minimumContext = _maximumContext;
+        if (_minimumContext == PpmContext.ZERO)
+        {
+            throw new InvalidFormatException("PPMd: model context not initialized");
+        }
         _numberStatistics = _minimumContext.NumberStatistics;
         return _coder;
     }
@@ -330,6 +414,81 @@ internal partial class Model
         return total;
     }
 
+    internal async ValueTask<int> DecodeBlockAsync(
+        Stream source,
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (_minimumContext == PpmContext.ZERO)
+        {
+            return 0;
+        }
+
+        var total = 0;
+        while (total < count)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_numberStatistics != 0)
+            {
+                DecodeSymbol1(_minimumContext);
+            }
+            else
+            {
+                DecodeBinarySymbol(_minimumContext);
+            }
+
+            _coder.RangeRemoveSubrange();
+
+            while (_foundState == PpmState.ZERO)
+            {
+                await _coder
+                    .RangeDecoderNormalizeAsync(source, cancellationToken)
+                    .ConfigureAwait(false);
+                do
+                {
+                    _orderFall++;
+                    _minimumContext = _minimumContext.Suffix;
+                    if (_minimumContext == PpmContext.ZERO)
+                    {
+                        goto StopDecoding;
+                    }
+                } while (_minimumContext.NumberStatistics == _numberMasked);
+                DecodeSymbol2(_minimumContext);
+                _coder.RangeRemoveSubrange();
+            }
+
+            buffer[offset] = _foundState.Symbol;
+            offset++;
+            total++;
+
+            if (_orderFall == 0 && (Pointer)_foundState.Successor >= _allocator._baseUnit)
+            {
+                _maximumContext = _foundState.Successor;
+            }
+            else
+            {
+                UpdateModel(_minimumContext);
+                if (_escapeCount == 0)
+                {
+                    ClearMask();
+                }
+            }
+
+            _minimumContext = _maximumContext;
+            _numberStatistics = _minimumContext.NumberStatistics;
+            await _coder
+                .RangeDecoderNormalizeAsync(source, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        StopDecoding:
+        return total;
+    }
+
     #endregion
 
     #region Private Methods
@@ -349,13 +508,16 @@ internal partial class Model
         if (modelOrder < 2)
         {
             _orderFall = _modelOrder;
-            for (
-                var context = _maximumContext;
-                context.Suffix != PpmContext.ZERO;
-                context = context.Suffix
-            )
+            if (_maximumContext != PpmContext.ZERO)
             {
-                _orderFall--;
+                for (
+                    var context = _maximumContext;
+                    context.Suffix != PpmContext.ZERO;
+                    context = context.Suffix
+                )
+                {
+                    _orderFall--;
+                }
             }
             return;
         }

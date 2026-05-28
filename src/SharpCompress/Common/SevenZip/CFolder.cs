@@ -30,7 +30,7 @@ internal class CFolder
             }
         }
 
-        throw new InvalidOperationException();
+        throw new ArchiveOperationException();
     }
 
     public int GetNumOutStreams()

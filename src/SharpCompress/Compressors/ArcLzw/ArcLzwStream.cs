@@ -2,32 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SharpCompress.Common;
 using SharpCompress.Compressors.RLE90;
-using SharpCompress.Compressors.Squeezed;
-using SharpCompress.IO;
 
-public partial class ArcLzwStream : Stream, IStreamStack
+namespace SharpCompress.Compressors.ArcLzw;
+
+public partial class ArcLzwStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private Stream _stream;
     private bool _processed;
     private bool _useCrunched;
@@ -54,9 +35,6 @@ public partial class ArcLzwStream : Stream, IStreamStack
     public ArcLzwStream(Stream stream, int compressedSize, bool useCrunched = true)
     {
         _stream = stream;
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ArcLzwStream));
-#endif
         _useCrunched = useCrunched;
         _compressedSize = compressedSize;
 
@@ -95,9 +73,13 @@ public partial class ArcLzwStream : Stream, IStreamStack
 
         if (useCrunched)
         {
+            if (input.Length == 0)
+            {
+                throw new InvalidFormatException("ArcLzwStream: compressed data is empty");
+            }
             if (input[0] != BITS)
             {
-                throw new InvalidDataException($"File packed with {input[0]}, expected {BITS}.");
+                throw new InvalidFormatException($"File packed with {input[0]}, expected {BITS}.");
             }
 
             input = input.Skip(1).ToArray();
@@ -151,6 +133,10 @@ public partial class ArcLzwStream : Stream, IStreamStack
 
             while (code >= 256)
             {
+                if (code >= suffix.Length)
+                {
+                    throw new InvalidFormatException("ArcLzwStream: code out of range");
+                }
                 stack.Push(suffix[code]);
                 code = prefix[code];
             }
@@ -199,7 +185,7 @@ public partial class ArcLzwStream : Stream, IStreamStack
         var data = new byte[_compressedSize];
         _stream.Read(data, 0, _compressedSize);
         var decoded = Decompress(data, _useCrunched);
-        var result = decoded.Count();
+        var result = decoded.Count;
         if (_useCrunched)
         {
             var unpacked = RLE.UnpackRLE(decoded.ToArray());
@@ -223,9 +209,6 @@ public partial class ArcLzwStream : Stream, IStreamStack
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ArcLzwStream));
-#endif
         base.Dispose(disposing);
     }
 }

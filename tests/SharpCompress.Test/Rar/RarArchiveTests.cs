@@ -4,7 +4,7 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -13,15 +13,40 @@ namespace SharpCompress.Test.Rar;
 
 public class RarArchiveTests : ArchiveTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar2.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public void Rar_Archive_Recently_Changed_Unpackers_Sync(string filename)
+    {
+        var extractedEntries = 0;
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        using var archive = RarArchive.OpenArchive(
+            stream,
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+        {
+            using var output = new MemoryStream();
+            entry.WriteTo(output);
+            extractedEntries++;
+        }
+
+        Assert.True(extractedEntries > 0);
+    }
+
     [Fact]
     public void Rar_EncryptedFileAndHeader_Archive() =>
         ReadRarPassword("Rar.encrypted_filesAndHeader.rar", "test");
 
     [Fact]
     public void Rar_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
@@ -30,16 +55,14 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar5_EncryptedFileAndHeader_Archive_Err() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "failed")
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "failed")
         );
 
     [Fact]
     public void Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null)
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
@@ -48,9 +71,8 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar_EncryptedFileOnly_Archive_Err() =>
-        Assert.Throws(
-            typeof(CryptographicException),
-            () => ReadRarPassword("Rar5.encrypted_filesOnly.rar", "failed")
+        Assert.Throws<CryptographicException>(() =>
+            ReadRarPassword("Rar5.encrypted_filesOnly.rar", "failed")
         );
 
     [Fact]
@@ -70,7 +92,11 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 stream,
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
@@ -79,10 +105,7 @@ public class RarArchiveTests : ArchiveTests
                 if (!entry.IsDirectory)
                 {
                     Assert.Equal(CompressionType.Rar, entry.CompressionType);
-                    entry.WriteToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    entry.WriteToDirectory(SCRATCH_FILES_PATH);
                 }
             }
         }
@@ -100,16 +123,17 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, archiveName),
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForFilePath with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -125,6 +149,23 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_ArchiveStreamRead() => ArchiveStreamRead("Rar.rar");
 
     [Fact]
+    public void RarArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => RarArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
+    public void RarArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => RarArchive.OpenArchive(unreadable));
+    }
+
+    [Fact]
     public void Rar5_ArchiveStreamRead() => ArchiveStreamRead("Rar5.rar");
 
     [Fact]
@@ -137,10 +178,7 @@ public class RarArchiveTests : ArchiveTests
         using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            entry.WriteToDirectory(SCRATCH_FILES_PATH);
         }
     }
 
@@ -149,15 +187,18 @@ public class RarArchiveTests : ArchiveTests
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
         using (
-            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+            var archive = RarArchive.OpenArchive(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
+            )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -177,10 +218,7 @@ public class RarArchiveTests : ArchiveTests
             Assert.False(archive.IsSolid);
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -261,15 +299,15 @@ public class RarArchiveTests : ArchiveTests
     private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
     {
         using var archive = RarArchive.OpenArchive(
-            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+            archives
+                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .Select(File.OpenRead)
+                .ToArray()
         );
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
         {
-            entry.WriteToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-            );
+            entry.WriteToDirectory(SCRATCH_FILES_PATH);
         }
     }
 
@@ -321,16 +359,16 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForFilePath with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
             {
-                entry.WriteToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -706,7 +744,7 @@ public class RarArchiveTests : ArchiveTests
 
         // Opening the archive should work, but extracting should throw
         // when we try to read beyond the truncated data
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<ArchiveOperationException>(() =>
         {
             using var archive = RarArchive.OpenArchive(truncatedStream);
             foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
@@ -720,5 +758,79 @@ public class RarArchiveTests : ArchiveTests
 
         // Verify the exception message matches our expectation
         Assert.Contains("unpacked file size does not match header", exception.Message);
+    }
+
+    /// <summary>
+    /// Tests for Issue #1050 - RAR extraction with WriteToDirectory creates folders
+    /// but places all files at the top level instead of in their subdirectories.
+    /// </summary>
+    [Fact]
+    public void Rar_Issue1050_WriteToDirectory_ExtractsToSubdirectories()
+    {
+        var testFile = "Rar.issue1050.rar";
+        using var fileStream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testFile));
+        using var archive = RarArchive.OpenArchive(fileStream);
+
+        // Extract using archive.WriteToDirectory without explicit options
+        archive.WriteToDirectory(SCRATCH_FILES_PATH);
+
+        // Verify files are in their subdirectories, not at the root
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "PhysicsBraid", "263825.tr11dtp")),
+            "File should be in PhysicsBraid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Animations", "15441.tr11anim")),
+            "File should be in Animations subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766728.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp")),
+            "File should be in Braid subdirectory"
+        );
+        Assert.True(
+            File.Exists(Path.Combine(SCRATCH_FILES_PATH, "HeadBraid", "321353.tr11modeldata")),
+            "File should be in HeadBraid subdirectory"
+        );
+
+        // Verify the exact file size of 766832.tr11dtp matches the archive entry size
+        var fileInfo = new FileInfo(Path.Combine(SCRATCH_FILES_PATH, "Braid", "766832.tr11dtp"));
+        Assert.Equal(4867620, fileInfo.Length); // Expected: 4,867,620 bytes
+    }
+
+    /// <summary>
+    /// Test case for malformed RAR archives that previously caused infinite loops.
+    /// This test verifies that attempting to read entries from a potentially malformed
+    /// 512-byte RAR archive throws an InvalidOperationException instead of looping infinitely.
+    /// See: https://github.com/adamhathcock/sharpcompress/issues/1176
+    /// </summary>
+    [Fact]
+    public void Rar_MalformedArchive_NoInfiniteLoop()
+    {
+        var testFile = "Rar.malformed_512byte.rar";
+        var readerOptions = ReaderOptions.ForExternalStream.WithLookForHeader(true);
+
+        // This should throw InvalidOperationException, not hang in an infinite loop
+        var exception = Assert.Throws<ArchiveOperationException>(() =>
+        {
+            using var fileStream = File.Open(
+                Path.Combine(TEST_ARCHIVES_PATH, testFile),
+                FileMode.Open
+            );
+            using var archive = RarArchive.OpenArchive(fileStream, readerOptions);
+
+            // Attempting to enumerate entries should throw an exception
+            // instead of looping infinitely
+            foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+            {
+                // This line should not be reached due to the exception
+            }
+        });
+
+        // Verify that the exception is related to seeking beyond available data
+        Assert.Contains("Cannot seek to position", exception.Message);
     }
 }

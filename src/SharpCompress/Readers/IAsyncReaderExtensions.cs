@@ -17,12 +17,12 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToDirectoryAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToDirectoryAsync(
                     destinationDirectory,
                     options,
-                    reader.WriteEntryToFileAsync,
+                    async (path, ct) =>
+                        await reader.WriteEntryToFileAsync(path, options, ct).ConfigureAwait(false),
                     cancellationToken
                 )
                 .ConfigureAwait(false);
@@ -35,14 +35,13 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToFileAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToFileAsync(
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
+                        using var fs = File.Open(x, fm);
                         await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
                     },
                     cancellationToken
@@ -58,7 +57,7 @@ public static class IAsyncReaderExtensions
             CancellationToken cancellationToken = default
         )
         {
-            while (await reader.MoveToNextEntryAsync(cancellationToken))
+            while (await reader.MoveToNextEntryAsync(cancellationToken).ConfigureAwait(false))
             {
                 await reader
                     .WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken)
@@ -71,14 +70,13 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ExtractionMethods
-                .WriteEntryToFileAsync(
-                    reader.Entry,
+            await reader
+                .Entry.WriteEntryToFileAsync(
                     destinationFileName,
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
+                        using var fs = File.Open(x, fm);
                         await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
                     },
                     cancellationToken

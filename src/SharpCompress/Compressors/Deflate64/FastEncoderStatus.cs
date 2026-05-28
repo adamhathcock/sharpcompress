@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Diagnostics;
 
 namespace SharpCompress.Compressors.Deflate64;
 
@@ -964,7 +963,6 @@ internal static class FastEncoderStatics
     {
         uint newCode = 0;
 
-        Debug.Assert(length > 0 && length <= 16, "Invalid len");
         do
         {
             newCode |= (code & 1);

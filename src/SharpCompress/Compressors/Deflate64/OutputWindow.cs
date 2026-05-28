@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Diagnostics;
 
 namespace SharpCompress.Compressors.Deflate64;
 
@@ -29,7 +28,6 @@ internal sealed class OutputWindow
     /// <summary>Add a byte to output window.</summary>
     public void Write(byte b)
     {
-        Debug.Assert(_bytesUsed < WINDOW_SIZE, "Can't add byte when window is full!");
         _window[_end++] = b;
         _end &= WINDOW_MASK;
         ++_bytesUsed;
@@ -37,8 +35,6 @@ internal sealed class OutputWindow
 
     public void WriteLengthDistance(int length, int distance)
     {
-        Debug.Assert((_bytesUsed + length) <= WINDOW_SIZE, "No Enough space");
-
         // move backwards distance bytes in the output stream,
         // and copy length bytes from this position to the output stream.
         _bytesUsed += length;
@@ -143,10 +139,6 @@ internal sealed class OutputWindow
         }
         Array.Copy(_window, copyEnd - length, output, offset, length);
         _bytesUsed -= copied;
-        Debug.Assert(
-            _bytesUsed >= 0,
-            "check this function and find why we copied more bytes than we have"
-        );
         return copied;
     }
 }

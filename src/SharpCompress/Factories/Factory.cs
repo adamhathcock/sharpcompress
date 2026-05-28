@@ -16,12 +16,13 @@ public abstract class Factory : IFactory
     {
         RegisterFactory(new ZipFactory());
         RegisterFactory(new RarFactory());
-        RegisterFactory(new SevenZipFactory());
+        RegisterFactory(new TarFactory()); //put tar before most
         RegisterFactory(new GZipFactory());
-        RegisterFactory(new TarFactory());
+        RegisterFactory(new LzwFactory());
         RegisterFactory(new ArcFactory());
         RegisterFactory(new ArjFactory());
         RegisterFactory(new AceFactory());
+        RegisterFactory(new SevenZipFactory());
     }
 
     private static readonly HashSet<Factory> _factories = new();
@@ -53,29 +54,12 @@ public abstract class Factory : IFactory
     public abstract IEnumerable<string> GetSupportedExtensions();
 
     /// <inheritdoc/>
-    public abstract bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    );
-
+    public abstract bool IsArchive(Stream stream, ReaderOptions readerOptions);
     public abstract ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    );
-
-    /// <inheritdoc/>
-    public virtual ValueTask<bool> IsArchiveAsync(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return new(IsArchive(stream, password, bufferSize));
-    }
+    );
 
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;
@@ -100,43 +84,36 @@ public abstract class Factory : IFactory
 
         if (this is IReaderFactory readerFactory)
         {
-            long pos = ((IStreamStack)stream).GetPosition();
-
-            if (IsArchive(stream, options.Password, options.BufferSize))
+            stream.Rewind();
+            if (IsArchive(stream, options))
             {
-                ((IStreamStack)stream).StackSeek(pos);
+                stream.Rewind(true);
                 reader = readerFactory.OpenReader(stream, options);
                 return true;
             }
         }
-
+        stream.Rewind();
         return false;
     }
 
-    internal virtual async ValueTask<(bool, IAsyncReader?)> TryOpenReaderAsync(
+    internal virtual async ValueTask<IAsyncReader?> TryOpenReaderAsync(
         SharpCompressStream stream,
         ReaderOptions options,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
     {
         if (this is IReaderFactory readerFactory)
         {
-            long pos = ((IStreamStack)stream).GetPosition();
-
-            if (
-                await IsArchiveAsync(
-                    stream,
-                    options.Password,
-                    options.BufferSize,
-                    cancellationToken
-                )
-            )
+            stream.Rewind();
+            if (await IsArchiveAsync(stream, options, cancellationToken).ConfigureAwait(false))
             {
-                ((IStreamStack)stream).StackSeek(pos);
-                return (true, readerFactory.OpenAsyncReader(stream, options, cancellationToken));
+                stream.Rewind(true);
+                return await readerFactory
+                    .OpenAsyncReader(stream, options, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
-
-        return (false, null);
+        stream.Rewind();
+        return null;
     }
 }

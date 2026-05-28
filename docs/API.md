@@ -20,14 +20,18 @@ using (var archive = RarArchive.OpenArchive("file.rar"))
 using (var archive = SevenZipArchive.OpenArchive("file.7z"))
 using (var archive = GZipArchive.OpenArchive("file.gz"))
 
-// With options
-var options = new ReaderOptions
+// With fluent options (preferred)
+var options = ReaderOptions.ForEncryptedArchive("password")
+    .WithArchiveEncoding(new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
+using (var archive = ZipArchive.OpenArchive("encrypted.zip", options))
+
+// Alternative: object initializer
+var options2 = new ReaderOptions
 {
     Password = "password",
     LeaveStreamOpen = true,
     ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
 };
-using (var archive = ZipArchive.OpenArchive("encrypted.zip", options))
 ```
 
 ### Creating Archives
@@ -44,16 +48,21 @@ using (var archive = ZipArchive.CreateArchive())
 using (var archive = TarArchive.CreateArchive())
 using (var archive = GZipArchive.CreateArchive())
 
-// With options
-var options = new WriterOptions(CompressionType.Deflate)
-{
-    CompressionLevel = 9,
-    LeaveStreamOpen = false
-};
+// With fluent options (preferred)
+var options = WriterOptions.ForZip()
+    .WithCompressionLevel(9)
+    .WithLeaveStreamOpen(false);
 using (var archive = ZipArchive.CreateArchive())
 {
     archive.SaveTo("output.zip", options);
 }
+
+// Alternative: constructor with object initializer
+var options2 = new WriterOptions(CompressionType.Deflate)
+{
+    CompressionLevel = 9,
+    LeaveStreamOpen = false
+};
 ```
 
 ---
@@ -72,16 +81,11 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
     var entry = archive.Entries.FirstOrDefault(e => e.Key == "file.txt");
 
     // Extract all
-    archive.WriteToDirectory(@"C:\output", new ExtractionOptions
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    archive.WriteToDirectory(@"C:\output");
 
     // Extract single entry
-    var entry = archive.Entries.First();
-    entry.WriteToFile(@"C:\output\file.txt");
-    entry.WriteToFile(@"C:\output\file.txt", new ExtractionOptions { Overwrite = true });
+    var firstEntry = archive.Entries.First();
+    firstEntry.WriteToFile(@"C:\output\file.txt");
 
     // Get entry stream
     using (var stream = entry.OpenEntryStream())
@@ -91,17 +95,25 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
 }
 
 // Async extraction (requires IAsyncArchive)
-using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
+await using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
+    // Extract all entries asynchronously
     await asyncArchive.WriteToDirectoryAsync(
         @"C:\output",
-        new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
         cancellationToken: cancellationToken
     );
 }
-using (var stream = await entry.OpenEntryStreamAsync(cancellationToken))
+
+// Open a specific entry stream asynchronously
+await using (var asyncArchive = await ZipArchive.OpenAsyncArchive("file.zip"))
 {
-    // ...
+    await foreach (var entry in asyncArchive.EntriesAsync)
+    {
+        using (var stream = await entry.OpenEntryStreamAsync(cancellationToken))
+        {
+            // ...
+        }
+    }
 }
 ```
 
@@ -174,7 +186,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 // Async variants (use OpenAsyncReader to get IAsyncReader)
 using (var stream = File.OpenRead("file.zip"))
-using (var reader = await ReaderFactory.OpenAsyncReader(stream))
+await using (var reader = await ReaderFactory.OpenAsyncReader(stream))
 {
     while (await reader.MoveToNextEntryAsync())
     {
@@ -187,8 +199,7 @@ using (var reader = await ReaderFactory.OpenAsyncReader(stream))
     // Async extraction of all entries
     await reader.WriteAllToDirectoryAsync(
         @"C:\output",
-        new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
-        cancellationToken
+        cancellationToken: cancellationToken
     );
 }
 ```
@@ -212,15 +223,18 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, Compressio
     // Write directory
     writer.WriteAll("C:\\source", "*", SearchOption.AllDirectories);
     writer.WriteAll("C:\\source", "*.txt", SearchOption.TopDirectoryOnly);
-    
-    // Async variants
-    using (var fileStream = File.OpenRead("source.txt"))
-    {
-        await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken);
-    }
-    
-    await writer.WriteAllAsync("C:\\source", "*", SearchOption.AllDirectories, cancellationToken);
 }
+
+// Async variants: use OpenAsyncWriter to get IAsyncWriter
+await using var stream = File.Create("output.zip");
+await using var writer = await WriterFactory.OpenAsyncWriter(stream, ArchiveType.Zip, new WriterOptions(CompressionType.Deflate), cancellationToken);
+
+using (var fileStream = File.OpenRead("source.txt"))
+{
+    await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken);
+}
+
+await writer.WriteAllAsync("C:\\source", "*", SearchOption.AllDirectories, cancellationToken);
 ```
 
 ---
@@ -229,34 +243,75 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, Compressio
 
 ### ReaderOptions
 
+Use preset properties and fluent helpers for common configurations:
+
 ```csharp
-var options = new ReaderOptions
-{
-    Password = "password",                          // For encrypted archives
-    LeaveStreamOpen = true,                         // Don't close wrapped stream
-    ArchiveEncoding = new ArchiveEncoding          // Custom character encoding
-    {
-        Default = Encoding.GetEncoding(932)
-    }
-};
+// External stream with password and custom encoding
+var options = ReaderOptions.ForExternalStream
+    .WithPassword("password")
+    .WithArchiveEncoding(new ArchiveEncoding { Default = Encoding.GetEncoding(932) });
+
 using (var archive = ZipArchive.OpenArchive("file.zip", options))
 {
     // ...
 }
+
+// Open-time presets
+var external = ReaderOptions.ForExternalStream;
+var owned = ReaderOptions.ForFilePath;
+
+// Extraction presets
+var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
+var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
+var metadataOptions = ExtractionOptions.PreserveMetadata; // Keep timestamps and attributes
+
+// Factory defaults:
+// - file path / FileInfo overloads use LeaveStreamOpen = false
+// - stream overloads use LeaveStreamOpen = true
+```
+
+Alternative: traditional object initializer:
+
+```csharp
+var options = new ReaderOptions
+{
+    Password = "password",
+    LeaveStreamOpen = true,
+    ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
+};
 ```
 
 ### WriterOptions
 
+Factory methods provide a clean, discoverable way to create writer options:
+
+```csharp
+// Factory methods for common archive types
+var zipOptions = WriterOptions.ForZip()                           // ZIP with Deflate
+    .WithCompressionLevel(9)                                      // 0-9 for Deflate
+    .WithLeaveStreamOpen(false);                                  // Close stream when done
+
+var tarOptions = WriterOptions.ForTar(CompressionType.GZip)       // TAR with GZip
+    .WithLeaveStreamOpen(false);
+
+var gzipOptions = WriterOptions.ForGZip()                         // GZip file
+    .WithCompressionLevel(6);
+
+archive.SaveTo("output.zip", zipOptions);
+```
+
+Alternative: traditional constructor with object initializer:
+
 ```csharp
 var options = new WriterOptions(CompressionType.Deflate)
 {
-    CompressionLevel = 9,                           // 0-9 for Deflate
-    LeaveStreamOpen = true,                         // Don't close stream
+    CompressionLevel = 9,
+    LeaveStreamOpen = true,
 };
 archive.SaveTo("output.zip", options);
 ```
 
-### ExtractionOptions
+### Extraction behavior
 
 ```csharp
 var options = new ExtractionOptions
@@ -265,8 +320,39 @@ var options = new ExtractionOptions
     Overwrite = true,                               // Overwrite existing files
     PreserveFileTime = true                         // Keep original timestamps
 };
-archive.WriteToDirectory(@"C:\output", options);
+
+using (var archive = ZipArchive.OpenArchive("file.zip"))
+{
+    archive.WriteToDirectory(@"C:\output", options);
+}
 ```
+
+### Options matrix
+
+```text
+ReaderOptions: open-time behavior (password, encoding, stream ownership)
+ExtractionOptions: extract-time behavior (overwrite, paths, timestamps, attributes, symlinks)
+WriterOptions: write-time behavior (compression type/level, encoding, stream ownership)
+ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, comments, zip64)
+```
+
+### Compression Providers
+
+`ReaderOptions` and `WriterOptions` expose a `Providers` registry that controls which `ICompressionProvider` implementations are used for each `CompressionType`. The registry defaults to `CompressionProviderRegistry.Default`, so you only need to set it if you want to swap in a custom provider (for example the `SystemGZipCompressionProvider`). The selected registry is honored by Reader/Writer APIs, Archive APIs, and async entry-stream extraction paths.
+
+```csharp
+var registry = CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider());
+var readerOptions = ReaderOptions.ForFilePath.WithProviders(registry);
+var writerOptions = new WriterOptions(CompressionType.GZip)
+{
+    CompressionLevel = 6,
+}.WithProviders(registry);
+
+using var reader = ReaderFactory.OpenReader(input, readerOptions);
+using var writer = WriterFactory.OpenWriter(output, ArchiveType.GZip, writerOptions);
+```
+
+When a format needs additional initialization/finalization data (LZMA, PPMd, etc.) the registry exposes `GetCompressingProvider` which returns the `ICompressionProviderHooks` contract; the rest of the API continues to flow through `Providers`, including pre/properties/post compression hook data.
 
 ---
 
@@ -316,14 +402,10 @@ ArchiveType.ZStandard
 ```csharp
 try
 {
-    using (var archive = ZipArchive.Open("archive.zip", 
-        new ReaderOptions { Password = "password" }))
+    using (var archive = ZipArchive.OpenArchive("archive.zip", 
+        ReaderOptions.ForEncryptedArchive("password")))
     {
-        archive.WriteToDirectory(@"C:\output", new ExtractionOptions
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        });
+        archive.WriteToDirectory(@"C:\output");
     }
 }
 catch (PasswordRequiredException)
@@ -348,7 +430,7 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-var options = new ReaderOptions { Progress = progress };
+var options = ReaderOptions.ForFilePath.WithProgress(progress);
 using (var archive = ZipArchive.OpenArchive("archive.zip", options))
 {
     archive.WriteToDirectory(@"C:\output");
@@ -363,11 +445,10 @@ cts.CancelAfter(TimeSpan.FromMinutes(5));
 
 try
 {
-    using (var archive = await ZipArchive.OpenAsyncArchive("archive.zip"))
+    await using (var archive = await ZipArchive.OpenAsyncArchive("archive.zip"))
     {
         await archive.WriteToDirectoryAsync(
             @"C:\output",
-            new ExtractionOptions { ExtractFullPath = true, Overwrite = true },
             cancellationToken: cts.Token
         );
     }
@@ -421,6 +502,31 @@ using (var archive = ZipArchive.CreateArchive())
     byte[] archiveBytes = outputStream.ToArray();
 }
 ```
+
+### Buffered Forward-Only Streams
+
+`SharpCompressStream` can wrap streams with buffering for forward-only scenarios:
+
+```csharp
+// Wrap a non-seekable stream with buffering
+using (var bufferedStream = new SharpCompressStream(rawStream))
+{
+    // Provides ring buffer functionality for reading ahead
+    // and seeking within buffered data
+    using (var reader = ReaderFactory.OpenReader(bufferedStream))
+    {
+        while (reader.MoveToNextEntry())
+        {
+            reader.WriteEntryToDirectory(@"C:\output");
+        }
+    }
+}
+```
+
+Useful for:
+- Non-seekable streams (network streams, pipes)
+- Forward-only reading with limited look-ahead
+- Buffering unbuffered streams for better performance
 
 ### Extract Specific Files
 

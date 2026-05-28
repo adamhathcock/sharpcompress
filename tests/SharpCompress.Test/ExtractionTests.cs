@@ -27,7 +27,11 @@ public class ExtractionTests : TestBase
         using (var stream = File.Create(testArchive))
         {
             using var writer = (ZipWriter)
-                WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate);
+                WriterFactory.OpenWriter(
+                    stream,
+                    ArchiveType.Zip,
+                    new WriterOptions(CompressionType.Deflate)
+                );
 
             // Create a test file to add to the archive
             var testFilePath = Path.Combine(SCRATCH2_FILES_PATH, "testfile.txt");
@@ -72,7 +76,11 @@ public class ExtractionTests : TestBase
         using (var stream = File.Create(testArchive))
         {
             using var writer = (ZipWriter)
-                WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate);
+                WriterFactory.OpenWriter(
+                    stream,
+                    ArchiveType.Zip,
+                    new WriterOptions(CompressionType.Deflate)
+                );
 
             var testFilePath = Path.Combine(SCRATCH2_FILES_PATH, "testfile2.txt");
             File.WriteAllText(testFilePath, "Test content");

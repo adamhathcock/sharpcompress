@@ -6,7 +6,7 @@ using SharpCompress.Compressors.LZMA;
 namespace SharpCompress.Compressors.Xz.Filters;
 
 [CLSCompliant(false)]
-public class Lzma2Filter : BlockFilter
+public partial class Lzma2Filter : BlockFilter
 {
     public override bool AllowAsLast => true;
     public override bool AllowAsNonLast => false;
@@ -19,7 +19,7 @@ public class Lzma2Filter : BlockFilter
         {
             if (_dictionarySize > 40)
             {
-                throw new OverflowException("Dictionary size greater than UInt32.Max");
+                throw new InvalidFormatException("Dictionary size greater than UInt32.Max");
             }
 
             if (_dictionarySize == 40)
@@ -50,7 +50,7 @@ public class Lzma2Filter : BlockFilter
     public override void ValidateFilter() { }
 
     public override void SetBaseStream(Stream stream) =>
-        BaseStream = new LzmaStream(new[] { _dictionarySize }, stream);
+        BaseStream = LzmaStream.Create(new[] { _dictionarySize }, stream);
 
     public override int Read(byte[] buffer, int offset, int count) =>
         BaseStream.Read(buffer, offset, count);

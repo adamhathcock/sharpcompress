@@ -594,7 +594,10 @@ public static unsafe partial class Methods
         {
             uint norm = (uint)(256 * count[s] / total);
             if (count[s] != 0 && norm == 0)
+            {
                 norm = 1;
+            }
+
             assert(count[s] < total);
             cost += count[s] * kInverseProbabilityLog256[norm];
         }
@@ -624,7 +627,10 @@ public static unsafe partial class Methods
             uint badCost = tableLog + 1 << (int)kAccuracyLog;
             uint bitCost = FSE_bitCost(cstate.symbolTT, tableLog, s, kAccuracyLog);
             if (count[s] == 0)
+            {
                 continue;
+            }
+
             if (bitCost >= badCost)
             {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
@@ -723,13 +729,6 @@ public static unsafe partial class Methods
                     : unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
             nuint NCountCost = ZSTD_NCountCost(count, max, nbSeq, FSELog);
             nuint compressedCost = (NCountCost << 3) + ZSTD_entropyCost(count, max, nbSeq);
-#if DEBUG
-            if (isDefaultAllowed != default)
-            {
-                assert(!ERR_isError(basicCost));
-                assert(!(*repeatMode == FSE_repeat.FSE_repeat_valid && ERR_isError(repeatCost)));
-            }
-#endif
 
             assert(!ERR_isError(NCountCost));
             assert(compressedCost < unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxCode)));
@@ -925,12 +924,15 @@ public static unsafe partial class Methods
             LL_bits[llCodeTable[nbSeq - 1]]
         );
         if (MEM_32bits)
+        {
             BIT_flushBits(
                 ref blockStream_bitContainer,
                 ref blockStream_bitPos,
                 ref blockStream_ptr,
                 blockStream_endPtr
             );
+        }
+
         BIT_addBits(
             ref blockStream_bitContainer,
             ref blockStream_bitPos,
@@ -938,12 +940,15 @@ public static unsafe partial class Methods
             ML_bits[mlCodeTable[nbSeq - 1]]
         );
         if (MEM_32bits)
+        {
             BIT_flushBits(
                 ref blockStream_bitContainer,
                 ref blockStream_bitPos,
                 ref blockStream_ptr,
                 blockStream_endPtr
             );
+        }
+
         if (longOffsets != 0)
         {
             uint ofBits = ofCodeTable[nbSeq - 1];
@@ -1016,12 +1021,15 @@ public static unsafe partial class Methods
                     mlCode
                 );
                 if (MEM_32bits)
+                {
                     BIT_flushBits(
                         ref blockStream_bitContainer,
                         ref blockStream_bitPos,
                         ref blockStream_ptr,
                         blockStream_endPtr
                     );
+                }
+
                 FSE_encodeSymbol(
                     ref blockStream_bitContainer,
                     ref blockStream_bitPos,
@@ -1029,12 +1037,15 @@ public static unsafe partial class Methods
                     llCode
                 );
                 if (MEM_32bits || ofBits + mlBits + llBits >= 64 - 7 - (9 + 9 + 8))
+                {
                     BIT_flushBits(
                         ref blockStream_bitContainer,
                         ref blockStream_bitPos,
                         ref blockStream_ptr,
                         blockStream_endPtr
                     );
+                }
+
                 BIT_addBits(
                     ref blockStream_bitContainer,
                     ref blockStream_bitPos,
@@ -1042,12 +1053,15 @@ public static unsafe partial class Methods
                     llBits
                 );
                 if (MEM_32bits && llBits + mlBits > 24)
+                {
                     BIT_flushBits(
                         ref blockStream_bitContainer,
                         ref blockStream_bitPos,
                         ref blockStream_ptr,
                         blockStream_endPtr
                     );
+                }
+
                 BIT_addBits(
                     ref blockStream_bitContainer,
                     ref blockStream_bitPos,
@@ -1055,12 +1069,15 @@ public static unsafe partial class Methods
                     mlBits
                 );
                 if (MEM_32bits || ofBits + mlBits + llBits > 56)
+                {
                     BIT_flushBits(
                         ref blockStream_bitContainer,
                         ref blockStream_bitPos,
                         ref blockStream_ptr,
                         blockStream_endPtr
                     );
+                }
+
                 if (longOffsets != 0)
                 {
                     uint extraBits =

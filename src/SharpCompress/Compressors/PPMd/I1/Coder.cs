@@ -1,6 +1,9 @@
 #region Using
 
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.IO;
 
 #endregion
 
@@ -44,6 +47,24 @@ internal class Coder
         }
     }
 
+    public async ValueTask RangeEncoderNormalizeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (
+            (_low ^ (_low + _range)) < RANGE_TOP
+            || _range < RANGE_BOTTOM && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
+        )
+        {
+            await stream
+                .WriteAsync(new[] { (byte)(_low >> 24) }, 0, 1, cancellationToken)
+                .ConfigureAwait(false);
+            _range <<= 8;
+            _low <<= 8;
+        }
+    }
+
     public void RangeEncodeSymbol()
     {
         _low += _lowCount * (_range /= _scale);
@@ -65,6 +86,21 @@ internal class Coder
         }
     }
 
+    public async ValueTask RangeEncoderFlushAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var buffer = new byte[4];
+        for (var index = 0; index < buffer.Length; index++)
+        {
+            buffer[index] = (byte)(_low >> 24);
+            _low <<= 8;
+        }
+
+        await stream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+    }
+
     public void RangeDecoderInitialize(Stream stream)
     {
         _low = 0;
@@ -76,6 +112,24 @@ internal class Coder
         }
     }
 
+    public async ValueTask RangeDecoderInitializeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _low = 0;
+        _code = 0;
+        _range = uint.MaxValue;
+
+        byte[] buffer = new byte[4];
+        await stream.ReadFullyAsync(buffer, 0, 4, cancellationToken).ConfigureAwait(false);
+
+        for (uint index = 0; index < 4; index++)
+        {
+            _code = (_code << 8) | buffer[index];
+        }
+    }
+
     public void RangeDecoderNormalize(Stream stream)
     {
         while (
@@ -84,6 +138,24 @@ internal class Coder
         )
         {
             _code = (_code << 8) | (byte)stream.ReadByte();
+            _range <<= 8;
+            _low <<= 8;
+        }
+    }
+
+    public async ValueTask RangeDecoderNormalizeAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (
+            (_low ^ (_low + _range)) < RANGE_TOP
+            || _range < RANGE_BOTTOM && ((_range = (uint)-_low & (RANGE_BOTTOM - 1)) != 0 || true)
+        )
+        {
+            byte[] buffer = new byte[1];
+            await stream.ReadFullyAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            _code = (_code << 8) | buffer[0];
             _range <<= 8;
             _low <<= 8;
         }

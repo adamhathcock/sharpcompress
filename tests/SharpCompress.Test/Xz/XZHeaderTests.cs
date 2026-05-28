@@ -13,7 +13,7 @@ public class XzHeaderTests : XzTestsBase
         var bytes = (byte[])Compressed.Clone();
         bytes[3]++;
         using Stream badMagicNumberStream = new MemoryStream(bytes);
-        var br = new BinaryReader(badMagicNumberStream);
+        using var br = new BinaryReader(badMagicNumberStream);
         var header = new XZHeader(br);
         var ex = Assert.Throws<InvalidFormatException>(() =>
         {
@@ -28,7 +28,7 @@ public class XzHeaderTests : XzTestsBase
         var bytes = (byte[])Compressed.Clone();
         bytes[8]++;
         using Stream badCrcStream = new MemoryStream(bytes);
-        var br = new BinaryReader(badCrcStream);
+        using var br = new BinaryReader(badCrcStream);
         var header = new XZHeader(br);
         var ex = Assert.Throws<InvalidFormatException>(() =>
         {
@@ -46,7 +46,7 @@ public class XzHeaderTests : XzTestsBase
         streamFlags.CopyTo(bytes, 6);
         crc.CopyTo(bytes, 8);
         using Stream badFlagStream = new MemoryStream(bytes);
-        var br = new BinaryReader(badFlagStream);
+        using var br = new BinaryReader(badFlagStream);
         var header = new XZHeader(br);
         var ex = Assert.Throws<InvalidFormatException>(() =>
         {
@@ -58,7 +58,7 @@ public class XzHeaderTests : XzTestsBase
     [Fact]
     public void ProcessesBlockCheckType()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var header = new XZHeader(br);
         header.Process();
         Assert.Equal(CheckType.CRC64, header.BlockCheckType);
@@ -67,7 +67,7 @@ public class XzHeaderTests : XzTestsBase
     [Fact]
     public void CanCalculateBlockCheckSize()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var header = new XZHeader(br);
         header.Process();
         Assert.Equal(8, header.BlockCheckSize);

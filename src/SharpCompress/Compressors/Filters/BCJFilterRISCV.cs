@@ -27,7 +27,9 @@ internal class BCJFilterRISCV : Filter
             {
                 uint b1 = buffer[i + 1];
                 if ((b1 & 0x0D) != 0)
+                {
                     continue;
+                }
 
                 uint b2 = buffer[i + 2];
                 uint b3 = buffer[i + 3];
@@ -116,7 +118,9 @@ internal class BCJFilterRISCV : Filter
             {
                 uint b1 = buffer[i + 1];
                 if ((b1 & 0x0D) != 0)
+                {
                     continue;
+                }
 
                 uint b2 = buffer[i + 2];
                 uint b3 = buffer[i + 3];

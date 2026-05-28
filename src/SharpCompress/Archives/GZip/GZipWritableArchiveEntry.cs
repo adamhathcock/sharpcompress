@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 
@@ -19,7 +21,7 @@ internal sealed class GZipWritableArchiveEntry : GZipArchiveEntry, IWritableArch
         DateTime? lastModified,
         bool closeStream
     )
-        : base(archive, null)
+        : base(archive, null, archive.ReaderOptions)
     {
         this.stream = stream;
         Key = path;
@@ -58,7 +60,15 @@ internal sealed class GZipWritableArchiveEntry : GZipArchiveEntry, IWritableArch
     {
         //ensure new stream is at the start, this could be reset
         stream.Seek(0, SeekOrigin.Begin);
-        return SharpCompressStream.Create(stream, leaveOpen: true);
+        return SharpCompressStream.CreateNonDisposing(stream);
+    }
+
+    public override ValueTask<Stream> OpenEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new(OpenEntryStream());
     }
 
     internal override void Close()

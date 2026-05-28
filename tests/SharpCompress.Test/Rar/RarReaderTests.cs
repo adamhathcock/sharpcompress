@@ -46,10 +46,7 @@ public class RarReaderTests : ReaderTests
         {
             while (reader.MoveToNextEntry())
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -74,16 +71,16 @@ public class RarReaderTests : ReaderTests
                     archives
                         .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                         .Select(p => File.OpenRead(p)),
-                    new ReaderOptions { Password = "test" }
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
                 )
             )
             {
                 while (reader.MoveToNextEntry())
                 {
-                    reader.WriteEntryToDirectory(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
                 }
             }
             VerifyFiles();
@@ -128,10 +125,7 @@ public class RarReaderTests : ReaderTests
         {
             while (reader.MoveToNextEntry())
             {
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         foreach (var stream in streams)
@@ -182,7 +176,14 @@ public class RarReaderTests : ReaderTests
     public void Rar5_Encrypted_Reader() => ReadRar("Rar5.encrypted_filesOnly.rar", "test");
 
     private void ReadRar(string testArchive, string password) =>
-        Read(testArchive, CompressionType.Rar, new ReaderOptions { Password = password });
+        Read(
+            testArchive,
+            CompressionType.Rar,
+            ReaderOptions.ForFilePath with
+            {
+                Password = password,
+            }
+        );
 
     [Fact]
     public void Rar_Entry_Stream() => DoRar_Entry_Stream("Rar.rar");
@@ -204,7 +205,9 @@ public class RarReaderTests : ReaderTests
                     var file = Path.GetFileName(reader.Entry.Key).NotNull();
                     var folder =
                         Path.GetDirectoryName(reader.Entry.Key)
-                        ?? throw new ArgumentNullException();
+                        ?? throw new InvalidOperationException(
+                            "Entry key must have a directory name."
+                        );
                     var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                     if (!Directory.Exists(destdir))
                     {
@@ -229,17 +232,17 @@ public class RarReaderTests : ReaderTests
         using (
             var reader = ReaderFactory.OpenReader(
                 stream,
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
             while (reader.MoveToNextEntry())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         CompareFilesByPath(
@@ -253,16 +256,19 @@ public class RarReaderTests : ReaderTests
     {
         using (var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg")))
         using (
-            var reader = RarReader.OpenReader(stream, new ReaderOptions { LookForHeader = true })
+            var reader = RarReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
+            )
         )
         {
             while (reader.MoveToNextEntry())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -291,17 +297,17 @@ public class RarReaderTests : ReaderTests
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -317,17 +323,17 @@ public class RarReaderTests : ReaderTests
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (reader.MoveToNextEntry())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                reader.WriteEntryToDirectory(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -340,7 +346,10 @@ public class RarReaderTests : ReaderTests
         );
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (reader.MoveToNextEntry())
         {

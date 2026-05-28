@@ -1,46 +1,46 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Common;
-using SharpCompress.Common.GZip;
 using SharpCompress.IO;
 using SharpCompress.Readers;
-using SharpCompress.Readers.GZip;
-using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Archives.GZip;
 
 public partial class GZipArchive
 #if NET8_0_OR_GREATER
-    : IWritableArchiveOpenable,
-        IMultiArchiveOpenable<IWritableArchive, IWritableAsyncArchive>
+    : IWritableArchiveOpenable<GZipWriterOptions>,
+        IMultiArchiveOpenable<
+            IWritableArchive<GZipWriterOptions>,
+            IWritableAsyncArchive<GZipWriterOptions>
+        >
 #endif
 {
-    public static IWritableAsyncArchive OpenAsyncArchive(
-        string path,
+    public static ValueTask<IWritableAsyncArchive<GZipWriterOptions>> OpenAsyncArchive(
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return (IWritableAsyncArchive)OpenArchive(
-            new FileInfo(path),
-            readerOptions ?? new ReaderOptions()
-        );
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return OpenAsyncArchive(new FileInfo(filePath), readerOptions, cancellationToken);
     }
 
-    public static IWritableArchive OpenArchive(string filePath, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        string filePath,
+        ReaderOptions? readerOptions = null
+    )
     {
         filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), readerOptions ?? new ReaderOptions());
+        return OpenArchive(new FileInfo(filePath), readerOptions ?? ReaderOptions.ForFilePath);
     }
 
-    public static IWritableArchive OpenArchive(
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null
     )
@@ -50,100 +50,99 @@ public partial class GZipArchive
             new SourceStream(
                 fileInfo,
                 i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
-                readerOptions ?? new ReaderOptions()
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
-    public static IWritableArchive OpenArchive(
-        IEnumerable<FileInfo> fileInfos,
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null
     )
     {
         fileInfos.NotNull(nameof(fileInfos));
-        var files = fileInfos.ToArray();
+        var files = fileInfos;
         return new GZipArchive(
             new SourceStream(
                 files[0],
-                i => i < files.Length ? files[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < files.Count ? files[i] : null,
+                readerOptions ?? ReaderOptions.ForFilePath
             )
         );
     }
 
-    public static IWritableArchive OpenArchive(
-        IEnumerable<Stream> streams,
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null
     )
     {
-        streams.NotNull(nameof(streams));
-        var strms = streams.ToArray();
+        var strms = streams.RequireReadable().RequireSeekable().ToList();
         return new GZipArchive(
             new SourceStream(
                 strms[0],
-                i => i < strms.Length ? strms[i] : null,
-                readerOptions ?? new ReaderOptions()
+                i => i < strms.Count ? strms[i] : null,
+                readerOptions ?? ReaderOptions.ForExternalStream
             )
         );
     }
 
-    public static IWritableArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
+    public static IWritableArchive<GZipWriterOptions> OpenArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null
+    )
     {
-        stream.NotNull(nameof(stream));
-
-        if (stream is not { CanSeek: true })
-        {
-            throw new ArgumentException("Stream must be seekable", nameof(stream));
-        }
+        stream.RequireReadable();
+        stream.RequireSeekable();
 
         return new GZipArchive(
-            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
         );
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<GZipWriterOptions>> OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(stream, readerOptions);
+        return new((IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(stream, readerOptions));
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<GZipWriterOptions>> OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(fileInfo, readerOptions);
+        return new((IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(fileInfo, readerOptions));
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<GZipWriterOptions>> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(streams, readerOptions);
+        return new((IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(streams, readerOptions));
     }
 
-    public static IWritableAsyncArchive OpenAsyncArchive(
+    public static ValueTask<IWritableAsyncArchive<GZipWriterOptions>> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IWritableAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        return new((IWritableAsyncArchive<GZipWriterOptions>)OpenArchive(fileInfos, readerOptions));
     }
 
-    public static IWritableArchive CreateArchive() => new GZipArchive();
+    public static IWritableArchive<GZipWriterOptions> CreateArchive() => new GZipArchive();
 
-    public static IWritableAsyncArchive CreateAsyncArchive() => new GZipArchive();
+    public static ValueTask<IWritableAsyncArchive<GZipWriterOptions>> CreateAsyncArchive() =>
+        new(new GZipArchive());
 
     public static bool IsGZipFile(string filePath) => IsGZipFile(new FileInfo(filePath));
 
@@ -180,18 +179,21 @@ public partial class GZipArchive
         CancellationToken cancellationToken = default
     )
     {
-        byte[] header = new byte[10];
-
-        if (!await stream.ReadFullyAsync(header, cancellationToken).ConfigureAwait(false))
+        var header = ArrayPool<byte>.Shared.Rent(10);
+        try
         {
-            return false;
-        }
+            await stream.ReadFullyAsync(header, 0, 10, cancellationToken).ConfigureAwait(false);
 
-        if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        finally
         {
-            return false;
+            ArrayPool<byte>.Shared.Return(header);
         }
-
-        return true;
     }
 }

@@ -1,22 +1,84 @@
 using System;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
+using SharpCompress.Compressors;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Readers;
 
-public class ReaderOptions : OptionsBase
+/// <summary>
+/// Options for configuring reader behavior when opening archives.
+/// </summary>
+/// <remarks>
+/// Use preset properties, setters, and fluent helpers for common configurations:
+/// <code>
+/// var options = ReaderOptions.ForExternalStream
+///     .WithPassword("secret")
+///     .WithLookForHeader(true);
+/// </code>
+/// Or use object initializers for simple cases:
+/// <code>
+/// var options = new ReaderOptions { Password = "secret", LeaveStreamOpen = false };
+/// </code>
+/// </remarks>
+public sealed record ReaderOptions : IReaderOptions
 {
-    public const int DefaultBufferSize = 0x10000;
+    /// <summary>
+    /// Whether SharpCompress leaves the supplied streams open when the reader/archive is disposed.
+    /// As of v0.21, the library is documented to close streams by default; this option now defaults to false.
+    /// Set to true when passing caller-owned streams that should not be disposed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Default behavior (LeaveStreamOpen = false):</b>
+    /// When you open an archive from a file path (e.g., <c>GZipArchive.OpenArchive(filePath)</c>),
+    /// SharpCompress manages the stream lifetime and closes it on Dispose.
+    /// </para>
+    /// <para>
+    /// <b>Caller-provided streams (LeaveStreamOpen = true):</b>
+    /// When you pass a stream you created (FileStream, MemoryStream, NetworkStream, etc.),
+    /// set LeaveStreamOpen = true to prevent SharpCompress from disposing it.
+    /// Use <see cref="ForExternalStream"/> preset for convenience.
+    /// </para>
+    /// <para>
+    /// <b>Example:</b>
+    /// <code>
+    /// // File-based: stream managed by library
+    /// using var archive = GZipArchive.OpenArchive(filePath); // LeaveStreamOpen = false
+    ///
+    /// // Caller-provided stream: caller manages lifetime
+    /// using var stream = File.OpenRead(filePath);
+    /// var options = new ReaderOptions { LeaveStreamOpen = true };
+    /// using var archive = GZipArchive.OpenArchive(stream, options);
+    /// </code>
+    /// </para>
+    /// </remarks>
+    public bool LeaveStreamOpen { get; set; } = false;
+
+    /// <summary>
+    /// Encoding to use for archive entry names.
+    /// </summary>
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
 
     /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)
     /// </summary>
     public bool LookForHeader { get; set; }
 
+    /// <summary>
+    /// Password for encrypted archives.
+    /// </summary>
     public string? Password { get; set; }
 
+    /// <summary>
+    /// Disable checking for incomplete archives.
+    /// </summary>
     public bool DisableCheckIncomplete { get; set; }
 
-    public int BufferSize { get; set; } = DefaultBufferSize;
+    /// <summary>
+    /// Buffer size for stream operations.
+    /// </summary>
+    public int BufferSize { get; set; } = Constants.BufferSize;
 
     /// <summary>
     /// Provide a hint for the extension of the archive being read, can speed up finding the correct decoder.  Should be without the leading period in the form like: tar.gz or zip
@@ -28,6 +90,101 @@ public class ReaderOptions : OptionsBase
     /// When set, progress updates will be reported as entries are extracted.
     /// </summary>
     public IProgress<ProgressReport>? Progress { get; set; }
+
+    /// <summary>
+    /// Size of the rewindable buffer for non-seekable streams.
+    /// Used during format detection to enable multiple rewinds.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When opening archives from non-seekable streams (network streams, pipes,
+    /// compressed streams), SharpCompress uses a ring buffer to enable format
+    /// auto-detection. This buffer allows the library to try multiple decoders
+    /// by rewinding and re-reading the same data.
+    /// </para>
+    /// <para>
+    /// <b>Default:</b> Constants.RewindableBufferSize (163840 bytes / 160KB) - sized to cover
+    /// ZStandard's worst-case first block on a tar archive (~131KB including header overhead).
+    /// </para>
+    /// <para>
+    /// <b>Typical usage:</b> 500-1000 bytes for most archives
+    /// </para>
+    /// <para>
+    /// <b>Increase if:</b>
+    /// <list type="bullet">
+    /// <item>Opening self-extracting RAR archives (may need 512KB+)</item>
+    /// <item>Format detection fails with "recording anchor" errors</item>
+    /// <item>Using custom formats with large headers</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <b>Memory impact:</b> Buffer is allocated for non-seekable streams only.
+    /// Seekable streams (FileStream, MemoryStream) use zero-copy seeking instead.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// // For self-extracting archives, use larger buffer
+    /// var options = new ReaderOptions
+    /// {
+    ///     RewindableBufferSize = 1_048_576, // 1MB
+    ///     LookForHeader = true
+    /// };
+    /// using var reader = ReaderFactory.OpenReader(networkStream, options);
+    /// </code>
+    /// </example>
+    public int? RewindableBufferSize { get; set; }
+
+    /// <summary>
+    /// Registry of compression providers.
+    /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
+    /// System.IO.Compression for Deflate/GZip on modern .NET.
+    /// </summary>
+    public CompressionProviderRegistry Providers { get; set; } =
+        CompressionProviderRegistry.Default;
+
+    /// <summary>
+    /// Creates a new ReaderOptions instance with default values.
+    /// </summary>
+    public ReaderOptions() { }
+
+    /// <summary>
+    /// Gets ReaderOptions configured for caller-provided streams.
+    /// </summary>
+    internal static ReaderOptions Default => new();
+
+    public static ReaderOptions ForExternalStream => Default.WithLeaveStreamOpen(true);
+
+    /// <summary>
+    /// Gets ReaderOptions configured for file-based overloads that open their own stream.
+    /// </summary>
+    public static ReaderOptions ForFilePath => Default;
+
+    /// <summary>
+    /// Creates ReaderOptions for reading encrypted archives.
+    /// </summary>
+    /// <param name="password">The password for encrypted archives.</param>
+    public static ReaderOptions ForEncryptedArchive(string? password = null) =>
+        Default.WithPassword(password);
+
+    /// <summary>
+    /// Creates ReaderOptions for archives with custom character encoding.
+    /// </summary>
+    /// <param name="encoding">The encoding for archive entry names.</param>
+    public static ReaderOptions ForEncoding(IArchiveEncoding encoding) =>
+        Default.WithArchiveEncoding(encoding);
+
+    /// <summary>
+    /// Creates ReaderOptions for self-extracting archives that require header search.
+    /// </summary>
+    public static ReaderOptions ForSelfExtractingArchive(string? password = null) =>
+        Default.WithLookForHeader(true).WithPassword(password).WithRewindableBufferSize(1_048_576); // 1MB for SFX archives
+
+    // Note: Parameterized constructors have been removed.
+    // Use fluent With*() helpers or object initializers instead:
+    // new ReaderOptions().WithPassword("secret").WithLookForHeader(true)
+    // or
+    // new ReaderOptions { Password = "secret", LookForHeader = true }
 
     /// <summary>
     /// Enable multi-threaded extraction support when the archive is opened from a FileInfo or file path.

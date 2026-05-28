@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Crypto;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Compressors.LZMA;
 
@@ -17,40 +18,22 @@ namespace SharpCompress.Compressors.LZMA;
 /// <summary>
 /// Stream supporting the LZIP format, as documented at http://www.nongnu.org/lzip/manual/lzip_manual.html
 /// </summary>
-public sealed class LZipStream : Stream, IStreamStack
+public sealed partial class LZipStream : Stream, IFinishable
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly Stream _stream;
-    private readonly SharpCompressStream? _countingWritableSubStream;
+    private readonly CountingStream? _countingWritableSubStream;
     private bool _disposed;
     private bool _finished;
 
     private long _writeCount;
     private readonly Stream? _originalStream;
+    private readonly bool _leaveOpen;
 
-    public LZipStream(Stream stream, CompressionMode mode)
+    private LZipStream(Stream stream, CompressionMode mode, bool leaveOpen = false)
     {
         Mode = mode;
         _originalStream = stream;
+        _leaveOpen = leaveOpen;
 
         if (mode == CompressionMode.Decompress)
         {
@@ -60,25 +43,23 @@ public sealed class LZipStream : Stream, IStreamStack
                 throw new InvalidFormatException("Not an LZip stream");
             }
             var properties = GetProperties(dSize);
-            _stream = new LzmaStream(properties, stream);
+            _stream = LzmaStream.Create(properties, stream, leaveOpen: leaveOpen);
         }
         else
         {
             //default
             var dSize = 104 * 1024;
-            WriteHeaderSize(stream);
-
-            _countingWritableSubStream = new SharpCompressStream(stream, leaveOpen: true);
+            _countingWritableSubStream = new CountingStream(
+                SharpCompressStream.CreateNonDisposing(stream)
+            );
             _stream = new Crc32Stream(
-                new LzmaStream(
+                LzmaStream.Create(
                     new LzmaEncoderProperties(true, dSize),
                     false,
+                    null,
                     _countingWritableSubStream
                 )
             );
-#if DEBUG_STREAMS
-            this.DebugConstruct(typeof(LZipStream));
-#endif
         }
     }
 
@@ -91,7 +72,7 @@ public sealed class LZipStream : Stream, IStreamStack
                 var crc32Stream = (Crc32Stream)_stream;
                 crc32Stream.WrappedStream.Dispose();
                 crc32Stream.Dispose();
-                var compressedCount = _countingWritableSubStream.NotNull().InternalPosition;
+                var compressedCount = _countingWritableSubStream.NotNull().BytesWritten;
 
                 Span<byte> intBuf = stackalloc byte[8];
                 BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc32Stream.Crc);
@@ -117,21 +98,20 @@ public sealed class LZipStream : Stream, IStreamStack
     {
         if (_disposed)
         {
+            base.Dispose(disposing);
             return;
         }
         _disposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(LZipStream));
-#endif
         if (disposing)
         {
             Finish();
             _stream.Dispose();
-            if (Mode == CompressionMode.Compress)
+            if (Mode == CompressionMode.Compress && !_leaveOpen)
             {
                 _originalStream?.Dispose();
             }
         }
+        base.Dispose(disposing);
     }
 
     public CompressionMode Mode { get; }
@@ -165,11 +145,6 @@ public sealed class LZipStream : Stream, IStreamStack
 
 #if !LEGACY_DOTNET
 
-    public override ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    ) => _stream.ReadAsync(buffer, cancellationToken);
-
     public override int Read(Span<byte> buffer) => _stream.Read(buffer);
 
     public override void Write(ReadOnlySpan<byte> buffer)
@@ -192,24 +167,7 @@ public sealed class LZipStream : Stream, IStreamStack
         ++_writeCount;
     }
 
-    public override Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    ) => _stream.ReadAsync(buffer, offset, count, cancellationToken);
-
-    public override async Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        await _stream.WriteAsync(buffer, offset, count, cancellationToken);
-        _writeCount += count;
-    }
+    // Async methods moved to LZipStream.Async.cs
 
     #endregion
 
@@ -254,6 +212,8 @@ public sealed class LZipStream : Stream, IStreamStack
         var subtractionNumerator = (header[5] & 0xE0) >> 5;
         return (1 << basePower) - (subtractionNumerator * (1 << (basePower - 4)));
     }
+
+    // Async methods moved to LZipStream.Async.cs
 
     private static readonly byte[] headerBytes =
     [

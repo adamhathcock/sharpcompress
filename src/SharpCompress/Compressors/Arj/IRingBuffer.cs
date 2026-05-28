@@ -1,17 +1,16 @@
-namespace SharpCompress.Compressors.Arj
+namespace SharpCompress.Compressors.Arj;
+
+public interface IRingBuffer
 {
-    public interface IRingBuffer
-    {
-        int BufferSize { get; }
+    int BufferSize { get; }
 
-        int Cursor { get; }
-        void SetCursor(int pos);
+    int Cursor { get; }
+    void SetCursor(int pos);
 
-        void Push(byte value);
+    void Push(byte value);
 
-        HistoryIterator IterFromOffset(int offset);
-        HistoryIterator IterFromPos(int pos);
+    HistoryIterator IterFromOffset(int offset);
+    HistoryIterator IterFromPos(int pos);
 
-        byte this[int index] { get; }
-    }
+    byte this[int index] { get; }
 }

@@ -4,31 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace SharpCompress.IO;
 
-public class SourceStream : Stream, IStreamStack
+public partial class SourceStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
     Stream IStreamStack.BaseStream() => _streams[_stream];
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { return; }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { return; }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     private long _prevSize;
     private readonly List<FileInfo> _files;
@@ -76,10 +59,6 @@ public class SourceStream : Stream, IStreamStack
         }
         _stream = 0;
         _prevSize = 0;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(SourceStream));
-#endif
     }
 
     public void LoadAllParts()
@@ -246,8 +225,26 @@ public class SourceStream : Stream, IStreamStack
             SetStream(0);
             while (_prevSize + Current.Length < pos)
             {
-                _prevSize += Current.Length;
-                SetStream(_stream + 1);
+                var currentLength = Current.Length;
+                _prevSize += currentLength;
+
+                if (!SetStream(_stream + 1))
+                {
+                    // No more streams available, cannot seek to requested position
+                    throw new ArchiveOperationException(
+                        $"Cannot seek to position {pos}. End of stream reached at position {_prevSize}."
+                    );
+                }
+
+                // Safety check: if we have a zero-length stream and we're still not
+                // making progress toward the target position, we're in an invalid state
+                if (currentLength <= 0 && Current.Length <= 0)
+                {
+                    // Both old and new stream have zero length - cannot make progress
+                    throw new ArchiveOperationException(
+                        $"Cannot seek to position {pos}. Encountered zero-length streams at position {_prevSize}."
+                    );
+                }
             }
         }
 
@@ -264,108 +261,9 @@ public class SourceStream : Stream, IStreamStack
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotImplementedException();
 
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken
-    )
-    {
-        if (count <= 0)
-        {
-            return 0;
-        }
-
-        var total = count;
-        var r = -1;
-
-        while (count != 0 && r != 0)
-        {
-            r = await Current
-                .ReadAsync(
-                    buffer,
-                    offset,
-                    (int)Math.Min(count, Current.Length - Current.Position),
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-            count -= r;
-            offset += r;
-
-            if (!IsVolumes && count != 0 && Current.Position == Current.Length)
-            {
-                var length = Current.Length;
-
-                // Load next file if present
-                if (!SetStream(_stream + 1))
-                {
-                    break;
-                }
-
-                // Current stream switched
-                // Add length of previous stream
-                _prevSize += length;
-                Current.Seek(0, SeekOrigin.Begin);
-                r = -1; //BugFix: reset to allow loop if count is still not 0 - was breaking split zipx (lzma xz etc)
-            }
-        }
-
-        return total - count;
-    }
-
-#if !LEGACY_DOTNET
-
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (buffer.Length <= 0)
-        {
-            return 0;
-        }
-
-        var total = buffer.Length;
-        var count = buffer.Length;
-        var offset = 0;
-        var r = -1;
-
-        while (count != 0 && r != 0)
-        {
-            r = await Current
-                .ReadAsync(
-                    buffer.Slice(offset, (int)Math.Min(count, Current.Length - Current.Position)),
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-            count -= r;
-            offset += r;
-
-            if (!IsVolumes && count != 0 && Current.Position == Current.Length)
-            {
-                var length = Current.Length;
-
-                // Load next file if present
-                if (!SetStream(_stream + 1))
-                {
-                    break;
-                }
-
-                // Current stream switched
-                // Add length of previous stream
-                _prevSize += length;
-                Current.Seek(0, SeekOrigin.Begin);
-                r = -1;
-            }
-        }
-
-        return total - count;
-    }
-#endif
-
     public override void Close()
     {
-        if (IsFileMode || !ReaderOptions.LeaveStreamOpen) //close if file mode or options specify it
+        if (!ReaderOptions.LeaveStreamOpen) //close if file mode or options specify it
         {
             foreach (var stream in _streams)
             {
@@ -385,9 +283,6 @@ public class SourceStream : Stream, IStreamStack
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(SourceStream));
-#endif
         Close();
         base.Dispose(disposing);
     }

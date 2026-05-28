@@ -1,9 +1,8 @@
-namespace SharpCompress.Compressors.Arj
+namespace SharpCompress.Compressors.Arj;
+
+public interface ILhaDecoderConfig
 {
-    public interface ILhaDecoderConfig
-    {
-        int HistoryBits { get; }
-        int OffsetBits { get; }
-        RingBuffer RingBuffer { get; }
-    }
+    int HistoryBits { get; }
+    int OffsetBits { get; }
+    RingBuffer RingBuffer { get; }
 }

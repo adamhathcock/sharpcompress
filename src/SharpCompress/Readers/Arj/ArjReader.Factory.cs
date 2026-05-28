@@ -1,41 +1,42 @@
 #if NET8_0_OR_GREATER
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Readers.Arj;
 
 public partial class ArjReader : IReaderOpenable
 {
-    public static IAsyncReader OpenAsyncReader(
-        string path,
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        string filePath,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        path.NotNullOrEmpty(nameof(path));
-        return (IAsyncReader)OpenReader(new FileInfo(path), readerOptions);
+        filePath.NotNullOrEmpty(nameof(filePath));
+        return new((IAsyncReader)OpenReader(new FileInfo(filePath), readerOptions));
     }
 
-    public static IAsyncReader OpenAsyncReader(
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)OpenReader(stream, readerOptions);
+        return new((IAsyncReader)OpenReader(stream, readerOptions));
     }
 
-    public static IAsyncReader OpenAsyncReader(
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)OpenReader(fileInfo, readerOptions);
+        return new((IAsyncReader)OpenReader(fileInfo, readerOptions));
     }
 
     public static IReader OpenReader(string filePath, ReaderOptions? readerOptions = null)
@@ -47,6 +48,7 @@ public partial class ArjReader : IReaderOpenable
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
         fileInfo.NotNull(nameof(fileInfo));
+        readerOptions ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 }

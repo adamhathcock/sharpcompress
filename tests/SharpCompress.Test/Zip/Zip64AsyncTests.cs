@@ -173,7 +173,7 @@ public class Zip64AsyncTests : WriterTests
         var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = setZip64 };
 
         // Use no compression to ensure we hit the limits (actually inflates a bit, but seems better than using method==Store)
-        var eo = new ZipWriterEntryOptions { DeflateCompressionLevel = CompressionLevel.None };
+        var eo = new ZipWriterEntryOptions { CompressionLevel = 0 };
 
         using var zip = File.OpenWrite(filename);
         using var st = forwardOnly ? (Stream)new ForwardOnlyStream(zip) : zip;
@@ -199,33 +199,33 @@ public class Zip64AsyncTests : WriterTests
         ZipEntry? prev = null;
         using (var fs = File.OpenRead(filename))
         {
-            var rd = ReaderFactory.OpenAsyncReader(
+            await using var rd = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(fs),
-                new ReaderOptions { LookForHeader = false }
-            );
-            await using (rd)
-            {
-                while (await rd.MoveToNextEntryAsync())
+                ReaderOptions.ForExternalStream with
                 {
-#if NETFRAMEWORK || NETSTANDARD2_0
-                    using (var entryStream = await rd.OpenEntryStreamAsync())
-                    {
-                        await entryStream.SkipEntryAsync();
-                    }
-#else
-                    await using (var entryStream = await rd.OpenEntryStreamAsync())
-                    {
-                        await entryStream.SkipEntryAsync();
-                    }
-#endif
-                    count++;
-                    if (prev != null)
-                    {
-                        size += prev.Size;
-                    }
-
-                    prev = (ZipEntry)rd.Entry;
+                    LookForHeader = false,
                 }
+            );
+            while (await rd.MoveToNextEntryAsync())
+            {
+#if LEGACY_DOTNET
+                using (var entryStream = await rd.OpenEntryStreamAsync())
+                {
+                    await entryStream.SkipEntryAsync();
+                }
+#else
+                await using (var entryStream = await rd.OpenEntryStreamAsync())
+                {
+                    await entryStream.SkipEntryAsync();
+                }
+#endif
+                count++;
+                if (prev != null)
+                {
+                    size += prev.Size;
+                }
+
+                prev = (ZipEntry)rd.Entry;
             }
         }
 

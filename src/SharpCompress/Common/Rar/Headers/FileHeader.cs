@@ -2,23 +2,23 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using SharpCompress.Common.Rar;
 using SharpCompress.IO;
-#if !Rar2017_64bit
 using size_t = System.UInt32;
-#else
-using nint = System.Int64;
-using nuint = System.UInt64;
-using size_t = System.UInt64;
-#endif
 
 namespace SharpCompress.Common.Rar.Headers;
 
-internal class FileHeader : RarHeader
+internal partial class FileHeader : RarHeader
 {
     private byte[]? _hash;
 
-    public FileHeader(RarHeader header, RarCrcBinaryReader reader, HeaderType headerType)
-        : base(header, reader, headerType) { }
+    public static FileHeader Create(
+        RarHeader header,
+        RarCrcBinaryReader reader,
+        HeaderType headerType
+    ) => CreateChild<FileHeader>(header, reader, headerType);
 
     protected override void ReadFinish(MarkingBinaryReader reader)
     {
@@ -72,27 +72,10 @@ internal class FileHeader : RarHeader
         // Bits 11 - 14 (0x3c00) define the minimum size of dictionary size required to extract data. Value 0 means 128 KB, 1 - 256 KB, ..., 14 - 2048 MB, 15 - 4096 MB.
         WindowSize = IsDirectory ? 0 : ((size_t)0x20000) << ((compressionInfo >> 10) & 0xf);
 
-        HostOs = reader.ReadRarVIntByte();
+        _ = reader.ReadRarVIntByte();
 
         var nameSize = reader.ReadRarVIntUInt16();
 
-        // Variable length field containing Name length bytes in UTF-8 format without trailing zero.
-        // For file header this is a name of archived file. Forward slash character is used as the path separator both for Unix and Windows names.
-        // Backslashes are treated as a part of name for Unix names and as invalid character for Windows file names. Type of name is defined by Host OS field.
-        //
-        // TODO: not sure if anything needs to be done to handle the following:
-        // If Unix file name contains any high ASCII characters which cannot be correctly converted to Unicode and UTF-8
-        // we map such characters to to 0xE080 - 0xE0FF private use Unicode area and insert 0xFFFE Unicode non-character
-        // to resulting string to indicate that it contains mapped characters, which need to be converted back when extracting.
-        // Concrete position of 0xFFFE is not defined, we need to search the entire string for it. Such mapped names are not
-        // portable and can be correctly unpacked only on the same system where they were created.
-        //
-        // For service header this field contains a name of service header. Now the following names are used:
-        // CMT	Archive comment
-        // QO	Archive quick open data
-        // ACL	NTFS file permissions
-        // STM	NTFS alternate data stream
-        // RR	Recovery record
         var b = reader.ReadBytes(nameSize);
         FileName = ConvertPathV5(Encoding.UTF8.GetString(b, 0, b.Length));
 
@@ -119,7 +102,7 @@ internal class FileHeader : RarHeader
             {
                 case FHEXTRA_CRYPT: // file encryption
                     {
-                        Rar5CryptoInfo = new Rar5CryptoInfo(reader, true);
+                        Rar5CryptoInfo = Rar5CryptoInfo.Create(reader, true);
 
                         if (Rar5CryptoInfo.PswCheck.All(singleByte => singleByte == 0))
                         {
@@ -130,14 +113,11 @@ internal class FileHeader : RarHeader
                 case FHEXTRA_HASH:
                     {
                         const uint FHEXTRA_HASH_BLAKE2 = 0x0;
-                        //                        const uint HASH_BLAKE2 = 0x03;
                         const int BLAKE2_DIGEST_SIZE = 0x20;
                         if ((uint)reader.ReadRarVInt() == FHEXTRA_HASH_BLAKE2)
                         {
-                            //                            var hash = HASH_BLAKE2;
                             _hash = reader.ReadBytes(BLAKE2_DIGEST_SIZE);
                         }
-                        // enum HASH_TYPE {HASH_NONE,HASH_RAR14,HASH_CRC32,HASH_BLAKE2};
                     }
                     break;
                 case FHEXTRA_HTIME: // file time
@@ -158,12 +138,6 @@ internal class FileHeader : RarHeader
                         }
                     }
                     break;
-                //TODO
-                //                    case FHEXTRA_VERSION: // file version
-                //                        {
-                //
-                //                        }
-                //                        break;
                 case FHEXTRA_REDIR: // file system redirection
                     {
                         RedirType = reader.ReadRarVIntByte();
@@ -173,21 +147,7 @@ internal class FileHeader : RarHeader
                         RedirTargetName = ConvertPathV5(Encoding.UTF8.GetString(bb, 0, bb.Length));
                     }
                     break;
-                //TODO
-                //                    case FHEXTRA_UOWNER: // unix owner
-                //                        {
-                //
-                //                        }
-                //                        break;
-                //                    case FHEXTRA_SUBDATA: // service data
-                //                        {
-                //
-                //                        }
-                //                        break;
-
                 default:
-                    // skip unknown record types to allow new record types to be added in the future
-                    //Console.WriteLine($"unhandled rar header field type {type}");
                     break;
             }
             // drain any trailing bytes of extra record
@@ -237,7 +197,7 @@ internal class FileHeader : RarHeader
 
         var lowUncompressedSize = reader.ReadUInt32();
 
-        HostOs = reader.ReadByte();
+        _ = reader.ReadByte();
 
         FileCrc = reader.ReadBytes(4);
 
@@ -336,8 +296,6 @@ internal class FileHeader : RarHeader
         }
         if (HasFlag(FileFlagsV4.EXT_TIME))
         {
-            // verify that the end of the header hasn't been reached before reading the Extended Time.
-            //  some tools incorrectly omit Extended Time despite specifying FileFlags.EXTTIME, which most parsers tolerate.
             if (RemainingHeaderBytes(reader) >= 2)
             {
                 var extendedFlags = reader.ReadUInt16();
@@ -457,7 +415,6 @@ internal class FileHeader : RarHeader
 
     internal byte[]? R4Salt { get; private set; }
     internal Rar5CryptoInfo? Rar5CryptoInfo { get; private set; }
-    private byte HostOs { get; set; }
     internal uint FileAttributes { get; private set; }
     internal long CompressedSize { get; private set; }
     internal long UncompressedSize { get; private set; }

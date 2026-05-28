@@ -45,17 +45,23 @@ jobs:
     # Build and test
     - name: Build and Test
       run: dotnet run --project build/build.csproj
+
+    - name: Validate AOT Smoke Test
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        dotnet publish tests/SharpCompress.AotSmoke/SharpCompress.AotSmoke.csproj --configuration Release --runtime linux-x64 --self-contained true --output artifacts/aot-smoke
+        ./artifacts/aot-smoke/SharpCompress.AotSmoke
     
     # Upload artifacts for verification
     - name: Upload NuGet Package
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.os }}-nuget-package
         path: artifacts/*.nupkg
     
-    # Push to NuGet.org using C# build target (Windows only, not on PRs)
+    # Push to NuGet.org only for version tag pushes (Windows only)
     - name: Push to NuGet
-      if: success() && matrix.os == 'windows-latest' && github.event_name != 'pull_request'
+      if: success() && matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
       run: dotnet run --project build/build.csproj -- push-to-nuget
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}

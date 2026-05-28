@@ -10,7 +10,7 @@ using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
-public class PowerPCFilter : BlockFilter
+public partial class PowerPCFilter : BlockFilter
 {
     public override bool AllowAsLast => false;
 

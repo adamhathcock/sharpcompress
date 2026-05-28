@@ -327,7 +327,10 @@ public static unsafe partial class Methods
     {
         assert(sizeof(XXH32_canonical_t) == sizeof(uint));
         if (BitConverter.IsLittleEndian)
+        {
             hash = BinaryPrimitives.ReverseEndianness(hash);
+        }
+
         XXH_memcpy(dst, &hash, (nuint)sizeof(XXH32_canonical_t));
     }
 
@@ -356,11 +359,15 @@ public static unsafe partial class Methods
     private static ulong XXH_readLE64_align(void* ptr, XXH_alignment align)
     {
         if (align == XXH_alignment.XXH_unaligned)
+        {
             return XXH_readLE64(ptr);
+        }
         else
+        {
             return BitConverter.IsLittleEndian
                 ? *(ulong*)ptr
                 : BinaryPrimitives.ReverseEndianness(*(ulong*)ptr);
+        }
     }
 
     /*! @copydoc XXH32_round */
@@ -614,7 +621,10 @@ public static unsafe partial class Methods
     {
         assert(sizeof(XXH64_canonical_t) == sizeof(ulong));
         if (BitConverter.IsLittleEndian)
+        {
             hash = BinaryPrimitives.ReverseEndianness(hash);
+        }
+
         XXH_memcpy(dst, &hash, (nuint)sizeof(XXH64_canonical_t));
     }
 

@@ -66,6 +66,7 @@
 using System;
 using System.Buffers;
 using SharpCompress.Algorithms;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate;
 
@@ -1746,6 +1747,7 @@ internal sealed class InflateManager
                     {
                         mode = InflateManagerMode.BAD;
                         _codec.Message = string.Format(
+                            Constants.DefaultCultureInfo,
                             "unknown compression method (0x{0:X2})",
                             method
                         );
@@ -1756,6 +1758,7 @@ internal sealed class InflateManager
                     {
                         mode = InflateManagerMode.BAD;
                         _codec.Message = string.Format(
+                            Constants.DefaultCultureInfo,
                             "invalid window size ({0})",
                             (method >> 4) + 8
                         );
@@ -1945,7 +1948,13 @@ internal sealed class InflateManager
                     return ZlibConstants.Z_STREAM_END;
 
                 case InflateManagerMode.BAD:
-                    throw new ZlibException(string.Format("Bad state ({0})", _codec.Message));
+                    throw new ZlibException(
+                        string.Format(
+                            Constants.DefaultCultureInfo,
+                            "Bad state ({0})",
+                            _codec.Message
+                        )
+                    );
 
                 default:
                     throw new ZlibException("Stream error.");

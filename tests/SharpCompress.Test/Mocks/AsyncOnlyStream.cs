@@ -5,15 +5,9 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.Test.Mocks;
 
-public class AsyncOnlyStream : Stream
+public class AsyncOnlyStream(Stream stream, bool disposeStream = true) : Stream
 {
-    private readonly Stream _stream;
-
-    public AsyncOnlyStream(Stream stream)
-    {
-        _stream = stream;
-        // Console.WriteLine("AsyncOnlyStream created");
-    }
+    private readonly Stream _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
     public override bool CanRead => _stream.CanRead;
     public override bool CanSeek => _stream.CanSeek;
@@ -25,7 +19,14 @@ public class AsyncOnlyStream : Stream
         set => _stream.Position = value;
     }
 
-    public override void Flush() => _stream.Flush();
+    public override Task FlushAsync(CancellationToken cancellationToken) =>
+        _stream.FlushAsync(cancellationToken);
+
+    public override void Flush() =>
+        throw new NotSupportedException("Synchronous Flush is not supported");
+
+    public override int ReadByte() =>
+        throw new NotSupportedException("Synchronous ReadByte is not supported");
 
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException("Synchronous Read is not supported");
@@ -53,7 +54,7 @@ public class AsyncOnlyStream : Stream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => throw new NotSupportedException("Synchronous Read is not supported");
+    ) => _stream.WriteAsync(buffer, offset, count, cancellationToken);
 
 #if NET8_0_OR_GREATER
     public override ValueTask WriteAsync(
@@ -63,11 +64,14 @@ public class AsyncOnlyStream : Stream
 #endif
 
     public override void Write(byte[] buffer, int offset, int count) =>
-        _stream.Write(buffer, offset, count);
+        throw new NotSupportedException("Synchronous Write is not supported");
+
+    public override void WriteByte(byte value) =>
+        throw new NotSupportedException("Synchronous WriteByte is not supported");
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && disposeStream)
         {
             _stream.Dispose();
         }

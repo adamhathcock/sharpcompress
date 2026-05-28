@@ -32,7 +32,7 @@ internal abstract unsafe class SafeZstdHandle : SafeHandle
 internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
 {
     /// <inheritdoc/>
-    private SafeCctxHandle() { }
+    internal SafeCctxHandle() { }
 
     /// <summary>
     /// Creates a new instance of <see cref="SafeCctxHandle"/>.
@@ -47,7 +47,10 @@ internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
         {
             var cctx = Unsafe.Methods.ZSTD_createCCtx();
             if (cctx == null)
+            {
                 throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create cctx");
+            }
+
             safeHandle.SetHandle((IntPtr)cctx);
             success = true;
         }
@@ -82,7 +85,7 @@ internal sealed unsafe class SafeCctxHandle : SafeZstdHandle
 internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
 {
     /// <inheritdoc/>
-    private SafeDctxHandle() { }
+    internal SafeDctxHandle() { }
 
     /// <summary>
     /// Creates a new instance of <see cref="SafeDctxHandle"/>.
@@ -97,7 +100,10 @@ internal sealed unsafe class SafeDctxHandle : SafeZstdHandle
         {
             var dctx = Unsafe.Methods.ZSTD_createDCtx();
             if (dctx == null)
+            {
                 throw new ZstdException(ZSTD_ErrorCode.ZSTD_error_GENERIC, "Failed to create dctx");
+            }
+
             safeHandle.SetHandle((IntPtr)dctx);
             success = true;
         }

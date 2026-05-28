@@ -6,7 +6,7 @@ SharpCompress now provides full async/await support for all I/O operations. All 
 
 **Key Async Methods:**
 - `reader.WriteEntryToAsync(stream, cancellationToken)` - Extract entry asynchronously  
-- `reader.WriteAllToDirectoryAsync(path, options, cancellationToken)` - Extract all asynchronously
+- `reader.WriteAllToDirectoryAsync(path, cancellationToken: cancellationToken)` - Extract all asynchronously
 - `writer.WriteAsync(filename, stream, modTime, cancellationToken)` - Write entry asynchronously
 - `writer.WriteAllAsync(directory, pattern, searchOption, cancellationToken)` - Write directory asynchronously
 - `entry.OpenEntryStreamAsync(cancellationToken)` - Open entry stream asynchronously
@@ -39,6 +39,10 @@ using (var reader = new StreamReader(fileStream))
 To deal with the "correct" rules as well as the expectations of users, I've decided to always close wrapped streams as of 0.21.
 
 To be explicit though, consider always using the overloads that use `ReaderOptions` or `WriterOptions` and explicitly set `LeaveStreamOpen` the way you want.
+
+Default behavior in factory APIs:
+- File path / `FileInfo` overloads set `LeaveStreamOpen = false`.
+- Caller-provided `Stream` overloads set `LeaveStreamOpen = true`.
 
 If using Compression Stream classes directly and you don't want the wrapped stream to be closed.  Use the `NonDisposingStream` as a wrapper to prevent the stream being disposed.  The change in 0.21 simplified a lot even though the usage is a bit more convoluted.
 
@@ -90,14 +94,14 @@ Note: Extracting a solid rar or 7z file needs to be done in sequential order to 
 `ExtractAllEntries` is primarily intended for solid archives (like solid Rar) or 7Zip archives, where sequential extraction provides the best performance. For general/simple extraction with any supported archive type, use `archive.WriteToDirectory()` instead.
 
 ```C#
-using (var archive = RarArchive.OpenArchive("Test.rar"))
+// Use ReaderOptions for open-time behavior and ExtractionOptions for extract-time behavior
+using (var archive = RarArchive.OpenArchive("Test.rar", ReaderOptions.ForFilePath))
 {
     // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
-    archive.WriteToDirectory(@"D:\temp", new ExtractionOptions()
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    archive.WriteToDirectory(
+        @"D:\temp",
+        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+    );
 }
 ```
 
@@ -126,13 +130,14 @@ var progress = new Progress<ProgressReport>(report =>
     Console.WriteLine($"Extracting {report.EntryPath}: {report.PercentComplete}%");
 });
 
-using (var archive = RarArchive.OpenArchive("archive.rar", new ReaderOptions { Progress = progress })) // Must be solid Rar or 7Zip
+using (var archive = RarArchive.OpenArchive("archive.rar",
+    ReaderOptions.ForFilePath
+        .WithProgress(progress))) // Must be solid Rar or 7Zip
 {
-    archive.WriteToDirectory(@"D:\output", new ExtractionOptions()
-    {
-        ExtractFullPath = true,
-        Overwrite = true
-    });
+    archive.WriteToDirectory(
+        @"D:\output",
+        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+    );
 }
 ```
 
@@ -147,11 +152,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
         if (!reader.Entry.IsDirectory)
         {
             Console.WriteLine(reader.Entry.Key);
-            reader.WriteEntryToDirectory(@"C:\temp", new ExtractionOptions()
-            {
-                ExtractFullPath = true,
-                Overwrite = true
-            });
+            reader.WriteEntryToDirectory(@"C:\temp");
         }
     }
 }
@@ -180,10 +181,10 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 ```C#
 using (Stream stream = File.OpenWrite("C:\\temp.tgz"))
-using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)
-                                                {
-                                                    LeaveOpenStream = true
-                                                }))
+using (var writer = WriterFactory.OpenWriter(
+    stream,
+    ArchiveType.Tar,
+    WriterOptions.ForTar(CompressionType.GZip).WithLeaveStreamOpen(true)))
 {
     writer.WriteAll("D:\\temp", "*", SearchOption.AllDirectories);
 }
@@ -192,19 +193,42 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new Writer
 ### Extract zip which has non-utf8 encoded filename(cp932)
 
 ```C#
-var opts = new SharpCompress.Readers.ReaderOptions();
 var encoding = Encoding.GetEncoding(932);
-opts.ArchiveEncoding = new SharpCompress.Common.ArchiveEncoding();
-opts.ArchiveEncoding.CustomDecoder = (data, x, y) =>
-{
-    return encoding.GetString(data);
-};
-var tr = SharpCompress.Archives.Zip.ZipArchive.OpenArchive("test.zip", opts);
-foreach(var entry in tr.Entries)
+var opts = new ReaderOptions()
+    .WithArchiveEncoding(new ArchiveEncoding
+    {
+        CustomDecoder = (data, x, y) => encoding.GetString(data)
+    });
+
+using var archive = ZipArchive.OpenArchive("test.zip", opts);
+foreach(var entry in archive.Entries)
 {
     Console.WriteLine($"{entry.Key}");
 }
 ```
+
+## Custom Compression Providers
+
+By default `ReaderOptions` and `WriterOptions` already include `CompressionProviderRegistry.Default` via their `Providers` property, so you can read and write without touching the registry yet still get SharpCompress’s built-in implementations.
+
+The configured registry is used consistently across Reader APIs, Writer APIs, Archive APIs, and async entry-stream extraction, including compressed TAR wrappers and ZIP async decompression.
+
+To replace a specific algorithm (for example to use `System.IO.Compression` for GZip or Deflate), create a modified registry and pass it through the same options:
+
+```C#
+var systemGZip = new SystemGZipCompressionProvider();
+var customRegistry = CompressionProviderRegistry.Default.With(systemGZip);
+
+var readerOptions = ReaderOptions.ForFilePath
+    .WithProviders(customRegistry);
+using var reader = ReaderFactory.OpenReader(stream, readerOptions);
+
+var writerOptions = new WriterOptions(CompressionType.GZip)
+    .WithProviders(customRegistry);
+using var writer = WriterFactory.OpenWriter(outputStream, ArchiveType.GZip, writerOptions);
+```
+
+The registry also exposes `GetCompressingProvider` (now returning `ICompressionProviderHooks`) when a compression format needs pre- or post-stream data (e.g., LZMA/PPMd). Implementations that need extra headers can supply those bytes through the `ICompressionProviderHooks` members while the rest of the API still works through the `Providers` property.
 
 ## Async Examples
 
@@ -212,53 +236,38 @@ foreach(var entry in tr.Entries)
 
 **Extract single entry asynchronously:**
 ```C#
-using (Stream stream = File.OpenRead("archive.zip"))
-using (var reader = ReaderFactory.OpenReader(stream))
+using Stream stream = File.OpenRead("archive.zip");
+await using var reader = await ReaderFactory.OpenAsyncReader(stream, cancellationToken: cancellationToken);
+while (await reader.MoveToNextEntryAsync(cancellationToken))
 {
-    while (reader.MoveToNextEntry())
+    if (!reader.Entry.IsDirectory)
     {
-        if (!reader.Entry.IsDirectory)
-        {
-            using (var entryStream = reader.OpenEntryStream())
-            {
-                using (var outputStream = File.Create("output.bin"))
-                {
-                    await reader.WriteEntryToAsync(outputStream, cancellationToken);
-                }
-            }
-        }
+        using var outputStream = File.Create("output.bin");
+        await reader.WriteEntryToAsync(outputStream, cancellationToken);
     }
 }
 ```
 
 **Extract all entries asynchronously:**
 ```C#
-using (Stream stream = File.OpenRead("archive.tar.gz"))
-using (var reader = ReaderFactory.OpenReader(stream))
-{
-    await reader.WriteAllToDirectoryAsync(
-        @"D:\temp",
-        new ExtractionOptions()
-        {
-            ExtractFullPath = true,
-            Overwrite = true
-        },
-        cancellationToken
-    );
-}
+using Stream stream = File.OpenRead("archive.tar.gz");
+await using var reader = await ReaderFactory.OpenAsyncReader(stream, cancellationToken: cancellationToken);
+await reader.WriteAllToDirectoryAsync(
+    @"D:\temp",
+    cancellationToken: cancellationToken
+);
 ```
 
 **Open and process entry stream asynchronously:**
 ```C#
-using (var archive = ZipArchive.OpenArchive("archive.zip"))
+await using var archive = await ZipArchive.OpenAsyncArchive("archive.zip", cancellationToken: cancellationToken);
+await foreach (var entry in archive.EntriesAsync)
 {
-    foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+    if (!entry.IsDirectory)
     {
-        using (var entryStream = await entry.OpenEntryStreamAsync(cancellationToken))
-        {
-            // Process the decompressed stream asynchronously
-            await ProcessStreamAsync(entryStream, cancellationToken);
-        }
+        using var entryStream = await entry.OpenEntryStreamAsync(cancellationToken);
+        // Process the decompressed stream asynchronously
+        await ProcessStreamAsync(entryStream, cancellationToken);
     }
 }
 ```
@@ -267,28 +276,22 @@ using (var archive = ZipArchive.OpenArchive("archive.zip"))
 
 **Write single file asynchronously:**
 ```C#
-using (Stream archiveStream = File.OpenWrite("output.zip"))
-using (var writer = WriterFactory.OpenWriter(archiveStream, ArchiveType.Zip, CompressionType.Deflate))
-{
-    using (Stream fileStream = File.OpenRead("input.txt"))
-    {
-        await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken);
-    }
-}
+using Stream archiveStream = File.OpenWrite("output.zip");
+await using var writer = await WriterFactory.OpenAsyncWriter(archiveStream, ArchiveType.Zip, new WriterOptions(CompressionType.Deflate), cancellationToken);
+using Stream fileStream = File.OpenRead("input.txt");
+await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken);
 ```
 
 **Write entire directory asynchronously:**
 ```C#
-using (Stream stream = File.OpenWrite("backup.tar.gz"))
-using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip)))
-{
-    await writer.WriteAllAsync(
-        @"D:\files",
-        "*",
-        SearchOption.AllDirectories,
-        cancellationToken
-    );
-}
+using Stream stream = File.OpenWrite("backup.tar.gz");
+await using var writer = await WriterFactory.OpenAsyncWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip), cancellationToken);
+await writer.WriteAllAsync(
+    @"D:\files",
+    "*",
+    SearchOption.AllDirectories,
+    cancellationToken
+);
 ```
 
 **Write with progress tracking and cancellation:**
@@ -298,17 +301,15 @@ var cts = new CancellationTokenSource();
 // Set timeout or cancel from UI
 cts.CancelAfter(TimeSpan.FromMinutes(5));
 
-using (Stream stream = File.OpenWrite("archive.zip"))
-using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, CompressionType.Deflate))
+using Stream stream = File.OpenWrite("archive.zip");
+await using var writer = await WriterFactory.OpenAsyncWriter(stream, ArchiveType.Zip, new WriterOptions(CompressionType.Deflate), cts.Token);
+try
 {
-    try
-    {
-        await writer.WriteAllAsync(@"D:\data", "*", SearchOption.AllDirectories, cts.Token);
-    }
-    catch (OperationCanceledException)
-    {
-        Console.WriteLine("Operation was cancelled");
-    }
+    await writer.WriteAllAsync(@"D:\data", "*", SearchOption.AllDirectories, cts.Token);
+}
+catch (OperationCanceledException)
+{
+    Console.WriteLine("Operation was cancelled");
 }
 ```
 
@@ -316,15 +317,12 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Zip, Compressio
 
 **Extract from archive asynchronously:**
 ```C#
-using (var archive = ZipArchive.OpenArchive("archive.zip"))
-{
-    // Simple async extraction - works for all archive types
-    await archive.WriteToDirectoryAsync(
-        @"C:\output",
-        new ExtractionOptions() { ExtractFullPath = true, Overwrite = true },
-        cancellationToken
-    );
-}
+await using var archive = await ZipArchive.OpenAsyncArchive("archive.zip", cancellationToken: cancellationToken);
+// Simple async extraction - works for all archive types
+await archive.WriteToDirectoryAsync(
+    @"C:\output",
+    cancellationToken: cancellationToken
+);
 ```
 
 **Benefits of Async Operations:**

@@ -39,18 +39,15 @@ public class WriterTests : TestBase
 
         using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            var readerOptions = new ReaderOptions();
+            var readerOptions = ReaderOptions.ForExternalStream;
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
             using var reader = ReaderFactory.OpenReader(
-                SharpCompressStream.Create(stream, leaveOpen: true),
+                SharpCompressStream.CreateNonDisposing(stream),
                 readerOptions
             );
-            reader.WriteAllToDirectory(
-                SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true }
-            );
+            reader.WriteAllToDirectory(SCRATCH_FILES_PATH);
         }
         VerifyFiles();
     }
@@ -73,7 +70,12 @@ public class WriterTests : TestBase
 
             writerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            using var writer = WriterFactory.OpenAsyncWriter(stream, _type, writerOptions);
+            await using var writer = await WriterFactory.OpenAsyncWriter(
+                stream,
+                _type,
+                writerOptions,
+                cancellationToken
+            );
             await writer.WriteAllAsync(
                 ORIGINAL_FILES_PATH,
                 "*",
@@ -88,19 +90,18 @@ public class WriterTests : TestBase
 
         using (Stream stream = File.OpenRead(Path.Combine(SCRATCH2_FILES_PATH, archive)))
         {
-            var readerOptions = new ReaderOptions();
+            var readerOptions = ReaderOptions.ForExternalStream;
 
             readerOptions.ArchiveEncoding.Default = encoding ?? Encoding.Default;
 
-            await using var reader = ReaderFactory.OpenAsyncReader(
-                new AsyncOnlyStream(SharpCompressStream.Create(stream, leaveOpen: true)),
+            await using var reader = await ReaderFactory.OpenAsyncReader(
+                new AsyncOnlyStream(SharpCompressStream.CreateNonDisposing(stream)),
                 readerOptions,
                 cancellationToken
             );
             await reader.WriteAllToDirectoryAsync(
                 SCRATCH_FILES_PATH,
-                new ExtractionOptions { ExtractFullPath = true },
-                cancellationToken
+                cancellationToken: cancellationToken
             );
         }
         VerifyFiles();

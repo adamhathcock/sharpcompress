@@ -10,4 +10,5 @@ public enum ArchiveType
     Arc,
     Arj,
     Ace,
+    Lzw,
 }

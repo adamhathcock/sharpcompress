@@ -47,16 +47,27 @@ public static unsafe partial class Methods
             sizeof(uint)
         );
         if (workspaceSize < (nuint)sizeof(HUF_CompressWeightsWksp))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         if (wtSize <= 1)
+        {
             return 0;
+        }
+
         {
             /* never fails */
             uint maxCount = HIST_count_simple(wksp->count, &maxSymbolValue, weightTable, wtSize);
             if (maxCount == wtSize)
+            {
                 return 1;
+            }
+
             if (maxCount == 1)
+            {
                 return 0;
+            }
         }
 
         tableLog = FSE_optimalTableLog(tableLog, wtSize, maxSymbolValue);
@@ -71,7 +82,9 @@ public static unsafe partial class Methods
                 0
             );
             if (ERR_isError(_var_err__))
+            {
                 return _var_err__;
+            }
         }
 
         {
@@ -83,7 +96,10 @@ public static unsafe partial class Methods
                 tableLog
             );
             if (ERR_isError(hSize))
+            {
                 return hSize;
+            }
+
             op += hSize;
         }
 
@@ -98,7 +114,9 @@ public static unsafe partial class Methods
                 sizeof(uint) * 41
             );
             if (ERR_isError(_var_err__))
+            {
                 return _var_err__;
+            }
         }
 
         {
@@ -110,9 +128,15 @@ public static unsafe partial class Methods
                 wksp->CTable
             );
             if (ERR_isError(cSize))
+            {
                 return cSize;
+            }
+
             if (cSize == 0)
+            {
                 return 0;
+            }
+
             op += cSize;
         }
 
@@ -203,16 +227,31 @@ public static unsafe partial class Methods
         assert(HUF_readCTableHeader(CTable).maxSymbolValue == maxSymbolValue);
         assert(HUF_readCTableHeader(CTable).tableLog == huffLog);
         if (workspaceSize < (nuint)sizeof(HUF_WriteCTableWksp))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         if (maxSymbolValue > 255)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+        }
+
         wksp->bitsToWeight[0] = 0;
         for (n = 1; n < huffLog + 1; n++)
+        {
             wksp->bitsToWeight[n] = (byte)(huffLog + 1 - n);
+        }
+
         for (n = 0; n < maxSymbolValue; n++)
+        {
             wksp->huffWeight[n] = wksp->bitsToWeight[HUF_getNbBits(ct[n])];
+        }
+
         if (maxDstSize < 1)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         {
             nuint hSize = HUF_compressWeights(
                 op + 1,
@@ -223,7 +262,10 @@ public static unsafe partial class Methods
                 (nuint)sizeof(HUF_CompressWeightsWksp)
             );
             if (ERR_isError(hSize))
+            {
                 return hSize;
+            }
+
             if (hSize > 1 && hSize < maxSymbolValue / 2)
             {
                 op[0] = (byte)hSize;
@@ -232,13 +274,22 @@ public static unsafe partial class Methods
         }
 
         if (maxSymbolValue > 256 - 128)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         if ((maxSymbolValue + 1) / 2 + 1 > maxDstSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         op[0] = (byte)(128 + (maxSymbolValue - 1));
         wksp->huffWeight[maxSymbolValue] = 0;
         for (n = 0; n < maxSymbolValue; n += 2)
+        {
             op[n / 2 + 1] = (byte)((wksp->huffWeight[n] << 4) + wksp->huffWeight[n + 1]);
+        }
+
         return (maxSymbolValue + 1) / 2 + 1;
     }
 
@@ -270,12 +321,21 @@ public static unsafe partial class Methods
             srcSize
         );
         if (ERR_isError(readSize))
+        {
             return readSize;
+        }
+
         *hasZeroWeights = rankVal[0] > 0 ? 1U : 0U;
         if (tableLog > 12)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         if (nbSymbols > *maxSymbolValuePtr + 1)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooSmall));
+        }
+
         *maxSymbolValuePtr = nbSymbols - 1;
         HUF_writeCTableHeader(CTable, tableLog, *maxSymbolValuePtr);
         {
@@ -307,7 +367,9 @@ public static unsafe partial class Methods
             {
                 uint n;
                 for (n = 0; n < nbSymbols; n++)
+                {
                     nbPerRank[HUF_getNbBits(ct[n])]++;
+                }
             }
 
             valPerRank[tableLog + 1] = 0;
@@ -326,7 +388,9 @@ public static unsafe partial class Methods
             {
                 uint n;
                 for (n = 0; n < nbSymbols; n++)
+                {
                     HUF_setValue(ct + n, valPerRank[HUF_getNbBits(ct[n])]++);
+                }
             }
         }
 
@@ -343,7 +407,10 @@ public static unsafe partial class Methods
         nuint* ct = CTable + 1;
         assert(symbolValue <= 255);
         if (symbolValue > HUF_readCTableHeader(CTable).maxSymbolValue)
+        {
             return 0;
+        }
+
         return (uint)HUF_getNbBits(ct[symbolValue]);
     }
 
@@ -372,7 +439,10 @@ public static unsafe partial class Methods
     {
         uint largestBits = huffNode[lastNonNull].nbBits;
         if (largestBits <= targetNbBits)
+        {
             return largestBits;
+        }
+
         {
             int totalCost = 0;
             uint baseCost = (uint)(1 << (int)(largestBits - targetNbBits));
@@ -386,7 +456,10 @@ public static unsafe partial class Methods
 
             assert(huffNode[n].nbBits <= targetNbBits);
             while (huffNode[n].nbBits == targetNbBits)
+            {
                 --n;
+            }
+
             assert(((uint)totalCost & baseCost - 1) == 0);
             totalCost >>= (int)(largestBits - targetNbBits);
             assert(totalCost > 0);
@@ -400,7 +473,10 @@ public static unsafe partial class Methods
                     for (pos = n; pos >= 0; pos--)
                     {
                         if (huffNode[pos].nbBits >= currentNbBits)
+                        {
                             continue;
+                        }
+
                         currentNbBits = huffNode[pos].nbBits;
                         rankLast[targetNbBits - currentNbBits] = (uint)pos;
                     }
@@ -417,27 +493,43 @@ public static unsafe partial class Methods
                         uint highPos = rankLast[nBitsToDecrease];
                         uint lowPos = rankLast[nBitsToDecrease - 1];
                         if (highPos == noSymbol)
+                        {
                             continue;
+                        }
+
                         if (lowPos == noSymbol)
+                        {
                             break;
+                        }
+
                         {
                             uint highTotal = huffNode[highPos].count;
                             uint lowTotal = 2 * huffNode[lowPos].count;
                             if (highTotal <= lowTotal)
+                            {
                                 break;
+                            }
                         }
                     }
 
                     assert(rankLast[nBitsToDecrease] != noSymbol || nBitsToDecrease == 1);
                     while (nBitsToDecrease <= 12 && rankLast[nBitsToDecrease] == noSymbol)
+                    {
                         nBitsToDecrease++;
+                    }
+
                     assert(rankLast[nBitsToDecrease] != noSymbol);
                     totalCost -= 1 << (int)(nBitsToDecrease - 1);
                     huffNode[rankLast[nBitsToDecrease]].nbBits++;
                     if (rankLast[nBitsToDecrease - 1] == noSymbol)
+                    {
                         rankLast[nBitsToDecrease - 1] = rankLast[nBitsToDecrease];
+                    }
+
                     if (rankLast[nBitsToDecrease] == 0)
+                    {
                         rankLast[nBitsToDecrease] = noSymbol;
+                    }
                     else
                     {
                         rankLast[nBitsToDecrease]--;
@@ -445,7 +537,9 @@ public static unsafe partial class Methods
                             huffNode[rankLast[nBitsToDecrease]].nbBits
                             != targetNbBits - nBitsToDecrease
                         )
+                        {
                             rankLast[nBitsToDecrease] = noSymbol;
+                        }
                     }
                 }
 
@@ -454,7 +548,10 @@ public static unsafe partial class Methods
                     if (rankLast[1] == noSymbol)
                     {
                         while (huffNode[n].nbBits == targetNbBits)
+                        {
                             n--;
+                        }
+
                         huffNode[n + 1].nbBits--;
                         assert(n >= 0);
                         rankLast[1] = (uint)(n + 1);
@@ -655,7 +752,10 @@ public static unsafe partial class Methods
             nodeRoot;
         nonNullRank = (int)maxSymbolValue;
         while (huffNode[nonNullRank].count == 0)
+        {
             nonNullRank--;
+        }
+
         lowS = nonNullRank;
         nodeRoot = nodeNb + lowS - 1;
         lowN = nodeNb;
@@ -664,7 +764,10 @@ public static unsafe partial class Methods
         nodeNb++;
         lowS -= 2;
         for (n = nodeNb; n <= nodeRoot; n++)
+        {
             huffNode[n].count = 1U << 30;
+        }
+
         huffNode0[0].count = 1U << 31;
         while (nodeNb <= nodeRoot)
         {
@@ -677,9 +780,15 @@ public static unsafe partial class Methods
 
         huffNode[nodeRoot].nbBits = 0;
         for (n = nodeRoot - 1; n >= 255 + 1; n--)
+        {
             huffNode[n].nbBits = (byte)(huffNode[huffNode[n].parent].nbBits + 1);
+        }
+
         for (n = 0; n <= nonNullRank; n++)
+        {
             huffNode[n].nbBits = (byte)(huffNode[huffNode[n].parent].nbBits + 1);
+        }
+
         return nonNullRank;
     }
 
@@ -710,7 +819,10 @@ public static unsafe partial class Methods
         memset(valPerRank, 0, sizeof(ushort) * 13);
         int alphabetSize = (int)(maxSymbolValue + 1);
         for (n = 0; n <= nonNullRank; n++)
+        {
             nbPerRank[huffNode[n].nbBits]++;
+        }
+
         {
             ushort min = 0;
             for (n = (int)maxNbBits; n > 0; n--)
@@ -722,9 +834,15 @@ public static unsafe partial class Methods
         }
 
         for (n = 0; n < alphabetSize; n++)
+        {
             HUF_setNbBits(ct + huffNode[n].@byte, huffNode[n].nbBits);
+        }
+
         for (n = 0; n < alphabetSize; n++)
+        {
             HUF_setValue(ct + n, valPerRank[HUF_getNbBits(ct[n])]++);
+        }
+
         HUF_writeCTableHeader(CTable, maxNbBits, maxSymbolValue);
     }
 
@@ -743,17 +861,29 @@ public static unsafe partial class Methods
         nodeElt_s* huffNode = huffNode0 + 1;
         int nonNullRank;
         if (wkspSize < (nuint)sizeof(HUF_buildCTable_wksp_tables))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+        }
+
         if (maxNbBits == 0)
+        {
             maxNbBits = 11;
+        }
+
         if (maxSymbolValue > 255)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+        }
+
         memset(huffNode0, 0, (uint)(sizeof(nodeElt_s) * 512));
         HUF_sort(huffNode, count, maxSymbolValue, &wksp_tables->rankPosition.e0);
         nonNullRank = HUF_buildTree(huffNode, maxSymbolValue);
         maxNbBits = HUF_setMaxHeight(huffNode, (uint)nonNullRank, maxNbBits);
         if (maxNbBits > 12)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_GENERIC));
+        }
+
         HUF_buildCTableFromTree(CTable, huffNode, nonNullRank, maxSymbolValue, maxNbBits);
         return maxNbBits;
     }
@@ -779,7 +909,10 @@ public static unsafe partial class Methods
         int s;
         assert(header.tableLog <= 12);
         if (header.maxSymbolValue < maxSymbolValue)
+        {
             return 0;
+        }
+
         for (s = 0; s <= (int)maxSymbolValue; ++s)
         {
             bad |= count[s] != 0 && HUF_getNbBits(ct[s]) == 0 ? 1 : 0;
@@ -806,7 +939,10 @@ public static unsafe partial class Methods
             endPtr = (byte*)startPtr + dstCapacity - sizeof(nuint),
         };
         if (dstCapacity <= (nuint)sizeof(nuint))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         return 0;
     }
 
@@ -890,7 +1026,9 @@ public static unsafe partial class Methods
         bitC_ptr += nbBytes;
         assert(kFast == 0 || bitC_ptr <= bitC_endPtr);
         if (kFast == 0 && bitC_ptr > bitC_endPtr)
+        {
             bitC_ptr = bitC_endPtr;
+        }
     }
 
     /*! HUF_endMark()
@@ -914,7 +1052,10 @@ public static unsafe partial class Methods
         {
             nuint nbBits = bitC.bitPos.e0 & 0xFF;
             if (bitC.ptr >= bitC.endPtr)
+            {
                 return 0;
+            }
+
             return (nuint)(bitC.ptr - bitC.startPtr) + (nuint)(nbBits > 0 ? 1 : 0);
         }
     }
@@ -1086,15 +1227,21 @@ public static unsafe partial class Methods
         HUF_CStream_t bitC;
         System.Runtime.CompilerServices.Unsafe.SkipInit(out bitC);
         if (dstSize < 8)
+        {
             return 0;
+        }
+
         {
             byte* op = ostart;
             nuint initErr = HUF_initCStream(ref bitC, op, (nuint)(oend - op));
             if (ERR_isError(initErr))
+            {
                 return 0;
+            }
         }
 
         if (dstSize < HUF_tightCompressBound(srcSize, tableLog) || tableLog > 11)
+        {
             HUF_compress1X_usingCTable_internal_body_loop(
                 ref bitC,
                 ip,
@@ -1104,6 +1251,7 @@ public static unsafe partial class Methods
                 0,
                 0
             );
+        }
         else
         {
             if (MEM_32bits)
@@ -1271,9 +1419,15 @@ public static unsafe partial class Methods
         byte* oend = ostart + dstSize;
         byte* op = ostart;
         if (dstSize < 6 + 1 + 1 + 1 + 8)
+        {
             return 0;
+        }
+
         if (srcSize < 12)
+        {
             return 0;
+        }
+
         op += 6;
         assert(op <= oend);
         {
@@ -1286,9 +1440,15 @@ public static unsafe partial class Methods
                 flags
             );
             if (ERR_isError(cSize))
+            {
                 return cSize;
+            }
+
             if (cSize == 0 || cSize > 65535)
+            {
                 return 0;
+            }
+
             MEM_writeLE16(ostart, (ushort)cSize);
             op += cSize;
         }
@@ -1305,9 +1465,15 @@ public static unsafe partial class Methods
                 flags
             );
             if (ERR_isError(cSize))
+            {
                 return cSize;
+            }
+
             if (cSize == 0 || cSize > 65535)
+            {
                 return 0;
+            }
+
             MEM_writeLE16(ostart + 2, (ushort)cSize);
             op += cSize;
         }
@@ -1324,9 +1490,15 @@ public static unsafe partial class Methods
                 flags
             );
             if (ERR_isError(cSize))
+            {
                 return cSize;
+            }
+
             if (cSize == 0 || cSize > 65535)
+            {
                 return 0;
+            }
+
             MEM_writeLE16(ostart + 4, (ushort)cSize);
             op += cSize;
         }
@@ -1344,9 +1516,15 @@ public static unsafe partial class Methods
                 flags
             );
             if (ERR_isError(cSize))
+            {
                 return cSize;
+            }
+
             if (cSize == 0 || cSize > 65535)
+            {
                 return 0;
+            }
+
             op += cSize;
         }
 
@@ -1421,7 +1599,9 @@ public static unsafe partial class Methods
         for (i = 0; i < maxSymbolValue + 1; i++)
         {
             if (count[i] != 0)
+            {
                 cardinality += 1;
+            }
         }
 
         return cardinality;
@@ -1484,9 +1664,15 @@ public static unsafe partial class Methods
                         wkspSize
                     );
                     if (ERR_isError(maxBits))
+                    {
                         continue;
+                    }
+
                     if (maxBits < optLogGuess && optLogGuess > minTableLog)
+                    {
                         break;
+                    }
+
                     hSize = HUF_writeCTable_wksp(
                         dst,
                         dstSize,
@@ -1499,7 +1685,10 @@ public static unsafe partial class Methods
                 }
 
                 if (ERR_isError(hSize))
+                {
                     continue;
+                }
+
                 newSize = HUF_estimateCompressedSize(table, count, maxSymbolValue) + hSize;
                 if (newSize > optSize + 1)
                 {
@@ -1545,21 +1734,45 @@ public static unsafe partial class Methods
         byte* oend = ostart + dstSize;
         byte* op = ostart;
         if (wkspSize < (nuint)sizeof(HUF_compress_tables_t))
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_workSpace_tooSmall));
+        }
+
         if (srcSize == 0)
+        {
             return 0;
+        }
+
         if (dstSize == 0)
+        {
             return 0;
+        }
+
         if (srcSize > 128 * 1024)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_srcSize_wrong));
+        }
+
         if (huffLog > 12)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_tableLog_tooLarge));
+        }
+
         if (maxSymbolValue > 255)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_maxSymbolValue_tooLarge));
+        }
+
         if (maxSymbolValue == 0)
+        {
             maxSymbolValue = 255;
+        }
+
         if (huffLog == 0)
+        {
             huffLog = 11;
+        }
+
         if (
             (flags & (int)HUF_flags_e.HUF_flags_preferRepeat) != 0
             && repeat != null
@@ -1590,7 +1803,10 @@ public static unsafe partial class Methods
                     4096
                 );
                 if (ERR_isError(largestBegin))
+                {
                     return largestBegin;
+                }
+
                 largestTotal += largestBegin;
             }
 
@@ -1603,12 +1819,17 @@ public static unsafe partial class Methods
                     4096
                 );
                 if (ERR_isError(largestEnd))
+                {
                     return largestEnd;
+                }
+
                 largestTotal += largestEnd;
             }
 
             if (largestTotal <= (2 * 4096 >> 7) + 4)
+            {
                 return 0;
+            }
         }
 
         {
@@ -1621,7 +1842,10 @@ public static unsafe partial class Methods
                 sizeof(uint) * 1024
             );
             if (ERR_isError(largest))
+            {
                 return largest;
+            }
+
             if (largest == srcSize)
             {
                 *ostart = ((byte*)src)[0];
@@ -1629,7 +1853,9 @@ public static unsafe partial class Methods
             }
 
             if (largest <= (srcSize >> 7) + 4)
+            {
                 return 0;
+            }
         }
 
         if (
@@ -1681,7 +1907,9 @@ public static unsafe partial class Methods
             {
                 nuint _var_err__ = maxBits;
                 if (ERR_isError(_var_err__))
+                {
                     return _var_err__;
+                }
             }
 
             huffLog = (uint)maxBits;
@@ -1698,7 +1926,10 @@ public static unsafe partial class Methods
                 (nuint)sizeof(HUF_WriteCTableWksp)
             );
             if (ERR_isError(hSize))
+            {
                 return hSize;
+            }
+
             if (repeat != null && *repeat != HUF_repeat.HUF_repeat_none)
             {
                 nuint oldSize = HUF_estimateCompressedSize(
@@ -1738,7 +1969,9 @@ public static unsafe partial class Methods
             }
 
             if (oldHufTable != null)
+            {
                 memcpy(oldHufTable, &table->CTable.e0, sizeof(ulong) * 257);
+            }
         }
 
         return HUF_compressCTable_internal(

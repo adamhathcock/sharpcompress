@@ -1,31 +1,11 @@
 using System;
 using System.IO;
-using SharpCompress.IO;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Reduce;
 
-public class ReduceStream : Stream, IStreamStack
+public partial class ReduceStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => inStream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private readonly long unCompressedSize;
     private readonly long compressedSize;
     private readonly Stream inStream;
@@ -44,17 +24,13 @@ public class ReduceStream : Stream, IStreamStack
     private int length;
     private int distance;
 
-    public ReduceStream(Stream inStr, long compsize, long unCompSize, int factor)
+    private ReduceStream(Stream inStr, long compsize, long unCompSize, int factor)
     {
         inStream = inStr;
         compressedSize = compsize;
         unCompressedSize = unCompSize;
         inByteCount = 0;
         outBytesCount = 0;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ReduceStream));
-#endif
 
         this.factor = factor;
         distanceMask = (int)mask_bits[factor] << 8;
@@ -69,14 +45,17 @@ public class ReduceStream : Stream, IStreamStack
         outByte = 0;
 
         LoadBitLengthTable();
-        LoadNextByteTable();
+    }
+
+    public static ReduceStream Create(Stream inStr, long compsize, long unCompSize, int factor)
+    {
+        var stream = new ReduceStream(inStr, compsize, unCompSize, factor);
+        stream.LoadNextByteTable();
+        return stream;
     }
 
     protected override void Dispose(bool disposing)
     {
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ReduceStream));
-#endif
         base.Dispose(disposing);
     }
 
@@ -136,13 +115,24 @@ public class ReduceStream : Stream, IStreamStack
 
     private int bitBufferCount;
     private ulong bitBuffer;
+    private bool _inputExhausted;
 
     private int NEXTBYTE()
     {
         if (inByteCount == compressedSize)
+        {
+            _inputExhausted = true;
             return EOF;
+        }
+
         inByteCount++;
-        return inStream.ReadByte();
+        int b = inStream.ReadByte();
+        if (b < 0)
+        {
+            _inputExhausted = true;
+            return EOF;
+        }
+        return b;
     }
 
     private void READBITS(int nbits, out byte zdest)
@@ -211,6 +201,10 @@ public class ReduceStream : Stream, IStreamStack
             return outByte;
         }
         READBITS(bitCountTable[nextByteTable[outByte].Length], out byte nextByteIndex);
+        if (nextByteIndex >= nextByteTable[outByte].Length)
+        {
+            throw new InvalidFormatException("ReduceStream: next byte table index out of range");
+        }
         outByte = nextByteTable[outByte][nextByteIndex];
         return outByte;
     }
@@ -222,6 +216,13 @@ public class ReduceStream : Stream, IStreamStack
         {
             if (length == 0)
             {
+                if (_inputExhausted && bitBufferCount <= 0)
+                {
+                    throw new InvalidFormatException(
+                        "ReduceStream: compressed data exhausted before uncompressed size reached"
+                    );
+                }
+
                 byte nextByte = GetNextByte();
                 if (nextByte != RunLengthCode)
                 {
@@ -229,7 +230,9 @@ public class ReduceStream : Stream, IStreamStack
                     windowsBuffer[windowIndex++] = nextByte;
                     outBytesCount++;
                     if (windowIndex == WSIZE)
+                    {
                         windowIndex = 0;
+                    }
 
                     continue;
                 }
@@ -241,7 +244,9 @@ public class ReduceStream : Stream, IStreamStack
                     windowsBuffer[windowIndex++] = RunLengthCode;
                     outBytesCount++;
                     if (windowIndex == WSIZE)
+                    {
                         windowIndex = 0;
+                    }
 
                     continue;
                 }
@@ -268,10 +273,14 @@ public class ReduceStream : Stream, IStreamStack
                 outBytesCount++;
 
                 if (distance == WSIZE)
+                {
                     distance = 0;
+                }
 
                 if (windowIndex == WSIZE)
+                {
                     windowIndex = 0;
+                }
 
                 length--;
             }

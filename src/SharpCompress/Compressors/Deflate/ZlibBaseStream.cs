@@ -33,6 +33,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 
@@ -47,25 +48,7 @@ internal enum ZlibStreamFlavor
 
 internal class ZlibBaseStream : Stream, IStreamStack
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
     Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
 
     protected internal ZlibCodec _z; // deferred init... new ZlibCodec();
 
@@ -89,6 +72,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
     protected internal int _gzipHeaderByteCount;
 
     private readonly Encoding _encoding;
+    private readonly bool _leaveOpen;
 
     internal int Crc32 => crc?.Crc32Result ?? 0;
 
@@ -99,8 +83,19 @@ internal class ZlibBaseStream : Stream, IStreamStack
         ZlibStreamFlavor flavor,
         Encoding encoding
     )
+        : this(stream, compressionMode, level, flavor, leaveOpen: false, encoding) { }
+
+    public ZlibBaseStream(
+        Stream stream,
+        CompressionMode compressionMode,
+        CompressionLevel level,
+        ZlibStreamFlavor flavor,
+        bool leaveOpen,
+        Encoding encoding
+    )
     {
         _flushMode = FlushType.None;
+        _leaveOpen = leaveOpen;
 
         //this._workingBuffer = new byte[WORKING_BUFFER_SIZE_DEFAULT];
         _stream = stream;
@@ -109,10 +104,6 @@ internal class ZlibBaseStream : Stream, IStreamStack
         _level = level;
 
         _encoding = encoding;
-
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(ZlibBaseStream));
-#endif
 
         // workitem 7159
         if (flavor == ZlibStreamFlavor.GZIP)
@@ -285,7 +276,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     var verb = (_wantCompress ? "de" : "in") + "flating";
                     if (_z.Message is null)
                     {
-                        throw new ZlibException(String.Format("{0}: (rc = {1})", verb, rc));
+                        throw new ZlibException(
+                            String.Format(Constants.DefaultCultureInfo, "{0}: (rc = {1})", verb, rc)
+                        );
                     }
                     throw new ZlibException(verb + ": " + _z.Message);
                 }
@@ -354,6 +347,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                         {
                             throw new ZlibException(
                                 String.Format(
+                                    Constants.DefaultCultureInfo,
                                     "Protocol error. AvailableBytesIn={0}, expected 8",
                                     _z.AvailableBytesIn + bytesRead
                                 )
@@ -374,6 +368,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     {
                         throw new ZlibException(
                             String.Format(
+                                Constants.DefaultCultureInfo,
                                 "Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
                                 crc32_actual,
                                 crc32_expected
@@ -385,6 +380,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     {
                         throw new ZlibException(
                             String.Format(
+                                Constants.DefaultCultureInfo,
                                 "Bad size in GZIP stream. (actual({0})!=expected({1}))",
                                 isize_actual,
                                 isize_expected
@@ -423,7 +419,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     var verb = (_wantCompress ? "de" : "in") + "flating";
                     if (_z.Message is null)
                     {
-                        throw new ZlibException(String.Format("{0}: (rc = {1})", verb, rc));
+                        throw new ZlibException(
+                            String.Format(Constants.DefaultCultureInfo, "{0}: (rc = {1})", verb, rc)
+                        );
                     }
                     throw new ZlibException(verb + ": " + _z.Message);
                 }
@@ -529,9 +527,6 @@ internal class ZlibBaseStream : Stream, IStreamStack
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ZlibBaseStream));
-#endif
         base.Dispose(disposing);
         if (disposing)
         {
@@ -546,24 +541,29 @@ internal class ZlibBaseStream : Stream, IStreamStack
             finally
             {
                 end();
-                _stream?.Dispose();
+                if (!_leaveOpen)
+                {
+                    _stream?.Dispose();
+                }
                 _stream = null;
             }
         }
     }
 
-#if !LEGACY_DOTNET
+#if !LEGACY_DOTNET || NETSTANDARD2_1
     public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
     {
         if (isDisposed)
         {
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(ZlibBaseStream));
-#endif
+#if !LEGACY_DOTNET || NETSTANDARD2_1
         await base.DisposeAsync().ConfigureAwait(false);
+#endif
         if (_stream is null)
         {
             return;
@@ -577,27 +577,62 @@ internal class ZlibBaseStream : Stream, IStreamStack
             end();
             if (_stream != null)
             {
-                await _stream.DisposeAsync().ConfigureAwait(false);
+                if (!_leaveOpen)
+                {
+                    if (_stream is IAsyncDisposable asyncDisposableStream)
+                    {
+                        await asyncDisposableStream.DisposeAsync().ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        _stream.Dispose();
+                    }
+                }
                 _stream = null;
             }
         }
     }
-#endif
 
     public override void Flush()
     {
-        _stream.Flush();
-        //rewind the buffer
-        ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
-        z.AvailableBytesIn = 0;
+        // Only flush the underlying stream when in write mode
+        // Flushing input streams during read operations is not meaningful
+        // and can cause issues with forward-only/non-seekable streams
+        if (_streamMode == StreamMode.Writer)
+        {
+            _stream.Flush();
+        }
+        else if (z.AvailableBytesIn > 0)
+        {
+            // Rewind the underlying stream by the number of unconsumed bytes in the buffer
+            // This handles the case where the decompressor over-read past the end of the entry
+            if (_stream is IStreamStack stack)
+            {
+                stack.Rewind(z.AvailableBytesIn);
+            }
+            z.AvailableBytesIn = 0;
+        }
     }
 
     public override async Task FlushAsync(CancellationToken cancellationToken)
     {
-        await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
-        //rewind the buffer
-        ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
-        z.AvailableBytesIn = 0;
+        // Only flush the underlying stream when in write mode
+        // Flushing input streams during read operations is not meaningful
+        // and can cause issues with forward-only/non-seekable streams
+        if (_streamMode == StreamMode.Writer)
+        {
+            await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else if (z.AvailableBytesIn > 0)
+        {
+            // Rewind the underlying stream by the number of unconsumed bytes in the buffer
+            // This handles the case where the decompressor over-read past the end of the entry
+            if (_stream is IStreamStack stack)
+            {
+                stack.Rewind(z.AvailableBytesIn);
+            }
+            z.AvailableBytesIn = 0;
+        }
     }
 
     public override Int64 Seek(Int64 offset, SeekOrigin origin) =>
@@ -853,7 +888,12 @@ internal class ZlibBaseStream : Stream, IStreamStack
             if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
             {
                 throw new ZlibException(
-                    String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message)
+                    String.Format(
+                        Constants.DefaultCultureInfo,
+                        "Deflating:  rc={0}  msg={1}",
+                        rc,
+                        _z.Message
+                    )
                 );
             }
 
@@ -867,18 +907,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
             return rc;
         }
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-        if (offset < buffer.GetLowerBound(0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
+        ThrowHelper.ThrowIfNegative(count);
+        ThrowHelper.ThrowIfLessThan(offset, buffer.GetLowerBound(0));
         if ((offset + count) > buffer.GetLength(0))
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -915,6 +946,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             {
                 throw new ZlibException(
                     String.Format(
+                        Constants.DefaultCultureInfo,
                         "{0}flating:  rc={1}  msg={2}",
                         (_wantCompress ? "de" : "in"),
                         rc,
@@ -954,7 +986,12 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
                     {
                         throw new ZlibException(
-                            String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message)
+                            String.Format(
+                                Constants.DefaultCultureInfo,
+                                "Deflating:  rc={0}  msg={1}",
+                                rc,
+                                _z.Message
+                            )
                         );
                     }
                 }
@@ -972,7 +1009,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+            this.Rewind(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 
@@ -1043,7 +1080,12 @@ internal class ZlibBaseStream : Stream, IStreamStack
             if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
             {
                 throw new ZlibException(
-                    String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message)
+                    String.Format(
+                        Constants.DefaultCultureInfo,
+                        "Deflating:  rc={0}  msg={1}",
+                        rc,
+                        _z.Message
+                    )
                 );
             }
 
@@ -1057,18 +1099,9 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
             return rc;
         }
-        if (buffer is null)
-        {
-            throw new ArgumentNullException(nameof(buffer));
-        }
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-        if (offset < buffer.GetLowerBound(0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
+        ThrowHelper.ThrowIfNull(buffer);
+        ThrowHelper.ThrowIfNegative(count);
+        ThrowHelper.ThrowIfLessThan(offset, buffer.GetLowerBound(0));
         if ((offset + count) > buffer.GetLength(0))
         {
             throw new ArgumentOutOfRangeException(nameof(count));
@@ -1107,6 +1140,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             {
                 throw new ZlibException(
                     String.Format(
+                        Constants.DefaultCultureInfo,
                         "{0}flating:  rc={1}  msg={2}",
                         (_wantCompress ? "de" : "in"),
                         rc,
@@ -1146,7 +1180,12 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
                     {
                         throw new ZlibException(
-                            String.Format("Deflating:  rc={0}  msg={1}", rc, _z.Message)
+                            String.Format(
+                                Constants.DefaultCultureInfo,
+                                "Deflating:  rc={0}  msg={1}",
+                                rc,
+                                _z.Message
+                            )
                         );
                     }
                 }
@@ -1164,7 +1203,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            ((IStreamStack)this).Rewind(z.AvailableBytesIn); //unused
+            this.Rewind(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 

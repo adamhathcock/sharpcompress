@@ -62,11 +62,17 @@ public static unsafe partial class Methods
         ddict->dictID = 0;
         ddict->entropyPresent = 0;
         if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_rawContent)
+        {
             return 0;
+        }
+
         if (ddict->dictSize < 8)
         {
             if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_fullDict)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+            }
+
             return 0;
         }
 
@@ -75,7 +81,10 @@ public static unsafe partial class Methods
             if (magic != 0xEC30A437)
             {
                 if (dictContentType == ZSTD_dictContentType_e.ZSTD_dct_fullDict)
+                {
                     return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dictionary_corrupted));
+                }
+
                 return 0;
             }
         }
@@ -103,7 +112,9 @@ public static unsafe partial class Methods
             ddict->dictBuffer = null;
             ddict->dictContent = dict;
             if (dict == null)
+            {
                 dictSize = 0;
+            }
         }
         else
         {
@@ -111,7 +122,10 @@ public static unsafe partial class Methods
             ddict->dictBuffer = internalBuffer;
             ddict->dictContent = internalBuffer;
             if (internalBuffer == null)
+            {
                 return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_memory_allocation));
+            }
+
             memcpy(internalBuffer, dict, (uint)dictSize);
         }
 
@@ -138,14 +152,20 @@ public static unsafe partial class Methods
     )
     {
         if (((customMem.customAlloc == null ? 1 : 0) ^ (customMem.customFree == null ? 1 : 0)) != 0)
+        {
             return null;
+        }
+
         {
             ZSTD_DDict_s* ddict = (ZSTD_DDict_s*)ZSTD_customMalloc(
                 (nuint)sizeof(ZSTD_DDict_s),
                 customMem
             );
             if (ddict == null)
+            {
                 return null;
+            }
+
             ddict->cMem = customMem;
             {
                 nuint initResult = ZSTD_initDDict_internal(
@@ -224,9 +244,15 @@ public static unsafe partial class Methods
         assert(sBuffer != null);
         assert(dict != null);
         if (((nuint)sBuffer & 7) != 0)
+        {
             return null;
+        }
+
         if (sBufferSize < neededSpace)
+        {
             return null;
+        }
+
         if (dictLoadMethod == ZSTD_dictLoadMethod_e.ZSTD_dlm_byCopy)
         {
             memcpy(ddict + 1, dict, (uint)dictSize);
@@ -244,7 +270,10 @@ public static unsafe partial class Methods
                 )
             )
         )
+        {
             return null;
+        }
+
         return ddict;
     }
 
@@ -254,7 +283,10 @@ public static unsafe partial class Methods
     public static nuint ZSTD_freeDDict(ZSTD_DDict_s* ddict)
     {
         if (ddict == null)
+        {
             return 0;
+        }
+
         {
             ZSTD_customMem cMem = ddict->cMem;
             ZSTD_customFree(ddict->dictBuffer, cMem);
@@ -275,7 +307,10 @@ public static unsafe partial class Methods
     public static nuint ZSTD_sizeof_DDict(ZSTD_DDict_s* ddict)
     {
         if (ddict == null)
+        {
             return 0;
+        }
+
         return (nuint)sizeof(ZSTD_DDict_s) + (ddict->dictBuffer != null ? ddict->dictSize : 0);
     }
 
@@ -286,7 +321,10 @@ public static unsafe partial class Methods
     public static uint ZSTD_getDictID_fromDDict(ZSTD_DDict_s* ddict)
     {
         if (ddict == null)
+        {
             return 0;
+        }
+
         return ddict->dictID;
     }
 }

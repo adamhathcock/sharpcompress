@@ -1,29 +1,28 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 
 namespace SharpCompress.Writers;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptions)
+public abstract partial class AbstractWriter(ArchiveType type, IWriterOptions writerOptions)
     : IWriter,
         IAsyncWriter
 {
-    private bool _isDisposed;
+    protected bool _isDisposed;
 
     //always initializes the stream
 
     protected void InitializeStream(Stream stream) => OutputStream = stream;
 
-    protected Stream OutputStream { get; private set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    protected Stream? OutputStream { get; private set; }
 
-    public ArchiveType WriterType { get; } = type;
+    public ArchiveType Type { get; } = type;
 
-    protected WriterOptions WriterOptions { get; } = writerOptions;
+    protected IWriterOptions WriterOptions { get; } = writerOptions;
 
     /// <summary>
     /// Wraps the source stream with a progress-reporting stream if progress reporting is enabled.
@@ -50,38 +49,13 @@ public abstract class AbstractWriter(ArchiveType type, WriterOptions writerOptio
 
     public abstract void Write(string filename, Stream source, DateTime? modificationTime);
 
-    public virtual async ValueTask WriteAsync(
-        string filename,
-        Stream source,
-        DateTime? modificationTime,
-        CancellationToken cancellationToken = default
-    )
-    {
-        // Default implementation calls synchronous version
-        // Derived classes should override for true async behavior
-        Write(filename, source, modificationTime);
-        await Task.CompletedTask.ConfigureAwait(false);
-    }
-
     public abstract void WriteDirectory(string directoryName, DateTime? modificationTime);
-
-    public virtual async ValueTask WriteDirectoryAsync(
-        string directoryName,
-        DateTime? modificationTime,
-        CancellationToken cancellationToken = default
-    )
-    {
-        // Default implementation calls synchronous version
-        // Derived classes should override for true async behavior
-        WriteDirectory(directoryName, modificationTime);
-        await Task.CompletedTask.ConfigureAwait(false);
-    }
 
     protected virtual void Dispose(bool isDisposing)
     {
         if (isDisposing)
         {
-            OutputStream.Dispose();
+            OutputStream?.Dispose();
         }
     }
 

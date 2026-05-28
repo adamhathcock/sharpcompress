@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Test.Zip;
@@ -80,7 +81,7 @@ public class ZipArchiveDirectoryTests : TestBase
 
             using (var fileStream = File.Create(scratchPath))
             {
-                archive.SaveTo(fileStream, CompressionType.Deflate);
+                archive.SaveTo(fileStream, new ZipWriterOptions(CompressionType.Deflate));
             }
         }
 

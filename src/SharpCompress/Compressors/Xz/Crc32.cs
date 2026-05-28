@@ -1,5 +1,3 @@
-#nullable disable
-
 using System;
 
 namespace SharpCompress.Compressors.Xz;
@@ -10,7 +8,7 @@ public static class Crc32
     public const uint DefaultPolynomial = 0xedb88320u;
     public const uint DefaultSeed = 0xffffffffu;
 
-    private static uint[] defaultTable;
+    private static uint[]? defaultTable;
 
     public static uint Compute(byte[] buffer) => Compute(DefaultSeed, buffer);
 

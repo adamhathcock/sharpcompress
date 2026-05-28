@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
@@ -39,29 +37,27 @@ public static class IArchiveExtensions
             IProgress<ProgressReport>? progress
         )
         {
+            options ??= new ExtractionOptions();
+            var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
+                destinationDirectory
+            );
+
             var totalBytes = archive.TotalUncompressedSize;
             var bytesRead = 0L;
-            var seenDirectories = new HashSet<string>();
 
             foreach (var entry in archive.Entries)
             {
                 if (entry.IsDirectory)
                 {
-                    var dirPath = Path.Combine(
-                        destinationDirectory,
-                        entry.Key.NotNull("Entry Key is null")
-                    );
-                    if (
-                        Path.GetDirectoryName(dirPath + "/") is { } parentDirectory
-                        && seenDirectories.Add(dirPath)
-                    )
-                    {
-                        Directory.CreateDirectory(parentDirectory);
-                    }
+                    entry.WriteEntryToDirectoryCore(fullDestinationDirectoryPath, options, null);
                     continue;
                 }
 
-                entry.WriteToDirectory(destinationDirectory, options);
+                entry.WriteEntryToDirectoryCore(
+                    fullDestinationDirectoryPath,
+                    options,
+                    path => entry.WriteToFile(path, options)
+                );
 
                 bytesRead += entry.Size;
                 progress?.Report(

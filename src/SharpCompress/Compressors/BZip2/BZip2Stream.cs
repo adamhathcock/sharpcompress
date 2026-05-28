@@ -1,35 +1,18 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Compressors.BZip2;
 
-public sealed class BZip2Stream : Stream, IStreamStack
+public sealed partial class BZip2Stream : Stream, IFinishable
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
-    private readonly Stream stream;
+    private Stream stream = default!;
     private bool isDisposed;
+
+    private BZip2Stream() { }
 
     /// <summary>
     /// Create a BZip2Stream
@@ -37,21 +20,32 @@ public sealed class BZip2Stream : Stream, IStreamStack
     /// <param name="stream">The stream to read from</param>
     /// <param name="compressionMode">Compression Mode</param>
     /// <param name="decompressConcatenated">Decompress Concatenated</param>
-    public BZip2Stream(Stream stream, CompressionMode compressionMode, bool decompressConcatenated)
+    public static BZip2Stream Create(
+        Stream stream,
+        CompressionMode compressionMode,
+        bool decompressConcatenated,
+        bool leaveOpen = false
+    )
     {
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(BZip2Stream));
-#endif
-        Mode = compressionMode;
-        if (Mode == CompressionMode.Compress)
+        var bZip2Stream = new BZip2Stream();
+        bZip2Stream.Mode = compressionMode;
+        if (bZip2Stream.Mode == CompressionMode.Compress)
         {
-            this.stream = new CBZip2OutputStream(stream);
+            bZip2Stream.stream = new CBZip2OutputStream(stream, leaveOpen);
         }
         else
         {
-            this.stream = new CBZip2InputStream(stream, decompressConcatenated);
+            bZip2Stream.stream = CBZip2InputStream.Create(
+                stream,
+                decompressConcatenated,
+                leaveOpen
+            );
         }
+
+        return bZip2Stream;
     }
+
+    public ValueTask FinishAsync() => (stream as CBZip2OutputStream)?.FinishAsync() ?? default;
 
     public void Finish() => (stream as CBZip2OutputStream)?.Finish();
 
@@ -59,19 +53,18 @@ public sealed class BZip2Stream : Stream, IStreamStack
     {
         if (isDisposed)
         {
+            base.Dispose(disposing);
             return;
         }
         isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(BZip2Stream));
-#endif
         if (disposing)
         {
             stream.Dispose();
         }
+        base.Dispose(disposing);
     }
 
-    public CompressionMode Mode { get; }
+    public CompressionMode Mode { get; private set; }
 
     public override bool CanRead => stream.CanRead;
 
@@ -99,35 +92,10 @@ public sealed class BZip2Stream : Stream, IStreamStack
     public override void SetLength(long value) => stream.SetLength(value);
 
 #if !LEGACY_DOTNET
-
     public override int Read(Span<byte> buffer) => stream.Read(buffer);
 
     public override void Write(ReadOnlySpan<byte> buffer) => stream.Write(buffer);
-
-    public override async ValueTask<int> ReadAsync(
-        Memory<byte> buffer,
-        CancellationToken cancellationToken = default
-    ) => await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-
-    public override async ValueTask WriteAsync(
-        ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default
-    ) => await stream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
 #endif
-
-    public override async Task<int> ReadAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    ) => await stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
-
-    public override async Task WriteAsync(
-        byte[] buffer,
-        int offset,
-        int count,
-        CancellationToken cancellationToken = default
-    ) => await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
 
     public override void Write(byte[] buffer, int offset, int count) =>
         stream.Write(buffer, offset, count);
@@ -141,7 +109,7 @@ public sealed class BZip2Stream : Stream, IStreamStack
     /// <returns></returns>
     public static bool IsBZip2(Stream stream)
     {
-        var br = new BinaryReader(stream);
+        using var br = new BinaryReader(stream, Encoding.Default, leaveOpen: true);
         var chars = br.ReadBytes(2);
         if (chars.Length < 2 || chars[0] != 'B' || chars[1] != 'Z')
         {
@@ -149,4 +117,6 @@ public sealed class BZip2Stream : Stream, IStreamStack
         }
         return true;
     }
+
+    // Async methods moved to BZip2Stream.Async.cs
 }

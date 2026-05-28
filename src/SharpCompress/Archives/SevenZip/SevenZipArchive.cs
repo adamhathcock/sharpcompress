@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
-using SharpCompress.Compressors.LZMA.Utilites;
+using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
@@ -16,48 +16,66 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 {
     private ArchiveDatabase? _database;
 
+    /// <summary>
+    /// Constructor with a SourceStream able to handle FileInfo and Streams.
+    /// </summary>
+    /// <param name="sourceStream"></param>
     private SevenZipArchive(SourceStream sourceStream)
         : base(ArchiveType.SevenZip, sourceStream) { }
 
-    internal SevenZipArchive()
-        : base(ArchiveType.SevenZip) { }
-
     protected override IEnumerable<SevenZipVolume> LoadVolumes(SourceStream sourceStream)
     {
-        sourceStream.NotNull("SourceStream is null").LoadAllParts();
-        return new SevenZipVolume(sourceStream, ReaderOptions, 0).AsEnumerable();
+        sourceStream.NotNull("SourceStream is null").LoadAllParts(); //request all streams
+        return new SevenZipVolume(sourceStream, ReaderOptions, 0).AsEnumerable(); //simple single volume or split, multivolume not supported
     }
+
+    internal SevenZipArchive()
+        : base(ArchiveType.SevenZip) { }
 
     protected override IEnumerable<SevenZipArchiveEntry> LoadEntries(
         IEnumerable<SevenZipVolume> volumes
     )
     {
-        var stream = volumes.Single().Stream;
-        LoadFactory(stream);
-        if (_database is null)
+        foreach (var volume in volumes)
         {
-            return Enumerable.Empty<SevenZipArchiveEntry>();
-        }
-        var entries = new SevenZipArchiveEntry[_database._files.Count];
-        for (var i = 0; i < _database._files.Count; i++)
-        {
-            var file = _database._files[i];
-            entries[i] = new SevenZipArchiveEntry(
-                this,
-                new SevenZipFilePart(stream, _database, i, file, ReaderOptions.ArchiveEncoding)
-            );
-        }
-        foreach (var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder))
-        {
-            var isSolid = false;
-            foreach (var entry in group)
+            LoadFactory(volume.Stream);
+            if (_database is null)
             {
-                entry.IsSolid = isSolid;
-                isSolid = true;
+                yield break;
+            }
+            var entries = new SevenZipArchiveEntry[_database._files.Count];
+            for (var i = 0; i < _database._files.Count; i++)
+            {
+                var file = _database._files[i];
+                entries[i] = new SevenZipArchiveEntry(
+                    this,
+                    new SevenZipFilePart(
+                        volume.Stream,
+                        _database,
+                        i,
+                        file,
+                        ReaderOptions.ArchiveEncoding
+                    ),
+                    ReaderOptions
+                );
+            }
+            foreach (
+                var group in entries.Where(x => !x.IsDirectory).GroupBy(x => x.FilePart.Folder)
+            )
+            {
+                var isSolid = false;
+                foreach (var entry in group)
+                {
+                    entry.IsSolid = isSolid;
+                    isSolid = true;
+                }
+            }
+
+            foreach (var entry in entries)
+            {
+                yield return entry;
             }
         }
-
-        return entries;
     }
 
     private void LoadFactory(Stream stream)
@@ -74,27 +92,45 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
     protected override IReader CreateReaderForSolidExtraction() =>
         new SevenZipReader(ReaderOptions, this);
 
-    protected override ValueTask<IAsyncReader> CreateReaderForSolidExtractionAsync() =>
-        new(new SevenZipReader(ReaderOptions, this));
-
     public override bool IsSolid =>
         Entries
             .Where(x => !x.IsDirectory)
             .GroupBy(x => x.FilePart.Folder)
-            .Any(folder => folder.Count() > 1);
+            .Any(folder => folder.Skip(1).Any());
 
     public override bool IsEncrypted => Entries.First(x => !x.IsDirectory).IsEncrypted;
 
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
 
-    private sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
+    internal sealed class SevenZipReader : AbstractReader<SevenZipEntry, SevenZipVolume>
     {
         private readonly SevenZipArchive _archive;
         private SevenZipEntry? _currentEntry;
+        private Stream? _currentFolderStream;
+        private CFolder? _currentFolder;
+
+        /// <summary>
+        /// Enables internal diagnostics for tests.
+        /// When disabled (default), diagnostics properties return null to avoid exposing internal state.
+        /// </summary>
+        internal bool DiagnosticsEnabled { get; set; }
+
+        /// <summary>
+        /// Current folder instance used to decide whether the solid folder stream should be reused.
+        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
+        /// </summary>
+        internal object? DiagnosticsCurrentFolder => DiagnosticsEnabled ? _currentFolder : null;
+
+        /// <summary>
+        /// Current shared folder stream instance.
+        /// Only available when <see cref="DiagnosticsEnabled"/> is true.
+        /// </summary>
+        internal Stream? DiagnosticsCurrentFolderStream =>
+            DiagnosticsEnabled ? _currentFolderStream : null;
 
         internal SevenZipReader(ReaderOptions readerOptions, SevenZipArchive archive)
-            : base(readerOptions, ArchiveType.SevenZip) => this._archive = archive;
+            : base(readerOptions, ArchiveType.SevenZip, false) => this._archive = archive;
 
         public override SevenZipVolume Volume => _archive.Volumes.Single();
 
@@ -107,6 +143,10 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 _currentEntry = dir;
                 yield return dir;
             }
+            // For solid archives (entries in the same folder share a compressed stream),
+            // we must iterate entries sequentially and maintain the folder stream state
+            // across entries in the same folder to avoid recreating the decompression
+            // stream for each file, which breaks contiguous streaming.
             foreach (var entry in entries.Where(x => !x.IsDirectory))
             {
                 _currentEntry = entry;
@@ -121,10 +161,59 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             {
                 return CreateEntryStream(Stream.Null);
             }
-            return CreateEntryStream(new SyncOnlyStream(entry.FilePart.GetCompressedStream()));
+
+            var folder = entry.FilePart.Folder;
+
+            // If folder is null (empty stream entry), return empty stream
+            if (folder is null)
+            {
+                return CreateEntryStream(Stream.Null);
+            }
+
+            // Check if we're starting a new folder - dispose old folder stream if needed
+            if (folder != _currentFolder)
+            {
+                _currentFolderStream?.Dispose();
+                _currentFolderStream = null;
+                _currentFolder = folder;
+            }
+
+            // Create the folder stream once per folder
+            if (_currentFolderStream is null)
+            {
+                _currentFolderStream = _archive._database!.GetFolderStream(
+                    _archive.Volumes.Single().Stream,
+                    folder!,
+                    _archive._database.PasswordProvider
+                );
+            }
+
+            return CreateEntryStream(
+                new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
+            );
+        }
+
+        protected override ValueTask<EntryStream> GetEntryStreamAsync(
+            CancellationToken cancellationToken = default
+        ) => new(GetEntryStream());
+
+        public override void Dispose()
+        {
+            _currentFolderStream?.Dispose();
+            _currentFolderStream = null;
+            base.Dispose();
         }
     }
 
+    /// <summary>
+    /// WORKAROUND: Forces async operations to use synchronous equivalents.
+    /// This is necessary because the LZMA decoder has bugs in its async implementation
+    /// that cause state corruption (IndexOutOfRangeException, DataErrorException).
+    ///
+    /// The proper fix would be to repair the LZMA decoder's async methods
+    /// (LzmaStream.ReadAsync, Decoder.CodeAsync, OutWindow async operations),
+    /// but that requires deep changes to the decoder state machine.
+    /// </summary>
     private sealed class SyncOnlyStream : Stream
     {
         private readonly Stream _baseStream;
@@ -154,6 +243,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         public override void Write(byte[] buffer, int offset, int count) =>
             _baseStream.Write(buffer, offset, count);
 
+        // Force async operations to use sync equivalents to avoid LZMA decoder bugs
         public override Task<int> ReadAsync(
             byte[] buffer,
             int offset,

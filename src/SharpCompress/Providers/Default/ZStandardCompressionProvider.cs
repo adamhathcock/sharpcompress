@@ -1,0 +1,25 @@
+using System.IO;
+using SharpCompress.Common;
+using ZStd = SharpCompress.Compressors.ZStandard;
+
+namespace SharpCompress.Providers.Default;
+
+/// <summary>
+/// Provides ZStandard compression using SharpCompress's internal implementation.
+/// </summary>
+public sealed class ZStandardCompressionProvider : CompressionProviderBase
+{
+    public override CompressionType CompressionType => CompressionType.ZStandard;
+    public override bool SupportsCompression => true;
+    public override bool SupportsDecompression => true;
+
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel)
+    {
+        return new ZStd.CompressionStream(destination, compressionLevel);
+    }
+
+    public override Stream CreateDecompressStream(Stream source)
+    {
+        return new ZStd.DecompressionStream(source);
+    }
+}

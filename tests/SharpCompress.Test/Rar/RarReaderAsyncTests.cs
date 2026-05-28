@@ -14,6 +14,30 @@ namespace SharpCompress.Test.Rar;
 
 public class RarReaderAsyncTests : ReaderTests
 {
+    [Theory]
+    [InlineData("Rar15.rar")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.Audio_program.rar")]
+    [InlineData("Rar5.rar")]
+    [InlineData("Rar5.solid.rar")]
+    public async ValueTask Rar_Reader_Async_Uses_Only_Async_Stream_Operations(string filename)
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (!reader.Entry.IsDirectory)
+            {
+                using var output = new AsyncOnlyStream(new MemoryStream());
+                await reader.WriteEntryToAsync(output);
+            }
+        }
+    }
+
     [Fact]
     public async ValueTask Rar_Multi_Reader_Async() =>
         await DoRar_Multi_Reader_Async([
@@ -49,10 +73,7 @@ public class RarReaderAsyncTests : ReaderTests
             IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -60,7 +81,7 @@ public class RarReaderAsyncTests : ReaderTests
 
     [Fact]
     public async ValueTask Rar_Multi_Reader_Encrypted_Async() =>
-        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
         {
             string[] archives =
             [
@@ -76,17 +97,17 @@ public class RarReaderAsyncTests : ReaderTests
                     archives
                         .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
                         .Select(p => File.OpenRead(p)),
-                    new ReaderOptions { Password = "test" }
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
                 )
             )
             {
                 IAsyncReader reader = (IAsyncReader)baseReader;
                 while (await reader.MoveToNextEntryAsync())
                 {
-                    await reader.WriteEntryToDirectoryAsync(
-                        SCRATCH_FILES_PATH,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                    );
+                    await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
                 }
             }
             VerifyFiles();
@@ -132,10 +153,7 @@ public class RarReaderAsyncTests : ReaderTests
             IAsyncReader reader = (IAsyncReader)baseReader;
             while (await reader.MoveToNextEntryAsync())
             {
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         foreach (var stream in streams)
@@ -196,7 +214,10 @@ public class RarReaderAsyncTests : ReaderTests
         await ReadAsync(
             testArchive,
             CompressionType.Rar,
-            new ReaderOptions { Password = password }
+            ReaderOptions.ForFilePath with
+            {
+                Password = password,
+            }
         );
 
     [Fact]
@@ -208,7 +229,7 @@ public class RarReaderAsyncTests : ReaderTests
     private async ValueTask DoRar_Entry_Stream_Async(string filename)
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename)))
-        await using (var reader = ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream)))
+        await using (var reader = await ReaderFactory.OpenAsyncReader(new AsyncOnlyStream(stream)))
         {
             while (await reader.MoveToNextEntryAsync())
             {
@@ -221,7 +242,9 @@ public class RarReaderAsyncTests : ReaderTests
                         var file = Path.GetFileName(reader.Entry.Key).NotNull();
                         var folder =
                             Path.GetDirectoryName(reader.Entry.Key)
-                            ?? throw new ArgumentNullException();
+                            ?? throw new InvalidOperationException(
+                                "Entry key must have a directory name."
+                            );
                         var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                         if (!Directory.Exists(destdir))
                         {
@@ -253,19 +276,19 @@ public class RarReaderAsyncTests : ReaderTests
             var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.Audio_program.rar"))
         )
         await using (
-            var reader = ReaderFactory.OpenAsyncReader(
+            var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
             while (await reader.MoveToNextEntryAsync())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         CompareFilesByPath(
@@ -281,7 +304,10 @@ public class RarReaderAsyncTests : ReaderTests
         using (
             IReader baseReader = RarReader.OpenReader(
                 stream,
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
@@ -289,10 +315,7 @@ public class RarReaderAsyncTests : ReaderTests
             while (await reader.MoveToNextEntryAsync())
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();
@@ -325,19 +348,19 @@ public class RarReaderAsyncTests : ReaderTests
     private async ValueTask DoRar_Solid_Skip_Reader_Async(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        await using var reader = ReaderFactory.OpenAsyncReader(
+        await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -351,19 +374,19 @@ public class RarReaderAsyncTests : ReaderTests
     private async ValueTask DoRar_Reader_Skip_Async(string filename)
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
-        await using var reader = ReaderFactory.OpenAsyncReader(
+        await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            new ReaderOptions { LookForHeader = true }
+            ReaderOptions.ForExternalStream with
+            {
+                LookForHeader = true,
+            }
         );
         while (await reader.MoveToNextEntryAsync())
         {
             if (reader.Entry.Key.NotNull().Contains("jpg"))
             {
                 Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
     }
@@ -376,19 +399,16 @@ public class RarReaderAsyncTests : ReaderTests
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
         using Stream stream = File.OpenRead(testArchive);
-        await using var reader = ReaderFactory.OpenAsyncReader(
+        await using var reader = await ReaderFactory.OpenAsyncReader(
             new AsyncOnlyStream(stream),
-            readerOptions ?? new ReaderOptions()
+            readerOptions ?? ReaderOptions.ForExternalStream
         );
         while (await reader.MoveToNextEntryAsync())
         {
             if (!reader.Entry.IsDirectory)
             {
                 Assert.Equal(expectedCompression, reader.Entry.CompressionType);
-                await reader.WriteEntryToDirectoryAsync(
-                    SCRATCH_FILES_PATH,
-                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
-                );
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
             }
         }
         VerifyFiles();

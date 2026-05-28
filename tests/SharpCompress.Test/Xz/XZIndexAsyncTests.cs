@@ -18,7 +18,7 @@ public class XzIndexAsyncTests : XzTestsBase
     public void RecordsStreamStartOnInit()
     {
         using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
-        var br = new BinaryReader(badStream);
+        using var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         Assert.Equal(0, index.StreamStartPosition);
     }
@@ -27,7 +27,7 @@ public class XzIndexAsyncTests : XzTestsBase
     public async ValueTask ThrowsIfHasNoIndexMarkerAsync()
     {
         using Stream badStream = new MemoryStream([1, 2, 3, 4, 5]);
-        var br = new BinaryReader(badStream);
+        using var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             await index.ProcessAsync().ConfigureAwait(false)
@@ -37,7 +37,7 @@ public class XzIndexAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask ReadsNoRecordAsync()
     {
-        var br = new BinaryReader(CompressedEmptyStream);
+        using var br = new BinaryReader(CompressedEmptyStream);
         var index = new XZIndex(br, false);
         await index.ProcessAsync().ConfigureAwait(false);
         Assert.Equal((ulong)0, index.NumberOfRecords);
@@ -46,7 +46,7 @@ public class XzIndexAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask ReadsOneRecordAsync()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var index = new XZIndex(br, false);
         await index.ProcessAsync().ConfigureAwait(false);
         Assert.Equal((ulong)1, index.NumberOfRecords);
@@ -55,7 +55,7 @@ public class XzIndexAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask ReadsMultipleRecordsAsync()
     {
-        var br = new BinaryReader(CompressedIndexedStream);
+        using var br = new BinaryReader(CompressedIndexedStream);
         var index = new XZIndex(br, false);
         await index.ProcessAsync().ConfigureAwait(false);
         Assert.Equal((ulong)2, index.NumberOfRecords);
@@ -64,7 +64,7 @@ public class XzIndexAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask ReadsFirstRecordAsync()
     {
-        var br = new BinaryReader(CompressedStream);
+        using var br = new BinaryReader(CompressedStream);
         var index = new XZIndex(br, false);
         await index.ProcessAsync().ConfigureAwait(false);
         Assert.Equal((ulong)OriginalBytes.Length, index.Records[0].UncompressedSize);
@@ -89,7 +89,7 @@ public class XzIndexAsyncTests : XzTestsBase
             0xC9,
             0xFF,
         ]);
-        var br = new BinaryReader(badStream);
+        using var br = new BinaryReader(badStream);
         var index = new XZIndex(br, false);
         await index.ProcessAsync().ConfigureAwait(false);
         Assert.Equal(0L, badStream.Position % 4L);

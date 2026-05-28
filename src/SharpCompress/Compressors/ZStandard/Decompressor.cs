@@ -36,17 +36,21 @@ public unsafe class Decompressor : IDisposable
     {
         using var dctx = handle.Acquire();
         fixed (byte* dictPtr = dict)
+        {
             Unsafe
                 .Methods.ZSTD_DCtx_loadDictionary(dctx, dictPtr, (nuint)dict.Length)
                 .EnsureZstdSuccess();
+        }
     }
 
     public static ulong GetDecompressedSize(ReadOnlySpan<byte> src)
     {
         fixed (byte* srcPtr = src)
+        {
             return Unsafe
                 .Methods.ZSTD_decompressBound(srcPtr, (nuint)src.Length)
                 .EnsureContentSizeOk();
+        }
     }
 
     public static ulong GetDecompressedSize(ArraySegment<byte> src) =>
@@ -59,15 +63,20 @@ public unsafe class Decompressor : IDisposable
     {
         var expectedDstSize = GetDecompressedSize(src);
         if (expectedDstSize > (ulong)maxDecompressedSize)
+        {
             throw new ZstdException(
                 ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than {nameof(maxDecompressedSize)} {maxDecompressedSize}"
             );
+        }
+
         if (expectedDstSize > Constants.MaxByteArrayLength)
+        {
             throw new ZstdException(
                 ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall,
                 $"Decompressed content size {expectedDstSize} is greater than max possible byte array size {Constants.MaxByteArrayLength}"
             );
+        }
 
         var dest = new byte[expectedDstSize];
         var length = Unwrap(src, dest);

@@ -31,7 +31,7 @@ public class Zip64VersionConsistencyTests : WriterTests
         }
 
         // Create archive with UseZip64=true
-        WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+        var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
         {
             LeaveStreamOpen = false,
             UseZip64 = true,
@@ -135,7 +135,7 @@ public class Zip64VersionConsistencyTests : WriterTests
         }
 
         // Create archive without UseZip64
-        WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+        var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
         {
             LeaveStreamOpen = false,
             UseZip64 = false,
@@ -186,7 +186,7 @@ public class Zip64VersionConsistencyTests : WriterTests
             File.Delete(filename);
         }
 
-        WriterOptions writerOptions = new ZipWriterOptions(CompressionType.LZMA)
+        var writerOptions = new ZipWriterOptions(CompressionType.LZMA)
         {
             LeaveStreamOpen = false,
             UseZip64 = false,
@@ -239,7 +239,7 @@ public class Zip64VersionConsistencyTests : WriterTests
             File.Delete(filename);
         }
 
-        WriterOptions writerOptions = new ZipWriterOptions(CompressionType.PPMd)
+        var writerOptions = new ZipWriterOptions(CompressionType.PPMd)
         {
             LeaveStreamOpen = false,
             UseZip64 = false,
@@ -292,7 +292,7 @@ public class Zip64VersionConsistencyTests : WriterTests
             File.Delete(filename);
         }
 
-        WriterOptions writerOptions = new ZipWriterOptions(CompressionType.Deflate)
+        var writerOptions = new ZipWriterOptions(CompressionType.Deflate)
         {
             LeaveStreamOpen = false,
             UseZip64 = true,

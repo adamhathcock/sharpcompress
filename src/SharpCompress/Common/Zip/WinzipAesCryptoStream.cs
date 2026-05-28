@@ -1,41 +1,22 @@
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
 using System.Security.Cryptography;
-using SharpCompress.IO;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip;
 
-internal class WinzipAesCryptoStream : Stream, IStreamStack
+internal partial class WinzipAesCryptoStream : Stream
 {
-#if DEBUG_STREAMS
-    long IStreamStack.InstanceId { get; set; }
-#endif
-    int IStreamStack.DefaultBufferSize { get; set; }
-
-    Stream IStreamStack.BaseStream() => _stream;
-
-    int IStreamStack.BufferSize
-    {
-        get => 0;
-        set { }
-    }
-    int IStreamStack.BufferPosition
-    {
-        get => 0;
-        set { }
-    }
-
-    void IStreamStack.SetPosition(long position) { }
-
     private const int BLOCK_SIZE_IN_BYTES = 16;
-    private readonly SymmetricAlgorithm _cipher;
+    private readonly Aes _cipher;
     private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
     private readonly Stream _stream;
     private readonly ICryptoTransform _transform;
     private int _nonce = 1;
     private byte[] _counterOut = new byte[BLOCK_SIZE_IN_BYTES];
-    private bool _isFinalBlock;
+    private int _counterOutOffset = BLOCK_SIZE_IN_BYTES;
     private long _totalBytesLeftToRead;
     private bool _isDisposed;
 
@@ -48,17 +29,13 @@ internal class WinzipAesCryptoStream : Stream, IStreamStack
         _stream = stream;
         _totalBytesLeftToRead = length;
 
-#if DEBUG_STREAMS
-        this.DebugConstruct(typeof(WinzipAesCryptoStream));
-#endif
-
         _cipher = CreateCipher(winzipAesEncryptionData);
 
         var iv = new byte[BLOCK_SIZE_IN_BYTES];
         _transform = _cipher.CreateEncryptor(winzipAesEncryptionData.KeyBytes, iv);
     }
 
-    private SymmetricAlgorithm CreateCipher(WinzipAesEncryptionData winzipAesEncryptionData)
+    private Aes CreateCipher(WinzipAesEncryptionData winzipAesEncryptionData)
     {
         var cipher = Aes.Create();
         cipher.BlockSize = BLOCK_SIZE_IN_BYTES * 8;
@@ -86,19 +63,43 @@ internal class WinzipAesCryptoStream : Stream, IStreamStack
     {
         if (_isDisposed)
         {
+            base.Dispose(disposing);
             return;
         }
         _isDisposed = true;
-#if DEBUG_STREAMS
-        this.DebugDispose(typeof(WinzipAesCryptoStream));
-#endif
         if (disposing)
         {
-            //read out last 10 auth bytes
-            Span<byte> ten = stackalloc byte[10];
-            _stream.ReadFully(ten);
+            // Read out last 10 auth bytes - catch exceptions for async-only streams
+            if (Utility.UseSyncOverAsyncDispose())
+            {
+                var ten = ArrayPool<byte>.Shared.Rent(10);
+                try
+                {
+#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
+#pragma warning disable CA2012
+                    _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
+#pragma warning restore CA2012
+#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(ten);
+                }
+            }
+            else
+            {
+                Span<byte> ten = stackalloc byte[10];
+                _stream.ReadFully(ten);
+            }
             _stream.Dispose();
         }
+        base.Dispose(disposing);
+    }
+
+    private async ValueTask ReadAuthBytesAsync()
+    {
+        byte[] authBytes = new byte[10];
+        await _stream.ReadFullyAsync(authBytes, 0, 10).ConfigureAwait(false);
     }
 
     public override void Flush() { }
@@ -122,58 +123,45 @@ internal class WinzipAesCryptoStream : Stream, IStreamStack
         return read;
     }
 
-    private int ReadTransformOneBlock(byte[] buffer, int offset, int last)
+    private void FillCounterOut()
     {
-        if (_isFinalBlock)
-        {
-            throw new InvalidOperationException();
-        }
-
-        var bytesRemaining = last - offset;
-        var bytesToRead =
-            (bytesRemaining > BLOCK_SIZE_IN_BYTES) ? BLOCK_SIZE_IN_BYTES : bytesRemaining;
-
         // update the counter
         BinaryPrimitives.WriteInt32LittleEndian(_counter, _nonce++);
-
-        // Determine if this is the final block
-        if ((bytesToRead == bytesRemaining) && (_totalBytesLeftToRead == 0))
-        {
-            _counterOut = _transform.TransformFinalBlock(_counter, 0, BLOCK_SIZE_IN_BYTES);
-            _isFinalBlock = true;
-        }
-        else
-        {
-            _transform.TransformBlock(
-                _counter,
-                0, // offset
-                BLOCK_SIZE_IN_BYTES,
-                _counterOut,
-                0
-            ); // offset
-        }
-
-        XorInPlace(buffer, offset, bytesToRead);
-        return bytesToRead;
+        _transform.TransformBlock(
+            _counter,
+            0, // offset
+            BLOCK_SIZE_IN_BYTES,
+            _counterOut,
+            0
+        ); // offset
+        _counterOutOffset = 0;
     }
 
-    private void XorInPlace(byte[] buffer, int offset, int count)
+    private void XorInPlace(byte[] buffer, int offset, int count, int counterOffset)
     {
         for (var i = 0; i < count; i++)
         {
-            buffer[offset + i] = (byte)(_counterOut[i] ^ buffer[offset + i]);
+            buffer[offset + i] = (byte)(_counterOut[counterOffset + i] ^ buffer[offset + i]);
         }
     }
 
     private void ReadTransformBlocks(byte[] buffer, int offset, int count)
     {
         var posn = offset;
-        var last = count + offset;
+        var remaining = count;
 
-        while (posn < buffer.Length && posn < last)
+        while (posn < buffer.Length && remaining > 0)
         {
-            var n = ReadTransformOneBlock(buffer, posn, last);
-            posn += n;
+            if (_counterOutOffset == BLOCK_SIZE_IN_BYTES)
+            {
+                FillCounterOut();
+            }
+
+            var bytesToXor = Math.Min(BLOCK_SIZE_IN_BYTES - _counterOutOffset, remaining);
+            XorInPlace(buffer, posn, bytesToXor, _counterOutOffset);
+            _counterOutOffset += bytesToXor;
+            posn += bytesToXor;
+            remaining -= bytesToXor;
         }
     }
 

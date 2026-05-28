@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -5,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
@@ -22,7 +24,7 @@ public class ZipFactory
         IMultiArchiveFactory,
         IReaderFactory,
         IWriterFactory,
-        IWriteableArchiveFactory
+        IWritableArchiveFactory<ZipWriterOptions>
 {
     #region IFactory
 
@@ -41,22 +43,10 @@ public class ZipFactory
     }
 
     /// <inheritdoc/>
-    public override bool IsArchive(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    )
+    public override bool IsArchive(Stream stream, ReaderOptions readerOptions)
     {
         var startPosition = stream.CanSeek ? stream.Position : -1;
-
-        // probe for single volume zip
-
-        if (stream is not SharpCompressStream) // wrap to provide buffer bef
-        {
-            stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-        }
-
-        if (ZipArchive.IsZipFile(stream, password, bufferSize))
+        if (ZipArchive.IsZipFile(stream, readerOptions.Password))
         {
             return true;
         }
@@ -71,7 +61,7 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (ZipArchive.IsZipMulti(stream, password, bufferSize))
+        if (ZipArchive.IsZipMulti(stream, readerOptions.Password))
         {
             return true;
         }
@@ -81,17 +71,10 @@ public class ZipFactory
         return false;
     }
 
-    public override ValueTask<bool> IsArchiveAsync(
-        Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize
-    ) => new(IsArchive(stream, password, bufferSize));
-
     /// <inheritdoc/>
     public override async ValueTask<bool> IsArchiveAsync(
         Stream stream,
-        string? password = null,
-        int bufferSize = ReaderOptions.DefaultBufferSize,
+        ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
     )
     {
@@ -99,19 +82,16 @@ public class ZipFactory
         var startPosition = stream.CanSeek ? stream.Position : -1;
 
         // probe for single volume zip
-
-        if (stream is not SharpCompressStream) // wrap to provide buffer bef
-        {
-            stream = new SharpCompressStream(stream, bufferSize: bufferSize);
-        }
-
-        if (await ZipArchive.IsZipFileAsync(stream, password, bufferSize, cancellationToken))
+        if (
+            await ZipArchive
+                .IsZipFileAsync(stream, readerOptions.Password, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             return true;
         }
 
         // probe for a multipart zip
-
         if (!stream.CanSeek)
         {
             return false;
@@ -120,7 +100,11 @@ public class ZipFactory
         stream.Position = startPosition;
 
         //test the zip (last) file of a multipart zip
-        if (await ZipArchive.IsZipMultiAsync(stream, password, bufferSize, cancellationToken))
+        if (
+            await ZipArchive
+                .IsZipMultiAsync(stream, readerOptions.Password, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             return true;
         }
@@ -143,22 +127,29 @@ public class ZipFactory
         ZipArchive.OpenArchive(stream, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(Stream stream, ReaderOptions? readerOptions = null) =>
-        (IAsyncArchive)OpenArchive(stream, readerOptions);
+    public ValueTask<IAsyncArchive> OpenAsyncArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return new((IAsyncArchive)OpenArchive(stream, readerOptions));
+    }
 
     /// <inheritdoc/>
     public IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? readerOptions = null) =>
         ZipArchive.OpenArchive(fileInfo, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
+    public ValueTask<IAsyncArchive> OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfo, readerOptions);
+        return new((IAsyncArchive)OpenArchive(fileInfo, readerOptions));
     }
 
     #endregion
@@ -172,10 +163,17 @@ public class ZipFactory
     ) => ZipArchive.OpenArchive(streams, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
-    ) => (IAsyncArchive)OpenArchive(streams, readerOptions);
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return await ZipArchive
+            .OpenAsyncArchive(streams, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
     /// <inheritdoc/>
     public IArchive OpenArchive(
@@ -184,14 +182,16 @@ public class ZipFactory
     ) => ZipArchive.OpenArchive(fileInfos, readerOptions);
 
     /// <inheritdoc/>
-    public IAsyncArchive OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncArchive)OpenArchive(fileInfos, readerOptions);
+        return await ZipArchive
+            .OpenAsyncArchive(fileInfos, readerOptions, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     #endregion
@@ -203,14 +203,14 @@ public class ZipFactory
         ZipReader.OpenReader(stream, options);
 
     /// <inheritdoc/>
-    public IAsyncReader OpenAsyncReader(
+    public ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncReader)ZipReader.OpenReader(stream, options);
+        return new((IAsyncReader)ZipReader.OpenReader(stream, options));
     }
 
     #endregion
@@ -218,26 +218,38 @@ public class ZipFactory
     #region IWriterFactory
 
     /// <inheritdoc/>
-    public IWriter OpenWriter(Stream stream, WriterOptions writerOptions) =>
-        new ZipWriter(stream, new ZipWriterOptions(writerOptions));
+    public IWriter OpenWriter(Stream stream, IWriterOptions writerOptions)
+    {
+        ZipWriterOptions zipOptions = writerOptions switch
+        {
+            ZipWriterOptions zwo => zwo,
+            WriterOptions wo => new ZipWriterOptions(wo),
+            _ => throw new ArgumentException(
+                $"Expected WriterOptions or ZipWriterOptions, got {writerOptions.GetType().Name}",
+                nameof(writerOptions)
+            ),
+        };
+        return new ZipWriter(stream, zipOptions);
+    }
 
     /// <inheritdoc/>
-    public IAsyncWriter OpenAsyncWriter(
+    public ValueTask<IAsyncWriter> OpenAsyncWriter(
         Stream stream,
-        WriterOptions writerOptions,
+        IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return (IAsyncWriter)OpenWriter(stream, writerOptions);
+        var writer = OpenWriter(stream, writerOptions);
+        return new((IAsyncWriter)writer);
     }
 
     #endregion
 
-    #region IWriteableArchiveFactory
+    #region IWritableArchiveFactory
 
     /// <inheritdoc/>
-    public IWritableArchive CreateArchive() => ZipArchive.CreateArchive();
+    public IWritableArchive<ZipWriterOptions> CreateArchive() => ZipArchive.CreateArchive();
 
     #endregion
 }

@@ -6,20 +6,24 @@ applyTo: '**/*.cs'
 # SharpCompress Development
 
 ## About SharpCompress
-SharpCompress is a pure C# compression library supporting multiple archive formats (Zip, Tar, GZip, BZip2, 7Zip, Rar, LZip, XZ, ZStandard) for .NET Framework 4.62, .NET Standard 2.1, .NET 6.0, and .NET 8.0. The library provides both seekable Archive APIs and forward-only Reader/Writer APIs for streaming scenarios.
+SharpCompress is a pure C# compression library supporting multiple archive formats (Zip, Tar, GZip, BZip2, 7Zip, Rar, LZip, XZ, ZStandard). The project currently targets .NET Framework 4.8, .NET Standard 2.0, .NET 8.0, and .NET 10.0. The library provides both seekable Archive APIs and forward-only Reader/Writer APIs for streaming scenarios.
 
 ## C# Instructions
-- Always use the latest version C#, currently C# 13 features.
-- Write clear and concise comments for each function.
+- Use language features supported by the current project toolchain (`LangVersion=latest`) and existing codebase patterns.
+- Add comments for non-obvious logic and important design decisions; avoid redundant comments.
 - Follow the existing code style and patterns in the codebase.
 
 ## General Instructions
-- **Agents should NEVER commit to git** - Agents should stage files and leave committing to the user. Only create commits when the user explicitly requests them.
+- **Do not commit or stage changes unless the user explicitly asks for it.**
 - Make only high confidence suggestions when reviewing code changes.
 - Write code with good maintainability practices, including comments on why certain design decisions were made.
 - Handle edge cases and write clear exception handling.
 - For libraries or external dependencies, mention their usage and purpose in comments.
 - Preserve backward compatibility when making changes to public APIs.
+
+### Workspace Hygiene
+- Do not edit generated or machine-local files unless required for the task (for example: `bin/`, `obj/`, `*.csproj.user`).
+- Avoid broad formatting-only diffs in unrelated files.
 
 ## Naming Conventions
 
@@ -64,7 +68,7 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 
 ## Project Setup and Structure
 
-- The project targets multiple frameworks: .NET Framework 4.62, .NET Standard 2.1, .NET 6.0, and .NET 8.0
+- The project targets multiple frameworks: .NET Framework 4.8, .NET Standard 2.0, .NET 8.0, and .NET 10.0
 - Main library is in `src/SharpCompress/`
 - Tests are in `tests/SharpCompress.Test/`
 - Performance tests are in `tests/SharpCompress.Performance/`
@@ -89,13 +93,21 @@ src/SharpCompress/
 tests/SharpCompress.Test/
   ├── Zip/, Tar/, Rar/, SevenZip/, GZip/, BZip2/  # Format-specific tests
   ├── TestBase.cs      # Base test class with helper methods
-  └── TestArchives/    # Test data (not checked into main test project)
+
+tests/
+  ├── SharpCompress.Test/         # Unit/integration tests
+  ├── SharpCompress.Performance/  # Benchmark tests
+  └── TestArchives/               # Test data archives
 ```
 
 ### Factory Pattern
-All format types implement factory interfaces (`IArchiveFactory`, `IReaderFactory`, `IWriterFactory`) for auto-detection:
-- `ReaderFactory.Open()` - Auto-detects format by probing stream
-- `WriterFactory.Open()` - Creates writer for specified `ArchiveType`
+Factory implementations can implement one or more interfaces (`IArchiveFactory`, `IReaderFactory`, `IWriterFactory`) depending on format capabilities:
+- `ArchiveFactory.OpenArchive()` - Opens archive API objects from seekable streams/files
+- `ArchiveFactory.OpenAsyncArchive()` - Opens async archive API objects for async archive use cases
+- `ReaderFactory.OpenReader()` - Auto-detects and opens forward-only readers
+- `ReaderFactory.OpenAsyncReader()` - Auto-detects and opens forward-only async readers
+- `WriterFactory.OpenWriter()` - Creates a writer for a specified `ArchiveType`
+- `WriterFactory.OpenAsyncWriter()` - Creates an async writer for async write scenarios
 - Factories located in: `src/SharpCompress/Factories/`
 
 ## Nullable Reference Types
@@ -114,15 +126,25 @@ SharpCompress supports multiple archive and compression formats:
 - See [docs/FORMATS.md](docs/FORMATS.md) for complete format support matrix
 
 ### Stream Handling Rules
-- **Disposal**: As of version 0.21, SharpCompress closes wrapped streams by default
-- Use `ReaderOptions` or `WriterOptions` with `LeaveStreamOpen = true` to control stream disposal
+- **Disposal semantics**: The default `ReaderOptions.LeaveStreamOpen` value is `false`, but effective stream ownership depends on which API overload you call
+  - File-based overloads (e.g., `OpenArchive(string filePath)`) open the file internally and own that stream, so it is closed by default with the archive/reader
+    - Do **not** rely on a specific `ReaderOptions` preset being used internally; some implementations may use `ReaderOptions.ForFilePath`, while others may use default `ReaderOptions` with the same ownership semantics
+  - Several high-level overloads that accept a caller-provided `Stream` use external-stream semantics by default (for example, `ReaderFactory.OpenReader(Stream)` / `ArchiveFactory.OpenArchive(Stream)`), so the caller's stream is typically left open unless you opt into different ownership behavior
+    - Do **not** assume every stream-based overload behaves identically; some APIs require you to pass stream ownership options explicitly
+- **For caller-provided streams**: When the overload accepts `ReaderOptions`, pass `ReaderOptions.ForExternalStream` or use `ReaderOptions` with `LeaveStreamOpen = true` whenever the caller must retain ownership of the stream
+  - Example: `var options = new ReaderOptions { LeaveStreamOpen = true };`
+  - Or: `var options = ReaderOptions.ForExternalStream;`
+- **For file paths**: SharpCompress manages the stream lifecycle for the internally opened file stream; no manual disposal is needed beyond the archive/reader itself
 - Use `NonDisposingStream` wrapper when working with compression streams directly to prevent disposal
-- Always dispose of readers, writers, and archives in `using` blocks
+- Always dispose of readers, writers, and archives in `using` / `await using` blocks
 - For forward-only operations, use Reader/Writer APIs; for random access, use Archive APIs
 
 ### Async/Await Patterns
 - All I/O operations support async/await with `CancellationToken`
 - Async methods follow the naming convention: `MethodNameAsync`
+- For async archive scenarios, prefer `ArchiveFactory.OpenAsyncArchive(...)` over sync `OpenArchive(...)`.
+- For async forward-only read scenarios, prefer `ReaderFactory.OpenAsyncReader(...)` over sync `OpenReader(...)`.
+- For async write scenarios, prefer `WriterFactory.OpenAsyncWriter(...)` over sync `OpenWriter(...)`.
 - Key async methods:
   - `WriteEntryToAsync` - Extract entry asynchronously
   - `WriteAllToDirectoryAsync` - Extract all entries asynchronously
@@ -166,16 +188,34 @@ SharpCompress supports multiple archive and compression formats:
 - Test stream disposal and `LeaveStreamOpen` behavior.
 - Test edge cases: empty archives, large files, corrupted archives, encrypted archives.
 
+### Validation Expectations
+- Run targeted tests for the changed area first.
+- On non-Windows machines, avoid net48 test runs unless Mono is installed; use framework-specific validation such as `--framework net10.0` instead.
+- Run `dotnet csharpier format .` after code edits.
+- Run `dotnet csharpier check .` before handing off changes.
+
 ### Test Organization
 - Base class: `TestBase` - Provides `TEST_ARCHIVES_PATH`, `SCRATCH_FILES_PATH`, temp directory management
 - Framework: xUnit with AwesomeAssertions
 - Test archives: `tests/TestArchives/` - Use existing archives, don't create new ones unnecessarily
 - Match naming style of nearby test files
 
+### Public API Change Checklist
+- Preserve existing public method signatures and behavior when possible.
+- If a breaking change is unavoidable, document it and provide a migration path.
+- Add or update tests that cover backward compatibility expectations.
+- Avoid exposing public `init` setters, positional records, `required` members, or other metadata that forces consumers onto newer C# language versions; validate older-consumer compatibility with tests when changing exported APIs.
+
+### Stream Ownership and Position Checklist
+- Verify `LeaveStreamOpen` behavior for externally owned streams.
+- Validate behavior for both seekable and non-seekable streams.
+- Ensure stream position assumptions are explicit and tested.
+
 ## Common Pitfalls
 
 1. **Don't mix Archive and Reader APIs** - Archive needs seekable stream, Reader doesn't
-2. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
-3. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
-4. **Tar + non-seekable stream** - Must provide file size or it will throw
-6. **Format detection** - Use `ReaderFactory.Open()` for auto-detection, test with actual archive files
+2. **Don't mix sync and async open paths** - For async workflows use `OpenAsyncArchive`/`OpenAsyncReader`/`OpenAsyncWriter`, not `OpenArchive`/`OpenReader`/`OpenWriter`
+3. **Solid archives (Rar, 7Zip)** - Use `ExtractAllEntries()` for best performance, not individual entry extraction
+4. **Stream disposal** - Always set `LeaveStreamOpen` explicitly when needed (default is to close)
+5. **Tar + non-seekable stream** - Must provide file size or it will throw
+6. **Format detection** - Use `ReaderFactory.OpenReader()` / `ReaderFactory.OpenAsyncReader()` for auto-detection, test with actual archive files

@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using SharpCompress.Common;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
-internal class StreamingZipHeaderFactory : ZipHeaderFactory
+internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
 {
     private IEnumerable<ZipEntry>? _entries;
 
@@ -23,460 +20,187 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
-        if (stream is not SharpCompressStream) //ensure the stream is already a SharpCompressStream. So the buffer/size will already be set
+        // Use Create to avoid double-wrapping if stream is already a SharpCompressStream,
+        // and to preserve seekability for DataDescriptorStream which needs to seek backward
+        var sharpCompressStream = SharpCompressStream.Create(stream);
+        var reader = new BinaryReader(
+            sharpCompressStream,
+            System.Text.Encoding.Default,
+            leaveOpen: true
+        );
+
+        try
         {
-            //the original code wrapped this with RewindableStream. Wrap with SharpCompressStream as we can get the buffer size
-            if (stream is SourceStream src)
-            {
-                stream = new SharpCompressStream(
-                    stream,
-                    src.ReaderOptions.LeaveStreamOpen,
-                    bufferSize: src.ReaderOptions.BufferSize
-                );
-            }
-            else
-            {
-                throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
-            }
-        }
-        var rewindableStream = (SharpCompressStream)stream;
-
-        while (true)
-        {
-            var reader = new BinaryReader(rewindableStream);
-            uint headerBytes = 0;
-            if (
-                _lastEntryHeader != null
-                && FlagUtility.HasFlag(_lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
-            )
-            {
-                if (_lastEntryHeader.Part is null)
-                {
-                    continue;
-                }
-
-                // removed requirement for FixStreamedFileLocation()
-
-                var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
-
-                var crc = reader.ReadUInt32();
-                if (crc == POST_DATA_DESCRIPTOR)
-                {
-                    crc = reader.ReadUInt32();
-                }
-                _lastEntryHeader.Crc = crc;
-
-                //attempt 32bit read
-                ulong compSize = reader.ReadUInt32();
-                ulong uncompSize = reader.ReadUInt32();
-                headerBytes = reader.ReadUInt32();
-
-                //check for zip64 sentinel or unexpected header
-                bool isSentinel = compSize == 0xFFFFFFFF || uncompSize == 0xFFFFFFFF;
-                bool isHeader = headerBytes == 0x04034b50 || headerBytes == 0x02014b50;
-
-                if (!isHeader && !isSentinel)
-                {
-                    //reshuffle into 64-bit values
-                    compSize = (uncompSize << 32) | compSize;
-                    uncompSize = ((ulong)headerBytes << 32) | reader.ReadUInt32();
-                    headerBytes = reader.ReadUInt32();
-                }
-                else if (isSentinel)
-                {
-                    //standards-compliant zip64 descriptor
-                    compSize = reader.ReadUInt64();
-                    uncompSize = reader.ReadUInt64();
-                }
-
-                _lastEntryHeader.CompressedSize = (long)compSize;
-                _lastEntryHeader.UncompressedSize = (long)uncompSize;
-
-                if (pos.HasValue)
-                {
-                    _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
-                }
-            }
-            else if (_lastEntryHeader != null && _lastEntryHeader.IsZip64)
-            {
-                if (_lastEntryHeader.Part is null)
-                    continue;
-
-                //reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
-                //    ref rewindableStream
-                //);
-
-                var pos = rewindableStream.CanSeek ? (long?)rewindableStream.Position : null;
-
-                headerBytes = reader.ReadUInt32();
-
-                var version = reader.ReadUInt16();
-                var flags = (HeaderFlags)reader.ReadUInt16();
-                var compressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
-                var lastModifiedDate = reader.ReadUInt16();
-                var lastModifiedTime = reader.ReadUInt16();
-
-                var crc = reader.ReadUInt32();
-
-                if (crc == POST_DATA_DESCRIPTOR)
-                {
-                    crc = reader.ReadUInt32();
-                }
-                _lastEntryHeader.Crc = crc;
-
-                // The DataDescriptor can be either 64bit or 32bit
-                var compressed_size = reader.ReadUInt32();
-                var uncompressed_size = reader.ReadUInt32();
-
-                // Check if we have header or 64bit DataDescriptor
-                var test_header = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
-
-                var test_64bit = ((long)uncompressed_size << 32) | compressed_size;
-                if (test_64bit == _lastEntryHeader.CompressedSize && test_header)
-                {
-                    _lastEntryHeader.UncompressedSize =
-                        ((long)reader.ReadUInt32() << 32) | headerBytes;
-                    headerBytes = reader.ReadUInt32();
-                }
-                else
-                {
-                    _lastEntryHeader.UncompressedSize = uncompressed_size;
-                }
-
-                if (pos.HasValue)
-                {
-                    _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
-
-                    // 4 = First 4 bytes of the entry header (i.e. 50 4B 03 04)
-                    rewindableStream.Position = pos.Value + 4;
-                }
-            }
-            else
-            {
-                headerBytes = reader.ReadUInt32();
-            }
-
-            _lastEntryHeader = null;
-            var header = ReadHeader(headerBytes, reader);
-            if (header is null)
-            {
-                yield break;
-            }
-
-            //entry could be zero bytes so we need to know that.
-            if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
-            {
-                var local_header = ((LocalEntryHeader)header);
-                var dir_header = _entries?.FirstOrDefault(entry =>
-                    entry.Key == local_header.Name
-                    && local_header.CompressedSize == 0
-                    && local_header.UncompressedSize == 0
-                    && local_header.Crc == 0
-                    && local_header.IsDirectory == false
-                );
-
-                if (dir_header != null)
-                {
-                    local_header.UncompressedSize = dir_header.Size;
-                    local_header.CompressedSize = dir_header.CompressedSize;
-                    local_header.Crc = (uint)dir_header.Crc;
-                }
-
-                // If we have CompressedSize, there is data to be read
-                if (local_header.CompressedSize > 0)
-                {
-                    header.HasData = true;
-                } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
-                else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
-                {
-                    var nextHeaderBytes = reader.ReadUInt32();
-                    ((IStreamStack)rewindableStream).Rewind(sizeof(uint));
-
-                    // Check if next data is PostDataDescriptor, streamed file with 0 length
-                    header.HasData = !IsHeader(nextHeaderBytes);
-                }
-                else // We are not streaming and compressed size is 0, we have no data
-                {
-                    header.HasData = false;
-                }
-            }
-            yield return header;
-        }
-    }
-
-    /// <summary>
-    /// Reads ZIP headers asynchronously for streams that do not support synchronous reads.
-    /// </summary>
-    internal IAsyncEnumerable<ZipHeader> ReadStreamHeaderAsync(Stream stream) =>
-        new StreamHeaderAsyncEnumerable(this, stream);
-
-    /// <summary>
-    /// Invokes the shared async header parsing logic on the base factory.
-    /// </summary>
-    private ValueTask<ZipHeader?> ReadHeaderAsyncInternal(
-        uint headerBytes,
-        AsyncBinaryReader reader
-    ) => ReadHeader(headerBytes, reader);
-
-    /// <summary>
-    /// Exposes the last parsed local entry header to the async enumerator so it can handle streaming data descriptors.
-    /// </summary>
-    private LocalEntryHeader? LastEntryHeader
-    {
-        get => _lastEntryHeader;
-        set => _lastEntryHeader = value;
-    }
-
-    /// <summary>
-    /// Produces an async enumerator for streaming ZIP headers.
-    /// </summary>
-    private sealed class StreamHeaderAsyncEnumerable : IAsyncEnumerable<ZipHeader>
-    {
-        private readonly StreamingZipHeaderFactory _headerFactory;
-        private readonly Stream _stream;
-
-        public StreamHeaderAsyncEnumerable(StreamingZipHeaderFactory headerFactory, Stream stream)
-        {
-            _headerFactory = headerFactory;
-            _stream = stream;
-        }
-
-        public IAsyncEnumerator<ZipHeader> GetAsyncEnumerator(
-            CancellationToken cancellationToken = default
-        ) => new StreamHeaderAsyncEnumerator(_headerFactory, _stream, cancellationToken);
-    }
-
-    /// <summary>
-    /// Async implementation of <see cref="ReadStreamHeader"/> using <see cref="AsyncBinaryReader"/> to avoid sync reads.
-    /// </summary>
-    private sealed class StreamHeaderAsyncEnumerator : IAsyncEnumerator<ZipHeader>, IDisposable
-    {
-        private readonly StreamingZipHeaderFactory _headerFactory;
-        private readonly SharpCompressStream _rewindableStream;
-        private readonly AsyncBinaryReader _reader;
-        private readonly CancellationToken _cancellationToken;
-        private bool _completed;
-
-        public StreamHeaderAsyncEnumerator(
-            StreamingZipHeaderFactory headerFactory,
-            Stream stream,
-            CancellationToken cancellationToken
-        )
-        {
-            _headerFactory = headerFactory;
-            _rewindableStream = EnsureSharpCompressStream(stream);
-            _reader = new AsyncBinaryReader(_rewindableStream, leaveOpen: true);
-            _cancellationToken = cancellationToken;
-        }
-
-        private ZipHeader? _current;
-
-        public ZipHeader Current =>
-            _current ?? throw new InvalidOperationException("No current header is available.");
-
-        /// <summary>
-        /// Advances to the next ZIP header in the stream, honoring streaming data descriptors where applicable.
-        /// </summary>
-        public async ValueTask<bool> MoveNextAsync()
-        {
-            if (_completed)
-            {
-                return false;
-            }
-
             while (true)
             {
-                _cancellationToken.ThrowIfCancellationRequested();
-
-                uint headerBytes;
-                var lastEntryHeader = _headerFactory.LastEntryHeader;
+                uint headerBytes = 0;
                 if (
-                    lastEntryHeader != null
-                    && FlagUtility.HasFlag(lastEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+                    _lastEntryHeader != null
+                    && FlagUtility.HasFlag(
+                        _lastEntryHeader.Flags,
+                        HeaderFlags.UsePostDataDescriptor
+                    )
                 )
                 {
-                    if (lastEntryHeader.Part is null)
+                    if (_lastEntryHeader.Part is null)
                     {
                         continue;
                     }
 
-                    var pos = _rewindableStream.CanSeek ? (long?)_rewindableStream.Position : null;
+                    // removed requirement for FixStreamedFileLocation()
 
-                    var crc = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
+                    var pos = sharpCompressStream.CanSeek
+                        ? (long?)sharpCompressStream.Position
+                        : null;
+
+                    var crc = reader.ReadUInt32();
                     if (crc == POST_DATA_DESCRIPTOR)
                     {
-                        crc = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
+                        crc = reader.ReadUInt32();
                     }
-                    lastEntryHeader.Crc = crc;
+                    _lastEntryHeader.Crc = crc;
 
                     //attempt 32bit read
-                    ulong compressedSize = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
-                    ulong uncompressedSize = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
-                    headerBytes = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
+                    ulong compSize = reader.ReadUInt32();
+                    ulong uncompSize = reader.ReadUInt32();
+                    headerBytes = reader.ReadUInt32();
 
                     //check for zip64 sentinel or unexpected header
-                    bool isSentinel =
-                        compressedSize == 0xFFFFFFFF || uncompressedSize == 0xFFFFFFFF;
+                    bool isSentinel = compSize == 0xFFFFFFFF || uncompSize == 0xFFFFFFFF;
                     bool isHeader = headerBytes == 0x04034b50 || headerBytes == 0x02014b50;
 
                     if (!isHeader && !isSentinel)
                     {
                         //reshuffle into 64-bit values
-                        compressedSize = (uncompressedSize << 32) | compressedSize;
-                        uncompressedSize =
-                            ((ulong)headerBytes << 32)
-                            | await _reader
-                                .ReadUInt32Async(_cancellationToken)
-                                .ConfigureAwait(false);
-                        headerBytes = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
+                        compSize = (uncompSize << 32) | compSize;
+                        uncompSize = ((ulong)headerBytes << 32) | reader.ReadUInt32();
+                        headerBytes = reader.ReadUInt32();
                     }
                     else if (isSentinel)
                     {
                         //standards-compliant zip64 descriptor
-                        compressedSize = await _reader
-                            .ReadUInt64Async(_cancellationToken)
-                            .ConfigureAwait(false);
-                        uncompressedSize = await _reader
-                            .ReadUInt64Async(_cancellationToken)
-                            .ConfigureAwait(false);
+                        compSize = reader.ReadUInt64();
+                        uncompSize = reader.ReadUInt64();
                     }
 
-                    lastEntryHeader.CompressedSize = (long)compressedSize;
-                    lastEntryHeader.UncompressedSize = (long)uncompressedSize;
+                    _lastEntryHeader.CompressedSize = (long)compSize;
+                    _lastEntryHeader.UncompressedSize = (long)uncompSize;
 
                     if (pos.HasValue)
                     {
-                        lastEntryHeader.DataStartPosition = pos - lastEntryHeader.CompressedSize;
+                        _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
                     }
                 }
-                else if (lastEntryHeader != null && lastEntryHeader.IsZip64)
+                else if (_lastEntryHeader != null && _lastEntryHeader.IsZip64)
                 {
-                    if (lastEntryHeader.Part is null)
+                    if (_lastEntryHeader.Part is null)
                     {
                         continue;
                     }
 
-                    var pos = _rewindableStream.CanSeek ? (long?)_rewindableStream.Position : null;
+                    //reader = ((StreamingZipFilePart)_lastEntryHeader.Part).FixStreamedFileLocation(
+                    //    ref sharpCompressStream
+                    //);
 
-                    headerBytes = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
+                    var pos = sharpCompressStream.CanSeek
+                        ? (long?)sharpCompressStream.Position
+                        : null;
 
-                    _ = await _reader.ReadUInt16Async(_cancellationToken).ConfigureAwait(false); // version
-                    _ = await _reader.ReadUInt16Async(_cancellationToken).ConfigureAwait(false); // flags
-                    _ = await _reader.ReadUInt16Async(_cancellationToken).ConfigureAwait(false); // compressionMethod
-                    _ = await _reader.ReadUInt16Async(_cancellationToken).ConfigureAwait(false); // lastModifiedDate
-                    _ = await _reader.ReadUInt16Async(_cancellationToken).ConfigureAwait(false); // lastModifiedTime
+                    headerBytes = reader.ReadUInt32();
 
-                    var crc = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
+                    var version = reader.ReadUInt16();
+                    var flags = (HeaderFlags)reader.ReadUInt16();
+                    var compressionMethod = (ZipCompressionMethod)reader.ReadUInt16();
+                    var lastModifiedDate = reader.ReadUInt16();
+                    var lastModifiedTime = reader.ReadUInt16();
+
+                    var crc = reader.ReadUInt32();
 
                     if (crc == POST_DATA_DESCRIPTOR)
                     {
-                        crc = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
+                        crc = reader.ReadUInt32();
                     }
-                    lastEntryHeader.Crc = crc;
+                    _lastEntryHeader.Crc = crc;
 
                     // The DataDescriptor can be either 64bit or 32bit
-                    var compressedSize = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
-                    var uncompressedSize = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
+                    var compressed_size = reader.ReadUInt32();
+                    var uncompressed_size = reader.ReadUInt32();
 
                     // Check if we have header or 64bit DataDescriptor
-                    var testHeader = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
+                    var test_header = !(headerBytes == 0x04034b50 || headerBytes == 0x02014b50);
 
-                    var test64Bit = ((long)uncompressedSize << 32) | compressedSize;
-                    if (test64Bit == lastEntryHeader.CompressedSize && testHeader)
+                    var test_64bit = ((long)uncompressed_size << 32) | compressed_size;
+                    if (test_64bit == _lastEntryHeader.CompressedSize && test_header)
                     {
-                        lastEntryHeader.UncompressedSize =
-                            (
-                                (long)
-                                    await _reader
-                                        .ReadUInt32Async(_cancellationToken)
-                                        .ConfigureAwait(false) << 32
-                            ) | headerBytes;
-                        headerBytes = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
+                        _lastEntryHeader.UncompressedSize =
+                            ((long)reader.ReadUInt32() << 32) | headerBytes;
+                        headerBytes = reader.ReadUInt32();
                     }
                     else
                     {
-                        lastEntryHeader.UncompressedSize = uncompressedSize;
+                        _lastEntryHeader.UncompressedSize = uncompressed_size;
                     }
 
                     if (pos.HasValue)
                     {
-                        lastEntryHeader.DataStartPosition = pos - lastEntryHeader.CompressedSize;
+                        _lastEntryHeader.DataStartPosition = pos - _lastEntryHeader.CompressedSize;
 
                         // 4 = First 4 bytes of the entry header (i.e. 50 4B 03 04)
-                        _rewindableStream.Position = pos.Value + 4;
+                        sharpCompressStream.Position = pos.Value + 4;
                     }
                 }
                 else
                 {
-                    headerBytes = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
+                    try
+                    {
+                        headerBytes = reader.ReadUInt32();
+                    }
+                    catch (EndOfStreamException ex)
+                    {
+                        throw new InvalidFormatException(
+                            "Unexpected end of stream while reading ZIP archive",
+                            ex
+                        );
+                    }
                 }
 
-                _headerFactory.LastEntryHeader = null;
-                var header = await _headerFactory
-                    .ReadHeaderAsyncInternal(headerBytes, _reader)
-                    .ConfigureAwait(false);
+                _lastEntryHeader = null;
+                var header = ReadHeader(headerBytes, reader);
                 if (header is null)
                 {
-                    _completed = true;
-                    return false;
+                    yield break;
                 }
 
                 //entry could be zero bytes so we need to know that.
                 if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
                 {
-                    var localHeader = (LocalEntryHeader)header;
-                    var directoryHeader = _headerFactory._entries?.FirstOrDefault(entry =>
-                        entry.Key == localHeader.Name
-                        && localHeader.CompressedSize == 0
-                        && localHeader.UncompressedSize == 0
-                        && localHeader.Crc == 0
-                        && localHeader.IsDirectory == false
+                    var local_header = ((LocalEntryHeader)header);
+                    var dir_header = _entries?.FirstOrDefault(entry =>
+                        entry.Key == local_header.Name
+                        && local_header.CompressedSize == 0
+                        && local_header.UncompressedSize == 0
+                        && local_header.Crc == 0
+                        && local_header.IsDirectory == false
                     );
 
-                    if (directoryHeader != null)
+                    if (dir_header != null)
                     {
-                        localHeader.UncompressedSize = directoryHeader.Size;
-                        localHeader.CompressedSize = directoryHeader.CompressedSize;
-                        localHeader.Crc = (uint)directoryHeader.Crc;
+                        local_header.UncompressedSize = dir_header.Size;
+                        local_header.CompressedSize = dir_header.CompressedSize;
+                        local_header.Crc = (uint)dir_header.Crc;
                     }
 
                     // If we have CompressedSize, there is data to be read
-                    if (localHeader.CompressedSize > 0)
+                    if (local_header.CompressedSize > 0)
                     {
                         header.HasData = true;
                     } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
-                    else if (localHeader.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
+                    else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                     {
-                        var nextHeaderBytes = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
-                        ((IStreamStack)_rewindableStream).Rewind(sizeof(uint));
+                        // Peek ahead to check if next data is a header or file data.
+                        // Use the IStreamStack.Rewind mechanism to give back the peeked bytes.
+                        var nextHeaderBytes = reader.ReadUInt32();
+                        sharpCompressStream.Rewind(sizeof(uint));
 
                         // Check if next data is PostDataDescriptor, streamed file with 0 length
                         header.HasData = !IsHeader(nextHeaderBytes);
@@ -486,48 +210,12 @@ internal class StreamingZipHeaderFactory : ZipHeaderFactory
                         header.HasData = false;
                     }
                 }
-
-                _current = header;
-                return true;
+                yield return header;
             }
         }
-
-        public ValueTask DisposeAsync()
+        finally
         {
-            Dispose();
-            return default;
-        }
-
-        /// <summary>
-        /// Disposes the underlying reader (without closing the archive stream).
-        /// </summary>
-        public void Dispose()
-        {
-            _reader.Dispose();
-        }
-
-        /// <summary>
-        /// Ensures the stream is a <see cref="SharpCompressStream"/> so header parsing can use rewind/buffer helpers.
-        /// </summary>
-        private static SharpCompressStream EnsureSharpCompressStream(Stream stream)
-        {
-            if (stream is SharpCompressStream sharpCompressStream)
-            {
-                return sharpCompressStream;
-            }
-
-            // Ensure the stream is already a SharpCompressStream so the buffer/size is set.
-            // The original code wrapped this with RewindableStream; use SharpCompressStream so we can get the buffer size.
-            if (stream is SourceStream src)
-            {
-                return new SharpCompressStream(
-                    stream,
-                    src.ReaderOptions.LeaveStreamOpen,
-                    bufferSize: src.ReaderOptions.BufferSize
-                );
-            }
-
-            throw new ArgumentException("Stream must be a SharpCompressStream", nameof(stream));
+            reader.Dispose();
         }
     }
 }

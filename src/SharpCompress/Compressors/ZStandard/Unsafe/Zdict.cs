@@ -37,7 +37,10 @@ public static unsafe partial class Methods
         );
         nuint cSize;
         if (srcSize > blockSizeMax)
+        {
             srcSize = blockSizeMax;
+        }
+
         {
             nuint errorCode = ZSTD_compressBegin_usingCDict_deprecated(esr.zc, esr.dict);
             if (ERR_isError(errorCode))
@@ -58,7 +61,9 @@ public static unsafe partial class Methods
             {
                 byte* bytePtr;
                 for (bytePtr = seqStorePtr->litStart; bytePtr < seqStorePtr->lit; bytePtr++)
+                {
                     countLit[*bytePtr]++;
+                }
             }
 
             {
@@ -68,21 +73,27 @@ public static unsafe partial class Methods
                     byte* codePtr = seqStorePtr->ofCode;
                     uint u;
                     for (u = 0; u < nbSeq; u++)
+                    {
                         offsetcodeCount[codePtr[u]]++;
+                    }
                 }
 
                 {
                     byte* codePtr = seqStorePtr->mlCode;
                     uint u;
                     for (u = 0; u < nbSeq; u++)
+                    {
                         matchlengthCount[codePtr[u]]++;
+                    }
                 }
 
                 {
                     byte* codePtr = seqStorePtr->llCode;
                     uint u;
                     for (u = 0; u < nbSeq; u++)
+                    {
                         litlengthCount[codePtr[u]]++;
+                    }
                 }
 
                 if (nbSeq >= 2)
@@ -91,9 +102,15 @@ public static unsafe partial class Methods
                     uint offset1 = seq[0].offBase - 3;
                     uint offset2 = seq[1].offBase - 3;
                     if (offset1 >= 1024)
+                    {
                         offset1 = 0;
+                    }
+
                     if (offset2 >= 1024)
+                    {
                         offset2 = 0;
+                    }
+
                     repOffsets[offset1] += 3;
                     repOffsets[offset2] += 1;
                 }
@@ -106,7 +123,10 @@ public static unsafe partial class Methods
         nuint total = 0;
         uint u;
         for (u = 0; u < nbFiles; u++)
+        {
             total += fileSizes[u];
+        }
+
         return total;
     }
 
@@ -119,7 +139,10 @@ public static unsafe partial class Methods
         {
             offsetCount_t tmp;
             if (table[u - 1].count >= table[u].count)
+            {
                 break;
+            }
+
             tmp = table[u - 1];
             table[u - 1] = table[u];
             table[u] = tmp;
@@ -134,7 +157,10 @@ public static unsafe partial class Methods
     {
         int u;
         for (u = 1; u < 256; u++)
+        {
             countLit[u] = 2;
+        }
+
         countLit[0] = 4;
         countLit[253] = 1;
         countLit[254] = 1;
@@ -191,18 +217,33 @@ public static unsafe partial class Methods
         }
 
         for (u = 0; u < 256; u++)
+        {
             countLit[u] = 1;
+        }
+
         for (u = 0; u <= offcodeMax; u++)
+        {
             offcodeCount[u] = 1;
+        }
+
         for (u = 0; u <= 52; u++)
+        {
             matchLengthCount[u] = 1;
+        }
+
         for (u = 0; u <= 35; u++)
+        {
             litLengthCount[u] = 1;
+        }
+
         memset(repOffset, 0, sizeof(uint) * 1024);
         repOffset[1] = repOffset[4] = repOffset[8] = 1;
         memset(bestRepOffset, 0, (uint)(sizeof(offsetCount_t) * 4));
         if (compressionLevel == 0)
+        {
             compressionLevel = 3;
+        }
+
         @params = ZSTD_getParams(compressionLevel, averageSampleSize, dictBufferSize);
         esr.dict = ZSTD_createCDict_advanced(
             dictBuffer,
@@ -277,12 +318,17 @@ public static unsafe partial class Methods
         {
             uint offset;
             for (offset = 1; offset < 1024; offset++)
+            {
                 ZDICT_insertSortCount(bestRepOffset, offset, repOffset[offset]);
+            }
         }
 
         total = 0;
         for (u = 0; u <= offcodeMax; u++)
+        {
             total += offcodeCount[u];
+        }
+
         errorCode = FSE_normalizeCount(offcodeNCount, Offlog, offcodeCount, total, offcodeMax, 1);
         if (ERR_isError(errorCode))
         {
@@ -293,7 +339,10 @@ public static unsafe partial class Methods
         Offlog = (uint)errorCode;
         total = 0;
         for (u = 0; u <= 52; u++)
+        {
             total += matchLengthCount[u];
+        }
+
         errorCode = FSE_normalizeCount(matchLengthNCount, mlLog, matchLengthCount, total, 52, 1);
         if (ERR_isError(errorCode))
         {
@@ -304,7 +353,10 @@ public static unsafe partial class Methods
         mlLog = (uint)errorCode;
         total = 0;
         for (u = 0; u <= 35; u++)
+        {
             total += litLengthCount[u];
+        }
+
         errorCode = FSE_normalizeCount(litLengthNCount, llLog, litLengthCount, total, 35, 1);
         if (ERR_isError(errorCode))
         {
@@ -398,7 +450,10 @@ public static unsafe partial class Methods
         uint maxRep = reps[0];
         int r;
         for (r = 1; r < 3; ++r)
+        {
             maxRep = maxRep > reps[r] ? maxRep : reps[r];
+        }
+
         return maxRep;
     }
 
@@ -456,9 +511,15 @@ public static unsafe partial class Methods
         nuint minContentSize = ZDICT_maxRep(repStartValue);
         nuint paddingSize;
         if (dictBufferCapacity < dictContentSize)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         if (dictBufferCapacity < 256)
+        {
             return unchecked((nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_dstSize_tooSmall));
+        }
+
         MEM_writeLE32(header, 0xEC30A437);
         {
             ulong randomID = ZSTD_XXH64(customDictContent, dictContentSize, 0);
@@ -481,7 +542,10 @@ public static unsafe partial class Methods
                 notificationLevel
             );
             if (ZDICT_isError(eSize))
+            {
                 return eSize;
+            }
+
             hSize += eSize;
         }
 
@@ -548,7 +612,10 @@ public static unsafe partial class Methods
                 notificationLevel
             );
             if (ZDICT_isError(eSize))
+            {
                 return eSize;
+            }
+
             hSize += eSize;
         }
 
@@ -565,11 +632,14 @@ public static unsafe partial class Methods
         }
 
         if (hSize + dictContentSize < dictBufferCapacity)
+        {
             memmove(
                 (sbyte*)dictBuffer + hSize,
                 (sbyte*)dictBuffer + dictBufferCapacity - dictContentSize,
                 dictContentSize
             );
+        }
+
         return dictBufferCapacity < hSize + dictContentSize
             ? dictBufferCapacity
             : hSize + dictContentSize;

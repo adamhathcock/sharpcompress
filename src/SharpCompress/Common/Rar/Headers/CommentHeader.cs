@@ -4,13 +4,14 @@ namespace SharpCompress.Common.Rar.Headers;
 
 internal class CommentHeader : RarHeader
 {
-    protected CommentHeader(RarHeader header, RarCrcBinaryReader reader)
-        : base(header, reader, HeaderType.Comment)
+    public static CommentHeader Create(RarHeader header, RarCrcBinaryReader reader)
     {
-        if (IsRar5)
+        var c = CreateChild<CommentHeader>(header, reader, HeaderType.Comment);
+        if (c.IsRar5)
         {
             throw new InvalidFormatException("unexpected rar5 record");
         }
+        return c;
     }
 
     protected override void ReadFinish(MarkingBinaryReader reader)

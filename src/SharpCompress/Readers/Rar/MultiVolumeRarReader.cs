@@ -1,18 +1,18 @@
-﻿#nullable disable
-
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 
 namespace SharpCompress.Readers.Rar;
 
-internal class MultiVolumeRarReader : RarReader
+internal partial class MultiVolumeRarReader : RarReader
 {
     private readonly IEnumerator<Stream> streams;
-    private Stream tempStream;
+    private Stream? tempStream;
 
     internal MultiVolumeRarReader(IEnumerable<Stream> streams, ReaderOptions options)
         : base(options) => this.streams = streams.GetEnumerator();
@@ -47,17 +47,19 @@ internal class MultiVolumeRarReader : RarReader
         return enumerator;
     }
 
+    // Async method and MultiVolumeStreamAsyncEnumerator moved to MultiVolumeRarReader.Async.cs
+
     private class MultiVolumeStreamEnumerator : IEnumerable<FilePart>, IEnumerator<FilePart>
     {
         private readonly MultiVolumeRarReader reader;
         private readonly IEnumerator<Stream> nextReadableStreams;
-        private Stream tempStream;
+        private Stream? tempStream;
         private bool isFirst = true;
 
         internal MultiVolumeStreamEnumerator(
             MultiVolumeRarReader r,
             IEnumerator<Stream> nextReadableStreams,
-            Stream tempStream
+            Stream? tempStream
         )
         {
             reader = r;
@@ -69,7 +71,7 @@ internal class MultiVolumeRarReader : RarReader
 
         IEnumerator IEnumerable.GetEnumerator() => this;
 
-        public FilePart Current { get; private set; }
+        public FilePart Current { get; private set; } = null!;
 
         public void Dispose() { }
 

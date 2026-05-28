@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 
@@ -7,7 +8,8 @@ namespace SharpCompress.Readers.Rar;
 
 public class RarReaderEntry : RarEntry
 {
-    internal RarReaderEntry(bool solid, RarFilePart part)
+    internal RarReaderEntry(bool solid, RarFilePart part, IReaderOptions readerOptions)
+        : base(readerOptions)
     {
         Part = part;
         IsSolid = solid;

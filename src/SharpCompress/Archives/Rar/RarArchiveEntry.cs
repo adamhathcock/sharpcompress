@@ -12,7 +12,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.Rar;
 
-public class RarArchiveEntry : RarEntry, IArchiveEntry
+public partial class RarArchiveEntry : RarEntry, IArchiveEntry
 {
     private readonly ICollection<RarFilePart> parts;
     private readonly RarArchive archive;
@@ -23,6 +23,7 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         IEnumerable<RarFilePart> parts,
         ReaderOptions readerOptions
     )
+        : base(readerOptions)
     {
         this.parts = parts.ToList();
         this.archive = archive;
@@ -89,32 +90,6 @@ public class RarArchiveEntry : RarEntry, IArchiveEntry
         }
 
         stream.Initialize();
-        return stream;
-    }
-
-    public async ValueTask<Stream> OpenEntryStreamAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        RarStream stream;
-        if (IsRarV3)
-        {
-            stream = new RarStream(
-                archive.UnpackV1.Value,
-                FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>())
-            );
-        }
-        else
-        {
-            stream = new RarStream(
-                archive.UnpackV2017.Value,
-                FileHeader,
-                new MultiVolumeReadOnlyStream(Parts.Cast<RarFilePart>())
-            );
-        }
-
-        await stream.InitializeAsync(cancellationToken);
         return stream;
     }
 
