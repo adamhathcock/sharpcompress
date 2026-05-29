@@ -147,14 +147,18 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     public async Task SevenZipArchive_Solid_WriteToDirectoryAsync_WithProgress()
     {
         var progressReports = new System.Collections.Generic.List<ProgressReport>();
-        var progress = new SynchronousProgress<ProgressReport>(report => progressReports.Add(report));
+        var progress = new SynchronousProgress<ProgressReport>(report =>
+            progressReports.Add(report)
+        );
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
 #if NETFRAMEWORK
         using var stream = File.OpenRead(testArchive);
 #else
         await using var stream = File.OpenRead(testArchive);
 #endif
-        await using var archive = await ArchiveFactory.OpenAsyncArchive(new AsyncOnlyStream(stream));
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(stream)
+        );
 
         await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, progress: progress);
 

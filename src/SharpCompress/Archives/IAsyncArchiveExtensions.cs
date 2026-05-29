@@ -39,7 +39,11 @@ public static class IAsyncArchiveExtensions
                     cancellationToken.ThrowIfCancellationRequested();
 
                     await reader
-                        .WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                        .WriteEntryToDirectoryAsync(
+                            destinationDirectory,
+                            options,
+                            cancellationToken
+                        )
                         .ConfigureAwait(false);
 
                     if (reader.Entry.IsDirectory)
