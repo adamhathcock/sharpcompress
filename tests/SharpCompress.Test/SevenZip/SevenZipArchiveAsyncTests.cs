@@ -1,9 +1,11 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -139,6 +141,26 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         }
 
         VerifyFiles();
+    }
+
+    [Fact]
+    public async Task SevenZipArchive_Solid_WriteToDirectoryAsync_WithProgress()
+    {
+        var progressReports = new System.Collections.Generic.List<ProgressReport>();
+        var progress = new Progress<ProgressReport>(report => progressReports.Add(report));
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+#if NETFRAMEWORK
+        using var stream = File.OpenRead(testArchive);
+#else
+        await using var stream = File.OpenRead(testArchive);
+#endif
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(new AsyncOnlyStream(stream));
+
+        await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, progress: progress);
+
+        await Task.Delay(1000);
+        VerifyFiles();
+        Assert.True(progressReports.Count > 0, "Progress reports should be generated");
     }
 
     [Fact]
