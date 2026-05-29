@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
@@ -67,11 +68,11 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     [Benchmark(Description = "Tar: Extract all entries (Archive API) - SystemGzip")]
     public void SystemTarExtractArchiveApi()
     {
-        using var stream = new MemoryStream(_tarBytes);
-        using var archive = TarArchive.OpenArchive(
+        using var stream = new MemoryStream(_tarGzBytes);
+        using var archive = ArchiveFactory.OpenArchive(
             stream,
-            new ReaderOptions().WithProviders(
-                CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
+            ReaderOptions.ForExternalStream.WithProviders(
+                CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider())
             )
         );
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
@@ -84,11 +85,11 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     [Benchmark(Description = "Tar: Extract all entries (Reader API) - SystemGzip")]
     public void SystemTarExtractReaderApi()
     {
-        using var stream = new MemoryStream(_tarBytes);
+        using var stream = new MemoryStream(_tarGzBytes);
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions().WithProviders(
-                CompressionProviderRegistry.Empty.With(new SystemGZipCompressionProvider())
+            ReaderOptions.ForExternalStream.WithProviders(
+                CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider())
             )
         );
         while (reader.MoveToNextEntry())
@@ -104,7 +105,7 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     public void TarGzipExtract()
     {
         using var stream = new MemoryStream(_tarGzBytes);
-        using var archive = TarArchive.OpenArchive(stream);
+        using var archive = ArchiveFactory.OpenArchive(stream);
         foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
         {
             using var entryStream = entry.OpenEntryStream();
@@ -116,7 +117,9 @@ public class TarBenchmarks : ArchiveBenchmarkBase
     public async Task TarGzipExtractAsync()
     {
         using var stream = new MemoryStream(_tarGzBytes);
-        await using var archive = await TarArchive.OpenAsyncArchive(stream).ConfigureAwait(false);
+        await using var archive = await ArchiveFactory
+            .OpenAsyncArchive(stream)
+            .ConfigureAwait(false);
         await foreach (var entry in archive.EntriesAsync.Where(e => !e.IsDirectory))
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);

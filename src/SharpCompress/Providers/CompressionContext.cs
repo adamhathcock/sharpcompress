@@ -12,22 +12,22 @@ public sealed record CompressionContext
     /// <summary>
     /// The size of the input data, or -1 if unknown.
     /// </summary>
-    public long InputSize { get; init; } = -1;
+    public long InputSize { get; set; } = -1;
 
     /// <summary>
     /// The expected output size, or -1 if unknown.
     /// </summary>
-    public long OutputSize { get; init; } = -1;
+    public long OutputSize { get; set; } = -1;
 
     /// <summary>
     /// Properties bytes for the compression format (e.g., LZMA properties).
     /// </summary>
-    public byte[]? Properties { get; init; }
+    public byte[]? Properties { get; set; }
 
     /// <summary>
     /// Whether the underlying stream supports seeking.
     /// </summary>
-    public bool CanSeek { get; init; }
+    public bool CanSeek { get; set; }
 
     /// <summary>
     /// Additional format-specific options.
@@ -38,7 +38,7 @@ public sealed record CompressionContext
     /// Examples of valid FormatOptions values include compression properties (e.g., LZMA properties),
     /// format flags, or algorithm-specific configuration.
     /// </remarks>
-    public object? FormatOptions { get; init; }
+    public object? FormatOptions { get; set; }
 
     /// <summary>
     /// Creates a CompressionContext from a stream.
@@ -51,7 +51,7 @@ public sealed record CompressionContext
     /// <summary>
     /// Reader options for accessing archive metadata such as header encoding.
     /// </summary>
-    public IReaderOptions? ReaderOptions { get; init; }
+    public IReaderOptions? ReaderOptions { get; set; }
 
     /// <summary>
     /// Returns a new <see cref="CompressionContext"/> with the specified reader options.

@@ -203,11 +203,17 @@ public partial class SharpCompressStream : Stream, IStreamStack
         // Allocate ring buffer with the requested minimum size (at least the global default).
         if (_ringBuffer is null)
         {
-            var size =
+            var requiredSize =
                 minBufferSize.GetValueOrDefault() > Constants.RewindableBufferSize
                     ? minBufferSize.GetValueOrDefault()
                     : Constants.RewindableBufferSize;
-            _ringBuffer = new RingBuffer(size);
+            _ringBuffer = new RingBuffer(requiredSize);
+        }
+        else if (minBufferSize.HasValue && minBufferSize.Value > _ringBuffer.Capacity)
+        {
+            throw new ArchiveOperationException(
+                $"StartRecording requires a ring buffer of at least {minBufferSize.Value} bytes, but the stream was created with capacity {_ringBuffer.Capacity}."
+            );
         }
 
         // Mark current position as recording anchor

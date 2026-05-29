@@ -96,7 +96,7 @@ internal partial class WinzipAesCryptoStream : Stream
         base.Dispose(disposing);
     }
 
-    private async Task ReadAuthBytesAsync()
+    private async ValueTask ReadAuthBytesAsync()
     {
         byte[] authBytes = new byte[10];
         await _stream.ReadFullyAsync(authBytes, 0, 10).ConfigureAwait(false);

@@ -204,16 +204,16 @@ public partial class DecompressionStream : Stream
     }
 
 #if LEGACY_DOTNET && !NETSTANDARD2_1
-    public virtual Task DisposeAsync()
+    public virtual ValueTask DisposeAsync()
     {
         try
         {
             Dispose();
-            return Task.CompletedTask;
+            return default;
         }
         catch (Exception exc)
         {
-            return Task.FromException(exc);
+            return new ValueTask(Task.FromException(exc));
         }
     }
 #endif

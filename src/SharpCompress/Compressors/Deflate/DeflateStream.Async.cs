@@ -8,8 +8,11 @@ namespace SharpCompress.Compressors.Deflate;
 
 public partial class DeflateStream
 {
-#if !LEGACY_DOTNET
+#if !LEGACY_DOTNET || NETSTANDARD2_1
     public override async ValueTask DisposeAsync()
+#else
+    public async ValueTask DisposeAsync()
+#endif
     {
         if (!_disposed)
         {
@@ -19,9 +22,12 @@ public partial class DeflateStream
             }
             _disposed = true;
         }
+#if !LEGACY_DOTNET || NETSTANDARD2_1
         await base.DisposeAsync().ConfigureAwait(false);
-    }
+#else
+        await Task.CompletedTask.ConfigureAwait(false);
 #endif
+    }
 
     public override async Task FlushAsync(CancellationToken cancellationToken)
     {

@@ -8,7 +8,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
 
-public partial class LzmaStream : Stream, IStreamStack
+public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
 {
     private readonly Stream? _inputStream;
     private readonly long _inputSize;

@@ -4,11 +4,45 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.IO;
+using SharpCompress.Providers;
 
 namespace SharpCompress.Writers.Tar;
 
 public partial class TarWriter
 {
+    /// <summary>
+    /// Asynchronously disposes the writer, writing the archive finalization record if required.
+    /// </summary>
+    public override async ValueTask DisposeAsync()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+        GC.SuppressFinalize(this);
+        _isDisposed = true;
+
+        if (_finalizeArchiveOnClose)
+        {
+            await OutputStream.NotNull().WriteAsync(new byte[1024], 0, 1024).ConfigureAwait(false);
+        }
+        if (OutputStream is IFinishable finishable)
+        {
+            await finishable.FinishAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        if (OutputStream is IAsyncDisposable asyncDisposableOutputStream)
+        {
+            await asyncDisposableOutputStream.DisposeAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            OutputStream?.Dispose();
+        }
+        // base.DisposeAsync() is a no-op since _isDisposed is already set
+        await base.DisposeAsync().ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Asynchronously writes a directory entry to the TAR archive.
     /// </summary>
@@ -24,7 +58,7 @@ public partial class TarWriter
             return;
         }
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = normalizedName;
         header.Size = 0;
@@ -62,7 +96,7 @@ public partial class TarWriter
 
         var realSize = size ?? source.Length;
 
-        var header = new TarHeader(WriterOptions.ArchiveEncoding);
+        var header = new TarHeader(WriterOptions.ArchiveEncoding, _headerFormat);
 
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);

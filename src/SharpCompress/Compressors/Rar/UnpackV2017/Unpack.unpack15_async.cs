@@ -5,7 +5,7 @@ namespace SharpCompress.Compressors.Rar.UnpackV2017;
 
 internal partial class Unpack
 {
-    private async Task Unpack15Async(bool Solid, CancellationToken cancellationToken = default)
+    private async ValueTask Unpack15Async(bool Solid, CancellationToken cancellationToken = default)
     {
         UnpInitData(Solid);
         UnpInitData15(Solid);

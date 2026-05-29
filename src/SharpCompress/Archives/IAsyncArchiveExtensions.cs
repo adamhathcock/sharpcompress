@@ -29,12 +29,33 @@ public static class IAsyncArchiveExtensions
                 || archive.Type == ArchiveType.SevenZip
             )
             {
+                var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
+                var bytesRead = 0L;
                 await using var reader = await archive
                     .ExtractAllEntriesAsync()
                     .ConfigureAwait(false);
-                await reader
-                    .WriteAllToDirectoryAsync(destinationDirectory, options, cancellationToken)
-                    .ConfigureAwait(false);
+                while (await reader.MoveToNextEntryAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    await reader
+                        .WriteEntryToDirectoryAsync(
+                            destinationDirectory,
+                            options,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
+
+                    if (reader.Entry.IsDirectory)
+                    {
+                        continue;
+                    }
+
+                    bytesRead += reader.Entry.Size;
+                    progress?.Report(
+                        new ProgressReport(reader.Entry.Key ?? string.Empty, bytesRead, totalBytes)
+                    );
+                }
             }
             else
             {
@@ -64,7 +85,11 @@ public static class IAsyncArchiveExtensions
             var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
             var bytesRead = 0L;
 
-            await foreach (var entry in archive.EntriesAsync.WithCancellation(cancellationToken))
+            await foreach (
+                var entry in archive
+                    .EntriesAsync.WithCancellation(cancellationToken)
+                    .ConfigureAwait(false)
+            )
             {
                 cancellationToken.ThrowIfCancellationRequested();
 

@@ -54,7 +54,7 @@ public partial class ZipWriter : AbstractWriter
 
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing)
+        if (isDisposing && !_isDisposed)
         {
             ulong size = 0;
             foreach (var entry in entries)
@@ -209,10 +209,18 @@ public partial class ZipWriter : AbstractWriter
         ZipWriterEntryOptions zipWriterEntryOptions,
         ZipCentralDirectoryEntry entry,
         bool useZip64
+    ) => WriteHeader(OutputStream.NotNull(), filename, zipWriterEntryOptions, entry, useZip64);
+
+    private int WriteHeader(
+        Stream stream,
+        string filename,
+        ZipWriterEntryOptions zipWriterEntryOptions,
+        ZipCentralDirectoryEntry entry,
+        bool useZip64
     )
     {
         // We err on the side of caution until the zip specification clarifies how to support this
-        if (!OutputStream.NotNull().CanSeek && useZip64)
+        if (!stream.CanSeek && useZip64)
         {
             throw new NotSupportedException(
                 "Zip64 extensions are not supported on non-seekable streams"
@@ -226,26 +234,26 @@ public partial class ZipWriter : AbstractWriter
 
         Span<byte> intBuf = stackalloc byte[4];
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, ZipHeaderFactory.ENTRY_HEADER_BYTES);
-        OutputStream.NotNull().Write(intBuf);
+        stream.Write(intBuf);
         if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
         {
-            if (OutputStream.NotNull().CanSeek && useZip64)
+            if (stream.CanSeek && useZip64)
             {
-                OutputStream.NotNull().Write(stackalloc byte[] { 45, 0 }); //smallest allowed version for zip64
+                stream.Write(stackalloc byte[] { 45, 0 }); //smallest allowed version for zip64
             }
             else
             {
-                OutputStream.NotNull().Write(stackalloc byte[] { 20, 0 }); //older version which is more compatible
+                stream.Write(stackalloc byte[] { 20, 0 }); //older version which is more compatible
             }
         }
         else
         {
-            OutputStream.NotNull().Write(stackalloc byte[] { 63, 0 }); //version says we used PPMd or LZMA
+            stream.Write(stackalloc byte[] { 63, 0 }); //version says we used PPMd or LZMA
         }
         var flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
             : 0;
-        if (!OutputStream.NotNull().CanSeek)
+        if (!stream.CanSeek)
         {
             flags |= HeaderFlags.UsePostDataDescriptor;
 
@@ -256,53 +264,58 @@ public partial class ZipWriter : AbstractWriter
         }
 
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)flags);
-        OutputStream.NotNull().Write(intBuf.Slice(0, 2));
+        stream.Write(intBuf.Slice(0, 2));
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)explicitZipCompressionInfo);
-        OutputStream.NotNull().Write(intBuf.Slice(0, 2)); // zipping method
+        stream.Write(intBuf.Slice(0, 2)); // zipping method
         BinaryPrimitives.WriteUInt32LittleEndian(
             intBuf,
             zipWriterEntryOptions.ModificationDateTime.DateTimeToDosTime()
         );
-        OutputStream.NotNull().Write(intBuf);
+        stream.Write(intBuf);
 
         // zipping date and time
-        OutputStream.NotNull().Write(stackalloc byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+        stream.Write(stackalloc byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
 
         // unused CRC, un/compressed size, updated later
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedFilename.Length);
-        OutputStream.NotNull().Write(intBuf.Slice(0, 2)); // filename length
+        stream.Write(intBuf.Slice(0, 2)); // filename length
 
         var extralength = 0;
-        if (OutputStream.NotNull().CanSeek && useZip64)
+        if (stream.CanSeek && useZip64)
         {
             extralength = 2 + 2 + 8 + 8;
         }
 
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)extralength);
-        OutputStream.NotNull().Write(intBuf.Slice(0, 2)); // extra length
-        OutputStream.NotNull().Write(encodedFilename, 0, encodedFilename.Length);
+        stream.Write(intBuf.Slice(0, 2)); // extra length
+        stream.Write(encodedFilename, 0, encodedFilename.Length);
 
         if (extralength != 0)
         {
-            OutputStream.NotNull().Write(new byte[extralength], 0, extralength); // reserve space for zip64 data
+            stream.Write(new byte[extralength], 0, extralength); // reserve space for zip64 data
             entry.Zip64HeaderOffset = (ushort)(6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length);
         }
 
         return 6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length + extralength;
     }
 
-    private void WriteFooter(uint crc, uint compressed, uint uncompressed)
+    private void WriteFooter(uint crc, uint compressed, uint uncompressed) =>
+        WriteFooter(OutputStream.NotNull(), crc, compressed, uncompressed);
+
+    private static void WriteFooter(Stream stream, uint crc, uint compressed, uint uncompressed)
     {
         Span<byte> intBuf = stackalloc byte[4];
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, crc);
-        OutputStream.NotNull().Write(intBuf);
+        stream.Write(intBuf);
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, compressed);
-        OutputStream.NotNull().Write(intBuf);
+        stream.Write(intBuf);
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, uncompressed);
-        OutputStream.NotNull().Write(intBuf);
+        stream.Write(intBuf);
     }
 
-    private void WriteEndRecord(ulong size)
+    private void WriteEndRecord(ulong size) => WriteEndRecord(OutputStream.NotNull(), size);
+
+    private void WriteEndRecord(Stream stream, ulong size)
     {
         var zip64EndOfCentralDirectoryNeeded =
             entries.Count > ushort.MaxValue
@@ -319,412 +332,56 @@ public partial class ZipWriter : AbstractWriter
             var recordlen = 2 + 2 + 4 + 4 + 8 + 8 + 8 + 8;
 
             // Write zip64 end of central directory record
-            OutputStream.NotNull().Write(stackalloc byte[] { 80, 75, 6, 6 });
+            stream.Write(stackalloc byte[] { 80, 75, 6, 6 });
 
             BinaryPrimitives.WriteUInt64LittleEndian(intBuf, (ulong)recordlen);
-            OutputStream.NotNull().Write(intBuf); // Size of zip64 end of central directory record
+            stream.Write(intBuf); // Size of zip64 end of central directory record
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 45);
-            OutputStream.NotNull().Write(intBuf.Slice(0, 2)); // Made by
+            stream.Write(intBuf.Slice(0, 2)); // Made by
             BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 45);
-            OutputStream.NotNull().Write(intBuf.Slice(0, 2)); // Version needed
+            stream.Write(intBuf.Slice(0, 2)); // Version needed
 
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 0);
-            OutputStream.NotNull().Write(intBuf.Slice(0, 4)); // Disk number
-            OutputStream.NotNull().Write(intBuf.Slice(0, 4)); // Central dir disk
+            stream.Write(intBuf.Slice(0, 4)); // Disk number
+            stream.Write(intBuf.Slice(0, 4)); // Central dir disk
 
             // TODO: entries.Count is int, so max 2^31 files
             BinaryPrimitives.WriteUInt64LittleEndian(intBuf, (ulong)entries.Count);
-            OutputStream.NotNull().Write(intBuf); // Entries in this disk
-            OutputStream.NotNull().Write(intBuf); // Total entries
+            stream.Write(intBuf); // Entries in this disk
+            stream.Write(intBuf); // Total entries
             BinaryPrimitives.WriteUInt64LittleEndian(intBuf, size);
-            OutputStream.NotNull().Write(intBuf); // Central Directory size
+            stream.Write(intBuf); // Central Directory size
             BinaryPrimitives.WriteUInt64LittleEndian(intBuf, (ulong)streamPosition);
-            OutputStream.NotNull().Write(intBuf); // Disk offset
+            stream.Write(intBuf); // Disk offset
 
             // Write zip64 end of central directory locator
-            OutputStream.NotNull().Write(stackalloc byte[] { 80, 75, 6, 7 });
+            stream.Write(stackalloc byte[] { 80, 75, 6, 7 });
 
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 0);
-            OutputStream.NotNull().Write(intBuf.Slice(0, 4)); // Entry disk
+            stream.Write(intBuf.Slice(0, 4)); // Entry disk
             BinaryPrimitives.WriteUInt64LittleEndian(intBuf, (ulong)streamPosition + size);
-            OutputStream.NotNull().Write(intBuf); // Offset to the zip64 central directory
+            stream.Write(intBuf); // Offset to the zip64 central directory
             BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 1);
-            OutputStream.NotNull().Write(intBuf.Slice(0, 4)); // Number of disks
+            stream.Write(intBuf.Slice(0, 4)); // Number of disks
 
             streamPosition += 4 + 8 + recordlen + (4 + 4 + 8 + 4);
         }
 
         // Write normal end of central directory record
-        OutputStream.NotNull().Write(stackalloc byte[] { 80, 75, 5, 6, 0, 0, 0, 0 });
+        stream.Write(stackalloc byte[] { 80, 75, 5, 6, 0, 0, 0, 0 });
         BinaryPrimitives.WriteUInt16LittleEndian(
             intBuf,
             (ushort)(entries.Count < 0xFFFF ? entries.Count : 0xFFFF)
         );
-        OutputStream.NotNull().Write(intBuf.Slice(0, 2));
-        OutputStream.NotNull().Write(intBuf.Slice(0, 2));
+        stream.Write(intBuf.Slice(0, 2));
+        stream.Write(intBuf.Slice(0, 2));
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, sizevalue);
-        OutputStream.NotNull().Write(intBuf.Slice(0, 4));
+        stream.Write(intBuf.Slice(0, 4));
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, streampositionvalue);
-        OutputStream.NotNull().Write(intBuf.Slice(0, 4));
+        stream.Write(intBuf.Slice(0, 4));
         var encodedComment = WriterOptions.ArchiveEncoding.Encode(zipComment);
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedComment.Length);
-        OutputStream.NotNull().Write(intBuf.Slice(0, 2));
-        OutputStream.NotNull().Write(encodedComment, 0, encodedComment.Length);
+        stream.Write(intBuf.Slice(0, 2));
+        stream.Write(encodedComment, 0, encodedComment.Length);
     }
-
-    #region Nested type: ZipWritingStream
-
-    internal class ZipWritingStream : Stream
-    {
-        private readonly CRC32 crc = new();
-        private readonly ZipCentralDirectoryEntry entry;
-        private readonly Stream originalStream;
-        private readonly Stream writeStream;
-        private readonly ZipWriter writer;
-        private readonly ZipCompressionMethod zipCompressionMethod;
-        private readonly int compressionLevel;
-        private ICompressionProviderHooks? compressionProviderHooks;
-        private CompressionContext? compressionContext;
-        private CountingStream? counting;
-        private ulong decompressed;
-
-        // Flag to prevent throwing exceptions on Dispose
-        private bool limitsExceeded;
-        private bool isDisposed;
-
-        internal ZipWritingStream(
-            ZipWriter writer,
-            Stream originalStream,
-            ZipCentralDirectoryEntry entry,
-            ZipCompressionMethod zipCompressionMethod,
-            int compressionLevel
-        )
-        {
-            this.writer = writer;
-            this.originalStream = originalStream;
-            this.writer = writer;
-            this.entry = entry;
-            this.zipCompressionMethod = zipCompressionMethod;
-            this.compressionLevel = compressionLevel;
-            writeStream = GetWriteStream(originalStream);
-        }
-
-        public override bool CanRead => false;
-
-        public override bool CanSeek => false;
-
-        public override bool CanWrite => true;
-
-        public override long Length => throw new NotSupportedException();
-
-        public override long Position
-        {
-            get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
-        }
-
-        private Stream GetWriteStream(Stream writeStream)
-        {
-            counting = new CountingStream(SharpCompressStream.CreateNonDisposing(writeStream));
-            Stream output = counting;
-
-            var providers = writer.WriterOptions.Providers;
-
-            switch (zipCompressionMethod)
-            {
-                case ZipCompressionMethod.None:
-                {
-                    return output;
-                }
-                case ZipCompressionMethod.Deflate:
-                {
-                    return providers.CreateCompressStream(
-                        CompressionType.Deflate,
-                        counting,
-                        compressionLevel
-                    );
-                }
-                case ZipCompressionMethod.BZip2:
-                {
-                    return providers.CreateCompressStream(
-                        CompressionType.BZip2,
-                        counting,
-                        compressionLevel
-                    );
-                }
-                case ZipCompressionMethod.LZMA:
-                {
-                    // Use ICompressionProviderHooks for complex initialization
-                    var compressingProvider = providers.GetCompressingProvider(
-                        CompressionType.LZMA
-                    );
-                    if (compressingProvider is null)
-                    {
-                        throw new ArchiveOperationException("LZMA compression provider not found.");
-                    }
-
-                    var context = new CompressionContext { CanSeek = originalStream.CanSeek };
-                    compressionProviderHooks = compressingProvider;
-                    compressionContext = context;
-
-                    // Write pre-compression data (magic bytes)
-                    var preData = compressingProvider.GetPreCompressionData(context);
-                    if (preData != null)
-                    {
-                        counting.Write(preData, 0, preData.Length);
-                    }
-
-                    // Create compression stream
-                    var lzmaStream = compressingProvider.CreateCompressStream(
-                        counting,
-                        compressionLevel,
-                        context
-                    );
-
-                    // Write compression properties
-                    var props = compressingProvider.GetCompressionProperties(lzmaStream, context);
-                    if (props != null)
-                    {
-                        counting.Write(props, 0, props.Length);
-                    }
-
-                    return lzmaStream;
-                }
-                case ZipCompressionMethod.PPMd:
-                {
-                    // Use ICompressionProviderHooks for complex initialization
-                    var compressingProvider = providers.GetCompressingProvider(
-                        CompressionType.PPMd
-                    );
-                    if (compressingProvider is null)
-                    {
-                        throw new ArchiveOperationException("PPMd compression provider not found.");
-                    }
-
-                    var context = new CompressionContext
-                    {
-                        CanSeek = originalStream.CanSeek,
-                        FormatOptions = writer.PpmdProperties,
-                    };
-                    compressionProviderHooks = compressingProvider;
-                    compressionContext = context;
-
-                    // Write pre-compression data (properties)
-                    var preData = compressingProvider.GetPreCompressionData(context);
-                    if (preData != null)
-                    {
-                        counting.Write(preData, 0, preData.Length);
-                    }
-
-                    // Create compression stream
-                    return compressingProvider.CreateCompressStream(
-                        counting,
-                        compressionLevel,
-                        context
-                    );
-                }
-                case ZipCompressionMethod.ZStandard:
-                {
-                    return providers.CreateCompressStream(
-                        CompressionType.ZStandard,
-                        counting,
-                        compressionLevel
-                    );
-                }
-                default:
-                {
-                    throw new NotSupportedException("CompressionMethod: " + zipCompressionMethod);
-                }
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (isDisposed)
-            {
-                return;
-            }
-
-            isDisposed = true;
-
-            base.Dispose(disposing);
-            if (disposing)
-            {
-                writeStream.Dispose();
-
-                if (limitsExceeded)
-                {
-                    // We have written invalid data into the archive,
-                    // so we destroy it now, instead of allowing the user to continue
-                    // with a defunct archive
-                    originalStream.Dispose();
-                    return;
-                }
-
-                WritePostCompressionData();
-
-                var countingCount = counting?.BytesWritten ?? 0;
-                entry.Crc = (uint)crc.Crc32Result;
-                entry.Compressed = (ulong)countingCount;
-                entry.Decompressed = decompressed;
-
-                var zip64 =
-                    entry.Compressed >= uint.MaxValue || entry.Decompressed >= uint.MaxValue;
-                var compressedvalue = zip64 ? uint.MaxValue : (uint)countingCount;
-                var decompressedvalue = zip64 ? uint.MaxValue : (uint)entry.Decompressed;
-
-                if (originalStream.CanSeek)
-                {
-                    originalStream.Position = (long)(entry.HeaderOffset + 6);
-                    originalStream.WriteByte(0);
-
-                    if (countingCount == 0 && entry.Decompressed == 0)
-                    {
-                        // set compression to STORED for zero byte files (no compression data)
-                        originalStream.Position = (long)(entry.HeaderOffset + 8);
-                        originalStream.WriteByte(0);
-                        originalStream.WriteByte(0);
-                    }
-
-                    originalStream.Position = (long)(entry.HeaderOffset + 14);
-
-                    writer.WriteFooter(entry.Crc, compressedvalue, decompressedvalue);
-
-                    // Ideally, we should not throw from Dispose()
-                    // We should not get here as the Write call checks the limits
-                    if (zip64 && entry.Zip64HeaderOffset == 0)
-                    {
-                        throw new NotSupportedException(
-                            "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
-                        );
-                    }
-
-                    // If we have pre-allocated space for zip64 data,
-                    // fill it out, even if it is not required
-                    if (entry.Zip64HeaderOffset != 0)
-                    {
-                        originalStream.Position = (long)(
-                            entry.HeaderOffset + entry.Zip64HeaderOffset
-                        );
-                        Span<byte> intBuf = stackalloc byte[8];
-                        BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 0x0001);
-                        originalStream.Write(intBuf.Slice(0, 2));
-                        BinaryPrimitives.WriteUInt16LittleEndian(intBuf, 8 + 8);
-                        originalStream.Write(intBuf.Slice(0, 2));
-
-                        BinaryPrimitives.WriteUInt64LittleEndian(intBuf, entry.Decompressed);
-                        originalStream.Write(intBuf);
-                        BinaryPrimitives.WriteUInt64LittleEndian(intBuf, entry.Compressed);
-                        originalStream.Write(intBuf);
-                    }
-
-                    originalStream.Position = writer.streamPosition + (long)entry.Compressed;
-                    writer.streamPosition += (long)entry.Compressed;
-                }
-                else
-                {
-                    // We have a streaming archive, so we should add a post-data-descriptor,
-                    // but we cannot as it does not hold the zip64 values
-                    // Throwing an exception until the zip specification is clarified
-
-                    // Ideally, we should not throw from Dispose()
-                    // We should not get here as the Write call checks the limits
-                    if (zip64)
-                    {
-                        throw new NotSupportedException(
-                            "Streams larger than 4GiB are not supported for non-seekable streams"
-                        );
-                    }
-
-                    Span<byte> intBuf = stackalloc byte[4];
-                    BinaryPrimitives.WriteUInt32LittleEndian(
-                        intBuf,
-                        ZipHeaderFactory.POST_DATA_DESCRIPTOR
-                    );
-                    originalStream.Write(intBuf);
-                    writer.WriteFooter(entry.Crc, compressedvalue, decompressedvalue);
-                    writer.streamPosition += (long)entry.Compressed + 16;
-                }
-                writer.entries.Add(entry);
-            }
-        }
-
-        public override void Flush() => writeStream.Flush();
-
-        public override int Read(byte[] buffer, int offset, int count) =>
-            throw new NotSupportedException();
-
-        public override long Seek(long offset, SeekOrigin origin) =>
-            throw new NotSupportedException();
-
-        public override void SetLength(long value) => throw new NotSupportedException();
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            // We check the limits first, because we can keep the archive consistent
-            // if we can prevent the writes from happening
-            if (entry.Zip64HeaderOffset == 0)
-            {
-                var countingCount = counting?.BytesWritten ?? 0;
-                // Pre-check, the counting.Count is not exact, as we do not know the size before having actually compressed it
-                if (
-                    limitsExceeded
-                    || ((decompressed + (uint)count) > uint.MaxValue)
-                    || (countingCount + (uint)count) > uint.MaxValue
-                )
-                {
-                    throw new NotSupportedException(
-                        "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
-                    );
-                }
-            }
-
-            decompressed += (uint)count;
-            crc.SlurpBlock(buffer, offset, count);
-            writeStream.Write(buffer, offset, count);
-
-            if (entry.Zip64HeaderOffset == 0)
-            {
-                var countingCount = counting?.BytesWritten ?? 0;
-                // Post-check, this is accurate
-                if ((decompressed > uint.MaxValue) || countingCount > uint.MaxValue)
-                {
-                    // We have written the data, so the archive is now broken
-                    // Throwing the exception here, allows us to avoid
-                    // throwing an exception in Dispose() which is discouraged
-                    // as it can mask other errors
-                    limitsExceeded = true;
-                    throw new NotSupportedException(
-                        "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
-                    );
-                }
-            }
-        }
-
-        private void WritePostCompressionData()
-        {
-            if (
-                compressionProviderHooks is null
-                || compressionContext is null
-                || counting is null
-                || zipCompressionMethod == ZipCompressionMethod.None
-            )
-            {
-                return;
-            }
-
-            var postData = compressionProviderHooks.GetPostCompressionData(
-                writeStream,
-                compressionContext
-            );
-            if (postData is null || postData.Length == 0)
-            {
-                return;
-            }
-
-            counting.Write(postData, 0, postData.Length);
-        }
-    }
-
-    #endregion Nested type: ZipWritingStream
 }

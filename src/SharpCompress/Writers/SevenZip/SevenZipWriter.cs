@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA;
@@ -21,6 +23,7 @@ public partial class SevenZipWriter : AbstractWriter
     private readonly List<SevenZipWriteEntry> entries = [];
     private readonly List<PackedStream> packedStreams = [];
     private bool finalized;
+    private bool _placeholderWritten;
 
     /// <summary>
     /// Creates a new SevenZipWriter writing to the specified stream.
@@ -45,9 +48,36 @@ public partial class SevenZipWriter : AbstractWriter
         }
 
         InitializeStream(destination);
+    }
 
-        // Write placeholder signature header (32 bytes) - will be back-patched on finalize
-        SevenZipSignatureHeaderWriter.WritePlaceholder(OutputStream.NotNull());
+    /// <summary>
+    /// Ensures the placeholder signature header has been written synchronously.
+    /// Called before the first sync write.
+    /// </summary>
+    private void EnsurePlaceholderWritten()
+    {
+        if (!_placeholderWritten)
+        {
+            _placeholderWritten = true;
+            // Write placeholder signature header (32 bytes) - will be back-patched on finalize
+            SevenZipSignatureHeaderWriter.WritePlaceholder(OutputStream.NotNull());
+        }
+    }
+
+    /// <summary>
+    /// Ensures the placeholder signature header has been written asynchronously.
+    /// Called before the first async write.
+    /// </summary>
+    private async ValueTask EnsurePlaceholderWrittenAsync(CancellationToken cancellationToken)
+    {
+        if (!_placeholderWritten)
+        {
+            _placeholderWritten = true;
+            // Write placeholder signature header (32 bytes) - will be back-patched on finalize
+            await SevenZipSignatureHeaderWriter
+                .WritePlaceholderAsync(OutputStream.NotNull(), cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -62,6 +92,8 @@ public partial class SevenZipWriter : AbstractWriter
                 "Cannot write to a finalized archive."
             );
         }
+
+        EnsurePlaceholderWritten();
 
         filename = NormalizeFilename(filename);
         var progressStream = WrapWithProgress(source, filename);
@@ -151,7 +183,7 @@ public partial class SevenZipWriter : AbstractWriter
     /// </summary>
     protected override void Dispose(bool isDisposing)
     {
-        if (isDisposing && !finalized)
+        if (isDisposing && !finalized && !_isDisposed)
         {
             finalized = true;
             FinalizeArchive();
@@ -171,7 +203,7 @@ public partial class SevenZipWriter : AbstractWriter
         var filesInfo = new SevenZipFilesInfoWriter { Entries = entries.ToArray() };
 
         // Write header to a temporary stream first
-        using var headerStream = new MemoryStream();
+        using var headerStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteRawHeader(headerStream, mainStreamsInfo, filesInfo);
 
         // Optionally compress the header
@@ -212,7 +244,7 @@ public partial class SevenZipWriter : AbstractWriter
         };
 
         // Write encoded header to a second temporary stream
-        using var encodedHeaderStream = new MemoryStream();
+        using var encodedHeaderStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteEncodedHeader(encodedHeaderStream, headerStreamsInfo);
 
         // Write the encoded header to the output
@@ -220,12 +252,10 @@ public partial class SevenZipWriter : AbstractWriter
         encodedHeaderStream.Position = 0;
         encodedHeaderStream.CopyTo(output);
 
-        // Compute CRC of the encoded header
-        var headerCrc = Crc32Stream.Compute(
-            Crc32Stream.DEFAULT_POLYNOMIAL,
-            Crc32Stream.DEFAULT_SEED,
-            encodedHeaderStream.GetBuffer().AsSpan(0, (int)encodedHeaderStream.Length)
-        );
+        // Compute CRC of the encoded header without allocating a contiguous buffer
+        var encodedHeaderCrcSink = new Crc32Stream(Stream.Null);
+        encodedHeaderStream.WriteTo(encodedHeaderCrcSink);
+        var headerCrc = encodedHeaderCrcSink.Crc;
 
         // Back-patch signature header
         var nextHeaderOffset = (ulong)(headerStartPos - SevenZipSignatureHeaderWriter.HeaderSize);
@@ -251,12 +281,10 @@ public partial class SevenZipWriter : AbstractWriter
         rawHeaderStream.Position = 0;
         rawHeaderStream.CopyTo(output);
 
-        // Compute CRC of the raw header
-        var headerCrc = Crc32Stream.Compute(
-            Crc32Stream.DEFAULT_POLYNOMIAL,
-            Crc32Stream.DEFAULT_SEED,
-            rawHeaderStream.GetBuffer().AsSpan(0, (int)rawHeaderStream.Length)
-        );
+        // Compute CRC of the raw header without allocating a contiguous buffer
+        var rawHeaderCrcSink = new Crc32Stream(Stream.Null);
+        rawHeaderStream.WriteTo(rawHeaderCrcSink);
+        var headerCrc = rawHeaderCrcSink.Crc;
 
         // Back-patch signature header
         var nextHeaderOffset = (ulong)(headerStartPos - SevenZipSignatureHeaderWriter.HeaderSize);

@@ -70,7 +70,8 @@ public abstract class CompressionProviderBase : ICompressionProvider
         CancellationToken cancellationToken = default
     )
     {
-        return CreateCompressStreamAsync(destination, compressionLevel, cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new ValueTask<Stream>(CreateCompressStream(destination, compressionLevel, context));
     }
 
     /// <summary>

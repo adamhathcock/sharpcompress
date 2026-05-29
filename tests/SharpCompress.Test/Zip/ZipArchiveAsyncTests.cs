@@ -187,6 +187,28 @@ public class ZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
+    public async ValueTask Zip_Async_Dispose_Closes_New_Entry_Stream()
+    {
+        var entryStream = new TestStream(new MemoryStream(Encoding.UTF8.GetBytes("test")));
+
+        await using (var archive = await ZipArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync(
+                "test.txt",
+                entryStream,
+                closeStream: true,
+                size: entryStream.Length
+            );
+            await archive.SaveToAsync(
+                new MemoryStream(),
+                new ZipWriterOptions(CompressionType.Deflate)
+            );
+        }
+
+        Assert.True(entryStream.IsDisposed);
+    }
+
+    [Fact]
     public async ValueTask Zip_Deflate_Entry_Stream_Async()
     {
         using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")))

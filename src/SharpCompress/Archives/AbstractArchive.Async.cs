@@ -31,7 +31,7 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
     {
         if (!_disposed)
         {
-            await foreach (var v in _lazyVolumesAsync)
+            await foreach (var v in _lazyVolumesAsync.ConfigureAwait(false))
             {
                 v.Dispose();
             }
@@ -53,7 +53,7 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     private async IAsyncEnumerable<IArchiveEntry> EntriesAsyncCast()
     {
-        await foreach (var entry in EntriesAsync)
+        await foreach (var entry in EntriesAsync.ConfigureAwait(false))
         {
             yield return entry;
         }
@@ -65,7 +65,7 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     private async IAsyncEnumerable<IVolume> VolumesAsyncCast()
     {
-        await foreach (var volume in _lazyVolumesAsync)
+        await foreach (var volume in _lazyVolumesAsync.ConfigureAwait(false))
         {
             yield return volume;
         }

@@ -201,7 +201,10 @@ public class Zip64AsyncTests : WriterTests
         {
             await using var rd = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(fs),
-                new ReaderOptions { LookForHeader = false }
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = false,
+                }
             );
             while (await rd.MoveToNextEntryAsync())
             {

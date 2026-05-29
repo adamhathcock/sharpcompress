@@ -25,7 +25,7 @@ internal partial class Unpack : IRarUnpack
         // NOTE: caller has logic to check for -1 for error we throw instead.
         readStream.Read(buf, offset, count);
 
-    private async Task<int> UnpIO_UnpReadAsync(
+    private async ValueTask<int> UnpIO_UnpReadAsync(
         byte[] buf,
         int offset,
         int count,
@@ -37,7 +37,7 @@ internal partial class Unpack : IRarUnpack
     private void UnpIO_UnpWrite(byte[] buf, size_t offset, uint count) =>
         writeStream.Write(buf, checked((int)offset), checked((int)count));
 
-    private async Task UnpIO_UnpWriteAsync(
+    private async ValueTask UnpIO_UnpWriteAsync(
         byte[] buf,
         size_t offset,
         uint count,
@@ -68,7 +68,7 @@ internal partial class Unpack : IRarUnpack
         DoUnpack();
     }
 
-    public async Task DoUnpackAsync(
+    public async ValueTask DoUnpackAsync(
         FileHeader fileHeader,
         Stream readStream,
         Stream writeStream,
@@ -99,7 +99,7 @@ internal partial class Unpack : IRarUnpack
         }
     }
 
-    public async Task DoUnpackAsync(CancellationToken cancellationToken = default)
+    public async ValueTask DoUnpackAsync(CancellationToken cancellationToken = default)
     {
         if (fileHeader.IsStored)
         {
@@ -133,7 +133,7 @@ internal partial class Unpack : IRarUnpack
         } while (!Suspended);
     }
 
-    private async Task UnstoreFileAsync(CancellationToken cancellationToken = default)
+    private async ValueTask UnstoreFileAsync(CancellationToken cancellationToken = default)
     {
         var buffer = new byte[(int)Math.Min(0x10000, DestUnpSize)];
         do

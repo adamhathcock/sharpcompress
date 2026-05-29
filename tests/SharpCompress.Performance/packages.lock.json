@@ -22,12 +22,12 @@
       },
       "JetBrains.Profiler.SelfApi": {
         "type": "Direct",
-        "requested": "[2.5.16, )",
-        "resolved": "2.5.16",
-        "contentHash": "F8Tczi426PmDNZu0d88d60jVEQ/Tnvdi7LKnVLikTQ9hPqdzW7WOjj79S4XA2awbpTfCCU+eHL9MrUk6Yj90Zw==",
+        "requested": "[2.5.18, )",
+        "resolved": "2.5.18",
+        "contentHash": "zOHtZGrLzYey6d57XLvLUWbB7tK1WbXz2z3wSwDR6HwV5AEROmtu1di3OZE1kxGXMilPbyzXyKJT5eBwC+j32Q==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.4.6",
-          "JetBrains.Profiler.Api": "1.4.11"
+          "JetBrains.HabitatDetector": "1.5.0",
+          "JetBrains.Profiler.Api": "1.4.13"
         }
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
@@ -54,6 +54,12 @@
         "requested": "[17.14.15, )",
         "resolved": "17.14.15",
         "contentHash": "mXQPJsbuUD2ydq4/ffd8h8tSOFCXec+2xJOVNCvXjuMOq/+5EKHq3D2m2MC2+nUaXeFMSt66VS/J4HdKBixgcw=="
+      },
+      "PolySharp": {
+        "type": "Direct",
+        "requested": "[1.15.0, )",
+        "resolved": "1.15.0",
+        "contentHash": "FbU0El+EEjdpuIX4iDbeS7ki1uzpJPx8vbqOzEtqnl1GZeAGJfq+jCbxeJL2y0EPnUNk8dRnnqR2xnYXg9Tf+g=="
       },
       "BenchmarkDotNet.Annotations": {
         "type": "Transitive",
@@ -82,18 +88,18 @@
       },
       "JetBrains.HabitatDetector": {
         "type": "Transitive",
-        "resolved": "1.4.6",
-        "contentHash": "kNN79C3hIt+1AzPNKbddouXXGaL84bi2T42Zsa2A0nXyatg1V5q+WLI9NddCtWjMdb9CLkDem2VIc/5lHWaXJQ==",
+        "resolved": "1.5.0",
+        "contentHash": "GazZUoCunH1vrruUvy147lYfgcm2Ns6MCh76XmKZBViosvvYMLyt+JD2PWL8Lm6Ctdo3iQoPYgkStrxhrHbjEQ==",
         "dependencies": {
           "JetBrains.FormatRipper": "2.4.0"
         }
       },
       "JetBrains.Profiler.Api": {
         "type": "Transitive",
-        "resolved": "1.4.11",
-        "contentHash": "4XOA72p49dmzT9k2NyhSVYnLxjw+OPJpXen2gNFsbWquZPjnpoPqXJosVfeONDOST52cgAg3c1q/cBa6/R3NLQ==",
+        "resolved": "1.4.13",
+        "contentHash": "abkSB+SOgLMPfOGJtl2XQ+ioSUYBtZxiKDOGCpNZ4WU7ZbAzhldrpRwDMsQnIJJcNhEawGtbhcI+Gk3ktx2RXQ==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.4.6"
+          "JetBrains.HabitatDetector": "1.5.0"
         }
       },
       "Microsoft.Build.Tasks.Git": {

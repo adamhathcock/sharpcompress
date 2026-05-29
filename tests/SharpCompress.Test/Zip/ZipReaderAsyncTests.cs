@@ -143,7 +143,10 @@ public class ZipReaderAsyncTests : ReaderTests
         using (
             IReader baseReader = ZipReader.OpenReader(
                 stream,
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
             )
         )
         {
@@ -169,7 +172,7 @@ public class ZipReaderAsyncTests : ReaderTests
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(stream),
-                new ReaderOptions().WithLeaveStreamOpen(false)
+                ReaderOptions.ForExternalStream.WithLeaveStreamOpen(false)
             )
         )
         {
@@ -215,7 +218,10 @@ public class ZipReaderAsyncTests : ReaderTests
             using (
                 IReader baseReader = ZipReader.OpenReader(
                     stream,
-                    new ReaderOptions { Password = "test" }
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
                 )
             )
             {
@@ -244,7 +250,10 @@ public class ZipReaderAsyncTests : ReaderTests
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(
                 stream,
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
             )
         )
         {
@@ -272,7 +281,10 @@ public class ZipReaderAsyncTests : ReaderTests
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(
                 stream,
-                new ReaderOptions { Password = "test" }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
             )
         )
         {

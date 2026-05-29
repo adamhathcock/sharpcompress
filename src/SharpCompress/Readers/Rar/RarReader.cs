@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Compressors.Rar;
@@ -48,7 +49,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
 
     public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? readerOptions = null)
     {
-        readerOptions ??= new ReaderOptions { LeaveStreamOpen = false };
+        readerOptions ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfo.OpenRead(), readerOptions);
     }
 
@@ -59,7 +60,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
 
     public static IReader OpenReader(IEnumerable<FileInfo> fileInfos, ReaderOptions? options = null)
     {
-        options ??= new ReaderOptions { LeaveStreamOpen = false };
+        options ??= ReaderOptions.ForFilePath;
         return OpenReader(fileInfos.Select(x => x.OpenRead()), options);
     }
 
@@ -71,8 +72,8 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     /// <returns></returns>
     public static IReader OpenReader(Stream stream, ReaderOptions? readerOptions = null)
     {
-        stream.NotNull(nameof(stream));
-        return new SingleVolumeRarReader(stream, readerOptions ?? new ReaderOptions());
+        stream.RequireReadable();
+        return new SingleVolumeRarReader(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
     /// <summary>
@@ -83,8 +84,8 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     /// <returns></returns>
     public static IReader OpenReader(IEnumerable<Stream> streams, ReaderOptions? options = null)
     {
-        streams.NotNull(nameof(streams));
-        return new MultiVolumeRarReader(streams, options ?? new ReaderOptions());
+        var streamArray = streams.RequireReadable();
+        return new MultiVolumeRarReader(streamArray, options ?? ReaderOptions.ForExternalStream);
     }
 
     protected override IEnumerable<RarReaderEntry> GetEntries(Stream stream)
@@ -100,7 +101,7 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     protected override async IAsyncEnumerable<RarReaderEntry> GetEntriesAsync(Stream stream)
     {
         volume = new RarReaderVolume(stream, Options, 0);
-        await foreach (var fp in volume.ReadFilePartsAsync())
+        await foreach (var fp in volume.ReadFilePartsAsync().ConfigureAwait(false))
         {
             ValidateArchive(volume);
             yield return new RarReaderEntry(volume.IsSolidArchive, fp, Options);

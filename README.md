@@ -1,13 +1,13 @@
 # SharpCompress
 
-SharpCompress is a compression library in pure C# for .NET Framework 4.8, .NET 8.0 and .NET 10.0 that can unrar, un7zip, unzip, untar unbzip2, ungzip, unlzip, unzstd, unarc and unarj with forward-only reading and file random access APIs. Write support for zip/tar/bzip2/gzip/lzip are implemented.
+SharpCompress is a compression library in pure C# for .NET Framework 4.8, .NET Standard 2.0/2.1, .NET 6.0, .NET 8.0, and .NET 10.0 that can unrar, un7zip, unzip, untar, unbzip2, ungzip, unlzip, unzstd, unarc, and unarj with forward-only reading and file random access APIs. Write support for zip, tar, bzip2, gzip, lzip, zstandard compression streams, and 7zip archives is implemented.
 
 The major feature is support for non-seekable streams so large files can be processed on the fly (i.e. download stream).
 
 **NEW:** All I/O operations now support async/await for improved performance and scalability. See the [USAGE.md](docs/USAGE.md#async-examples) for examples.
 
 GitHub Actions Build -
-[![SharpCompress](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml/badge.svg)](https://github.com/adamhathcock/sharpcompress/actions/workflows/dotnetcore.yml)
+[![SharpCompress](https://github.com/adamhathcock/sharpcompress/actions/workflows/nuget-release.yml/badge.svg)](https://github.com/adamhathcock/sharpcompress/actions/workflows/nuget-release.yml)
 [![Static Badge](https://img.shields.io/badge/API%20Docs-DNDocs-190088?logo=readme&logoColor=white)](https://dndocs.com/d/sharpcompress/api/index.html)
 
 ## Need Help?

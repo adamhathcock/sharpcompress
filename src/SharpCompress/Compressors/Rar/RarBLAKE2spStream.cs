@@ -1,8 +1,5 @@
 using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 
@@ -13,14 +10,14 @@ internal partial class RarBLAKE2spStream : RarStream
     private readonly MultiVolumeReadOnlyStreamBase readStream;
     private readonly bool disableCRCCheck;
 
-    const uint BLAKE2S_NUM_ROUNDS = 10;
-    const uint BLAKE2S_FINAL_FLAG = (~(uint)0);
-    const int BLAKE2S_BLOCK_SIZE = 64;
-    const int BLAKE2S_DIGEST_SIZE = 32;
-    const int BLAKE2SP_PARALLEL_DEGREE = 8;
-    const uint BLAKE2S_INIT_IV_SIZE = 8;
+    private const int BLAKE2S_NUM_ROUNDS = 10;
+    private const uint BLAKE2S_FINAL_FLAG = ~(uint)0;
+    private const int BLAKE2S_BLOCK_SIZE = 64;
+    private const int BLAKE2S_DIGEST_SIZE = 32;
+    private const int BLAKE2SP_PARALLEL_DEGREE = 8;
+    private const int BLAKE2S_INIT_IV_SIZE = 8;
 
-    static readonly UInt32[] k_BLAKE2S_IV =
+    private static readonly uint[] k_BLAKE2S_IV =
     {
         0x6A09E667U,
         0xBB67AE85U,
@@ -32,7 +29,7 @@ internal partial class RarBLAKE2spStream : RarStream
         0x5BE0CD19U,
     };
 
-    static readonly byte[][] k_BLAKE2S_Sigma =
+    private static readonly byte[][] k_BLAKE2S_Sigma =
     {
         new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
         new byte[] { 14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3 },
@@ -46,14 +43,14 @@ internal partial class RarBLAKE2spStream : RarStream
         new byte[] { 10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0 },
     };
 
-    internal class BLAKE2S
+    private sealed class BLAKE2S
     {
-        internal UInt32[] h;
-        internal UInt32[] t;
-        internal UInt32[] f;
-        internal byte[] b;
+        internal readonly uint[] h;
+        internal readonly uint[] t;
+        internal readonly uint[] f;
+        internal readonly byte[] b;
         internal int bufferPosition;
-        internal UInt32 lastNodeFlag;
+        internal uint lastNodeFlag;
 
         public BLAKE2S()
         {
@@ -64,9 +61,9 @@ internal partial class RarBLAKE2spStream : RarStream
         }
     };
 
-    internal class BLAKE2SP
+    private sealed class BLAKE2SP
     {
-        internal BLAKE2S[] S;
+        internal readonly BLAKE2S[] S;
         internal int bufferPosition;
 
         public BLAKE2SP()
@@ -79,9 +76,8 @@ internal partial class RarBLAKE2spStream : RarStream
         }
     };
 
-    BLAKE2SP _blake2sp;
-
-    byte[] _hash = [];
+    private BLAKE2SP? _blake2sp;
+    private byte[]? _hash;
 
     private RarBLAKE2spStream(
         IRarUnpack unpack,
@@ -92,10 +88,9 @@ internal partial class RarBLAKE2spStream : RarStream
     {
         this.readStream = readStream;
 
+        // TODO: rar uses a modified hash xor'ed with encryption key?
         disableCRCCheck = fileHeader.IsEncrypted;
-        _hash = fileHeader.FileCrc.NotNull();
-        _blake2sp = new BLAKE2SP();
-        ResetCrc();
+        this._blake2sp = CreateBlake2sp();
     }
 
     public static RarBLAKE2spStream Create(
@@ -111,19 +106,15 @@ internal partial class RarBLAKE2spStream : RarStream
 
     // Async methods moved to RarBLAKE2spStream.Async.cs
 
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-    }
+    public byte[] GetCrc() =>
+        this._hash
+        ?? throw new InvalidOperationException(
+            "hash not computed, has the stream been fully drained?"
+        );
 
-    public byte[] GetCrc() => _hash;
-
-    internal void ResetCrc(BLAKE2S hash)
+    private static void ResetCrc(BLAKE2S hash)
     {
-        for (UInt32 j = 0; j < BLAKE2S_INIT_IV_SIZE; j++)
-        {
-            hash.h[j] = k_BLAKE2S_IV[j];
-        }
+        k_BLAKE2S_IV.AsSpan().CopyTo(hash.h);
         hash.t[0] = 0;
         hash.t[1] = 0;
         hash.f[0] = 0;
@@ -132,14 +123,14 @@ internal partial class RarBLAKE2spStream : RarStream
         hash.lastNodeFlag = 0;
     }
 
-    internal void G(
-        ref UInt32[] m,
-        ref byte[] sigma,
+    private static void G(
+        Span<uint> m,
+        byte[] sigma,
         int i,
-        ref UInt32 a,
-        ref UInt32 b,
-        ref UInt32 c,
-        ref UInt32 d
+        ref uint a,
+        ref uint b,
+        ref uint c,
+        ref uint d
     )
     {
         a += b + m[sigma[2 * i]];
@@ -157,16 +148,22 @@ internal partial class RarBLAKE2spStream : RarStream
         b = (b >> 7) | (b << 25);
     }
 
-    internal void Compress(BLAKE2S hash)
+    private static void Compress(BLAKE2S hash)
     {
-        var m = new UInt32[16];
-        var v = new UInt32[16];
-
-        for (var i = 0; i < 16; i++)
+        Span<uint> m = stackalloc uint[16];
+        if (BitConverter.IsLittleEndian)
         {
-            m[i] = BitConverter.ToUInt32(hash.b, i * 4);
+            MemoryMarshal.Cast<byte, uint>(hash.b).CopyTo(m);
+        }
+        else
+        {
+            for (var i = 0; i < 16; i++)
+            {
+                m[i] = BitConverter.ToUInt32(hash.b, i * 4);
+            }
         }
 
+        Span<uint> v = stackalloc uint[16];
         for (var i = 0; i < 8; i++)
         {
             v[i] = hash.h[i];
@@ -184,16 +181,15 @@ internal partial class RarBLAKE2spStream : RarStream
 
         for (var r = 0; r < BLAKE2S_NUM_ROUNDS; r++)
         {
-            ref byte[] sigma = ref k_BLAKE2S_Sigma[r];
-
-            G(ref m, ref sigma, 0, ref v[0], ref v[4], ref v[8], ref v[12]);
-            G(ref m, ref sigma, 1, ref v[1], ref v[5], ref v[9], ref v[13]);
-            G(ref m, ref sigma, 2, ref v[2], ref v[6], ref v[10], ref v[14]);
-            G(ref m, ref sigma, 3, ref v[3], ref v[7], ref v[11], ref v[15]);
-            G(ref m, ref sigma, 4, ref v[0], ref v[5], ref v[10], ref v[15]);
-            G(ref m, ref sigma, 5, ref v[1], ref v[6], ref v[11], ref v[12]);
-            G(ref m, ref sigma, 6, ref v[2], ref v[7], ref v[8], ref v[13]);
-            G(ref m, ref sigma, 7, ref v[3], ref v[4], ref v[9], ref v[14]);
+            var sigma = k_BLAKE2S_Sigma[r];
+            G(m, sigma, 0, ref v[0], ref v[4], ref v[8], ref v[12]);
+            G(m, sigma, 1, ref v[1], ref v[5], ref v[9], ref v[13]);
+            G(m, sigma, 2, ref v[2], ref v[6], ref v[10], ref v[14]);
+            G(m, sigma, 3, ref v[3], ref v[7], ref v[11], ref v[15]);
+            G(m, sigma, 4, ref v[0], ref v[5], ref v[10], ref v[15]);
+            G(m, sigma, 5, ref v[1], ref v[6], ref v[11], ref v[12]);
+            G(m, sigma, 6, ref v[2], ref v[7], ref v[8], ref v[13]);
+            G(m, sigma, 7, ref v[3], ref v[4], ref v[9], ref v[14]);
         }
 
         for (var i = 0; i < 8; i++)
@@ -202,103 +198,124 @@ internal partial class RarBLAKE2spStream : RarStream
         }
     }
 
-    internal void Update(BLAKE2S hash, ReadOnlySpan<byte> data, int size)
+    private static void Update(BLAKE2S hash, ReadOnlySpan<byte> data)
     {
-        var i = 0;
-        while (size != 0)
+        while (data.Length != 0)
         {
             var pos = hash.bufferPosition;
-            var reminder = BLAKE2S_BLOCK_SIZE - pos;
-
-            if (size <= reminder)
+            var chunkSize = BLAKE2S_BLOCK_SIZE - pos;
+            if (data.Length <= chunkSize)
             {
-                data.Slice(i, size).CopyTo(new Span<byte>(hash.b, pos, size));
-                hash.bufferPosition += size;
+                data.CopyTo(hash.b.AsSpan(pos));
+                hash.bufferPosition += data.Length;
                 return;
             }
-            data.Slice(i, reminder).CopyTo(new Span<byte>(hash.b, pos, reminder));
+            data.Slice(0, chunkSize).CopyTo(hash.b.AsSpan(pos));
             hash.t[0] += BLAKE2S_BLOCK_SIZE;
             hash.t[1] += hash.t[0] < BLAKE2S_BLOCK_SIZE ? 1U : 0U;
             Compress(hash);
             hash.bufferPosition = 0;
-            i += reminder;
-            size -= reminder;
+            data = data.Slice(chunkSize);
         }
     }
 
-    internal byte[] Final(BLAKE2S hash)
+    private static void Final(BLAKE2S hash, Span<byte> output)
     {
         hash.t[0] += (uint)hash.bufferPosition;
         hash.t[1] += hash.t[0] < hash.bufferPosition ? 1U : 0U;
         hash.f[0] = BLAKE2S_FINAL_FLAG;
         hash.f[1] = hash.lastNodeFlag;
-        Array.Clear(hash.b, hash.bufferPosition, BLAKE2S_BLOCK_SIZE - hash.bufferPosition);
+        hash.b.AsSpan(hash.bufferPosition).Clear();
         Compress(hash);
 
-        var mem = new MemoryStream();
-
-        for (var i = 0; i < 8; i++)
+        if (BitConverter.IsLittleEndian)
         {
-            mem.Write(BitConverter.GetBytes(hash.h[i]), 0, 4);
+            MemoryMarshal.Cast<uint, byte>(hash.h).CopyTo(output);
         }
-
-        return mem.ToArray();
+        else
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                var v = hash.h[i];
+                output[i * 4] = (byte)v;
+                output[i * 4 + 1] = (byte)(v >> 8);
+                output[i * 4 + 2] = (byte)(v >> 16);
+                output[i * 4 + 3] = (byte)(v >> 24);
+            }
+        }
     }
 
-    public void ResetCrc()
+    private static BLAKE2SP CreateBlake2sp()
     {
-        _blake2sp.bufferPosition = 0;
+        var blake2sp = new BLAKE2SP();
 
-        for (UInt32 i = 0; i < BLAKE2SP_PARALLEL_DEGREE; i++)
+        for (var i = 0; i < BLAKE2SP_PARALLEL_DEGREE; i++)
         {
-            _blake2sp.S[i].bufferPosition = 0;
-            ResetCrc(_blake2sp.S[i]);
-            _blake2sp.S[i].h[0] ^= (BLAKE2S_DIGEST_SIZE | BLAKE2SP_PARALLEL_DEGREE << 16 | 2 << 24);
-            _blake2sp.S[i].h[2] ^= i;
-            _blake2sp.S[i].h[3] ^= (BLAKE2S_DIGEST_SIZE << 24);
+            var blake2S = blake2sp.S[i];
+            ResetCrc(blake2S);
+
+            var h = blake2S.h;
+            // word[0]: digest_length | (fanout<<16) | (depth<<24)
+            h[0] ^= BLAKE2S_DIGEST_SIZE | (BLAKE2SP_PARALLEL_DEGREE << 16) | (2 << 24);
+            // word[2]: node_offset = leaf index
+            h[2] ^= (uint)i;
+            // word[3]: inner_length in bits 24-31
+            h[3] ^= BLAKE2S_DIGEST_SIZE << 24;
         }
 
-        _blake2sp.S[BLAKE2SP_PARALLEL_DEGREE - 1].lastNodeFlag = BLAKE2S_FINAL_FLAG;
+        blake2sp.S[BLAKE2SP_PARALLEL_DEGREE - 1].lastNodeFlag = BLAKE2S_FINAL_FLAG;
+        return blake2sp;
     }
 
-    internal void Update(BLAKE2SP hash, ReadOnlySpan<byte> data, int size)
+    private static void Update(BLAKE2SP hash, ReadOnlySpan<byte> data)
     {
-        var i = 0;
         var pos = hash.bufferPosition;
-        while (size != 0)
+        while (data.Length != 0)
         {
             var index = pos / BLAKE2S_BLOCK_SIZE;
-            var reminder = BLAKE2S_BLOCK_SIZE - (pos & (BLAKE2S_BLOCK_SIZE - 1));
-            if (reminder > size)
+            var chunkSize = BLAKE2S_BLOCK_SIZE - (pos & (BLAKE2S_BLOCK_SIZE - 1));
+            if (chunkSize > data.Length)
             {
-                reminder = size;
+                chunkSize = data.Length;
             }
-            //            Update(hash.S[index], data, size);
-            Update(hash.S[index], data.Slice(i, reminder), reminder);
-            size -= reminder;
-            i += reminder;
-            pos += reminder;
-            pos &= (BLAKE2S_BLOCK_SIZE * (BLAKE2SP_PARALLEL_DEGREE - 1));
+            Update(hash.S[index], data.Slice(0, chunkSize));
+            data = data.Slice(chunkSize);
+            pos = (pos + chunkSize) & (BLAKE2S_BLOCK_SIZE * BLAKE2SP_PARALLEL_DEGREE - 1);
         }
         hash.bufferPosition = pos;
     }
 
-    internal byte[] Final(BLAKE2SP hash)
+    private static byte[] Final(BLAKE2SP blake2sp)
     {
-        var h = new BLAKE2S();
+        var blake2s = new BLAKE2S();
+        ResetCrc(blake2s);
 
-        ResetCrc(h);
-        h.h[0] ^= (BLAKE2S_DIGEST_SIZE | BLAKE2SP_PARALLEL_DEGREE << 16 | 2 << 24);
-        h.h[3] ^= (1 << 16 | BLAKE2S_DIGEST_SIZE << 24);
-        h.lastNodeFlag = BLAKE2S_FINAL_FLAG;
+        var h = blake2s.h;
+        // word[0]: digest_length | (fanout<<16) | (depth<<24)  — same as leaves
+        h[0] ^= BLAKE2S_DIGEST_SIZE | (BLAKE2SP_PARALLEL_DEGREE << 16) | (2 << 24);
+        // word[3]: node_depth=1 (bits 16-23), inner_length=32 (bits 24-31)
+        h[3] ^= (1 << 16) | (BLAKE2S_DIGEST_SIZE << 24);
+        blake2s.lastNodeFlag = BLAKE2S_FINAL_FLAG;
 
+        Span<byte> digest = stackalloc byte[BLAKE2S_DIGEST_SIZE];
         for (var i = 0; i < BLAKE2SP_PARALLEL_DEGREE; i++)
         {
-            var digest = Final(_blake2sp.S[i]);
-            Update(h, digest, BLAKE2S_DIGEST_SIZE);
+            Final(blake2sp.S[i], digest);
+            Update(blake2s, digest);
         }
 
-        return Final(h);
+        Final(blake2s, digest);
+        return digest.ToArray();
+    }
+
+    private void EnsureHash()
+    {
+        if (this._hash == null)
+        {
+            this._hash = Final(this._blake2sp!);
+            // prevent incorrect usage past hash finality by failing fast
+            this._blake2sp = null;
+        }
     }
 
     public override int Read(byte[] buffer, int offset, int count)
@@ -306,12 +323,12 @@ internal partial class RarBLAKE2spStream : RarStream
         var result = base.Read(buffer, offset, count);
         if (result != 0)
         {
-            Update(_blake2sp, new ReadOnlySpan<byte>(buffer, offset, result), result);
+            Update(this._blake2sp!, new ReadOnlySpan<byte>(buffer, offset, result));
         }
         else
         {
-            _hash = Final(_blake2sp);
-            if (!disableCRCCheck && !(GetCrc().SequenceEqual(readStream.CurrentCrc)) && count != 0)
+            EnsureHash();
+            if (!disableCRCCheck && !GetCrc().SequenceEqual(readStream.CurrentCrc) && count != 0)
             {
                 // NOTE: we use the last FileHeader in a multipart volume to check CRC
                 throw new InvalidFormatException("file crc mismatch");

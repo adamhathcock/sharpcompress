@@ -40,7 +40,7 @@ public abstract partial class AbstractArchive<TEntry, TVolume> : IArchive, IAsyn
     internal AbstractArchive(ArchiveType type)
     {
         Type = type;
-        ReaderOptions = new();
+        ReaderOptions = ReaderOptions.Default;
         _lazyVolumes = new LazyReadOnlyCollection<TVolume>(Enumerable.Empty<TVolume>());
         _lazyEntries = new LazyReadOnlyCollection<TEntry>(Enumerable.Empty<TEntry>());
         _lazyVolumesAsync = new LazyAsyncReadOnlyCollection<TVolume>(

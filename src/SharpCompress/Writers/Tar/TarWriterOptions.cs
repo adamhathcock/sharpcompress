@@ -11,7 +11,7 @@ namespace SharpCompress.Writers.Tar;
 /// Options for configuring Tar writer behavior.
 /// </summary>
 /// <remarks>
-/// This class is immutable. Use the <c>with</c> expression to create modified copies:
+/// Configure tar writing with constructors, property setters, or the <c>with</c> expression:
 /// <code>
 /// var options = new TarWriterOptions(CompressionType.GZip, true);
 /// options = options with { HeaderFormat = TarHeaderWriteFormat.V7 };
@@ -22,45 +22,44 @@ public sealed record TarWriterOptions : IWriterOptions
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
-    public CompressionType CompressionType { get; init; }
+    public CompressionType CompressionType { get; set; }
 
     /// <summary>
     /// The compression level to be used when the compression type supports variable levels.
     /// </summary>
-    public int CompressionLevel { get; init; }
+    public int CompressionLevel { get; set; }
 
     /// <summary>
     /// SharpCompress will keep the supplied streams open.  Default is true.
     /// </summary>
-    public bool LeaveStreamOpen { get; init; } = true;
+    public bool LeaveStreamOpen { get; set; } = true;
 
     /// <summary>
     /// Encoding to use for archive entry names.
     /// </summary>
-    public IArchiveEncoding ArchiveEncoding { get; init; } = new ArchiveEncoding();
+    public IArchiveEncoding ArchiveEncoding { get; set; } = new ArchiveEncoding();
 
     /// <summary>
     /// An optional progress reporter for tracking compression operations.
     /// </summary>
-    public IProgress<ProgressReport>? Progress { get; init; }
+    public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; init; } =
+    public CompressionProviderRegistry Providers { get; set; } =
         CompressionProviderRegistry.Default;
 
     /// <summary>
     /// Indicates if archive should be finalized (by 2 empty blocks) on close.
     /// </summary>
-    public bool FinalizeArchiveOnClose { get; init; } = true;
+    public bool FinalizeArchiveOnClose { get; set; } = true;
 
     /// <summary>
     /// The format to use when writing tar headers.
     /// </summary>
-    public TarHeaderWriteFormat HeaderFormat { get; init; } =
-        TarHeaderWriteFormat.GNU_TAR_LONG_LINK;
+    public TarHeaderWriteFormat HeaderFormat { get; set; } = TarHeaderWriteFormat.GNU_TAR_LONG_LINK;
 
     /// <summary>
     /// Creates a new TarWriterOptions instance with the specified compression type and finalization option.

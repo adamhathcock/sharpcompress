@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -540,13 +541,13 @@ public class LzmaStreamAsyncTests
     {
         using var inputStream = new MemoryStream(LzmaResultData);
         using MemoryStream outputStream = new();
-        using var lzmaStream = LzmaStream.Create(
+        await using var lzmaStream = LzmaStream.Create(
             LzmaEncoderProperties.Default,
             false,
-            outputStream
+            new AsyncOnlyStream(outputStream, disposeStream: false)
         );
         await inputStream.CopyToAsync(lzmaStream).ConfigureAwait(false);
-        lzmaStream.Close();
+        await lzmaStream.DisposeAsync().ConfigureAwait(false);
         Assert.NotEqual(0, outputStream.Length);
     }
 
@@ -558,10 +559,10 @@ public class LzmaStreamAsyncTests
         var lzmaEncodingStream = LzmaStream.Create(
             LzmaEncoderProperties.Default,
             false,
-            compressed
+            new AsyncOnlyStream(compressed, disposeStream: false)
         );
         await input.CopyToAsync(lzmaEncodingStream).ConfigureAwait(false);
-        lzmaEncodingStream.Close();
+        await lzmaEncodingStream.DisposeAsync().ConfigureAwait(false);
         compressed.Position = 0;
 
         var output = new MemoryStream();

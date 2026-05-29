@@ -12,17 +12,17 @@ public interface IWriterOptions : IStreamOptions, IEncodingOptions, IProgressOpt
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
-    CompressionType CompressionType { get; init; }
+    CompressionType CompressionType { get; set; }
 
     /// <summary>
     /// The compression level to be used when the compression type supports variable levels.
     /// </summary>
-    int CompressionLevel { get; init; }
+    int CompressionLevel { get; set; }
 
     /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom providers, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    CompressionProviderRegistry Providers { get; init; }
+    CompressionProviderRegistry Providers { get; set; }
 }

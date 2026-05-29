@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using SharpCompress.Common.Rar;
 using SharpCompress.Readers;
 
@@ -21,9 +22,9 @@ internal static class RarArchiveEntryFactory
         IAsyncEnumerable<RarVolume> parts
     )
     {
-        await foreach (var rarPart in parts)
+        await foreach (var rarPart in parts.ConfigureAwait(false))
         {
-            await foreach (var fp in rarPart.ReadFilePartsAsync())
+            await foreach (var fp in rarPart.ReadFilePartsAsync().ConfigureAwait(false))
             {
                 yield return fp;
             }
@@ -56,7 +57,7 @@ internal static class RarArchiveEntryFactory
     )
     {
         var groupedParts = new List<RarFilePart>();
-        await foreach (var fp in GetFilePartsAsync(parts))
+        await foreach (var fp in GetFilePartsAsync(parts).ConfigureAwait(false))
         {
             groupedParts.Add(fp);
 
@@ -90,7 +91,7 @@ internal static class RarArchiveEntryFactory
         ReaderOptions readerOptions
     )
     {
-        await foreach (var groupedParts in GetMatchedFilePartsAsync(rarParts))
+        await foreach (var groupedParts in GetMatchedFilePartsAsync(rarParts).ConfigureAwait(false))
         {
             yield return new RarArchiveEntry(archive, groupedParts, readerOptions);
         }

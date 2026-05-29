@@ -37,11 +37,14 @@ public class LzwReaderTests : ReaderTests
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.Z"));
         using var reader = ReaderFactory.OpenReader(
             stream,
-            new ReaderOptions { LeaveStreamOpen = false }
+            ReaderOptions.ForExternalStream with
+            {
+                LeaveStreamOpen = false,
+            }
         );
 
         // Should detect as Tar archive with Lzw compression
-        Assert.Equal(ArchiveType.Tar, reader.ArchiveType);
+        Assert.Equal(ArchiveType.Tar, reader.Type);
         Assert.True(reader.MoveToNextEntry());
         Assert.NotNull(reader.Entry);
         Assert.Equal(CompressionType.Lzw, reader.Entry.CompressionType);
@@ -80,7 +83,7 @@ public class LzwReaderTests : ReaderTests
         using var reader = ReaderFactory.OpenReader(stream);
 
         // Should detect as Lzw archive (not Tar)
-        Assert.Equal(ArchiveType.Lzw, reader.ArchiveType);
+        Assert.Equal(ArchiveType.Lzw, reader.Type);
         Assert.True(reader.MoveToNextEntry());
         Assert.NotNull(reader.Entry);
         Assert.Equal(CompressionType.Lzw, reader.Entry.CompressionType);

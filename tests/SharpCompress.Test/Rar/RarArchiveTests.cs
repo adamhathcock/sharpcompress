@@ -92,7 +92,11 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 stream,
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
@@ -119,7 +123,11 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, archiveName),
-                new ReaderOptions { Password = password, LeaveStreamOpen = true }
+                ReaderOptions.ForFilePath with
+                {
+                    Password = password,
+                    LeaveStreamOpen = true,
+                }
             )
         )
         {
@@ -139,6 +147,23 @@ public class RarArchiveTests : ArchiveTests
 
     [Fact]
     public void Rar_ArchiveStreamRead() => ArchiveStreamRead("Rar.rar");
+
+    [Fact]
+    public void RarArchive_StreamCollection_Throws_On_NonSeekable_Stream()
+    {
+        using var nonSeekable = new ForwardOnlyStream(new MemoryStream());
+        using var seekable = new MemoryStream();
+
+        Assert.Throws<ArgumentException>(() => RarArchive.OpenArchive([nonSeekable, seekable]));
+    }
+
+    [Fact]
+    public void RarArchive_Stream_Throws_On_Unreadable_Stream()
+    {
+        using var unreadable = new TestStream(new MemoryStream(), false, true, true);
+
+        Assert.Throws<ArgumentException>(() => RarArchive.OpenArchive(unreadable));
+    }
 
     [Fact]
     public void Rar5_ArchiveStreamRead() => ArchiveStreamRead("Rar5.rar");
@@ -162,7 +187,13 @@ public class RarArchiveTests : ArchiveTests
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"));
         using (
-            var archive = RarArchive.OpenArchive(stream, new ReaderOptions { LookForHeader = true })
+            var archive = RarArchive.OpenArchive(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    LookForHeader = true,
+                }
+            )
         )
         {
             foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -268,7 +299,10 @@ public class RarArchiveTests : ArchiveTests
     private void DoRar_Multi_ArchiveStreamRead(string[] archives, bool isSolid)
     {
         using var archive = RarArchive.OpenArchive(
-            archives.Select(s => Path.Combine(TEST_ARCHIVES_PATH, s)).Select(File.OpenRead)
+            archives
+                .Select(s => Path.Combine(TEST_ARCHIVES_PATH, s))
+                .Select(File.OpenRead)
+                .ToArray()
         );
         Assert.Equal(archive.IsSolid, isSolid);
         foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
@@ -325,7 +359,10 @@ public class RarArchiveTests : ArchiveTests
         using (
             var archive = RarArchive.OpenArchive(
                 Path.Combine(TEST_ARCHIVES_PATH, "Rar.jpeg.jpg"),
-                new ReaderOptions { LookForHeader = true }
+                ReaderOptions.ForFilePath with
+                {
+                    LookForHeader = true,
+                }
             )
         )
         {
@@ -774,7 +811,7 @@ public class RarArchiveTests : ArchiveTests
     public void Rar_MalformedArchive_NoInfiniteLoop()
     {
         var testFile = "Rar.malformed_512byte.rar";
-        var readerOptions = new ReaderOptions { LookForHeader = true };
+        var readerOptions = ReaderOptions.ForExternalStream.WithLookForHeader(true);
 
         // This should throw InvalidOperationException, not hang in an infinite loop
         var exception = Assert.Throws<ArchiveOperationException>(() =>

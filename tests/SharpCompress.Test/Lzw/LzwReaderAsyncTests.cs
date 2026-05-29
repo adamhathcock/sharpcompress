@@ -23,7 +23,7 @@ public class LzwReaderAsyncTests : ReaderTests
         using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "large_test.txt.Z"));
         using var reader = LzwReader.OpenReader(stream);
 
-        Assert.Equal(ArchiveType.Lzw, reader.ArchiveType);
+        Assert.Equal(ArchiveType.Lzw, reader.Type);
         Assert.True(reader.MoveToNextEntry());
 
         var entry = reader.Entry;

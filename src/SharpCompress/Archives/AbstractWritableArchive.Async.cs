@@ -27,7 +27,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         hasModifications = true;
         newEntries.RemoveAll(v => removedEntries.Contains(v));
         modifiedEntries.Clear();
-        await foreach (var entry in OldEntriesAsync)
+        await foreach (var entry in OldEntriesAsync.ConfigureAwait(false))
         {
             modifiedEntries.Add(entry);
         }
@@ -120,6 +120,14 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
         await SaveToAsync(stream, options, OldEntriesAsync, newEntries, cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync().ConfigureAwait(false);
+        newEntries.Cast<Entry>().ForEach(x => x.Close());
+        removedEntries.Cast<Entry>().ForEach(x => x.Close());
+        modifiedEntries.Cast<Entry>().ForEach(x => x.Close());
     }
 
     protected abstract ValueTask SaveToAsync(

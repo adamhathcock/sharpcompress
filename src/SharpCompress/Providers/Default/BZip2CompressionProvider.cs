@@ -22,6 +22,18 @@ public sealed class BZip2CompressionProvider : CompressionProviderBase
         return BZip2Stream.Create(destination, CompressionMode.Compress, false);
     }
 
+    public override async ValueTask<Stream> CreateCompressStreamAsync(
+        Stream destination,
+        int compressionLevel,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // BZip2 doesn't use compressionLevel parameter in this implementation
+        return await BZip2Stream
+            .CreateAsync(destination, CompressionMode.Compress, false, false, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public override Stream CreateDecompressStream(Stream source)
     {
         return BZip2Stream.Create(source, CompressionMode.Decompress, false);

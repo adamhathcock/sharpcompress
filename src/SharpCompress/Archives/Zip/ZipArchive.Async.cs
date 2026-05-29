@@ -45,7 +45,7 @@ public partial class ZipArchive
                                 s = new SourceStream(
                                     v[0].Stream,
                                     i => i < v.Length ? v[i].Stream : null,
-                                    new ReaderOptions() { LeaveStreamOpen = true }
+                                    ReaderOptions.ForExternalStream
                                 );
                             }
                             else
