@@ -12,6 +12,7 @@ using static SimpleExec.Command;
 
 const string Clean = "clean";
 const string Restore = "restore";
+const string UpdateLocks = "update-locks";
 const string Build = "build";
 const string Test = "test";
 const string Format = "format";
@@ -66,7 +67,8 @@ Target(
         Run("dotnet", "csharpier check .");
     }
 );
-Target(Restore, [CheckFormat], () => Run("dotnet", "restore"));
+Target(Restore, [CheckFormat], () => Run("dotnet", "restore --locked-mode"));
+Target(UpdateLocks, [CheckFormat], () => Run("dotnet", "restore --force-evaluate"));
 
 Target(
     Build,
