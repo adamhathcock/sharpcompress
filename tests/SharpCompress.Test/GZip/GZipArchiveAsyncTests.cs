@@ -221,4 +221,23 @@ public class GZipArchiveAsyncTests : ArchiveTests
             Path.Combine(scratchPath2, "Tar.tar")
         );
     }
+
+    [Fact]
+    public async ValueTask GZip_Async_Dispose_Closes_New_Entry_Stream()
+    {
+        var entryStream = new TestStream(new MemoryStream(new byte[] { 1, 2, 3 }));
+
+        await using (var archive = await GZipArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync(
+                "test.bin",
+                entryStream,
+                closeStream: true,
+                size: entryStream.Length
+            );
+            await archive.SaveToAsync(new MemoryStream(), new GZipWriterOptions());
+        }
+
+        Assert.True(entryStream.IsDisposed);
+    }
 }
