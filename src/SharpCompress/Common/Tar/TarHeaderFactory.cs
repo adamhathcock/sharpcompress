@@ -40,8 +40,7 @@ internal static partial class TarHeaderFactory
                         {
                             header.PackedStream = new TarReadOnlySubStream(
                                 stream,
-                                header.Size,
-                                false
+                                header.Size
                             );
                         }
                         break;

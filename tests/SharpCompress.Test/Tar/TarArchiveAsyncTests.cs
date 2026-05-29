@@ -416,6 +416,9 @@ public class TarArchiveAsyncTests : ArchiveTests
         Assert.Equal(4100, localOverrideLink.UserID);
         Assert.Equal(5100, localOverrideLink.GroupId);
         Assert.Equal(Convert.ToInt64("777", 8), localOverrideLink.Mode);
+    }
+
+    [Fact]
     public async ValueTask Tar_Read_One_At_A_Time_Without_Disposing_Entry_Stream_Async()
     {
         var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
