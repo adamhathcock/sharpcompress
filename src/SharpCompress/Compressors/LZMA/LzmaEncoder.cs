@@ -223,12 +223,19 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
             _posMask = ((uint)1 << numPosBits) - 1;
             _numPrevBits = numPrevBits;
             var numStates = (uint)1 << (_numPrevBits + _numPosBits);
-            if (_models is not null)
+            var requiredModelLength = checked((int)(numStates * 0x300));
+            if (_models is null || _models.Length < requiredModelLength)
             {
-                ArrayPool<BitEncoder>.Shared.Return(_models);
+                if (_models is not null)
+                {
+                    ArrayPool<BitEncoder>.Shared.Return(_models);
+                }
+                _models = ArrayPool<BitEncoder>.Shared.Rent(requiredModelLength);
             }
-            _models = ArrayPool<BitEncoder>.Shared.Rent(checked((int)(numStates * 0x300)));
-            _coders = new Encoder2[numStates];
+            if (_coders is null || _coders.Length != numStates)
+            {
+                _coders = new Encoder2[numStates];
+            }
             for (uint i = 0; i < numStates; i++)
             {
                 _coders[i].Create(_models, checked((int)(i * 0x300)));
