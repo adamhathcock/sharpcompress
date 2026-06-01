@@ -139,7 +139,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
             _posMask = ((uint)1 << numPosBits) - 1;
             _numPrevBits = numPrevBits;
             var numStates = (uint)1 << (_numPrevBits + _numPosBits);
-            _models = new BitDecoder[numStates * 0x300];
+            _models = new BitDecoder[checked((int)(numStates * 0x300))];
             _coders = new Decoder2[numStates];
             for (uint i = 0; i < numStates; i++)
             {
