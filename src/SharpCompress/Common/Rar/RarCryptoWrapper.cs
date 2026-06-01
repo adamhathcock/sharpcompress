@@ -63,9 +63,9 @@ internal sealed class RarCryptoWrapper : Stream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => ReadAndDecryptAsync(buffer, offset, count, cancellationToken);
+    ) => ReadAndDecryptAsync(buffer, offset, count, cancellationToken).AsTask();
 
-    private async Task<int> ReadAndDecryptAsync(
+    private async ValueTask<int> ReadAndDecryptAsync(
         byte[] buffer,
         int offset,
         int count,

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,11 +27,12 @@ internal sealed class Lzma2EncoderStream : Stream
     private readonly int _dictionarySize;
     private readonly int _numFastBytes;
     private readonly byte[] _buffer;
+    private readonly byte[] _properties;
+    private readonly Encoder _encoder;
     private int _bufferPosition;
     private bool _isFirstChunk = true;
     private bool _isDisposed;
     private byte _lzmaPropertiesByte;
-    private bool _lzmaPropertiesKnown;
 
     /// <summary>
     /// Creates a new LZMA2 encoder stream.
@@ -43,14 +45,23 @@ internal sealed class Lzma2EncoderStream : Stream
         _output = output;
         _dictionarySize = dictionarySize;
         _numFastBytes = numFastBytes;
-        _buffer = new byte[MAX_UNCOMPRESSED_CHUNK_SIZE];
+        _buffer = ArrayPool<byte>.Shared.Rent(MAX_UNCOMPRESSED_CHUNK_SIZE);
         _bufferPosition = 0;
+
+        var encoderProps = new LzmaEncoderProperties(eos: false, _dictionarySize, _numFastBytes);
+        _encoder = new Encoder();
+        _encoder.SetCoderProperties(encoderProps.PropIDs, encoderProps.Properties);
+
+        Span<byte> lzmaProperties = stackalloc byte[5];
+        _encoder.WriteCoderProperties(lzmaProperties);
+        _lzmaPropertiesByte = lzmaProperties[0];
+        _properties = [EncodeDictionarySize(_dictionarySize)];
     }
 
     /// <summary>
     /// Gets the 1-byte LZMA2 properties (encoded dictionary size).
     /// </summary>
-    public byte[] Properties => [EncodeDictionarySize(_dictionarySize)];
+    public byte[] Properties => _properties;
 
     public override bool CanRead => false;
     public override bool CanSeek => false;
@@ -67,13 +78,13 @@ internal sealed class Lzma2EncoderStream : Stream
     {
         while (count > 0)
         {
-            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
             Buffer.BlockCopy(buffer, offset, _buffer, _bufferPosition, toCopy);
             _bufferPosition += toCopy;
             offset += toCopy;
             count -= toCopy;
 
-            if (_bufferPosition == _buffer.Length)
+            if (_bufferPosition == MAX_UNCOMPRESSED_CHUNK_SIZE)
             {
                 FlushChunk();
             }
@@ -91,13 +102,13 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
             Buffer.BlockCopy(buffer, offset, _buffer, _bufferPosition, toCopy);
             _bufferPosition += toCopy;
             offset += toCopy;
             count -= toCopy;
 
-            if (_bufferPosition == _buffer.Length)
+            if (_bufferPosition == MAX_UNCOMPRESSED_CHUNK_SIZE)
             {
                 await FlushChunkAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -116,13 +127,13 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
             buffer.Slice(offset, toCopy).Span.CopyTo(_buffer.AsSpan(_bufferPosition, toCopy));
             _bufferPosition += toCopy;
             offset += toCopy;
             count -= toCopy;
 
-            if (_bufferPosition == _buffer.Length)
+            if (_bufferPosition == MAX_UNCOMPRESSED_CHUNK_SIZE)
             {
                 await FlushChunkAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -153,6 +164,8 @@ internal sealed class Lzma2EncoderStream : Stream
 
             // Write LZMA2 end marker
             _output.WriteByte(0x00);
+            _encoder.Dispose();
+            ArrayPool<byte>.Shared.Return(_buffer);
         }
         base.Dispose(disposing);
     }
@@ -179,6 +192,9 @@ internal sealed class Lzma2EncoderStream : Stream
 #else
             await _output.WriteAsync(_endMarker, 0, 1).ConfigureAwait(false);
 #endif
+
+            _encoder.Dispose();
+            ArrayPool<byte>.Shared.Return(_buffer);
         }
 
 #if !LEGACY_DOTNET || NETSTANDARD2_1
@@ -193,14 +209,15 @@ internal sealed class Lzma2EncoderStream : Stream
             return;
         }
 
-        var uncompressedData = _buffer.AsSpan(0, _bufferPosition);
+        var uncompressedSize = _bufferPosition;
+        var uncompressedData = _buffer.AsSpan(0, uncompressedSize);
         _bufferPosition = 0;
 
         // Try compressing the data
-        byte[] compressed;
+        (byte[] Buffer, int Length) compressed;
         try
         {
-            compressed = CompressBlock(uncompressedData);
+            compressed = CompressBlock(_buffer, uncompressedSize);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
@@ -215,7 +232,7 @@ internal sealed class Lzma2EncoderStream : Stream
             && compressed.Length < uncompressedData.Length
         )
         {
-            WriteCompressedChunk(uncompressedData.Length, compressed);
+            WriteCompressedChunk(uncompressedData.Length, compressed.Buffer, compressed.Length);
         }
         else
         {
@@ -230,13 +247,14 @@ internal sealed class Lzma2EncoderStream : Stream
             return;
         }
 
-        var uncompressedData = _buffer.AsMemory(0, _bufferPosition);
+        var uncompressedSize = _bufferPosition;
+        var uncompressedData = _buffer.AsMemory(0, uncompressedSize);
         _bufferPosition = 0;
 
-        byte[] compressed;
+        (byte[] Buffer, int Length) compressed;
         try
         {
-            compressed = CompressBlock(uncompressedData.Span);
+            compressed = CompressBlock(_buffer, uncompressedSize);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
         {
@@ -250,7 +268,12 @@ internal sealed class Lzma2EncoderStream : Stream
             && compressed.Length < uncompressedData.Length
         )
         {
-            await WriteCompressedChunkAsync(uncompressedData.Length, compressed, cancellationToken)
+            await WriteCompressedChunkAsync(
+                    uncompressedData.Length,
+                    compressed.Buffer,
+                    compressed.Length,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
         }
         else
@@ -260,45 +283,26 @@ internal sealed class Lzma2EncoderStream : Stream
         }
     }
 
-    private byte[] CompressBlock(ReadOnlySpan<byte> data)
+    private (byte[] Buffer, int Length) CompressBlock(byte[] data, int length)
     {
-        var encoderProps = new LzmaEncoderProperties(eos: false, _dictionarySize, _numFastBytes);
-
-        var encoder = new Encoder();
-        encoder.SetCoderProperties(encoderProps.PropIDs, encoderProps.Properties);
-
-        // Capture the LZMA properties byte (pb/lp/lc encoding) for the chunk header
-        if (!_lzmaPropertiesKnown)
-        {
-            var propBytes = new byte[5];
-            encoder.WriteCoderProperties(propBytes);
-            _lzmaPropertiesByte = propBytes[0];
-            _lzmaPropertiesKnown = true;
-        }
-
-        using var inputMs = new MemoryStream(data.ToArray(), writable: false);
+        using var inputMs = new MemoryStream(data, 0, length, writable: false);
         using var outputMs = new PooledMemoryStream();
 
-        encoder.Code(inputMs, outputMs, data.Length, -1, null);
+        _encoder.Code(inputMs, outputMs, length, -1, null);
 
         var fullCompressed = outputMs.ToArray();
 
         // The LZMA range encoder flush writes trailing bytes the decoder doesn't consume.
         // Trial-decode to find the exact byte count the decoder needs, so the LZMA2
         // chunk header reports a compressed size that matches what the decoder reads.
-        var consumed = FindConsumedBytes(fullCompressed, data.Length);
-        if (consumed < fullCompressed.Length)
-        {
-            return fullCompressed.AsSpan(0, consumed).ToArray();
-        }
-
-        return fullCompressed;
+        var consumed = FindConsumedBytes(fullCompressed, fullCompressed.Length, length);
+        return (fullCompressed, consumed);
     }
 
-    private int FindConsumedBytes(byte[] compressedData, int uncompressedSize)
+    private int FindConsumedBytes(byte[] compressedData, int compressedSize, int uncompressedSize)
     {
         // Build 5-byte LZMA property header: [pb/lp/lc byte] [dictSize as LE int32]
-        var props = new byte[5];
+        Span<byte> props = stackalloc byte[5];
         props[0] = _lzmaPropertiesByte;
         props[1] = (byte)_dictionarySize;
         props[2] = (byte)(_dictionarySize >> 8);
@@ -308,9 +312,8 @@ internal sealed class Lzma2EncoderStream : Stream
         var decoder = new Decoder();
         decoder.SetDecoderProperties(props);
 
-        using var input = new MemoryStream(compressedData);
-        using var output = new PooledMemoryStream();
-        decoder.Code(input, output, compressedData.Length, uncompressedSize, null);
+        using var input = new MemoryStream(compressedData, 0, compressedSize, writable: false);
+        decoder.Code(input, Stream.Null, compressedSize, uncompressedSize, null);
 
         return (int)input.Position;
     }
@@ -319,10 +322,14 @@ internal sealed class Lzma2EncoderStream : Stream
     /// Writes a compressed LZMA2 chunk.
     /// Header: [control] [uncompSize_hi] [uncompSize_lo] [compSize_hi] [compSize_lo] [props?]
     /// </summary>
-    private void WriteCompressedChunk(int uncompressedSize, byte[] compressedData)
+    private void WriteCompressedChunk(
+        int uncompressedSize,
+        byte[] compressedData,
+        int compressedSize
+    )
     {
         var uncompSizeMinus1 = uncompressedSize - 1;
-        var compSizeMinus1 = compressedData.Length - 1;
+        var compSizeMinus1 = compressedSize - 1;
 
         // Each chunk is compressed independently with a fresh LZMA encoder,
         // so we must use 0xE0 (full reset: dictionary + state + properties) every time.
@@ -341,32 +348,38 @@ internal sealed class Lzma2EncoderStream : Stream
         // 0xE0 (>= 0xC0) requires properties byte
         _output.WriteByte(_lzmaPropertiesByte);
 
-        _output.Write(compressedData, 0, compressedData.Length);
+        _output.Write(compressedData, 0, compressedSize);
     }
 
     private async ValueTask WriteCompressedChunkAsync(
         int uncompressedSize,
         byte[] compressedData,
+        int compressedSize,
         CancellationToken cancellationToken = default
     )
     {
         var uncompSizeMinus1 = uncompressedSize - 1;
-        var compSizeMinus1 = compressedData.Length - 1;
+        var compSizeMinus1 = compressedSize - 1;
         var control = (byte)(0xE0 | ((uncompSizeMinus1 >> 16) & 0x1F));
         _isFirstChunk = false;
 
-        var header = new[]
+        var header = ArrayPool<byte>.Shared.Rent(6);
+        try
         {
-            control,
-            (byte)((uncompSizeMinus1 >> 8) & 0xFF),
-            (byte)(uncompSizeMinus1 & 0xFF),
-            (byte)((compSizeMinus1 >> 8) & 0xFF),
-            (byte)(compSizeMinus1 & 0xFF),
-            _lzmaPropertiesByte,
-        };
-        await _output.WriteAsync(header, 0, header.Length, cancellationToken).ConfigureAwait(false);
+            header[0] = control;
+            header[1] = (byte)((uncompSizeMinus1 >> 8) & 0xFF);
+            header[2] = (byte)(uncompSizeMinus1 & 0xFF);
+            header[3] = (byte)((compSizeMinus1 >> 8) & 0xFF);
+            header[4] = (byte)(compSizeMinus1 & 0xFF);
+            header[5] = _lzmaPropertiesByte;
+            await _output.WriteAsync(header, 0, 6, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(header);
+        }
         await _output
-            .WriteAsync(compressedData, 0, compressedData.Length, cancellationToken)
+            .WriteAsync(compressedData, 0, compressedSize, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -426,20 +439,37 @@ internal sealed class Lzma2EncoderStream : Stream
                 control = 0x02;
             }
 
-            var header = new[]
+            var header = ArrayPool<byte>.Shared.Rent(3);
+            try
             {
-                control,
-                (byte)((sizeMinus1 >> 8) & 0xFF),
-                (byte)(sizeMinus1 & 0xFF),
-            };
-            await _output
-                .WriteAsync(header, 0, header.Length, cancellationToken)
-                .ConfigureAwait(false);
+                header[0] = control;
+                header[1] = (byte)((sizeMinus1 >> 8) & 0xFF);
+                header[2] = (byte)(sizeMinus1 & 0xFF);
+                await _output.WriteAsync(header, 0, 3, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(header);
+            }
 
-            var chunk = data.Slice(offset, chunkSize).ToArray();
+#if !LEGACY_DOTNET || NETSTANDARD2_1
             await _output
-                .WriteAsync(chunk, 0, chunk.Length, cancellationToken)
+                .WriteAsync(data.Slice(offset, chunkSize), cancellationToken)
                 .ConfigureAwait(false);
+#else
+            var chunk = ArrayPool<byte>.Shared.Rent(chunkSize);
+            try
+            {
+                data.Slice(offset, chunkSize).CopyTo(chunk);
+                await _output
+                    .WriteAsync(chunk, 0, chunkSize, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(chunk);
+            }
+#endif
             offset += chunkSize;
         }
     }

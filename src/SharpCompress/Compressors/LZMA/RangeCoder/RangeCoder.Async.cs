@@ -9,6 +9,8 @@ namespace SharpCompress.Compressors.LZMA.RangeCoder;
 
 internal partial class Encoder
 {
+    private byte[] SingleByteBuffer => _singleByteBuffer ??= new byte[1];
+
     public async ValueTask ShiftLowAsync(CancellationToken cancellationToken = default)
     {
         if ((uint)_low < 0xFF000000 || (uint)(_low >> 32) == 1)
@@ -17,7 +19,8 @@ internal partial class Encoder
             do
             {
                 var b = (byte)(temp + (_low >> 32));
-                var buffer = new[] { b };
+                var buffer = SingleByteBuffer;
+                buffer[0] = b;
                 await _stream.WriteAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
                 temp = 0xFF;
             } while (--_cacheSize != 0);
@@ -78,13 +81,15 @@ internal partial class Encoder
 
 internal partial class Decoder
 {
+    private byte[] SingleByteBuffer => _singleByteBuffer ??= new byte[1];
+
     public async ValueTask InitAsync(Stream stream, CancellationToken cancellationToken = default)
     {
         _stream = stream;
 
         _code = 0;
         _range = 0xFFFFFFFF;
-        var buffer = new byte[1];
+        var buffer = SingleByteBuffer;
         for (var i = 0; i < 5; i++)
         {
             var read = await _stream
@@ -103,7 +108,7 @@ internal partial class Decoder
     {
         while (_range < K_TOP_VALUE)
         {
-            var buffer = new byte[1];
+            var buffer = SingleByteBuffer;
             var read = await _stream
                 .ReadAsync(buffer, 0, 1, cancellationToken)
                 .ConfigureAwait(false);
@@ -121,7 +126,7 @@ internal partial class Decoder
     {
         if (_range < K_TOP_VALUE)
         {
-            var buffer = new byte[1];
+            var buffer = SingleByteBuffer;
             var read = await _stream
                 .ReadAsync(buffer, 0, 1, cancellationToken)
                 .ConfigureAwait(false);
@@ -143,7 +148,7 @@ internal partial class Decoder
         var range = _range;
         var code = _code;
         uint result = 0;
-        var buffer = new byte[1];
+        var buffer = SingleByteBuffer;
         for (var i = numTotalBits; i > 0; i--)
         {
             range >>= 1;
