@@ -15,7 +15,7 @@ internal partial class Encoder
     public uint _range;
     private uint _cacheSize;
     private byte _cache;
-    private byte[] _singleByteBuffer;
+    private byte[] _singleByteBuffer = new byte[1];
 
     public void SetStream(Stream stream) => _stream = stream;
 
