@@ -78,13 +78,13 @@ internal sealed class Lzma2EncoderStream : Stream
     {
         while (count > 0)
         {
-            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
             Buffer.BlockCopy(buffer, offset, _buffer, _bufferPosition, toCopy);
             _bufferPosition += toCopy;
             offset += toCopy;
             count -= toCopy;
 
-            if (_bufferPosition == _buffer.Length)
+            if (_bufferPosition == MAX_UNCOMPRESSED_CHUNK_SIZE)
             {
                 FlushChunk();
             }
@@ -102,13 +102,13 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
             Buffer.BlockCopy(buffer, offset, _buffer, _bufferPosition, toCopy);
             _bufferPosition += toCopy;
             offset += toCopy;
             count -= toCopy;
 
-            if (_bufferPosition == _buffer.Length)
+            if (_bufferPosition == MAX_UNCOMPRESSED_CHUNK_SIZE)
             {
                 await FlushChunkAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -127,13 +127,13 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var toCopy = Math.Min(count, _buffer.Length - _bufferPosition);
+            var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
             buffer.Slice(offset, toCopy).Span.CopyTo(_buffer.AsSpan(_bufferPosition, toCopy));
             _bufferPosition += toCopy;
             offset += toCopy;
             count -= toCopy;
 
-            if (_bufferPosition == _buffer.Length)
+            if (_bufferPosition == MAX_UNCOMPRESSED_CHUNK_SIZE)
             {
                 await FlushChunkAsync(cancellationToken).ConfigureAwait(false);
             }
