@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -177,6 +178,28 @@ public class TarArchiveAsyncTests : ArchiveTests
             await archive.SaveToAsync(scratchPath, twopt);
         }
         CompareArchivesByPath(unmodified, scratchPath);
+    }
+
+    [Fact]
+    public async ValueTask Tar_Async_Dispose_Closes_New_Entry_Stream()
+    {
+        var entryStream = new TestStream(new MemoryStream(Encoding.UTF8.GetBytes("test")));
+
+        await using (var archive = await TarArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync(
+                "test.txt",
+                entryStream,
+                closeStream: true,
+                size: entryStream.Length
+            );
+            await archive.SaveToAsync(
+                new MemoryStream(),
+                new TarWriterOptions(CompressionType.None, true)
+            );
+        }
+
+        Assert.True(entryStream.IsDisposed);
     }
 
     [Fact]
@@ -393,5 +416,66 @@ public class TarArchiveAsyncTests : ArchiveTests
         Assert.Equal(4100, localOverrideLink.UserID);
         Assert.Equal(5100, localOverrideLink.GroupId);
         Assert.Equal(Convert.ToInt64("777", 8), localOverrideLink.Mode);
+    }
+
+    [Fact]
+    public async ValueTask Tar_Read_One_At_A_Time_Without_Disposing_Entry_Stream_Async()
+    {
+        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
+        var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)
+        {
+            ArchiveEncoding = archiveEncoding,
+        };
+        var testBytes = Encoding.UTF8.GetBytes("This is a test.");
+
+        using var memoryStream = new MemoryStream();
+        using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
+        using (var testFileStream = new MemoryStream(testBytes))
+        {
+            await tarWriter.WriteAsync("file0.txt", testFileStream, null);
+            testFileStream.Position = 0;
+            await tarWriter.WriteAsync("file1.txt", testFileStream, null);
+            tarWriter.WriteDirectory("folder0", null);
+            testFileStream.Position = 0;
+            await tarWriter.WriteAsync("folder0/file_in_folder0.txt", testFileStream, null);
+        }
+
+        memoryStream.Position = 0;
+
+        var entryKeys = new List<string?>();
+        var openEntryStreams = new List<Stream>();
+
+        await using (
+            var archive = await TarArchive.OpenAsyncArchive(
+                new AsyncOnlyStream(memoryStream),
+                ReaderOptions.ForExternalStream
+            )
+        )
+        {
+            await foreach (var entry in archive.EntriesAsync)
+            {
+                entryKeys.Add(entry.Key);
+                if (entry.IsDirectory)
+                {
+                    continue;
+                }
+
+                var tarEntryStream = await entry.OpenEntryStreamAsync();
+                openEntryStreams.Add(tarEntryStream);
+
+                using var testFileStream = new MemoryStream();
+                await tarEntryStream.CopyToAsync(testFileStream);
+                Assert.Equal(testBytes.Length, testFileStream.Length);
+            }
+
+            Assert.Equal(4, await archive.EntriesAsync.CountAsync());
+        }
+
+        openEntryStreams.ForEach(stream => stream.Dispose());
+
+        Assert.Equal(
+            ["file0.txt", "file1.txt", "folder0/", "folder0/file_in_folder0.txt"],
+            entryKeys
+        );
     }
 }

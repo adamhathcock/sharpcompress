@@ -1,9 +1,11 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -139,6 +141,29 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
         }
 
         VerifyFiles();
+    }
+
+    [Fact]
+    public async Task SevenZipArchive_Solid_WriteToDirectoryAsync_WithProgress()
+    {
+        var progressReports = new System.Collections.Generic.List<ProgressReport>();
+        var progress = new SynchronousProgress<ProgressReport>(report =>
+            progressReports.Add(report)
+        );
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+#if NETFRAMEWORK
+        using var stream = File.OpenRead(testArchive);
+#else
+        await using var stream = File.OpenRead(testArchive);
+#endif
+        await using var archive = await ArchiveFactory.OpenAsyncArchive(
+            new AsyncOnlyStream(stream)
+        );
+
+        await archive.WriteToDirectoryAsync(SCRATCH_FILES_PATH, progress: progress);
+
+        VerifyFiles();
+        Assert.True(progressReports.Count > 0, "Progress reports should be generated");
     }
 
     [Fact]
@@ -335,5 +360,14 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
 
         // The critical check: within a single folder, the stream should NEVER be recreated
         Assert.Equal(0, streamRecreationsWithinFolder); // Folder stream should remain the same for all entries in the same folder
+    }
+
+    private sealed class SynchronousProgress<T> : IProgress<T>
+    {
+        private readonly Action<T> _handler;
+
+        public SynchronousProgress(Action<T> handler) => _handler = handler;
+
+        public void Report(T value) => _handler(value);
     }
 }

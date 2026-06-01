@@ -30,7 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Config", "Config", "{CDB425
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.Performance", "tests\SharpCompress.Performance\SharpCompress.Performance.csproj", "{5BDE6DBC-9E5F-4E21-AB71-F138A3E72B17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.AotSmoke", "tests\SharpCompress.AotSmoke\SharpCompress.AotSmoke.csproj", "{50C6DA22-2124-4E47-9FB7-96FEC5F59566}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpCompress.AotSmoke", "tests\SharpCompress.AotSmoke\SharpCompress.AotSmoke.csproj", "{C9290353-5931-46DE-970A-63143B0BAE41}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,10 +54,10 @@ Global
 		{5BDE6DBC-9E5F-4E21-AB71-F138A3E72B17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BDE6DBC-9E5F-4E21-AB71-F138A3E72B17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BDE6DBC-9E5F-4E21-AB71-F138A3E72B17}.Release|Any CPU.Build.0 = Release|Any CPU
-		{50C6DA22-2124-4E47-9FB7-96FEC5F59566}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{50C6DA22-2124-4E47-9FB7-96FEC5F59566}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50C6DA22-2124-4E47-9FB7-96FEC5F59566}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{50C6DA22-2124-4E47-9FB7-96FEC5F59566}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9290353-5931-46DE-970A-63143B0BAE41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9290353-5931-46DE-970A-63143B0BAE41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9290353-5931-46DE-970A-63143B0BAE41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9290353-5931-46DE-970A-63143B0BAE41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +66,6 @@ Global
 		{FD19DDD8-72B2-4024-8665-0D1F7A2AA998} = {3C5BE746-03E5-4895-9988-0B57F162F86C}
 		{F2B1A1EB-0FA6-40D0-8908-E13247C7226F} = {0F0901FF-E8D9-426A-B5A2-17C7F47C1529}
 		{5BDE6DBC-9E5F-4E21-AB71-F138A3E72B17} = {0F0901FF-E8D9-426A-B5A2-17C7F47C1529}
-		{50C6DA22-2124-4E47-9FB7-96FEC5F59566} = {0F0901FF-E8D9-426A-B5A2-17C7F47C1529}
+		{C9290353-5931-46DE-970A-63143B0BAE41} = {0F0901FF-E8D9-426A-B5A2-17C7F47C1529}
 	EndGlobalSection
 EndGlobal
