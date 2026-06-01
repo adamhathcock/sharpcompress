@@ -150,6 +150,10 @@ public sealed partial class LZipStream
             }
             var basePower = header[5] & 0x1F;
             var subtractionNumerator = (header[5] & 0xE0) >> 5;
+            if (basePower < 4 || basePower > 30)
+            {
+                return 0;
+            }
             return (1 << basePower) - (subtractionNumerator * (1 << (basePower - 4)));
         }
         finally
