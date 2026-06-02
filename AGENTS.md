@@ -76,7 +76,7 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 - Build project is in `build/`
 - Use `dotnet build` to build the solution
 - Use `dotnet test` to run tests
-- Solution file: `SharpCompress.sln`
+- Solution file: `SharpCompress.slnx`
 
 ### Directory Structure
 ```
