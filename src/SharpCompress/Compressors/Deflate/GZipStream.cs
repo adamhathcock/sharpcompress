@@ -71,6 +71,7 @@ public partial class GZipStream : Stream
             stream,
             mode,
             level,
+            readerOptions.LeaveStreamOpen,
             (
                 readerOptions ?? throw new ArgumentNullException(nameof(readerOptions))
             ).ArchiveEncoding.GetEncoding()
