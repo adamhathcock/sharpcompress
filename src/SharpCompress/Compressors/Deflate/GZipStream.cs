@@ -73,17 +73,26 @@ public partial class GZipStream : Stream
             level,
             (
                 readerOptions ?? throw new ArgumentNullException(nameof(readerOptions))
-            ).ArchiveEncoding.GetEncoding()
+            ).ArchiveEncoding.GetEncoding(),
+            readerOptions.LeaveStreamOpen
         ) { }
 
     public GZipStream(
         Stream stream,
         CompressionMode mode,
         CompressionLevel level,
-        Encoding encoding
+        Encoding encoding,
+        bool leaveOpen = false
     )
     {
-        BaseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, encoding);
+        BaseStream = new ZlibBaseStream(
+            stream,
+            mode,
+            level,
+            ZlibStreamFlavor.GZIP,
+            leaveOpen,
+            encoding
+        );
         _encoding = encoding;
     }
 
