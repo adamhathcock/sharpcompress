@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Config/">
+    <File Path=".editorconfig" />
+    <File Path=".github/workflows/nuget-release.yml" />
+    <File Path=".gitignore" />
+    <File Path="AGENTS.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="docs/TAR_GAP_ANALYSIS.md" />
+    <File Path="docs/TAR_SPEC.md" />
+    <File Path="global.json" />
+    <File Path="NuGet.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/SharpCompress/SharpCompress.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SharpCompress.AotSmoke/SharpCompress.AotSmoke.csproj" />
+    <Project Path="tests/SharpCompress.Performance/SharpCompress.Performance.csproj" />
+    <Project Path="tests/SharpCompress.Test/SharpCompress.Test.csproj" />
+  </Folder>
+  <Project Path="build/build.csproj" />
+</Solution>
