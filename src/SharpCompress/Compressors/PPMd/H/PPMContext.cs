@@ -265,7 +265,7 @@ internal class PpmContext : Pointer
         model.HiBitsFlag = model.GetHb2Flag()[model.FoundState.Symbol];
         var off1 = rs.Freq - 1;
         var off2 = GetArrayIndex(model, rs);
-        var bs = model.BinSumm[off1][off2];
+        var bs = model.GetBinSumm(off1, off2);
         if (model.Coder.GetCurrentShiftCount(ModelPpm.TOT_BITS) < bs)
         {
             model.FoundState.Address = rs.Address;
@@ -273,7 +273,7 @@ internal class PpmContext : Pointer
             model.Coder.SubRange.LowCount = 0;
             model.Coder.SubRange.HighCount = bs;
             bs = ((bs + ModelPpm.INTERVAL - GetMean(bs, ModelPpm.PERIOD_BITS, 2)) & 0xffff);
-            model.BinSumm[off1][off2] = bs;
+            model.SetBinSumm(off1, off2, bs);
             model.PrevSuccess = 1;
             model.IncRunLength(1);
         }
@@ -281,7 +281,7 @@ internal class PpmContext : Pointer
         {
             model.Coder.SubRange.LowCount = bs;
             bs = (bs - GetMean(bs, ModelPpm.PERIOD_BITS, 2)) & 0xFFFF;
-            model.BinSumm[off1][off2] = bs;
+            model.SetBinSumm(off1, off2, bs);
             model.Coder.SubRange.HighCount = ModelPpm.BIN_SCALE;
             model.InitEsc = EXP_ESCAPE[Utility.URShift(bs, 10)];
             model.NumMasked = 1;
@@ -431,7 +431,7 @@ internal class PpmContext : Pointer
             idx2 += 2 * ((_freqData.SummFreq < 11 * numStats) ? 1 : 0);
             idx2 += 4 * ((model.NumMasked > diff) ? 1 : 0);
             idx2 += model.HiBitsFlag;
-            psee2C = model.GetSee2Cont()[idx1][idx2];
+            psee2C = model.GetSee2Cont(idx1, idx2);
             model.Coder.SubRange.Scale = psee2C.Mean;
         }
         else
@@ -457,7 +457,7 @@ internal class PpmContext : Pointer
             idx2 += 2 * ((_freqData.SummFreq < 11 * numStats) ? 1 : 0);
             idx2 += 4 * ((numMasked > nonMasked) ? 1 : 0);
             idx2 += model.HiBitsFlag;
-            psee2C = model.GetSee2Cont()[idx1][idx2];
+            psee2C = model.GetSee2Cont(idx1, idx2);
             escFreq = psee2C.Mean;
         }
         else

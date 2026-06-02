@@ -81,13 +81,13 @@ public class Program
             using (profiler)
             {
                 // Run a simple benchmark iteration
-                var zipBenchmark = new Benchmarks.SevenZipBenchmarks();
+                var zipBenchmark = new Benchmarks.RarBenchmarks();
                 zipBenchmark.Setup();
 
                 Console.WriteLine("Running benchmark iterations...");
                 for (int i = 0; i < 100; i++)
                 {
-                    await zipBenchmark.SevenZipLzma2ExtractAsync_Reader();
+                    await zipBenchmark.RarExtractArchiveApiAsync();
                     if (i % 3 == 0)
                     {
                         Console.Write(".");

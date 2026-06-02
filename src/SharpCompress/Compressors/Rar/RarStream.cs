@@ -24,6 +24,7 @@ internal partial class RarStream : Stream
     private int outOffset;
     private int outCount;
     private int outTotal;
+    private bool initialized;
     private bool isDisposed;
     private long _position;
 
@@ -36,9 +37,15 @@ internal partial class RarStream : Stream
 
     public void Initialize()
     {
+        if (initialized)
+        {
+            return;
+        }
+
         fetch = true;
         unpack.DoUnpack(fileHeader, readStream, this);
         fetch = false;
+        initialized = true;
         _position = 0;
     }
 
@@ -76,6 +83,12 @@ internal partial class RarStream : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        if (count == 0)
+        {
+            return 0;
+        }
+
+        Initialize();
         outTotal = 0;
         if (tmpCount > 0)
         {

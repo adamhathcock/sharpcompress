@@ -9,7 +9,7 @@ namespace SharpCompress.Compressors.Rar;
 
 internal partial class RarCrcStream : RarStream
 {
-    public static async ValueTask<RarCrcStream> CreateAsync(
+    public static ValueTask<RarCrcStream> CreateAsync(
         IRarUnpack unpack,
         FileHeader fileHeader,
         MultiVolumeReadOnlyStreamBase readStream,
@@ -17,8 +17,7 @@ internal partial class RarCrcStream : RarStream
     )
     {
         var stream = new RarCrcStream(unpack, fileHeader, readStream);
-        await stream.InitializeAsync(cancellationToken).ConfigureAwait(false);
-        return stream;
+        return new ValueTask<RarCrcStream>(stream);
     }
 
     public override async Task<int> ReadAsync(

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -135,19 +136,26 @@ internal partial class Unpack : IRarUnpack
 
     private async ValueTask UnstoreFileAsync(CancellationToken cancellationToken = default)
     {
-        var buffer = new byte[(int)Math.Min(0x10000, DestUnpSize)];
-        do
+        var buffer = ArrayPool<byte>.Shared.Rent((int)Math.Min(0x10000, DestUnpSize));
+        try
         {
-            var n = await readStream
-                .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
-                .ConfigureAwait(false);
-            if (n == 0)
+            do
             {
-                break;
-            }
-            await writeStream.WriteAsync(buffer, 0, n, cancellationToken).ConfigureAwait(false);
-            DestUnpSize -= n;
-        } while (!Suspended);
+                var n = await readStream
+                    .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
+                    .ConfigureAwait(false);
+                if (n == 0)
+                {
+                    break;
+                }
+                await writeStream.WriteAsync(buffer, 0, n, cancellationToken).ConfigureAwait(false);
+                DestUnpSize -= n;
+            } while (!Suspended);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     public bool Suspended { get; set; }
@@ -181,6 +189,18 @@ internal partial class Unpack : IRarUnpack
         set => PPMEscChar = value;
     }
 
-    public static byte[] EnsureCapacity(byte[] array, int length) =>
-        array.Length < length ? new byte[length] : array;
+    private byte[] EnsureCapacity(byte[] array, int length)
+    {
+        if (array.Length >= length)
+        {
+            return array;
+        }
+
+        var newArray = ArrayPool<byte>.Shared.Rent(length);
+        if (array.Length != 0)
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
+        return newArray;
+    }
 }

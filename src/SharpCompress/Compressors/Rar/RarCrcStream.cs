@@ -32,7 +32,6 @@ internal partial class RarCrcStream : RarStream
     )
     {
         var stream = new RarCrcStream(unpack, fileHeader, readStream);
-        stream.Initialize();
         return stream;
     }
 

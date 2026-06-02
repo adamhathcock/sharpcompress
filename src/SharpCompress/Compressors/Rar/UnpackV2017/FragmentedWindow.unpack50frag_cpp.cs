@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using SharpCompress.Common;
 using size_t = System.UInt32;
 
@@ -19,15 +20,16 @@ internal partial class FragmentedWindow
     //  Reset();
     //}
 
-    private void Reset()
+    public void Reset()
     {
         for (uint I = 0; I < Mem.Length; I++)
         {
             if (Mem[I] != null)
             {
-                //free(Mem[I]);
+                ArrayPool<byte>.Shared.Return(Mem[I]);
                 Mem[I] = null;
             }
+            MemSize[I] = 0;
         }
     }
 
@@ -50,7 +52,7 @@ internal partial class FragmentedWindow
             byte[] NewMem = null;
             while (Size >= MinSize)
             {
-                NewMem = new byte[Size];
+                NewMem = ArrayPool<byte>.Shared.Rent(checked((int)Size));
                 if (NewMem != null)
                 {
                     break;

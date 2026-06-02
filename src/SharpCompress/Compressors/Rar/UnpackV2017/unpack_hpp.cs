@@ -247,6 +247,7 @@ internal partial class Unpack
 
     // Filters code, one entry per filter.
     private readonly List<UnpackFilter> Filters = new();
+    private readonly List<UnpackFilter> FilterPool = new();
 
     private readonly uint[] OldDist = new uint[4];
     private uint OldDistPtr;

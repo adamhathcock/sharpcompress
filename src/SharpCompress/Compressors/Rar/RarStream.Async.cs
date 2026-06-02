@@ -3,6 +3,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -18,11 +19,17 @@ internal partial class RarStream
     /// </summary>
     public async ValueTask InitializeAsync(CancellationToken cancellationToken = default)
     {
+        if (initialized)
+        {
+            return;
+        }
+
         fetch = true;
         await unpack
             .DoUnpackAsync(fileHeader, readStream, this, cancellationToken)
             .ConfigureAwait(false);
         fetch = false;
+        initialized = true;
         _position = 0;
     }
 
@@ -46,6 +53,12 @@ internal partial class RarStream
         CancellationToken cancellationToken
     )
     {
+        if (count == 0)
+        {
+            return 0;
+        }
+
+        await InitializeAsync(cancellationToken).ConfigureAwait(false);
         outTotal = 0;
         if (tmpCount > 0)
         {
@@ -87,6 +100,17 @@ internal partial class RarStream
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (MemoryMarshal.TryGetArray<byte>(buffer, out var segment))
+        {
+            return await ReadImplAsync(
+                    segment.Array!,
+                    segment.Offset,
+                    buffer.Length,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+
         var array = ArrayPool<byte>.Shared.Rent(buffer.Length);
         try
         {

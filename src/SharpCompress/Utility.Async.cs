@@ -43,9 +43,15 @@ internal static partial class Utility
 
             while (length > 0)
             {
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                var fetched = await source
+                    .ReadAsync(buffer.AsMemory(offset, length), cancellationToken)
+                    .ConfigureAwait(false);
+#else
                 var fetched = await source
                     .ReadAsync(buffer, offset, length, cancellationToken)
                     .ConfigureAwait(false);
+#endif
                 if (fetched <= 0)
                 {
                     throw new IncompleteArchiveException("Unexpected end of stream.");
@@ -79,9 +85,15 @@ internal static partial class Utility
             int read;
             while (
                 (
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                    read = await source
+                        .ReadAsync(buffer.AsMemory(total, buffer.Length - total), cancellationToken)
+                        .ConfigureAwait(false)
+#else
                     read = await source
                         .ReadAsync(buffer, total, buffer.Length - total, cancellationToken)
                         .ConfigureAwait(false)
+#endif
                 ) > 0
             )
             {
@@ -105,9 +117,18 @@ internal static partial class Utility
             int read;
             while (
                 (
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+                    read = await source
+                        .ReadAsync(
+                            buffer.AsMemory(offset + total, count - total),
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false)
+#else
                     read = await source
                         .ReadAsync(buffer, offset + total, count - total, cancellationToken)
                         .ConfigureAwait(false)
+#endif
                 ) > 0
             )
             {
