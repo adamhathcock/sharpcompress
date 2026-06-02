@@ -124,7 +124,8 @@ internal sealed class InflateBlocks
     internal InflateBlocks(ZlibCodec codec, object checkfn, int w)
     {
         _codec = codec;
-        hufts = new int[MANY * 3];
+        hufts = ArrayPool<int>.Shared.Rent(MANY * 3);
+        Array.Clear(hufts, 0, MANY * 3);
         window = MemoryPool<byte>.Shared.Rent(w);
         end = w;
         this.checkfn = checkfn;
@@ -719,7 +720,11 @@ internal sealed class InflateBlocks
         Reset();
         window?.Dispose();
         window = null;
-        hufts = null;
+        if (hufts is not null)
+        {
+            ArrayPool<int>.Shared.Return(hufts, clearArray: true);
+            hufts = null;
+        }
     }
 
     internal void SetDictionary(byte[] d, int start, int n)

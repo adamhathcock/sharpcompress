@@ -27,6 +27,7 @@
 // ------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
@@ -136,7 +137,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         }
     }
 
-    private byte[] workingBuffer => _workingBuffer ??= new byte[_bufferSize];
+    private byte[] workingBuffer => _workingBuffer ??= ArrayPool<byte>.Shared.Rent(_bufferSize);
 
     public override void Write(byte[] buffer, int offset, int count)
     {
@@ -541,6 +542,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             finally
             {
                 end();
+                ReturnWorkingBuffer();
                 if (!_leaveOpen)
                 {
                     _stream?.Dispose();
@@ -575,6 +577,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         finally
         {
             end();
+            ReturnWorkingBuffer();
             if (_stream != null)
             {
                 if (!_leaveOpen)
@@ -591,6 +594,17 @@ internal class ZlibBaseStream : Stream, IStreamStack
                 _stream = null;
             }
         }
+    }
+
+    private void ReturnWorkingBuffer()
+    {
+        if (_workingBuffer is null)
+        {
+            return;
+        }
+
+        ArrayPool<byte>.Shared.Return(_workingBuffer, clearArray: true);
+        _workingBuffer = null;
     }
 
     public override void Flush()
