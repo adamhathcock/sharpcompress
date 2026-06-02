@@ -59,17 +59,20 @@ internal sealed partial class Unpack : BitInput
             ArrayPool<byte>.Shared.Return(Window);
             Window = null;
         }
+
         FragWindow.Reset();
         if (FilterSrcMemory.Length != 0)
         {
             ArrayPool<byte>.Shared.Return(FilterSrcMemory);
             FilterSrcMemory = Array.Empty<byte>();
         }
+
         if (FilterDstMemory.Length != 0)
         {
             ArrayPool<byte>.Shared.Return(FilterDstMemory);
             FilterDstMemory = Array.Empty<byte>();
         }
+
         disposed = true;
     }
 
@@ -120,56 +123,70 @@ internal sealed partial class Unpack : BitInput
             throw new InvalidFormatException("Grow && Fragmented");
         }
 
-        var NewWindow = Fragmented ? null : ArrayPool<byte>.Shared.Rent((int)WinSize);
-
-        if (NewWindow == null)
+        byte[] NewWindow = null;
+        try
         {
-            if (Grow || WinSize < 0x1000000)
+            NewWindow = Fragmented ? null : ArrayPool<byte>.Shared.Rent((int)WinSize);
+
+            if (NewWindow == null)
             {
-                // We do not support growth for new fragmented window.
-                // Also exclude RAR4 and small dictionaries.
-                //throw std::bad_alloc();
-                throw new InvalidFormatException("Grow || WinSize<0x1000000");
-            }
-            else
-            {
-                if (Window != null) // If allocated by preceding files.
+                if (Grow || WinSize < 0x1000000)
                 {
-                    //free(Window);
-                    ArrayPool<byte>.Shared.Return(Window);
-                    Window = null;
+                    // We do not support growth for new fragmented window.
+                    // Also exclude RAR4 and small dictionaries.
+                    //throw std::bad_alloc();
+                    throw new InvalidFormatException("Grow || WinSize<0x1000000");
                 }
-                FragWindow.Init(WinSize);
-                Fragmented = true;
+                else
+                {
+                    if (Window != null) // If allocated by preceding files.
+                    {
+                        //free(Window);
+                        ArrayPool<byte>.Shared.Return(Window);
+                        Window = null;
+                    }
+
+                    FragWindow.Init(WinSize);
+                    Fragmented = true;
+                }
+            }
+
+            if (!Fragmented)
+            {
+                // Clean the window to generate the same output when unpacking corrupt
+                // RAR files, which may access unused areas of sliding dictionary.
+                // sharpcompress: don't need this, freshly allocated above
+                //memset(NewWindow,0,WinSize);
+
+                // If Window is not NULL, it means that window size has grown.
+                // In solid streams we need to copy data to a new window in such case.
+                // RAR archiving code does not allow it in solid streams now,
+                // but let's implement it anyway just in case we'll change it sometimes.
+                if (Grow)
+                {
+                    for (size_t I = 1; I <= MaxWinSize; I++)
+                    {
+                        NewWindow[(UnpPtr - I) & (WinSize - 1)] = Window[
+                            (UnpPtr - I) & (MaxWinSize - 1)
+                        ];
+                    }
+                }
+
+                if (Window != null)
+                {
+                    ArrayPool<byte>.Shared.Return(Window);
+                }
+
+                Window = NewWindow;
+                NewWindow = null;
             }
         }
-
-        if (!Fragmented)
+        finally
         {
-            // Clean the window to generate the same output when unpacking corrupt
-            // RAR files, which may access unused areas of sliding dictionary.
-            // sharpcompress: don't need this, freshly allocated above
-            //memset(NewWindow,0,WinSize);
-
-            // If Window is not NULL, it means that window size has grown.
-            // In solid streams we need to copy data to a new window in such case.
-            // RAR archiving code does not allow it in solid streams now,
-            // but let's implement it anyway just in case we'll change it sometimes.
-            if (Grow)
+            if (NewWindow != null)
             {
-                for (size_t I = 1; I <= MaxWinSize; I++)
-                {
-                    NewWindow[(UnpPtr - I) & (WinSize - 1)] = Window[
-                        (UnpPtr - I) & (MaxWinSize - 1)
-                    ];
-                }
+                ArrayPool<byte>.Shared.Return(NewWindow);
             }
-
-            if (Window != null)
-            {
-                ArrayPool<byte>.Shared.Return(Window);
-            }
-            Window = NewWindow;
         }
 
         MaxWinSize = WinSize;
@@ -279,6 +296,7 @@ internal sealed partial class Unpack : BitInput
             UnpPtr = WrPtr = 0;
             WriteBorder = Math.Min(MaxWinSize, UNPACK_MAX_WRITE) & MaxWinMask;
         }
+
         // Filters never share several solid files, so we can safely reset them
         // even in solid archive.
         InitFilters();

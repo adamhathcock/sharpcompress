@@ -1,11 +1,12 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.Text;
 
 namespace SharpCompress.Compressors.PPMd.H;
 
-internal class SubAllocator
+internal class SubAllocator : IDisposable
 {
     public virtual int FakeUnitsStart
     {
@@ -124,20 +125,31 @@ internal class SubAllocator
     {
         if (_subAllocatorSize != 0)
         {
+            var heap = _heap;
             _subAllocatorSize = 0;
-
-            //ArrayFactory.BYTES_FACTORY.recycle(heap);
             _heap = null;
             _heapStart = 1;
 
             // rarfree(HeapStart);
+            for (var i = 0; i < _freeList.Length; i++)
+            {
+                _freeList[i] = null;
+            }
+
             // Free temp fields
             _tempRarNode = null;
             _tempRarMemBlock1 = null;
             _tempRarMemBlock2 = null;
             _tempRarMemBlock3 = null;
+
+            if (heap is not null)
+            {
+                ArrayPool<byte>.Shared.Return(heap, clearArray: true);
+            }
         }
     }
+
+    public void Dispose() => StopSubAllocator();
 
     public virtual int GetAllocatedMemory() => _subAllocatorSize;
 
@@ -159,7 +171,8 @@ internal class SubAllocator
         _tempMemBlockPos = realAllocSize;
         realAllocSize += RarMemBlock.SIZE;
 
-        _heap = new byte[realAllocSize];
+        _heap = ArrayPool<byte>.Shared.Rent(realAllocSize);
+        new Span<byte>(_heap, 0, realAllocSize).Clear();
         _heapStart = 1;
         _heapEnd = _heapStart + allocSize - UNIT_SIZE;
         _subAllocatorSize = t;

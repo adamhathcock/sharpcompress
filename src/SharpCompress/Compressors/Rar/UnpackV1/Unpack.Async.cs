@@ -27,8 +27,16 @@ internal sealed partial class Unpack
         this.writeStream = writeStream;
         if (!fileHeader.IsSolid)
         {
-            Init();
+            if (fileHeader.IsStored)
+            {
+                ReleaseWindow();
+            }
+            else
+            {
+                Init();
+            }
         }
+
         suspended = false;
         await DoUnpackAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -40,6 +48,7 @@ internal sealed partial class Unpack
             await UnstoreFileAsync(cancellationToken).ConfigureAwait(false);
             return;
         }
+
         switch (fileHeader.CompressionAlgorithm)
         {
             case 15:
@@ -77,6 +86,7 @@ internal sealed partial class Unpack
                 {
                     break;
                 }
+
                 code = code < destUnpSize ? code : (int)destUnpSize;
                 await writeStream
                     .WriteAsync(buffer, 0, code, cancellationToken)
@@ -122,6 +132,7 @@ internal sealed partial class Unpack
             {
                 return;
             }
+
             if (
                 (!solid || !tablesRead)
                 && !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
@@ -155,12 +166,14 @@ internal sealed partial class Unpack
                 {
                     return;
                 }
+
                 if (suspended)
                 {
                     FileExtracted = false;
                     return;
                 }
             }
+
             if (unpBlockType == BlockTypes.BLOCK_PPM)
             {
                 var Ch = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
@@ -169,6 +182,7 @@ internal sealed partial class Unpack
                     ppmError = true;
                     break;
                 }
+
                 if (Ch == PpmEscChar)
                 {
                     var NextCh = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
@@ -178,20 +192,25 @@ internal sealed partial class Unpack
                         {
                             break;
                         }
+
                         continue;
                     }
+
                     if (NextCh == 2 || NextCh == -1)
                     {
                         break;
                     }
+
                     if (NextCh == 3)
                     {
                         if (!await ReadVMCodePPMAsync(cancellationToken).ConfigureAwait(false))
                         {
                             break;
                         }
+
                         continue;
                     }
+
                     if (NextCh == 4)
                     {
                         int Distance = 0,
@@ -217,13 +236,16 @@ internal sealed partial class Unpack
                                 }
                             }
                         }
+
                         if (failed)
                         {
                             break;
                         }
+
                         CopyString(Length + 32, Distance + 2);
                         continue;
                     }
+
                     if (NextCh == 5)
                     {
                         var Length = await ppm.DecodeCharAsync(cancellationToken)
@@ -232,10 +254,12 @@ internal sealed partial class Unpack
                         {
                             break;
                         }
+
                         CopyString(Length + 4, 1);
                         continue;
                     }
                 }
+
                 window[unpPtr++] = (byte)Ch;
                 continue;
             }
@@ -246,6 +270,7 @@ internal sealed partial class Unpack
                 window[unpPtr++] = (byte)Number;
                 continue;
             }
+
             if (Number >= 271)
             {
                 var Length = LDecode[Number -= 271] + 3;
@@ -266,6 +291,7 @@ internal sealed partial class Unpack
                             Distance += ((Utility.URShift(GetBits(), (20 - Bits))) << 4);
                             AddBits(Bits - 4);
                         }
+
                         if (lowDistRepCount > 0)
                         {
                             lowDistRepCount--;
@@ -307,30 +333,37 @@ internal sealed partial class Unpack
                 CopyString(Length, Distance);
                 continue;
             }
+
             if (Number == 256)
             {
                 if (!await ReadEndOfBlockAsync(cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
+
                 continue;
             }
+
             if (Number == 257)
             {
                 if (!await ReadVMCodeAsync(cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
+
                 continue;
             }
+
             if (Number == 258)
             {
                 if (lastLength != 0)
                 {
                     CopyString(lastLength, lastDist);
                 }
+
                 continue;
             }
+
             if (Number < 263)
             {
                 var DistNum = Number - 259;
@@ -339,6 +372,7 @@ internal sealed partial class Unpack
                 {
                     oldDist[I] = oldDist[I - 1];
                 }
+
                 oldDist[0] = Distance;
 
                 var LengthNumber = this.decodeNumber(RD);
@@ -348,10 +382,12 @@ internal sealed partial class Unpack
                     Length += Utility.URShift(GetBits(), (16 - Bits));
                     AddBits(Bits);
                 }
+
                 InsertLastMatch(Length, Distance);
                 CopyString(Length, Distance);
                 continue;
             }
+
             if (Number < 272)
             {
                 var Distance = SDDecode[Number -= 263] + 1;
@@ -360,11 +396,13 @@ internal sealed partial class Unpack
                     Distance += Utility.URShift(GetBits(), (16 - Bits));
                     AddBits(Bits);
                 }
+
                 InsertOldDist(Distance);
                 InsertLastMatch(2, Distance);
                 CopyString(2, Distance);
             }
         }
+
         await UnpWriteBufAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -379,11 +417,13 @@ internal sealed partial class Unpack
             {
                 continue;
             }
+
             if (flt.NextWindow)
             {
                 flt.NextWindow = false;
                 continue;
             }
+
             var BlockStart = flt.BlockStart;
             var BlockLength = flt.BlockLength;
             if (((BlockStart - WrittenBorder) & PackDef.MAXWINMASK) < WriteSize)
@@ -395,6 +435,7 @@ internal sealed partial class Unpack
                     WrittenBorder = BlockStart;
                     WriteSize = (unpPtr - WrittenBorder) & PackDef.MAXWINMASK;
                 }
+
                 if (BlockLength <= WriteSize)
                 {
                     var BlockEnd = (BlockStart + BlockLength) & PackDef.MAXWINMASK;
@@ -526,6 +567,7 @@ internal sealed partial class Unpack
                                 ArrayPool<byte>.Shared.Return(FilteredData);
                                 FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
                             }
+
                             for (var i = 0; i < FilteredDataSize; i++)
                             {
                                 FilteredData[i] = NextPrg.GlobalData[FilteredDataOffset + i];
@@ -558,6 +600,7 @@ internal sealed partial class Unpack
                             filt.NextWindow = false;
                         }
                     }
+
                     wrPtr = WrittenBorder;
                     return;
                 }
@@ -603,11 +646,13 @@ internal sealed partial class Unpack
         {
             return;
         }
+
         var writeSize = size;
         if (writeSize > destUnpSize)
         {
             writeSize = (int)destUnpSize;
         }
+
         await writeStream
             .WriteAsync(data, offset, writeSize, cancellationToken)
             .ConfigureAwait(false);
@@ -786,6 +831,7 @@ internal sealed partial class Unpack
             NewTable = (BitField & 0x4000) != 0;
             AddBits(2);
         }
+
         tablesRead = !NewTable;
         return !(
             NewFile || NewTable && !await ReadTablesAsync(cancellationToken).ConfigureAwait(false)
@@ -819,9 +865,11 @@ internal sealed partial class Unpack
             {
                 return false;
             }
+
             vmCode.Add((byte)(GetBits() >> 8));
             AddBits(8);
         }
+
         return AddVMCode(FirstByte, vmCode);
     }
 
@@ -831,6 +879,7 @@ internal sealed partial class Unpack
         {
             await unpReadBufAsync(cancellationToken).ConfigureAwait(false);
         }
+
         return InBuf[inAddr++] & 0xff;
     }
 
@@ -841,6 +890,7 @@ internal sealed partial class Unpack
         {
             return false;
         }
+
         var Length = (FirstByte & 7) + 1;
         if (Length == 7)
         {
@@ -849,6 +899,7 @@ internal sealed partial class Unpack
             {
                 return false;
             }
+
             Length = B1 + 7;
         }
         else if (Length == 8)
@@ -858,11 +909,13 @@ internal sealed partial class Unpack
             {
                 return false;
             }
+
             var B2 = await ppm.DecodeCharAsync(cancellationToken).ConfigureAwait(false);
             if (B2 == -1)
             {
                 return false;
             }
+
             Length = (B1 * 256) + B2;
         }
 
@@ -874,8 +927,10 @@ internal sealed partial class Unpack
             {
                 return false;
             }
+
             vmCode.Add((byte)Ch);
         }
+
         return AddVMCode(FirstByte, vmCode);
     }
 }

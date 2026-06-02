@@ -182,6 +182,8 @@ public class PpmdStream : Stream, IAsyncDisposable
             {
                 _model.EncodeBlock(_stream, Stream.Null, true);
             }
+            _modelH?.Dispose();
+            _modelH = null;
         }
         base.Dispose(disposing);
     }
@@ -202,6 +204,8 @@ public class PpmdStream : Stream, IAsyncDisposable
         {
             await _model.EncodeBlockAsync(_stream, new MemoryStream(), true).ConfigureAwait(false);
         }
+        _modelH?.Dispose();
+        _modelH = null;
 
 #if !LEGACY_DOTNET || NETSTANDARD2_1
         await base.DisposeAsync().ConfigureAwait(false);
