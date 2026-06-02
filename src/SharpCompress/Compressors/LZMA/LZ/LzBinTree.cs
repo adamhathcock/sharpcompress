@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace SharpCompress.Compressors.LZMA.LZ;
@@ -11,8 +12,8 @@ internal sealed class BinTree : InWindow
     private uint _cyclicBufferSize;
     private uint _matchMaxLen;
 
-    private uint[] _son;
-    private uint[] _hash;
+    private uint[] _son = [];
+    private uint[] _hash = [];
 
     private uint _cutValue = 0xFF;
     private uint _hashMask;
@@ -108,7 +109,12 @@ internal sealed class BinTree : InWindow
         var cyclicBufferSize = historySize + 1;
         if (_cyclicBufferSize != cyclicBufferSize)
         {
-            _son = new uint[(_cyclicBufferSize = cyclicBufferSize) * 2];
+            if (_son.Length != 0)
+            {
+                ArrayPool<uint>.Shared.Return(_son);
+            }
+            _cyclicBufferSize = cyclicBufferSize;
+            _son = ArrayPool<uint>.Shared.Rent(checked((int)(_cyclicBufferSize * 2)));
         }
 
         var hs = K_BT2_HASH_SIZE;
@@ -132,7 +138,27 @@ internal sealed class BinTree : InWindow
         }
         if (hs != _hashSizeSum)
         {
-            _hash = new uint[_hashSizeSum = hs];
+            if (_hash.Length != 0)
+            {
+                ArrayPool<uint>.Shared.Return(_hash);
+            }
+            _hashSizeSum = hs;
+            _hash = ArrayPool<uint>.Shared.Rent(checked((int)_hashSizeSum));
+        }
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        if (_son.Length != 0)
+        {
+            ArrayPool<uint>.Shared.Return(_son);
+            _son = [];
+        }
+        if (_hash.Length != 0)
+        {
+            ArrayPool<uint>.Shared.Return(_hash);
+            _hash = [];
         }
     }
 

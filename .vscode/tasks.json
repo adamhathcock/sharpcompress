@@ -7,7 +7,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/SharpCompress.sln",
+        "${workspaceFolder}/SharpCompress.slnx",
         "/property:GenerateFullPaths=true",
         "/consoleloggerparameters:NoSummary;ForceNoAlign"
       ],
@@ -23,7 +23,7 @@
       "type": "process",
       "args": [
         "build",
-        "${workspaceFolder}/SharpCompress.sln",
+        "${workspaceFolder}/SharpCompress.slnx",
         "-c",
         "Release",
         "/property:GenerateFullPaths=true",
@@ -51,7 +51,7 @@
       "type": "process",
       "args": [
         "restore",
-        "${workspaceFolder}/SharpCompress.sln"
+        "${workspaceFolder}/SharpCompress.slnx"
       ],
       "problemMatcher": "$msCompile"
     },
@@ -61,7 +61,7 @@
       "type": "process",
       "args": [
         "clean",
-        "${workspaceFolder}/SharpCompress.sln"
+        "${workspaceFolder}/SharpCompress.slnx"
       ],
       "problemMatcher": "$msCompile"
     },

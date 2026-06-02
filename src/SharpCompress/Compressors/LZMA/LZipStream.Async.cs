@@ -126,31 +126,40 @@ public sealed partial class LZipStream
     )
     {
         // Read the header
-        byte[] header = new byte[6];
-        var n = await stream
-            .ReadAsync(header, 0, header.Length, cancellationToken)
-            .ConfigureAwait(false);
-
-        // TODO: Handle reading only part of the header?
-
-        if (n != 6)
+        var header = ArrayPool<byte>.Shared.Rent(6);
+        try
         {
-            return 0;
-        }
+            var n = await stream.ReadAsync(header, 0, 6, cancellationToken).ConfigureAwait(false);
 
-        if (
-            header[0] != 'L'
-            || header[1] != 'Z'
-            || header[2] != 'I'
-            || header[3] != 'P'
-            || header[4] != 1 /* version 1 */
-        )
-        {
-            return 0;
+            // TODO: Handle reading only part of the header?
+
+            if (n != 6)
+            {
+                return 0;
+            }
+
+            if (
+                header[0] != 'L'
+                || header[1] != 'Z'
+                || header[2] != 'I'
+                || header[3] != 'P'
+                || header[4] != 1 /* version 1 */
+            )
+            {
+                return 0;
+            }
+            var basePower = header[5] & 0x1F;
+            var subtractionNumerator = (header[5] & 0xE0) >> 5;
+            if (basePower < 4 || basePower > 30)
+            {
+                return 0;
+            }
+            return (1 << basePower) - (subtractionNumerator * (1 << (basePower - 4)));
         }
-        var basePower = header[5] & 0x1F;
-        var subtractionNumerator = (header[5] & 0xE0) >> 5;
-        return (1 << basePower) - (subtractionNumerator * (1 << (basePower - 4)));
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(header);
+        }
     }
 
 #if !LEGACY_DOTNET

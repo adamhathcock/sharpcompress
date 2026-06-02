@@ -38,11 +38,7 @@ internal static partial class TarHeaderFactory
                         break;
                     case StreamingMode.Streaming:
                         {
-                            header.PackedStream = new TarReadOnlySubStream(
-                                stream,
-                                header.Size,
-                                false
-                            );
+                            header.PackedStream = new TarReadOnlySubStream(stream, header.Size);
                         }
                         break;
                     default:

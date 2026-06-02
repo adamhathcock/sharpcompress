@@ -73,14 +73,19 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         private partial struct Decoder2
         {
             private BitDecoder[] _decoders;
+            private int _baseIndex;
 
-            public void Create() => _decoders = new BitDecoder[0x300];
+            public void Create(BitDecoder[] decoders, int baseIndex)
+            {
+                _decoders = decoders;
+                _baseIndex = baseIndex;
+            }
 
             public void Init()
             {
                 for (var i = 0; i < 0x300; i++)
                 {
-                    _decoders[i].Init();
+                    _decoders[_baseIndex + i].Init();
                 }
             }
 
@@ -89,7 +94,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
                 uint symbol = 1;
                 do
                 {
-                    symbol = (symbol << 1) | _decoders[symbol].Decode(rangeDecoder);
+                    symbol = (symbol << 1) | _decoders[_baseIndex + symbol].Decode(rangeDecoder);
                 } while (symbol < 0x100);
                 return (byte)symbol;
             }
@@ -101,13 +106,15 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
                 {
                     var matchBit = (uint)(matchByte >> 7) & 1;
                     matchByte <<= 1;
-                    var bit = _decoders[((1 + matchBit) << 8) + symbol].Decode(rangeDecoder);
+                    var bit = _decoders[_baseIndex + ((1 + matchBit) << 8) + symbol]
+                        .Decode(rangeDecoder);
                     symbol = (symbol << 1) | bit;
                     if (matchBit != bit)
                     {
                         while (symbol < 0x100)
                         {
-                            symbol = (symbol << 1) | _decoders[symbol].Decode(rangeDecoder);
+                            symbol =
+                                (symbol << 1) | _decoders[_baseIndex + symbol].Decode(rangeDecoder);
                         }
                         break;
                     }
@@ -117,6 +124,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         }
 
         private Decoder2[] _coders;
+        private BitDecoder[] _models;
         private int _numPrevBits;
         private int _numPosBits;
         private uint _posMask;
@@ -131,10 +139,11 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
             _posMask = ((uint)1 << numPosBits) - 1;
             _numPrevBits = numPrevBits;
             var numStates = (uint)1 << (_numPrevBits + _numPosBits);
+            _models = new BitDecoder[checked((int)(numStates * 0x300))];
             _coders = new Decoder2[numStates];
             for (uint i = 0; i < numStates; i++)
             {
-                _coders[i].Create();
+                _coders[i].Create(_models, checked((int)(i * 0x300)));
             }
         }
 
@@ -446,7 +455,10 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         return false;
     }
 
-    public void SetDecoderProperties(byte[] properties)
+    public void SetDecoderProperties(byte[] properties) =>
+        SetDecoderProperties(properties.AsSpan());
+
+    internal void SetDecoderProperties(ReadOnlySpan<byte> properties)
     {
         if (properties.Length < 1)
         {

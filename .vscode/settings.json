@@ -1,5 +1,5 @@
 {
-  "dotnet.defaultSolution": "SharpCompress.sln",
+  "dotnet.defaultSolution": "SharpCompress.slnx",
   "files.exclude": {
     "**/bin": true,
     "**/obj": true

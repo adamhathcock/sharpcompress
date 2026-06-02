@@ -1,10 +1,12 @@
 #nullable disable
 
+using System;
+using System.Buffers;
 using System.IO;
 
 namespace SharpCompress.Compressors.LZMA.LZ;
 
-internal class InWindow
+internal class InWindow : IDisposable
 {
     public byte[] _bufferBase; // pointer to buffer with data
     private Stream _stream;
@@ -78,7 +80,22 @@ internal class InWindow
         }
     }
 
-    private void Free() => _bufferBase = null;
+    private void Free()
+    {
+        if (_bufferBase is null)
+        {
+            return;
+        }
+
+        ArrayPool<byte>.Shared.Return(_bufferBase);
+        _bufferBase = null;
+    }
+
+    public virtual void Dispose()
+    {
+        ReleaseStream();
+        Free();
+    }
 
     public void Create(uint keepSizeBefore, uint keepSizeAfter, uint keepSizeReserv)
     {
@@ -89,7 +106,7 @@ internal class InWindow
         {
             Free();
             _blockSize = blockSize;
-            _bufferBase = new byte[_blockSize];
+            _bufferBase = ArrayPool<byte>.Shared.Rent(checked((int)_blockSize));
         }
         _pointerToLastSafePosition = _blockSize - keepSizeAfter;
         _streamEndWasReached = false;

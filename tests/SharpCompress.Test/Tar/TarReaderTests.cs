@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
 using SharpCompress.Compressors.BZip2;
@@ -8,6 +9,7 @@ using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
+using SharpCompress.Writers.Tar;
 using Xunit;
 
 namespace SharpCompress.Test.Tar;
@@ -377,6 +379,60 @@ public class TarReaderTests : ReaderTests
         reader.WriteEntryTo(memoryStream);
         stream.Close();
         Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
+    }
+
+    [Fact]
+    public void Tar_Read_One_At_A_Time_Without_Disposing_Entry_Stream()
+    {
+        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
+        var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)
+        {
+            ArchiveEncoding = archiveEncoding,
+        };
+        var testBytes = Encoding.UTF8.GetBytes("This is a test.");
+
+        using var memoryStream = new MemoryStream();
+        using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
+        using (var testFileStream = new MemoryStream(testBytes))
+        {
+            tarWriter.Write("file0.txt", testFileStream, null);
+            testFileStream.Position = 0;
+            tarWriter.Write("file1.txt", testFileStream, null);
+            tarWriter.WriteDirectory("folder0", null);
+            testFileStream.Position = 0;
+            tarWriter.Write("folder0/file_in_folder0.txt", testFileStream, null);
+        }
+
+        memoryStream.Position = 0;
+
+        var entryKeys = new List<string?>();
+        var openEntryStreams = new List<Stream>();
+
+        using (var reader = TarReader.OpenReader(memoryStream))
+        {
+            while (reader.MoveToNextEntry())
+            {
+                entryKeys.Add(reader.Entry.Key);
+                if (reader.Entry.IsDirectory)
+                {
+                    continue;
+                }
+
+                var entryStream = reader.OpenEntryStream();
+                openEntryStreams.Add(entryStream);
+
+                using var testFileStream = new MemoryStream();
+                entryStream.CopyTo(testFileStream);
+                Assert.Equal(testBytes.Length, testFileStream.Length);
+            }
+        }
+
+        openEntryStreams.ForEach(stream => stream.Dispose());
+
+        Assert.Equal(
+            ["file0.txt", "file1.txt", "folder0/", "folder0/file_in_folder0.txt"],
+            entryKeys
+        );
     }
 
     [Fact]
