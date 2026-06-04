@@ -33,6 +33,7 @@
 // ------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace SharpCompress.Compressors.Deflate;
@@ -120,22 +121,29 @@ public class CRC32
         {
             //UInt32 crc32Result;
             //crc32Result = 0xFFFFFFFF;
-            var buffer = new byte[BUFFER_SIZE];
-            var readSize = BUFFER_SIZE;
-
-            TotalBytesRead = 0;
-            var count = input.Read(buffer, 0, readSize);
-            output?.Write(buffer, 0, count);
-            TotalBytesRead += count;
-            while (count > 0)
+            var buffer = ArrayPool<byte>.Shared.Rent(BUFFER_SIZE);
+            try
             {
-                SlurpBlock(buffer, 0, count);
-                count = input.Read(buffer, 0, readSize);
+                var readSize = BUFFER_SIZE;
+
+                TotalBytesRead = 0;
+                var count = input.Read(buffer, 0, readSize);
                 output?.Write(buffer, 0, count);
                 TotalBytesRead += count;
-            }
+                while (count > 0)
+                {
+                    SlurpBlock(buffer, 0, count);
+                    count = input.Read(buffer, 0, readSize);
+                    output?.Write(buffer, 0, count);
+                    TotalBytesRead += count;
+                }
 
-            return ~runningCrc32Result;
+                return ~runningCrc32Result;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
+            }
         }
     }
 
