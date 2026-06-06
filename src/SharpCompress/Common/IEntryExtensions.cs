@@ -64,7 +64,7 @@ internal static partial class IEntryExtensions
             }
         }
 
-        private string GetEntryDestinationFileName(
+        internal string GetEntryDestinationFileName(
             string fullDestinationDirectoryPath,
             ExtractionOptions options
         )

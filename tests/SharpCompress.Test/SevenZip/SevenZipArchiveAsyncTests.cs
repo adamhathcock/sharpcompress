@@ -167,6 +167,21 @@ public class SevenZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
+    public async Task SevenZipArchive_WriteToDirectoryAsync_RequireParallel_Fails()
+    {
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "7Zip.nonsolid.7z")
+        );
+
+        await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { Parallelism = ExtractionParallelism.RequireParallel }
+            )
+        );
+    }
+
+    [Fact]
     public async Task SevenZipArchive_BZip2_AsyncStreamExtraction()
     {
         var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.BZip2.7z");

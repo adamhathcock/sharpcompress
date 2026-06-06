@@ -1,4 +1,5 @@
 using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,6 +34,8 @@ public partial class ZipArchive
 
     internal ZipArchive()
         : base(ArchiveType.Zip) { }
+
+    internal IReadOnlyList<FileInfo> IndependentExtractionSourceFiles => SourceFiles;
 
     protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream sourceStream)
     {

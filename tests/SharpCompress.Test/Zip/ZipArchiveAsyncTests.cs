@@ -248,6 +248,39 @@ public class ZipArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
+    public async ValueTask Zip_Deflate_FileBacked_Archive_WriteToDirectoryAsync_PerEntry()
+    {
+        await using var archive = await ZipArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")
+        );
+
+        await archive.WriteToDirectoryAsync(
+            SCRATCH_FILES_PATH,
+            new ExtractionOptions
+            {
+                Parallelism = ExtractionParallelism.PerEntry,
+                MaxDegreeOfParallelism = 2,
+            }
+        );
+
+        VerifyFiles();
+    }
+
+    [Fact]
+    public async ValueTask Zip_Deflate_StreamBacked_Archive_WriteToDirectoryAsync_RequireParallel_Fails()
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip"));
+        await using var archive = await ZipArchive.OpenAsyncArchive(stream);
+
+        await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { Parallelism = ExtractionParallelism.RequireParallel }
+            )
+        );
+    }
+
+    [Fact]
     public async ValueTask Zip_Deflate_Archive_WriteToDirectoryAsync_WithProgress()
     {
         var progressReports = new System.Collections.Generic.List<ProgressReport>();

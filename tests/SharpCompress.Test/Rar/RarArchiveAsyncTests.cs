@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,6 +37,22 @@ public class RarArchiveAsyncTests : ArchiveTests
         }
 
         Assert.True(extractedEntries > 0);
+    }
+
+    [Fact]
+    public async ValueTask Rar_WriteToDirectoryAsync_RequireParallel_Fails()
+    {
+        await using var archive = await RarArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.rar"),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await archive.WriteToDirectoryAsync(
+                SCRATCH_FILES_PATH,
+                new ExtractionOptions { Parallelism = ExtractionParallelism.RequireParallel }
+            )
+        );
     }
 
     [Fact]
