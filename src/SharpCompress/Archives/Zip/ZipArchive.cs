@@ -38,26 +38,28 @@ public partial class ZipArchive
 
     internal IReadOnlyList<FileInfo> IndependentExtractionSourceFiles => SourceFiles;
 
-    public async ValueTask<ArchiveInformation> GetArchiveInformationAsync(
-        CancellationToken cancellationToken = default
+    async ValueTask<ArchiveExtractionConcurrencyInfo> IArchiveExtractionConcurrencyProvider.GetExtractionConcurrencyInfoAsync(
+        CancellationToken cancellationToken
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
         var sourceFiles = IndependentExtractionSourceFiles;
         if (sourceFiles.Count == 1 && !await IsSolidAsync().ConfigureAwait(false))
         {
-            return new ArchiveInformation(ArchiveType.Zip, supportsRandomAccess: true)
+            return new ArchiveExtractionConcurrencyInfo(ArchiveType.Zip)
             {
-                ConcurrencyMode = ArchiveConcurrencyMode.IndependentEntries,
+                Mode = ArchiveConcurrencyMode.IndependentEntries,
                 SupportsIndependentEntryStreams = true,
-                RequiresSeekableStreamForParallelExtraction = true,
-                ParallelExtractionSourceFile = sourceFiles[0],
+                RequiresSeekableStream = true,
+                SourceFile = sourceFiles[0],
+                ReaderOptions = ReaderOptions,
             };
         }
 
-        return new ArchiveInformation(ArchiveType.Zip, supportsRandomAccess: true)
+        return new ArchiveExtractionConcurrencyInfo(ArchiveType.Zip)
         {
-            RequiresSeekableStreamForParallelExtraction = true,
+            RequiresSeekableStream = true,
+            ReaderOptions = ReaderOptions,
         };
     }
 

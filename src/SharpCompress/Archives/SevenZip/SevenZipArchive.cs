@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives.Extraction;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
 using SharpCompress.Compressors.LZMA.Utilities;
@@ -12,7 +13,9 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.SevenZip;
 
-public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>
+public partial class SevenZipArchive
+    : AbstractArchive<SevenZipArchiveEntry, SevenZipVolume>,
+        IArchiveExtractionConcurrencyProvider
 {
     private ArchiveDatabase? _database;
 
@@ -31,6 +34,61 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 
     internal SevenZipArchive()
         : base(ArchiveType.SevenZip) { }
+
+    async ValueTask<ArchiveExtractionConcurrencyInfo> IArchiveExtractionConcurrencyProvider.GetExtractionConcurrencyInfoAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var sourceFiles = SourceFiles;
+        var baseInformation = new ArchiveExtractionConcurrencyInfo(ArchiveType.SevenZip)
+        {
+            RequiresSeekableStream = true,
+            ReaderOptions = ReaderOptions,
+        };
+
+        if (sourceFiles.Count != 1)
+        {
+            return baseInformation;
+        }
+
+        var entries = new List<SevenZipArchiveEntry>();
+        await foreach (
+            var entry in EntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
+        {
+            entries.Add(entry);
+        }
+
+        var fileEntries = entries.Where(entry => !entry.IsDirectory).ToList();
+        if (fileEntries.Count == 0 || fileEntries.Any(entry => entry.IsEncrypted))
+        {
+            return baseInformation;
+        }
+
+        var groups = fileEntries
+            .GroupBy(entry => entry.FilePart.Folder)
+            .Select(group => new ArchiveExtractionGroup(
+                group.Select(entry => entry.Key.NotNull("Entry Key is null")),
+                isSolid: group.Count() > 1
+            ))
+            .ToArray();
+
+        if (groups.Length <= 1)
+        {
+            return baseInformation;
+        }
+
+        return baseInformation with
+        {
+            Mode = groups.Any(group => group.IsSolid)
+                ? ArchiveConcurrencyMode.SolidBlocks
+                : ArchiveConcurrencyMode.IndependentEntries,
+            SupportsIndependentSolidStreams = true,
+            SourceFile = sourceFiles[0],
+            Groups = groups,
+        };
+    }
 
     protected override IEnumerable<SevenZipArchiveEntry> LoadEntries(
         IEnumerable<SevenZipVolume> volumes

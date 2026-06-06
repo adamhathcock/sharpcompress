@@ -40,10 +40,26 @@ public class RarArchiveAsyncTests : ArchiveTests
     }
 
     [Fact]
-    public async ValueTask Rar_WriteToDirectoryAsync_RequireParallel_Fails()
+    public async ValueTask Rar_NonSolid_WriteToDirectoryAsync_RequireParallel()
     {
         await using var archive = await RarArchive.OpenAsyncArchive(
             Path.Combine(TEST_ARCHIVES_PATH, "Rar.rar"),
+            new ReaderOptions { LookForHeader = true }
+        );
+
+        await archive.WriteToDirectoryAsync(
+            SCRATCH_FILES_PATH,
+            new ExtractionOptions { Parallelism = ExtractionParallelism.RequireParallel }
+        );
+
+        VerifyFiles();
+    }
+
+    [Fact]
+    public async ValueTask Rar_Solid_WriteToDirectoryAsync_RequireParallel_Fails()
+    {
+        await using var archive = await RarArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar.solid.rar"),
             new ReaderOptions { LookForHeader = true }
         );
 

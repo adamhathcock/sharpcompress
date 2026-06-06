@@ -4,15 +4,27 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives.Extraction;
 
-internal static class ArchiveExtractionCoordinator
+internal sealed class ArchiveExtractionCoordinator
 {
-    internal static async ValueTask WriteToDirectoryAsync(
+    private readonly IAsyncArchive archive;
+    private readonly string destinationDirectory;
+    private readonly ExtractionOptions options;
+    private readonly IProgress<ProgressReport>? progress;
+    private readonly CancellationToken cancellationToken;
+    private readonly string fullDestinationDirectoryPath;
+    private List<IArchiveEntry>? entries;
+    private long bytesRead;
+    private long? totalBytes;
+
+    internal ArchiveExtractionCoordinator(
         IAsyncArchive archive,
         string destinationDirectory,
         ExtractionOptions? options,
@@ -20,56 +32,46 @@ internal static class ArchiveExtractionCoordinator
         CancellationToken cancellationToken
     )
     {
-        options ??= new ExtractionOptions();
-        ValidateOptions(options);
+        this.archive = archive;
+        this.destinationDirectory = destinationDirectory;
+        this.options = options ?? new ExtractionOptions();
+        this.progress = progress;
+        this.cancellationToken = cancellationToken;
+        ValidateOptions(this.options);
+        fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
+            destinationDirectory
+        );
+    }
 
+    internal async ValueTask WriteToDirectoryAsync()
+    {
         if (options.Parallelism == ExtractionParallelism.SingleThreaded)
         {
-            await WriteSequentiallyAsync(
-                    archive,
-                    destinationDirectory,
-                    options,
-                    progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            await WriteSequentiallyAsync().ConfigureAwait(false);
             return;
         }
 
-        var archiveInformation = await GetArchiveInformationAsync(archive).ConfigureAwait(false);
-        if (
-            archiveInformation.ConcurrencyMode != ArchiveConcurrencyMode.IndependentEntries
-            || !archiveInformation.SupportsIndependentEntryStreams
-            || archiveInformation.Type != ArchiveType.Zip
-        )
+        var concurrencyInfo = await GetExtractionConcurrencyInfoAsync().ConfigureAwait(false);
+        if (CanExtractZipEntriesInParallel(concurrencyInfo))
         {
-            if (options.Parallelism == ExtractionParallelism.RequireParallel)
-            {
-                throw new NotSupportedException(
-                    "This archive cannot be extracted in parallel because it requires sequential reading or is not backed by an independently readable file."
-                );
-            }
-
-            await WriteSequentiallyAsync(
-                    archive,
-                    destinationDirectory,
-                    options,
-                    progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            await WriteZipEntriesInParallelAsync(concurrencyInfo).ConfigureAwait(false);
             return;
         }
 
-        await WriteZipEntriesInParallelAsync(
-                archive,
-                archiveInformation.ParallelExtractionSourceFile.NotNull(),
-                destinationDirectory,
-                options,
-                progress,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
+        if (CanExtractGroupsInParallel(concurrencyInfo))
+        {
+            await WriteArchiveGroupsInParallelAsync(concurrencyInfo).ConfigureAwait(false);
+            return;
+        }
+
+        if (options.Parallelism == ExtractionParallelism.RequireParallel)
+        {
+            throw new NotSupportedException(
+                "This archive cannot be extracted in parallel because it requires sequential reading or is not backed by an independently readable file."
+            );
+        }
+
+        await WriteSequentiallyAsync().ConfigureAwait(false);
     }
 
     private static void ValidateOptions(ExtractionOptions options)
@@ -83,45 +85,47 @@ internal static class ArchiveExtractionCoordinator
         }
     }
 
-    private static async ValueTask<ArchiveInformation> GetArchiveInformationAsync(
-        IAsyncArchive archive
-    )
+    private async ValueTask<ArchiveExtractionConcurrencyInfo> GetExtractionConcurrencyInfoAsync()
     {
         if (archive is IArchiveExtractionConcurrencyProvider provider)
         {
-            return await provider.GetArchiveInformationAsync().ConfigureAwait(false);
+            return await provider
+                .GetExtractionConcurrencyInfoAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        return new ArchiveInformation(archive.Type, supportsRandomAccess: true);
+        return new ArchiveExtractionConcurrencyInfo(archive.Type);
     }
 
-    private static async ValueTask WriteZipEntriesInParallelAsync(
-        IAsyncArchive archive,
-        FileInfo sourceFile,
-        string destinationDirectory,
-        ExtractionOptions options,
-        IProgress<ProgressReport>? progress,
-        CancellationToken cancellationToken
+    private static bool CanExtractZipEntriesInParallel(
+        ArchiveExtractionConcurrencyInfo concurrencyInfo
+    ) =>
+        concurrencyInfo.Type == ArchiveType.Zip
+        && concurrencyInfo.Mode == ArchiveConcurrencyMode.IndependentEntries
+        && concurrencyInfo.SupportsIndependentEntryStreams
+        && concurrencyInfo.SourceFile is not null;
+
+    private static bool CanExtractGroupsInParallel(
+        ArchiveExtractionConcurrencyInfo concurrencyInfo
+    ) =>
+        concurrencyInfo.SupportsIndependentSolidStreams
+        && concurrencyInfo.SourceFile is not null
+        && concurrencyInfo.Groups.Count > 1
+        && (
+            concurrencyInfo.Type == ArchiveType.SevenZip || concurrencyInfo.Type == ArchiveType.Rar
+        );
+
+    private async ValueTask WriteZipEntriesInParallelAsync(
+        ArchiveExtractionConcurrencyInfo concurrencyInfo
     )
     {
-        var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
-            destinationDirectory
-        );
-        var entries = new List<IArchiveEntry>();
-        await foreach (
-            var entry in archive
-                .EntriesAsync.WithCancellation(cancellationToken)
-                .ConfigureAwait(false)
-        )
-        {
-            entries.Add(entry);
-        }
-        ValidateOutputPaths(entries, fullDestinationDirectoryPath, options);
+        var archiveEntries = await LoadEntriesAsync().ConfigureAwait(false);
+        ValidateOutputPaths(archiveEntries);
+        await WriteDirectoryEntriesAsync(archiveEntries).ConfigureAwait(false);
 
-        var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
-        var bytesRead = 0L;
+        var sourceFile = concurrencyInfo.SourceFile.NotNull();
         using var throttler = new SemaphoreSlim(options.MaxDegreeOfParallelism);
-        var fileEntries = entries.Where(entry => !entry.IsDirectory).ToList();
+        var fileEntries = archiveEntries.Where(entry => !entry.IsDirectory).ToList();
 
         var tasks = fileEntries.Select(async entry =>
         {
@@ -130,17 +134,11 @@ internal static class ArchiveExtractionCoordinator
             {
                 await ExtractZipEntryFromNewArchiveAsync(
                         sourceFile,
-                        entry.Key,
-                        destinationDirectory,
-                        options,
-                        cancellationToken
+                        concurrencyInfo.ReaderOptions,
+                        entry.Key
                     )
                     .ConfigureAwait(false);
-
-                var extracted = Interlocked.Add(ref bytesRead, entry.Size);
-                progress?.Report(
-                    new ProgressReport(entry.Key ?? string.Empty, extracted, totalBytes)
-                );
+                await ReportProgressAsync(entry).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -156,35 +154,101 @@ internal static class ArchiveExtractionCoordinator
             }
         });
 
-        foreach (var directory in entries.Where(entry => entry.IsDirectory))
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+    }
+
+    private async ValueTask WriteArchiveGroupsInParallelAsync(
+        ArchiveExtractionConcurrencyInfo concurrencyInfo
+    )
+    {
+        var archiveEntries = await LoadEntriesAsync().ConfigureAwait(false);
+        ValidateOutputPaths(archiveEntries);
+        await WriteDirectoryEntriesAsync(archiveEntries).ConfigureAwait(false);
+
+        using var throttler = new SemaphoreSlim(options.MaxDegreeOfParallelism);
+        var tasks = concurrencyInfo.Groups.Select(async group =>
         {
-            await directory
-                .WriteEntryToDirectoryAsyncCore(
-                    fullDestinationDirectoryPath,
-                    options,
-                    null,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
+            await throttler.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await ExtractGroupFromNewArchiveAsync(concurrencyInfo, group).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                throw new ArchiveExtractionException(
+                    "Failed to extract an archive entry group.",
+                    group.EntryKeys.FirstOrDefault(),
+                    ex
+                );
+            }
+            finally
+            {
+                throttler.Release();
+            }
+        });
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
     }
 
-    private static async ValueTask ExtractZipEntryFromNewArchiveAsync(
-        FileInfo sourceFile,
-        string? entryKey,
-        string destinationDirectory,
-        ExtractionOptions options,
-        CancellationToken cancellationToken
+    private async ValueTask ExtractGroupFromNewArchiveAsync(
+        ArchiveExtractionConcurrencyInfo concurrencyInfo,
+        ArchiveExtractionGroup group
     )
     {
-        await using var archive = await ZipArchive
-            .OpenAsyncArchive(sourceFile, readerOptions: null, cancellationToken)
+        var sourceFile = concurrencyInfo.SourceFile.NotNull();
+        await using var workerArchive = await OpenWorkerArchiveAsync(concurrencyInfo, sourceFile)
+            .ConfigureAwait(false);
+        var entryKeys = new HashSet<string>(group.EntryKeys, StringComparer.Ordinal);
+
+        await foreach (
+            var entry in workerArchive
+                .EntriesAsync.WithCancellation(cancellationToken)
+                .ConfigureAwait(false)
+        )
+        {
+            if (entry.IsDirectory || entry.Key is null || !entryKeys.Contains(entry.Key))
+            {
+                continue;
+            }
+
+            await entry
+                .WriteToDirectoryAsync(destinationDirectory, options, cancellationToken)
+                .ConfigureAwait(false);
+            await ReportProgressAsync(entry).ConfigureAwait(false);
+        }
+    }
+
+    private async ValueTask<IAsyncArchive> OpenWorkerArchiveAsync(
+        ArchiveExtractionConcurrencyInfo concurrencyInfo,
+        FileInfo sourceFile
+    )
+    {
+        return concurrencyInfo.Type switch
+        {
+            ArchiveType.SevenZip => await SevenZipArchive
+                .OpenAsyncArchive(sourceFile, concurrencyInfo.ReaderOptions, cancellationToken)
+                .ConfigureAwait(false),
+            ArchiveType.Rar => await RarArchive
+                .OpenAsyncArchive(sourceFile, concurrencyInfo.ReaderOptions, cancellationToken)
+                .ConfigureAwait(false),
+            _ => throw new NotSupportedException(
+                $"Parallel group extraction is not supported for {concurrencyInfo.Type}."
+            ),
+        };
+    }
+
+    private async ValueTask ExtractZipEntryFromNewArchiveAsync(
+        FileInfo sourceFile,
+        ReaderOptions? readerOptions,
+        string? entryKey
+    )
+    {
+        await using var workerArchive = await ZipArchive
+            .OpenAsyncArchive(sourceFile, readerOptions, cancellationToken)
             .ConfigureAwait(false);
         IArchiveEntry? entry = null;
         await foreach (
-            var candidate in archive
+            var candidate in workerArchive
                 .EntriesAsync.WithCancellation(cancellationToken)
                 .ConfigureAwait(false)
         )
@@ -206,54 +270,13 @@ internal static class ArchiveExtractionCoordinator
             .ConfigureAwait(false);
     }
 
-    private static void ValidateOutputPaths(
-        IReadOnlyList<IArchiveEntry> entries,
-        string fullDestinationDirectoryPath,
-        ExtractionOptions options
-    )
-    {
-        var outputPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var entry in entries)
-        {
-            var outputPath = Path.GetFullPath(
-                entry.GetEntryDestinationFileName(fullDestinationDirectoryPath, options)
-            );
-
-            if (entry.IsDirectory)
-            {
-                continue;
-            }
-
-            DirectoryManagement.EnsurePathInDestinationDirectory(
-                outputPath,
-                fullDestinationDirectoryPath,
-                DirectoryManagement.WriteFileOutsideDestinationMessage
-            );
-
-            if (!outputPaths.Add(outputPath))
-            {
-                throw new ExtractionException(
-                    "The archive contains multiple entries that resolve to the same output path."
-                );
-            }
-        }
-    }
-
-    private static async ValueTask WriteSequentiallyAsync(
-        IAsyncArchive archive,
-        string destinationDirectory,
-        ExtractionOptions? options,
-        IProgress<ProgressReport>? progress,
-        CancellationToken cancellationToken
-    )
+    private async ValueTask WriteSequentiallyAsync()
     {
         if (
             await archive.IsSolidAsync().ConfigureAwait(false)
             || archive.Type == ArchiveType.SevenZip
         )
         {
-            var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
-            var bytesRead = 0L;
             await using var reader = await archive.ExtractAllEntriesAsync().ConfigureAwait(false);
             while (await reader.MoveToNextEntryAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -263,46 +286,20 @@ internal static class ArchiveExtractionCoordinator
                     .WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken)
                     .ConfigureAwait(false);
 
-                if (reader.Entry.IsDirectory)
+                if (!reader.Entry.IsDirectory)
                 {
-                    continue;
+                    await ReportProgressAsync(reader.Entry).ConfigureAwait(false);
                 }
-
-                bytesRead += reader.Entry.Size;
-                progress?.Report(
-                    new ProgressReport(reader.Entry.Key ?? string.Empty, bytesRead, totalBytes)
-                );
             }
         }
         else
         {
-            await WriteIndependentEntriesSequentiallyAsync(
-                    archive,
-                    destinationDirectory,
-                    options,
-                    progress,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            await WriteIndependentEntriesSequentiallyAsync().ConfigureAwait(false);
         }
     }
 
-    private static async ValueTask WriteIndependentEntriesSequentiallyAsync(
-        IAsyncArchive archive,
-        string destinationDirectory,
-        ExtractionOptions? options,
-        IProgress<ProgressReport>? progress,
-        CancellationToken cancellationToken
-    )
+    private async ValueTask WriteIndependentEntriesSequentiallyAsync()
     {
-        options ??= new ExtractionOptions();
-        var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
-            destinationDirectory
-        );
-
-        var totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
-        var bytesRead = 0L;
-
         await foreach (
             var entry in archive
                 .EntriesAsync.WithCancellation(cancellationToken)
@@ -334,8 +331,98 @@ internal static class ArchiveExtractionCoordinator
                 )
                 .ConfigureAwait(false);
 
-            bytesRead += entry.Size;
-            progress?.Report(new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes));
+            await ReportProgressAsync(entry).ConfigureAwait(false);
+        }
+    }
+
+    private async ValueTask<List<IArchiveEntry>> LoadEntriesAsync()
+    {
+        if (entries is not null)
+        {
+            return entries;
+        }
+
+        entries = new List<IArchiveEntry>();
+        await foreach (
+            var entry in archive
+                .EntriesAsync.WithCancellation(cancellationToken)
+                .ConfigureAwait(false)
+        )
+        {
+            entries.Add(entry);
+        }
+
+        return entries;
+    }
+
+    private async ValueTask<long> GetTotalBytesAsync()
+    {
+        if (!totalBytes.HasValue)
+        {
+            totalBytes = await archive.TotalUncompressedSizeAsync().ConfigureAwait(false);
+        }
+
+        return totalBytes.Value;
+    }
+
+    private async ValueTask ReportProgressAsync(IEntry entry)
+    {
+        if (progress is null)
+        {
+            return;
+        }
+
+        var extracted = Interlocked.Add(ref bytesRead, entry.Size);
+        progress.Report(
+            new ProgressReport(
+                entry.Key ?? string.Empty,
+                extracted,
+                await GetTotalBytesAsync().ConfigureAwait(false)
+            )
+        );
+    }
+
+    private async ValueTask WriteDirectoryEntriesAsync(IEnumerable<IArchiveEntry> archiveEntries)
+    {
+        foreach (var directory in archiveEntries.Where(entry => entry.IsDirectory))
+        {
+            await directory
+                .WriteEntryToDirectoryAsyncCore(
+                    fullDestinationDirectoryPath,
+                    options,
+                    null,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+        }
+    }
+
+    private void ValidateOutputPaths(IReadOnlyList<IArchiveEntry> archiveEntries)
+    {
+        var outputPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in archiveEntries)
+        {
+            var outputPath = Path.GetFullPath(
+                entry.GetEntryDestinationFileName(fullDestinationDirectoryPath, options)
+            );
+
+            if (entry.IsDirectory)
+            {
+                continue;
+            }
+
+            DirectoryManagement.EnsurePathInDestinationDirectory(
+                outputPath,
+                fullDestinationDirectoryPath,
+                DirectoryManagement.WriteFileOutsideDestinationMessage
+            );
+
+            if (!outputPaths.Add(outputPath))
+            {
+                throw new ExtractionException(
+                    "The archive contains multiple entries that resolve to the same output path."
+                );
+            }
         }
     }
 }

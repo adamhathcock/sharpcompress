@@ -5,7 +5,7 @@ namespace SharpCompress.Archives.Extraction;
 
 internal interface IArchiveExtractionConcurrencyProvider
 {
-    ValueTask<ArchiveInformation> GetArchiveInformationAsync(
+    ValueTask<ArchiveExtractionConcurrencyInfo> GetExtractionConcurrencyInfoAsync(
         CancellationToken cancellationToken = default
     );
 }

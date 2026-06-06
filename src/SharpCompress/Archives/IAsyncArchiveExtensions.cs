@@ -23,14 +23,14 @@ public static class IAsyncArchiveExtensions
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
         ) =>
-            await ArchiveExtractionCoordinator
-                .WriteToDirectoryAsync(
-                    archive,
-                    destinationDirectory,
-                    options,
-                    progress,
-                    cancellationToken
-                )
+            await new ArchiveExtractionCoordinator(
+                archive,
+                destinationDirectory,
+                options,
+                progress,
+                cancellationToken
+            )
+                .WriteToDirectoryAsync()
                 .ConfigureAwait(false);
     }
 }
