@@ -1,10 +1,10 @@
 using System;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives.Extraction;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Common.Zip;
@@ -19,7 +19,8 @@ using SharpCompress.Writers.Zip;
 namespace SharpCompress.Archives.Zip;
 
 public partial class ZipArchive
-    : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>
+    : AbstractWritableArchive<ZipArchiveEntry, ZipVolume, ZipWriterOptions>,
+        IArchiveExtractionConcurrencyProvider
 {
     private readonly SeekableZipHeaderFactory? headerFactory;
 
@@ -36,6 +37,29 @@ public partial class ZipArchive
         : base(ArchiveType.Zip) { }
 
     internal IReadOnlyList<FileInfo> IndependentExtractionSourceFiles => SourceFiles;
+
+    public async ValueTask<ArchiveInformation> GetArchiveInformationAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var sourceFiles = IndependentExtractionSourceFiles;
+        if (sourceFiles.Count == 1 && !await IsSolidAsync().ConfigureAwait(false))
+        {
+            return new ArchiveInformation(ArchiveType.Zip, supportsRandomAccess: true)
+            {
+                ConcurrencyMode = ArchiveConcurrencyMode.IndependentEntries,
+                SupportsIndependentEntryStreams = true,
+                RequiresSeekableStreamForParallelExtraction = true,
+                ParallelExtractionSourceFile = sourceFiles[0],
+            };
+        }
+
+        return new ArchiveInformation(ArchiveType.Zip, supportsRandomAccess: true)
+        {
+            RequiresSeekableStreamForParallelExtraction = true,
+        };
+    }
 
     protected override IEnumerable<ZipVolume> LoadVolumes(SourceStream sourceStream)
     {

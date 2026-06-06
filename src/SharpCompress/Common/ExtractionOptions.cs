@@ -13,7 +13,7 @@ namespace SharpCompress.Common;
 /// options = options with { PreserveFileTime = true };
 /// </code>
 /// </remarks>
-public sealed record ExtractionOptions : IExtractionOptions
+public sealed record ExtractionOptions : IExtractionOptions, IExtractionParallelismOptions
 {
     /// <summary>
     /// Overwrite target if it exists.

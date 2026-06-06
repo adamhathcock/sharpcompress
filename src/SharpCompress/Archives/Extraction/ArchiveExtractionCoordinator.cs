@@ -36,8 +36,12 @@ internal static class ArchiveExtractionCoordinator
             return;
         }
 
-        var concurrencyInfo = await GetConcurrencyInfoAsync(archive).ConfigureAwait(false);
-        if (concurrencyInfo.Mode != ArchiveConcurrencyMode.IndependentEntries)
+        var archiveInformation = await GetArchiveInformationAsync(archive).ConfigureAwait(false);
+        if (
+            archiveInformation.ConcurrencyMode != ArchiveConcurrencyMode.IndependentEntries
+            || !archiveInformation.SupportsIndependentEntryStreams
+            || archiveInformation.Type != ArchiveType.Zip
+        )
         {
             if (options.Parallelism == ExtractionParallelism.RequireParallel)
             {
@@ -59,7 +63,7 @@ internal static class ArchiveExtractionCoordinator
 
         await WriteZipEntriesInParallelAsync(
                 archive,
-                concurrencyInfo.SourceFile.NotNull(),
+                archiveInformation.ParallelExtractionSourceFile.NotNull(),
                 destinationDirectory,
                 options,
                 progress,
@@ -79,23 +83,16 @@ internal static class ArchiveExtractionCoordinator
         }
     }
 
-    private static async ValueTask<ArchiveConcurrencyInfo> GetConcurrencyInfoAsync(
+    private static async ValueTask<ArchiveInformation> GetArchiveInformationAsync(
         IAsyncArchive archive
     )
     {
-        if (archive is ZipArchive zipArchive)
+        if (archive is IArchiveExtractionConcurrencyProvider provider)
         {
-            var sourceFiles = zipArchive.IndependentExtractionSourceFiles;
-            if (sourceFiles.Count == 1 && !await zipArchive.IsSolidAsync().ConfigureAwait(false))
-            {
-                return new ArchiveConcurrencyInfo(
-                    ArchiveConcurrencyMode.IndependentEntries,
-                    sourceFiles[0]
-                );
-            }
+            return await provider.GetArchiveInformationAsync().ConfigureAwait(false);
         }
 
-        return new ArchiveConcurrencyInfo(ArchiveConcurrencyMode.SequentialOnly, null);
+        return new ArchiveInformation(archive.Type, supportsRandomAccess: true);
     }
 
     private static async ValueTask WriteZipEntriesInParallelAsync(

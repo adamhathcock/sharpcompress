@@ -7,6 +7,7 @@ using SharpCompress;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Common.Options;
 using SharpCompress.Compressors.Deflate;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
@@ -265,6 +266,25 @@ public class ZipArchiveAsyncTests : ArchiveTests
 
         VerifyFiles();
     }
+
+    [Fact]
+    public async ValueTask Zip_Deflate_FileBacked_Archive_WriteToDirectoryAsync_RequireParallel()
+    {
+        await using var archive = await ZipArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip")
+        );
+
+        await archive.WriteToDirectoryAsync(
+            SCRATCH_FILES_PATH,
+            new ExtractionOptions { Parallelism = ExtractionParallelism.RequireParallel }
+        );
+
+        VerifyFiles();
+    }
+
+    [Fact]
+    public void ExtractionOptions_Implements_ParallelismOptions() =>
+        Assert.IsAssignableFrom<IExtractionParallelismOptions>(new ExtractionOptions());
 
     [Fact]
     public async ValueTask Zip_Deflate_StreamBacked_Archive_WriteToDirectoryAsync_RequireParallel_Fails()

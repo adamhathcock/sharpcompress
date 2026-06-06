@@ -1,3 +1,4 @@
+using System.IO;
 using SharpCompress.Common;
 
 namespace SharpCompress.Archives;
@@ -26,6 +27,24 @@ public record ArchiveInformation
     public bool SupportsRandomAccess { get; set; }
 
     /// <summary>
+    /// Indicates the safest known concurrent extraction strategy for this archive instance.
+    /// </summary>
+    public ArchiveConcurrencyMode ConcurrencyMode { get; set; } =
+        ArchiveConcurrencyMode.SequentialOnly;
+
+    /// <summary>
+    /// <see langword="true"/> when entries can be opened through independent streams for concurrent extraction.
+    /// </summary>
+    public bool SupportsIndependentEntryStreams { get; set; }
+
+    /// <summary>
+    /// <see langword="true"/> when parallel extraction requires seekable archive input.
+    /// </summary>
+    public bool RequiresSeekableStreamForParallelExtraction { get; set; }
+
+    internal FileInfo? ParallelExtractionSourceFile { get; set; }
+
+    /// <summary>
     /// Creates a new archive information instance.
     /// </summary>
     /// <param name="type">The detected archive type.</param>
@@ -35,4 +54,30 @@ public record ArchiveInformation
         Type = type;
         SupportsRandomAccess = supportsRandomAccess;
     }
+}
+
+/// <summary>
+/// Describes the safest known concurrent extraction strategy for an archive instance.
+/// </summary>
+public enum ArchiveConcurrencyMode
+{
+    /// <summary>
+    /// Entries must be extracted through the existing sequential path.
+    /// </summary>
+    SequentialOnly,
+
+    /// <summary>
+    /// Entries can be opened independently and extracted concurrently.
+    /// </summary>
+    IndependentEntries,
+
+    /// <summary>
+    /// Entries are grouped into solid blocks that must be read sequentially within each block.
+    /// </summary>
+    SolidBlocks,
+
+    /// <summary>
+    /// The archive contains a mixture of independent and sequential regions.
+    /// </summary>
+    Mixed,
 }
