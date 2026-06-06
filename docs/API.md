@@ -34,6 +34,47 @@ var options2 = new ReaderOptions
 };
 ```
 
+```csharp
+// Auto-detect and open with the Archive API
+using (var archive = ArchiveFactory.OpenArchive("archive.zip"))
+{
+    foreach (var entry in archive.Entries)
+    {
+        Console.WriteLine(entry.Key);
+    }
+}
+
+// Detect before opening
+if (ArchiveFactory.IsArchive("archive.zip", out var archiveType))
+{
+    Console.WriteLine($"Detected {archiveType}");
+}
+
+// Detect capabilities before choosing Archive API vs Reader API
+var info = ArchiveFactory.GetArchiveInformation("archive.arc");
+if (info is not null)
+{
+    Console.WriteLine($"Type: {info.Type}");
+    Console.WriteLine($"Supports random access: {info.SupportsRandomAccess}");
+}
+
+var asyncInfo = await ArchiveFactory.GetArchiveInformationAsync(
+    "archive.zip",
+    cancellationToken
+);
+
+// Multi-volume archives
+var parts = ArchiveFactory.GetFileParts("archive.part1.rar")
+    .Select(path => new FileInfo(path))
+    .ToArray();
+using (var archive = ArchiveFactory.OpenArchive(parts))
+{
+    archive.WriteToDirectory(@"C:\output");
+}
+```
+
+`ArchiveInformation.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead.
+
 ### Creating Archives
 
 ```csharp
@@ -259,6 +300,15 @@ using (var archive = ZipArchive.OpenArchive("file.zip", options))
 // Open-time presets
 var external = ReaderOptions.ForExternalStream;
 var owned = ReaderOptions.ForFilePath;
+var encrypted = ReaderOptions.ForEncryptedArchive("password");
+var encoded = ReaderOptions.ForEncoding(new ArchiveEncoding { Default = Encoding.UTF8 });
+var sfx = ReaderOptions.ForSelfExtractingArchive("password");
+
+// Faster detection when the container is known
+var hinted = ReaderOptions.ForExternalStream.WithExtensionHint("tar.gz");
+
+// Increase for non-seekable streams with large detection probes, such as SFX RAR
+var buffered = ReaderOptions.ForExternalStream.WithRewindableBufferSize(1_048_576);
 
 // Extraction presets
 var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
@@ -277,7 +327,12 @@ var options = new ReaderOptions
 {
     Password = "password",
     LeaveStreamOpen = true,
-    ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) }
+    ArchiveEncoding = new ArchiveEncoding { Default = Encoding.GetEncoding(932) },
+    ExtensionHint = "zip",
+    LookForHeader = true,
+    DisableCheckIncomplete = false,
+    BufferSize = 81920,
+    RewindableBufferSize = 1_048_576,
 };
 ```
 
@@ -298,6 +353,48 @@ var gzipOptions = WriterOptions.ForGZip()                         // GZip file
     .WithCompressionLevel(6);
 
 archive.SaveTo("output.zip", zipOptions);
+```
+
+Use typed writer options when a format exposes extra settings:
+
+```csharp
+// ZIP archive-level options
+var zipWriterOptions = new ZipWriterOptions(CompressionType.Deflate)
+{
+    ArchiveComment = "Created by SharpCompress",
+    UseZip64 = true,
+    CompressionLevel = 9,
+};
+
+// ZIP per-entry options
+using (var writer = new ZipWriter(outputStream, zipWriterOptions))
+using (var source = File.OpenRead("source.txt"))
+{
+    writer.Write("entry.txt", source, new ZipWriterEntryOptions
+    {
+        CompressionType = CompressionType.ZStandard,
+        CompressionLevel = 3,
+        EntryComment = "per-entry comment",
+        ModificationDateTime = DateTime.UtcNow,
+        EnableZip64 = true,
+    });
+}
+
+// TAR-specific options
+var tarOptions = new TarWriterOptions(CompressionType.GZip, finalizeArchiveOnClose: true)
+{
+    HeaderFormat = TarHeaderWriteFormat.GNU_TAR_LONG_LINK,
+};
+
+// GZip-specific options
+var gzipOptions = new GZipWriterOptions(compressionLevel: 9);
+
+// 7z writing requires a seekable output stream and writes non-solid archives
+var sevenZipOptions = new SevenZipWriterOptions(CompressionType.LZMA2)
+{
+    CompressHeader = true,
+    LzmaProperties = new LzmaEncoderProperties(),
+};
 ```
 
 Alternative: traditional constructor with object initializer:
@@ -363,16 +460,35 @@ When a format needs additional initialization/finalization data (LZMA, PPMd, etc
 ```csharp
 // For creating archives
 CompressionType.None       // No compression (store)
+CompressionType.GZip       // GZip wrapper/combined tar compression
 CompressionType.Deflate    // DEFLATE (default for ZIP/GZip)
 CompressionType.Deflate64  // Deflate64
 CompressionType.BZip2      // BZip2
 CompressionType.LZMA       // LZMA (for 7Zip, LZip, XZ)
+CompressionType.LZMA2      // LZMA2 (for 7Zip/XZ)
+CompressionType.BCJ        // 7Zip branch converter filter
+CompressionType.BCJ2       // 7Zip branch converter filter
+CompressionType.LZip       // LZip wrapper/combined tar compression
+CompressionType.Xz         // XZ wrapper/combined tar compression
 CompressionType.PPMd       // PPMd (for ZIP)
 CompressionType.Rar        // RAR compression (read-only)
+CompressionType.Lzw        // LZW, including .Z/tar.Z reading
+CompressionType.Shrink     // ZIP shrink (read-only)
+CompressionType.Reduce1    // ZIP reduce methods (read-only)
+CompressionType.Reduce2
+CompressionType.Reduce3
+CompressionType.Reduce4
+CompressionType.Explode    // ZIP implode/explode (read-only)
+CompressionType.Squeezed   // ARC/ARJ legacy compression (read-only)
+CompressionType.Packed     // ARC legacy compression (read-only)
+CompressionType.Crunched   // ARC legacy compression (read-only)
+CompressionType.Squashed   // Legacy compression (read-only)
+CompressionType.Crushed    // Legacy compression (read-only)
+CompressionType.Distilled  // Legacy compression (read-only)
 CompressionType.ZStandard  // ZStandard
-ArchiveType.Arc
-ArchiveType.Arj
-ArchiveType.Ace
+CompressionType.ArjLZ77    // ARJ compression (read-only)
+CompressionType.AceLZ77    // ACE compression (read-only)
+CompressionType.Unknown
 
 // For Tar archives with compression
 // Use WriterFactory to create compressed tar archives
@@ -389,8 +505,10 @@ ArchiveType.GZip
 ArchiveType.BZip2
 ArchiveType.Rar
 ArchiveType.SevenZip
-ArchiveType.XZ
-ArchiveType.ZStandard
+ArchiveType.Arc
+ArchiveType.Arj
+ArchiveType.Ace
+ArchiveType.Lzw
 ```
 
 ---

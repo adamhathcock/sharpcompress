@@ -1,6 +1,6 @@
 # SharpCompress Usage
 
-## Async/Await Support (Beta)
+## Async/Await Support
 
 SharpCompress now provides full async/await support for all I/O operations. All `Read`, `Write`, and extraction operations have async equivalents ending in `Async` that accept an optional `CancellationToken`. This enables better performance and scalability for I/O-bound operations.
 
@@ -119,7 +119,7 @@ using (var archive = RarArchive.OpenArchive("Test.rar"))
 
 ### Extract solid Rar or 7Zip archives with progress reporting
 
-`ExtractAllEntries` only works for solid archives (Rar) or 7Zip archives. For optimal performance with these archive types, use this method:
+For optimal performance with solid Rar and 7Zip archives, extract entries sequentially. `WriteToDirectory` handles that internally for simple extraction. Use `ExtractAllEntries` when you need to manually iterate in sequential order.
 
 ```C#
 using SharpCompress.Common;
@@ -132,12 +132,29 @@ var progress = new Progress<ProgressReport>(report =>
 
 using (var archive = RarArchive.OpenArchive("archive.rar",
     ReaderOptions.ForFilePath
-        .WithProgress(progress))) // Must be solid Rar or 7Zip
+        .WithProgress(progress)))
 {
     archive.WriteToDirectory(
         @"D:\output",
         new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
     );
+}
+```
+
+Manual sequential extraction:
+
+```C#
+using (var archive = RarArchive.OpenArchive("archive.rar",
+    ReaderOptions.ForFilePath.WithProgress(progress)))
+using (var reader = archive.ExtractAllEntries())
+{
+    while (reader.MoveToNextEntry())
+    {
+        if (!reader.Entry.IsDirectory)
+        {
+            reader.WriteEntryToDirectory(@"D:\output");
+        }
+    }
 }
 ```
 
@@ -188,6 +205,119 @@ using (var writer = WriterFactory.OpenWriter(
 {
     writer.WriteAll("D:\\temp", "*", SearchOption.AllDirectories);
 }
+```
+
+### Use ArchiveFactory to autodetect and open archives
+
+```C#
+if (ArchiveFactory.IsArchive("archive.zip", out var archiveType))
+{
+    Console.WriteLine($"Detected {archiveType}");
+}
+
+using (var archive = ArchiveFactory.OpenArchive("archive.zip"))
+{
+    archive.WriteToDirectory(@"D:\output");
+}
+```
+
+### Use ArchiveInformation to choose the right API
+
+```C#
+var archivePath = "archive.arc";
+var info = ArchiveFactory.GetArchiveInformation(archivePath);
+if (info is null)
+{
+    Console.WriteLine("Not a supported archive");
+}
+else if (info.SupportsRandomAccess)
+{
+    using var archive = ArchiveFactory.OpenArchive(archivePath);
+    archive.WriteToDirectory(@"D:\output");
+}
+else
+{
+    using var reader = ReaderFactory.OpenReader(archivePath);
+    reader.WriteAllToDirectory(@"D:\output");
+}
+```
+
+`SupportsRandomAccess` is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW. Use the Reader API for those formats.
+
+### Open multi-volume archives
+
+```C#
+var parts = ArchiveFactory.GetFileParts("archive.part1.rar")
+    .Select(path => new FileInfo(path))
+    .ToArray();
+
+using (var archive = ArchiveFactory.OpenArchive(parts))
+{
+    archive.WriteToDirectory(@"D:\output");
+}
+```
+
+### Use ReaderOptions for self-extracting archives and detection hints
+
+```C#
+var sfxOptions = ReaderOptions.ForSelfExtractingArchive("password");
+using (var archive = RarArchive.OpenArchive("setup.exe", sfxOptions))
+{
+    archive.WriteToDirectory(@"D:\output");
+}
+
+using (Stream stream = File.OpenRead("backup"))
+using (var reader = ReaderFactory.OpenReader(
+    stream,
+    ReaderOptions.ForExternalStream.WithExtensionHint("tar.gz")))
+{
+    while (reader.MoveToNextEntry())
+    {
+        if (!reader.Entry.IsDirectory)
+        {
+            reader.WriteEntryToDirectory(@"D:\output");
+        }
+    }
+}
+```
+
+### Write ZIP entries with per-entry options
+
+```C#
+using Stream archiveStream = File.Create("output.zip");
+using var writer = new ZipWriter(
+    archiveStream,
+    new ZipWriterOptions(CompressionType.Deflate)
+    {
+        ArchiveComment = "Archive comment",
+        UseZip64 = true,
+    });
+
+using Stream source = File.OpenRead("input.txt");
+writer.Write("entry.txt", source, new ZipWriterEntryOptions
+{
+    CompressionType = CompressionType.ZStandard,
+    CompressionLevel = 3,
+    EntryComment = "Entry comment",
+    ModificationDateTime = DateTime.UtcNow,
+    EnableZip64 = true,
+});
+```
+
+### Write a 7z archive
+
+```C#
+using Stream stream = File.Create("output.7z");
+using var writer = WriterFactory.OpenWriter(
+    stream,
+    ArchiveType.SevenZip,
+    new SevenZipWriterOptions(CompressionType.LZMA2)
+    {
+        CompressHeader = true,
+    });
+
+using Stream source = File.OpenRead("input.txt");
+writer.Write("input.txt", source, DateTime.UtcNow);
 ```
 
 ### Extract zip which has non-utf8 encoded filename(cp932)

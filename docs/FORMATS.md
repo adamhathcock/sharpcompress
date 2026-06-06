@@ -21,6 +21,7 @@
 | Tar.Zstandard      | ZStandard                                                           | Decompress          | TarArchive      | TarReader  | N/A             |
 | Tar.LZip           | LZMA                                                                | Both                | TarArchive      | TarReader  | TarWriter (3)   |
 | Tar.XZ             | LZMA2                                                               | Decompress          | TarArchive      | TarReader  | N/A             |
+| Tar.LZW            | LZW                                                                 | Decompress          | TarArchive      | TarReader  | N/A             |
 | GZip (single file) | DEFLATE                                                             | Both                | GZipArchive     | GZipReader | GZipWriter      |
 | 7Zip (4)           | LZMA, LZMA2, BZip2, PPMd, BCJ, BCJ2, Deflate                        | Both                | SevenZipArchive | N/A        | SevenZipWriter  |
 
@@ -30,10 +31,13 @@
 4. The 7Zip format doesn't allow for reading as a forward-only stream, so 7Zip read support is only through the Archive API. Writing is supported through SevenZipWriter for non-solid archives with LZMA/LZMA2 and requires a seekable output stream. See [7Zip Format Notes](#7zip-format-notes) for details on async extraction behavior.
 5. LZip has no support for extra data like the file name or timestamp. There is a default filename used when looking at the entry Key on the archive.
 
+`ArchiveFactory.GetArchiveInformation(...).SupportsRandomAccess` is `true` when the detected format has an Archive API in this table. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW.
+
 ### Zip Format Notes
 
 - Multi-volume/split ZIP archives require ZipArchive (seekable streams) as ZipReader cannot seek across volume files.
 - ZipReader processes entries from LocalEntry headers (which include directory entries ending with `/`) and intentionally skips DirectoryEntry headers from the central directory, as they are redundant in streaming mode - all entry data comes from LocalEntry headers which ZipReader has already processed.
+- ZIP supports ZStandard for reading and writing. Tar.Zstandard support is read/decompress only.
 
 ### 7Zip Format Notes
 
@@ -59,6 +63,7 @@ For those who want to directly compress/decompress bits. The single file formats
 | Deflate64Stream | Decompress          |
 | LZMAStream      | Both                |
 | PPMdStream      | Both                |
+| LzwStream       | Decompress          |
 | ADCStream       | Decompress          |
 | LZipStream      | Both                |
 | XZStream        | Decompress          |
@@ -78,4 +83,6 @@ Formats like Zip, 7Zip, Rar are archive formats only. They use other compression
 
 ### Overlap
 
-GZip, BZip2 and LZip are single file archival formats. The overlap in the API happens because Tar uses the single file formats as "compression" methods and the API tries to hide this a bit.
+GZip, BZip2, LZip, XZ, LZW, and ZStandard are single file or compression wrapper formats. The overlap in the API happens because Tar uses these formats as "compression" methods and the API tries to hide this a bit.
+
+`ArchiveType` represents archive containers exposed by the high-level APIs (`Rar`, `Zip`, `Tar`, `SevenZip`, `GZip`, `Arc`, `Arj`, `Ace`, and `Lzw`). `XZ` and `ZStandard` are represented as `CompressionType` values rather than `ArchiveType` values.
