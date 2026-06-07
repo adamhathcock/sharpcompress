@@ -6,7 +6,7 @@ applyTo: '**/*.cs'
 # SharpCompress Development
 
 ## About SharpCompress
-SharpCompress is a pure C# compression library supporting multiple archive formats (Zip, Tar, GZip, BZip2, 7Zip, Rar, LZip, XZ, ZStandard). The project currently targets .NET Framework 4.8, .NET Standard 2.0, .NET 8.0, and .NET 10.0. The library provides both seekable Archive APIs and forward-only Reader/Writer APIs for streaming scenarios.
+SharpCompress is a pure C# compression library supporting multiple archive formats (Zip, Tar, GZip, BZip2, 7Zip, Rar, LZip, XZ, ZStandard, Arc, Arj, Ace, LZW). The project currently targets .NET Framework 4.8, .NET Standard 2.0/2.1, .NET 6.0, .NET 8.0, and .NET 10.0. The library provides both seekable Archive APIs and forward-only Reader/Writer APIs for streaming scenarios.
 
 ## C# Instructions
 - Use language features supported by the current project toolchain (`LangVersion=latest`) and existing codebase patterns.
@@ -68,7 +68,7 @@ SharpCompress is a pure C# compression library supporting multiple archive forma
 
 ## Project Setup and Structure
 
-- The project targets multiple frameworks: .NET Framework 4.8, .NET Standard 2.0, .NET 8.0, and .NET 10.0
+- The project targets multiple frameworks: .NET Framework 4.8, .NET Standard 2.0/2.1, .NET 6.0, .NET 8.0, and .NET 10.0
 - Main library is in `src/SharpCompress/`
 - Tests are in `tests/SharpCompress.Test/`
 - Performance tests are in `tests/SharpCompress.Performance/`
@@ -120,9 +120,10 @@ Factory implementations can implement one or more interfaces (`IArchiveFactory`,
 
 ### Supported Formats
 SharpCompress supports multiple archive and compression formats:
-- **Archive Formats**: Zip, Tar, 7Zip, Rar (read-only)
-- **Compression**: DEFLATE, BZip2, LZMA/LZMA2, PPMd, ZStandard (decompress only), Deflate64 (decompress only)
-- **Combined Formats**: Tar.GZip, Tar.BZip2, Tar.LZip, Tar.XZ, Tar.ZStandard
+- **Archive Formats**: Zip, Tar, 7Zip, Rar (read-only), Ace (read-only), Arc (read-only), Arj (read-only), LZW (read-only)
+- **Compression**: DEFLATE, BZip2, LZMA/LZMA2, PPMd, ZStandard, LZip, XZ (decompress only), Deflate64 (decompress only), legacy Zip/Arc/Arj/Ace methods (read-only as applicable)
+- **Combined Formats**: Tar.GZip, Tar.BZip2, Tar.LZip, Tar.XZ (decompress only), Tar.ZStandard (decompress only), Tar.LZW (decompress only)
+- **ZIP ZStandard**: ZIP supports ZStandard reading and writing; Tar.ZStandard is decompress-only.
 - See [docs/FORMATS.md](docs/FORMATS.md) for complete format support matrix
 
 ### Stream Handling Rules
@@ -162,7 +163,8 @@ SharpCompress supports multiple archive and compression formats:
 ### Tar-Specific Considerations
 - Tar format requires file size in the header
 - If no size is specified to TarWriter and the stream is not seekable, an exception will be thrown
-- Tar combined with compression (GZip, BZip2, LZip, XZ) is supported
+- Tar combined with compression is supported for reading with GZip, BZip2, LZip, XZ, ZStandard, and LZW
+- Tar writing supports uncompressed Tar, GZip, BZip2, and LZip wrappers
 
 ### Zip-Specific Considerations
 - Supports Zip64 for large files (seekable streams only)
@@ -205,6 +207,14 @@ SharpCompress supports multiple archive and compression formats:
 - If a breaking change is unavoidable, document it and provide a migration path.
 - Add or update tests that cover backward compatibility expectations.
 - Avoid exposing public `init` setters, positional records, `required` members, or other metadata that forces consumers onto newer C# language versions; validate older-consumer compatibility with tests when changing exported APIs.
+
+### Public API Documentation Checklist
+- When adding, removing, renaming, or changing public APIs, update the public docs in the same change.
+- Check `docs/API.md` for new factory methods, options, interfaces, extension methods, enums, archive/reader/writer APIs, compression provider APIs, and examples.
+- Check `docs/USAGE.md` when the API change affects recommended usage patterns or requires a new example.
+- Check `docs/FORMATS.md` when the API change affects supported archive formats, compression methods, reader/archive/writer availability, or detection behavior.
+- Check `README.md` when the change affects the top-level support summary, target frameworks, major capabilities, or user-facing feature list.
+- For public API changes, verify examples compile conceptually against the actual public signatures and avoid documenting internal-only types.
 
 ### Stream Ownership and Position Checklist
 - Verify `LeaveStreamOpen` behavior for externally owned streams.
