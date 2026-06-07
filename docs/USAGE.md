@@ -343,11 +343,12 @@ By default `ReaderOptions` and `WriterOptions` already include `CompressionProvi
 
 The configured registry is used consistently across Reader APIs, Writer APIs, Archive APIs, and async entry-stream extraction, including compressed TAR wrappers and ZIP async decompression.
 
-To replace a specific algorithm (for example to use `System.IO.Compression` for GZip or Deflate), create a modified registry and pass it through the same options:
+To replace specific algorithms (for example to use `System.IO.Compression` for GZip or Deflate), create a modified registry and pass it through the same options:
 
 ```C#
-var systemGZip = new SystemGZipCompressionProvider();
-var customRegistry = CompressionProviderRegistry.Default.With(systemGZip);
+var customRegistry = CompressionProviderRegistry.Default
+    .With(new SystemGZipCompressionProvider())
+    .With(new SystemDeflateCompressionProvider());
 
 var readerOptions = ReaderOptions.ForFilePath
     .WithProviders(customRegistry);
@@ -357,6 +358,10 @@ var writerOptions = new WriterOptions(CompressionType.GZip)
     .WithProviders(customRegistry);
 using var writer = WriterFactory.OpenWriter(outputStream, ArchiveType.GZip, writerOptions);
 ```
+
+The registry is immutable. `With(provider)` returns a new registry and replaces any existing provider for that provider's `CompressionType`. You can inspect or use providers directly with `GetProvider`, `CreateCompressStream`, `CreateDecompressStream`, and their async/context overloads, but most application code should flow the registry through `ReaderOptions` or `WriterOptions` so archive readers and writers can supply the right `CompressionContext`.
+
+To implement a custom provider, implement `ICompressionProvider` directly or derive from `CompressionProviderBase` for default async methods. Derive from `DecompressionOnlyProviderBase` for read-only codecs. Providers can use `CompressionContext` for stream size, seekability, reader options, compression properties, and format-specific metadata.
 
 The registry also exposes `GetCompressingProvider` (now returning `ICompressionProviderHooks`) when a compression format needs pre- or post-stream data (e.g., LZMA/PPMd). Implementations that need extra headers can supply those bytes through the `ICompressionProviderHooks` members while the rest of the API still works through the `Providers` property.
 

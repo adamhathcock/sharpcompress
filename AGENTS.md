@@ -210,7 +210,7 @@ SharpCompress supports multiple archive and compression formats:
 
 ### Public API Documentation Checklist
 - When adding, removing, renaming, or changing public APIs, update the public docs in the same change.
-- Check `docs/API.md` for new factory methods, options, interfaces, extension methods, enums, archive/reader/writer APIs, and examples.
+- Check `docs/API.md` for new factory methods, options, interfaces, extension methods, enums, archive/reader/writer APIs, compression provider APIs, and examples.
 - Check `docs/USAGE.md` when the API change affects recommended usage patterns or requires a new example.
 - Check `docs/FORMATS.md` when the API change affects supported archive formats, compression methods, reader/archive/writer availability, or detection behavior.
 - Check `README.md` when the change affects the top-level support summary, target frameworks, major capabilities, or user-facing feature list.

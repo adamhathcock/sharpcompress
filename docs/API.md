@@ -435,10 +435,12 @@ ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, 
 
 ### Compression Providers
 
-`ReaderOptions` and `WriterOptions` expose a `Providers` registry that controls which `ICompressionProvider` implementations are used for each `CompressionType`. The registry defaults to `CompressionProviderRegistry.Default`, so you only need to set it if you want to swap in a custom provider (for example the `SystemGZipCompressionProvider`). The selected registry is honored by Reader/Writer APIs, Archive APIs, and async entry-stream extraction paths.
+`ReaderOptions` and `WriterOptions` expose a `Providers` registry that controls which `ICompressionProvider` implementations are used for each `CompressionType`. The registry defaults to `CompressionProviderRegistry.Default`, so you only need to set it if you want to swap in a custom provider (for example the `SystemGZipCompressionProvider` or `SystemDeflateCompressionProvider`). The selected registry is honored by Reader/Writer APIs, Archive APIs, and async entry-stream extraction paths.
 
 ```csharp
-var registry = CompressionProviderRegistry.Default.With(new SystemGZipCompressionProvider());
+var registry = CompressionProviderRegistry.Default
+    .With(new SystemGZipCompressionProvider())
+    .With(new SystemDeflateCompressionProvider());
 var readerOptions = ReaderOptions.ForFilePath.WithProviders(registry);
 var writerOptions = new WriterOptions(CompressionType.GZip)
 {
@@ -448,6 +450,39 @@ var writerOptions = new WriterOptions(CompressionType.GZip)
 using var reader = ReaderFactory.OpenReader(input, readerOptions);
 using var writer = WriterFactory.OpenWriter(output, ArchiveType.GZip, writerOptions);
 ```
+
+Registry API summary:
+
+```text
+CompressionProviderRegistry.Default: built-in provider registry
+CompressionProviderRegistry.Empty: empty registry, primarily useful for tests
+With(provider): returns a new registry with that provider added or replaced
+GetProvider(type): returns the registered ICompressionProvider, or null
+CreateCompressStream(...): creates a compression stream or throws if unsupported
+CreateDecompressStream(...): creates a decompression stream or throws if unsupported
+CreateCompressStreamAsync(...): async stream creation counterpart
+CreateDecompressStreamAsync(...): async stream creation counterpart
+GetCompressingProvider(type): returns ICompressionProviderHooks when available
+```
+
+`ICompressionProvider` implementations declare their `CompressionType`, whether they support compression/decompression, and create sync/async streams. For simple providers, derive from `CompressionProviderBase`; it supplies default async implementations that delegate to the synchronous methods. For read-only codecs, derive from `DecompressionOnlyProviderBase`.
+
+```csharp
+public sealed class CustomGZipProvider : CompressionProviderBase
+{
+    public override CompressionType CompressionType => CompressionType.GZip;
+    public override bool SupportsCompression => true;
+    public override bool SupportsDecompression => true;
+
+    public override Stream CreateCompressStream(Stream destination, int compressionLevel) =>
+        new GZipStream(destination, CompressionMode.Compress, leaveOpen: false);
+
+    public override Stream CreateDecompressStream(Stream source) =>
+        new GZipStream(source, CompressionMode.Decompress, leaveOpen: false);
+}
+```
+
+`CompressionContext` carries metadata that providers may need when creating streams, including `InputSize`, `OutputSize`, `Properties`, `CanSeek`, `FormatOptions`, and `ReaderOptions`. Use `CompressionContext.FromStream(stream)` to populate stream-derived values, `WithReaderOptions(...)` to attach reader metadata, and `ResolveArchiveEncoding()` to get the archive header encoding from the context.
 
 When a format needs additional initialization/finalization data (LZMA, PPMd, etc.) the registry exposes `GetCompressingProvider` which returns the `ICompressionProviderHooks` contract; the rest of the API continues to flow through `Providers`, including pre/properties/post compression hook data.
 
