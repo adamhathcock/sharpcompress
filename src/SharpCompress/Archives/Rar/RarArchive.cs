@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives.Extraction;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
@@ -27,7 +28,8 @@ public interface IRarAsyncArchive : IAsyncArchive, IRarArchiveCommon { }
 public partial class RarArchive
     : AbstractArchive<RarArchiveEntry, RarVolume>,
         IRarArchive,
-        IRarAsyncArchive
+        IRarAsyncArchive,
+        IArchiveExtractionConcurrencyProvider
 {
     private bool _disposed;
     internal Lazy<IRarUnpack> UnpackV2017 { get; } =
@@ -36,6 +38,57 @@ public partial class RarArchive
 
     private RarArchive(SourceStream sourceStream)
         : base(ArchiveType.Rar, sourceStream) { }
+
+    async ValueTask<ArchiveExtractionConcurrencyInfo> IArchiveExtractionConcurrencyProvider.GetExtractionConcurrencyInfoAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var sourceFiles = SourceFiles;
+        var baseInformation = new ArchiveExtractionConcurrencyInfo(ArchiveType.Rar)
+        {
+            RequiresSeekableStream = true,
+            ReaderOptions = ReaderOptions,
+        };
+
+        if (sourceFiles.Count != 1 || await IsSolidAsync().ConfigureAwait(false))
+        {
+            return baseInformation;
+        }
+
+        var entries = new List<RarArchiveEntry>();
+        await foreach (
+            var entry in EntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
+        {
+            entries.Add(entry);
+        }
+
+        var fileEntries = entries.Where(entry => !entry.IsDirectory).ToList();
+        if (
+            fileEntries.Count <= 1
+            || fileEntries.Any(entry =>
+                entry.IsEncrypted || entry.IsSplitAfter || !entry.IsComplete
+            )
+        )
+        {
+            return baseInformation;
+        }
+
+        return baseInformation with
+        {
+            Mode = ArchiveConcurrencyMode.IndependentEntries,
+            SupportsIndependentEntryStreams = true,
+            SupportsIndependentSolidStreams = true,
+            SourceFile = sourceFiles[0],
+            Groups = fileEntries
+                .Select(entry => new ArchiveExtractionGroup(
+                    new[] { entry.Key.NotNull("Entry Key is null") },
+                    isSolid: false
+                ))
+                .ToArray(),
+        };
+    }
 
     public override void Dispose()
     {

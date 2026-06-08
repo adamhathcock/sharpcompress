@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -21,6 +23,11 @@ public abstract partial class AbstractArchive<TEntry, TVolume> : IArchive, IAsyn
     private readonly LazyAsyncReadOnlyCollection<TEntry> _lazyEntriesAsync;
 
     public ReaderOptions ReaderOptions { get; protected set; }
+
+    internal IReadOnlyList<FileInfo> SourceFiles =>
+        _sourceStream is null || !_sourceStream.IsFileMode
+            ? Array.Empty<FileInfo>()
+            : _sourceStream.Files.ToList();
 
     internal AbstractArchive(ArchiveType type, SourceStream sourceStream)
     {

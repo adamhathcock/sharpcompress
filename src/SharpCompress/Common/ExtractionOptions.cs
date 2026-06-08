@@ -13,7 +13,7 @@ namespace SharpCompress.Common;
 /// options = options with { PreserveFileTime = true };
 /// </code>
 /// </remarks>
-public sealed record ExtractionOptions : IExtractionOptions
+public sealed record ExtractionOptions : IExtractionOptions, IExtractionParallelismOptions
 {
     /// <summary>
     /// Overwrite target if it exists.
@@ -37,6 +37,16 @@ public sealed record ExtractionOptions : IExtractionOptions
     /// Preserve windows file attributes.
     /// </summary>
     public bool PreserveAttributes { get; set; }
+
+    /// <summary>
+    /// Controls whether extraction may run entries concurrently when the archive format and backing stream are safe.
+    /// </summary>
+    public ExtractionParallelism Parallelism { get; set; } = ExtractionParallelism.Auto;
+
+    /// <summary>
+    /// Maximum number of concurrent extraction workers used when parallel extraction is selected.
+    /// </summary>
+    public int MaxDegreeOfParallelism { get; set; } = Environment.ProcessorCount;
 
     /// <summary>
     /// Delegate for writing symbolic links to disk.

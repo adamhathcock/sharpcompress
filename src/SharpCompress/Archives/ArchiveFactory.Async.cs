@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,45 @@ namespace SharpCompress.Archives;
 
 public static partial class ArchiveFactory
 {
+    public static async ValueTask ExtractToDirectoryAsync(
+        string sourceArchive,
+        string destinationDirectory,
+        ExtractionOptions? options = null,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        sourceArchive.NotNullOrEmpty(nameof(sourceArchive));
+        await ExtractToDirectoryAsync(
+                new FileInfo(sourceArchive),
+                destinationDirectory,
+                options,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+    }
+
+    public static async ValueTask ExtractToDirectoryAsync(
+        FileInfo sourceArchive,
+        string destinationDirectory,
+        ExtractionOptions? options = null,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        sourceArchive.NotNull(nameof(sourceArchive));
+        await using var archive = await OpenAsyncArchive(
+                sourceArchive,
+                ReaderOptions.ForFilePath,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+        await archive
+            .WriteToDirectoryAsync(destinationDirectory, options, progress, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
