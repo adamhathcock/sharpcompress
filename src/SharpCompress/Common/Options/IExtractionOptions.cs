@@ -31,6 +31,11 @@ public interface IExtractionOptions
     bool PreserveAttributes { get; set; }
 
     /// <summary>
+    /// Buffer size for extraction stream copy operations.
+    /// </summary>
+    int BufferSize { get; set; }
+
+    /// <summary>
     /// Delegate for writing symbolic links to disk.
     /// The first parameter is the source path (where the symlink is created).
     /// The second parameter is the target path (what the symlink refers to).

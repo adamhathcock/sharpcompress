@@ -315,6 +315,9 @@ var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
 var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
 var metadataOptions = ExtractionOptions.PreserveMetadata; // Keep timestamps and attributes
 
+// Tune extraction copy buffering
+var extractionOptions = new ExtractionOptions { BufferSize = 131072 };
+
 // Factory defaults:
 // - file path / FileInfo overloads use LeaveStreamOpen = false
 // - stream overloads use LeaveStreamOpen = true
@@ -333,6 +336,13 @@ var options = new ReaderOptions
     DisableCheckIncomplete = false,
     BufferSize = 81920,
     RewindableBufferSize = 1_048_576,
+};
+
+var extractionOptions = new ExtractionOptions
+{
+    ExtractFullPath = true,
+    Overwrite = true,
+    BufferSize = 131072,
 };
 ```
 

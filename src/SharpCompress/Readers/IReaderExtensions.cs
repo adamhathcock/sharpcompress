@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
 
@@ -58,9 +60,48 @@ public static class IReaderExtensions
                 options,
                 (x, fm) =>
                 {
-                    using var fs = File.Open(destinationFileName, fm);
-                    reader.WriteEntryTo(fs);
+                    using var fs = File.Open(x, fm);
+                    CopyEntryTo(reader, fs, options?.BufferSize ?? Constants.BufferSize);
                 }
             );
+    }
+
+    private static void CopyEntryTo(IReader reader, Stream writableStream, int bufferSize)
+    {
+        using var entryStream = reader.OpenEntryStream();
+        var sourceStream = WrapWithProgress(entryStream, reader.Entry);
+        sourceStream.CopyTo(writableStream, bufferSize);
+    }
+
+    private static Stream WrapWithProgress(Stream source, IEntry entry)
+    {
+        var progress = entry.Options.Progress;
+        if (progress is null)
+        {
+            return source;
+        }
+
+        var entryPath = entry.Key ?? string.Empty;
+        var totalBytes = GetEntrySizeSafe(entry);
+        return new ProgressReportingStream(
+            source,
+            progress,
+            entryPath,
+            totalBytes,
+            leaveOpen: true
+        );
+    }
+
+    private static long? GetEntrySizeSafe(IEntry entry)
+    {
+        try
+        {
+            var size = entry.Size;
+            return size >= 0 ? size : null;
+        }
+        catch (NotImplementedException)
+        {
+            return null;
+        }
     }
 }

@@ -100,7 +100,12 @@ using (var archive = RarArchive.OpenArchive("Test.rar", ReaderOptions.ForFilePat
     // Simple extraction with RarArchive; this WriteToDirectory pattern works for all archive types
     archive.WriteToDirectory(
         @"D:\temp",
-        new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+        new ExtractionOptions
+        {
+            ExtractFullPath = true,
+            Overwrite = true,
+            BufferSize = 131072,
+        }
     );
 }
 ```

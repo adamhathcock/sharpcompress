@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
 
@@ -138,19 +137,19 @@ public abstract partial class AbstractReader<TEntry, TVolume>
         _wroteCurrentEntry = true;
     }
 
-    internal async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
+    private async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
 #if LEGACY_DOTNET
         using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream
-            .CopyToAsync(writeStream, Constants.BufferSize, cancellationToken)
+            .CopyToAsync(writeStream, Options.BufferSize, cancellationToken)
             .ConfigureAwait(false);
 #else
         await using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream
-            .CopyToAsync(writeStream, Constants.BufferSize, cancellationToken)
+            .CopyToAsync(writeStream, Options.BufferSize, cancellationToken)
             .ConfigureAwait(false);
 #endif
     }
@@ -187,9 +186,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
     /// <summary>
     /// Moves the current async enumerator to the next entry.
     /// </summary>
-    internal virtual ValueTask<bool> NextEntryForCurrentStreamAsync(
-        CancellationToken cancellationToken
-    )
+    private ValueTask<bool> NextEntryForCurrentStreamAsync(CancellationToken cancellationToken)
     {
         if (_entriesForCurrentReadStreamAsync is not null)
         {
@@ -202,6 +199,9 @@ public abstract partial class AbstractReader<TEntry, TVolume>
     // Async iterator method
     protected virtual async IAsyncEnumerable<TEntry> GetEntriesAsync(Stream stream)
     {
+#pragma warning disable VSTHRD111
+        await Task.CompletedTask;
+#pragma warning restore VSTHRD111
         foreach (var entry in GetEntries(stream))
         {
             yield return entry;

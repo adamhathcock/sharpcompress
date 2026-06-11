@@ -179,7 +179,10 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
         s.SkipEntry();
     }
 
-    public void WriteEntryTo(Stream writableStream)
+    public void WriteEntryTo(Stream writableStream) =>
+        WriteEntryTo(writableStream, Options.BufferSize);
+
+    private void WriteEntryTo(Stream writableStream, int bufferSize)
     {
         if (_wroteCurrentEntry)
         {
@@ -194,15 +197,17 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
             );
         }
 
-        Write(writableStream);
+        Write(writableStream, bufferSize);
         _wroteCurrentEntry = true;
     }
 
-    internal void Write(Stream writeStream)
+    internal void Write(Stream writeStream) => Write(writeStream, Options.BufferSize);
+
+    internal void Write(Stream writeStream, int bufferSize)
     {
         using Stream s = OpenEntryStream();
         var sourceStream = WrapWithProgress(s, Entry);
-        sourceStream.CopyTo(writeStream, Constants.BufferSize);
+        sourceStream.CopyTo(writeStream, bufferSize);
     }
 
     private Stream WrapWithProgress(Stream source, Entry entry)
