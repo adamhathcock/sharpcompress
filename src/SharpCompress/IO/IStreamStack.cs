@@ -49,7 +49,7 @@ public static class StreamStackExtensions
         return current;
     }
 
-    internal static void Rewind(this IStreamStack stream, int count)
+    internal static bool Rewind(this IStreamStack stream, int count)
     {
         IStreamStack? current = stream;
 
@@ -57,24 +57,33 @@ public static class StreamStackExtensions
         {
             if (current is SharpCompressStream sharpCompressStream)
             {
+                // Check if stream supports seeking before attempting rewind
+                if (!sharpCompressStream.CanSeek)
+                {
+                    return false;
+                }
+
                 // Try to rewind within the buffer. If the position is outside the buffered
-                // region, silently ignore (matching release behavior where streams without
-                // buffering simply didn't rewind).
+                // region, silently ignore (non-seekable/non-buffered streams cannot rewind,
+                // but passthrough streams with seekable underlying streams can).
                 var targetPosition = sharpCompressStream.Position - count;
                 if (targetPosition >= 0)
                 {
                     try
                     {
                         sharpCompressStream.Position = targetPosition;
+                        return true;
                     }
                     catch (NotSupportedException)
                     {
                         // Cannot seek outside buffered region - silently ignore
+                        return false;
                     }
                 }
-                return;
+                return false;
             }
             current = current.BaseStream() as IStreamStack;
         }
+        return false;
     }
 }
