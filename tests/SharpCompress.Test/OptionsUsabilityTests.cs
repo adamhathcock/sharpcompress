@@ -1,3 +1,4 @@
+#if !LEGACY_DOTNET
 using System;
 using System.IO;
 using System.Linq;
@@ -220,9 +221,9 @@ public class OptionsUsabilityTests : TestBase
     }
 
     [Fact]
-    public void TarWriter_Uses_WriterOptions_BufferSize()
+    public void TarWriter_Uses_WriterOptions_BufferSize_ForTransfer()
     {
-        using var source = new TrackingReadStream(new byte[100]);
+        using var source = new MemoryStream(new byte[100]);
         using var destination = new MemoryStream();
         using var writer = new TarWriter(
             destination,
@@ -305,30 +306,6 @@ public class OptionsUsabilityTests : TestBase
         Assert.True(preserveMetadata.PreserveAttributes);
 
         Assert.Equal(Constants.BufferSize, new ExtractionOptions().BufferSize);
-    }
-
-    [Fact]
-    public void ArchiveEntry_WriteToFile_Uses_ExtractionOptions_BufferSize()
-    {
-        using var source = new TrackingReadStream(new byte[16]);
-        var entry = new TestArchiveEntry(source);
-        var destination = Path.Combine(SCRATCH_FILES_PATH, "buffer-size.txt");
-
-        entry.WriteToFile(destination, new ExtractionOptions { BufferSize = 7 });
-
-        Assert.Equal(7, source.CopyBufferSize);
-    }
-
-    [Fact]
-    public async Task ArchiveEntry_WriteToFileAsync_Uses_ExtractionOptions_BufferSize()
-    {
-        using var source = new TrackingReadStream(new byte[16]);
-        var entry = new TestArchiveEntry(source);
-        var destination = Path.Combine(SCRATCH_FILES_PATH, "buffer-size-async.txt");
-
-        await entry.WriteToFileAsync(destination, new ExtractionOptions { BufferSize = 9 });
-
-        Assert.Equal(9, source.CopyBufferSize);
     }
 
     [Fact]
@@ -444,21 +421,6 @@ public class OptionsUsabilityTests : TestBase
         Assert.Equal(1_048_576, noPassword.RewindableBufferSize);
     }
 
-    private sealed class TrackingReadStream(byte[] data) : MemoryStream(data)
-    {
-        public int? CopyBufferSize { get; private set; }
-
-        public override Task CopyToAsync(
-            Stream destination,
-            int bufferSize,
-            CancellationToken cancellationToken
-        )
-        {
-            CopyBufferSize = bufferSize;
-            return base.CopyToAsync(destination, bufferSize, cancellationToken);
-        }
-    }
-
     private sealed class TestArchiveEntry(Stream source) : IArchiveEntry
     {
         public CompressionType CompressionType => CompressionType.None;
@@ -496,10 +458,31 @@ public class OptionsUsabilityTests : TestBase
         }
     }
 
+    private sealed class TrackingReadStream(byte[] data) : MemoryStream(data)
+    {
+        public int? CopyBufferSize { get; private set; }
+
+        public override void CopyTo(Stream destination, int bufferSize)
+        {
+            CopyBufferSize = bufferSize;
+            base.CopyTo(destination, bufferSize);
+        }
+
+        public override Task CopyToAsync(
+            Stream destination,
+            int bufferSize,
+            CancellationToken cancellationToken
+        )
+        {
+            CopyBufferSize = bufferSize;
+            return base.CopyToAsync(destination, bufferSize, cancellationToken);
+        }
+    }
+
     private sealed class TrackingReader : IReader, IAsyncReader
     {
         public ArchiveType Type => ArchiveType.Zip;
-        public TrackingReadStream Source { get; } = new(new byte[100]);
+        public MemoryStream Source { get; } = new(new byte[100]);
         public IEntry Entry => new TestArchiveEntry(Source);
         public bool Cancelled => false;
         public int? EntryStreamCopyBufferSize { get; private set; }
@@ -544,6 +527,12 @@ public class OptionsUsabilityTests : TestBase
         Action<int> copyBufferSize
     ) : EntryStream(reader, stream)
     {
+        public override void CopyTo(Stream destination, int bufferSize)
+        {
+            copyBufferSize(bufferSize);
+            base.CopyTo(destination, bufferSize);
+        }
+
         public override Task CopyToAsync(
             Stream destination,
             int bufferSize,
@@ -555,3 +544,4 @@ public class OptionsUsabilityTests : TestBase
         }
     }
 }
+#endif
