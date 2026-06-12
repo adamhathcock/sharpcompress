@@ -104,7 +104,12 @@ public partial class TarWriter
         await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
         var progressStream = WrapWithProgress(source, filename);
         var written = await progressStream
-            .TransferToAsync(OutputStream.NotNull(), realSize, cancellationToken)
+            .TransferToAsync(
+                OutputStream.NotNull(),
+                realSize,
+                WriterOptions.BufferSize,
+                cancellationToken
+            )
             .ConfigureAwait(false);
         await PadTo512Async(written, cancellationToken).ConfigureAwait(false);
     }

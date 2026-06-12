@@ -11,6 +11,7 @@ using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
+using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
 using Xunit;
 
@@ -133,11 +134,16 @@ public class OptionsUsabilityTests : TestBase
     [Fact]
     public void WriterOptions_Fluent_Methods_Modify_Correctly()
     {
-        var options = WriterOptions.ForZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
+        var options = WriterOptions
+            .ForZip()
+            .WithLeaveStreamOpen(false)
+            .WithCompressionLevel(9)
+            .WithBufferSize(65536);
 
         Assert.Equal(CompressionType.Deflate, options.CompressionType);
         Assert.Equal(9, options.CompressionLevel);
         Assert.False(options.LeaveStreamOpen);
+        Assert.Equal(65536, options.BufferSize);
     }
 
     [Fact]
@@ -159,6 +165,73 @@ public class OptionsUsabilityTests : TestBase
         Assert.Equal(factoryApproach.CompressionType, constructorApproach.CompressionType);
         Assert.Equal(factoryApproach.CompressionLevel, constructorApproach.CompressionLevel);
         Assert.Equal(factoryApproach.LeaveStreamOpen, constructorApproach.LeaveStreamOpen);
+    }
+
+    [Fact]
+    public void WriterOptions_Default_BufferSize_Uses_Constants_BufferSize()
+    {
+        Assert.Equal(Constants.BufferSize, WriterOptions.ForZip().BufferSize);
+        Assert.Equal(
+            Constants.BufferSize,
+            new ZipWriterOptions(CompressionType.Deflate).BufferSize
+        );
+        Assert.Equal(
+            Constants.BufferSize,
+            new TarWriterOptions(CompressionType.None, true).BufferSize
+        );
+        Assert.Equal(Constants.BufferSize, new GZipWriterOptions().BufferSize);
+    }
+
+    [Fact]
+    public void Format_WriterOptions_Copy_BufferSize()
+    {
+        var options = WriterOptions.ForZip().WithBufferSize(12345);
+
+        Assert.Equal(12345, new ZipWriterOptions(options).BufferSize);
+        Assert.Equal(12345, new TarWriterOptions(options).BufferSize);
+        Assert.Equal(12345, new GZipWriterOptions(options).BufferSize);
+    }
+
+    [Fact]
+    public void ZipWriter_Uses_WriterOptions_BufferSize()
+    {
+        using var source = new TrackingReadStream(new byte[100]);
+        using var destination = new MemoryStream();
+        using var writer = new ZipWriter(
+            destination,
+            new ZipWriterOptions(CompressionType.None) { BufferSize = 17 }
+        );
+
+        writer.Write("buffer-size.txt", source, DateTime.Now);
+
+        Assert.Equal(17, source.CopyBufferSize);
+    }
+
+    [Fact]
+    public void GZipWriter_Uses_WriterOptions_BufferSize()
+    {
+        using var source = new TrackingReadStream(new byte[100]);
+        using var destination = new MemoryStream();
+        using var writer = new GZipWriter(destination, new GZipWriterOptions { BufferSize = 19 });
+
+        writer.Write("buffer-size.txt", source, DateTime.Now);
+
+        Assert.Equal(19, source.CopyBufferSize);
+    }
+
+    [Fact]
+    public void TarWriter_Uses_WriterOptions_BufferSize()
+    {
+        using var source = new TrackingReadStream(new byte[100]);
+        using var destination = new MemoryStream();
+        using var writer = new TarWriter(
+            destination,
+            new TarWriterOptions(CompressionType.None, true) { BufferSize = 0 }
+        );
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            writer.Write("buffer-size.txt", source, DateTime.Now)
+        );
     }
 
     [Fact]
@@ -375,12 +448,6 @@ public class OptionsUsabilityTests : TestBase
     {
         public int? CopyBufferSize { get; private set; }
 
-        public override void CopyTo(Stream destination, int bufferSize)
-        {
-            CopyBufferSize = bufferSize;
-            base.CopyTo(destination, bufferSize);
-        }
-
         public override Task CopyToAsync(
             Stream destination,
             int bufferSize,
@@ -477,12 +544,6 @@ public class OptionsUsabilityTests : TestBase
         Action<int> copyBufferSize
     ) : EntryStream(reader, stream)
     {
-        public override void CopyTo(Stream destination, int bufferSize)
-        {
-            copyBufferSize(bufferSize);
-            base.CopyTo(destination, bufferSize);
-        }
-
         public override Task CopyToAsync(
             Stream destination,
             int bufferSize,

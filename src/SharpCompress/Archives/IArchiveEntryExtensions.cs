@@ -17,7 +17,8 @@ public static class IArchiveEntryExtensions
         /// </summary>
         /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
-        public void WriteTo(Stream streamToWriteTo, IProgress<ProgressReport>? progress = null) => archiveEntry.WriteTo(streamToWriteTo, null, progress);
+        public void WriteTo(Stream streamToWriteTo, IProgress<ProgressReport>? progress = null) =>
+            archiveEntry.WriteTo(streamToWriteTo, null, progress);
 
         private void WriteTo(
             Stream streamToWriteTo,

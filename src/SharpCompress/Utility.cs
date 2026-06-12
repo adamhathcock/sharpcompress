@@ -150,11 +150,11 @@ internal static partial class Utility
 
     extension(Stream source)
     {
-        public long TransferTo(Stream destination, long maxLength)
+        public long TransferTo(Stream destination, long maxLength, int? bufferSize)
         {
             // Use ReadOnlySubStream to limit reading and leverage framework's CopyTo
             using var limitedStream = new IO.ReadOnlySubStream(source, maxLength);
-            limitedStream.CopyTo(destination, Constants.BufferSize);
+            limitedStream.CopyTo(destination, bufferSize ?? Constants.BufferSize);
             return limitedStream.Position;
         }
 

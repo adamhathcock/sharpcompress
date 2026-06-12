@@ -579,7 +579,7 @@ public class UtilityTests
         using var source = new MemoryStream(sourceData);
         using var destination = new MemoryStream();
 
-        var transferred = source.TransferTo(destination, 5);
+        var transferred = source.TransferTo(destination, 5, null);
 
         Assert.Equal(5, transferred);
         Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, destination.ToArray());
@@ -592,7 +592,7 @@ public class UtilityTests
         using var source = new MemoryStream(sourceData);
         using var destination = new MemoryStream();
 
-        var transferred = source.TransferTo(destination, 100);
+        var transferred = source.TransferTo(destination, 100, null);
 
         Assert.Equal(3, transferred);
         Assert.Equal(sourceData, destination.ToArray());
@@ -604,7 +604,7 @@ public class UtilityTests
         using var source = new MemoryStream();
         using var destination = new MemoryStream();
 
-        var transferred = source.TransferTo(destination, 100);
+        var transferred = source.TransferTo(destination, 100, null);
 
         Assert.Equal(0, transferred);
         Assert.Empty(destination.ToArray());
