@@ -21,7 +21,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
     private readonly CheckType _checkType;
     private readonly int _checkSize;
     private uint _crc32 = Crc32.DefaultSeed;
-    private ulong _crc64 = Crc64.DefaultSeed;
+    private ulong _crc64 = Crc64.XZ_SEED;
     private readonly SHA256? _sha256;
     private bool _streamConnected;
     private int _numFilters;
@@ -125,8 +125,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
                 _crc32 = Crc32.Update(_crc32, bytes);
                 break;
             case CheckType.CRC64:
-                Crc64.Table ??= Crc64.CreateTable(Crc64.Iso3309Polynomial);
-                _crc64 = Crc64.CalculateHash(_crc64, Crc64.Table, bytes);
+                _crc64 = Crc64.UpdateXz(_crc64, bytes);
                 break;
             case CheckType.SHA256:
                 _sha256.NotNull().TransformBlock(buffer, offset, count, null, 0);

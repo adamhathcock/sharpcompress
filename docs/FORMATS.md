@@ -48,8 +48,14 @@
   2. Skip through the decompressed data to reach each file's starting position
   
   **Recommendation**: For best performance with 7Zip archives, use synchronous extraction methods (`MoveToNextEntry()` and `WriteEntryToDirectory()`) when possible. Use async methods only when you need to avoid blocking the thread (e.g., in UI applications or async-only contexts).
-  
+
   **Technical Details**: 7Zip archives group files into "folders" (compression units), where all files in a folder share one continuous LZMA-compressed stream. The LZMA decoder maintains internal state (dictionary window, decoder positions) that assumes sequential, non-interruptible processing. Async operations can yield control during awaits, which would corrupt this shared state. To avoid this, async extraction creates a fresh decoder stream for each file.
+
+### XZ Format Notes
+
+- XZ is a container format around LZMA2-compressed blocks, not just raw LZMA/LZMA2 data.
+- XZ streams can include per-block integrity checks selected by the stream header: CRC32, CRC64/XZ, SHA-256, or none. SharpCompress validates these checks while reading XZ blocks.
+- Raw LZMA/LZMA2 decoding does not provide the same container-level CRC validation; it only validates what the decoder format itself can detect, such as malformed compressed data or invalid end markers.
 
 ## Compression Streams
 

@@ -6,10 +6,13 @@ namespace SharpCompress.Compressors.Xz;
 public static class Crc64
 {
     public const ulong DefaultSeed = 0x0;
+    internal const ulong XZ_SEED = 0xffffffffffffffff;
 
     internal static ulong[]? Table;
+    private static ulong[]? _xzTable;
 
     public const ulong Iso3309Polynomial = 0xD800000000000000;
+    private const ulong XZ_POLYNOMIAL = 0xC96C5795D7870F42;
 
     public static ulong Compute(byte[] buffer) => Compute(DefaultSeed, buffer);
 
@@ -18,6 +21,15 @@ public static class Crc64
         Table ??= CreateTable(Iso3309Polynomial);
 
         return CalculateHash(seed, Table, buffer);
+    }
+
+    public static ulong ComputeXz(byte[] buffer) => ~UpdateXz(XZ_SEED, buffer);
+
+    public static ulong UpdateXz(ulong seed, ReadOnlySpan<byte> buffer)
+    {
+        _xzTable ??= CreateTable(XZ_POLYNOMIAL);
+
+        return CalculateHash(seed, _xzTable, buffer);
     }
 
     public static ulong CalculateHash(ulong seed, ulong[] table, ReadOnlySpan<byte> buffer)
