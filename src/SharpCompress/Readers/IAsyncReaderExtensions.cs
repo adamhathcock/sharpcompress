@@ -1,7 +1,9 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
 
@@ -42,7 +44,8 @@ public static class IAsyncReaderExtensions
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(x, fm);
-                        await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
+                        await CopyEntryToAsync(reader, fs, options?.BufferSize, ct)
+                            .ConfigureAwait(false);
                     },
                     cancellationToken
                 )
@@ -77,7 +80,8 @@ public static class IAsyncReaderExtensions
                     async (x, fm, ct) =>
                     {
                         using var fs = File.Open(x, fm);
-                        await reader.WriteEntryToAsync(fs, ct).ConfigureAwait(false);
+                        await CopyEntryToAsync(reader, fs, options?.BufferSize, ct)
+                            .ConfigureAwait(false);
                     },
                     cancellationToken
                 )
@@ -91,5 +95,59 @@ public static class IAsyncReaderExtensions
             await reader
                 .WriteEntryToAsync(destinationFileInfo.FullName, options, cancellationToken)
                 .ConfigureAwait(false);
+    }
+
+    private static async ValueTask CopyEntryToAsync(
+        IAsyncReader reader,
+        Stream writableStream,
+        int? bufferSize,
+        CancellationToken cancellationToken
+    )
+    {
+#if LEGACY_DOTNET
+        using var entryStream = await reader
+            .OpenEntryStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+#else
+        await using var entryStream = await reader
+            .OpenEntryStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+#endif
+        var sourceStream = WrapWithProgress(entryStream, reader.Entry);
+        await sourceStream
+            .CopyToAsync(writableStream, bufferSize ?? Constants.BufferSize, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    private static Stream WrapWithProgress(Stream source, IEntry entry)
+    {
+        var progress = entry.Options.Progress;
+        if (progress is null)
+        {
+            return source;
+        }
+
+        var entryPath = entry.Key ?? string.Empty;
+        var totalBytes = GetEntrySizeSafe(entry);
+        return new ProgressReportingStream(
+            source,
+            progress,
+            entryPath,
+            totalBytes,
+            leaveOpen: true
+        );
+    }
+
+    private static long? GetEntrySizeSafe(IEntry entry)
+    {
+        try
+        {
+            var size = entry.Size;
+            return size >= 0 ? size : null;
+        }
+        catch (NotImplementedException)
+        {
+            return null;
+        }
     }
 }

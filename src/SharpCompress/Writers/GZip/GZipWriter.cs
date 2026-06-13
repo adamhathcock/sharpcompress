@@ -86,7 +86,7 @@ public sealed partial class GZipWriter : AbstractWriter
         }
 
         var progressStream = WrapWithProgress(source, filename);
-        progressStream.CopyTo(OutputStream.NotNull(), Constants.BufferSize);
+        progressStream.CopyTo(OutputStream.NotNull(), WriterOptions.BufferSize);
         _wroteToStream = true;
     }
 

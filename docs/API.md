@@ -92,7 +92,8 @@ using (var archive = GZipArchive.CreateArchive())
 // With fluent options (preferred)
 var options = WriterOptions.ForZip()
     .WithCompressionLevel(9)
-    .WithLeaveStreamOpen(false);
+    .WithLeaveStreamOpen(false)
+    .WithBufferSize(131072);
 using (var archive = ZipArchive.CreateArchive())
 {
     archive.SaveTo("output.zip", options);
@@ -102,9 +103,12 @@ using (var archive = ZipArchive.CreateArchive())
 var options2 = new WriterOptions(CompressionType.Deflate)
 {
     CompressionLevel = 9,
-    LeaveStreamOpen = false
+    LeaveStreamOpen = false,
+    BufferSize = 131072
 };
 ```
+
+`WriterOptions.BufferSize` controls stream copy buffers used while writing archive entries. If it is not set, SharpCompress falls back to `Constants.BufferSize`.
 
 ---
 
@@ -315,6 +319,9 @@ var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
 var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
 var metadataOptions = ExtractionOptions.PreserveMetadata; // Keep timestamps and attributes
 
+// Tune extraction copy buffering
+var extractionOptions = new ExtractionOptions { BufferSize = 131072 };
+
 // Factory defaults:
 // - file path / FileInfo overloads use LeaveStreamOpen = false
 // - stream overloads use LeaveStreamOpen = true
@@ -333,6 +340,13 @@ var options = new ReaderOptions
     DisableCheckIncomplete = false,
     BufferSize = 81920,
     RewindableBufferSize = 1_048_576,
+};
+
+var extractionOptions = new ExtractionOptions
+{
+    ExtractFullPath = true,
+    Overwrite = true,
+    BufferSize = 131072,
 };
 ```
 

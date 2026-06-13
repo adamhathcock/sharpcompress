@@ -1,8 +1,10 @@
+#if !LEGACY_DOTNET
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -10,6 +12,7 @@ using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
+using SharpCompress.Writers.Tar;
 using SharpCompress.Writers.Zip;
 using Xunit;
 
@@ -132,11 +135,16 @@ public class OptionsUsabilityTests : TestBase
     [Fact]
     public void WriterOptions_Fluent_Methods_Modify_Correctly()
     {
-        var options = WriterOptions.ForZip().WithLeaveStreamOpen(false).WithCompressionLevel(9);
+        var options = WriterOptions
+            .ForZip()
+            .WithLeaveStreamOpen(false)
+            .WithCompressionLevel(9)
+            .WithBufferSize(65536);
 
         Assert.Equal(CompressionType.Deflate, options.CompressionType);
         Assert.Equal(9, options.CompressionLevel);
         Assert.False(options.LeaveStreamOpen);
+        Assert.Equal(65536, options.BufferSize);
     }
 
     [Fact]
@@ -158,6 +166,73 @@ public class OptionsUsabilityTests : TestBase
         Assert.Equal(factoryApproach.CompressionType, constructorApproach.CompressionType);
         Assert.Equal(factoryApproach.CompressionLevel, constructorApproach.CompressionLevel);
         Assert.Equal(factoryApproach.LeaveStreamOpen, constructorApproach.LeaveStreamOpen);
+    }
+
+    [Fact]
+    public void WriterOptions_Default_BufferSize_Uses_Constants_BufferSize()
+    {
+        Assert.Equal(Constants.BufferSize, WriterOptions.ForZip().BufferSize);
+        Assert.Equal(
+            Constants.BufferSize,
+            new ZipWriterOptions(CompressionType.Deflate).BufferSize
+        );
+        Assert.Equal(
+            Constants.BufferSize,
+            new TarWriterOptions(CompressionType.None, true).BufferSize
+        );
+        Assert.Equal(Constants.BufferSize, new GZipWriterOptions().BufferSize);
+    }
+
+    [Fact]
+    public void Format_WriterOptions_Copy_BufferSize()
+    {
+        var options = WriterOptions.ForZip().WithBufferSize(12345);
+
+        Assert.Equal(12345, new ZipWriterOptions(options).BufferSize);
+        Assert.Equal(12345, new TarWriterOptions(options).BufferSize);
+        Assert.Equal(12345, new GZipWriterOptions(options).BufferSize);
+    }
+
+    [Fact]
+    public void ZipWriter_Uses_WriterOptions_BufferSize()
+    {
+        using var source = new TrackingReadStream(new byte[100]);
+        using var destination = new MemoryStream();
+        using var writer = new ZipWriter(
+            destination,
+            new ZipWriterOptions(CompressionType.None) { BufferSize = 17 }
+        );
+
+        writer.Write("buffer-size.txt", source, DateTime.Now);
+
+        Assert.Equal(17, source.CopyBufferSize);
+    }
+
+    [Fact]
+    public void GZipWriter_Uses_WriterOptions_BufferSize()
+    {
+        using var source = new TrackingReadStream(new byte[100]);
+        using var destination = new MemoryStream();
+        using var writer = new GZipWriter(destination, new GZipWriterOptions { BufferSize = 19 });
+
+        writer.Write("buffer-size.txt", source, DateTime.Now);
+
+        Assert.Equal(19, source.CopyBufferSize);
+    }
+
+    [Fact]
+    public void TarWriter_Uses_WriterOptions_BufferSize_ForTransfer()
+    {
+        using var source = new MemoryStream(new byte[100]);
+        using var destination = new MemoryStream();
+        using var writer = new TarWriter(
+            destination,
+            new TarWriterOptions(CompressionType.None, true) { BufferSize = 0 }
+        );
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            writer.Write("buffer-size.txt", source, DateTime.Now)
+        );
     }
 
     [Fact]
@@ -229,6 +304,30 @@ public class OptionsUsabilityTests : TestBase
         var preserveMetadata = ExtractionOptions.PreserveMetadata;
         Assert.True(preserveMetadata.PreserveFileTime);
         Assert.True(preserveMetadata.PreserveAttributes);
+
+        Assert.Equal(Constants.BufferSize, new ExtractionOptions().BufferSize);
+    }
+
+    [Fact]
+    public void Reader_WriteEntryToFile_Uses_ExtractionOptions_BufferSize()
+    {
+        using var reader = new TrackingReader();
+        var destination = Path.Combine(SCRATCH_FILES_PATH, "reader-buffer-size.txt");
+
+        reader.WriteEntryToFile(destination, new ExtractionOptions { BufferSize = 11 });
+
+        Assert.Equal(11, reader.EntryStreamCopyBufferSize);
+    }
+
+    [Fact]
+    public async Task Reader_WriteEntryToFileAsync_Uses_ExtractionOptions_BufferSize()
+    {
+        await using var reader = new TrackingReader();
+        var destination = Path.Combine(SCRATCH_FILES_PATH, "reader-buffer-size-async.txt");
+
+        await reader.WriteEntryToFileAsync(destination, new ExtractionOptions { BufferSize = 13 });
+
+        Assert.Equal(13, reader.EntryStreamCopyBufferSize);
     }
 
     [Fact]
@@ -321,4 +420,128 @@ public class OptionsUsabilityTests : TestBase
         Assert.Null(noPassword.Password);
         Assert.Equal(1_048_576, noPassword.RewindableBufferSize);
     }
+
+    private sealed class TestArchiveEntry(Stream source) : IArchiveEntry
+    {
+        public CompressionType CompressionType => CompressionType.None;
+        public DateTime? ArchivedTime => null;
+        public long CompressedSize => source.Length;
+        public long Crc => 0;
+        public DateTime? CreatedTime => null;
+        public string? Key => "buffer-size.txt";
+        public string? LinkTarget => null;
+        public bool IsDirectory => false;
+        public bool IsEncrypted => false;
+        public bool IsSplitAfter => false;
+        public bool IsSolid => false;
+        public int VolumeIndexFirst => 0;
+        public int VolumeIndexLast => 0;
+        public DateTime? LastAccessedTime => null;
+        public DateTime? LastModifiedTime => null;
+        public long Size => source.Length;
+        public int? Attrib => null;
+        public SharpCompress.Common.Options.IReaderOptions Options =>
+            ReaderOptions.ForExternalStream;
+        public bool IsComplete => true;
+        public IArchive Archive => throw new NotSupportedException();
+
+        public Stream OpenEntryStream()
+        {
+            source.Position = 0;
+            return source;
+        }
+
+        public ValueTask<Stream> OpenEntryStreamAsync(CancellationToken cancellationToken = default)
+        {
+            source.Position = 0;
+            return new ValueTask<Stream>(source);
+        }
+    }
+
+    private sealed class TrackingReadStream(byte[] data) : MemoryStream(data)
+    {
+        public int? CopyBufferSize { get; private set; }
+
+        public override void CopyTo(Stream destination, int bufferSize)
+        {
+            CopyBufferSize = bufferSize;
+            base.CopyTo(destination, bufferSize);
+        }
+
+        public override Task CopyToAsync(
+            Stream destination,
+            int bufferSize,
+            CancellationToken cancellationToken
+        )
+        {
+            CopyBufferSize = bufferSize;
+            return base.CopyToAsync(destination, bufferSize, cancellationToken);
+        }
+    }
+
+    private sealed class TrackingReader : IReader, IAsyncReader
+    {
+        public ArchiveType Type => ArchiveType.Zip;
+        public MemoryStream Source { get; } = new(new byte[100]);
+        public IEntry Entry => new TestArchiveEntry(Source);
+        public bool Cancelled => false;
+        public int? EntryStreamCopyBufferSize { get; private set; }
+
+        public void Dispose() { }
+
+        public ValueTask DisposeAsync() => default;
+
+        public void WriteEntryTo(Stream writableStream) => throw new NotSupportedException();
+
+        public ValueTask WriteEntryToAsync(
+            Stream writableStream,
+            CancellationToken cancellationToken = default
+        ) => throw new NotSupportedException();
+
+        public void Cancel() { }
+
+        public bool MoveToNextEntry() => false;
+
+        public ValueTask<bool> MoveToNextEntryAsync(
+            CancellationToken cancellationToken = default
+        ) => new(false);
+
+        public EntryStream OpenEntryStream()
+        {
+            Source.Position = 0;
+            return new TrackingEntryStream(
+                this,
+                Source,
+                bufferSize => EntryStreamCopyBufferSize = bufferSize
+            );
+        }
+
+        public ValueTask<EntryStream> OpenEntryStreamAsync(
+            CancellationToken cancellationToken = default
+        ) => new(OpenEntryStream());
+    }
+
+    private sealed class TrackingEntryStream(
+        IReader reader,
+        Stream stream,
+        Action<int> copyBufferSize
+    ) : EntryStream(reader, stream)
+    {
+        public override void CopyTo(Stream destination, int bufferSize)
+        {
+            copyBufferSize(bufferSize);
+            base.CopyTo(destination, bufferSize);
+        }
+
+        public override Task CopyToAsync(
+            Stream destination,
+            int bufferSize,
+            CancellationToken cancellationToken
+        )
+        {
+            copyBufferSize(bufferSize);
+            return base.CopyToAsync(destination, bufferSize, cancellationToken);
+        }
+    }
 }
+#endif

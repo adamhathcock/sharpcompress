@@ -57,6 +57,11 @@ public sealed record WriterOptions : IWriterOptions
     public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
+    /// Buffer size for writer stream copy operations.
+    /// </summary>
+    public int BufferSize { get; set; } = Constants.BufferSize;
+
+    /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.

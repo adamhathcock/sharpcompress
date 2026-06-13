@@ -45,6 +45,11 @@ public sealed record TarWriterOptions : IWriterOptions
     public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
+    /// Buffer size for writer stream copy operations.
+    /// </summary>
+    public int BufferSize { get; set; } = Constants.BufferSize;
+
+    /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
     /// </summary>
@@ -104,6 +109,7 @@ public sealed record TarWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        BufferSize = options.BufferSize;
         Providers = options.Providers;
     }
 
@@ -118,6 +124,7 @@ public sealed record TarWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        BufferSize = options.BufferSize;
         Providers = options.Providers;
     }
 

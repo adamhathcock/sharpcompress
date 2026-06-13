@@ -17,7 +17,14 @@ public static class IArchiveEntryExtensions
         /// </summary>
         /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
-        public void WriteTo(Stream streamToWriteTo, IProgress<ProgressReport>? progress = null)
+        public void WriteTo(Stream streamToWriteTo, IProgress<ProgressReport>? progress = null) =>
+            archiveEntry.WriteTo(streamToWriteTo, null, progress);
+
+        private void WriteTo(
+            Stream streamToWriteTo,
+            int? bufferSize,
+            IProgress<ProgressReport>? progress = null
+        )
         {
             if (archiveEntry.IsDirectory)
             {
@@ -26,7 +33,7 @@ public static class IArchiveEntryExtensions
 
             using var entryStream = archiveEntry.OpenEntryStream();
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
-            sourceStream.CopyTo(streamToWriteTo, Constants.BufferSize);
+            sourceStream.CopyTo(streamToWriteTo, bufferSize ?? Constants.BufferSize);
         }
 
         /// <summary>
@@ -37,6 +44,18 @@ public static class IArchiveEntryExtensions
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
         public async ValueTask WriteToAsync(
             Stream streamToWriteTo,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            await archiveEntry
+                .WriteToAsync(streamToWriteTo, Constants.BufferSize, progress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        private async ValueTask WriteToAsync(
+            Stream streamToWriteTo,
+            int? bufferSize,
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
         )
@@ -57,7 +76,7 @@ public static class IArchiveEntryExtensions
 #endif
             var sourceStream = WrapWithProgress(entryStream, archiveEntry, progress);
             await sourceStream
-                .CopyToAsync(streamToWriteTo, Constants.BufferSize, cancellationToken)
+                .CopyToAsync(streamToWriteTo, bufferSize ?? Constants.BufferSize, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
@@ -133,16 +152,18 @@ public static class IArchiveEntryExtensions
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public void WriteToFile(string destinationFileName, ExtractionOptions? options = null) =>
+        public void WriteToFile(string destinationFileName, ExtractionOptions? options = null)
+        {
             entry.WriteEntryToFile(
                 destinationFileName,
                 options,
                 (x, fm) =>
                 {
-                    using var fs = File.Open(destinationFileName, fm);
-                    entry.WriteTo(fs);
+                    using var fs = File.Open(x, fm);
+                    entry.WriteTo(fs, options?.BufferSize ?? Constants.BufferSize);
                 }
             );
+        }
 
         /// <summary>
         /// Extract to specific file asynchronously
@@ -158,8 +179,10 @@ public static class IArchiveEntryExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(destinationFileName, fm);
-                        await entry.WriteToAsync(fs, null, ct).ConfigureAwait(false);
+                        using var fs = File.Open(x, fm);
+                        await entry
+                            .WriteToAsync(fs, options?.BufferSize, null, ct)
+                            .ConfigureAwait(false);
                     },
                     cancellationToken
                 )
