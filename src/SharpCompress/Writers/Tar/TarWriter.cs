@@ -133,7 +133,11 @@ public partial class TarWriter : AbstractWriter
         header.Size = realSize;
         header.Write(OutputStream.NotNull());
         var progressStream = WrapWithProgress(source, filename);
-        size = progressStream.TransferTo(OutputStream.NotNull(), realSize);
+        size = progressStream.TransferTo(
+            OutputStream.NotNull(),
+            realSize,
+            WriterOptions.BufferSize
+        );
         PadTo512(size.Value);
     }
 

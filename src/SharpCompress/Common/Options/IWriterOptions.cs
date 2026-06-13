@@ -20,6 +20,11 @@ public interface IWriterOptions : IStreamOptions, IEncodingOptions, IProgressOpt
     int CompressionLevel { get; set; }
 
     /// <summary>
+    /// Buffer size for writer stream copy operations.
+    /// </summary>
+    int BufferSize { get; set; }
+
+    /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom providers, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.

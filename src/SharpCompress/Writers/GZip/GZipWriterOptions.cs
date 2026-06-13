@@ -69,6 +69,11 @@ public sealed record GZipWriterOptions : IWriterOptions
     public IProgress<ProgressReport>? Progress { get; set; }
 
     /// <summary>
+    /// Buffer size for writer stream copy operations.
+    /// </summary>
+    public int BufferSize { get; set; } = Constants.BufferSize;
+
+    /// <summary>
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for GZip on modern .NET.
@@ -115,6 +120,7 @@ public sealed record GZipWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        BufferSize = options.BufferSize;
         Providers = options.Providers;
     }
 
@@ -128,6 +134,7 @@ public sealed record GZipWriterOptions : IWriterOptions
         LeaveStreamOpen = options.LeaveStreamOpen;
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
+        BufferSize = options.BufferSize;
         Providers = options.Providers;
     }
 }

@@ -54,6 +54,15 @@ public static class WriterOptionsExtensions
         };
 
     /// <summary>
+    /// Creates a copy with the specified buffer size.
+    /// </summary>
+    public static WriterOptions WithBufferSize(this WriterOptions options, int bufferSize) =>
+        options with
+        {
+            BufferSize = bufferSize,
+        };
+
+    /// <summary>
     /// Creates a copy with the specified compression level.
     /// </summary>
     /// <param name="options">The source options.</param>

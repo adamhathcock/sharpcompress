@@ -65,13 +65,14 @@ internal static partial class Utility
         public async ValueTask<long> TransferToAsync(
             Stream destination,
             long maxLength,
+            int? bufferSize = null,
             CancellationToken cancellationToken = default
         )
         {
             // Use ReadOnlySubStream to limit reading and leverage framework's CopyToAsync
             using var limitedStream = new IO.ReadOnlySubStream(source, maxLength);
             await limitedStream
-                .CopyToAsync(destination, Constants.BufferSize, cancellationToken)
+                .CopyToAsync(destination, bufferSize ?? Constants.BufferSize, cancellationToken)
                 .ConfigureAwait(false);
             return limitedStream.Position;
         }

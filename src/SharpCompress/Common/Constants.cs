@@ -8,6 +8,7 @@ public static class Constants
     /// The default buffer size for stream operations, matching .NET's Stream.CopyTo default of 81920 bytes.
     /// This can be modified globally at runtime.
     /// </summary>
+    // TODO: Revisit remaining non-extraction usages after extraction buffering moves to ExtractionOptions.
     public static int BufferSize { get; set; } = 81920;
 
     /// <summary>
