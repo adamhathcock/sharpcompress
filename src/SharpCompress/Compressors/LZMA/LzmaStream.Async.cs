@@ -92,6 +92,11 @@ public partial class LzmaStream
 
         if (control == 0x00)
         {
+            if (_isLzma2 && _decoder is { HasEndMarker: true })
+            {
+                throw new DataErrorException();
+            }
+
             _endReached = true;
             return;
         }
@@ -213,10 +218,9 @@ public partial class LzmaStream
                 await _decoder!
                     .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
                     .ConfigureAwait(false)
-                && _outputSize < 0
             )
             {
-                _availableBytes = _outWindow.AvailableBytes;
+                HandleEndMarker();
             }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
@@ -227,6 +231,11 @@ public partial class LzmaStream
 
             if (_availableBytes == 0 && !_uncompressedChunk)
             {
+                if (_isLzma2 && _decoder!.HasEndMarker)
+                {
+                    throw new DataErrorException();
+                }
+
                 if (
                     !_rangeDecoder.IsFinished
                     || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit)
@@ -325,10 +334,9 @@ public partial class LzmaStream
                 await _decoder!
                     .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
                     .ConfigureAwait(false)
-                && _outputSize < 0
             )
             {
-                _availableBytes = _outWindow.AvailableBytes;
+                HandleEndMarker();
             }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
@@ -339,6 +347,11 @@ public partial class LzmaStream
 
             if (_availableBytes == 0 && !_uncompressedChunk)
             {
+                if (_isLzma2 && _decoder!.HasEndMarker)
+                {
+                    throw new DataErrorException();
+                }
+
                 if (
                     !_rangeDecoder.IsFinished
                     || (_rangeDecoderLimit >= 0 && _rangeDecoder._total != _rangeDecoderLimit)
