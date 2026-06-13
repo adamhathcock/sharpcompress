@@ -1,3 +1,4 @@
+using System;
 using System.Buffers;
 using System.IO;
 using System.Linq;
@@ -66,9 +67,12 @@ public sealed partial class XZBlock
                 await BaseStream
                     .ReadExactAsync(paddingBytes, 0, size, cancellationToken)
                     .ConfigureAwait(false);
-                if (paddingBytes.Any(b => b != 0))
+                for (var i = 0; i < size; i++)
                 {
-                    throw new InvalidFormatException("Padding bytes were non-null");
+                    if (paddingBytes[i] != 0)
+                    {
+                        throw new InvalidFormatException("Padding bytes were non-null");
+                    }
                 }
             }
             finally
@@ -87,7 +91,7 @@ public sealed partial class XZBlock
             await BaseStream
                 .ReadExactAsync(crc, 0, _checkSize, cancellationToken)
                 .ConfigureAwait(false);
-            VerifyCheck(crc);
+            VerifyCheck(crc.AsSpan().Slice(0, _checkSize));
             _crcChecked = true;
         }
         finally

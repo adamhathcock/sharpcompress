@@ -98,10 +98,17 @@ public sealed partial class XZBlock : XZReadOnlyStream
 
     private void CheckCrc()
     {
-        var crc = new byte[_checkSize];
-        BaseStream.ReadExact(crc, 0, _checkSize);
-        VerifyCheck(crc);
-        _crcChecked = true;
+        var crc = ArrayPool<byte>.Shared.Rent(_checkSize);
+        try
+        {
+            BaseStream.ReadExact(crc, 0, _checkSize);
+            VerifyCheck(crc.AsSpan().Slice(0, _checkSize));
+            _crcChecked = true;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(crc);
+        }
     }
 
     private void UpdateCheck(byte[] buffer, int offset, int count)
@@ -127,7 +134,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
         }
     }
 
-    private void VerifyCheck(byte[] expected)
+    private void VerifyCheck(ReadOnlySpan<byte> expected)
     {
         switch (_checkType)
         {
@@ -147,7 +154,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
         }
     }
 
-    private static void GetLittleEndianBytes(uint value, byte[] expected)
+    private static void GetLittleEndianBytes(uint value, ReadOnlySpan<byte> expected)
     {
         var bytes = ArrayPool<byte>.Shared.Rent(sizeof(uint));
         try
@@ -164,7 +171,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
         }
     }
 
-    private static void GetLittleEndianBytes(ulong value, byte[] expected)
+    private static void GetLittleEndianBytes(ulong value, ReadOnlySpan<byte> expected)
     {
         var bytes = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
         try
@@ -181,7 +188,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
         }
     }
 
-    private void FinalizeSha256Check(byte[] expected)
+    private void FinalizeSha256Check(ReadOnlySpan<byte> expected)
     {
         _sha256.NotNull().TransformFinalBlock(Array.Empty<byte>(), 0, 0);
         if (!expected.SequenceEqual(_sha256.NotNull().Hash))

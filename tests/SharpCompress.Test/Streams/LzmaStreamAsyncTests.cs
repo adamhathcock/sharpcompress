@@ -17,7 +17,7 @@ public class LzmaStreamAsyncTests : TestBase
     {
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "bad-1-lzma2-7.xz"));
 
-        var xz = new XZStream(stream);
+        using var xz = new XZStream(stream);
         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             await xz.TransferToAsync(Stream.Null, long.MaxValue)
         );
