@@ -1,13 +1,10 @@
-#nullable disable
-
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz.Filters;
 
@@ -16,20 +13,20 @@ namespace SharpCompress.Compressors.Xz;
 [CLSCompliant(false)]
 public sealed partial class XZBlock : XZReadOnlyStream
 {
-    public int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
+    private int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
     public ulong? CompressedSize { get; private set; }
     public ulong? UncompressedSize { get; private set; }
-    public Stack<BlockFilter> Filters { get; private set; } = new();
-    public bool HeaderIsLoaded { get; private set; }
+    private readonly Stack<BlockFilter> _filters = new();
+    private bool HeaderIsLoaded { get; set; }
     private readonly CheckType _checkType;
     private readonly int _checkSize;
     private uint _crc32 = Crc32.DefaultSeed;
     private ulong _crc64 = Crc64.DefaultSeed;
-    private readonly SHA256 _sha256;
+    private readonly SHA256? _sha256;
     private bool _streamConnected;
     private int _numFilters;
     private byte _blockHeaderSizeByte;
-    private Stream _decomStream;
+    private Stream? _decomStream;
     private bool _endOfStream;
     private bool _paddingSkipped;
     private bool _crcChecked;
@@ -62,7 +59,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
 
         if (!_endOfStream)
         {
-            bytesRead = _decomStream.Read(buffer, offset, count);
+            bytesRead = _decomStream.NotNull().Read(buffer, offset, count);
             UpdateCheck(buffer, offset, bytesRead);
         }
 
@@ -125,54 +122,80 @@ public sealed partial class XZBlock : XZReadOnlyStream
                 _crc64 = Crc64.CalculateHash(_crc64, Crc64.Table, bytes);
                 break;
             case CheckType.SHA256:
-                _sha256.TransformBlock(buffer, offset, count, null, 0);
+                _sha256.NotNull().TransformBlock(buffer, offset, count, null, 0);
                 break;
         }
     }
 
     private void VerifyCheck(byte[] expected)
     {
-        var actual = _checkType switch
+        switch (_checkType)
         {
-            CheckType.NONE => Array.Empty<byte>(),
-            CheckType.CRC32 => GetLittleEndianBytes(~_crc32),
-            CheckType.CRC64 => GetLittleEndianBytes(_crc64),
-            CheckType.SHA256 => FinalizeSha256Check(),
-            _ => throw new InvalidFormatException("Unsupported XZ check type"),
-        };
+            case CheckType.NONE:
+                break;
+            case CheckType.CRC32:
+                GetLittleEndianBytes(~_crc32, expected);
+                break;
+            case CheckType.CRC64:
+                GetLittleEndianBytes(~_crc64, expected);
+                break;
+            case CheckType.SHA256:
+                FinalizeSha256Check(expected);
+                break;
+            default:
+                throw new InvalidFormatException("Unsupported XZ check type");
+        }
+    }
 
-        if (!expected.SequenceEqual(actual))
+    private static void GetLittleEndianBytes(uint value, byte[] expected)
+    {
+        var bytes = ArrayPool<byte>.Shared.Rent(sizeof(uint));
+        try
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(bytes, value);
+            if (!expected.SequenceEqual(bytes.AsSpan().Slice(0, sizeof(uint))))
+            {
+                throw new InvalidFormatException("Block check corrupt");
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
+    private static void GetLittleEndianBytes(ulong value, byte[] expected)
+    {
+        var bytes = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
+        try
+        {
+            BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
+            if (!expected.SequenceEqual(bytes.AsSpan().Slice(0, sizeof(ulong))))
+            {
+                throw new InvalidFormatException("Block check corrupt");
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
+    private void FinalizeSha256Check(byte[] expected)
+    {
+        _sha256.NotNull().TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        if (!expected.SequenceEqual(_sha256.NotNull().Hash))
         {
             throw new InvalidFormatException("Block check corrupt");
         }
     }
 
-    private static byte[] GetLittleEndianBytes(uint value)
-    {
-        var bytes = new byte[sizeof(uint)];
-        BinaryPrimitives.WriteUInt32LittleEndian(bytes, value);
-        return bytes;
-    }
-
-    private static byte[] GetLittleEndianBytes(ulong value)
-    {
-        var bytes = new byte[sizeof(ulong)];
-        BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
-        return bytes;
-    }
-
-    private byte[] FinalizeSha256Check()
-    {
-        _sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-        return _sha256.Hash;
-    }
-
     private void ConnectStream()
     {
         _decomStream = BaseStream;
-        while (Filters.Any())
+        while (_filters.Any())
         {
-            var filter = Filters.Pop();
+            var filter = _filters.Pop();
             filter.SetBaseStream(_decomStream);
             _decomStream = filter;
         }
@@ -270,7 +293,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
             }
 
             filter.ValidateFilter();
-            Filters.Push(filter);
+            _filters.Push(filter);
         }
         if (nonLastSizeChangers > 2)
         {
