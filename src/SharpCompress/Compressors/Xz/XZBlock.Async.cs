@@ -34,6 +34,7 @@ public sealed partial class XZBlock
             bytesRead = await _decomStream
                 .ReadAsync(buffer, offset, count, cancellationToken)
                 .ConfigureAwait(false);
+            UpdateCheck(buffer, offset, bytesRead);
         }
 
         if (bytesRead != count)
@@ -74,9 +75,10 @@ public sealed partial class XZBlock
     private async ValueTask CheckCrcAsync(CancellationToken cancellationToken = default)
     {
         var crc = new byte[_checkSize];
-        await BaseStream.ReadAsync(crc, 0, _checkSize, cancellationToken).ConfigureAwait(false);
-        // Actually do a check (and read in the bytes
-        //   into the function throughout the stream read).
+        await BaseStream
+            .ReadExactAsync(crc, 0, _checkSize, cancellationToken)
+            .ConfigureAwait(false);
+        VerifyCheck(crc);
         _crcChecked = true;
     }
 

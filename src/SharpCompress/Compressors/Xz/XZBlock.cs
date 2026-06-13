@@ -1,9 +1,11 @@
 #nullable disable
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -19,7 +21,11 @@ public sealed partial class XZBlock : XZReadOnlyStream
     public ulong? UncompressedSize { get; private set; }
     public Stack<BlockFilter> Filters { get; private set; } = new();
     public bool HeaderIsLoaded { get; private set; }
+    private readonly CheckType _checkType;
     private readonly int _checkSize;
+    private uint _crc32 = Crc32.DefaultSeed;
+    private ulong _crc64 = Crc64.DefaultSeed;
+    private readonly SHA256 _sha256;
     private bool _streamConnected;
     private int _numFilters;
     private byte _blockHeaderSizeByte;
@@ -32,7 +38,12 @@ public sealed partial class XZBlock : XZReadOnlyStream
     public XZBlock(Stream stream, CheckType checkType, int checkSize)
         : base(stream)
     {
+        _checkType = checkType;
         _checkSize = checkSize;
+        if (checkType == CheckType.SHA256)
+        {
+            _sha256 = SHA256.Create();
+        }
         _startPosition = stream.Position;
     }
 
@@ -52,6 +63,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
         if (!_endOfStream)
         {
             bytesRead = _decomStream.Read(buffer, offset, count);
+            UpdateCheck(buffer, offset, bytesRead);
         }
 
         if (bytesRead != count)
@@ -90,10 +102,69 @@ public sealed partial class XZBlock : XZReadOnlyStream
     private void CheckCrc()
     {
         var crc = new byte[_checkSize];
-        BaseStream.Read(crc, 0, _checkSize);
-        // Actually do a check (and read in the bytes
-        //   into the function throughout the stream read).
+        BaseStream.ReadExact(crc, 0, _checkSize);
+        VerifyCheck(crc);
         _crcChecked = true;
+    }
+
+    private void UpdateCheck(byte[] buffer, int offset, int count)
+    {
+        if (count == 0 || _checkType == CheckType.NONE)
+        {
+            return;
+        }
+
+        var bytes = buffer.AsSpan(offset, count);
+        switch (_checkType)
+        {
+            case CheckType.CRC32:
+                _crc32 = Crc32.Update(_crc32, bytes);
+                break;
+            case CheckType.CRC64:
+                Crc64.Table ??= Crc64.CreateTable(Crc64.Iso3309Polynomial);
+                _crc64 = Crc64.CalculateHash(_crc64, Crc64.Table, bytes);
+                break;
+            case CheckType.SHA256:
+                _sha256.TransformBlock(buffer, offset, count, null, 0);
+                break;
+        }
+    }
+
+    private void VerifyCheck(byte[] expected)
+    {
+        var actual = _checkType switch
+        {
+            CheckType.NONE => Array.Empty<byte>(),
+            CheckType.CRC32 => GetLittleEndianBytes(~_crc32),
+            CheckType.CRC64 => GetLittleEndianBytes(_crc64),
+            CheckType.SHA256 => FinalizeSha256Check(),
+            _ => throw new InvalidFormatException("Unsupported XZ check type"),
+        };
+
+        if (!expected.SequenceEqual(actual))
+        {
+            throw new InvalidFormatException("Block check corrupt");
+        }
+    }
+
+    private static byte[] GetLittleEndianBytes(uint value)
+    {
+        var bytes = new byte[sizeof(uint)];
+        BinaryPrimitives.WriteUInt32LittleEndian(bytes, value);
+        return bytes;
+    }
+
+    private static byte[] GetLittleEndianBytes(ulong value)
+    {
+        var bytes = new byte[sizeof(ulong)];
+        BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
+        return bytes;
+    }
+
+    private byte[] FinalizeSha256Check()
+    {
+        _sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        return _sha256.Hash;
     }
 
     private void ConnectStream()
