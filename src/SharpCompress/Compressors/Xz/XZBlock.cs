@@ -1,11 +1,10 @@
-#nullable disable
-
 using System;
+using System.Buffers;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Security.Cryptography;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Xz.Filters;
 
@@ -14,16 +13,20 @@ namespace SharpCompress.Compressors.Xz;
 [CLSCompliant(false)]
 public sealed partial class XZBlock : XZReadOnlyStream
 {
-    public int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
+    private int BlockHeaderSize => (_blockHeaderSizeByte + 1) * 4;
     public ulong? CompressedSize { get; private set; }
     public ulong? UncompressedSize { get; private set; }
-    public Stack<BlockFilter> Filters { get; private set; } = new();
-    public bool HeaderIsLoaded { get; private set; }
+    private readonly Stack<BlockFilter> _filters = new();
+    private bool HeaderIsLoaded { get; set; }
+    private readonly CheckType _checkType;
     private readonly int _checkSize;
+    private uint _crc32 = Crc32.DefaultSeed;
+    private ulong _crc64 = Crc64.XZ_SEED;
+    private readonly SHA256? _sha256;
     private bool _streamConnected;
     private int _numFilters;
     private byte _blockHeaderSizeByte;
-    private Stream _decomStream;
+    private Stream? _decomStream;
     private bool _endOfStream;
     private bool _paddingSkipped;
     private bool _crcChecked;
@@ -32,7 +35,12 @@ public sealed partial class XZBlock : XZReadOnlyStream
     public XZBlock(Stream stream, CheckType checkType, int checkSize)
         : base(stream)
     {
+        _checkType = checkType;
         _checkSize = checkSize;
+        if (checkType == CheckType.SHA256)
+        {
+            _sha256 = SHA256.Create();
+        }
         _startPosition = stream.Position;
     }
 
@@ -51,7 +59,8 @@ public sealed partial class XZBlock : XZReadOnlyStream
 
         if (!_endOfStream)
         {
-            bytesRead = _decomStream.Read(buffer, offset, count);
+            bytesRead = _decomStream.NotNull().Read(buffer, offset, count);
+            UpdateCheck(buffer, offset, bytesRead);
         }
 
         if (bytesRead != count)
@@ -89,19 +98,110 @@ public sealed partial class XZBlock : XZReadOnlyStream
 
     private void CheckCrc()
     {
-        var crc = new byte[_checkSize];
-        BaseStream.Read(crc, 0, _checkSize);
-        // Actually do a check (and read in the bytes
-        //   into the function throughout the stream read).
-        _crcChecked = true;
+        var crc = ArrayPool<byte>.Shared.Rent(_checkSize);
+        try
+        {
+            BaseStream.ReadExact(crc, 0, _checkSize);
+            VerifyCheck(crc.AsSpan().Slice(0, _checkSize));
+            _crcChecked = true;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(crc);
+        }
+    }
+
+    private void UpdateCheck(byte[] buffer, int offset, int count)
+    {
+        if (count == 0 || _checkType == CheckType.NONE)
+        {
+            return;
+        }
+
+        var bytes = buffer.AsSpan(offset, count);
+        switch (_checkType)
+        {
+            case CheckType.CRC32:
+                _crc32 = Crc32.Update(_crc32, bytes);
+                break;
+            case CheckType.CRC64:
+                _crc64 = Crc64.UpdateXz(_crc64, bytes);
+                break;
+            case CheckType.SHA256:
+                _sha256.NotNull().TransformBlock(buffer, offset, count, null, 0);
+                break;
+        }
+    }
+
+    private void VerifyCheck(ReadOnlySpan<byte> expected)
+    {
+        switch (_checkType)
+        {
+            case CheckType.NONE:
+                break;
+            case CheckType.CRC32:
+                GetLittleEndianBytes(~_crc32, expected);
+                break;
+            case CheckType.CRC64:
+                GetLittleEndianBytes(~_crc64, expected);
+                break;
+            case CheckType.SHA256:
+                FinalizeSha256Check(expected);
+                break;
+            default:
+                throw new InvalidFormatException("Unsupported XZ check type");
+        }
+    }
+
+    private static void GetLittleEndianBytes(uint value, ReadOnlySpan<byte> expected)
+    {
+        var bytes = ArrayPool<byte>.Shared.Rent(sizeof(uint));
+        try
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(bytes, value);
+            if (!expected.SequenceEqual(bytes.AsSpan().Slice(0, sizeof(uint))))
+            {
+                throw new InvalidFormatException("Block check corrupt");
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
+    private static void GetLittleEndianBytes(ulong value, ReadOnlySpan<byte> expected)
+    {
+        var bytes = ArrayPool<byte>.Shared.Rent(sizeof(ulong));
+        try
+        {
+            BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
+            if (!expected.SequenceEqual(bytes.AsSpan().Slice(0, sizeof(ulong))))
+            {
+                throw new InvalidFormatException("Block check corrupt");
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
+    private void FinalizeSha256Check(ReadOnlySpan<byte> expected)
+    {
+        _sha256.NotNull().TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        if (!expected.SequenceEqual(_sha256.NotNull().Hash))
+        {
+            throw new InvalidFormatException("Block check corrupt");
+        }
     }
 
     private void ConnectStream()
     {
         _decomStream = BaseStream;
-        while (Filters.Any())
+        while (_filters.Any())
         {
-            var filter = Filters.Pop();
+            var filter = _filters.Pop();
             filter.SetBaseStream(_decomStream);
             _decomStream = filter;
         }
@@ -199,7 +299,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
             }
 
             filter.ValidateFilter();
-            Filters.Push(filter);
+            _filters.Push(filter);
         }
         if (nonLastSizeChangers > 2)
         {

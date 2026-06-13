@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
+using System.Buffers;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Compressors.Xz.Filters;
 
 namespace SharpCompress.Compressors.Xz;
 
@@ -32,8 +31,10 @@ public sealed partial class XZBlock
         if (!_endOfStream)
         {
             bytesRead = await _decomStream
+                .NotNull()
                 .ReadAsync(buffer, offset, count, cancellationToken)
                 .ConfigureAwait(false);
+            UpdateCheck(buffer, offset, bytesRead);
         }
 
         if (bytesRead != count)
@@ -59,13 +60,24 @@ public sealed partial class XZBlock
         var bytes = (BaseStream.Position - _startPosition) % 4;
         if (bytes > 0)
         {
-            var paddingBytes = new byte[4 - bytes];
-            await BaseStream
-                .ReadAsync(paddingBytes, 0, paddingBytes.Length, cancellationToken)
-                .ConfigureAwait(false);
-            if (paddingBytes.Any(b => b != 0))
+            var size = 4 - (int)bytes;
+            var paddingBytes = ArrayPool<byte>.Shared.Rent(size);
+            try
             {
-                throw new InvalidFormatException("Padding bytes were non-null");
+                await BaseStream
+                    .ReadExactAsync(paddingBytes, 0, size, cancellationToken)
+                    .ConfigureAwait(false);
+                for (var i = 0; i < size; i++)
+                {
+                    if (paddingBytes[i] != 0)
+                    {
+                        throw new InvalidFormatException("Padding bytes were non-null");
+                    }
+                }
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(paddingBytes);
             }
         }
         _paddingSkipped = true;
@@ -73,11 +85,19 @@ public sealed partial class XZBlock
 
     private async ValueTask CheckCrcAsync(CancellationToken cancellationToken = default)
     {
-        var crc = new byte[_checkSize];
-        await BaseStream.ReadAsync(crc, 0, _checkSize, cancellationToken).ConfigureAwait(false);
-        // Actually do a check (and read in the bytes
-        //   into the function throughout the stream read).
-        _crcChecked = true;
+        var crc = ArrayPool<byte>.Shared.Rent(_checkSize);
+        try
+        {
+            await BaseStream
+                .ReadExactAsync(crc, 0, _checkSize, cancellationToken)
+                .ConfigureAwait(false);
+            VerifyCheck(crc.AsSpan().Slice(0, _checkSize));
+            _crcChecked = true;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(crc);
+        }
     }
 
     private async ValueTask LoadHeaderAsync(CancellationToken cancellationToken = default)
@@ -97,12 +117,19 @@ public sealed partial class XZBlock
 
     private async ValueTask ReadHeaderSizeAsync(CancellationToken cancellationToken = default)
     {
-        var buffer = new byte[1];
-        await BaseStream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
-        _blockHeaderSizeByte = buffer[0];
-        if (_blockHeaderSizeByte == 0)
+        var buffer = ArrayPool<byte>.Shared.Rent(1);
+        try
         {
-            throw new XZIndexMarkerReachedException();
+            await BaseStream.ReadExactAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false);
+            _blockHeaderSizeByte = buffer[0];
+            if (_blockHeaderSizeByte == 0)
+            {
+                throw new XZIndexMarkerReachedException();
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 

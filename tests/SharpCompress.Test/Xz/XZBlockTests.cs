@@ -72,7 +72,7 @@ public class XzBlockTests : XzTestsBase
     {
         var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
         using var sr = new StreamReader(xzBlock);
-        Assert.Equal(sr.ReadToEnd(), Original);
+        Assert.Equal(Original, sr.ReadToEnd());
     }
 
     [Fact]
@@ -88,8 +88,8 @@ public class XzBlockTests : XzTestsBase
     [Fact]
     public void SkipsPaddingWhenPresent()
     {
-        // CompressedIndexedStream's first block has 1-byte padding.
-        using var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
+        // CompressedIndexedStream uses CRC32 checks.
+        using var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC32, 4);
         using var sr = new StreamReader(xzBlock);
         sr.ReadToEnd();
         Assert.Equal(0L, CompressedIndexedStream.Position % 4L);

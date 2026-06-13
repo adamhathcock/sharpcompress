@@ -2,14 +2,27 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.Compressors.Xz;
 using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
 
-public class LzmaStreamAsyncTests
+public class LzmaStreamAsyncTests : TestBase
 {
+    [Fact]
+    public async ValueTask TestLzma2Decompress()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "bad-1-lzma2-7.xz"));
+
+        using var xz = new XZStream(stream);
+        await Assert.ThrowsAnyAsync<SharpCompressException>(async () =>
+            await xz.TransferToAsync(Stream.Null, long.MaxValue)
+        );
+    }
+
     [Fact]
     public async ValueTask TestLzma2Decompress1ByteAsync()
     {

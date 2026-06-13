@@ -11,6 +11,8 @@ namespace SharpCompress.Compressors.LZMA;
 
 public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
 {
+    internal bool HasEndMarker => _rep0 == uint.MaxValue;
+
     public void Dispose()
     {
         _outWindow?.Dispose();

@@ -27,4 +27,12 @@ public class Crc64Tests
 
         Assert.Equal((ulong)0x416B4150508661EE, actual);
     }
+
+    [Fact]
+    public void XzCheckString()
+    {
+        var actual = Crc64.ComputeXz(Encoding.ASCII.GetBytes("123456789"));
+
+        Assert.Equal(0x995DC9BBDF1939FAUL, actual);
+    }
 }

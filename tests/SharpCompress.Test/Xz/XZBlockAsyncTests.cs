@@ -85,7 +85,7 @@ public class XzBlockAsyncTests : XzTestsBase
     {
         using var xzBlock = new XZBlock(CompressedStream, CheckType.CRC64, 8);
         using var sr = new StreamReader(xzBlock);
-        Assert.Equal(await sr.ReadToEndAsync().ConfigureAwait(false), Original);
+        Assert.Equal(Original, await sr.ReadToEndAsync().ConfigureAwait(false));
     }
 
     [Fact]
@@ -101,8 +101,8 @@ public class XzBlockAsyncTests : XzTestsBase
     [Fact]
     public async ValueTask SkipsPaddingWhenPresentAsync()
     {
-        // CompressedIndexedStream's first block has 1-byte padding.
-        using var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC64, 8);
+        // CompressedIndexedStream uses CRC32 checks.
+        using var xzBlock = new XZBlock(CompressedIndexedStream, CheckType.CRC32, 4);
         using var sr = new StreamReader(xzBlock);
         await sr.ReadToEndAsync().ConfigureAwait(false);
         Assert.Equal(0L, CompressedIndexedStream.Position % 4L);

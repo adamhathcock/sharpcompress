@@ -52,6 +52,9 @@ public static class Crc32
         return createTable;
     }
 
+    public static uint Update(uint seed, ReadOnlySpan<byte> buffer) =>
+        CalculateHash(InitializeTable(DefaultPolynomial), seed, buffer);
+
     private static uint CalculateHash(uint[] table, uint seed, ReadOnlySpan<byte> buffer)
     {
         var crc = seed;
