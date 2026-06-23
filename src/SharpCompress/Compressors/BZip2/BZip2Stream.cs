@@ -35,22 +35,40 @@ public sealed partial class BZip2Stream : Stream, IFinishable
         bool decompressConcatenated,
         bool leaveOpen = false,
         bool tolerateTruncatedStream = false
+    ) =>
+        Create(
+            stream,
+            compressionMode,
+            new BZip2StreamOptions
+            {
+                DecompressConcatenated = decompressConcatenated,
+                LeaveStreamOpen = leaveOpen,
+                TolerateTruncatedStream = tolerateTruncatedStream,
+            }
+        );
+
+    /// <summary>
+    /// Create a BZip2Stream
+    /// </summary>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="compressionMode">Compression Mode</param>
+    /// <param name="options">BZip2 stream options</param>
+    public static BZip2Stream Create(
+        Stream stream,
+        CompressionMode compressionMode,
+        BZip2StreamOptions options
     )
     {
+        options = options ?? throw new ArgumentNullException(nameof(options));
         var bZip2Stream = new BZip2Stream();
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {
-            bZip2Stream.stream = new CBZip2OutputStream(stream, leaveOpen);
+            bZip2Stream.stream = new CBZip2OutputStream(stream, options);
         }
         else
         {
-            bZip2Stream.stream = CBZip2InputStream.Create(
-                stream,
-                decompressConcatenated,
-                leaveOpen,
-                tolerateTruncatedStream
-            );
+            bZip2Stream.stream = CBZip2InputStream.Create(stream, options);
         }
 
         return bZip2Stream;

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -236,5 +237,28 @@ public class BZip2StreamAsyncTests
 
         // Verify
         Assert.Equal(largeData, decompressed);
+    }
+
+    [Fact]
+    public async ValueTask BZip2CreateAsyncWithOptionsTest()
+    {
+        await using var memoryStream = new MemoryStream();
+        await using (
+            var stream = await BZip2Stream.CreateAsync(
+                new AsyncOnlyStream(memoryStream),
+                CompressionMode.Compress,
+                new BZip2StreamOptions { LeaveStreamOpen = true, BlockSize100k = 1 }
+            )
+        )
+        {
+            var bytes = Encoding.ASCII.GetBytes("async options");
+            await stream.WriteAsync(bytes, 0, bytes.Length);
+        }
+
+        var compressed = memoryStream.ToArray();
+        Assert.Equal((byte)'B', compressed[0]);
+        Assert.Equal((byte)'Z', compressed[1]);
+        Assert.Equal((byte)'h', compressed[2]);
+        Assert.Equal((byte)'1', compressed[3]);
     }
 }

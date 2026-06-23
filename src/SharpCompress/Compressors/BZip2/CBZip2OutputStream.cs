@@ -319,8 +319,11 @@ internal sealed partial class CBZip2OutputStream : Stream
     private int runLength;
     private readonly bool leaveOpen;
 
+    public CBZip2OutputStream(Stream inStream, BZip2StreamOptions options)
+        : this(inStream, options.BlockSize100k, options.LeaveStreamOpen) { }
+
     public CBZip2OutputStream(Stream inStream, bool leaveOpen = false)
-        : this(inStream, 9, leaveOpen) { }
+        : this(inStream, new BZip2StreamOptions { LeaveStreamOpen = leaveOpen }) { }
 
     public CBZip2OutputStream(Stream inStream, int inBlockSize, bool leaveOpen = false)
     {

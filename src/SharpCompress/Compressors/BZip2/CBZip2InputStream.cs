@@ -188,15 +188,11 @@ internal partial class CBZip2InputStream : Stream
     private char z;
     private bool isDisposed;
 
-    private CBZip2InputStream(
-        bool decompressConcatenated,
-        bool leaveOpen,
-        bool tolerateTruncatedStream
-    )
+    private CBZip2InputStream(BZip2StreamOptions options)
     {
-        this.decompressConcatenated = decompressConcatenated;
-        this.leaveOpen = leaveOpen;
-        this.tolerateTruncatedStream = tolerateTruncatedStream;
+        decompressConcatenated = options.DecompressConcatenated;
+        leaveOpen = options.LeaveStreamOpen;
+        tolerateTruncatedStream = options.TolerateTruncatedStream;
     }
 
     public static CBZip2InputStream Create(
@@ -204,13 +200,20 @@ internal partial class CBZip2InputStream : Stream
         bool decompressConcatenated,
         bool leaveOpen,
         bool tolerateTruncatedStream = false
-    )
-    {
-        var cbZip2InputStream = new CBZip2InputStream(
-            decompressConcatenated,
-            leaveOpen,
-            tolerateTruncatedStream
+    ) =>
+        Create(
+            zStream,
+            new BZip2StreamOptions
+            {
+                DecompressConcatenated = decompressConcatenated,
+                LeaveStreamOpen = leaveOpen,
+                TolerateTruncatedStream = tolerateTruncatedStream,
+            }
         );
+
+    public static CBZip2InputStream Create(Stream zStream, BZip2StreamOptions options)
+    {
+        var cbZip2InputStream = new CBZip2InputStream(options);
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         cbZip2InputStream.BsSetStream(zStream);

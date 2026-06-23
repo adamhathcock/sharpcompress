@@ -4,6 +4,7 @@ using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.BZip2;
@@ -90,6 +91,65 @@ public class BZip2StreamTests
         var result = Decompress(Compress(text), tolerateTruncatedStream: true);
 
         Assert.Equal(text, Encoding.ASCII.GetString(result));
+    }
+
+    [Fact]
+    public void BZip2Stream_Create_WithOptions_UsesDecompressionOptions()
+    {
+        var headerOnly = Encoding.ASCII.GetBytes("BZh9");
+
+        using var stream = BZip2Stream.Create(
+            new MemoryStream(headerOnly),
+            CompressionMode.Decompress,
+            new BZip2StreamOptions { TolerateTruncatedStream = true }
+        );
+        using var output = new MemoryStream();
+
+        stream.CopyTo(output);
+
+        Assert.Empty(output.ToArray());
+    }
+
+    [Fact]
+    public void BZip2Stream_Create_WithOptions_LeavesStreamOpen()
+    {
+        using var innerStream = new TestStream(new MemoryStream());
+        using (
+            var stream = BZip2Stream.Create(
+                innerStream,
+                CompressionMode.Compress,
+                new BZip2StreamOptions { LeaveStreamOpen = true }
+            )
+        )
+        {
+            var bytes = Encoding.ASCII.GetBytes("leave open");
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        Assert.False(innerStream.IsDisposed);
+    }
+
+    [Fact]
+    public void BZip2Stream_Create_WithOptions_UsesCompressionBlockSize()
+    {
+        using var memoryStream = new MemoryStream();
+        using (
+            var stream = BZip2Stream.Create(
+                memoryStream,
+                CompressionMode.Compress,
+                new BZip2StreamOptions { LeaveStreamOpen = true, BlockSize100k = 1 }
+            )
+        )
+        {
+            var bytes = Encoding.ASCII.GetBytes("block size");
+            stream.Write(bytes, 0, bytes.Length);
+        }
+
+        var compressed = memoryStream.ToArray();
+        Assert.Equal((byte)'B', compressed[0]);
+        Assert.Equal((byte)'Z', compressed[1]);
+        Assert.Equal((byte)'h', compressed[2]);
+        Assert.Equal((byte)'1', compressed[3]);
     }
 
     private static byte[] Decompress(

@@ -42,24 +42,45 @@ public sealed partial class BZip2Stream : IAsyncDisposable
         bool leaveOpen = false,
         bool tolerateTruncatedStream = false,
         CancellationToken cancellationToken = default
+    ) =>
+        await CreateAsync(
+                stream,
+                compressionMode,
+                new BZip2StreamOptions
+                {
+                    DecompressConcatenated = decompressConcatenated,
+                    LeaveStreamOpen = leaveOpen,
+                    TolerateTruncatedStream = tolerateTruncatedStream,
+                },
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+    /// <summary>
+    /// Create a BZip2Stream asynchronously
+    /// </summary>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="compressionMode">Compression Mode</param>
+    /// <param name="options">BZip2 stream options</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
+    public static async ValueTask<BZip2Stream> CreateAsync(
+        Stream stream,
+        CompressionMode compressionMode,
+        BZip2StreamOptions options,
+        CancellationToken cancellationToken = default
     )
     {
+        options = options ?? throw new ArgumentNullException(nameof(options));
         var bZip2Stream = new BZip2Stream();
         bZip2Stream.Mode = compressionMode;
         if (bZip2Stream.Mode == CompressionMode.Compress)
         {
-            bZip2Stream.stream = new CBZip2OutputStream(stream, leaveOpen);
+            bZip2Stream.stream = new CBZip2OutputStream(stream, options);
         }
         else
         {
             bZip2Stream.stream = await CBZip2InputStream
-                .CreateAsync(
-                    stream,
-                    decompressConcatenated,
-                    leaveOpen,
-                    tolerateTruncatedStream,
-                    cancellationToken
-                )
+                .CreateAsync(stream, options, cancellationToken)
                 .ConfigureAwait(false);
         }
 

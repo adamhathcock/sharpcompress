@@ -470,6 +470,24 @@ ReaderOptions: open-time behavior (password, encoding, stream ownership)
 ExtractionOptions: extract-time behavior (overwrite, paths, timestamps, attributes, symlinks)
 WriterOptions: write-time behavior (compression type/level, encoding, stream ownership)
 ZipWriterEntryOptions: per-entry ZIP overrides (compression, level, timestamps, comments, zip64)
+BZip2StreamOptions: direct BZip2Stream behavior (stream ownership, concatenated streams, block size)
+```
+
+### BZip2 streams
+
+```csharp
+var options = new BZip2StreamOptions
+{
+    LeaveStreamOpen = true,
+    DecompressConcatenated = true,
+    TolerateTruncatedStream = false,
+    BlockSize100k = 9
+};
+
+using (var bzip2 = BZip2Stream.Create(stream, CompressionMode.Decompress, options))
+{
+    bzip2.CopyTo(outputStream);
+}
 ```
 
 ### Compression Providers

@@ -953,13 +953,26 @@ internal partial class CBZip2InputStream
         bool leaveOpen = false,
         bool tolerateTruncatedStream = false,
         CancellationToken cancellationToken = default
+    ) =>
+        await CreateAsync(
+                zStream,
+                new BZip2StreamOptions
+                {
+                    DecompressConcatenated = decompressConcatenated,
+                    LeaveStreamOpen = leaveOpen,
+                    TolerateTruncatedStream = tolerateTruncatedStream,
+                },
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+    public static async ValueTask<CBZip2InputStream> CreateAsync(
+        Stream zStream,
+        BZip2StreamOptions options,
+        CancellationToken cancellationToken = default
     )
     {
-        var cbZip2InputStream = new CBZip2InputStream(
-            decompressConcatenated,
-            leaveOpen,
-            tolerateTruncatedStream
-        );
+        var cbZip2InputStream = new CBZip2InputStream(options);
         cbZip2InputStream.ll8 = null;
         cbZip2InputStream.tt = null;
         cbZip2InputStream.BsSetStream(zStream);
