@@ -12,7 +12,7 @@ namespace SharpCompress.Test.BZip2;
 
 public class BZip2StreamAsyncTests
 {
-    private byte[] CreateTestData(int size)
+    private static byte[] CreateTestData(int size)
     {
         var data = new byte[size];
         // Create compressible data with repetitive pattern
@@ -108,6 +108,7 @@ public class BZip2StreamAsyncTests
         // Decompress with cancellation support
         using (var memoryStream = new MemoryStream(compressed))
         {
+#if LEGACY_DOTNET
             using (
                 var bzip2Stream = await BZip2Stream.CreateAsync(
                     new AsyncOnlyStream(memoryStream),
@@ -115,6 +116,15 @@ public class BZip2StreamAsyncTests
                     false
                 )
             )
+#else
+            await using (
+                var bzip2Stream = await BZip2Stream.CreateAsync(
+                    new AsyncOnlyStream(memoryStream),
+                    SharpCompress.Compressors.CompressionMode.Decompress,
+                    false
+                )
+            )
+#endif
             {
                 var buffer = new byte[1024];
                 using var cts = new System.Threading.CancellationTokenSource();
@@ -242,7 +252,7 @@ public class BZip2StreamAsyncTests
     [Fact]
     public async ValueTask BZip2CreateAsyncWithOptionsTest()
     {
-        await using var memoryStream = new MemoryStream();
+        using var memoryStream = new MemoryStream();
         await using (
             var stream = await BZip2Stream.CreateAsync(
                 new AsyncOnlyStream(memoryStream),
