@@ -32,46 +32,29 @@ public static partial class ReaderFactory
         stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
+        var factories = Factories.Factory.Factories.OfType<Factories.Factory>().ToList();
+        var minimumDetectionBufferSize = factories.Max(a =>
+            a.MinimumReaderDetectionBufferSize ?? 0
+        );
+        var bufferSize = Math.Max(options.RewindableBufferSize ?? 0, minimumDetectionBufferSize);
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            bufferSize: options.RewindableBufferSize
+            bufferSize: bufferSize == 0 ? options.RewindableBufferSize : bufferSize
         );
         sharpCompressStream.StartRecording();
 
-        var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
-
-        Factory? testedFactory = null;
-
-        if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
+        var match = Factories.Factory.DetectFactory(
+            sharpCompressStream,
+            options,
+            FactoryDetectionTarget.Reader
+        );
+        if (
+            match.Result == FactoryDetectionResult.Match
+            && match.Factory is IReaderFactory readerFactory
+        )
         {
-            testedFactory = factories.FirstOrDefault(a =>
-                a.GetSupportedExtensions()
-                    .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
-            );
-            if (
-                testedFactory?.TryOpenReader(sharpCompressStream, options, out var reader) == true
-                && reader != null
-            )
-            {
-                sharpCompressStream.Rewind(true);
-                return reader;
-            }
-        }
-
-        foreach (var factory in factories)
-        {
-            if (testedFactory == factory)
-            {
-                continue; // Already tested above
-            }
-            sharpCompressStream.Rewind();
-            if (
-                factory.TryOpenReader(sharpCompressStream, options, out var reader)
-                && reader != null
-            )
-            {
-                return reader;
-            }
+            sharpCompressStream.Rewind(true);
+            return readerFactory.OpenReader(sharpCompressStream, options);
         }
 
         throw new InvalidFormatException(

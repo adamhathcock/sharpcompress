@@ -63,6 +63,58 @@ public class TarFactory
         return await TarArchive.IsTarFileAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
+    internal override int? MinimumReaderDetectionBufferSize => TarWrapper.MaximumRewindBufferSize;
+
+    internal override FactoryDetectionResult Detect(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target
+    )
+    {
+        var startPosition = stream.Position;
+        if (TarArchive.IsTarFile(stream))
+        {
+            return FactoryDetectionResult.Match;
+        }
+
+        stream.Seek(startPosition, SeekOrigin.Begin);
+        if (!IsCompressedTar(stream, readerOptions))
+        {
+            return FactoryDetectionResult.NoMatch;
+        }
+
+        return target == FactoryDetectionTarget.Archive
+            ? FactoryDetectionResult.Unsupported
+            : FactoryDetectionResult.Match;
+    }
+
+    internal override async ValueTask<FactoryDetectionResult> DetectAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var startPosition = stream.Position;
+        if (await TarArchive.IsTarFileAsync(stream, cancellationToken).ConfigureAwait(false))
+        {
+            return FactoryDetectionResult.Match;
+        }
+
+        stream.Seek(startPosition, SeekOrigin.Begin);
+        if (
+            !await IsCompressedTarAsync(stream, readerOptions, cancellationToken)
+                .ConfigureAwait(false)
+        )
+        {
+            return FactoryDetectionResult.NoMatch;
+        }
+
+        return target == FactoryDetectionTarget.Archive
+            ? FactoryDetectionResult.Unsupported
+            : FactoryDetectionResult.Match;
+    }
+
     #endregion
 
     private static Stream CreateProbeDecompressionStream(
@@ -180,6 +232,92 @@ public class TarFactory
             }
         }
         throw new InvalidFormatException("Not a tar file.");
+    }
+
+    private static bool IsCompressedTar(Stream stream, ReaderOptions readerOptions)
+    {
+        var startPosition = stream.Position;
+        try
+        {
+            foreach (var wrapper in TarWrapper.Wrappers)
+            {
+                if (wrapper.CompressionType == CompressionType.None)
+                {
+                    continue;
+                }
+
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                if (!wrapper.IsMatch(stream))
+                {
+                    continue;
+                }
+
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                var decompressedStream = CreateProbeDecompressionStream(
+                    stream,
+                    wrapper.CompressionType,
+                    readerOptions
+                );
+                if (TarArchive.IsTarFile(decompressedStream))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        finally
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+        }
+    }
+
+    private static async ValueTask<bool> IsCompressedTarAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var startPosition = stream.Position;
+        try
+        {
+            foreach (var wrapper in TarWrapper.Wrappers)
+            {
+                if (wrapper.CompressionType == CompressionType.None)
+                {
+                    continue;
+                }
+
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                if (!await wrapper.IsMatchAsync(stream, cancellationToken).ConfigureAwait(false))
+                {
+                    continue;
+                }
+
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                var decompressedStream = await CreateProbeDecompressionStreamAsync(
+                        stream,
+                        wrapper.CompressionType,
+                        readerOptions,
+                        cancellationToken: cancellationToken
+                    )
+                    .ConfigureAwait(false);
+                if (
+                    await TarArchive
+                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        finally
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+        }
     }
 
     internal override bool TryOpenReader(

@@ -75,15 +75,20 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = await TryFindFactoryAsync(
+        var match = await Factory
+            .DetectFactoryAsync(
                 stream,
                 readerOptions ?? ReaderOptions.ForExternalStream,
+                FactoryDetectionTarget.Archive,
                 cancellationToken
             )
             .ConfigureAwait(false);
-        return factory is null
+        return match.Factory is null
             ? null
-            : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
+            : new ArchiveInformation(
+                match.Factory.KnownArchiveType,
+                match.Result == FactoryDetectionResult.Match && match.Factory is IArchiveFactory
+            );
     }
 
     internal static ValueTask<T> FindFactoryAsync<T>(
@@ -116,12 +121,11 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        // Use the shared async detection loop over all factories. If the matched factory
-        // implements T we return it; otherwise (or if nothing matched) we fall through
-        // to the same "unsupported format" exception that the original code produced,
-        // listing the T-typed factories as the hint for the caller.
-        var factory = await TryFindFactoryAsync(stream, cancellationToken).ConfigureAwait(false);
-        if (factory is T typedFactory)
+        var target = GetDetectionTarget<T>();
+        var match = await Factory
+            .DetectFactoryAsync(stream, ReaderOptions.ForExternalStream, target, cancellationToken)
+            .ConfigureAwait(false);
+        if (match.Result == FactoryDetectionResult.Match && match.Factory is T typedFactory)
         {
             return typedFactory;
         }
@@ -131,45 +135,6 @@ public static partial class ArchiveFactory
         throw new ArchiveOperationException(
             $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
         );
-    }
-
-    /// <summary>
-    /// Async counterpart of <see cref="ArchiveFactory.TryFindFactory"/>.
-    /// Iterates all registered factories and returns the first one whose
-    /// <see cref="IFactory.IsArchiveAsync"/> recognises the stream, or <see langword="null"/>.
-    /// Stream position is restored to its value at entry on both success and failure.
-    /// </summary>
-    private static async ValueTask<IFactory?> TryFindFactoryAsync(
-        Stream stream,
-        CancellationToken cancellationToken
-    ) =>
-        await TryFindFactoryAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
-            .ConfigureAwait(false);
-
-    private static async ValueTask<IFactory?> TryFindFactoryAsync(
-        Stream stream,
-        ReaderOptions readerOptions,
-        CancellationToken cancellationToken
-    )
-    {
-        var startPosition = stream.Position;
-
-        foreach (var factory in Factory.Factories)
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            var isArchive = await factory
-                .IsArchiveAsync(stream, readerOptions, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (isArchive)
-            {
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                return factory;
-            }
-        }
-
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        return null;
     }
 
     /// <summary>
@@ -218,47 +183,16 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = TryFindFactory(stream, readerOptions ?? ReaderOptions.ForExternalStream);
-        return factory is null
+        var match = Factory.DetectFactory(
+            stream,
+            readerOptions ?? ReaderOptions.ForExternalStream,
+            FactoryDetectionTarget.Archive
+        );
+        return match.Factory is null
             ? null
-            : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
-    }
-
-    /// <summary>
-    /// Iterates all registered factories and returns the first one whose
-    /// <see cref="IFactory.IsArchive"/> recognises the stream, or <see langword="null"/>.
-    /// Stream position is restored to its value at entry on both success and failure.
-    /// </summary>
-    /// <remarks>
-    /// This is the shared, seekable-stream detection core used by
-    /// <see cref="FindFactory{T}(Stream)"/>, <see cref="IsArchive(Stream, out ArchiveType?)"/>,
-    /// and <see cref="GetArchiveInformation(Stream)"/>.
-    /// <para>
-    /// <see cref="ReaderFactory.OpenReader(Stream, ReaderOptions)"/> uses a separate code path
-    /// based on <see cref="IO.SharpCompressStream"/> rewindable buffering, which supports
-    /// non-seekable streams and is therefore not unified with this helper.
-    /// </para>
-    /// </remarks>
-    private static IFactory? TryFindFactory(Stream stream) =>
-        TryFindFactory(stream, ReaderOptions.ForExternalStream);
-
-    private static IFactory? TryFindFactory(Stream stream, ReaderOptions readerOptions)
-    {
-        var startPosition = stream.Position;
-
-        foreach (var factory in Factory.Factories)
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            var isArchive = factory.IsArchive(stream, readerOptions);
-
-            if (isArchive)
-            {
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                return factory;
-            }
-        }
-
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        return null;
+            : new ArchiveInformation(
+                match.Factory.KnownArchiveType,
+                match.Result == FactoryDetectionResult.Match && match.Factory is IArchiveFactory
+            );
     }
 }

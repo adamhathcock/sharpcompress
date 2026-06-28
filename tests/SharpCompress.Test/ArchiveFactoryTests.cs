@@ -659,45 +659,47 @@ public class ArchiveFactoryTests : TestBase
     [Theory]
     [InlineData("Tar.tar.gz")]
     [InlineData("Tar.tar.Z")]
-    public void IsArchive_ReturnsFalse_ForCompressedTar(string archiveName)
+    public void IsArchive_ReturnsTrue_ForCompressedTar(string archiveName)
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
         var isArchive = ArchiveFactory.IsArchive(stream, out var archiveType);
 
-        Assert.False(isArchive);
-        Assert.Null(archiveType);
+        Assert.True(isArchive);
+        Assert.Equal(ArchiveType.Tar, archiveType);
     }
 
     [Theory]
     [InlineData("Tar.tar.gz")]
     [InlineData("Tar.tar.Z")]
-    public async ValueTask IsArchiveAsync_ReturnsFalse_ForCompressedTar(string archiveName)
+    public async ValueTask IsArchiveAsync_ReturnsTrue_ForCompressedTar(string archiveName)
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
         var (isArchive, archiveType) = await ArchiveFactory.IsArchiveAsync(stream);
 
-        Assert.False(isArchive);
-        Assert.Null(archiveType);
+        Assert.True(isArchive);
+        Assert.Equal(ArchiveType.Tar, archiveType);
     }
 
     [Theory]
     [InlineData("Tar.tar.gz")]
     [InlineData("Tar.tar.Z")]
-    public void GetArchiveInformation_ReturnsNull_ForCompressedTar(string archiveName)
+    public void GetArchiveInformation_ReturnsReaderOnlyTar_ForCompressedTar(string archiveName)
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
         var info = ArchiveFactory.GetArchiveInformation(stream);
 
-        Assert.Null(info);
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Tar, info.Type);
+        Assert.False(info.SupportsRandomAccess);
     }
 
     [Theory]
     [InlineData("Tar.tar.gz")]
     [InlineData("Tar.tar.Z")]
-    public async ValueTask GetArchiveInformationAsync_ReturnsNull_ForCompressedTar(
+    public async ValueTask GetArchiveInformationAsync_ReturnsReaderOnlyTar_ForCompressedTar(
         string archiveName
     )
     {
@@ -705,7 +707,9 @@ public class ArchiveFactoryTests : TestBase
 
         var info = await ArchiveFactory.GetArchiveInformationAsync(stream);
 
-        Assert.Null(info);
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Tar, info.Type);
+        Assert.False(info.SupportsRandomAccess);
     }
 
     [Theory]

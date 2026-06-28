@@ -515,4 +515,17 @@ public class TarArchiveTests : ArchiveTests
         Assert.Equal(ArchiveType.Tar, reader.Type);
         Assert.True(reader.MoveToNextEntry());
     }
+
+    [Fact]
+    public void TarReaderStreamRead_Autodetect_CompressedTar_WithGZipExtensionHint()
+    {
+        using Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var reader = ReaderFactory.OpenReader(
+            stream,
+            new ReaderOptions { ExtensionHint = "gz" }
+        );
+
+        Assert.Equal(ArchiveType.Tar, reader.Type);
+        Assert.True(reader.MoveToNextEntry());
+    }
 }

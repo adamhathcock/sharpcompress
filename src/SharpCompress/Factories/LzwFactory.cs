@@ -2,13 +2,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Lzw;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Lzw;
-using SharpCompress.Readers.Tar;
 
 namespace SharpCompress.Factories;
 
@@ -45,40 +42,6 @@ public class LzwFactory : Factory, IReaderFactory
     #endregion
 
     #region IReaderFactory
-
-    /// <inheritdoc/>
-    internal override bool TryOpenReader(
-        SharpCompressStream sharpCompressStream,
-        ReaderOptions options,
-        out IReader? reader
-    )
-    {
-        reader = null;
-
-        if (LzwStream.IsLzwStream(sharpCompressStream))
-        {
-            sharpCompressStream.Rewind();
-            using (
-                var testStream = options.Providers.CreateDecompressStream(
-                    CompressionType.Lzw,
-                    SharpCompressStream.CreateNonDisposing(sharpCompressStream)
-                )
-            )
-            {
-                if (TarArchive.IsTarFile(testStream))
-                {
-                    sharpCompressStream.StopRecording();
-                    reader = new TarReader(sharpCompressStream, options, CompressionType.Lzw);
-                    return true;
-                }
-            }
-            sharpCompressStream.StopRecording();
-            reader = OpenReader(sharpCompressStream, options);
-            return true;
-        }
-        sharpCompressStream.Rewind();
-        return false;
-    }
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>

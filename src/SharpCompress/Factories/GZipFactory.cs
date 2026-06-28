@@ -5,14 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
-using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
-using SharpCompress.IO;
-using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
-using SharpCompress.Readers.Tar;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
 
@@ -129,37 +125,6 @@ public class GZipFactory
     #endregion
 
     #region IReaderFactory
-
-    /// <inheritdoc/>
-    internal override bool TryOpenReader(
-        SharpCompressStream sharpCompressStream,
-        ReaderOptions options,
-        out IReader? reader
-    )
-    {
-        reader = null;
-
-        if (GZipArchive.IsGZipFile(sharpCompressStream))
-        {
-            sharpCompressStream.Rewind();
-            using var testStream = options.Providers.CreateDecompressStream(
-                CompressionType.GZip,
-                SharpCompressStream.CreateNonDisposing(sharpCompressStream),
-                CompressionContext.FromStream(sharpCompressStream).WithReaderOptions(options)
-            );
-            if (TarArchive.IsTarFile(testStream))
-            {
-                sharpCompressStream.StopRecording();
-                reader = new TarReader(sharpCompressStream, options, CompressionType.GZip);
-                return true;
-            }
-            sharpCompressStream.StopRecording();
-            reader = OpenReader(sharpCompressStream, options);
-            return true;
-        }
-        sharpCompressStream.Rewind();
-        return false;
-    }
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options) =>

@@ -123,12 +123,9 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        // Use the shared detection loop over all factories. If the matched factory
-        // implements T we return it; otherwise (or if nothing matched) we fall through
-        // to the same "unsupported format" exception that the original code produced,
-        // listing the T-typed factories as the hint for the caller.
-        var factory = TryFindFactory(stream);
-        if (factory is T typedFactory)
+        var target = GetDetectionTarget<T>();
+        var match = Factory.DetectFactory(stream, ReaderOptions.ForExternalStream, target);
+        if (match.Result == FactoryDetectionResult.Match && match.Factory is T typedFactory)
         {
             return typedFactory;
         }
@@ -138,6 +135,23 @@ public static partial class ArchiveFactory
         throw new ArchiveOperationException(
             $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
         );
+    }
+
+    private static FactoryDetectionTarget GetDetectionTarget<T>()
+        where T : IFactory
+    {
+        var factoryType = typeof(T);
+        if (
+            typeof(IArchiveFactory).IsAssignableFrom(factoryType)
+            || typeof(IMultiArchiveFactory).IsAssignableFrom(factoryType)
+        )
+        {
+            return FactoryDetectionTarget.Archive;
+        }
+
+        return typeof(IReaderFactory).IsAssignableFrom(factoryType)
+            ? FactoryDetectionTarget.Reader
+            : FactoryDetectionTarget.Identify;
     }
 
     public static bool IsArchive(string filePath, out ArchiveType? type)
@@ -166,9 +180,13 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = TryFindFactory(stream, readerOptions ?? ReaderOptions.ForExternalStream);
-        type = factory?.KnownArchiveType;
-        return factory is not null;
+        var match = Factory.DetectFactory(
+            stream,
+            readerOptions ?? ReaderOptions.ForExternalStream,
+            FactoryDetectionTarget.Identify
+        );
+        type = match.Factory?.KnownArchiveType;
+        return match.Factory is not null;
     }
 
     public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
@@ -210,13 +228,15 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = await TryFindFactoryAsync(
+        var match = await Factory
+            .DetectFactoryAsync(
                 stream,
                 readerOptions ?? ReaderOptions.ForExternalStream,
+                FactoryDetectionTarget.Identify,
                 cancellationToken
             )
             .ConfigureAwait(false);
-        return (factory is not null, factory?.KnownArchiveType);
+        return (match.Factory is not null, match.Factory?.KnownArchiveType);
     }
 
     public static IEnumerable<string> GetFileParts(string part1)

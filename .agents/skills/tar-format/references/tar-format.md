@@ -280,7 +280,7 @@ Archive API:
 
 - `TarArchive.OpenArchive(Stream)` and `TarArchive.OpenAsyncArchive(Stream)` require seekable raw tar streams.
 - File/path overloads own the opened file stream.
-- Compressed tar wrappers are supported through `TarReader`, not `TarArchive` or `ArchiveFactory`; archive detection blocks them instead of opening the outer compression wrapper as a standalone archive.
+- Compressed tar wrappers are identified as Tar without random-access support and are opened through `TarReader`, not `TarArchive` or `ArchiveFactory`; archive open detection blocks them instead of opening the outer compression wrapper as a standalone archive.
 
 Parsed metadata surfaced through entries includes:
 

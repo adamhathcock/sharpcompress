@@ -59,47 +59,34 @@ public static partial class ReaderFactory
         stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
+        var factories = Factory.Factories.OfType<Factory>().ToList();
+        var minimumDetectionBufferSize = factories.Max(a =>
+            a.MinimumReaderDetectionBufferSize ?? 0
+        );
+        var bufferSize = Math.Max(options.RewindableBufferSize ?? 0, minimumDetectionBufferSize);
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
-            bufferSize: options.RewindableBufferSize
+            bufferSize: bufferSize == 0 ? options.RewindableBufferSize : bufferSize
         );
         sharpCompressStream.StartRecording();
 
-        var factories = Factory.Factories.OfType<Factory>();
-
-        Factory? testedFactory = null;
-        if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
+        var match = await Factory
+            .DetectFactoryAsync(
+                sharpCompressStream,
+                options,
+                FactoryDetectionTarget.Reader,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+        if (
+            match.Result == FactoryDetectionResult.Match
+            && match.Factory is IReaderFactory readerFactory
+        )
         {
-            testedFactory = factories.FirstOrDefault(a =>
-                a.GetSupportedExtensions()
-                    .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
-            );
-            if (testedFactory is not null)
-            {
-                var reader = await testedFactory
-                    .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
-                    .ConfigureAwait(false);
-                if (reader is not null)
-                {
-                    return reader;
-                }
-            }
-            sharpCompressStream.Rewind();
-        }
-
-        foreach (var factory in factories)
-        {
-            if (testedFactory == factory)
-            {
-                continue; // Already tested above
-            }
-            var reader = await factory
-                .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
+            sharpCompressStream.Rewind(true);
+            return await readerFactory
+                .OpenAsyncReader(sharpCompressStream, options, cancellationToken)
                 .ConfigureAwait(false);
-            if (reader is not null)
-            {
-                return reader;
-            }
         }
 
         throw new InvalidFormatException(

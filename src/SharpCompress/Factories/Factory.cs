@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -61,6 +62,99 @@ public abstract class Factory : IFactory
         CancellationToken cancellationToken = default
     );
 
+    internal virtual int? MinimumReaderDetectionBufferSize => null;
+
+    internal virtual FactoryDetectionResult Detect(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target
+    )
+    {
+        if (!IsArchive(stream, readerOptions))
+        {
+            return FactoryDetectionResult.NoMatch;
+        }
+
+        return SupportsTarget(target)
+            ? FactoryDetectionResult.Match
+            : FactoryDetectionResult.Unsupported;
+    }
+
+    internal virtual async ValueTask<FactoryDetectionResult> DetectAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!await IsArchiveAsync(stream, readerOptions, cancellationToken).ConfigureAwait(false))
+        {
+            return FactoryDetectionResult.NoMatch;
+        }
+
+        return SupportsTarget(target)
+            ? FactoryDetectionResult.Match
+            : FactoryDetectionResult.Unsupported;
+    }
+
+    private bool SupportsTarget(FactoryDetectionTarget target) =>
+        target switch
+        {
+            FactoryDetectionTarget.Identify => true,
+            FactoryDetectionTarget.Archive => this is IArchiveFactory,
+            FactoryDetectionTarget.Reader => this is IReaderFactory,
+            _ => false,
+        };
+
+    internal static FactoryDetectionMatch DetectFactory(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target
+    )
+    {
+        var startPosition = stream.Position;
+
+        foreach (var factory in _factories)
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            var result = factory.Detect(stream, readerOptions, target);
+            if (result != FactoryDetectionResult.NoMatch)
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                return new FactoryDetectionMatch(result, factory);
+            }
+        }
+
+        stream.Seek(startPosition, SeekOrigin.Begin);
+        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null);
+    }
+
+    internal static async ValueTask<FactoryDetectionMatch> DetectFactoryAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var startPosition = stream.Position;
+
+        foreach (var factory in _factories)
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            var result = await factory
+                .DetectAsync(stream, readerOptions, target, cancellationToken)
+                .ConfigureAwait(false);
+            if (result != FactoryDetectionResult.NoMatch)
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                return new FactoryDetectionMatch(result, factory);
+            }
+        }
+
+        stream.Seek(startPosition, SeekOrigin.Begin);
+        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null);
+    }
+
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;
 
@@ -85,7 +179,10 @@ public abstract class Factory : IFactory
         if (this is IReaderFactory readerFactory)
         {
             stream.Rewind();
-            if (IsArchive(stream, options))
+            if (
+                Detect(stream, options, FactoryDetectionTarget.Reader)
+                == FactoryDetectionResult.Match
+            )
             {
                 stream.Rewind(true);
                 reader = readerFactory.OpenReader(stream, options);
@@ -105,7 +202,10 @@ public abstract class Factory : IFactory
         if (this is IReaderFactory readerFactory)
         {
             stream.Rewind();
-            if (await IsArchiveAsync(stream, options, cancellationToken).ConfigureAwait(false))
+            if (
+                await DetectAsync(stream, options, FactoryDetectionTarget.Reader, cancellationToken)
+                    .ConfigureAwait(false) == FactoryDetectionResult.Match
+            )
             {
                 stream.Rewind(true);
                 return await readerFactory
@@ -117,3 +217,22 @@ public abstract class Factory : IFactory
         return null;
     }
 }
+
+internal enum FactoryDetectionTarget
+{
+    Identify,
+    Archive,
+    Reader,
+}
+
+internal enum FactoryDetectionResult
+{
+    NoMatch,
+    Match,
+    Unsupported,
+}
+
+internal readonly record struct FactoryDetectionMatch(
+    FactoryDetectionResult Result,
+    Factory? Factory
+);
