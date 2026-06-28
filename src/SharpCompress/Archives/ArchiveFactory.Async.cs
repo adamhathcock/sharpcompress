@@ -4,12 +4,31 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Factories;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
 public static partial class ArchiveFactory
 {
+    internal static ValueTask<T> FindFactoryAsync<T>(
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory => FactoryDetection.FindFactoryAsync<T>(filePath, cancellationToken);
+
+    internal static ValueTask<T> FindFactoryAsync<T>(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory => FactoryDetection.FindFactoryAsync<T>(fileInfo, cancellationToken);
+
+    internal static ValueTask<T> FindFactoryAsync<T>(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory => FactoryDetection.FindFactoryAsync<T>(stream, cancellationToken);
+
     public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
@@ -17,7 +36,8 @@ public static partial class ArchiveFactory
     )
     {
         readerOptions ??= ReaderOptions.ForExternalStream;
-        var factory = await FindFactoryAsync<IArchiveFactory>(stream, cancellationToken)
+        var factory = await FactoryDetection
+            .FindFactoryAsync<IArchiveFactory>(stream, cancellationToken)
             .ConfigureAwait(false);
         return await factory
             .OpenAsyncArchive(stream, readerOptions, cancellationToken)
@@ -46,7 +66,8 @@ public static partial class ArchiveFactory
     {
         options ??= ReaderOptions.ForFilePath;
 
-        var factory = await FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken)
+        var factory = await FactoryDetection
+            .FindFactoryAsync<IArchiveFactory>(fileInfo, cancellationToken)
             .ConfigureAwait(false);
         return await factory
             .OpenAsyncArchive(fileInfo, options, cancellationToken)
@@ -76,7 +97,8 @@ public static partial class ArchiveFactory
         fileInfo.NotNull(nameof(fileInfo));
         options ??= ReaderOptions.ForFilePath;
 
-        var factory = await FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken)
+        var factory = await FactoryDetection
+            .FindFactoryAsync<IMultiArchiveFactory>(fileInfo, cancellationToken)
             .ConfigureAwait(false);
         return await factory
             .OpenAsyncArchive(filesArray, options, cancellationToken)
@@ -101,7 +123,8 @@ public static partial class ArchiveFactory
         firstStream.NotNull(nameof(firstStream));
         options ??= ReaderOptions.ForExternalStream;
 
-        var factory = await FindFactoryAsync<IMultiArchiveFactory>(firstStream, cancellationToken)
+        var factory = await FactoryDetection
+            .FindFactoryAsync<IMultiArchiveFactory>(firstStream, cancellationToken)
             .ConfigureAwait(false);
         return await factory
             .OpenAsyncArchive(streamsArray, options, cancellationToken)

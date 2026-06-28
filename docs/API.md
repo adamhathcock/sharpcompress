@@ -45,20 +45,20 @@ using (var archive = ArchiveFactory.OpenArchive("archive.zip"))
 }
 
 // Detect before opening
-if (ArchiveFactory.IsArchive("archive.zip", out var archiveType))
+if (ArchiveFormat.IsArchive("archive.zip", out var archiveType))
 {
     Console.WriteLine($"Detected {archiveType}");
 }
 
 // Detect capabilities before choosing Archive API vs Reader API
-var info = ArchiveFactory.GetArchiveInformation("archive.arc");
+var info = ArchiveFormat.GetInfo("archive.arc");
 if (info is not null)
 {
     Console.WriteLine($"Type: {info.Type}");
     Console.WriteLine($"Supports random access: {info.SupportsRandomAccess}");
 }
 
-var asyncInfo = await ArchiveFactory.GetArchiveInformationAsync(
+var asyncInfo = await ArchiveFormat.GetInfoAsync(
     "archive.zip",
     cancellationToken
 );
@@ -73,7 +73,9 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 }
 ```
 
-`ArchiveInformation.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFactory.GetArchiveInformation` reports them as `ArchiveType.Tar` with `SupportsRandomAccess = false`, and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files.
+`ArchiveFormatInfo.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFormat.GetInfo` reports them as `ArchiveType.Tar` with `SupportsRandomAccess = false`, and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files.
+
+Breaking change: archive detection APIs live on `ArchiveFormat`. `ArchiveFactory` is only responsible for opening and creating archive API objects, and `ArchiveInformation` has been replaced by `ArchiveFormatInfo`.
 
 ### Creating Archives
 

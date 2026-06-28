@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Factories;
@@ -16,7 +14,9 @@ public static partial class ArchiveFactory
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
         readerOptions ??= ReaderOptions.ForExternalStream;
-        return FindFactory<IArchiveFactory>(stream).OpenArchive(stream, readerOptions);
+        return FactoryDetection
+            .FindFactory<IArchiveFactory>(stream)
+            .OpenArchive(stream, readerOptions);
     }
 
     public static IWritableArchive<TOptions> CreateArchive<TOptions>()
@@ -44,7 +44,9 @@ public static partial class ArchiveFactory
     {
         options ??= ReaderOptions.ForFilePath;
 
-        return FindFactory<IArchiveFactory>(fileInfo).OpenArchive(fileInfo, options);
+        return FactoryDetection
+            .FindFactory<IArchiveFactory>(fileInfo)
+            .OpenArchive(fileInfo, options);
     }
 
     public static IArchive OpenArchive(
@@ -68,7 +70,9 @@ public static partial class ArchiveFactory
         fileInfo.NotNull(nameof(fileInfo));
         options ??= ReaderOptions.ForFilePath;
 
-        return FindFactory<IMultiArchiveFactory>(fileInfo).OpenArchive(filesArray, options);
+        return FactoryDetection
+            .FindFactory<IMultiArchiveFactory>(fileInfo)
+            .OpenArchive(filesArray, options);
     }
 
     public static IArchive OpenArchive(IReadOnlyList<Stream> streams, ReaderOptions? options = null)
@@ -88,7 +92,9 @@ public static partial class ArchiveFactory
         firstStream.NotNull(nameof(firstStream));
         options ??= ReaderOptions.ForExternalStream;
 
-        return FindFactory<IMultiArchiveFactory>(firstStream).OpenArchive(streamsArray, options);
+        return FactoryDetection
+            .FindFactory<IMultiArchiveFactory>(firstStream)
+            .OpenArchive(streamsArray, options);
     }
 
     public static void WriteToDirectory(
@@ -104,139 +110,19 @@ public static partial class ArchiveFactory
     public static T FindFactory<T>(string filePath)
         where T : IFactory
     {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        using Stream stream = File.OpenRead(filePath);
-        return FindFactory<T>(stream);
+        return FactoryDetection.FindFactory<T>(filePath);
     }
 
     public static T FindFactory<T>(FileInfo finfo)
         where T : IFactory
     {
-        finfo.NotNull(nameof(finfo));
-        using Stream stream = finfo.OpenRead();
-        return FindFactory<T>(stream);
+        return FactoryDetection.FindFactory<T>(finfo);
     }
 
     public static T FindFactory<T>(Stream stream)
         where T : IFactory
     {
-        stream.RequireReadable();
-        stream.RequireSeekable();
-
-        var target = GetDetectionTarget<T>();
-        var match = Factory.DetectFactory(stream, ReaderOptions.ForExternalStream, target);
-        if (match.Result == FactoryDetectionResult.Match && match.Factory is T typedFactory)
-        {
-            return typedFactory;
-        }
-
-        var extensions = string.Join(", ", Factory.Factories.OfType<T>().Select(item => item.Name));
-
-        throw new ArchiveOperationException(
-            $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
-        );
-    }
-
-    private static FactoryDetectionTarget GetDetectionTarget<T>()
-        where T : IFactory
-    {
-        var factoryType = typeof(T);
-        if (
-            typeof(IArchiveFactory).IsAssignableFrom(factoryType)
-            || typeof(IMultiArchiveFactory).IsAssignableFrom(factoryType)
-        )
-        {
-            return FactoryDetectionTarget.Archive;
-        }
-
-        return typeof(IReaderFactory).IsAssignableFrom(factoryType)
-            ? FactoryDetectionTarget.Reader
-            : FactoryDetectionTarget.Identify;
-    }
-
-    public static bool IsArchive(string filePath, out ArchiveType? type)
-    {
-        return IsArchive(filePath, ReaderOptions.ForFilePath, out type);
-    }
-
-    public static bool IsArchive(
-        string filePath,
-        ReaderOptions? readerOptions,
-        out ArchiveType? type
-    )
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        using Stream s = File.OpenRead(filePath);
-        return IsArchive(s, readerOptions ?? ReaderOptions.ForFilePath, out type);
-    }
-
-    public static bool IsArchive(Stream stream, out ArchiveType? type)
-    {
-        return IsArchive(stream, ReaderOptions.ForExternalStream, out type);
-    }
-
-    public static bool IsArchive(Stream stream, ReaderOptions? readerOptions, out ArchiveType? type)
-    {
-        stream.RequireReadable();
-        stream.RequireSeekable();
-
-        var match = Factory.DetectFactory(
-            stream,
-            readerOptions ?? ReaderOptions.ForExternalStream,
-            FactoryDetectionTarget.Identify
-        );
-        type = match.Factory?.KnownArchiveType;
-        return match.Factory is not null;
-    }
-
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
-        string filePath,
-        CancellationToken cancellationToken = default
-    ) =>
-        await IsArchiveAsync(filePath, ReaderOptions.ForFilePath, cancellationToken)
-            .ConfigureAwait(false);
-
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
-        string filePath,
-        ReaderOptions? readerOptions,
-        CancellationToken cancellationToken = default
-    )
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        using Stream stream = File.OpenRead(filePath);
-        return await IsArchiveAsync(
-                stream,
-                readerOptions ?? ReaderOptions.ForFilePath,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-    }
-
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    ) =>
-        await IsArchiveAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
-            .ConfigureAwait(false);
-
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
-        Stream stream,
-        ReaderOptions? readerOptions,
-        CancellationToken cancellationToken = default
-    )
-    {
-        stream.RequireReadable();
-        stream.RequireSeekable();
-
-        var match = await Factory
-            .DetectFactoryAsync(
-                stream,
-                readerOptions ?? ReaderOptions.ForExternalStream,
-                FactoryDetectionTarget.Identify,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-        return (match.Factory is not null, match.Factory?.KnownArchiveType);
+        return FactoryDetection.FindFactory<T>(stream);
     }
 
     public static IEnumerable<string> GetFileParts(string part1)

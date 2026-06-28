@@ -106,55 +106,6 @@ public abstract class Factory : IFactory
             _ => false,
         };
 
-    internal static FactoryDetectionMatch DetectFactory(
-        Stream stream,
-        ReaderOptions readerOptions,
-        FactoryDetectionTarget target
-    )
-    {
-        var startPosition = stream.Position;
-
-        foreach (var factory in _factories)
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            var result = factory.Detect(stream, readerOptions, target);
-            if (result != FactoryDetectionResult.NoMatch)
-            {
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                return new FactoryDetectionMatch(result, factory);
-            }
-        }
-
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null);
-    }
-
-    internal static async ValueTask<FactoryDetectionMatch> DetectFactoryAsync(
-        Stream stream,
-        ReaderOptions readerOptions,
-        FactoryDetectionTarget target,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var startPosition = stream.Position;
-
-        foreach (var factory in _factories)
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            var result = await factory
-                .DetectAsync(stream, readerOptions, target, cancellationToken)
-                .ConfigureAwait(false);
-            if (result != FactoryDetectionResult.NoMatch)
-            {
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                return new FactoryDetectionMatch(result, factory);
-            }
-        }
-
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null);
-    }
-
     /// <inheritdoc/>
     public virtual FileInfo? GetFilePart(int index, FileInfo part1) => null;
 

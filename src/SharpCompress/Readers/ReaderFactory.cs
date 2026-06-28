@@ -1,9 +1,4 @@
-using System;
 using System.IO;
-using System.Linq;
-using SharpCompress.Common;
-using SharpCompress.Factories;
-using SharpCompress.IO;
 
 namespace SharpCompress.Readers;
 
@@ -32,33 +27,6 @@ public static partial class ReaderFactory
         stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
-        var factories = Factories.Factory.Factories.OfType<Factories.Factory>().ToList();
-        var minimumDetectionBufferSize = factories.Max(a =>
-            a.MinimumReaderDetectionBufferSize ?? 0
-        );
-        var bufferSize = Math.Max(options.RewindableBufferSize ?? 0, minimumDetectionBufferSize);
-        var sharpCompressStream = SharpCompressStream.Create(
-            stream,
-            bufferSize: bufferSize == 0 ? options.RewindableBufferSize : bufferSize
-        );
-        sharpCompressStream.StartRecording();
-
-        var match = Factories.Factory.DetectFactory(
-            sharpCompressStream,
-            options,
-            FactoryDetectionTarget.Reader
-        );
-        if (
-            match.Result == FactoryDetectionResult.Match
-            && match.Factory is IReaderFactory readerFactory
-        )
-        {
-            sharpCompressStream.Rewind(true);
-            return readerFactory.OpenReader(sharpCompressStream, options);
-        }
-
-        throw new InvalidFormatException(
-            "Cannot determine compressed stream type.  Supported Reader Formats: Ace, Arc, Arj, Zip, GZip, BZip2, Tar, Rar, LZip, Lzw, XZ, ZStandard"
-        );
+        return ReaderFormatDetection.OpenReader(stream, options);
     }
 }

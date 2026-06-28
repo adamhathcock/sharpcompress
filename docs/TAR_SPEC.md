@@ -68,7 +68,7 @@ Write support is implemented in `src/SharpCompress/Writers/Tar/TarWriter.cs` and
 
 ## Detection Behavior
 
-Tar reader detection is implemented in `TarFactory.TryOpenReader`, `TarFactory.TryOpenReaderAsync`, `TarFactory.GetCompressionType`, and `TarFactory.GetCompressionTypeAsync`. Archive detection through `TarFactory.IsArchive` and `TarFactory.IsArchiveAsync` accepts raw tar only.
+Tar reader detection is orchestrated by `ReaderFormatDetection`, with tar-specific wrapper probing in `TarFactory.GetCompressionType` and `TarFactory.GetCompressionTypeAsync`. Archive detection through `TarFactory.IsArchive` and `TarFactory.IsArchiveAsync` accepts raw tar only.
 
 Detection behavior is:
 
@@ -84,7 +84,7 @@ Implications:
 - Tar detection is content-based, not extension-based.
 - Wrapper detection is not sufficient by itself. The decompressed payload must also parse as tar.
 - Non-seekable wrapper detection is supported through the recording and rewind mechanism on the reader path.
-- `ArchiveFactory.GetArchiveInformation` identifies compressed tar wrappers as `ArchiveType.Tar` with no random access, but `ArchiveFactory`/`TarArchive` do not open them and do not fall through to the outer compression wrapper archive; use `ReaderFactory`/`TarReader` for `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tar.zst`, `.tar.lz`, and `.tar.Z`.
+- `ArchiveFormat.GetInfo` identifies compressed tar wrappers as `ArchiveType.Tar` with no random access, but `ArchiveFactory`/`TarArchive` do not open them and do not fall through to the outer compression wrapper archive; use `ReaderFactory`/`TarReader` for `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tar.zst`, `.tar.lz`, and `.tar.Z`.
 - The largest rewind requirement currently comes from BZip2, which declares a larger minimum probe buffer in `TarWrapper`.
 
 `TarArchive.IsTarFile` and `TarArchive.IsTarFileAsync` attempt to read a single tar header and return `false` on any exception. They also treat an all-zero empty archive block as a valid empty tar archive when the entry type is defined.
