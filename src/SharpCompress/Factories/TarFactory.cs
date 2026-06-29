@@ -71,21 +71,36 @@ public class TarFactory
         FactoryDetectionTarget target
     )
     {
+        return DetectMatch(stream, readerOptions, target).Result;
+    }
+
+    internal override FactoryDetectionMatch DetectMatch(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target
+    )
+    {
         var startPosition = stream.Position;
         if (TarArchive.IsTarFile(stream))
         {
-            return FactoryDetectionResult.Match;
+            return new FactoryDetectionMatch(
+                FactoryDetectionResult.Match,
+                this,
+                CompressionType.None
+            );
         }
 
         stream.Seek(startPosition, SeekOrigin.Begin);
-        if (!IsCompressedTar(stream, readerOptions))
+        if (!TryGetCompressedTarType(stream, readerOptions, out var compressionType))
         {
-            return FactoryDetectionResult.NoMatch;
+            return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null, null);
         }
 
-        return target == FactoryDetectionTarget.Archive
-            ? FactoryDetectionResult.Unsupported
-            : FactoryDetectionResult.Match;
+        var result =
+            target == FactoryDetectionTarget.Archive
+                ? FactoryDetectionResult.Unsupported
+                : FactoryDetectionResult.Match;
+        return new FactoryDetectionMatch(result, this, compressionType);
     }
 
     internal override async ValueTask<FactoryDetectionResult> DetectAsync(
@@ -95,24 +110,45 @@ public class TarFactory
         CancellationToken cancellationToken = default
     )
     {
+        var match = await DetectMatchAsync(stream, readerOptions, target, cancellationToken)
+            .ConfigureAwait(false);
+        return match.Result;
+    }
+
+    internal override async ValueTask<FactoryDetectionMatch> DetectMatchAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target,
+        CancellationToken cancellationToken = default
+    )
+    {
         var startPosition = stream.Position;
         if (await TarArchive.IsTarFileAsync(stream, cancellationToken).ConfigureAwait(false))
         {
-            return FactoryDetectionResult.Match;
+            return new FactoryDetectionMatch(
+                FactoryDetectionResult.Match,
+                this,
+                CompressionType.None
+            );
         }
 
         stream.Seek(startPosition, SeekOrigin.Begin);
-        if (
-            !await IsCompressedTarAsync(stream, readerOptions, cancellationToken)
-                .ConfigureAwait(false)
-        )
+        var compressionType = await TryGetCompressedTarTypeAsync(
+                stream,
+                readerOptions,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+        if (compressionType is null)
         {
-            return FactoryDetectionResult.NoMatch;
+            return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null, null);
         }
 
-        return target == FactoryDetectionTarget.Archive
-            ? FactoryDetectionResult.Unsupported
-            : FactoryDetectionResult.Match;
+        var result =
+            target == FactoryDetectionTarget.Archive
+                ? FactoryDetectionResult.Unsupported
+                : FactoryDetectionResult.Match;
+        return new FactoryDetectionMatch(result, this, compressionType);
     }
 
     #endregion
@@ -234,9 +270,14 @@ public class TarFactory
         throw new InvalidFormatException("Not a tar file.");
     }
 
-    private static bool IsCompressedTar(Stream stream, ReaderOptions readerOptions)
+    private static bool TryGetCompressedTarType(
+        Stream stream,
+        ReaderOptions readerOptions,
+        out CompressionType compressionType
+    )
     {
         var startPosition = stream.Position;
+        compressionType = CompressionType.Unknown;
         try
         {
             foreach (var wrapper in TarWrapper.Wrappers)
@@ -260,6 +301,7 @@ public class TarFactory
                 );
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
+                    compressionType = wrapper.CompressionType;
                     return true;
                 }
             }
@@ -272,7 +314,7 @@ public class TarFactory
         }
     }
 
-    private static async ValueTask<bool> IsCompressedTarAsync(
+    private static async ValueTask<CompressionType?> TryGetCompressedTarTypeAsync(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken = default
@@ -308,16 +350,17 @@ public class TarFactory
                         .ConfigureAwait(false)
                 )
                 {
-                    return true;
+                    return wrapper.CompressionType;
                 }
             }
-
-            return false;
         }
+        catch (InvalidFormatException) { }
         finally
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
         }
+
+        return null;
     }
 
     internal override bool TryOpenReader(

@@ -55,6 +55,7 @@ var info = ArchiveFormat.GetInfo("archive.arc");
 if (info is not null)
 {
     Console.WriteLine($"Type: {info.Type}");
+    Console.WriteLine($"Archive-wide compression: {info.CompressionType}");
     Console.WriteLine($"Supports random access: {info.SupportsRandomAccess}");
 }
 
@@ -72,6 +73,8 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
     archive.WriteToDirectory(@"C:\output");
 }
 ```
+
+`ArchiveFormatInfo.CompressionType` is the archive-wide or wrapper compression type. It is `null` for container formats such as Zip, Rar, 7Zip, Ace, Arc, and Arj because compression is stored per entry or internally; inspect `IEntry.CompressionType` after opening those archives. Raw tar reports `CompressionType.None`, and compressed tar wrappers report their wrapper compression, such as `CompressionType.GZip` for `.tar.gz` or `CompressionType.Lzw` for `.tar.Z`.
 
 `ArchiveFormatInfo.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFormat.GetInfo` reports them as `ArchiveType.Tar` with `SupportsRandomAccess = false`, and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files.
 

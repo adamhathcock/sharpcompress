@@ -22,6 +22,8 @@ public class LzwFactory : Factory, IReaderFactory
     /// <inheritdoc/>
     public override ArchiveType? KnownArchiveType => ArchiveType.Lzw;
 
+    internal override CompressionType? KnownCompressionType => CompressionType.Lzw;
+
     /// <inheritdoc/>
     public override IEnumerable<string> GetSupportedExtensions()
     {

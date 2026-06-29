@@ -107,16 +107,16 @@ internal static class FactoryDetection
         foreach (var factory in Factory.Factories.OfType<Factory>())
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
-            var result = factory.Detect(stream, readerOptions, target);
-            if (result != FactoryDetectionResult.NoMatch)
+            var match = factory.DetectMatch(stream, readerOptions, target);
+            if (match.Result != FactoryDetectionResult.NoMatch)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
-                return new FactoryDetectionMatch(result, factory);
+                return match;
             }
         }
 
         stream.Seek(startPosition, SeekOrigin.Begin);
-        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null);
+        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null, null);
     }
 
     internal static async ValueTask<FactoryDetectionMatch> DetectAsync(
@@ -131,18 +131,18 @@ internal static class FactoryDetection
         foreach (var factory in Factory.Factories.OfType<Factory>())
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
-            var result = await factory
-                .DetectAsync(stream, readerOptions, target, cancellationToken)
+            var match = await factory
+                .DetectMatchAsync(stream, readerOptions, target, cancellationToken)
                 .ConfigureAwait(false);
-            if (result != FactoryDetectionResult.NoMatch)
+            if (match.Result != FactoryDetectionResult.NoMatch)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
-                return new FactoryDetectionMatch(result, factory);
+                return match;
             }
         }
 
         stream.Seek(startPosition, SeekOrigin.Begin);
-        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null);
+        return new FactoryDetectionMatch(FactoryDetectionResult.NoMatch, null, null);
     }
 
     private static FactoryDetectionTarget GetDetectionTarget<T>()

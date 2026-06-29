@@ -276,15 +276,17 @@ public class ArchiveFormatTests : TestBase
     }
 
     [Theory]
-    [InlineData("Zip.deflate.zip", ArchiveType.Zip, true)]
-    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar, true)]
-    [InlineData("Rar.rar", ArchiveType.Rar, true)]
-    [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip, true)]
-    [InlineData("Ace.store.ace", ArchiveType.Ace, false)]
-    [InlineData("Arc.uncompressed.arc", ArchiveType.Arc, false)]
+    [InlineData("Zip.deflate.zip", ArchiveType.Zip, null, true)]
+    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar, CompressionType.None, true)]
+    [InlineData("Rar.rar", ArchiveType.Rar, null, true)]
+    [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip, null, true)]
+    [InlineData("Ace.store.ace", ArchiveType.Ace, null, false)]
+    [InlineData("Arc.uncompressed.arc", ArchiveType.Arc, null, false)]
+    [InlineData("large_test.txt.Z", ArchiveType.Lzw, CompressionType.Lzw, false)]
     public void GetInfo_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
+        CompressionType? expectedCompressionType,
         bool expectedRandomAccess
     )
     {
@@ -292,6 +294,7 @@ public class ArchiveFormatTests : TestBase
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.Type);
+        Assert.Equal(expectedCompressionType, info.CompressionType);
         Assert.Equal(expectedRandomAccess, info.SupportsRandomAccess);
     }
 
@@ -315,15 +318,17 @@ public class ArchiveFormatTests : TestBase
     }
 
     [Theory]
-    [InlineData("Zip.deflate.zip", ArchiveType.Zip, true)]
-    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar, true)]
-    [InlineData("Rar.rar", ArchiveType.Rar, true)]
-    [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip, true)]
-    [InlineData("Ace.store.ace", ArchiveType.Ace, false)]
-    [InlineData("Arc.uncompressed.arc", ArchiveType.Arc, false)]
+    [InlineData("Zip.deflate.zip", ArchiveType.Zip, null, true)]
+    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar, CompressionType.None, true)]
+    [InlineData("Rar.rar", ArchiveType.Rar, null, true)]
+    [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip, null, true)]
+    [InlineData("Ace.store.ace", ArchiveType.Ace, null, false)]
+    [InlineData("Arc.uncompressed.arc", ArchiveType.Arc, null, false)]
+    [InlineData("large_test.txt.Z", ArchiveType.Lzw, CompressionType.Lzw, false)]
     public async ValueTask GetInfoAsync_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
+        CompressionType? expectedCompressionType,
         bool expectedRandomAccess
     )
     {
@@ -331,6 +336,7 @@ public class ArchiveFormatTests : TestBase
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.Type);
+        Assert.Equal(expectedCompressionType, info.CompressionType);
         Assert.Equal(expectedRandomAccess, info.SupportsRandomAccess);
     }
 
@@ -430,9 +436,12 @@ public class ArchiveFormatTests : TestBase
     }
 
     [Theory]
-    [InlineData("Tar.tar.gz")]
-    [InlineData("Tar.tar.Z")]
-    public void GetInfo_ReturnsReaderOnlyTar_ForCompressedTar(string archiveName)
+    [InlineData("Tar.tar.gz", CompressionType.GZip)]
+    [InlineData("Tar.tar.Z", CompressionType.Lzw)]
+    public void GetInfo_ReturnsReaderOnlyTar_ForCompressedTar(
+        string archiveName,
+        CompressionType expectedCompressionType
+    )
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
@@ -440,13 +449,17 @@ public class ArchiveFormatTests : TestBase
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Tar, info.Type);
+        Assert.Equal(expectedCompressionType, info.CompressionType);
         Assert.False(info.SupportsRandomAccess);
     }
 
     [Theory]
-    [InlineData("Tar.tar.gz")]
-    [InlineData("Tar.tar.Z")]
-    public async ValueTask GetInfoAsync_ReturnsReaderOnlyTar_ForCompressedTar(string archiveName)
+    [InlineData("Tar.tar.gz", CompressionType.GZip)]
+    [InlineData("Tar.tar.Z", CompressionType.Lzw)]
+    public async ValueTask GetInfoAsync_ReturnsReaderOnlyTar_ForCompressedTar(
+        string archiveName,
+        CompressionType expectedCompressionType
+    )
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
@@ -454,6 +467,7 @@ public class ArchiveFormatTests : TestBase
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Tar, info.Type);
+        Assert.Equal(expectedCompressionType, info.CompressionType);
         Assert.False(info.SupportsRandomAccess);
     }
 

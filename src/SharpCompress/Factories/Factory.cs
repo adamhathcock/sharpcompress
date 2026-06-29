@@ -51,6 +51,8 @@ public abstract class Factory : IFactory
     /// <inheritdoc/>
     public virtual ArchiveType? KnownArchiveType => null;
 
+    internal virtual CompressionType? KnownCompressionType => null;
+
     /// <inheritdoc/>
     public abstract IEnumerable<string> GetSupportedExtensions();
 
@@ -80,6 +82,16 @@ public abstract class Factory : IFactory
             : FactoryDetectionResult.Unsupported;
     }
 
+    internal virtual FactoryDetectionMatch DetectMatch(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target
+    )
+    {
+        var result = Detect(stream, readerOptions, target);
+        return CreateDetectionMatch(result);
+    }
+
     internal virtual async ValueTask<FactoryDetectionResult> DetectAsync(
         Stream stream,
         ReaderOptions readerOptions,
@@ -96,6 +108,23 @@ public abstract class Factory : IFactory
             ? FactoryDetectionResult.Match
             : FactoryDetectionResult.Unsupported;
     }
+
+    internal virtual async ValueTask<FactoryDetectionMatch> DetectMatchAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        FactoryDetectionTarget target,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await DetectAsync(stream, readerOptions, target, cancellationToken)
+            .ConfigureAwait(false);
+        return CreateDetectionMatch(result);
+    }
+
+    private FactoryDetectionMatch CreateDetectionMatch(FactoryDetectionResult result) =>
+        result == FactoryDetectionResult.NoMatch
+            ? new FactoryDetectionMatch(result, null, null)
+            : new FactoryDetectionMatch(result, this, KnownCompressionType);
 
     private bool SupportsTarget(FactoryDetectionTarget target) =>
         target switch
@@ -185,5 +214,6 @@ internal enum FactoryDetectionResult
 
 internal readonly record struct FactoryDetectionMatch(
     FactoryDetectionResult Result,
-    Factory? Factory
+    Factory? Factory,
+    CompressionType? CompressionType
 );

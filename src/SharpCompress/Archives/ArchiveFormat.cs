@@ -124,6 +124,7 @@ public static class ArchiveFormat
             ? null
             : new ArchiveFormatInfo(
                 match.Factory.KnownArchiveType,
+                match.CompressionType,
                 match.Result == FactoryDetectionResult.Match && match.Factory is IArchiveFactory
             );
     }
@@ -179,6 +180,7 @@ public static class ArchiveFormat
             ? null
             : new ArchiveFormatInfo(
                 match.Factory.KnownArchiveType,
+                match.CompressionType,
                 match.Result == FactoryDetectionResult.Match && match.Factory is IArchiveFactory
             );
     }

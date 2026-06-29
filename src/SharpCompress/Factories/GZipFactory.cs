@@ -33,6 +33,8 @@ public class GZipFactory
     /// <inheritdoc/>
     public override ArchiveType? KnownArchiveType => ArchiveType.GZip;
 
+    internal override CompressionType? KnownCompressionType => CompressionType.GZip;
+
     /// <inheritdoc/>
     public override IEnumerable<string> GetSupportedExtensions()
     {
