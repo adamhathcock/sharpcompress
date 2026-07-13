@@ -84,6 +84,15 @@ public partial class GZipStream : Stream
         Encoding encoding,
         bool leaveOpen = false
     )
+        : this(stream, mode, level, leaveOpen: false, encoding) { }
+
+    public GZipStream(
+        Stream stream,
+        CompressionMode mode,
+        CompressionLevel level,
+        bool leaveOpen,
+        Encoding encoding
+    )
     {
         BaseStream = new ZlibBaseStream(
             stream,
