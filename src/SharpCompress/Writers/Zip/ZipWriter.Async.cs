@@ -104,7 +104,8 @@ public partial class ZipWriter
             compression,
             entryPath,
             (ulong)streamPosition,
-            WriterOptions.ArchiveEncoding
+            WriterOptions.ArchiveEncoding,
+            OutputStream.NotNull().CanSeek
         )
         {
             Comment = options.EntryComment,
@@ -189,7 +190,8 @@ public partial class ZipWriter
             compression,
             directoryPath,
             (ulong)streamPosition,
-            WriterOptions.ArchiveEncoding
+            WriterOptions.ArchiveEncoding,
+            OutputStream.NotNull().CanSeek
         )
         {
             Comment = options.EntryComment,

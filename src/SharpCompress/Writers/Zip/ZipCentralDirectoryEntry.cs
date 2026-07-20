@@ -18,13 +18,15 @@ internal class ZipCentralDirectoryEntry
         ZipCompressionMethod compression,
         string fileName,
         ulong headerOffset,
-        IArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding,
+        bool outputCanSeek
     )
     {
         this.compression = compression;
         this.fileName = fileName;
         HeaderOffset = headerOffset;
         this.archiveEncoding = archiveEncoding;
+        OutputCanSeek = outputCanSeek;
     }
 
     internal DateTime? ModificationTime { get; set; }
@@ -34,6 +36,13 @@ internal class ZipCentralDirectoryEntry
     internal ulong Decompressed { get; set; }
     internal ushort Zip64HeaderOffset { get; set; }
     internal ulong HeaderOffset { get; }
+
+    /// <summary>
+    /// Whether the real destination stream is seekable. The async writer buffers header and
+    /// central directory writes through a seekable MemoryStream, so the data-descriptor
+    /// decision must be based on this captured value, never on the stream being written to.
+    /// </summary>
+    internal bool OutputCanSeek { get; }
 
     internal uint Write(Stream outputStream)
     {
@@ -75,7 +84,7 @@ internal class ZipCentralDirectoryEntry
         var flags = Equals(archiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
             : HeaderFlags.None;
-        if (!outputStream.CanSeek)
+        if (!OutputCanSeek)
         {
             // Cannot use data descriptors with zip64:
             // https://blogs.oracle.com/xuemingshen/entry/is_zipinput_outputstream_handling_of

@@ -103,7 +103,8 @@ public partial class ZipWriter : AbstractWriter
             compression,
             entryPath,
             (ulong)streamPosition,
-            WriterOptions.ArchiveEncoding
+            WriterOptions.ArchiveEncoding,
+            OutputStream.NotNull().CanSeek
         )
         {
             Comment = options.EntryComment,
@@ -181,7 +182,8 @@ public partial class ZipWriter : AbstractWriter
             compression,
             directoryPath,
             (ulong)streamPosition,
-            WriterOptions.ArchiveEncoding
+            WriterOptions.ArchiveEncoding,
+            OutputStream.NotNull().CanSeek
         )
         {
             Comment = options.EntryComment,
@@ -218,8 +220,10 @@ public partial class ZipWriter : AbstractWriter
         bool useZip64
     )
     {
+        // The header may be buffered through a seekable MemoryStream (async path), so all
+        // seekability decisions must use entry.OutputCanSeek, not stream.CanSeek.
         // We err on the side of caution until the zip specification clarifies how to support this
-        if (!stream.CanSeek && useZip64)
+        if (!entry.OutputCanSeek && useZip64)
         {
             throw new NotSupportedException(
                 "Zip64 extensions are not supported on non-seekable streams"
@@ -236,7 +240,7 @@ public partial class ZipWriter : AbstractWriter
         stream.Write(intBuf);
         if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
         {
-            if (stream.CanSeek && useZip64)
+            if (entry.OutputCanSeek && useZip64)
             {
                 stream.Write(stackalloc byte[] { 45, 0 }); //smallest allowed version for zip64
             }
@@ -252,7 +256,7 @@ public partial class ZipWriter : AbstractWriter
         var flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8)
             ? HeaderFlags.Efs
             : 0;
-        if (!stream.CanSeek)
+        if (!entry.OutputCanSeek)
         {
             flags |= HeaderFlags.UsePostDataDescriptor;
 
@@ -280,7 +284,7 @@ public partial class ZipWriter : AbstractWriter
         stream.Write(intBuf.Slice(0, 2)); // filename length
 
         var extralength = 0;
-        if (stream.CanSeek && useZip64)
+        if (entry.OutputCanSeek && useZip64)
         {
             extralength = 2 + 2 + 8 + 8;
         }
