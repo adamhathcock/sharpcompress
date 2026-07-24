@@ -50,8 +50,11 @@ public class ReaderFactoryTests : TestBase
     public void OpenReader_DeflateStream_WithTarPayload_DetectsTarReader()
     {
         using var compressedStream = new MemoryStream(CompressWithDeflate(CreateTarPayload()));
+        using var sharpCompressStream = SharpCompress.IO.SharpCompressStream.CreateNonDisposing(
+            compressedStream
+        );
         using var deflateStream = new DeflateStream(
-            compressedStream,
+            sharpCompressStream,
             CompressionMode.Decompress,
             CompressionLevel.Default,
             leaveOpen: false
