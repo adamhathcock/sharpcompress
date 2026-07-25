@@ -5,8 +5,13 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.Deflate;
+using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
+using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
+using SharpCompress.Writers.Tar;
 using Xunit;
 
 namespace SharpCompress.Test.GZip;
@@ -106,6 +111,49 @@ public class GZipArchiveTests : ArchiveTests
             entryStream.CopyTo(tarStream);
         }
         Assert.Equal(size, tarStream.Length);
+    }
+
+    [Fact]
+    public void GZip_Archive_EntryStream_Can_Be_Opened_As_Tar_Reader()
+    {
+        var sourceDirectory = Path.Combine(SCRATCH_FILES_PATH, "srcdir");
+        Directory.CreateDirectory(sourceDirectory);
+        File.WriteAllText(Path.Combine(sourceDirectory, "a.txt"), "i am a.txt");
+
+        var subDirectory = Path.Combine(sourceDirectory, "sub");
+        Directory.CreateDirectory(subDirectory);
+        File.WriteAllText(Path.Combine(subDirectory, "suba.txt"), "i am suba.txt");
+
+        var archivePath = Path.Combine(SCRATCH_FILES_PATH, "srcdir.tar.gz");
+        using (var fileStream = File.Create(archivePath))
+        using (var gzipStream = new GZipStream(fileStream, CompressionMode.Compress))
+        using (var tarArchive = TarArchive.CreateArchive())
+        {
+            tarArchive.AddAllFromDirectory(sourceDirectory, "*", SearchOption.AllDirectories);
+            tarArchive.SaveTo(gzipStream, new TarWriterOptions(CompressionType.None, false));
+        }
+
+        var destinationDirectory = Path.Combine(SCRATCH_FILES_PATH, "destdir");
+        Directory.CreateDirectory(destinationDirectory);
+        using var archive = GZipArchive.OpenArchive(archivePath);
+        using var entryStream = archive.Entries.First().OpenEntryStream();
+        using var reader = ReaderFactory.OpenReader(entryStream);
+        while (reader.MoveToNextEntry())
+        {
+            if (!reader.Entry.IsDirectory && reader.Entry.Size > 0)
+            {
+                reader.WriteEntryToDirectory(
+                    destinationDirectory,
+                    new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+                );
+            }
+        }
+
+        Assert.Equal("i am a.txt", File.ReadAllText(Path.Combine(destinationDirectory, "a.txt")));
+        Assert.Equal(
+            "i am suba.txt",
+            File.ReadAllText(Path.Combine(destinationDirectory, "sub", "suba.txt"))
+        );
     }
 
     [Fact]

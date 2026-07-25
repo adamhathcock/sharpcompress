@@ -86,13 +86,14 @@ public class SharpCompressStreamFactoryTest
     }
 
     [Fact]
-    public void Create_WithIStreamStack_UnwrapsSharpCompressStream()
+    public void Create_WithIStreamStack_Wraps_Outer_Stream_Instead_Of_Unwrapping_Inner_Stream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var sharpStream = SharpCompressStream.CreateNonDisposing(ms);
         var wrappedStream = new IStreamStackMock(sharpStream);
-        var stream = SharpCompressStream.Create(wrappedStream);
-        Assert.Same(sharpStream, stream);
+        var result = SharpCompressStream.Create(wrappedStream);
+        Assert.NotSame(sharpStream, result);
+        Assert.Same(wrappedStream, result.BaseStream());
     }
 
     [Fact]
@@ -127,13 +128,33 @@ public class SharpCompressStreamFactoryTest
     }
 
     [Fact]
-    public void Create_WithIStreamStack_ReturnsUnderlyingSharpCompressStream()
+    public void Create_WithIStreamStack_Containing_SharpCompressStream_Preserves_Outer_Stream()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
         var sharpStream = SharpCompressStream.Create(ms);
         var wrappedStream = new IStreamStackMock(sharpStream);
         var result = SharpCompressStream.Create(wrappedStream);
-        Assert.Same(sharpStream, result);
+        Assert.NotSame(sharpStream, result);
+        Assert.Same(wrappedStream, result.BaseStream());
+    }
+
+    [Fact]
+    public void Create_WithDataDescriptorStream_UsesBufferedWrapper()
+    {
+        using var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+        using var sharpStream = SharpCompressStream.CreateNonDisposing(ms);
+        using var dataDescriptorStream = new DataDescriptorStream(sharpStream);
+        using var result = SharpCompressStream.Create(dataDescriptorStream, 128);
+
+        Assert.False(dataDescriptorStream.CanSeek);
+        Assert.IsType<SharpCompressStream>(result);
+        Assert.Same(dataDescriptorStream, result.BaseStream());
+
+        result.StartRecording();
+        Assert.Equal(1, result.ReadByte());
+        Assert.Equal(2, result.ReadByte());
+        result.Rewind();
+        Assert.Equal(1, result.ReadByte());
     }
 
     [Fact]

@@ -1,14 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
+using SharpCompress.Common;
+using SharpCompress.Compressors;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Rar;
+using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
+using SharpCompress.Writers.Tar;
 using Xunit;
 
 namespace SharpCompress.Test;
 
-public class ReaderFactoryTests
+public class ReaderFactoryTests : TestBase
 {
     [Fact]
     public void OpenReader_Stream_Throws_On_Unreadable_Stream()
@@ -37,5 +44,135 @@ public class ReaderFactoryTests
         Assert.Throws<ArgumentException>(() =>
             RarReader.OpenReader([unreadable, readable]).MoveToNextEntry()
         );
+    }
+
+    [Fact]
+    public void OpenReader_DeflateStream_WithTarPayload_DetectsTarReader()
+    {
+        using var compressedStream = new MemoryStream(CompressWithDeflate(CreateTarPayload()));
+        using var sharpCompressStream = SharpCompress.IO.SharpCompressStream.CreateNonDisposing(
+            compressedStream
+        );
+        using var deflateStream = new DeflateStream(
+            sharpCompressStream,
+            CompressionMode.Decompress,
+            CompressionLevel.Default,
+            leaveOpen: false
+        );
+        using var reader = ReaderFactory.OpenReader(deflateStream);
+
+        Assert.IsType<TarReader>(reader);
+        Assert.Equal(
+            new Dictionary<string, string>
+            {
+                ["alpha.txt"] = "alpha",
+                ["nested/beta.txt"] = "beta",
+            },
+            ReadAllFiles(reader)
+        );
+    }
+
+    [Fact]
+    public async ValueTask OpenAsyncReader_DeflateStream_WithTarPayload_DetectsTarReader()
+    {
+        using var compressedStream = new MemoryStream(CompressWithDeflate(CreateTarPayload()));
+        using var sharpCompressStream = SharpCompress.IO.SharpCompressStream.CreateNonDisposing(
+            compressedStream
+        );
+        using var deflateStream = new DeflateStream(
+            sharpCompressStream,
+            CompressionMode.Decompress,
+            CompressionLevel.Default,
+            leaveOpen: false
+        );
+        await using var reader = await ReaderFactory.OpenAsyncReader(deflateStream);
+
+        Assert.IsType<TarReader>(reader);
+        Assert.Equal(
+            new Dictionary<string, string>
+            {
+                ["alpha.txt"] = "alpha",
+                ["nested/beta.txt"] = "beta",
+            },
+            await ReadAllFilesAsync(reader)
+        );
+    }
+
+    private static Dictionary<string, string> ReadAllFiles(IReader reader)
+    {
+        var entries = new Dictionary<string, string>();
+        while (reader.MoveToNextEntry())
+        {
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            using var entryStream = reader.OpenEntryStream();
+            using var streamReader = new StreamReader(entryStream, Encoding.UTF8);
+            entries.Add(reader.Entry.Key!, streamReader.ReadToEnd());
+        }
+
+        return entries;
+    }
+
+    private static async ValueTask<Dictionary<string, string>> ReadAllFilesAsync(
+        IAsyncReader reader
+    )
+    {
+        var entries = new Dictionary<string, string>();
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            using var entryStream = await reader.OpenEntryStreamAsync();
+            using var streamReader = new StreamReader(entryStream, Encoding.UTF8);
+            entries.Add(reader.Entry.Key!, await streamReader.ReadToEndAsync());
+        }
+
+        return entries;
+    }
+
+    private static byte[] CreateTarPayload()
+    {
+        var archiveEncoding = new ArchiveEncoding { Default = Encoding.UTF8 };
+        var tarWriterOptions = new TarWriterOptions(CompressionType.None, true)
+        {
+            ArchiveEncoding = archiveEncoding,
+        };
+
+        using var memoryStream = new MemoryStream();
+        using (var tarWriter = new TarWriter(memoryStream, tarWriterOptions))
+        using (var alphaStream = new MemoryStream(Encoding.UTF8.GetBytes("alpha")))
+        using (var betaStream = new MemoryStream(Encoding.UTF8.GetBytes("beta")))
+        {
+            tarWriter.Write("alpha.txt", alphaStream, null);
+            tarWriter.Write("nested/beta.txt", betaStream, null);
+        }
+
+        return memoryStream.ToArray();
+    }
+
+    private static byte[] CompressWithDeflate(byte[] bytes)
+    {
+        using var sourceStream = new MemoryStream(bytes);
+        using var deflateStream = new DeflateStream(
+            sourceStream,
+            CompressionMode.Compress,
+            CompressionLevel.Default
+        );
+        using var compressedStream = new MemoryStream();
+
+        var buffer = new byte[4096];
+        int read;
+        while ((read = deflateStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            compressedStream.Write(buffer, 0, read);
+        }
+
+        return compressedStream.ToArray();
     }
 }

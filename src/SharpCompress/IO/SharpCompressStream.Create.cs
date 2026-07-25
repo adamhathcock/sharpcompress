@@ -52,8 +52,8 @@ public partial class SharpCompressStream
     /// <paramref name="bufferSize"/> or <see cref="Common.Constants.RewindableBufferSize"/> to
     /// avoid this.</para>
     /// <para><b>Already-wrapped streams</b> — if <paramref name="stream"/> is already a
-    /// <see cref="SharpCompressStream"/> (or a stack that contains one), it is returned as-is to
-    /// prevent double-wrapping and double-buffering.</para>
+    /// <see cref="SharpCompressStream"/>, it is returned as-is to prevent double-wrapping and
+    /// double-buffering.</para>
     /// </remarks>
     /// <param name="stream">The underlying stream to wrap. Must not be <see langword="null"/>.</param>
     /// <param name="bufferSize">
@@ -88,16 +88,6 @@ public partial class SharpCompressStream
             }
             // Not passthrough - return as-is
             return sharpCompressStream;
-        }
-
-        // Check if stream is wrapping a SharpCompressStream (e.g., via IStreamStack)
-        if (stream is IStreamStack streamStack)
-        {
-            var underlying = streamStack.GetStream<SharpCompressStream>();
-            if (underlying is not null)
-            {
-                return underlying;
-            }
         }
 
         if (stream.CanSeek)
