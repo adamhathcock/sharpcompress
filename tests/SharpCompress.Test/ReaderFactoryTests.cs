@@ -72,6 +72,32 @@ public class ReaderFactoryTests : TestBase
         );
     }
 
+    [Fact]
+    public async ValueTask OpenAsyncReader_DeflateStream_WithTarPayload_DetectsTarReader()
+    {
+        using var compressedStream = new MemoryStream(CompressWithDeflate(CreateTarPayload()));
+        using var sharpCompressStream = SharpCompress.IO.SharpCompressStream.CreateNonDisposing(
+            compressedStream
+        );
+        using var deflateStream = new DeflateStream(
+            sharpCompressStream,
+            CompressionMode.Decompress,
+            CompressionLevel.Default,
+            leaveOpen: false
+        );
+        await using var reader = await ReaderFactory.OpenAsyncReader(deflateStream);
+
+        Assert.IsType<TarReader>(reader);
+        Assert.Equal(
+            new Dictionary<string, string>
+            {
+                ["alpha.txt"] = "alpha",
+                ["nested/beta.txt"] = "beta",
+            },
+            await ReadAllFilesAsync(reader)
+        );
+    }
+
     private static Dictionary<string, string> ReadAllFiles(IReader reader)
     {
         var entries = new Dictionary<string, string>();
@@ -85,6 +111,26 @@ public class ReaderFactoryTests : TestBase
             using var entryStream = reader.OpenEntryStream();
             using var streamReader = new StreamReader(entryStream, Encoding.UTF8);
             entries.Add(reader.Entry.Key!, streamReader.ReadToEnd());
+        }
+
+        return entries;
+    }
+
+    private static async ValueTask<Dictionary<string, string>> ReadAllFilesAsync(
+        IAsyncReader reader
+    )
+    {
+        var entries = new Dictionary<string, string>();
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            using var entryStream = await reader.OpenEntryStreamAsync();
+            using var streamReader = new StreamReader(entryStream, Encoding.UTF8);
+            entries.Add(reader.Entry.Key!, await streamReader.ReadToEndAsync());
         }
 
         return entries;

@@ -139,6 +139,25 @@ public class SharpCompressStreamFactoryTest
     }
 
     [Fact]
+    public void Create_WithDataDescriptorStream_UsesBufferedWrapper()
+    {
+        using var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+        using var sharpStream = SharpCompressStream.CreateNonDisposing(ms);
+        using var dataDescriptorStream = new DataDescriptorStream(sharpStream);
+        using var result = SharpCompressStream.Create(dataDescriptorStream, 128);
+
+        Assert.False(dataDescriptorStream.CanSeek);
+        Assert.IsType<SharpCompressStream>(result);
+        Assert.Same(dataDescriptorStream, result.BaseStream());
+
+        result.StartRecording();
+        Assert.Equal(1, result.ReadByte());
+        Assert.Equal(2, result.ReadByte());
+        result.Rewind();
+        Assert.Equal(1, result.ReadByte());
+    }
+
+    [Fact]
     public void Create_WithNonSeekablePassthroughStream_CreatesBufferedWrapper()
     {
         var ms = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
