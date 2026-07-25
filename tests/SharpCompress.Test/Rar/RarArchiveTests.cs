@@ -227,6 +227,20 @@ public class RarArchiveTests : ArchiveTests
     [Fact]
     public void Rar_IsSolidEntryStreamCheck() => DoRar_IsSolidEntryStreamCheck("Rar.solid.rar");
 
+    [Fact]
+    public void Rar_Solid_WriteTo_AllowsSingleEntryExtraction()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Rar.solid.rar");
+
+        using var archive = RarArchive.OpenArchive(archivePath);
+        var targetEntry = archive.Entries.Where(entry => !entry.IsDirectory).Skip(1).First();
+        using var output = new MemoryStream();
+
+        targetEntry.WriteTo(output);
+
+        Assert.NotEqual(0, output.Length);
+    }
+
     //Extract the 2nd file in a solid archive to check that the first file is skipped properly
     private void DoRar_IsSolidEntryStreamCheck(string filename)
     {

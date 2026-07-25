@@ -156,6 +156,10 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
                 Init();
             }
         }
+        else if (!fileHeader.IsStored && window is null)
+        {
+            window = ArrayPool<byte>.Shared.Rent(PackDef.MAXWINSIZE);
+        }
 
         suspended = false;
         DoUnpack();

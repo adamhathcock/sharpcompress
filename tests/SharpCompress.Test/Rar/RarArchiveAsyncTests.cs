@@ -43,6 +43,23 @@ public class RarArchiveAsyncTests : ArchiveTests
         await ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", "test");
 
     [Fact]
+    public async ValueTask Rar_Solid_WriteToAsync_AllowsSingleEntryExtraction()
+    {
+        var archivePath = Path.Combine(TEST_ARCHIVES_PATH, "Rar.solid.rar");
+
+        await using var archive = await RarArchive.OpenAsyncArchive(archivePath);
+        var targetEntry = await archive
+            .EntriesAsync.Where(entry => !entry.IsDirectory)
+            .Skip(1)
+            .FirstAsync();
+        using var output = new MemoryStream();
+
+        await targetEntry.WriteToAsync(output);
+
+        Assert.NotEqual(0, output.Length);
+    }
+
+    [Fact]
     public async ValueTask Rar_EncryptedFileAndHeader_NoPasswordExceptionTest_Async() =>
         await Assert.ThrowsAsync(
             typeof(CryptographicException),
