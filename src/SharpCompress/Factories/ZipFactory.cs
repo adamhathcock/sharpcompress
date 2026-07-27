@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Common.Zip;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
@@ -210,7 +212,32 @@ public class ZipFactory
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new((IAsyncReader)ZipReader.OpenReader(stream, options));
+        options ??= ReaderOptions.ForExternalStream;
+        if (!stream.CanSeek)
+        {
+            return new((IAsyncReader)ZipReader.OpenReader(stream, options));
+        }
+
+        var startPosition = stream.Position;
+        try
+        {
+            var metadataOptions = options with { LeaveStreamOpen = true };
+            using var archive = ZipArchive.OpenArchive(stream, metadataOptions);
+            var entries = archive.Entries.OfType<ZipEntry>().ToList();
+            return new((IAsyncReader)ZipReader.OpenReader(stream, options, entries));
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            return new((IAsyncReader)ZipReader.OpenReader(stream, options));
+        }
+        finally
+        {
+            stream.Position = startPosition;
+        }
     }
 
     #endregion

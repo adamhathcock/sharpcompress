@@ -61,6 +61,30 @@ public class ZipReaderAsyncTests : ReaderTests
         await ReadAsync("Zip.deflate.dd.zip", CompressionType.Deflate);
 
     [Fact]
+    public async ValueTask Zip_Deflate_Streamed_ReaderFactory_Size_Metadata_Async()
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.dd.zip"));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            stream,
+            ReaderOptions.ForExternalStream
+        );
+
+        var fileEntryCount = 0;
+        while (await reader.MoveToNextEntryAsync())
+        {
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+
+            fileEntryCount++;
+            Assert.NotEqual(0, reader.Entry.Size);
+        }
+
+        Assert.True(fileEntryCount > 0);
+    }
+
+    [Fact]
     public async ValueTask Zip_Deflate_Streamed_Skip_Async()
     {
         using Stream stream = new ForwardOnlyStream(
@@ -299,6 +323,30 @@ public class ZipReaderAsyncTests : ReaderTests
             }
         }
         Assert.Equal(8, count);
+    }
+
+    [Fact]
+    public async ValueTask Zip_Uncompressed_Encrypted_Read_Async()
+    {
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            Path.Combine(TEST_ARCHIVES_PATH, "Zip.none.encrypted.zip"),
+            ReaderOptions.ForFilePath with
+            {
+                Password = "test",
+            }
+        );
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.Equal("first.txt", reader.Entry.Key);
+        Assert.Equal(199, reader.Entry.Size);
+
+        await using (var firstEntryStream = await reader.OpenEntryStreamAsync())
+        {
+            await firstEntryStream.SkipEntryAsync();
+        }
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.Equal("second.txt", reader.Entry.Key);
+        Assert.Equal(197, reader.Entry.Size);
     }
 
     [Fact]
