@@ -96,10 +96,10 @@ Four things that will otherwise produce false results, all learned the hard way:
   `obj/Release/<tfm>/generated` first.
 - **The baseline is per batch.** Once a batch is committed `HEAD` no longer contains the code it
   deleted, so earlier batches must be compared against the commit *before* that batch.
-- **The generator fully qualifies types and reflows fluent calls.** It emits
-  `new global::System.ObjectDisposedException(...)` and splits `BaseStream\n.Read(...)` over lines.
-  Strip `global::` and type qualifiers **both before and after** collapsing whitespace — each form
-  only matches in one of the two passes.
+- **The generator fully qualifies types.** It emits
+  `new global::System.ObjectDisposedException(...)`, so strip `global::` and type qualifiers when
+  canonicalising before comparison. Version 2.0.42 preserves fluent-call layout, so no
+  reflow-specific normalisation is needed.
 - **Extension invocations become static calls.** `this.Skip()` is emitted as
   `StreamExtensions.Skip(this)`. Canonicalise one form to the other before comparing.
 
