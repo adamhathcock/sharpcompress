@@ -46,25 +46,9 @@ internal sealed partial class SeekableSharpCompressStream : SharpCompressStream
 
     internal override bool IsRecording => _recordedPosition.HasValue;
 
-    public override void Flush() => _stream.Flush();
-
-    public override int Read(byte[] buffer, int offset, int count) =>
-        _stream.Read(buffer, offset, count);
-
-#if !LEGACY_DOTNET
-    public override int Read(Span<byte> buffer) => _stream.Read(buffer);
-#endif
-
     public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
 
     public override void SetLength(long value) => _stream.SetLength(value);
-
-    public override void Write(byte[] buffer, int offset, int count) =>
-        _stream.Write(buffer, offset, count);
-
-#if !LEGACY_DOTNET
-    public override void Write(ReadOnlySpan<byte> buffer) => _stream.Write(buffer);
-#endif
 
     public override void Rewind(bool stopRecording = false)
     {

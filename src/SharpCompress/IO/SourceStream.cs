@@ -138,47 +138,6 @@ public partial class SourceStream : Stream, IStreamStack
 
     public override void Flush() => Current.Flush();
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (count <= 0)
-        {
-            return 0;
-        }
-
-        var total = count;
-        var r = -1;
-
-        while (count != 0 && r != 0)
-        {
-            r = Current.Read(
-                buffer,
-                offset,
-                (int)Math.Min(count, Current.Length - Current.Position)
-            );
-            count -= r;
-            offset += r;
-
-            if (!IsVolumes && count != 0 && Current.Position == Current.Length)
-            {
-                var length = Current.Length;
-
-                // Load next file if present
-                if (!SetStream(_stream + 1))
-                {
-                    break;
-                }
-
-                // Current stream switched
-                // Add length of previous stream
-                _prevSize += length;
-                Current.Seek(0, SeekOrigin.Begin);
-                r = -1; //BugFix: reset to allow loop if count is still not 0 - was breaking split zipx (lzma xz etc)
-            }
-        }
-
-        return total - count;
-    }
-
     public override long Seek(long offset, SeekOrigin origin)
     {
         var pos = Position;

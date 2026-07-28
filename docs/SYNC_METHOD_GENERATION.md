@@ -23,8 +23,9 @@ the verification workflow, and the record of what is blocked and why.
 | Batch | Area | Status |
 | --- | --- | --- |
 | 0 | `Archives/IArchiveEntryExtensions` (5 methods) | done — `c303856c` |
-| 1 | `Compressors/Filters/Filter` + 6 XZ branch filters + `Lzma2Filter` (9 methods, 147 lines) | done — verified token-identical on net48 + net10.0 |
-| 2–12 | below | to do |
+| 1 | `Compressors/Filters/Filter` + 6 XZ branch filters + `Lzma2Filter` (9 methods, 147 lines) | done — verified identical on net48 + net10.0 |
+| 2 | `IO/` leaf stream shims + `Common/EntryStream` (17 methods, 190 lines) | done — verified identical on net48 + net10.0 |
+| 3–12 | below | to do |
 | Rar reader unification | below | to do, needs its own design review |
 
 ---
@@ -82,13 +83,28 @@ Generated source lands in
 `src/SharpCompress/obj/Release/<tfm>/generated/Zomp.SyncMethodGenerator/Zomp.SyncMethodGenerator.SyncMethodSourceGenerator/<Namespace>.<Type>.<Method>.g.cs`
 — already TFM-scoped, already gitignored, and invisible to csharpier.
 
-For each attributed method, compare the generated body against the body deleted from `HEAD`
-(`git show HEAD:<path>`), normalising whitespace **and** the generator's full qualification: it emits
-`global::System.Buffer.BlockCopy` where the hand-written code said `Buffer.BlockCopy`, so collapse
-`global::A.B.C.Type.Member` to `Type.Member` before comparing (a greedy
-`global::(?:[A-Za-z0-9_]+\.)*([A-Za-z0-9_]+\.[A-Za-z0-9_]+)` → `$1` does it). Batch 1 was verified
-this way with a throwaway Python script — 18/18 bodies token-identical. **Expected result is an empty
+For each attributed method, compare the generated body against the body deleted from a baseline commit
+(`git show <rev>:<path>`). Batches 1 and 2 were verified this way with a throwaway Python script that
+walks the generated directory, parses each generated declaration, finds the same-signature method in
+the baseline and diffs the bodies — 48/48 identical across both TFMs. **Expected result is an empty
 diff**; itemise any non-empty hunk in the commit message.
+
+Four things that will otherwise produce false results, all learned the hard way:
+
+- **`obj/` is not cleaned by an incremental build.** If nothing changed the generator does not re-run,
+  so you compare against stale `.g.cs` from a previous attempt. Use `-t:Rebuild`, or delete
+  `obj/Release/<tfm>/generated` first.
+- **The baseline is per batch.** Once a batch is committed `HEAD` no longer contains the code it
+  deleted, so earlier batches must be compared against the commit *before* that batch.
+- **The generator fully qualifies types and reflows fluent calls.** It emits
+  `new global::System.ObjectDisposedException(...)` and splits `BaseStream\n.Read(...)` over lines.
+  Strip `global::` and type qualifiers **both before and after** collapsing whitespace — each form
+  only matches in one of the two passes.
+- **Extension invocations become static calls.** `this.Skip()` is emitted as
+  `StreamExtensions.Skip(this)`. Canonicalise one form to the other before comparing.
+
+A generated method whose signature is *absent* from the baseline is the important signal: the batch
+created a new member instead of replacing a duplicate. Report those separately and fail on them.
 
 If a dump has to survive `clean`, override `CompilerGeneratedFilesOutputPath` — but build one TFM at
 a time (it is a global property with no `$(TargetFramework)` expansion, so a multi-TFM build races all
@@ -127,18 +143,31 @@ hand-written — not noise to override.
 
 Ordered by (duplication removed) / risk.
 
-### 2 — `IO/` leaf stream shims · ~150 lines · low risk
+### 2 — `IO/` leaf stream shims — **done**, 17 methods, 190 lines
 
 `ReadOnlySubStream`, `BufferedSubStream`, `SourceStream`, `SeekableSharpCompressStream`,
-`ProgressReportingStream`, `Common/EntryStream`.
+`ProgressReportingStream`, `CountingStream`, `Common/EntryStream`.
 
-- `ReadOnlySubStream` is the one clean case where **both** overloads are attributed — a hand-written
-  `Read(Span<byte>)` exists (`ReadOnlySubStream.cs:78`) and matches the generated form.
-- `[SkipSyncVersion]` on every `Stream.DisposeAsync`.
-- `IO/CountingStream` needs `partial` added; then its `FlushAsync`/`ReadAsync`/`WriteAsync` map onto
-  existing hand-written members.
-- Leave `SharpCompressStream` for later (stateful, 274-line async partial; also needs the
-  `ReadAsyncCore` rename and the `ReadAsync(Memory<byte>)` rewrite, below).
+What it removed: `Read(byte[],int,int)` from all seven; `Read(Span<byte>)` from `CountingStream`,
+`ProgressReportingStream` and `SeekableSharpCompressStream`; `Write(byte[],int,int)` and
+`Write(ReadOnlySpan<byte>)` from `SeekableSharpCompressStream`/`CountingStream`; `Flush()` from those
+two; `BufferedSubStream.RefillCache()`; `EntryStream.SkipEntry()`.
+
+Notes from doing it:
+
+- `IO/CountingStream` needed `partial` added (it has no `.Async.cs` — both halves live in one file).
+- `Flush`/`FlushAsync` **can** be generated when the body is a pure delegation
+  (`SeekableSharpCompressStream`, `CountingStream`); the "leave hand-written" rule below is about
+  pairs whose semantics differ, not about the method name.
+- `ReadOnlySubStream.Read(Span<byte>)` **stays hand-written** — see the generator limitation below.
+  Its `Read(byte[],int,int)` is generated.
+- Not attributed, deliberately: every `DisposeAsync`; `SeekableSharpCompressStream.CopyToAsync`
+  (no hand-written `CopyTo(Stream,int)` twin); and the `Memory<byte>` overloads of
+  `BufferedSubStream`, `SourceStream` and `EntryStream`, which have no `Read(Span<byte>)` twin.
+- `EntryStream`: the informative doc comment lived on the sync `SkipEntry`; it moved to
+  `SkipEntryAsync`, which is now the single source of truth.
+- `SharpCompressStream` was left for later (stateful, 274-line async partial; also needs the
+  `ReadAsyncCore` rename and the `ReadAsync(Memory<byte>)` rewrite listed below).
 
 ### 3 — XZ reader family · ~120 lines · low-med risk
 
@@ -279,18 +308,68 @@ it when the async method awaits several operations at once.
 **Budget: at most two `SYNC_ONLY` sites per method, and never more than ~15% of its lines.** Past
 that, two honest files beat one half-preprocessor file.
 
+## Known generator limitations
+
+- **`Memory<T>` overloads only convert when the buffer is passed through unmodified.** Translating
+  `stream.ReadAsync(memory, ct)` to `stream.Read(span)` involves appending `.Span` to the argument;
+  if the async body slices first (`_stream.ReadAsync(buffer.Slice(0, n), ct)`), the generated code is
+  `_stream.Read(buffer.Slice(0, n).Span)` — and `buffer` is already a `Span<byte>` once the parameter
+  is converted, so it fails with `CS1061: 'Span<byte>' does not contain a definition for 'Span'`.
+  That is why `ReadOnlySubStream.Read(Span<byte>)` stays hand-written (with a comment saying so),
+  while the direct-pass-through cases (`CountingStream`, `ProgressReportingStream`,
+  `SeekableSharpCompressStream`) generate fine. It is a compile error, not a silent miscompile.
+- **Only a trailing `Async` is stripped** — `FooAsyncCore` and `OpenAsyncReader` are not renamed.
+- **Task-returning expressions that aren't awaited** are not rewritten: `new ValueTask<T>(x)` and
+  `ValueTask.FromResult(x)` need an `async`/`await` rewrite first. A non-`async` method that simply
+  *returns* an `XAsync(...)` call is fine (`Lzma2Filter` and `SeekableSharpCompressStream` prove it).
+
 ## Leave hand-written
 
 Record the decision once, as a comment at the method, so it is not re-litigated.
 
-- `Dispose`/`DisposeAsync`, `Flush`/`FlushAsync`, `CopyTo`/`CopyToAsync` — framework semantics
-  genuinely differ, and on a `Stream` the generated `Dispose()` cannot override the non-virtual
-  `Stream.Dispose()` (`CS0506`); the real override is `Dispose(bool)`.
+- `Dispose`/`DisposeAsync` — on a `Stream` the generated `Dispose()` cannot override the non-virtual
+  `Stream.Dispose()` (`CS0506`); the real override is `Dispose(bool)`. (On a plain `IDisposable` such
+  as `OutWindow` or LZMA's `Decoder`, `DisposeAsync`→`Dispose()` is legal.)
 - `ReadByteAsync`/`WriteByteAsync` on a `Stream` — generated without `override`, hides
   `Stream.ReadByte`/`WriteByte` (`CS0108`).
 - Pairs whose difference is an optimisation spread over >2 sites or >20% of the body — e.g.
   `Xz/BinaryUtils`.
-- `Memory`/`ReadOnlyMemory` overloads with no sync twin.
+- `Memory`/`ReadOnlyMemory` overloads with no sync twin — see the symmetry question below.
+- `Flush`/`FlushAsync` and `CopyTo`/`CopyToAsync` **only** where the two bodies genuinely differ.
+  Pure delegations convert cleanly and were converted in batch 2.
+
+## Should the sync and async surfaces match?
+
+Worth settling deliberately, because the answer decides whether some of the remaining asymmetries are
+"leave alone" or "a batch of their own". `Stream`'s base-class defaults mean an asymmetric type is not
+neutral:
+
+| Not overridden | What the base class does |
+| --- | --- |
+| `ReadAsync(byte[],int,int,ct)` | `BeginRead`/`EndRead`, i.e. runs the **sync** `Read` on a thread-pool thread |
+| `FlushAsync(ct)` | runs the **sync** `Flush` on a thread-pool thread |
+| `ReadAsync(Memory<byte>,ct)` | delegates to the `byte[]` overload, renting + copying when the memory is not array-backed |
+| `Read(Span<byte>)` | rents an array, calls `Read(byte[],int,int)`, copies back |
+| `DisposeAsync()` | calls the sync `Dispose()` |
+| `CopyToAsync(Stream,int,ct)` | generic `ReadAsync`/`WriteAsync` loop, skipping any inner fast path |
+
+So: **for wrapper/delegating streams the surfaces should match**, and the generator makes that nearly
+free — the async body is written once and the sync twin is emitted. Two distinct asymmetries exist
+today:
+
+1. **Async present, sync missing** — `ReadAsync(Memory<byte>)` with no `Read(Span<byte>)`
+   (`Filter`, `BufferedSubStream`, `SourceStream`, `EntryStream`, all six XZ branch filters, and
+   more). Attributing these *creates* the missing `Read(Span<byte>)`, replacing the base rent-and-copy
+   shim. That is a real improvement and makes the surfaces symmetric, but it is **not** a
+   deduplication: it changes behaviour, so it does not belong in a batch advertised as a no-op. Do it
+   as its own "symmetry pass" commit, one type at a time, and let the benchmark job see it.
+2. **Sync present, async missing** — the async path then blocks a thread-pool thread. On a
+   delegating wrapper this is worth fixing on its own merits (write the async override, attribute it,
+   delete the sync one), and it is the only case where new *async* code should be written as part of
+   this campaign.
+
+`DisposeAsync` is the deliberate exception in both directions: it cannot be generated on a `Stream`,
+so its symmetry stays hand-maintained.
 
 ## Hard-blocked
 

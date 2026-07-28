@@ -8,6 +8,7 @@ namespace SharpCompress.IO;
 
 internal sealed partial class SeekableSharpCompressStream
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -16,11 +17,13 @@ internal sealed partial class SeekableSharpCompressStream
     ) => _stream.ReadAsync(buffer, offset, count, cancellationToken);
 
 #if !LEGACY_DOTNET
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
     ) => _stream.ReadAsync(buffer, cancellationToken);
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override ValueTask WriteAsync(
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
@@ -47,6 +50,7 @@ internal sealed partial class SeekableSharpCompressStream
     }
 #endif
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override Task WriteAsync(
         byte[] buffer,
         int offset,
@@ -54,6 +58,7 @@ internal sealed partial class SeekableSharpCompressStream
         CancellationToken cancellationToken
     ) => _stream.WriteAsync(buffer, offset, count, cancellationToken);
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override Task FlushAsync(CancellationToken cancellationToken) =>
         _stream.FlushAsync(cancellationToken);
 

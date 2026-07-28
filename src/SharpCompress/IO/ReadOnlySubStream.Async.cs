@@ -7,6 +7,7 @@ namespace SharpCompress.IO;
 
 internal partial class ReadOnlySubStream
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
