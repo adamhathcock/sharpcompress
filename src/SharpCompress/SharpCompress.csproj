@@ -40,9 +40,6 @@
     <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Zomp.SyncMethodGenerator" PrivateAssets="all" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 </Project>
