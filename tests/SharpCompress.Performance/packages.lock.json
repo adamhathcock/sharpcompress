@@ -62,6 +62,12 @@
         "resolved": "1.16.0",
         "contentHash": "3kdIIceBPumwjw279FuiVMfVENT2cGASXJgcigdySsbX2dJB8ofUgG6i47yqF/k1qu6fvNR3csrSekZPviR6kQ=="
       },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+      },
       "BenchmarkDotNet.Annotations": {
         "type": "Transitive",
         "resolved": "0.15.8",
