@@ -27,7 +27,7 @@ internal static class EncodingProviderRegistration
     // Registering an encoding provider is the exception it does not account for: the registration has to be
     // in place before the first Encoding.GetEncoding call, and that call may be made by the consumer before
     // it touches any SharpCompress type. Every lazier trigger reintroduces the ordering bug. Callers who need
-    // registration to be explicit (e.g. to keep it trimmable) can call RegisterCodePagesProvider themselves.
+    // registration to be explicit can call Encoding.RegisterProvider(CodePagesEncodingProvider.Instance) themselves.
 #pragma warning disable CA2255
     [ModuleInitializer]
 #pragma warning restore CA2255
