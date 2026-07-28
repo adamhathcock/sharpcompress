@@ -11,14 +11,6 @@ namespace SharpCompress.Test.Tar;
 
 public class TarWriterTests : WriterTests
 {
-    static TarWriterTests()
-    {
-#if !NETFRAMEWORK
-        //fix issue where these tests could not be ran in isolation
-        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-#endif
-    }
-
     public TarWriterTests()
         : base(ArchiveType.Tar) => UseExtensionInsteadOfNameToVerify = true;
 
