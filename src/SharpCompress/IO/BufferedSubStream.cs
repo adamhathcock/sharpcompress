@@ -59,55 +59,6 @@ internal partial class BufferedSubStream : Stream, IStreamStack
         set => throw new NotSupportedException();
     }
 
-    private void RefillCache()
-    {
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(BufferedSubStream));
-        }
-
-        var count = (int)Math.Min(BytesLeftToRead, _cache!.Length);
-        _cacheOffset = 0;
-        if (count == 0)
-        {
-            _cacheLength = 0;
-            return;
-        }
-
-        // Only seek if we're not already at the correct position
-        // This avoids expensive seek operations when reading sequentially
-        if (_stream.CanSeek && _stream.Position != origin)
-        {
-            _stream.Position = origin;
-        }
-
-        _cacheLength = _stream.Read(_cache, 0, count);
-        origin += _cacheLength;
-        BytesLeftToRead -= _cacheLength;
-    }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (count > Length)
-        {
-            count = (int)Length;
-        }
-
-        if (count > 0)
-        {
-            if (_cacheOffset == _cacheLength)
-            {
-                RefillCache();
-            }
-
-            count = Math.Min(count, _cacheLength - _cacheOffset);
-            Buffer.BlockCopy(_cache!, _cacheOffset, buffer, offset, count);
-            _cacheOffset += count;
-        }
-
-        return count;
-    }
-
     public override int ReadByte()
     {
         if (_cacheOffset == _cacheLength)

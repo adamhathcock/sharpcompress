@@ -8,6 +8,7 @@ namespace SharpCompress.IO;
 
 internal partial class BufferedSubStream
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask RefillCacheAsync(CancellationToken cancellationToken)
     {
         if (_isDisposed)
@@ -35,6 +36,7 @@ internal partial class BufferedSubStream
         BytesLeftToRead -= _cacheLength;
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,

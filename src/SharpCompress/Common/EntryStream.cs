@@ -21,15 +21,6 @@ public partial class EntryStream : Stream
         _stream = stream;
     }
 
-    /// <summary>
-    /// When reading a stream from OpenEntryStream, the stream must be completed so use this to finish reading the entire entry.
-    /// </summary>
-    public void SkipEntry()
-    {
-        this.Skip();
-        _completed = true;
-    }
-
     protected override void Dispose(bool disposing)
     {
         if (_isDisposed)
@@ -91,16 +82,6 @@ public partial class EntryStream : Stream
     {
         get => _stream.Position; //throw new NotSupportedException();
         set => throw new NotSupportedException();
-    }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var read = _stream.Read(buffer, offset, count);
-        if (read <= 0)
-        {
-            _completed = true;
-        }
-        return read;
     }
 
     public override int ReadByte()

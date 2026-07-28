@@ -8,6 +8,7 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 public partial class PowerPCFilter
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,

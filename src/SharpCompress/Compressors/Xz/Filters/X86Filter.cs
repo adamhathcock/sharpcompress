@@ -6,7 +6,6 @@
 
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
@@ -46,14 +45,6 @@ public partial class X86Filter : BlockFilter
     }
 
     public override void ValidateFilter() { }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var bytesRead = BaseStream.Read(buffer, offset, count);
-        BranchExecFilter.X86Converter(buffer, _ip, ref _state);
-        _ip += (uint)bytesRead;
-        return bytesRead;
-    }
 
     public override void SetBaseStream(Stream stream) => BaseStream = stream;
 }

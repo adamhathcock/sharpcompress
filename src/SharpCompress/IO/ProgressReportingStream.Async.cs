@@ -7,6 +7,7 @@ namespace SharpCompress.IO;
 
 internal sealed partial class ProgressReportingStream
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -26,6 +27,7 @@ internal sealed partial class ProgressReportingStream
     }
 
 #if !LEGACY_DOTNET
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
