@@ -363,13 +363,54 @@ today:
    shim. That is a real improvement and makes the surfaces symmetric, but it is **not** a
    deduplication: it changes behaviour, so it does not belong in a batch advertised as a no-op. Do it
    as its own "symmetry pass" commit, one type at a time, and let the benchmark job see it.
-2. **Sync present, async missing** — the async path then blocks a thread-pool thread. On a
-   delegating wrapper this is worth fixing on its own merits (write the async override, attribute it,
-   delete the sync one), and it is the only case where new *async* code should be written as part of
-   this campaign.
+2. **Sync present, async missing** — the async path then blocks a thread-pool thread. This is the only
+   case where new *async* code should be written as part of this campaign: write the async override,
+   attribute it, delete the sync one. An audit of all 75 `Stream` subclasses found **12 real
+   instances**, listed below.
 
 `DisposeAsync` is the deliberate exception in both directions: it cannot be generated on a `Stream`,
 so its symmetry stays hand-maintained.
+
+### The 12 sync-only overrides (audited, verified by hand)
+
+Only members that do real work are listed. A `Write` that throws `NotSupportedException` (or calls a
+`Throw*` helper) needs no async twin, and neither does an empty `Flush() { }` — 22 types have one, and
+overriding `FlushAsync` there just queues a no-op to the pool. Those are excluded.
+
+**Missing `ReadAsync` — the sync decode runs on a pool thread for every async read:**
+
+| Type | Sync member |
+| --- | --- |
+| `BCJ2Filter` | `Read(byte[],int,int)` — `Compressors/Filters/BCJ2Filter.cs:92`, the type has *no* async member at all, so async extraction of BCJ2-filtered 7z entries is fully synchronous |
+| `DataDescriptorStream` | `Read(byte[],int,int)` — `IO/DataDescriptorStream.cs:83` |
+
+**Missing `WriteAsync`:**
+
+| Type | Sync member |
+| --- | --- |
+| `FolderUnpackStream` | `Write(byte[],int,int)` — `Common/SevenZip/ArchiveReader.cs:1190` (nested private class); fans one folder's bytes out across entry streams, all synchronously |
+| `LZipStream` | `Write(ReadOnlySpan<byte>)` — `Compressors/LZMA/LZipStream.cs:214`; the type *does* override `WriteAsync(byte[],int,int,ct)` (`.Async.cs:214`) but not the `ReadOnlyMemory<byte>` overload |
+
+**Missing `FlushAsync` where `Flush` does real work** — mostly one-line delegations, so these are the
+cheapest to fix and the most mechanical (write `FlushAsync`, attribute it, delete `Flush`):
+
+| Type | `Flush()` body |
+| --- | --- |
+| `ZipWritingStream` | `writeStream.Flush()` — `Writers/Zip/ZipWritingStream.cs:452`; on the **writer** path, and the type already overrides both `WriteAsync` overloads, so this is the sharpest inconsistency |
+| `ProgressReportingStream` | `_baseStream.Flush()` |
+| `SourceStream` | `Current.Flush()` |
+| `LzwStream` | `baseInputStream.Flush()` |
+| `LZipStream` | `_stream.Flush()` |
+| `Deflate64Stream` | `EnsureNotDisposed()` |
+| `BZip2Stream` | delegates to the underlying BZip2 stream |
+| `CBZip2OutputStream` | flushes encoder state |
+
+The audit is reproducible: walk every `class` in `src/SharpCompress`, union its members across partial
+files, resolve base types within the repo, and for each `(sync, async)` pair report types that declare
+the sync member but where neither the type nor any repo ancestor declares the async one. Classify the
+sync body as throws / empty / real and only report `real`. Note that "an ancestor declares the async
+one" is a *worse* finding than "nobody does" — it means async callers bypass the override entirely —
+but the audit found no instances of that.
 
 ## Hard-blocked
 
