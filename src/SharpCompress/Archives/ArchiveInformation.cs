@@ -26,6 +26,18 @@ public record ArchiveInformation
     public bool SupportsRandomAccess { get; set; }
 
     /// <summary>
+    /// For ZIP archives, the number of entries that use post-data descriptor trailers.
+    /// This value is <see langword="null"/> for non-ZIP formats.
+    /// </summary>
+    public int? ZipDataDescriptorEntryCount { get; set; }
+
+    /// <summary>
+    /// For solid-capable archive formats, the number of solid compressed streams present.
+    /// This value is <see langword="null"/> for formats that do not support solid entries.
+    /// </summary>
+    public int? SolidStreamCount { get; set; }
+
+    /// <summary>
     /// Creates a new archive information instance.
     /// </summary>
     /// <param name="type">The detected archive type.</param>

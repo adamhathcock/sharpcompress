@@ -760,6 +760,57 @@ public class ArchiveFactoryTests : TestBase
         Assert.Equal(startPosition, stream.Position);
     }
 
+    [Theory]
+    [InlineData("Zip.none.datadescriptors.zip", true)]
+    [InlineData("Zip.deflate.zip", false)]
+    public void GetArchiveInformation_ZipDataDescriptorEntryCount(
+        string archiveName,
+        bool expectsDataDescriptorTrailers
+    )
+    {
+        using var stream = File.OpenRead(GetTestArchivePath(archiveName));
+
+        var info = ArchiveFactory.GetArchiveInformation(stream);
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Zip, info.Type);
+        Assert.NotNull(info.ZipDataDescriptorEntryCount);
+        Assert.Equal(expectsDataDescriptorTrailers, info.ZipDataDescriptorEntryCount > 0);
+    }
+
+    [Theory]
+    [InlineData("7Zip.solid.7z", true)]
+    [InlineData("7Zip.nonsolid.7z", false)]
+    [InlineData("Rar.rar", false)]
+    public void GetArchiveInformation_SolidStreamCount(string archiveName, bool expectsSolidStreams)
+    {
+        using var stream = File.OpenRead(GetTestArchivePath(archiveName));
+
+        var info = ArchiveFactory.GetArchiveInformation(stream);
+
+        Assert.NotNull(info);
+        Assert.NotNull(info.SolidStreamCount);
+        Assert.Equal(expectsSolidStreams, info.SolidStreamCount > 0);
+    }
+
+    [Theory]
+    [InlineData("Zip.none.datadescriptors.zip", true)]
+    [InlineData("7Zip.solid.7z", true)]
+    public async ValueTask GetArchiveInformationAsync_IncludesFormatSpecificDetails(
+        string archiveName,
+        bool expectsAnyFormatSpecificDetails
+    )
+    {
+        using var stream = File.OpenRead(GetTestArchivePath(archiveName));
+
+        var info = await ArchiveFactory.GetArchiveInformationAsync(stream);
+
+        Assert.NotNull(info);
+        var hasZipDetail = info.ZipDataDescriptorEntryCount > 0;
+        var hasSolidDetail = info.SolidStreamCount > 0;
+        Assert.Equal(expectsAnyFormatSpecificDetails, hasZipDetail || hasSolidDetail);
+    }
+
     private MemoryStream CreatePrefixedArchiveStream(string archiveName, int prefixLength)
     {
         var archiveBytes = File.ReadAllBytes(GetTestArchivePath(archiveName));

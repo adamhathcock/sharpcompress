@@ -2,8 +2,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
+using SharpCompress.Common.Zip;
+using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Providers;
@@ -86,7 +91,11 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
         return factory is null
             ? null
-            : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
+            : BuildArchiveInformation(
+                stream,
+                readerOptions ?? ReaderOptions.ForExternalStream,
+                factory
+            );
     }
 
     internal static ValueTask<T> FindFactoryAsync<T>(
@@ -254,7 +263,11 @@ public static partial class ArchiveFactory
         var factory = TryFindFactory(stream, readerOptions ?? ReaderOptions.ForExternalStream);
         return factory is null
             ? null
-            : new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
+            : BuildArchiveInformation(
+                stream,
+                readerOptions ?? ReaderOptions.ForExternalStream,
+                factory
+            );
     }
 
     /// <summary>
@@ -411,4 +424,115 @@ public static partial class ArchiveFactory
             LzwFactory => CompressionType.Lzw,
             _ => null,
         };
+
+    private static ArchiveInformation BuildArchiveInformation(
+        Stream stream,
+        ReaderOptions readerOptions,
+        IFactory factory
+    )
+    {
+        var info = new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
+        var startPosition = stream.Position;
+
+        try
+        {
+            var probeReaderOptions = readerOptions with { LeaveStreamOpen = true };
+            switch (factory)
+            {
+                case ZipFactory:
+                    TryPopulateZipDetails(info, stream, probeReaderOptions);
+                    break;
+                case SevenZipFactory:
+                    TryPopulateSevenZipDetails(info, stream, probeReaderOptions);
+                    break;
+                case RarFactory:
+                    TryPopulateRarDetails(info, stream, probeReaderOptions);
+                    break;
+            }
+        }
+        finally
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+        }
+
+        return info;
+    }
+
+    private static void TryPopulateZipDetails(
+        ArchiveInformation info,
+        Stream stream,
+        ReaderOptions readerOptions
+    )
+    {
+        try
+        {
+            info.ZipDataDescriptorEntryCount = GetZipDataDescriptorEntryCount(
+                stream,
+                readerOptions
+            );
+        }
+        catch
+        {
+            // Keep archive detection resilient even when format-specific probing fails.
+        }
+    }
+
+    private static void TryPopulateSevenZipDetails(
+        ArchiveInformation info,
+        Stream stream,
+        ReaderOptions readerOptions
+    )
+    {
+        try
+        {
+            info.SolidStreamCount = GetSevenZipSolidStreamCount(stream, readerOptions);
+        }
+        catch
+        {
+            // Keep archive detection resilient even when format-specific probing fails.
+        }
+    }
+
+    private static void TryPopulateRarDetails(
+        ArchiveInformation info,
+        Stream stream,
+        ReaderOptions readerOptions
+    )
+    {
+        try
+        {
+            info.SolidStreamCount = GetRarSolidStreamCount(stream, readerOptions);
+        }
+        catch
+        {
+            // Keep archive detection resilient even when format-specific probing fails.
+        }
+    }
+
+    private static int GetZipDataDescriptorEntryCount(Stream stream, ReaderOptions readerOptions)
+    {
+        using var archive = ZipArchive.OpenArchive(stream, readerOptions);
+        return archive
+            .Entries.OfType<ZipArchiveEntry>()
+            .SelectMany(entry => entry.Parts.OfType<ZipFilePart>())
+            .Count(part =>
+                FlagUtility.HasFlag(part.Header.Flags, HeaderFlags.UsePostDataDescriptor)
+            );
+    }
+
+    private static int GetSevenZipSolidStreamCount(Stream stream, ReaderOptions readerOptions)
+    {
+        using var archive = SevenZipArchive.OpenArchive(stream, readerOptions);
+        return archive
+            .Entries.OfType<SevenZipArchiveEntry>()
+            .Where(entry => !entry.IsDirectory && entry.FilePart.Folder is not null)
+            .GroupBy(entry => entry.FilePart.Folder)
+            .Count(group => group.Skip(1).Any());
+    }
+
+    private static int GetRarSolidStreamCount(Stream stream, ReaderOptions readerOptions)
+    {
+        using var archive = RarArchive.OpenArchive(stream, readerOptions);
+        return archive.IsSolid ? 1 : 0;
+    }
 }

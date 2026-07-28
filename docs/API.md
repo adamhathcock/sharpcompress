@@ -56,6 +56,8 @@ if (info is not null)
 {
     Console.WriteLine($"Type: {info.Type}");
     Console.WriteLine($"Supports random access: {info.SupportsRandomAccess}");
+    Console.WriteLine($"ZIP data descriptor entries: {info.ZipDataDescriptorEntryCount}");
+    Console.WriteLine($"Solid stream count: {info.SolidStreamCount}");
 }
 
 var asyncInfo = await ArchiveFactory.GetArchiveInformationAsync(
@@ -73,7 +75,7 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 }
 ```
 
-`ArchiveInformation.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFactory.GetArchiveInformation` returns `null` for them and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files.
+`ArchiveInformation.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFactory.GetArchiveInformation` returns `null` for them and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files. Format-specific details are available through `ArchiveInformation.ZipDataDescriptorEntryCount` (ZIP) and `ArchiveInformation.SolidStreamCount` (solid-capable formats such as 7z and RAR).
 
 ### Creating Archives
 
