@@ -72,9 +72,9 @@
       },
       "Zomp.SyncMethodGenerator": {
         "type": "Direct",
-        "requested": "[2.0.40, )",
-        "resolved": "2.0.40",
-        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+        "requested": "[2.0.42, )",
+        "resolved": "2.0.42",
+        "contentHash": "kf2PvmD9N5xIzsdf6vy5tk2w0hlD7+Kbd3w/wFmgozgHTKJlh2RNiS+Jx+4d1AtgyJVBD0CO0nofbThu5zTsgQ=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
@@ -400,9 +400,9 @@
       },
       "Zomp.SyncMethodGenerator": {
         "type": "Direct",
-        "requested": "[2.0.40, )",
-        "resolved": "2.0.40",
-        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+        "requested": "[2.0.42, )",
+        "resolved": "2.0.42",
+        "contentHash": "kf2PvmD9N5xIzsdf6vy5tk2w0hlD7+Kbd3w/wFmgozgHTKJlh2RNiS+Jx+4d1AtgyJVBD0CO0nofbThu5zTsgQ=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
