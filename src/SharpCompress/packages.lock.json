@@ -53,6 +53,12 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+      },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
         "resolved": "10.0.300",
@@ -175,6 +181,12 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+      },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
         "resolved": "10.0.300",
@@ -289,6 +301,12 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+      },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
         "resolved": "10.0.300",
@@ -321,9 +339,9 @@
     "net10.0": {
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[10.0.9, )",
-        "resolved": "10.0.9",
-        "contentHash": "4Iw41e2h7I4t70SJcX2GCmbyKJIlA273Cfm9RJMM050/3VBejGAG1KcthP5Z2L6SQcbfbf6BhNWO26+ZG+GzMg=="
+        "requested": "[10.0.10, )",
+        "resolved": "10.0.10",
+        "contentHash": "f5VCIE7AJpd5YvzNTeMGVzQIgyE9tX+AreTYwQF+REbu+DZo/2Ae+jNSwhPEYrVz6RRkd7y8ubXjk6Nn6Ka+Cg=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -356,6 +374,12 @@
         "requested": "[1.16.0, )",
         "resolved": "1.16.0",
         "contentHash": "3kdIIceBPumwjw279FuiVMfVENT2cGASXJgcigdySsbX2dJB8ofUgG6i47yqF/k1qu6fvNR3csrSekZPviR6kQ=="
+      },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
       },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
@@ -414,6 +438,12 @@
         "resolved": "1.16.0",
         "contentHash": "3kdIIceBPumwjw279FuiVMfVENT2cGASXJgcigdySsbX2dJB8ofUgG6i47yqF/k1qu6fvNR3csrSekZPviR6kQ=="
       },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+      },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
         "resolved": "10.0.300",
@@ -441,9 +471,9 @@
     "net8.0": {
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[8.0.28, )",
-        "resolved": "8.0.28",
-        "contentHash": "XMqgVjlLxLqWmEh3c49haXLQwsMNtvo6YscUaqfvEGfg1iA8hnYgkUVq3i9Zu9gKeNKMWiiZKVwZExc/qyEAsQ=="
+        "requested": "[8.0.29, )",
+        "resolved": "8.0.29",
+        "contentHash": "HSBTfrkIZijz8z3ybLRKB7E8rHk4QQufFwpHa9fc5CMIgRhRzdn4mBGmlyXZqaueiMPtuJcnjresGvSTfaW8Mg=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -476,6 +506,12 @@
         "requested": "[1.16.0, )",
         "resolved": "1.16.0",
         "contentHash": "3kdIIceBPumwjw279FuiVMfVENT2cGASXJgcigdySsbX2dJB8ofUgG6i47yqF/k1qu6fvNR3csrSekZPviR6kQ=="
+      },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
       },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
