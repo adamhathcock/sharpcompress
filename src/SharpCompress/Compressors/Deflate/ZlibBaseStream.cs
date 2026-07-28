@@ -622,7 +622,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             // This handles the case where the decompressor over-read past the end of the entry
             if (_stream is IStreamStack stack)
             {
-                stack.Rewind(z.AvailableBytesIn);
+                stack.RewindBytes(z.AvailableBytesIn);
             }
             z.AvailableBytesIn = 0;
         }
@@ -643,7 +643,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             // This handles the case where the decompressor over-read past the end of the entry
             if (_stream is IStreamStack stack)
             {
-                stack.Rewind(z.AvailableBytesIn);
+                stack.RewindBytes(z.AvailableBytesIn);
             }
             z.AvailableBytesIn = 0;
         }
@@ -1023,7 +1023,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
+            this.RewindBytes(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 
@@ -1217,7 +1217,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
         {
             //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
+            this.RewindBytes(z.AvailableBytesIn);
             z.AvailableBytesIn = 0;
         }
 
