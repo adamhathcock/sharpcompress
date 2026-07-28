@@ -172,9 +172,9 @@ referenced for every project via `Directory.Packages.props`).
   member that did not exist before is a behaviour change, not a deduplication — in particular, a
   generated `Read(Span<byte>)` replaces `Stream`'s default rent-and-copy shim.
 - Deliberately **not** generated: `Dispose`/`DisposeAsync` (on a `Stream` the generated `Dispose()`
-  cannot override the non-virtual `Stream.Dispose()`), `Flush`/`FlushAsync`, `CopyTo`/`CopyToAsync`,
-  `ReadByte`/`WriteByte` (generated without `override`, so they would hide `Stream`'s), and the
-  `Memory`/`ReadOnlyMemory` overloads that have no sync twin.
+  cannot override the non-virtual `Stream.Dispose()`), `ReadByte`/`WriteByte` (generated without
+  `override`, so they would hide `Stream`'s), and the `Memory`/`ReadOnlyMemory` overloads that have no
+  sync twin. `Flush`/`FlushAsync` and `CopyTo`/`CopyToAsync` are OK to generate only when they are pure delegations with identical semantics.
 - Keep one XML doc comment, on the async method, phrased tense-neutrally ("Extract entry to the
   specified stream.") — it is emitted onto both copies.
 - Use `#if SYNC_ONLY` / `#if !SYNC_ONLY` only for a localised I/O idiom that genuinely differs; if it
