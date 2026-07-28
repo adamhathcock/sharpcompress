@@ -22,7 +22,7 @@ public partial class TarArchive
         CancellationToken cancellationToken = default
     )
     {
-        using var writer = new TarWriter(stream, options);
+        await using var writer = new TarWriter(stream, options);
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
@@ -39,7 +39,9 @@ public partial class TarArchive
             }
             else
             {
+#pragma warning disable VSTHRD103
                 using var entryStream = entry.OpenEntryStream();
+#pragma warning restore VSTHRD103
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -65,7 +67,9 @@ public partial class TarArchive
             }
             else
             {
+#pragma warning disable VSTHRD103
                 using var entryStream = entry.OpenEntryStream();
+#pragma warning restore VSTHRD103
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -83,15 +87,14 @@ public partial class TarArchive
     {
         var stream = Volumes.Single().Stream;
         stream.Position = 0;
-        return new((IAsyncReader)new TarReader(stream, ReaderOptions, CompressionType.None));
+        return new(new TarReader(stream, ReaderOptions, CompressionType.None));
     }
 
     protected override async IAsyncEnumerable<TarArchiveEntry> LoadEntriesAsync(
         IAsyncEnumerable<TarVolume> volumes
     )
     {
-        var sourceStream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
-        var stream = sourceStream;
+        var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
         if (stream.CanSeek)
         {
             stream.Position = 0;
