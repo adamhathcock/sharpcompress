@@ -7,7 +7,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Archives;
 
-public static class IArchiveEntryExtensions
+public static partial class IArchiveEntryExtensions
 {
     /// <param name="archiveEntry">The archive entry to extract.</param>
     extension(IArchiveEntry archiveEntry)
@@ -16,48 +16,9 @@ public static class IArchiveEntryExtensions
         /// Extract entry to the specified stream.
         /// </summary>
         /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
-        /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
-        public void WriteTo(Stream streamToWriteTo, IProgress<ProgressReport>? progress = null) =>
-            archiveEntry.WriteTo(streamToWriteTo, bufferSize: null, progress: progress);
-
-        /// <summary>
-        /// Extract entry to the specified stream.
-        /// </summary>
-        /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
-        /// <param name="options">Options for configuring extraction behavior.</param>
-        /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
-        public void WriteTo(
-            Stream streamToWriteTo,
-            ExtractionOptions options,
-            IProgress<ProgressReport>? progress = null
-        ) => archiveEntry.WriteTo(streamToWriteTo, options.BufferSize, options, progress);
-
-        private void WriteTo(
-            Stream streamToWriteTo,
-            int? bufferSize,
-            ExtractionOptions? options = null,
-            IProgress<ProgressReport>? progress = null
-        )
-        {
-            if (archiveEntry.IsDirectory)
-            {
-                throw new ExtractionException("Entry is a file directory and cannot be extracted.");
-            }
-
-            using var entryStream = archiveEntry.OpenEntryStream();
-            var checkedStream = options is null
-                ? entryStream
-                : IEntryExtensions.WrapWithChecksumValidation(archiveEntry, entryStream, options);
-            var sourceStream = WrapWithProgress(checkedStream, archiveEntry, progress);
-            sourceStream.CopyTo(streamToWriteTo, bufferSize ?? Constants.BufferSize);
-        }
-
-        /// <summary>
-        /// Extract entry to the specified stream asynchronously.
-        /// </summary>
-        /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion(PreserveProgress = true)]
         public async ValueTask WriteToAsync(
             Stream streamToWriteTo,
             IProgress<ProgressReport>? progress = null,
@@ -73,12 +34,13 @@ public static class IArchiveEntryExtensions
                 .ConfigureAwait(false);
 
         /// <summary>
-        /// Extract entry to the specified stream asynchronously.
+        /// Extract entry to the specified stream.
         /// </summary>
         /// <param name="streamToWriteTo">The stream to write the entry content to.</param>
         /// <param name="options">Options for configuring extraction behavior.</param>
         /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion(PreserveProgress = true)]
         public async ValueTask WriteToAsync(
             Stream streamToWriteTo,
             ExtractionOptions options,
@@ -95,6 +57,7 @@ public static class IArchiveEntryExtensions
                 )
                 .ConfigureAwait(false);
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion(PreserveProgress = true)]
         private async ValueTask WriteToAsync(
             Stream streamToWriteTo,
             int? bufferSize,
@@ -167,19 +130,7 @@ public static class IArchiveEntryExtensions
         /// <summary>
         /// Extract to specific directory, retaining filename
         /// </summary>
-        public void WriteToDirectory(
-            string destinationDirectory,
-            ExtractionOptions? options = null
-        ) =>
-            entry.WriteEntryToDirectory(
-                destinationDirectory,
-                options,
-                (path) => entry.WriteToFile(path, options)
-            );
-
-        /// <summary>
-        /// Extract to specific directory asynchronously, retaining filename
-        /// </summary>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async ValueTask WriteToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options = null,
@@ -198,23 +149,7 @@ public static class IArchiveEntryExtensions
         /// <summary>
         /// Extract to specific file
         /// </summary>
-        public void WriteToFile(string destinationFileName, ExtractionOptions? options = null)
-        {
-            options ??= new ExtractionOptions();
-            entry.WriteEntryToFile(
-                destinationFileName,
-                options,
-                (x, fm) =>
-                {
-                    using var fs = File.Open(x, fm);
-                    entry.WriteTo(fs, options?.BufferSize ?? Constants.BufferSize, options, null);
-                }
-            );
-        }
-
-        /// <summary>
-        /// Extract to specific file asynchronously
-        /// </summary>
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async ValueTask WriteToFileAsync(
             string destinationFileName,
             ExtractionOptions? options = null,

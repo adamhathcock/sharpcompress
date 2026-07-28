@@ -19,5 +19,6 @@
       Version="17.14.15"
     />
     <GlobalPackageReference Include="PolySharp" Version="1.16.0" />
+    <GlobalPackageReference Include="Zomp.SyncMethodGenerator" Version="2.0.40" />
   </ItemGroup>
 </Project>

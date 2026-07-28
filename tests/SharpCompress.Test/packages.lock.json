@@ -70,6 +70,12 @@
           "xunit.v3.mtp-v1": "[3.2.2]"
         }
       },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+      },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
         "resolved": "2.23.0",
@@ -391,6 +397,12 @@
         "dependencies": {
           "xunit.v3.mtp-v1": "[3.2.2]"
         }
+      },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",

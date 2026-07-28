@@ -52,6 +52,12 @@
         "resolved": "13.0.0",
         "contentHash": "zcCR1pupa1wI1VqBULRiQKeHKKZOuJhi/K+4V5oO+rHJZlaOD53ViFo1c3PavDoMAfSn/FAXGAWpPoF57rwhYg=="
       },
+      "Zomp.SyncMethodGenerator": {
+        "type": "Direct",
+        "requested": "[2.0.40, )",
+        "resolved": "2.0.40",
+        "contentHash": "lpU06HVF3AXHHU+qQSmoCCYPf3QfAUD4tePJ6o2PZta0K1Vt2jEyChwEeqTuG1940SB7kT6Wp5BagmL+7ILimw=="
+      },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
         "resolved": "10.0.300",
