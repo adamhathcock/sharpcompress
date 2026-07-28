@@ -7,6 +7,7 @@ namespace SharpCompress.Compressors.Filters;
 
 internal abstract partial class Filter
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -200,6 +201,7 @@ internal abstract partial class Filter
     }
 #endif
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task WriteAsync(
         byte[] buffer,
         int offset,
