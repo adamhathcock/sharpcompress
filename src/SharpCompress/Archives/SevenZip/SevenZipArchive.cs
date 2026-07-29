@@ -78,6 +78,12 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         }
     }
 
+    public override void Dispose()
+    {
+        _database?.DisposeCachedFolderStream();
+        base.Dispose();
+    }
+
     private void LoadFactory(Stream stream)
     {
         if (_database is null)
