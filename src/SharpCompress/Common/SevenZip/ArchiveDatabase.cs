@@ -163,4 +163,71 @@ internal partial class ArchiveDatabase
             pw
         );
     }
+
+    // Cache used to avoid re-decoding a solid folder from scratch for every file it contains.
+    // Without this, extracting N files from the same solid folder decodes O(N^2) bytes since each
+    // file's stream was previously created fresh from the folder start and skipped forward.
+    private CFolder? _cachedFolder;
+    private Stream? _cachedFolderStream;
+    private long _cachedFolderStreamPosition;
+
+    /// <summary>
+    /// Returns a stream positioned at <paramref name="skipSize"/> bytes into the decompressed
+    /// contents of <paramref name="folder"/>. Reuses a cached decoder stream for the folder when
+    /// possible instead of recreating and re-decoding from the start.
+    /// </summary>
+    internal Stream GetFolderStream(
+        Stream stream,
+        CFolder folder,
+        IPasswordProvider pw,
+        long skipSize,
+        long entrySize
+    )
+    {
+        if (_cachedFolder == folder && _cachedFolderStream != null)
+        {
+            if (skipSize >= _cachedFolderStreamPosition)
+            {
+                var delta = skipSize - _cachedFolderStreamPosition;
+                if (delta > 0)
+                {
+                    _cachedFolderStream.Skip(delta);
+                }
+                // Assume the caller will fully consume the returned entry stream, advancing the
+                // shared stream by entrySize bytes.
+                _cachedFolderStreamPosition = skipSize + entrySize;
+                return _cachedFolderStream;
+            }
+
+            // Non-sequential (backward) access within the same folder requires restarting.
+            _cachedFolderStream.Dispose();
+            _cachedFolderStream = null;
+            _cachedFolder = null;
+        }
+        else if (_cachedFolderStream != null)
+        {
+            _cachedFolderStream.Dispose();
+            _cachedFolderStream = null;
+            _cachedFolder = null;
+        }
+
+        var newStream = GetFolderStream(stream, folder, pw);
+        if (skipSize > 0)
+        {
+            newStream.Skip(skipSize);
+        }
+
+        _cachedFolder = folder;
+        _cachedFolderStream = newStream;
+        _cachedFolderStreamPosition = skipSize + entrySize;
+        return newStream;
+    }
+
+    internal void DisposeCachedFolderStream()
+    {
+        _cachedFolderStream?.Dispose();
+        _cachedFolderStream = null;
+        _cachedFolder = null;
+        _cachedFolderStreamPosition = 0;
+    }
 }
