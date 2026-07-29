@@ -108,6 +108,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
         private readonly SevenZipArchive _archive;
         private SevenZipEntry? _currentEntry;
         private Stream? _currentFolderStream;
+        private EntryStream? _currentEntryStream;
         private CFolder? _currentFolder;
 
         /// <summary>
@@ -156,10 +157,14 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 
         protected override EntryStream GetEntryStream()
         {
+            _currentEntryStream?.Dispose();
+            _currentEntryStream = null;
+
             var entry = _currentEntry.NotNull("currentEntry is not null");
             if (entry.IsDirectory)
             {
-                return CreateEntryStream(Stream.Null);
+                _currentEntryStream = CreateEntryStream(Stream.Null);
+                return _currentEntryStream;
             }
 
             var folder = entry.FilePart.Folder;
@@ -167,7 +172,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             // If folder is null (empty stream entry), return empty stream
             if (folder is null)
             {
-                return CreateEntryStream(Stream.Null);
+                _currentEntryStream = CreateEntryStream(Stream.Null);
+                return _currentEntryStream;
             }
 
             // Check if we're starting a new folder - dispose old folder stream if needed
@@ -188,9 +194,10 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 );
             }
 
-            return CreateEntryStream(
+            _currentEntryStream = CreateEntryStream(
                 new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
             );
+            return _currentEntryStream;
         }
 
         protected override ValueTask<EntryStream> GetEntryStreamAsync(
@@ -199,6 +206,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 
         public override void Dispose()
         {
+            _currentEntryStream?.Dispose();
+            _currentEntryStream = null;
             _currentFolderStream?.Dispose();
             _currentFolderStream = null;
             base.Dispose();
