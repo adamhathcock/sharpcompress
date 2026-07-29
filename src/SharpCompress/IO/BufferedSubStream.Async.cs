@@ -44,6 +44,8 @@ internal partial class BufferedSubStream
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (count > Length)
         {
             count = (int)Length;
@@ -70,6 +72,8 @@ internal partial class BufferedSubStream
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var count = buffer.Length;
         if (count > Length)
         {
