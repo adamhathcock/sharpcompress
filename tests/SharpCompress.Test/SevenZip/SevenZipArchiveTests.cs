@@ -407,16 +407,26 @@ public class SevenZipArchiveTests : ArchiveTests
         while (reader.MoveToNextEntry() && reader.Entry.IsDirectory) { }
 
         Assert.False(reader.Entry.IsDirectory);
-        var firstEntryStream = reader.OpenEntryStream();
+        using var firstEntryStream = reader.OpenEntryStream();
         Assert.NotEqual(-1, firstEntryStream.ReadByte());
 
         while (reader.MoveToNextEntry() && reader.Entry.IsDirectory) { }
 
         Assert.False(reader.Entry.IsDirectory);
+        var secondEntrySize = reader.Entry.Size;
         using var secondEntryStream = reader.OpenEntryStream();
+
+        Assert.Throws<ObjectDisposedException>(() => firstEntryStream.ReadByte());
+
         var buffer = new byte[4096];
-        while (secondEntryStream.Read(buffer, 0, buffer.Length) > 0) { }
-        firstEntryStream.Dispose();
+        long bytesRead = 0;
+        int read;
+        while ((read = secondEntryStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            bytesRead += read;
+        }
+
+        Assert.Equal(secondEntrySize, bytesRead);
     }
 
     [Fact]
