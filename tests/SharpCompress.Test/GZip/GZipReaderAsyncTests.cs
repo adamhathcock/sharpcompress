@@ -50,12 +50,12 @@ public class GZipReaderAsyncTests : ReaderTests
 
         var gzipPath = Path.Combine(SCRATCH_FILES_PATH, "Flat.bin.gz");
         using (var output = File.Create(gzipPath))
-        await using (var gzip = new GZipStream(output, CompressionMode.Compress))
+        using (var gzip = new GZipStream(output, CompressionMode.Compress))
         {
             await gzip.WriteAsync(source, 0, source.Length);
         }
 
-        await using Stream stream = File.OpenRead(gzipPath);
+        using Stream stream = File.OpenRead(gzipPath);
         await using var reader = await ReaderFactory.OpenAsyncReader(stream);
         Assert.IsType<GZipReader>(reader);
         Assert.True(await reader.MoveToNextEntryAsync());
