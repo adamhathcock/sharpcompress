@@ -65,14 +65,17 @@ public class LzwFactory : Factory, IReaderFactory
                 )
             )
             {
-                if (TarArchive.IsTarFile(testStream))
+                var isTarArchive = TarArchive.IsTarFile(testStream);
+
+                // The TAR probe can consume arbitrary compressed input before it rejects a stream.
+                sharpCompressStream.Rewind();
+                sharpCompressStream.StopRecording();
+                if (isTarArchive)
                 {
-                    sharpCompressStream.StopRecording();
                     reader = new TarReader(sharpCompressStream, options, CompressionType.Lzw);
                     return true;
                 }
             }
-            sharpCompressStream.StopRecording();
             reader = OpenReader(sharpCompressStream, options);
             return true;
         }
@@ -100,12 +103,13 @@ public class LzwFactory : Factory, IReaderFactory
         var tarReader = await new TarFactory()
             .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
             .ConfigureAwait(false);
+        sharpCompressStream.Rewind();
+        sharpCompressStream.StopRecording();
         if (tarReader is not null)
         {
             return tarReader;
         }
 
-        sharpCompressStream.StopRecording();
         return await OpenAsyncReader(sharpCompressStream, options, cancellationToken)
             .ConfigureAwait(false);
     }

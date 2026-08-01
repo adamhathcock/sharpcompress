@@ -151,13 +151,16 @@ public class GZipFactory
                     CompressionContext.FromStream(sharpCompressStream).WithReaderOptions(options)
                 )
             );
-            if (TarArchive.IsTarFile(testStream))
+            var isTarArchive = TarArchive.IsTarFile(testStream);
+
+            // The TAR probe can consume arbitrary compressed input before it rejects a stream.
+            sharpCompressStream.Rewind();
+            sharpCompressStream.StopRecording();
+            if (isTarArchive)
             {
-                sharpCompressStream.StopRecording();
                 reader = new TarReader(sharpCompressStream, options, CompressionType.GZip);
                 return true;
             }
-            sharpCompressStream.StopRecording();
             reader = OpenReader(sharpCompressStream, options);
             return true;
         }
@@ -185,12 +188,13 @@ public class GZipFactory
         var tarReader = await new TarFactory()
             .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
             .ConfigureAwait(false);
+        sharpCompressStream.Rewind();
+        sharpCompressStream.StopRecording();
         if (tarReader is not null)
         {
             return tarReader;
         }
 
-        sharpCompressStream.StopRecording();
         return await OpenAsyncReader(sharpCompressStream, options, cancellationToken)
             .ConfigureAwait(false);
     }
