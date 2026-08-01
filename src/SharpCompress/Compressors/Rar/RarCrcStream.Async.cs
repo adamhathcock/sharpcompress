@@ -39,7 +39,7 @@ internal partial class RarCrcStream : RarStream
         )
         {
             // NOTE: we use the last FileHeader in a multipart volume to check CRC
-            throw new InvalidFormatException("file crc mismatch");
+            throw new InvalidFormatException("file crc mismatch: " + _key);
         }
 
         return result;
