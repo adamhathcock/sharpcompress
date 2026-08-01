@@ -7,16 +7,15 @@ deterministic, repeated text pattern with a 2 KiB `0xFF` prefix. The entry CRC-3
 | Fixture | Archive API | Reader API |
 | --- | --- | --- |
 | `Large.zip` | Yes | Yes |
-| Generated `Large.tar` | Yes | N/A |
+| Generated `Large.tar` | Yes | Yes |
 | `Large.gz` | Yes | Yes |
 | `Large.rar` | Yes | Yes |
 | `Large.7z` | Yes | No |
 | `Large.tar.gz` | No | Yes |
 
 The compressible payload keeps the compressed fixtures small while requiring a full
-64 MiB decompression to validate each API. The Archive API test expands `Large.tar.gz`
-to a scratch `Large.tar` before exercising raw TAR support, so the 64 MiB TAR file is
-not committed.
+64 MiB decompression to validate each API. The tests expand `Large.tar.gz` to a scratch
+`Large.tar` before exercising raw TAR support, so the 64 MiB TAR file is not committed.
 
 ## Regenerating
 

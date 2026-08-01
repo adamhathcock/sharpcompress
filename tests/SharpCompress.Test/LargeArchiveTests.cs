@@ -26,7 +26,7 @@ public class LargeArchiveTests : TestBase
     [InlineData("Large/Large.7z")]
     public void OpenArchive_ShouldStreamLargeEntry(string fixtureName)
     {
-        using var stream = File.OpenRead(GetArchiveFixturePath(fixtureName));
+        using var stream = File.OpenRead(GetMaterializedFixturePath(fixtureName));
         using var archive = ArchiveFactory.OpenArchive(stream);
 
         VerifyArchive(archive);
@@ -41,7 +41,7 @@ public class LargeArchiveTests : TestBase
     public async Task OpenAsyncArchive_ShouldStreamLargeEntry(string fixtureName)
     {
         await using var stream = new AsyncOnlyStream(
-            File.OpenRead(await GetArchiveFixturePathAsync(fixtureName))
+            File.OpenRead(await GetMaterializedFixturePathAsync(fixtureName))
         );
         await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
 
@@ -58,7 +58,7 @@ public class LargeArchiveTests : TestBase
     [InlineData("Large/Large.tar.gz")]
     public void OpenReader_ShouldStreamLargeEntry(string fixtureName)
     {
-        using var stream = File.OpenRead(GetFixturePath(fixtureName));
+        using var stream = File.OpenRead(GetMaterializedFixturePath(fixtureName));
         using var reader = ReaderFactory.OpenReader(stream);
 
         VerifyReader(reader);
@@ -72,7 +72,9 @@ public class LargeArchiveTests : TestBase
     [InlineData("Large/Large.tar.gz")]
     public async Task OpenAsyncReader_ShouldStreamLargeEntry(string fixtureName)
     {
-        await using var stream = new AsyncOnlyStream(File.OpenRead(GetFixturePath(fixtureName)));
+        await using var stream = new AsyncOnlyStream(
+            File.OpenRead(await GetMaterializedFixturePathAsync(fixtureName))
+        );
         await using var reader = await ReaderFactory.OpenAsyncReader(stream);
 
         Assert.True(await reader.MoveToNextEntryAsync());
@@ -85,10 +87,10 @@ public class LargeArchiveTests : TestBase
     private static string GetFixturePath(string fixtureName) =>
         Path.Combine(TEST_ARCHIVES_PATH, fixtureName);
 
-    private string GetArchiveFixturePath(string fixtureName) =>
+    private string GetMaterializedFixturePath(string fixtureName) =>
         fixtureName == "Large/Large.tar" ? MaterializeTarFixture() : GetFixturePath(fixtureName);
 
-    private async Task<string> GetArchiveFixturePathAsync(string fixtureName) =>
+    private async Task<string> GetMaterializedFixturePathAsync(string fixtureName) =>
         fixtureName == "Large/Large.tar"
             ? await MaterializeTarFixtureAsync()
             : GetFixturePath(fixtureName);
