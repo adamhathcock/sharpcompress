@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -31,11 +30,11 @@ internal partial class RarCrcStream : RarStream
             .ConfigureAwait(false);
         if (result != 0)
         {
-            currentCrc = RarCRC.CheckCrc(currentCrc, buffer, offset, result);
+            _currentCrc = RarCRC.CheckCrc(_currentCrc, buffer, offset, result);
         }
         else if (
-            !disableCRC
-            && GetCrc() != BitConverter.ToUInt32(readStream.NotNull().CurrentCrc.NotNull(), 0)
+            !_disableCrc
+            && GetCrc() != BitConverter.ToUInt32(_readStream.NotNull().CurrentCrc.NotNull(), 0)
             && count != 0
         )
         {
@@ -56,16 +55,16 @@ internal partial class RarCrcStream : RarStream
         var result = await base.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (result != 0)
         {
-            currentCrc = RarCRC.CheckCrc(currentCrc, buffer.Span, 0, result);
+            _currentCrc = RarCRC.CheckCrc(_currentCrc, buffer.Span, 0, result);
         }
         else if (
-            !disableCRC
-            && GetCrc() != BitConverter.ToUInt32(readStream.NotNull().CurrentCrc.NotNull(), 0)
+            !_disableCrc
+            && GetCrc() != BitConverter.ToUInt32(_readStream.NotNull().CurrentCrc.NotNull(), 0)
             && buffer.Length != 0
         )
         {
             // NOTE: we use the last FileHeader in a multipart volume to check CRC
-            throw new InvalidFormatException("file crc mismatch");
+            throw new InvalidFormatException("file crc mismatch: " + _key);
         }
 
         return result;
