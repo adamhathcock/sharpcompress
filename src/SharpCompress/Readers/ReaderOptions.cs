@@ -144,6 +144,13 @@ public sealed record ReaderOptions : IReaderOptions
         CompressionProviderRegistry.Default;
 
     /// <summary>
+    /// When true, opts in to a format's optional parallel decode (e.g. 7-Zip's automatic
+    /// parallel LZMA2 solid-folder decode). Formats that do not implement parallel decoding
+    /// ignore this setting. Default is false (sequential decode).
+    /// </summary>
+    public bool EnableParallelism { get; set; }
+
+    /// <summary>
     /// Creates a new ReaderOptions instance with default values.
     /// </summary>
     public ReaderOptions() { }

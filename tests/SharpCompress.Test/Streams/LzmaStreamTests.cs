@@ -1,6 +1,8 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SharpCompress.Compressors.LZMA;
 using Xunit;
 
@@ -606,4 +608,304 @@ public class LzmaStreamTests
             }
         }
     }
+
+    // Tests Lzma2ParallelDecoder directly using hand-built LZMA2 streams made only of
+    // "uncompressed" chunks (control bytes 0x01/0x02). Those chunks carry their payload verbatim
+    // (no real LZMA compression involved), which makes it possible to build fully valid, precisely
+    // controlled multi-block LZMA2 streams -- including ones that exercise the small-block merge
+    // threshold and cross-segment block cuts -- without needing a real (and large) 7z test archive.
+#if !LEGACY_DOTNET
+    // Props byte encoding a ~2MB dictionary (see LzmaStream's dict-size formula), comfortably
+    // larger than any single chunk used by these tests.
+    private static readonly byte[] Lzma2Props = { 18 };
+#endif
+
+    private static byte[] UncompressedChunk(bool dictReset, byte[] payload)
+    {
+        Assert.InRange(payload.Length, 1, 0x10000);
+        var sizeMinusOne = payload.Length - 1;
+        var chunk = new byte[3 + payload.Length];
+        chunk[0] = dictReset ? (byte)0x01 : (byte)0x02;
+        chunk[1] = (byte)(sizeMinusOne >> 8);
+        chunk[2] = (byte)(sizeMinusOne & 0xFF);
+        Buffer.BlockCopy(payload, 0, chunk, 3, payload.Length);
+        return chunk;
+    }
+
+    private static byte[] RepeatingPayload(int size, byte seed)
+    {
+        var payload = new byte[size];
+        for (var i = 0; i < size; i++)
+        {
+            payload[i] = (byte)(seed + i);
+        }
+        return payload;
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_MergesSmallSegmentsAndCutsOnceThresholdReached()
+    {
+        // Seg1+Seg2 are both tiny -> merge. Seg3 is >= MinBlockSize on its own, so it merges into
+        // the same block (the cut only happens once the *already accumulated* size reaches the
+        // threshold), pushing that block's total past MinBlockSize. Seg4 then starts a new block,
+        // and Seg5 (tiny) merges into it. The trailing block is flushed as-is even though small.
+        var seg1 = UncompressedChunk(dictReset: true, RepeatingPayload(100, 1));
+        var seg2 = UncompressedChunk(dictReset: true, RepeatingPayload(100, 2));
+        var seg3 = UncompressedChunk(dictReset: true, RepeatingPayload(20_000, 3));
+        var seg4 = UncompressedChunk(dictReset: true, RepeatingPayload(50, 4));
+        var seg5 = UncompressedChunk(dictReset: true, RepeatingPayload(50, 5));
+
+        using var ms = new MemoryStream();
+        ms.Write(seg1, 0, seg1.Length);
+        ms.Write(seg2, 0, seg2.Length);
+        ms.Write(seg3, 0, seg3.Length);
+        ms.Write(seg4, 0, seg4.Length);
+        ms.Write(seg5, 0, seg5.Length);
+        ms.WriteByte(0); // end marker
+
+        var packSize = ms.Length;
+        var unpackSize = 100 + 100 + 20_000 + 50 + 50;
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(ms, 0, packSize, unpackSize);
+
+        Assert.NotNull(blocks);
+        Assert.Equal(2, blocks!.Count);
+
+        Assert.Equal(0, blocks[0].UnpackOffset);
+        Assert.Equal(100 + 100 + 20_000, blocks[0].UnpackLen);
+
+        Assert.Equal(100 + 100 + 20_000, blocks[1].UnpackOffset);
+        Assert.Equal(50 + 50, blocks[1].UnpackLen);
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_SingleSmallSegment_ReturnsOneBlock()
+    {
+        var seg = UncompressedChunk(dictReset: true, RepeatingPayload(64, 7));
+        using var ms = new MemoryStream();
+        ms.Write(seg, 0, seg.Length);
+        ms.WriteByte(0);
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(ms, 0, ms.Length, 64);
+
+        Assert.NotNull(blocks);
+        Assert.Single(blocks!);
+        Assert.Equal(0, blocks![0].UnpackOffset);
+        Assert.Equal(64, blocks[0].UnpackLen);
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_NonRestartChunksNeverCutABlock()
+    {
+        // A dict-reset chunk followed by several *non*-restart continuation chunks must all stay
+        // in the same block, regardless of accumulated size, since none of them are independently
+        // decodable restart points.
+        var seg1 = UncompressedChunk(dictReset: true, RepeatingPayload(20_000, 1));
+        var seg2 = UncompressedChunk(dictReset: false, RepeatingPayload(20_000, 2));
+        var seg3 = UncompressedChunk(dictReset: false, RepeatingPayload(20_000, 3));
+
+        using var ms = new MemoryStream();
+        ms.Write(seg1, 0, seg1.Length);
+        ms.Write(seg2, 0, seg2.Length);
+        ms.Write(seg3, 0, seg3.Length);
+        ms.WriteByte(0);
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(ms, 0, ms.Length, 60_000);
+
+        Assert.NotNull(blocks);
+        Assert.Single(blocks!);
+        Assert.Equal(60_000, blocks![0].UnpackLen);
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_MismatchedUnpackSize_ReturnsNull()
+    {
+        var seg = UncompressedChunk(dictReset: true, RepeatingPayload(64, 7));
+        using var ms = new MemoryStream();
+        ms.Write(seg, 0, seg.Length);
+        ms.WriteByte(0);
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(
+            ms,
+            0,
+            ms.Length,
+            65 /* wrong */
+        );
+
+        Assert.Null(blocks);
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_InvalidControlByte_ReturnsNull()
+    {
+        using var ms = new MemoryStream(new byte[] { 0x03, 0x00, 0x00, 0x00, 0x00 });
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(ms, 0, ms.Length, 1);
+
+        Assert.Null(blocks);
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_TruncatedStream_ReturnsNull()
+    {
+        // Claims a 100-byte chunk but only provides a couple of bytes of payload.
+        using var ms = new MemoryStream(new byte[] { 0x01, 0x00, 0x63, 0xAA, 0xBB });
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(ms, 0, ms.Length, 100);
+
+        Assert.Null(blocks);
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_EmptyStream_ReturnsEmptyList()
+    {
+        using var ms = new MemoryStream(new byte[] { 0 }); // just the end marker
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(ms, 0, ms.Length, 0);
+
+        Assert.NotNull(blocks);
+        Assert.Empty(blocks!);
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_TryScanBlocks_RealCompressedChunksWithNewProps_ParsesAndDecodesCorrectly()
+    {
+        // Real LZMA2 compressed chunks (as produced by the actual encoder used by SevenZipWriter)
+        // always set the new-props flag (control 0xE0-0xFF), which carries an extra properties
+        // byte in the chunk header, in addition to the 4 size-field bytes. This regression test
+        // guards that exact byte -- the hand-built "uncompressed chunk" tests above (control
+        // 0x01/0x02) never exercise this header shape, which is exactly how this bug slipped
+        // through: a real multi-GB archive was needed to surface it, header-only synthetic tests
+        // using only uncompressed chunks were not enough.
+        var payload = new byte[5_000_000];
+        for (var i = 0; i < payload.Length; i++)
+        {
+            payload[i] = (byte)(i % 7); // highly repetitive -> compresses well, forces real chunks
+        }
+
+        byte[] lzma2Props;
+        using var packMs = new MemoryStream();
+        using (
+            var encoder = new Lzma2EncoderStream(packMs, dictionarySize: 1 << 20, numFastBytes: 32)
+        )
+        {
+            encoder.Write(payload, 0, payload.Length);
+            lzma2Props = encoder.Properties;
+        }
+        var packBytes = packMs.ToArray();
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(
+            packMs,
+            0,
+            packBytes.Length,
+            payload.Length
+        );
+
+        Assert.NotNull(blocks);
+        Assert.True(blocks!.Count >= 1);
+        Assert.Equal(payload.Length, blocks.Sum(b => b.UnpackLen));
+
+        // Decode sequentially (production LzmaStream decode) to confirm the scanner's reported
+        // pack/unpack accounting is actually consistent with what a real decode produces.
+        using var decodeMs = new MemoryStream(packBytes);
+        using var lzma = LzmaStream.Create(
+            lzma2Props,
+            decodeMs,
+            -1,
+            payload.Length,
+            leaveOpen: true
+        );
+        var decoded = new byte[payload.Length];
+        var totalRead = 0;
+        while (totalRead < decoded.Length)
+        {
+            var read = lzma.Read(decoded, totalRead, decoded.Length - totalRead);
+            Assert.True(read > 0);
+            totalRead += read;
+        }
+
+        Assert.Equal(payload, decoded);
+    }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public void Lzma2ParallelDecoder_DecodeBlocksParallel_ProducesByteIdenticalOutputAcrossMultipleBlocks()
+    {
+        // Enough independent, large-enough segments to guarantee more than one merged block.
+        var payloads = new List<byte[]>();
+        for (var i = 0; i < 6; i++)
+        {
+            payloads.Add(RepeatingPayload(20_000 + i, (byte)(i * 17)));
+        }
+
+        using var packMs = new MemoryStream();
+        foreach (var payload in payloads)
+        {
+            var chunk = UncompressedChunk(dictReset: true, payload);
+            packMs.Write(chunk, 0, chunk.Length);
+        }
+        packMs.WriteByte(0);
+        var packBytes = packMs.ToArray();
+
+        var expected = new byte[payloads.Count == 0 ? 0 : payloads.Sum(p => p.Length)];
+        var offset = 0;
+        foreach (var payload in payloads)
+        {
+            Buffer.BlockCopy(payload, 0, expected, offset, payload.Length);
+            offset += payload.Length;
+        }
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(
+            packMs,
+            0,
+            packBytes.Length,
+            expected.Length
+        );
+        Assert.NotNull(blocks);
+        Assert.True(blocks!.Count > 1, "Test setup should produce more than one block.");
+
+        var inputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllBytes(inputPath, packBytes);
+
+            using (
+                var inputFile = new FileStream(
+                    inputPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read
+                )
+            )
+            using (
+                var outputFile = new FileStream(
+                    outputPath,
+                    FileMode.Open,
+                    FileAccess.ReadWrite,
+                    FileShare.None
+                )
+            )
+            {
+                outputFile.SetLength(expected.Length);
+                Lzma2ParallelDecoder.DecodeBlocksParallel(
+                    inputFile.SafeFileHandle,
+                    Lzma2Props,
+                    0,
+                    blocks,
+                    outputFile.SafeFileHandle,
+                    Environment.ProcessorCount
+                );
+            }
+
+            var actual = File.ReadAllBytes(outputPath);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            File.Delete(inputPath);
+            File.Delete(outputPath);
+        }
+    }
+#endif
 }

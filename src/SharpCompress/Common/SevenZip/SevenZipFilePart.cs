@@ -11,18 +11,21 @@ internal class SevenZipFilePart : FilePart
     private CompressionType? _type;
     private readonly Stream _stream;
     private readonly ArchiveDatabase _database;
+    private readonly bool _enableParallelism;
 
     internal SevenZipFilePart(
         Stream stream,
         ArchiveDatabase database,
         int index,
         CFileItem fileEntry,
-        IArchiveEncoding archiveEncoding
+        IArchiveEncoding archiveEncoding,
+        bool enableParallelism = false
     )
         : base(archiveEncoding)
     {
         _stream = stream;
         _database = database;
+        _enableParallelism = enableParallelism;
         Index = index;
         Header = fileEntry;
         if (Header.HasStream)
@@ -58,7 +61,8 @@ internal class SevenZipFilePart : FilePart
             Folder!,
             _database.PasswordProvider,
             skipSize,
-            Header.Size
+            Header.Size,
+            _enableParallelism
         );
         return new ReadOnlySubStream(folderStream, Header.Size, leaveOpen: true);
     }

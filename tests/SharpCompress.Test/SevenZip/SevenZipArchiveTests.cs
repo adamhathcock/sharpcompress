@@ -5,9 +5,11 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
 using SharpCompress.Common.SevenZip;
+using SharpCompress.Compressors.LZMA;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
+using SharpCompress.Writers.SevenZip;
 using Xunit;
 
 namespace SharpCompress.Test.SevenZip;
@@ -445,4 +447,79 @@ public class SevenZipArchiveTests : ArchiveTests
             Assert.Equal(0, fileInfo.Length);
         }
     }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public void SevenZipArchive_EnableParallelism_OptInEngagesParallelDecodePath()
+    {
+        // Highly repetitive so it compresses well, and large enough that -- combined with the
+        // small dictionary below -- the encoder is forced to periodically reset the dictionary,
+        // producing multiple independently-decodable LZMA2 restart blocks (the only shape
+        // Lzma2ParallelDecoder can split across threads).
+        var payload = new byte[20_000_000];
+        for (var i = 0; i < payload.Length; i++)
+        {
+            payload[i] = (byte)(i % 7);
+        }
+
+        // A real (file-backed, seekable) archive is required: the parallel decode path only
+        // engages for a genuine FileStream, never for archives opened from in-memory streams.
+        var archivePath = Path.Combine(SCRATCH_FILES_PATH, "parallel-decode-optin.7z");
+        var writerOptions = new SevenZipWriterOptions(CompressionType.LZMA2)
+        {
+            LzmaProperties = new LzmaEncoderProperties(
+                eos: false,
+                dictionary: 1 << 20,
+                numFastBytes: 32
+            ),
+        };
+        using (var archiveStream = File.Create(archivePath))
+        using (var writer = new SevenZipWriter(archiveStream, writerOptions))
+        using (var source = new MemoryStream(payload))
+        {
+            writer.Write("payload.bin", source, DateTime.UtcNow);
+        }
+
+        Assert.Equal(
+            payload,
+            ReadSinglePayloadEntry(
+                archivePath,
+                ReaderOptions.ForFilePath,
+                out var sequentialFolderStreamType
+            )
+        );
+        Assert.NotEqual(typeof(FileStream), sequentialFolderStreamType);
+
+        Assert.Equal(
+            payload,
+            ReadSinglePayloadEntry(
+                archivePath,
+                ReaderOptions.ForFilePath.WithEnableParallelism(true),
+                out var parallelFolderStreamType
+            )
+        );
+        Assert.Equal(typeof(FileStream), parallelFolderStreamType);
+    }
+
+    private static byte[] ReadSinglePayloadEntry(
+        string archivePath,
+        ReaderOptions readerOptions,
+        out Type folderStreamType
+    )
+    {
+        using var archive = (SevenZipArchive)
+            SevenZipArchive.OpenArchive(archivePath, readerOptions);
+        using var reader = archive.ExtractAllEntries();
+        var sevenZipReader = Assert.IsType<SevenZipArchive.SevenZipReader>(reader);
+        sevenZipReader.DiagnosticsEnabled = true;
+
+        Assert.True(reader.MoveToNextEntry());
+        using var entryStream = reader.OpenEntryStream();
+        using var output = new MemoryStream();
+        entryStream.CopyTo(output);
+
+        folderStreamType = sevenZipReader.DiagnosticsCurrentFolderStream!.GetType();
+        return output.ToArray();
+    }
+#endif
 }

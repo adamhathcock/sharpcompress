@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.LZMA.Utilities;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -144,8 +145,30 @@ internal partial class ArchiveDatabase
         return size;
     }
 
-    internal Stream GetFolderStream(Stream stream, CFolder folder, IPasswordProvider pw)
+    internal Stream GetFolderStream(
+        Stream stream,
+        CFolder folder,
+        IPasswordProvider pw,
+        bool enableParallelism = false
+    )
     {
+#if !LEGACY_DOTNET
+        // Opportunistically decode the whole folder concurrently when it's a single, unchained,
+        // unencrypted LZMA2 stream backed by a real (seekable, positional-I/O-capable) file -- the
+        // only shape where independent per-block decoding is possible and worth the temp-file
+        // round-trip. Opt-in only (via ReaderOptions.EnableParallelism): any other shape
+        // (multi-coder chains, BCJ/delta filters, encryption, a non-file stream, a single-core
+        // machine, or too few independent restart points to make parallelizing worthwhile) safely
+        // falls back to the existing sequential decode below.
+        if (
+            enableParallelism
+            && TryGetParallelDecodedFolderStream(stream, folder, out var parallelStream)
+        )
+        {
+            return parallelStream!;
+        }
+#endif
+
         var packStreamIndex = folder._firstPackStreamId;
         var folderStartPackPos = GetFolderStreamPos(folder, 0);
         var count = folder._packStreams.Count;
@@ -164,6 +187,101 @@ internal partial class ArchiveDatabase
         );
     }
 
+#if !LEGACY_DOTNET
+    /// <summary>
+    /// Attempts to decode <paramref name="folder"/> entirely up front using
+    /// <see cref="Lzma2ParallelDecoder"/>, writing the result to a temp file and returning a
+    /// stream over it. Returns false (and leaves <paramref name="decodedStream"/> null) whenever
+    /// the folder's shape, the host stream, or the current hardware make parallel decoding
+    /// inapplicable or not worthwhile -- callers must fall back to sequential decoding.
+    /// </summary>
+    private bool TryGetParallelDecodedFolderStream(
+        Stream stream,
+        CFolder folder,
+        out Stream? decodedStream
+    )
+    {
+        decodedStream = null;
+
+        // Matches 7-Zip's own behavior: with a single available core there is nothing to gain
+        // from splitting work across threads, so skip straight to the sequential path.
+        if (Environment.ProcessorCount <= 1)
+        {
+            return false;
+        }
+
+        // Only a lone, unchained LZMA2 coder can be split into independently-decodable blocks.
+        // Any bind pairs (BCJ/delta filters, etc.) or additional coders (e.g. AES encryption)
+        // mean the folder's bytes depend on more than just this one LZMA2 stream.
+        if (
+            folder._coders.Count != 1
+            || folder._coders[0]._methodId != CMethodId.K_LZMA2
+            || folder._packStreams.Count != 1
+            || folder._bindPairs.Count != 0
+        )
+        {
+            return false;
+        }
+
+        var props = folder._coders[0]._props;
+        if (props is null || props.Length == 0)
+        {
+            return false;
+        }
+
+        // Parallel decoding needs positional (random-access) reads from the source file and
+        // positional writes to the temp output file across multiple threads; a real, seekable
+        // file handle is required for that. Streams the archive was opened from may be wrapped
+        // (buffering, source-stream indirection, etc.), so unwrap looking for the underlying file.
+        var inputFile = stream as FileStream ?? (stream as IStreamStack)?.GetStream<FileStream>();
+        if (inputFile is null)
+        {
+            return false;
+        }
+
+        var folderIndex = _folders.IndexOf(folder);
+        var packStart = GetFolderStreamPos(folder, 0);
+        var packSize = GetFolderFullPackSize(folderIndex);
+        var unpackSize = folder.GetUnpackSize();
+
+        var blocks = Lzma2ParallelDecoder.TryScanBlocks(stream, packStart, packSize, unpackSize);
+        if (blocks is null || blocks.Count <= 1)
+        {
+            return false;
+        }
+
+        var tempFile = new FileStream(
+            Path.GetTempFileName(),
+            FileMode.Create,
+            FileAccess.ReadWrite,
+            FileShare.None,
+            4096,
+            FileOptions.DeleteOnClose
+        );
+
+        try
+        {
+            Lzma2ParallelDecoder.DecodeBlocksParallel(
+                inputFile.SafeFileHandle,
+                props,
+                packStart,
+                blocks,
+                tempFile.SafeFileHandle,
+                Math.Min(Environment.ProcessorCount, Lzma2ParallelDecoder.MaxThreads)
+            );
+        }
+        catch
+        {
+            tempFile.Dispose();
+            throw;
+        }
+
+        tempFile.Position = 0;
+        decodedStream = tempFile;
+        return true;
+    }
+#endif
+
     // Cache used to avoid re-decoding a solid folder from scratch for every file it contains.
     // Without this, extracting N files from the same solid folder decodes O(N^2) bytes since each
     // file's stream was previously created fresh from the folder start and skipped forward.
@@ -181,7 +299,8 @@ internal partial class ArchiveDatabase
         CFolder folder,
         IPasswordProvider pw,
         long skipSize,
-        long entrySize
+        long entrySize,
+        bool enableParallelism = false
     )
     {
         if (_cachedFolder == folder && _cachedFolderStream != null)
@@ -211,7 +330,7 @@ internal partial class ArchiveDatabase
             _cachedFolder = null;
         }
 
-        var newStream = GetFolderStream(stream, folder, pw);
+        var newStream = GetFolderStream(stream, folder, pw, enableParallelism);
         if (skipSize > 0)
         {
             newStream.Skip(skipSize);

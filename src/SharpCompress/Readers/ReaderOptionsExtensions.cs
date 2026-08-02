@@ -87,6 +87,14 @@ public static class ReaderOptionsExtensions
     ) => options with { RewindableBufferSize = rewindableBufferSize };
 
     /// <summary>
+    /// Creates a copy with the specified EnableParallelism value.
+    /// </summary>
+    public static ReaderOptions WithEnableParallelism(
+        this ReaderOptions options,
+        bool enableParallelism
+    ) => options with { EnableParallelism = enableParallelism };
+
+    /// <summary>
     /// Creates a copy with the specified compression provider registry.
     /// </summary>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="providers"/> is null.</exception>

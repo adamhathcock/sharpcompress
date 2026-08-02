@@ -70,6 +70,12 @@ public sealed record SevenZipWriterOptions : IWriterOptions
         CompressionProviderRegistry.Default;
 
     /// <summary>
+    /// When true, opts in to a format's optional parallel encode. No writer currently implements
+    /// parallel encoding; reserved for future use. Default is false.
+    /// </summary>
+    public bool EnableParallelism { get; set; }
+
+    /// <summary>
     /// Whether to compress the archive header itself using LZMA.
     /// Default is true, matching standard 7-Zip behavior.
     /// </summary>

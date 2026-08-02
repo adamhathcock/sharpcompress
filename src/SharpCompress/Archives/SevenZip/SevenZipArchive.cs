@@ -54,7 +54,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                         _database,
                         i,
                         file,
-                        ReaderOptions.ArchiveEncoding
+                        ReaderOptions.ArchiveEncoding,
+                        ReaderOptions.EnableParallelism
                     ),
                     ReaderOptions
                 );
@@ -190,7 +191,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 _currentFolderStream = _archive._database!.GetFolderStream(
                     _archive.Volumes.Single().Stream,
                     folder!,
-                    _archive._database.PasswordProvider
+                    _archive._database.PasswordProvider,
+                    Options.EnableParallelism
                 );
             }
 
