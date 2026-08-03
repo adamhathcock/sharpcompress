@@ -11,7 +11,7 @@ namespace SharpCompress.Providers.Default;
 /// <summary>
 /// Provides GZip compression using SharpCompress's internal implementation.
 /// </summary>
-public sealed class GZipCompressionProvider : CompressionProviderBase
+public sealed partial class GZipCompressionProvider : CompressionProviderBase
 {
     public override CompressionType CompressionType => CompressionType.GZip;
     public override bool SupportsCompression => true;
@@ -28,23 +28,22 @@ public sealed class GZipCompressionProvider : CompressionProviderBase
         return new GZipStream(source, CompressionMode.Decompress);
     }
 
-    public override Stream CreateDecompressStream(Stream source, CompressionContext context)
-    {
-        return new GZipStream(
-            source,
-            CompressionMode.Decompress,
-            CompressionLevel.Default,
-            context.ResolveArchiveEncoding()
-        );
-    }
-
-    public override ValueTask<Stream> CreateDecompressStreamAsync(
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    public override async ValueTask<Stream> CreateDecompressStreamAsync(
         Stream source,
         CompressionContext context,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return new ValueTask<Stream>(CreateDecompressStream(source, context));
+        return await Task.FromResult<Stream>(
+                new GZipStream(
+                    source,
+                    CompressionMode.Decompress,
+                    CompressionLevel.Default,
+                    context.ResolveArchiveEncoding()
+                )
+            )
+            .ConfigureAwait(false);
     }
 }
