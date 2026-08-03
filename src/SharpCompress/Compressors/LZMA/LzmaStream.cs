@@ -36,6 +36,14 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
     private readonly Encoder? _encoder;
     private byte[]? _asyncHeaderBuffer;
     private bool _isDisposed;
+    private ReadMode _readMode;
+
+    private enum ReadMode
+    {
+        None,
+        Synchronous,
+        Asynchronous,
+    }
 
     private LzmaStream(
         byte[] properties,
@@ -249,6 +257,11 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        if (count > 0)
+        {
+            EnsureReadMode(ReadMode.Synchronous);
+        }
+
         if (_endReached)
         {
             return 0;
@@ -344,6 +357,8 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
 
     public override int ReadByte()
     {
+        EnsureReadMode(ReadMode.Synchronous);
+
         if (_endReached)
         {
             return -1;
@@ -421,6 +436,22 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         }
 
         return value;
+    }
+
+    private void EnsureReadMode(ReadMode readMode)
+    {
+        if (_readMode == ReadMode.None)
+        {
+            _readMode = readMode;
+            return;
+        }
+
+        if (_readMode != readMode)
+        {
+            throw new InvalidOperationException(
+                "A LzmaStream cannot mix synchronous and asynchronous reads."
+            );
+        }
     }
 
     private void DecodeChunkHeader()

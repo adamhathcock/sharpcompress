@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
@@ -229,12 +231,11 @@ internal partial class ArchiveDatabase
             return false;
         }
 
-        // Parallel decoding needs positional (random-access) reads from the source file and
-        // positional writes to the temp output file across multiple threads; a real, seekable
-        // file handle is required for that. Streams the archive was opened from may be wrapped
-        // (buffering, source-stream indirection, etc.), so unwrap looking for the underlying file.
-        var inputFile = stream as FileStream ?? (stream as IStreamStack)?.GetStream<FileStream>();
-        if (inputFile is null)
+        // A file handle is not sufficient by itself: packStart is an offset in this stream's
+        // logical byte sequence. Only use positional I/O when that sequence is exactly one file.
+        // In particular, SourceStream concatenates multipart archives, where a logical offset
+        // cannot be passed directly to a handle for just one physical part.
+        if (!TryGetPositionallyEquivalentInputFile(stream, out var inputFile))
         {
             return false;
         }
@@ -261,6 +262,7 @@ internal partial class ArchiveDatabase
 
         try
         {
+            tempFile.SetLength(unpackSize);
             Lzma2ParallelDecoder.DecodeBlocksParallel(
                 inputFile.SafeFileHandle,
                 props,
@@ -278,6 +280,41 @@ internal partial class ArchiveDatabase
 
         tempFile.Position = 0;
         decodedStream = tempFile;
+        return true;
+    }
+
+    private static bool TryGetPositionallyEquivalentInputFile(
+        Stream stream,
+        [NotNullWhen(true)] out FileStream? inputFile
+    )
+    {
+        inputFile = null;
+
+        if (stream is FileStream fileStream)
+        {
+            inputFile = fileStream;
+            return true;
+        }
+
+        // Volume wraps caller-owned streams in this non-disposing passthrough wrapper. It does
+        // not change positions, so its single SourceStream input can still be used safely.
+        if (stream is SharpCompressStream { IsPassthrough: true } passthrough)
+        {
+            stream = passthrough.BaseStream();
+        }
+
+        if (stream is not SourceStream sourceStream)
+        {
+            return false;
+        }
+
+        var streams = sourceStream.Streams.Take(2).ToArray();
+        if (streams.Length != 1 || streams[0] is not FileStream sourceFile)
+        {
+            return false;
+        }
+
+        inputFile = sourceFile;
         return true;
     }
 #endif

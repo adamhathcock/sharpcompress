@@ -866,6 +866,7 @@ public class LzmaStreamTests
 
         var inputPath = Path.GetTempFileName();
         var outputPath = Path.GetTempFileName();
+        var bufferPool = new TrackingArrayPool();
         try
         {
             File.WriteAllBytes(inputPath, packBytes);
@@ -894,17 +895,183 @@ public class LzmaStreamTests
                     0,
                     blocks,
                     outputFile.SafeFileHandle,
-                    Environment.ProcessorCount
+                    Environment.ProcessorCount,
+                    bufferPool
                 );
             }
 
             var actual = File.ReadAllBytes(outputPath);
             Assert.Equal(expected, actual);
+            Assert.All(
+                bufferPool.RentRequests,
+                request => Assert.InRange(request, 1, Lzma2ParallelDecoder.BlockOutputBufferSize)
+            );
+            Assert.Equal(bufferPool.RentRequests.Count, bufferPool.ReturnedLengths.Count);
+            Assert.Equal(0, bufferPool.OutstandingRentals);
+            Assert.All(bufferPool.ClearArrayRequests, Assert.True);
         }
         finally
         {
             File.Delete(inputPath);
             File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_DecodeBlocksParallel_ReturnsPooledBuffersOnFailure()
+    {
+        var packedData = new byte[] { 0x01, 0x00, 0x3F, 0xAA, 0xBB };
+        var block = new Lzma2Block(0, packedData.Length, 0, 64);
+        var inputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
+        var bufferPool = new TrackingArrayPool();
+
+        try
+        {
+            File.WriteAllBytes(inputPath, packedData);
+
+            using (
+                var inputFile = new FileStream(
+                    inputPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read
+                )
+            )
+            using (
+                var outputFile = new FileStream(
+                    outputPath,
+                    FileMode.Open,
+                    FileAccess.ReadWrite,
+                    FileShare.None
+                )
+            )
+            {
+                outputFile.SetLength(block.UnpackLen);
+                Assert.ThrowsAny<Exception>(() =>
+                    Lzma2ParallelDecoder.DecodeBlocksParallel(
+                        inputFile.SafeFileHandle,
+                        Lzma2Props,
+                        0,
+                        [block],
+                        outputFile.SafeFileHandle,
+                        1,
+                        bufferPool
+                    )
+                );
+            }
+
+            Assert.Equal(bufferPool.RentRequests.Count, bufferPool.ReturnedLengths.Count);
+            Assert.Equal(0, bufferPool.OutstandingRentals);
+            Assert.All(bufferPool.ClearArrayRequests, Assert.True);
+        }
+        finally
+        {
+            File.Delete(inputPath);
+            File.Delete(outputPath);
+        }
+    }
+
+    [Fact]
+    public void Lzma2ParallelDecoder_DecodeBlocksParallel_SupportsLongPackLengths()
+    {
+        var expected = RepeatingPayload(64, 7);
+        var packedData = UncompressedChunk(dictReset: true, expected);
+        var block = new Lzma2Block(0, (long)int.MaxValue + 1, 0, expected.Length);
+        var inputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
+        var bufferPool = new TrackingArrayPool();
+
+        try
+        {
+            File.WriteAllBytes(inputPath, packedData);
+
+            using (
+                var inputFile = new FileStream(
+                    inputPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read
+                )
+            )
+            using (
+                var outputFile = new FileStream(
+                    outputPath,
+                    FileMode.Open,
+                    FileAccess.ReadWrite,
+                    FileShare.None
+                )
+            )
+            {
+                outputFile.SetLength(block.UnpackLen);
+                Lzma2ParallelDecoder.DecodeBlocksParallel(
+                    inputFile.SafeFileHandle,
+                    Lzma2Props,
+                    0,
+                    [block],
+                    outputFile.SafeFileHandle,
+                    1,
+                    bufferPool
+                );
+            }
+
+            Assert.Equal(expected, File.ReadAllBytes(outputPath));
+            Assert.All(
+                bufferPool.RentRequests,
+                request => Assert.InRange(request, 1, Lzma2ParallelDecoder.BlockOutputBufferSize)
+            );
+        }
+        finally
+        {
+            File.Delete(inputPath);
+            File.Delete(outputPath);
+        }
+    }
+
+    private sealed class TrackingArrayPool : ArrayPool<byte>
+    {
+        private readonly object _lock = new();
+        private readonly HashSet<byte[]> _rented = new();
+
+        public List<int> RentRequests { get; } = new();
+        public List<int> ReturnedLengths { get; } = new();
+        public List<bool> ClearArrayRequests { get; } = new();
+
+        public int OutstandingRentals
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _rented.Count;
+                }
+            }
+        }
+
+        public override byte[] Rent(int minimumLength)
+        {
+            var buffer = new byte[minimumLength];
+            lock (_lock)
+            {
+                RentRequests.Add(minimumLength);
+                _rented.Add(buffer);
+            }
+            return buffer;
+        }
+
+        public override void Return(byte[] array, bool clearArray = false)
+        {
+            lock (_lock)
+            {
+                Assert.True(_rented.Remove(array), "A buffer must be returned only once.");
+                ReturnedLengths.Add(array.Length);
+                ClearArrayRequests.Add(clearArray);
+            }
+
+            if (clearArray)
+            {
+                Array.Clear(array, 0, array.Length);
+            }
         }
     }
 #endif

@@ -452,39 +452,13 @@ public class SevenZipArchiveTests : ArchiveTests
     [Fact]
     public void SevenZipArchive_EnableParallelism_OptInEngagesParallelDecodePath()
     {
-        // Highly repetitive so it compresses well, and large enough that -- combined with the
-        // small dictionary below -- the encoder is forced to periodically reset the dictionary,
-        // producing multiple independently-decodable LZMA2 restart blocks (the only shape
-        // Lzma2ParallelDecoder can split across threads).
-        var payload = new byte[20_000_000];
-        for (var i = 0; i < payload.Length; i++)
-        {
-            payload[i] = (byte)(i % 7);
-        }
-
-        // A real (file-backed, seekable) archive is required: the parallel decode path only
-        // engages for a genuine FileStream, never for archives opened from in-memory streams.
         var archivePath = Path.Combine(SCRATCH_FILES_PATH, "parallel-decode-optin.7z");
-        var writerOptions = new SevenZipWriterOptions(CompressionType.LZMA2)
-        {
-            LzmaProperties = new LzmaEncoderProperties(
-                eos: false,
-                dictionary: 1 << 20,
-                numFastBytes: 32
-            ),
-        };
-        using (var archiveStream = File.Create(archivePath))
-        using (var writer = new SevenZipWriter(archiveStream, writerOptions))
-        using (var source = new MemoryStream(payload))
-        {
-            writer.Write("payload.bin", source, DateTime.UtcNow);
-        }
+        var payload = CreateParallelDecodeTestArchive(archivePath);
 
         Assert.Equal(
             payload,
             ReadSinglePayloadEntry(
-                archivePath,
-                ReaderOptions.ForFilePath,
+                () => SevenZipArchive.OpenArchive(archivePath, ReaderOptions.ForFilePath),
                 out var sequentialFolderStreamType
             )
         );
@@ -493,22 +467,80 @@ public class SevenZipArchiveTests : ArchiveTests
         Assert.Equal(
             payload,
             ReadSinglePayloadEntry(
-                archivePath,
-                ReaderOptions.ForFilePath.WithEnableParallelism(true),
+                () =>
+                    SevenZipArchive.OpenArchive(
+                        archivePath,
+                        ReaderOptions.ForFilePath.WithEnableParallelism(true)
+                    ),
                 out var parallelFolderStreamType
             )
         );
         Assert.Equal(typeof(FileStream), parallelFolderStreamType);
     }
 
+    [Fact]
+    public void SevenZipArchive_EnableParallelism_MultipartLzma2FallsBackToSequentialDecode()
+    {
+        var archivePath = Path.Combine(SCRATCH_FILES_PATH, "parallel-decode-multipart.7z");
+        var payload = CreateParallelDecodeTestArchive(archivePath);
+        var archiveBytes = File.ReadAllBytes(archivePath);
+        const int splitOffset = 64;
+        Assert.True(archiveBytes.Length > splitOffset);
+
+        var firstPartPath = Path.Combine(SCRATCH_FILES_PATH, "parallel-decode-multipart.001");
+        var secondPartPath = Path.Combine(SCRATCH_FILES_PATH, "parallel-decode-multipart.002");
+        File.WriteAllBytes(firstPartPath, archiveBytes[..splitOffset]);
+        File.WriteAllBytes(secondPartPath, archiveBytes[splitOffset..]);
+        var parts = new[] { new FileInfo(firstPartPath), new FileInfo(secondPartPath) };
+
+        Assert.Equal(
+            payload,
+            ReadSinglePayloadEntry(
+                () =>
+                    SevenZipArchive.OpenArchive(
+                        parts,
+                        ReaderOptions.ForFilePath.WithEnableParallelism(true)
+                    ),
+                out var folderStreamType
+            )
+        );
+        Assert.NotEqual(typeof(FileStream), folderStreamType);
+    }
+
+    private static byte[] CreateParallelDecodeTestArchive(string archivePath)
+    {
+        // Highly repetitive so it compresses well, and large enough that -- combined with the
+        // small dictionary below -- the encoder is forced to periodically reset the dictionary,
+        // producing multiple independently-decodable LZMA2 restart blocks.
+        var payload = new byte[20_000_000];
+        for (var i = 0; i < payload.Length; i++)
+        {
+            payload[i] = (byte)(i % 7);
+        }
+
+        using var archiveStream = File.Create(archivePath);
+        using var writer = new SevenZipWriter(
+            archiveStream,
+            new SevenZipWriterOptions(CompressionType.LZMA2)
+            {
+                LzmaProperties = new LzmaEncoderProperties(
+                    eos: false,
+                    dictionary: 1 << 20,
+                    numFastBytes: 32
+                ),
+            }
+        );
+        using var source = new MemoryStream(payload);
+        writer.Write("payload.bin", source, DateTime.UtcNow);
+        return payload;
+    }
+
     private static byte[] ReadSinglePayloadEntry(
-        string archivePath,
-        ReaderOptions readerOptions,
+        Func<IArchive> openArchive,
         out Type folderStreamType
     )
     {
-        using var archive = (SevenZipArchive)
-            SevenZipArchive.OpenArchive(archivePath, readerOptions);
+        using var archive = Assert.IsType<SevenZipArchive>(openArchive());
         using var reader = archive.ExtractAllEntries();
         var sevenZipReader = Assert.IsType<SevenZipArchive.SevenZipReader>(reader);
         sevenZipReader.DiagnosticsEnabled = true;

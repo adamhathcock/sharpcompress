@@ -211,7 +211,11 @@ internal sealed partial class ArchiveReader
                 await outStream
                     .ReadExactAsync(data, 0, data.Length, cancellationToken)
                     .ConfigureAwait(false);
-                if (outStream.ReadByte() >= 0)
+                if (
+                    await outStream
+                        .ReadAsync(new byte[1], 0, 1, cancellationToken)
+                        .ConfigureAwait(false) > 0
+                )
                 {
                     throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }
