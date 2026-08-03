@@ -7,6 +7,7 @@ namespace SharpCompress.Common.Zip;
 
 internal partial class SeekableZipFilePart
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     internal override async ValueTask<Stream?> GetCompressedStreamAsync(
         CancellationToken cancellationToken = default
     )
@@ -19,6 +20,7 @@ internal partial class SeekableZipFilePart
         return await base.GetCompressedStreamAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask LoadLocalHeaderAsync(CancellationToken cancellationToken = default) =>
         Header = await _headerFactory
             .GetLocalHeaderAsync(BaseStream, (DirectoryEntryHeader)Header)
