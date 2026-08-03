@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -41,6 +42,10 @@ internal static class Lzma2ParallelDecoder
 
     // 7-Zip MtDec.h: #define MTDEC_THREADS_MAX 32
     internal const int MaxThreads = 32;
+
+    // Bound each worker's transient buffers independently of the compressed block size.
+    internal const int BlockInputBufferSize = 1 << 16;
+    internal const int BlockOutputBufferSize = 1 << 20;
 
     /// <summary>
     /// Header-only walk of the LZMA2 chunk stream (no LZMA decoding) that locates every
@@ -185,16 +190,6 @@ internal static class Lzma2ParallelDecoder
                 );
             }
 
-            // Guards against a single unmerged segment large enough to overflow a byte[] buffer
-            // (only possible with an extreme, effectively-pathological run with zero restarts).
-            foreach (var block in blocks)
-            {
-                if (block.PackLen > int.MaxValue - 16 || block.UnpackLen > int.MaxValue - 16)
-                {
-                    return null;
-                }
-            }
-
             return blocks;
         }
         catch (Exception)
@@ -232,61 +227,210 @@ internal static class Lzma2ParallelDecoder
         IReadOnlyList<Lzma2Block> blocks,
         SafeFileHandle outputHandle,
         int maxDegreeOfParallelism
+    ) =>
+        DecodeBlocksParallel(
+            inputHandle,
+            lzma2Props,
+            packStart,
+            blocks,
+            outputHandle,
+            maxDegreeOfParallelism,
+            ArrayPool<byte>.Shared
+        );
+
+    internal static void DecodeBlocksParallel(
+        SafeFileHandle inputHandle,
+        byte[] lzma2Props,
+        long packStart,
+        IReadOnlyList<Lzma2Block> blocks,
+        SafeFileHandle outputHandle,
+        int maxDegreeOfParallelism,
+        ArrayPool<byte> bufferPool
     )
     {
+        ThrowHelper.ThrowIfNull(bufferPool);
+
         Parallel.ForEach(
             blocks,
             new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism },
             block =>
             {
-                var packBuffer = new byte[block.PackLen];
-                ReadFullyAt(inputHandle, packBuffer, packStart + block.PackOffset);
-
-                using var packStream = new MemoryStream(packBuffer, writable: false);
+                using var packStream = new RandomAccessBlockStream(
+                    inputHandle,
+                    checked(packStart + block.PackOffset),
+                    block.PackLen,
+                    bufferPool
+                );
                 using var lzma = LzmaStream.Create(
                     lzma2Props,
                     packStream,
-                    -1,
+                    block.PackLen,
                     block.UnpackLen,
                     leaveOpen: true
                 );
 
-                var buffer = new byte[Math.Min(block.UnpackLen, 1 << 20)];
-                long total = 0;
-                while (total < block.UnpackLen)
+                var bufferSize = checked(
+                    (int)Math.Min(Math.Max(block.UnpackLen, 1), BlockOutputBufferSize)
+                );
+                var buffer = bufferPool.Rent(bufferSize);
+                try
                 {
-                    var toRead = (int)Math.Min(buffer.Length, block.UnpackLen - total);
-                    var read = lzma.Read(buffer, 0, toRead);
-                    if (read <= 0)
+                    long total = 0;
+                    while (total < block.UnpackLen)
                     {
-                        throw new EndOfStreamException(
-                            $"LZMA2 block at unpack offset {block.UnpackOffset:N0} ended early after {total:N0}/{block.UnpackLen:N0} bytes."
+                        var toRead = (int)Math.Min(bufferSize, block.UnpackLen - total);
+                        var read = lzma.Read(buffer, 0, toRead);
+                        if (read <= 0)
+                        {
+                            throw new EndOfStreamException(
+                                $"LZMA2 block at unpack offset {block.UnpackOffset:N0} ended early after {total:N0}/{block.UnpackLen:N0} bytes."
+                            );
+                        }
+                        RandomAccess.Write(
+                            outputHandle,
+                            buffer.AsSpan(0, read),
+                            checked(block.UnpackOffset + total)
                         );
+                        total += read;
                     }
-                    RandomAccess.Write(
-                        outputHandle,
-                        buffer.AsSpan(0, read),
-                        block.UnpackOffset + total
-                    );
-                    total += read;
+                }
+                finally
+                {
+                    bufferPool.Return(buffer, clearArray: true);
                 }
             }
         );
     }
 
-    private static void ReadFullyAt(SafeFileHandle handle, byte[] buffer, long fileOffset)
+    private sealed class RandomAccessBlockStream : Stream
     {
-        var total = 0;
-        while (total < buffer.Length)
+        private readonly SafeFileHandle _inputHandle;
+        private readonly long _start;
+        private readonly long _length;
+        private readonly ArrayPool<byte> _bufferPool;
+        private byte[]? _buffer;
+        private long _bufferStart = -1;
+        private int _bufferLength;
+        private long _position;
+
+        internal RandomAccessBlockStream(
+            SafeFileHandle inputHandle,
+            long start,
+            long length,
+            ArrayPool<byte> bufferPool
+        )
         {
-            var read = RandomAccess.Read(handle, buffer.AsSpan(total), fileOffset + total);
-            if (read <= 0)
+            ThrowHelper.ThrowIfNegative(length);
+
+            _inputHandle = inputHandle;
+            _start = start;
+            _length = length;
+            _bufferPool = bufferPool;
+            _buffer = bufferPool.Rent(BlockInputBufferSize);
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => _length;
+
+        public override long Position
+        {
+            get => _position;
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush() { }
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            Read(buffer.AsSpan(offset, count));
+
+        public override int Read(Span<byte> buffer)
+        {
+            var total = 0;
+            while (!buffer.IsEmpty && _position < _length)
             {
-                throw new EndOfStreamException(
-                    "Unexpected end of pack stream while reading an LZMA2 block."
-                );
+                if (!FillBuffer())
+                {
+                    break;
+                }
+                var bufferOffset = checked((int)(_position - _bufferStart));
+                var count = Math.Min(_bufferLength - bufferOffset, buffer.Length);
+                _buffer!.AsSpan(bufferOffset, count).CopyTo(buffer);
+                _position += count;
+                total += count;
+                buffer = buffer.Slice(count);
             }
-            total += read;
+            return total;
+        }
+
+        public override int ReadByte()
+        {
+            if (_position >= _length)
+            {
+                return -1;
+            }
+
+            if (!FillBuffer())
+            {
+                return -1;
+            }
+            var value = _buffer![checked((int)(_position - _bufferStart))];
+            _position++;
+            return value;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _buffer is not null)
+            {
+                _bufferPool.Return(_buffer, clearArray: true);
+                _buffer = null;
+            }
+
+            base.Dispose(disposing);
+        }
+
+        private bool FillBuffer()
+        {
+            if (
+                _bufferStart >= 0
+                && _position >= _bufferStart
+                && _position - _bufferStart < _bufferLength
+            )
+            {
+                return true;
+            }
+
+            var buffer =
+                _buffer ?? throw new ObjectDisposedException(nameof(RandomAccessBlockStream));
+            var requested = (int)Math.Min(buffer.Length, _length - _position);
+            var total = 0;
+            while (total < requested)
+            {
+                var read = RandomAccess.Read(
+                    _inputHandle,
+                    buffer.AsSpan(total, requested - total),
+                    checked(_start + _position + total)
+                );
+                if (read <= 0)
+                {
+                    break;
+                }
+                total += read;
+            }
+
+            _bufferStart = _position;
+            _bufferLength = total;
+            return total > 0;
         }
     }
 #endif
