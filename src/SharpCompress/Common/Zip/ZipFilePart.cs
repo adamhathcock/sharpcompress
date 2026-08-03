@@ -1,19 +1,6 @@
 using System;
-using System.Buffers.Binary;
 using System.IO;
-using System.Linq;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors;
-using SharpCompress.Compressors.BZip2;
-using SharpCompress.Compressors.Deflate;
-using SharpCompress.Compressors.Deflate64;
-using SharpCompress.Compressors.Explode;
-using SharpCompress.Compressors.LZMA;
-using SharpCompress.Compressors.PPMd;
-using SharpCompress.Compressors.Reduce;
-using SharpCompress.Compressors.Shrink;
-using SharpCompress.Compressors.Xz;
-using SharpCompress.Compressors.ZStandard;
 using SharpCompress.IO;
 using SharpCompress.Providers;
 
@@ -40,23 +27,6 @@ internal abstract partial class ZipFilePart : FilePart
     internal ZipFileEntry Header { get; set; }
 
     internal override string? FilePartName => Header.Name;
-
-    internal override Stream GetCompressedStream()
-    {
-        if (!Header.HasData)
-        {
-            return Stream.Null;
-        }
-        var decompressionStream = CreateDecompressionStream(
-            GetCryptoStream(CreateBaseStream()),
-            Header.CompressionMethod
-        );
-        if (LeaveStreamOpen)
-        {
-            return SharpCompressStream.CreateNonDisposing(decompressionStream);
-        }
-        return decompressionStream;
-    }
 
     internal override Stream GetRawStream()
     {
@@ -191,102 +161,5 @@ internal abstract partial class ZipFilePart : FilePart
 
         // For simple methods, use the basic decompress
         return providers.CreateDecompressStream(compressionType, stream, context);
-    }
-
-    private Stream CreateWinzipAesDecompressionStream(Stream stream)
-    {
-        var data = Header.Extra.SingleOrDefault(x => x.Type == ExtraDataType.WinZipAes);
-        if (data is null)
-        {
-            throw new InvalidFormatException("No Winzip AES extra data found.");
-        }
-        if (data.Length != 7)
-        {
-            throw new InvalidFormatException("Winzip data length is not 7.");
-        }
-        var compressedMethod = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes);
-
-        if (compressedMethod != 0x01 && compressedMethod != 0x02)
-        {
-            throw new InvalidFormatException(
-                "Unexpected vendor version number for WinZip AES metadata"
-            );
-        }
-
-        var vendorId = BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(2));
-        if (vendorId != 0x4541)
-        {
-            throw new InvalidFormatException("Unexpected vendor ID for WinZip AES metadata");
-        }
-        return CreateDecompressionStream(
-            stream,
-            (ZipCompressionMethod)BinaryPrimitives.ReadUInt16LittleEndian(data.DataBytes.AsSpan(5))
-        );
-    }
-
-    protected Stream GetCryptoStream(Stream plainStream)
-    {
-        var isFileEncrypted = FlagUtility.HasFlag(Header.Flags, HeaderFlags.Encrypted);
-
-        if (Header.CompressedSize == 0 && isFileEncrypted)
-        {
-            throw new NotSupportedException("Cannot encrypt file with unknown size at start.");
-        }
-
-        if (
-            Header.CompressedSize == 0
-            && FlagUtility.HasFlag(Header.Flags, HeaderFlags.UsePostDataDescriptor)
-        )
-        {
-            plainStream = SharpCompressStream.CreateNonDisposing(plainStream); //make sure AES doesn't close
-        }
-        else
-        {
-            plainStream = new ReadOnlySubStream(plainStream, Header.CompressedSize); //make sure AES doesn't close
-        }
-
-        if (isFileEncrypted)
-        {
-            switch (Header.CompressionMethod)
-            {
-                case ZipCompressionMethod.None:
-                case ZipCompressionMethod.Shrink:
-                case ZipCompressionMethod.Reduce1:
-                case ZipCompressionMethod.Reduce2:
-                case ZipCompressionMethod.Reduce3:
-                case ZipCompressionMethod.Reduce4:
-                case ZipCompressionMethod.Deflate:
-                case ZipCompressionMethod.Deflate64:
-                case ZipCompressionMethod.BZip2:
-                case ZipCompressionMethod.LZMA:
-                case ZipCompressionMethod.PPMd:
-                {
-                    return new PkwareTraditionalCryptoStream(
-                        plainStream,
-                        Header.ComposeEncryptionData(plainStream),
-                        CryptoMode.Decrypt
-                    );
-                }
-
-                case ZipCompressionMethod.WinzipAes:
-                {
-                    if (Header.WinzipAesEncryptionData != null)
-                    {
-                        return new WinzipAesCryptoStream(
-                            plainStream,
-                            Header.WinzipAesEncryptionData,
-                            Header.CompressedSize - 10
-                        );
-                    }
-                    return plainStream;
-                }
-
-                default:
-                {
-                    throw new ArchiveOperationException("Header.CompressionMethod is invalid");
-                }
-            }
-        }
-        return plainStream;
     }
 }

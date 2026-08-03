@@ -26,7 +26,7 @@ namespace SharpCompress.Providers;
 /// };
 /// </code>
 /// </remarks>
-public sealed class CompressionProviderRegistry
+public sealed partial class CompressionProviderRegistry
 {
     /// <summary>
     /// The default registry using SharpCompress internal implementations.
@@ -61,103 +61,11 @@ public sealed class CompressionProviderRegistry
     /// <param name="type">The compression type.</param>
     /// <param name="destination">The destination stream.</param>
     /// <param name="level">The compression level.</param>
-    /// <returns>A compression stream.</returns>
-    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
-    /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
-    public Stream CreateCompressStream(CompressionType type, Stream destination, int level)
-    {
-        var provider = GetProvider(type);
-        if (provider is null)
-        {
-            throw new ArchiveOperationException(
-                $"No compression provider registered for type: {type}"
-            );
-        }
-        return provider.CreateCompressStream(destination, level);
-    }
-
-    /// <summary>
-    /// Creates a decompression stream for the specified type.
-    /// </summary>
-    /// <param name="type">The compression type.</param>
-    /// <param name="source">The source stream.</param>
-    /// <returns>A decompression stream.</returns>
-    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
-    /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
-    public Stream CreateDecompressStream(CompressionType type, Stream source)
-    {
-        var provider = GetProvider(type);
-        if (provider is null)
-        {
-            throw new ArchiveOperationException(
-                $"No compression provider registered for type: {type}"
-            );
-        }
-        return provider.CreateDecompressStream(source);
-    }
-
-    /// <summary>
-    /// Creates a compression stream for the specified type with context.
-    /// </summary>
-    /// <param name="type">The compression type.</param>
-    /// <param name="destination">The destination stream.</param>
-    /// <param name="level">The compression level.</param>
-    /// <param name="context">Context information for the compression.</param>
-    /// <returns>A compression stream.</returns>
-    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
-    /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
-    public Stream CreateCompressStream(
-        CompressionType type,
-        Stream destination,
-        int level,
-        CompressionContext context
-    )
-    {
-        var provider = GetProvider(type);
-        if (provider is null)
-        {
-            throw new ArchiveOperationException(
-                $"No compression provider registered for type: {type}"
-            );
-        }
-        return provider.CreateCompressStream(destination, level, context);
-    }
-
-    /// <summary>
-    /// Creates a decompression stream for the specified type with context.
-    /// </summary>
-    /// <param name="type">The compression type.</param>
-    /// <param name="source">The source stream.</param>
-    /// <param name="context">Context information for the decompression.</param>
-    /// <returns>A decompression stream.</returns>
-    /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
-    /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
-    public Stream CreateDecompressStream(
-        CompressionType type,
-        Stream source,
-        CompressionContext context
-    )
-    {
-        var provider = GetProvider(type);
-        if (provider is null)
-        {
-            throw new ArchiveOperationException(
-                $"No compression provider registered for type: {type}"
-            );
-        }
-        return provider.CreateDecompressStream(source, context);
-    }
-
-    /// <summary>
-    /// Asynchronously creates a compression stream for the specified type.
-    /// </summary>
-    /// <param name="type">The compression type.</param>
-    /// <param name="destination">The destination stream.</param>
-    /// <param name="level">The compression level.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task containing the compression stream.</returns>
+    /// <returns>A compression stream.</returns>
     /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public ValueTask<Stream> CreateCompressStreamAsync(
         CompressionType type,
         Stream destination,
@@ -176,14 +84,15 @@ public sealed class CompressionProviderRegistry
     }
 
     /// <summary>
-    /// Asynchronously creates a decompression stream for the specified type.
+    /// Creates a decompression stream for the specified type.
     /// </summary>
     /// <param name="type">The compression type.</param>
     /// <param name="source">The source stream.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task containing the decompression stream.</returns>
+    /// <returns>A decompression stream.</returns>
     /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public ValueTask<Stream> CreateDecompressStreamAsync(
         CompressionType type,
         Stream source,
@@ -201,16 +110,17 @@ public sealed class CompressionProviderRegistry
     }
 
     /// <summary>
-    /// Asynchronously creates a compression stream for the specified type with context.
+    /// Creates a compression stream for the specified type with context.
     /// </summary>
     /// <param name="type">The compression type.</param>
     /// <param name="destination">The destination stream.</param>
     /// <param name="level">The compression level.</param>
     /// <param name="context">Context information for the compression.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task containing the compression stream.</returns>
+    /// <returns>A compression stream.</returns>
     /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support compression.</exception>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public ValueTask<Stream> CreateCompressStreamAsync(
         CompressionType type,
         Stream destination,
@@ -230,15 +140,16 @@ public sealed class CompressionProviderRegistry
     }
 
     /// <summary>
-    /// Asynchronously creates a decompression stream for the specified type with context.
+    /// Creates a decompression stream for the specified type with context.
     /// </summary>
     /// <param name="type">The compression type.</param>
     /// <param name="source">The source stream.</param>
     /// <param name="context">Context information for the decompression.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A task containing the decompression stream.</returns>
+    /// <returns>A decompression stream.</returns>
     /// <exception cref="ArchiveOperationException">If no provider is registered for the type.</exception>
     /// <exception cref="NotSupportedException">If the provider does not support decompression.</exception>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public ValueTask<Stream> CreateDecompressStreamAsync(
         CompressionType type,
         Stream source,
