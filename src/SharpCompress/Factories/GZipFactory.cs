@@ -185,14 +185,25 @@ public class GZipFactory
         }
 
         sharpCompressStream.Rewind();
-        var tarReader = await new TarFactory()
-            .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
+        using var testStream = SharpCompressStream.CreateNonDisposing(
+            await options
+                .Providers.CreateDecompressStreamAsync(
+                    CompressionType.GZip,
+                    SharpCompressStream.CreateNonDisposing(sharpCompressStream),
+                    CompressionContext.FromStream(sharpCompressStream).WithReaderOptions(options),
+                    cancellationToken
+                )
+                .ConfigureAwait(false)
+        );
+        var isTarArchive = await TarArchive
+            .IsTarFileAsync(testStream, cancellationToken)
             .ConfigureAwait(false);
+
         sharpCompressStream.Rewind();
         sharpCompressStream.StopRecording();
-        if (tarReader is not null)
+        if (isTarArchive)
         {
-            return tarReader;
+            return new TarReader(sharpCompressStream, options, CompressionType.GZip);
         }
 
         return await OpenAsyncReader(sharpCompressStream, options, cancellationToken)
