@@ -16,32 +16,6 @@ internal sealed partial class GZipFilePart : FilePart
     private readonly Stream _stream;
     private readonly CompressionProviderRegistry _compressionProviders;
 
-    internal static GZipFilePart Create(
-        Stream stream,
-        IArchiveEncoding archiveEncoding,
-        CompressionProviderRegistry compressionProviders
-    )
-    {
-        var part = new GZipFilePart(stream, archiveEncoding, compressionProviders);
-
-        part.ReadAndValidateGzipHeader();
-        if (stream.CanSeek)
-        {
-            var position = stream.Position;
-            stream.Position = stream.Length - 8;
-            part.ReadTrailer();
-            stream.Position = position;
-            part.EntryStartPosition = position;
-        }
-        else
-        {
-            // For non-seekable streams, we can't read the trailer or track position.
-            // Set to 0 since the stream will be read sequentially from its current position.
-            part.EntryStartPosition = 0;
-        }
-        return part;
-    }
-
     private GZipFilePart(
         Stream stream,
         IArchiveEncoding archiveEncoding,
@@ -74,6 +48,7 @@ internal sealed partial class GZipFilePart : FilePart
 
     private void ReadTrailer()
     {
+        // Keep this sync implementation for its stack allocation on the parser hot path.
         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
         Span<byte> trailer = stackalloc byte[8];
         _stream.ReadFully(trailer);
@@ -84,6 +59,7 @@ internal sealed partial class GZipFilePart : FilePart
 
     private void ReadAndValidateGzipHeader()
     {
+        // Keep this sync implementation for stackalloc and ReadByte-based header parsing.
         // read the header on the first read
         Span<byte> header = stackalloc byte[10];
         var n = _stream.Read(header);
@@ -136,6 +112,7 @@ internal sealed partial class GZipFilePart : FilePart
 
     private string ReadZeroTerminatedString(Stream stream)
     {
+        // Keep this sync implementation for its one-byte stack allocation.
         Span<byte> buf1 = stackalloc byte[1];
         var list = new List<byte>();
         var done = false;
