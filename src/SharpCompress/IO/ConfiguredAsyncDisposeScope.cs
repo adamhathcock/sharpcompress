@@ -4,7 +4,10 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-internal readonly struct ConfiguredAsyncDisposeScope(IDisposable? resource, bool continueOnCapturedContext)
+internal readonly struct ConfiguredAsyncDisposeScope(
+    IDisposable? resource,
+    bool continueOnCapturedContext
+)
 {
     public ConfiguredValueTaskAwaitable DisposeAsync()
     {
