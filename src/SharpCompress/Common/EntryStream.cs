@@ -30,18 +30,7 @@ public partial class EntryStream : AsyncDisposableStream
         _isDisposed = true;
         if (!(_completed || _reader.Cancelled))
         {
-            if (Utility.UseSyncOverAsyncDispose())
-            {
-#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
-#pragma warning disable CA2012
-                SkipEntryAsync().GetAwaiter().GetResult();
-#pragma warning restore CA2012
-#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
-            }
-            else
-            {
-                SkipEntry();
-            }
+            SkipEntry();
         }
 
         //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
