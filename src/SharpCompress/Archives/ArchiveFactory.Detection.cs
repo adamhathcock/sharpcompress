@@ -2,13 +2,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Archives.Rar;
-using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Tar;
-using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
-using SharpCompress.Common.Zip;
-using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Providers;
@@ -19,26 +14,24 @@ namespace SharpCompress.Archives;
 public static partial class ArchiveFactory
 {
     /// <summary>
-    /// Returns information about the archive at the given file path asynchronously,
-    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// Identifies the archive at the given file path without enumerating its entries.
     /// </summary>
     /// <param name="filePath">Path to the archive file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
     ) =>
-        await GetArchiveInformationAsync(filePath, ReaderOptions.ForFilePath, cancellationToken)
+        await DetectArchiveAsync(filePath, ReaderOptions.ForFilePath, cancellationToken)
             .ConfigureAwait(false);
 
     /// <summary>
-    /// Returns information about the archive at the given file path asynchronously,
-    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// Identifies the archive at the given file path without enumerating its entries.
     /// </summary>
     /// <param name="filePath">Path to the archive file.</param>
     /// <param name="readerOptions">Options controlling archive detection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
@@ -46,7 +39,7 @@ public static partial class ArchiveFactory
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream stream = File.OpenRead(filePath);
-        return await GetArchiveInformationAsync(
+        return await DetectArchiveAsync(
                 stream,
                 readerOptions ?? ReaderOptions.ForFilePath,
                 cancellationToken
@@ -55,26 +48,24 @@ public static partial class ArchiveFactory
     }
 
     /// <summary>
-    /// Returns information about the archive in the given stream asynchronously,
-    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// Identifies the archive in the given stream without enumerating its entries.
     /// </summary>
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     ) =>
-        await GetArchiveInformationAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
+        await DetectArchiveAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
             .ConfigureAwait(false);
 
     /// <summary>
-    /// Returns information about the archive in the given stream asynchronously,
-    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// Identifies the archive in the given stream without enumerating its entries.
     /// </summary>
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
     /// <param name="readerOptions">Options controlling archive detection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public static async ValueTask<ArchiveInformation?> GetArchiveInformationAsync(
+    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
@@ -83,19 +74,12 @@ public static partial class ArchiveFactory
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = await TryFindFactoryAsync(
+        return await TryDetectArchiveAsync(
                 stream,
                 readerOptions ?? ReaderOptions.ForExternalStream,
                 cancellationToken
             )
             .ConfigureAwait(false);
-        return factory is null
-            ? null
-            : BuildArchiveInformation(
-                stream,
-                readerOptions ?? ReaderOptions.ForExternalStream,
-                factory
-            );
     }
 
     internal static ValueTask<T> FindFactoryAsync<T>(
@@ -187,87 +171,80 @@ public static partial class ArchiveFactory
     {
         var startPosition = stream.Position;
 
-        foreach (var factory in Factory.Factories)
+        try
         {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            var isArchive = await factory
-                .IsArchiveAsync(stream, readerOptions, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (isArchive)
+            foreach (var factory in Factory.Factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
-                if (
-                    await IsCompressedTarAsync(stream, factory, readerOptions, cancellationToken)
-                        .ConfigureAwait(false)
-                )
+                var isArchive = await factory
+                    .IsArchiveAsync(stream, readerOptions, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (isArchive)
                 {
-                    continue;
+                    stream.Seek(startPosition, SeekOrigin.Begin);
+                    if (
+                        await IsCompressedTarAsync(
+                                stream,
+                                factory,
+                                readerOptions,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false)
+                    )
+                    {
+                        continue;
+                    }
+
+                    return factory;
                 }
-
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                return factory;
             }
-        }
 
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        return null;
+            return null;
+        }
+        finally
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+        }
     }
 
     /// <summary>
-    /// Returns information about the archive at the given file path,
-    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// Identifies the archive at the given file path without enumerating its entries.
     /// </summary>
     /// <param name="filePath">Path to the archive file.</param>
-    public static ArchiveInformation? GetArchiveInformation(string filePath) =>
-        GetArchiveInformation(filePath, ReaderOptions.ForFilePath);
+    public static ArchiveDetection? DetectArchive(string filePath) =>
+        DetectArchive(filePath, ReaderOptions.ForFilePath);
 
     /// <summary>
-    /// Returns information about the archive at the given file path,
-    /// or <see langword="null"/> if the file is not a recognized archive.
+    /// Identifies the archive at the given file path without enumerating its entries.
     /// </summary>
     /// <param name="filePath">Path to the archive file.</param>
     /// <param name="readerOptions">Options controlling archive detection.</param>
-    public static ArchiveInformation? GetArchiveInformation(
-        string filePath,
-        ReaderOptions? readerOptions
-    )
+    public static ArchiveDetection? DetectArchive(string filePath, ReaderOptions? readerOptions)
     {
         filePath.NotNullOrEmpty(nameof(filePath));
         using Stream stream = File.OpenRead(filePath);
-        return GetArchiveInformation(stream, readerOptions ?? ReaderOptions.ForFilePath);
+        return DetectArchive(stream, readerOptions ?? ReaderOptions.ForFilePath);
     }
 
     /// <summary>
-    /// Returns information about the archive in the given stream,
-    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// Identifies the archive in the given stream without enumerating its entries.
     /// </summary>
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
-    public static ArchiveInformation? GetArchiveInformation(Stream stream) =>
-        GetArchiveInformation(stream, ReaderOptions.ForExternalStream);
+    public static ArchiveDetection? DetectArchive(Stream stream) =>
+        DetectArchive(stream, ReaderOptions.ForExternalStream);
 
     /// <summary>
-    /// Returns information about the archive in the given stream,
-    /// or <see langword="null"/> if the stream is not a recognized archive.
+    /// Identifies the archive in the given stream without enumerating its entries.
     /// </summary>
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
     /// <param name="readerOptions">Options controlling archive detection.</param>
-    public static ArchiveInformation? GetArchiveInformation(
-        Stream stream,
-        ReaderOptions? readerOptions
-    )
+    public static ArchiveDetection? DetectArchive(Stream stream, ReaderOptions? readerOptions)
     {
         stream.RequireReadable();
         stream.RequireSeekable();
 
-        var factory = TryFindFactory(stream, readerOptions ?? ReaderOptions.ForExternalStream);
-        return factory is null
-            ? null
-            : BuildArchiveInformation(
-                stream,
-                readerOptions ?? ReaderOptions.ForExternalStream,
-                factory
-            );
+        return TryDetectArchive(stream, readerOptions ?? ReaderOptions.ForExternalStream);
     }
 
     /// <summary>
@@ -278,7 +255,7 @@ public static partial class ArchiveFactory
     /// <remarks>
     /// This is the shared, seekable-stream detection core used by
     /// <see cref="FindFactory{T}(Stream)"/>, <see cref="IsArchive(Stream, out ArchiveType?)"/>,
-    /// and <see cref="GetArchiveInformation(Stream)"/>.
+    /// and <see cref="DetectArchive(Stream)"/>.
     /// <para>
     /// <see cref="ReaderFactory.OpenReader(Stream, ReaderOptions)"/> uses a separate code path
     /// based on <see cref="IO.SharpCompressStream"/> rewindable buffering, which supports
@@ -292,26 +269,31 @@ public static partial class ArchiveFactory
     {
         var startPosition = stream.Position;
 
-        foreach (var factory in Factory.Factories)
+        try
         {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-            var isArchive = factory.IsArchive(stream, readerOptions);
-
-            if (isArchive)
+            foreach (var factory in Factory.Factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
-                if (IsCompressedTar(stream, factory, readerOptions))
+                var isArchive = factory.IsArchive(stream, readerOptions);
+
+                if (isArchive)
                 {
-                    continue;
+                    stream.Seek(startPosition, SeekOrigin.Begin);
+                    if (IsCompressedTar(stream, factory, readerOptions))
+                    {
+                        continue;
+                    }
+
+                    return factory;
                 }
-
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                return factory;
             }
-        }
 
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        return null;
+            return null;
+        }
+        finally
+        {
+            stream.Seek(startPosition, SeekOrigin.Begin);
+        }
     }
 
     private static bool IsCompressedTar(
@@ -425,114 +407,184 @@ public static partial class ArchiveFactory
             _ => null,
         };
 
-    private static ArchiveInformation BuildArchiveInformation(
-        Stream stream,
-        ReaderOptions readerOptions,
-        IFactory factory
-    )
+    private static ArchiveDetection? TryDetectArchive(Stream stream, ReaderOptions readerOptions)
     {
-        var info = new ArchiveInformation(factory.KnownArchiveType, factory is IArchiveFactory);
         var startPosition = stream.Position;
 
         try
         {
-            var probeReaderOptions = readerOptions with { LeaveStreamOpen = true };
-            switch (factory)
+            foreach (var factory in Factory.Factories)
             {
-                case ZipFactory:
-                    TryPopulateZipDetails(info, stream, probeReaderOptions);
-                    break;
-                case SevenZipFactory:
-                    TryPopulateSevenZipDetails(info, stream, probeReaderOptions);
-                    break;
-                case RarFactory:
-                    TryPopulateRarDetails(info, stream, probeReaderOptions);
-                    break;
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                if (!factory.IsArchive(stream, readerOptions))
+                {
+                    continue;
+                }
+
+                if (GetCompressedTarType(factory) is { } compressionType)
+                {
+                    stream.Seek(startPosition, SeekOrigin.Begin);
+                    if (IsCompressedTar(stream, readerOptions, compressionType))
+                    {
+                        return CreateCompressedTarDetection(compressionType);
+                    }
+                }
+
+                return CreateDetection(factory);
             }
+
+            return
+                TryDetectCompressedTar(stream, readerOptions, startPosition)
+                    is { } compressedTarType
+                ? CreateCompressedTarDetection(compressedTarType)
+                : null;
         }
         finally
         {
             stream.Seek(startPosition, SeekOrigin.Begin);
         }
-
-        return info;
     }
 
-    private static void TryPopulateZipDetails(
-        ArchiveInformation info,
+    private static async ValueTask<ArchiveDetection?> TryDetectArchiveAsync(
         Stream stream,
-        ReaderOptions readerOptions
+        ReaderOptions readerOptions,
+        CancellationToken cancellationToken
     )
     {
+        var startPosition = stream.Position;
+
         try
         {
-            info.ZipDataDescriptorEntryCount = GetZipDataDescriptorEntryCount(
-                stream,
-                readerOptions
-            );
+            foreach (var factory in Factory.Factories)
+            {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+                if (
+                    !await factory
+                        .IsArchiveAsync(stream, readerOptions, cancellationToken)
+                        .ConfigureAwait(false)
+                )
+                {
+                    continue;
+                }
+
+                if (GetCompressedTarType(factory) is { } compressionType)
+                {
+                    stream.Seek(startPosition, SeekOrigin.Begin);
+                    if (
+                        await IsCompressedTarAsync(
+                                stream,
+                                readerOptions,
+                                compressionType,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false)
+                    )
+                    {
+                        return CreateCompressedTarDetection(compressionType);
+                    }
+                }
+
+                return CreateDetection(factory);
+            }
+
+            var compressedTarType = await TryDetectCompressedTarAsync(
+                    stream,
+                    readerOptions,
+                    startPosition,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+            return compressedTarType is { } value ? CreateCompressedTarDetection(value) : null;
         }
-        catch
+        finally
         {
-            // Keep archive detection resilient even when format-specific probing fails.
+            stream.Seek(startPosition, SeekOrigin.Begin);
         }
     }
 
-    private static void TryPopulateSevenZipDetails(
-        ArchiveInformation info,
+    private static CompressionType? TryDetectCompressedTar(
         Stream stream,
-        ReaderOptions readerOptions
+        ReaderOptions readerOptions,
+        long startPosition
     )
     {
-        try
+        foreach (var wrapper in TarWrapper.Wrappers)
         {
-            info.SolidStreamCount = GetSevenZipSolidStreamCount(stream, readerOptions);
+            if (wrapper.CompressionType == CompressionType.None)
+            {
+                continue;
+            }
+
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            if (!wrapper.IsMatch(stream))
+            {
+                continue;
+            }
+
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            if (IsCompressedTar(stream, readerOptions, wrapper.CompressionType))
+            {
+                return wrapper.CompressionType;
+            }
         }
-        catch
-        {
-            // Keep archive detection resilient even when format-specific probing fails.
-        }
+
+        return null;
     }
 
-    private static void TryPopulateRarDetails(
-        ArchiveInformation info,
+    private static async ValueTask<CompressionType?> TryDetectCompressedTarAsync(
         Stream stream,
-        ReaderOptions readerOptions
+        ReaderOptions readerOptions,
+        long startPosition,
+        CancellationToken cancellationToken
     )
     {
-        try
+        foreach (var wrapper in TarWrapper.Wrappers)
         {
-            info.SolidStreamCount = GetRarSolidStreamCount(stream, readerOptions);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (wrapper.CompressionType == CompressionType.None)
+            {
+                continue;
+            }
+
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            if (!await wrapper.IsMatchAsync(stream, cancellationToken).ConfigureAwait(false))
+            {
+                continue;
+            }
+
+            stream.Seek(startPosition, SeekOrigin.Begin);
+            if (
+                await IsCompressedTarAsync(
+                        stream,
+                        readerOptions,
+                        wrapper.CompressionType,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false)
+            )
+            {
+                return wrapper.CompressionType;
+            }
         }
-        catch
+
+        return null;
+    }
+
+    private static ArchiveDetection CreateDetection(IFactory factory)
+    {
+        var supportedApis = ArchiveAccessMode.None;
+        if (factory is IArchiveFactory)
         {
-            // Keep archive detection resilient even when format-specific probing fails.
+            supportedApis |= ArchiveAccessMode.Archive;
         }
+        if (factory is IReaderFactory)
+        {
+            supportedApis |= ArchiveAccessMode.Reader;
+        }
+
+        return new ArchiveDetection(factory.KnownArchiveType, factory.Name, null, supportedApis);
     }
 
-    private static int GetZipDataDescriptorEntryCount(Stream stream, ReaderOptions readerOptions)
-    {
-        using var archive = ZipArchive.OpenArchive(stream, readerOptions);
-        return archive
-            .Entries.OfType<ZipArchiveEntry>()
-            .SelectMany(entry => entry.Parts.OfType<ZipFilePart>())
-            .Count(part =>
-                FlagUtility.HasFlag(part.Header.Flags, HeaderFlags.UsePostDataDescriptor)
-            );
-    }
-
-    private static int GetSevenZipSolidStreamCount(Stream stream, ReaderOptions readerOptions)
-    {
-        using var archive = SevenZipArchive.OpenArchive(stream, readerOptions);
-        return archive
-            .Entries.OfType<SevenZipArchiveEntry>()
-            .Where(entry => !entry.IsDirectory && entry.FilePart.Folder is not null)
-            .GroupBy(entry => entry.FilePart.Folder)
-            .Count(group => group.Skip(1).Any());
-    }
-
-    private static int GetRarSolidStreamCount(Stream stream, ReaderOptions readerOptions)
-    {
-        using var archive = RarArchive.OpenArchive(stream, readerOptions);
-        return archive.IsSolid ? 1 : 0;
-    }
+    private static ArchiveDetection CreateCompressedTarDetection(CompressionType compressionType) =>
+        new(ArchiveType.Tar, "Tar", compressionType, ArchiveAccessMode.Reader);
 }

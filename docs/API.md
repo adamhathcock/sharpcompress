@@ -50,20 +50,26 @@ if (ArchiveFactory.IsArchive("archive.zip", out var archiveType))
     Console.WriteLine($"Detected {archiveType}");
 }
 
-// Detect capabilities before choosing Archive API vs Reader API
-var info = ArchiveFactory.GetArchiveInformation("archive.arc");
-if (info is not null)
+// Detect the format and choose an API without enumerating entries.
+var detection = ArchiveFactory.DetectArchive("archive.tar.xz");
+if (detection is not null)
 {
-    Console.WriteLine($"Type: {info.Type}");
-    Console.WriteLine($"Supports random access: {info.SupportsRandomAccess}");
-    Console.WriteLine($"ZIP data descriptor entries: {info.ZipDataDescriptorEntryCount}");
-    Console.WriteLine($"Solid stream count: {info.SolidStreamCount}");
+    Console.WriteLine($"Container: {detection.ContainerType}");
+    Console.WriteLine($"Outer compression: {detection.OuterCompressionType}");
+    Console.WriteLine($"Supported APIs: {detection.SupportedApis}");
 }
 
-var asyncInfo = await ArchiveFactory.GetArchiveInformationAsync(
-    "archive.zip",
-    cancellationToken
-);
+// InspectArchive parses complete archive metadata. It can be expensive for
+// sequential formats such as TAR and compressed TAR.
+var information = ArchiveFactory.InspectArchive("archive.zip");
+if (information is not null)
+{
+    Console.WriteLine($"Entries: {information.EntryCount}");
+    Console.WriteLine($"Solid streams: {information.SolidStreamCount}");
+    Console.WriteLine($"ZIP data descriptor entries: {information.Zip?.DataDescriptorEntryCount}");
+}
+
+var asyncInformation = await ArchiveFactory.InspectArchiveAsync("archive.zip", cancellationToken);
 
 // Multi-volume archives
 var parts = ArchiveFactory.GetFileParts("archive.part1.rar")
@@ -75,7 +81,23 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 }
 ```
 
-`ArchiveInformation.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFactory.GetArchiveInformation` returns `null` for them and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files. Format-specific details are available through `ArchiveInformation.ZipDataDescriptorEntryCount` (ZIP) and `ArchiveInformation.SolidStreamCount` (solid-capable formats such as 7z and RAR).
+`DetectArchive` identifies the logical container, its outer compression wrapper, and whether the Archive and Reader APIs are available without enumerating entries. Compressed TAR wrappers such as `.tar.gz` and `.tar.xz` are identified as `ArchiveType.Tar` with an outer compression type and `ArchiveAccessMode.Reader`.
+
+`InspectArchive` enumerates metadata and returns `ArchiveInformation`. It reports `Partial` status for missing volumes or encrypted headers without a password; malformed archives and incorrect passwords throw. ZIP-specific metadata is exposed through `ArchiveInformation.Zip`.
+
+The stream overloads of `DetectArchive` and `InspectArchive` preserve the supplied stream's position and leave it open, including when `ReaderOptions.LeaveStreamOpen` is `false`.
+
+#### Migrating from `GetArchiveInformation`
+
+| Removed API | Replacement |
+| --- | --- |
+| `GetArchiveInformation(...)` used only to identify a format | `DetectArchive(...)` |
+| `GetArchiveInformation(...)` used to enumerate archive details | `InspectArchive(...)` |
+| `GetArchiveInformationAsync(...)` | `DetectArchiveAsync(...)` or `InspectArchiveAsync(...)` |
+| `Type` | `Detection.ContainerType` |
+| `SupportsRandomAccess` | `Detection.SupportedApis.HasFlag(ArchiveAccessMode.Archive)` |
+| `ZipDataDescriptorEntryCount` | `Zip.DataDescriptorEntryCount` |
+| `SolidStreamCount` | `SolidStreamCount` |
 
 ### Creating Archives
 

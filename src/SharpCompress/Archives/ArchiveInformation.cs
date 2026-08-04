@@ -1,50 +1,145 @@
-using SharpCompress.Common;
-
 namespace SharpCompress.Archives;
 
 /// <summary>
-/// Contains information about a detected archive, including its type and supported capabilities.
+/// Contains metadata collected by fully inspecting an archive.
 /// </summary>
-/// <remarks>
-/// Use <see cref="ArchiveFactory.GetArchiveInformation(System.IO.Stream)"/> or
-/// <see cref="ArchiveFactory.GetArchiveInformationAsync(System.IO.Stream,System.Threading.CancellationToken)"/>
-/// to obtain an instance of this record.
-/// </remarks>
-public record ArchiveInformation
+public sealed class ArchiveInformation
 {
-    /// <summary>
-    /// The type of archive detected, or <see langword="null"/> when the format is not a registered well-known type.
-    /// </summary>
-    public ArchiveType? Type { get; set; }
-
-    /// <summary>
-    /// <see langword="true"/> when this archive format supports random access via the <see cref="IArchive"/> API,
-    /// meaning the full file listing can be retrieved without decompressing the entire archive.
-    /// <see langword="false"/> when only the <see cref="SharpCompress.Readers.IReader"/> API is available,
-    /// which reads entries sequentially and can only report per-entry progress.
-    /// </summary>
-    public bool SupportsRandomAccess { get; set; }
-
-    /// <summary>
-    /// For ZIP archives, the number of entries that use post-data descriptor trailers.
-    /// This value is <see langword="null"/> for non-ZIP formats.
-    /// </summary>
-    public int? ZipDataDescriptorEntryCount { get; set; }
-
-    /// <summary>
-    /// For solid-capable archive formats, the number of solid compressed streams present.
-    /// This value is <see langword="null"/> for formats that do not support solid entries.
-    /// </summary>
-    public int? SolidStreamCount { get; set; }
-
-    /// <summary>
-    /// Creates a new archive information instance.
-    /// </summary>
-    /// <param name="type">The detected archive type.</param>
-    /// <param name="supportsRandomAccess">Whether the detected format supports random access.</param>
-    public ArchiveInformation(ArchiveType? type, bool supportsRandomAccess)
+    internal ArchiveInformation(
+        ArchiveDetection detection,
+        ArchiveInformationStatus status,
+        ArchiveInformationLimitations limitations,
+        string? formatVersion,
+        long? entryCount,
+        long? entriesWithUnknownSizeCount,
+        long? physicalSize,
+        long? compressedPayloadSize,
+        long? uncompressedPayloadSize,
+        bool? isSolid,
+        long? solidStreamCount,
+        ArchiveEncryptionScope? encryption,
+        bool? isEncrypted,
+        bool? isMultiVolume,
+        int? physicalPartCount,
+        int? logicalVolumeCount,
+        bool? isComplete,
+        string? comment,
+        ZipArchiveInformation? zip
+    )
     {
-        Type = type;
-        SupportsRandomAccess = supportsRandomAccess;
+        Detection = detection;
+        Status = status;
+        Limitations = limitations;
+        FormatVersion = formatVersion;
+        EntryCount = entryCount;
+        EntriesWithUnknownSizeCount = entriesWithUnknownSizeCount;
+        PhysicalSize = physicalSize;
+        CompressedPayloadSize = compressedPayloadSize;
+        UncompressedPayloadSize = uncompressedPayloadSize;
+        IsSolid = isSolid;
+        SolidStreamCount = solidStreamCount;
+        Encryption = encryption;
+        IsEncrypted = isEncrypted;
+        IsMultiVolume = isMultiVolume;
+        PhysicalPartCount = physicalPartCount;
+        LogicalVolumeCount = logicalVolumeCount;
+        IsComplete = isComplete;
+        Comment = comment;
+        Zip = zip;
     }
+
+    /// <summary>
+    /// Gets the format and API capabilities identified before inspection.
+    /// </summary>
+    public ArchiveDetection Detection { get; }
+
+    /// <summary>
+    /// Gets whether metadata collection completed.
+    /// </summary>
+    public ArchiveInformationStatus Status { get; }
+
+    /// <summary>
+    /// Gets conditions that prevented complete metadata collection.
+    /// </summary>
+    public ArchiveInformationLimitations Limitations { get; }
+
+    /// <summary>
+    /// Gets the format version when exposed by the archive format.
+    /// </summary>
+    public string? FormatVersion { get; }
+
+    /// <summary>
+    /// Gets the number of entries, excluding format control records.
+    /// </summary>
+    public long? EntryCount { get; }
+
+    /// <summary>
+    /// Gets the number of entries for which a forward-only reader cannot know the uncompressed size before reading entry data.
+    /// </summary>
+    public long? EntriesWithUnknownSizeCount { get; }
+
+    /// <summary>
+    /// Gets the number of bytes in the supplied source parts, when known.
+    /// </summary>
+    public long? PhysicalSize { get; }
+
+    /// <summary>
+    /// Gets the aggregate stored payload size, when the format exposes it reliably.
+    /// </summary>
+    public long? CompressedPayloadSize { get; }
+
+    /// <summary>
+    /// Gets the aggregate uncompressed entry size, when the format exposes it reliably.
+    /// </summary>
+    public long? UncompressedPayloadSize { get; }
+
+    /// <summary>
+    /// Gets whether entries share compression state.
+    /// </summary>
+    public bool? IsSolid { get; }
+
+    /// <summary>
+    /// Gets the number of independent shared compression streams, when known.
+    /// </summary>
+    public long? SolidStreamCount { get; }
+
+    /// <summary>
+    /// Gets the scopes protected by encryption, when known.
+    /// </summary>
+    public ArchiveEncryptionScope? Encryption { get; }
+
+    /// <summary>
+    /// Gets whether archive headers or entry data are encrypted, when known.
+    /// </summary>
+    public bool? IsEncrypted { get; }
+
+    /// <summary>
+    /// Gets whether the archive is part of a multi-volume set, when known.
+    /// </summary>
+    public bool? IsMultiVolume { get; }
+
+    /// <summary>
+    /// Gets the number of source parts supplied for inspection.
+    /// </summary>
+    public int? PhysicalPartCount { get; }
+
+    /// <summary>
+    /// Gets the number of logical volumes exposed by the archive, when known.
+    /// </summary>
+    public int? LogicalVolumeCount { get; }
+
+    /// <summary>
+    /// Gets whether all discovered entries are complete, when known.
+    /// </summary>
+    public bool? IsComplete { get; }
+
+    /// <summary>
+    /// Gets the archive comment, when supported by the format.
+    /// </summary>
+    public string? Comment { get; }
+
+    /// <summary>
+    /// Gets ZIP-specific metadata when the detected container is ZIP.
+    /// </summary>
+    public ZipArchiveInformation? Zip { get; }
 }
