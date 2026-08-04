@@ -87,6 +87,22 @@ public class LargeArchiveTests : TestBase
         Assert.False(await reader.MoveToNextEntryAsync());
     }
 
+    [Fact]
+    public async Task OpenAsyncReader_WithGZipExtensionHint_ShouldStreamLargeTarEntry()
+    {
+        using var file = File.OpenRead(GetFixturePath("Large/Large.tar.gz"));
+        await using var stream = new AsyncOnlyStream(new ForwardOnlyStream(file));
+        var options = new ReaderOptions { ExtensionHint = "gz" };
+
+        await using var reader = await ReaderFactory.OpenAsyncReader(stream, options);
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.False(reader.Entry.IsDirectory);
+        await using var entryStream = await reader.OpenEntryStreamAsync();
+        await VerifyContentAsync(reader.Entry.Key, entryStream);
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
+
     private static string GetFixturePath(string fixtureName) =>
         Path.Combine(TEST_ARCHIVES_PATH, fixtureName);
 

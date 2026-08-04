@@ -47,22 +47,38 @@ public class TarReaderAsyncTests : ReaderTests
         await ReadAsync("Tar.tar.Z", CompressionType.Lzw);
 
     [Theory]
-    [InlineData("Tar.tar.gz", "gz", CompressionType.GZip)]
-    [InlineData("Tar.tar.Z", "z", CompressionType.Lzw)]
+    [InlineData("Tar.tar.gz", "gz", CompressionType.GZip, false)]
+    [InlineData("Tar.tar.gz", "gz", CompressionType.GZip, true)]
+    [InlineData("Tar.tar.Z", "z", CompressionType.Lzw, false)]
+    [InlineData("Tar.tar.Z", "z", CompressionType.Lzw, true)]
     public async ValueTask ReaderFactory_ExtensionHint_PreservesCompressedTarDetection_Async(
         string archiveName,
         string extensionHint,
-        CompressionType compressionType
+        CompressionType compressionType,
+        bool useForwardOnlyStream
     )
     {
-        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveName));
+        using var file = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, archiveName));
+        Stream source = useForwardOnlyStream ? new ForwardOnlyStream(file) : file;
+        await using var stream = new AsyncOnlyStream(source);
         var options = ReaderOptions.ForExternalStream.WithExtensionHint(extensionHint);
 
         await using var reader = await ReaderFactory.OpenAsyncReader(stream, options);
 
         Assert.Equal(ArchiveType.Tar, reader.Type);
-        Assert.True(await reader.MoveToNextEntryAsync());
-        Assert.Equal(compressionType, reader.Entry.CompressionType);
+        var entryCount = 0;
+        while (await reader.MoveToNextEntryAsync())
+        {
+            entryCount++;
+            Assert.Equal(compressionType, reader.Entry.CompressionType);
+            if (!reader.Entry.IsDirectory)
+            {
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
+            }
+        }
+
+        Assert.True(entryCount > 0);
+        VerifyFiles();
     }
 
     [Fact]

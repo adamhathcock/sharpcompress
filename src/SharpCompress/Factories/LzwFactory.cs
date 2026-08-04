@@ -100,14 +100,24 @@ public class LzwFactory : Factory, IReaderFactory
         }
 
         sharpCompressStream.Rewind();
-        var tarReader = await new TarFactory()
-            .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
+        using var testStream = SharpCompressStream.CreateNonDisposing(
+            await options
+                .Providers.CreateDecompressStreamAsync(
+                    CompressionType.Lzw,
+                    SharpCompressStream.CreateNonDisposing(sharpCompressStream),
+                    cancellationToken
+                )
+                .ConfigureAwait(false)
+        );
+        var isTarArchive = await TarArchive
+            .IsTarFileAsync(testStream, cancellationToken)
             .ConfigureAwait(false);
+
         sharpCompressStream.Rewind();
         sharpCompressStream.StopRecording();
-        if (tarReader is not null)
+        if (isTarArchive)
         {
-            return tarReader;
+            return new TarReader(sharpCompressStream, options, CompressionType.Lzw);
         }
 
         return await OpenAsyncReader(sharpCompressStream, options, cancellationToken)
