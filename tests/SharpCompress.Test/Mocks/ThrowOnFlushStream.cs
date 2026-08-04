@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Test.Mocks;
 
@@ -9,7 +10,7 @@ namespace SharpCompress.Test.Mocks;
 /// A stream wrapper that throws NotSupportedException on Flush() calls.
 /// This is used to test that archive iteration handles streams that don't support flushing.
 /// </summary>
-public class ThrowOnFlushStream : Stream
+public class ThrowOnFlushStream : AsyncDisposableStream
 {
     private readonly Stream inner;
 

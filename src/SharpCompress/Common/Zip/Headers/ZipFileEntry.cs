@@ -42,18 +42,6 @@ internal abstract partial class ZipFileEntry(ZipHeaderType type, IArchiveEncodin
 
     public string? Password { get; set; }
 
-    internal PkwareTraditionalEncryptionData ComposeEncryptionData(Stream archiveStream)
-    {
-        ThrowHelper.ThrowIfNull(archiveStream);
-
-        var buffer = new byte[12];
-        archiveStream.ReadFully(buffer);
-
-        var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
-
-        return encryptionData;
-    }
-
     internal WinzipAesEncryptionData? WinzipAesEncryptionData { get; set; }
 
     /// <summary>

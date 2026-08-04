@@ -15,7 +15,7 @@ namespace SharpCompress.Writers.Zip;
 
 public partial class ZipWriter
 {
-    internal class ZipWritingStream : Stream
+    internal partial class ZipWritingStream : Stream
     {
         private readonly CRC32 crc = new();
         private readonly ZipCentralDirectoryEntry entry;
@@ -98,114 +98,7 @@ public partial class ZipWriter
             set => throw new NotSupportedException();
         }
 
-        private Stream GetWriteStream(Stream writeStream)
-        {
-            counting = new CountingStream(SharpCompressStream.CreateNonDisposing(writeStream));
-            Stream output = counting;
-
-            var providers = writer.WriterOptions.Providers;
-
-            switch (zipCompressionMethod)
-            {
-                case ZipCompressionMethod.None:
-                {
-                    return output;
-                }
-                case ZipCompressionMethod.Deflate:
-                {
-                    return providers.CreateCompressStream(
-                        CompressionType.Deflate,
-                        counting,
-                        compressionLevel
-                    );
-                }
-                case ZipCompressionMethod.BZip2:
-                {
-                    return providers.CreateCompressStream(
-                        CompressionType.BZip2,
-                        counting,
-                        compressionLevel
-                    );
-                }
-                case ZipCompressionMethod.LZMA:
-                {
-                    var compressingProvider = providers.GetCompressingProvider(
-                        CompressionType.LZMA
-                    );
-                    if (compressingProvider is null)
-                    {
-                        throw new ArchiveOperationException("LZMA compression provider not found.");
-                    }
-
-                    var context = new CompressionContext { CanSeek = originalStream.CanSeek };
-                    compressionProviderHooks = compressingProvider;
-                    compressionContext = context;
-
-                    var preData = compressingProvider.GetPreCompressionData(context);
-                    if (preData is not null)
-                    {
-                        counting.Write(preData, 0, preData.Length);
-                    }
-
-                    var lzmaStream = compressingProvider.CreateCompressStream(
-                        counting,
-                        compressionLevel,
-                        context
-                    );
-
-                    var props = compressingProvider.GetCompressionProperties(lzmaStream, context);
-                    if (props is not null)
-                    {
-                        counting.Write(props, 0, props.Length);
-                    }
-
-                    return lzmaStream;
-                }
-                case ZipCompressionMethod.PPMd:
-                {
-                    var compressingProvider = providers.GetCompressingProvider(
-                        CompressionType.PPMd
-                    );
-                    if (compressingProvider is null)
-                    {
-                        throw new ArchiveOperationException("PPMd compression provider not found.");
-                    }
-
-                    var context = new CompressionContext
-                    {
-                        CanSeek = originalStream.CanSeek,
-                        FormatOptions = writer.PpmdProperties,
-                    };
-                    compressionProviderHooks = compressingProvider;
-                    compressionContext = context;
-
-                    var preData = compressingProvider.GetPreCompressionData(context);
-                    if (preData is not null)
-                    {
-                        counting.Write(preData, 0, preData.Length);
-                    }
-
-                    return compressingProvider.CreateCompressStream(
-                        counting,
-                        compressionLevel,
-                        context
-                    );
-                }
-                case ZipCompressionMethod.ZStandard:
-                {
-                    return providers.CreateCompressStream(
-                        CompressionType.ZStandard,
-                        counting,
-                        compressionLevel
-                    );
-                }
-                default:
-                {
-                    throw new NotSupportedException("CompressionMethod: " + zipCompressionMethod);
-                }
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async ValueTask<Stream> GetWriteStreamAsync(
             Stream writeStream,
             CancellationToken cancellationToken
@@ -459,17 +352,7 @@ public partial class ZipWriter
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            CheckWriteLimits(count);
-
-            decompressed += (uint)count;
-            crc.SlurpBlock(buffer, offset, count);
-            writeStream.Write(buffer, offset, count);
-
-            CheckPostWriteLimits();
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public override async Task WriteAsync(
             byte[] buffer,
             int offset,
@@ -477,7 +360,9 @@ public partial class ZipWriter
             CancellationToken cancellationToken
         )
         {
+#if !SYNC_ONLY
             cancellationToken.ThrowIfCancellationRequested();
+#endif
             CheckWriteLimits(count);
 
             decompressed += (uint)count;
@@ -556,30 +441,7 @@ public partial class ZipWriter
             }
         }
 
-        private void WritePostCompressionData()
-        {
-            if (
-                compressionProviderHooks is null
-                || compressionContext is null
-                || counting is null
-                || zipCompressionMethod == ZipCompressionMethod.None
-            )
-            {
-                return;
-            }
-
-            var postData = compressionProviderHooks.GetPostCompressionData(
-                writeStream,
-                compressionContext
-            );
-            if (postData is null || postData.Length == 0)
-            {
-                return;
-            }
-
-            counting.Write(postData, 0, postData.Length);
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async ValueTask WritePostCompressionDataAsync(CancellationToken cancellationToken)
         {
             if (

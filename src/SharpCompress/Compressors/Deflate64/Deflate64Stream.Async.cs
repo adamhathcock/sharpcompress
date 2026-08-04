@@ -10,6 +10,7 @@ namespace SharpCompress.Compressors.Deflate64;
 
 public sealed partial class Deflate64Stream
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,

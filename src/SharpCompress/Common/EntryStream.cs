@@ -8,7 +8,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public partial class EntryStream : Stream
+public partial class EntryStream : AsyncDisposableStream
 {
     private readonly IReader _reader;
     private readonly Stream _stream;

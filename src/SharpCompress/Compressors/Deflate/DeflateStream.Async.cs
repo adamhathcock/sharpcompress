@@ -29,6 +29,10 @@ public partial class DeflateStream
 #endif
     }
 
+    /// <summary>
+    /// Flush the stream.
+    /// </summary>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task FlushAsync(CancellationToken cancellationToken)
     {
         if (_disposed)
@@ -38,6 +42,24 @@ public partial class DeflateStream
         await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Read data from the stream.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// If you wish to use the <c>DeflateStream</c> to compress data while reading, create it with
+    /// <c>CompressionMode.Compress</c> and an uncompressed data stream. Reading then returns
+    /// compressed data. With <c>CompressionMode.Decompress</c>, reading returns decompressed data.
+    /// </para>
+    /// <para>
+    /// A <c>DeflateStream</c> can be used for <c>Read()</c> or <c>Write()</c>, but not both.
+    /// </para>
+    /// </remarks>
+    /// <param name="buffer">The buffer into which the read data should be placed.</param>
+    /// <param name="offset">The offset within that data array to put the first byte read.</param>
+    /// <param name="count">The number of bytes to read.</param>
+    /// <returns>The number of bytes actually read.</returns>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -68,6 +90,23 @@ public partial class DeflateStream
     }
 #endif
 
+    /// <summary>
+    /// Write data to the stream.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// With <c>CompressionMode.Compress</c>, written uncompressed data is compressed to the
+    /// destination. With <c>CompressionMode.Decompress</c>, written compressed data is decompressed
+    /// to the destination.
+    /// </para>
+    /// <para>
+    /// A <c>DeflateStream</c> can be used for <c>Read()</c> or <c>Write()</c>, but not both.
+    /// </para>
+    /// </remarks>
+    /// <param name="buffer">The buffer holding data to write to the stream.</param>
+    /// <param name="offset">The offset within that data array to find the first byte to write.</param>
+    /// <param name="count">The number of bytes to write.</param>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task WriteAsync(
         byte[] buffer,
         int offset,

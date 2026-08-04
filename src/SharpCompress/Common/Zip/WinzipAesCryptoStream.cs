@@ -104,25 +104,6 @@ internal partial class WinzipAesCryptoStream : Stream
 
     public override void Flush() { }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (_totalBytesLeftToRead == 0)
-        {
-            return 0;
-        }
-        var bytesToRead = count;
-        if (count > _totalBytesLeftToRead)
-        {
-            bytesToRead = (int)_totalBytesLeftToRead;
-        }
-        var read = _stream.Read(buffer, offset, bytesToRead);
-        _totalBytesLeftToRead -= read;
-
-        ReadTransformBlocks(buffer, offset, read);
-
-        return read;
-    }
-
     private void FillCounterOut()
     {
         // update the counter

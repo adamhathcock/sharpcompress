@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SharpCompress.IO;
 
 namespace SharpCompress.Test.Mocks;
 
@@ -7,7 +8,7 @@ namespace SharpCompress.Test.Mocks;
 /// A stream wrapper that truncates the underlying stream after reading a specified number of bytes.
 /// Used for testing error handling when streams end prematurely.
 /// </summary>
-public class TruncatedStream : Stream
+public class TruncatedStream : AsyncDisposableStream
 {
     private readonly Stream baseStream;
     private readonly long truncateAfterBytes;

@@ -8,6 +8,7 @@ namespace SharpCompress.Common.Zip;
 
 internal partial class PkwareTraditionalCryptoStream
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -59,6 +60,7 @@ internal partial class PkwareTraditionalCryptoStream
     }
 #endif
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task WriteAsync(
         byte[] buffer,
         int offset,
