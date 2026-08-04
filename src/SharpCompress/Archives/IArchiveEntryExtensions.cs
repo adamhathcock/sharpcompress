@@ -71,12 +71,16 @@ public static partial class IArchiveEntryExtensions
                 throw new ExtractionException("Entry is a file directory and cannot be extracted.");
             }
 
+#if SYNC_ONLY
+            using var entryStream = archiveEntry.OpenEntryStream();
+#else
             var entryStream = await archiveEntry
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
             await using var entryStreamScope = entryStream
                 .DisposeAsyncScope()
                 .ConfigureAwait(false);
+#endif
             var checkedStream = options is null
                 ? entryStream
                 : IEntryExtensions.WrapWithChecksumValidation(archiveEntry, entryStream, options);
