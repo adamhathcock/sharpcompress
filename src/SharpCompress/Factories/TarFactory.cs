@@ -296,11 +296,53 @@ public class TarFactory
 
     #region IReaderFactory
 
+    /// <summary>
+    /// Checks whether <paramref name="stream"/> is backed by a genuinely seekable stream.
+    /// Note: <see cref="SharpCompressStream.CanSeek"/> always reports <see langword="true"/> for
+    /// non-passthrough instances (it simulates seeking via its ring buffer even over a
+    /// non-seekable underlying stream), so it must be unwrapped to check the real stream.
+    /// </summary>
+    private static bool IsGenuinelySeekable(Stream stream)
+    {
+        while (stream is SharpCompressStream scs)
+        {
+            stream = scs.BaseStream();
+        }
+        return stream.CanSeek;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="SharpCompressStream"/> wrapper around <paramref name="stream"/> with
+    /// its own independent recording/rewind scope, isolated from any recording session the caller may
+    /// already have in progress on <paramref name="stream"/> itself.
+    /// </summary>
+    /// <remarks>
+    /// When the stream is genuinely seekable, a <see cref="SeekableSharpCompressStream"/> is used:
+    /// it delegates recording/rewinding to the underlying stream's native <see cref="Stream.Seek"/> and
+    /// never allocates a rewind ring buffer. For non-seekable streams, a ring-buffered
+    /// <see cref="SharpCompressStream"/> is required to support rewinding during format detection.
+    /// </remarks>
+    private static SharpCompressStream CreateNestedRecordingStream(Stream stream)
+    {
+        if (!IsGenuinelySeekable(stream))
+        {
+            return new SharpCompressStream(stream);
+        }
+
+        // Unwrap buffered SharpCompressStream wrappers so we use the real stream's native Seek.
+        while (stream is SharpCompressStream scs && !scs.IsPassthrough)
+        {
+            stream = scs.BaseStream();
+        }
+
+        return new SeekableSharpCompressStream(stream, leaveStreamOpen: false);
+    }
+
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options)
     {
         options ??= ReaderOptions.ForExternalStream;
-        var sharpCompressStream = new SharpCompressStream(stream);
+        var sharpCompressStream = CreateNestedRecordingStream(stream);
         sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
         foreach (var wrapper in TarWrapper.Wrappers)
         {
@@ -315,6 +357,7 @@ public class TarFactory
                 );
                 if (TarArchive.IsTarFile(decompressedStream))
                 {
+                    sharpCompressStream.Rewind();
                     sharpCompressStream.StopRecording();
                     return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
                 }

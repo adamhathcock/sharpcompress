@@ -25,7 +25,13 @@ the verification workflow, and the record of what is blocked and why.
 | 0 | `Archives/IArchiveEntryExtensions` (5 methods) | done — `c303856c` |
 | 1 | `Compressors/Filters/Filter` + 6 XZ branch filters + `Lzma2Filter` (9 methods, 147 lines) | done — verified identical on net48 + net10.0 |
 | 2 | `IO/` leaf stream shims + `Common/EntryStream` (17 methods, 190 lines) | done — verified identical on net48 + net10.0 |
-| 3–12 | below | to do |
+| 3–5 | below | to do |
+| 6 | ZIP parts & header factories | 6a done; header factories remain |
+| 7 | Concrete writers | ZIP done; Tar, SevenZip, and remaining writers to do |
+| 8 | 7-Zip | to do |
+| 9 | Streaming compressors | Deflate, Zlib, and Deflate64 done; remaining compressors to do |
+| 10–11 | below | to do |
+| 12 | Providers | registry done; provider implementations remain |
 | Rar reader unification | below | to do, needs its own design review |
 
 ---
@@ -207,16 +213,17 @@ the async one `new byte[4]`, and the method is 4 lines — `SYNC_ONLY` would be 
 `Arj/HuffmanTree`, `Arj/BitReader`, `Arj/LhaStream` (11 pairs, all ≥0.99), `Arj/LHDecoderStream`,
 `Squeezed/BitReader`. Best win per line of review — pure parsing, all clean.
 
-### 6 — Zip parts & header factories · ~250 lines · med risk
+### 6 — Zip parts & header factories · ~250 lines · med risk · **in progress**
 
 6a: `ZipFilePart` (incl. `GetCryptoStreamAsync`), `SeekableZipFilePart`, `StreamingZipFilePart`,
-`GZipFilePart`, `Zip/Headers/ZipFileEntry`, `PkwareTraditionalCryptoStream`, `WinzipAesCryptoStream`.
+`Zip/Headers/ZipFileEntry`, `PkwareTraditionalCryptoStream`, and `WinzipAesCryptoStream` — **done**.
+`GZipFilePart` was completed in the prior GZip batch.
 6b: `ZipHeaderFactory` (`LoadHeaderAsync` identical), `SeekableZipHeaderFactory`.
 
-### 7 — Concrete writers · ~250 lines · med risk
+### 7 — Concrete writers · ~250 lines · med risk · **in progress**
 
-`ZipWriter`, `ZipWritingStream` (`GetWriteStreamAsync` is a 131-line duplicate), `TarWriter`,
-`SevenZipWriter`, `GZipWriter`.
+`ZipWriter` and `ZipWritingStream` (`GetWriteStreamAsync` is a 131-line duplicate) — **done**.
+`TarWriter` and `SevenZipWriter` remain. `GZipWriter` was completed in the prior GZip batch.
 
 This is the **reachable Writers win**: `AbstractWriter` already implements *both* `IWriter` and
 `IAsyncWriter` (`AbstractWriter.cs:11`), so `ZipWriter.Async.cs:52
@@ -233,14 +240,15 @@ attempt `IWriterExtensions` (see Blocked).
 Clean: these use the sync `DataReader`, not an async-only reader type. Keep the file split
 (`ArchiveReader.cs` is 1,377 lines).
 
-### 9 — Streaming compressors · ~300 lines · med-high risk
+### 9 — Streaming compressors · ~300 lines · med-high risk · **in progress**
 
-`Deflate64Stream`, `Deflate/ZlibBaseStream` (`ReadAsync` 192 lines, `WriteAsync`, `FlushAsync`),
-`DeflateStream`, `GZipStream`, `ZlibStream`, `ZStandard/*`, `Reduce`, `Explode`, `Lzw/LzwStream`
-(`ReadAsync` 208 lines), `RLE90`, `Shrink`, `ArcLzw`.
+`Deflate64Stream`, `Deflate/ZlibBaseStream` (`ReadAsync`, `WriteAsync`, `FlushAsync`),
+`DeflateStream`, and `ZlibStream` — **done**. `GZipStream` was completed in the prior GZip batch.
+`ZStandard/*`, `Reduce`, `Explode`, `Lzw/LzwStream` (`ReadAsync` 208 lines), `RLE90`, `Shrink`,
+and `ArcLzw` remain.
 
-- `ZlibBaseStream` needs `partial` added.
-- `[SkipSyncVersion]` on all four Deflate-family `DisposeAsync`.
+- `ZlibBaseStream` is partial. Deflate-family `DisposeAsync`, byte methods, unmatched memory
+  overloads, GZip-header parsing, and finalization remain hand-written.
 - `RunLength90Stream` is the canonical `SYNC_ONLY` case (see below).
 - `GZipCompressionProvider.cs:41` returns `new ValueTask<Stream>(...)` from a non-`async` method —
   not a Zomp rewrite; make it `async` first. (Non-`async` methods that just *return* an `XAsync(...)`
@@ -264,11 +272,12 @@ generated `ReadByte()`/`WriteByte()` are emitted without `override` and would hi
 Fully clean — these use raw `Stream`, **not** the async reader types. The least readable diffs in the
 repo, so do them last of the mechanical work.
 
-### 12 — Providers · ~80 lines · low risk
+### 12 — Providers · ~80 lines · low risk · **in progress**
 
-`CompressionProviderRegistry` (4 identical pairs), `Default/*` providers (`XStream.CreateAsync(...)`
-→ `Create(...)` maps cleanly), `CompressionProviderBase`,
-`ContextRequiredDecompressionProviderBase`. Blocked on the `GZipCompressionProvider` rewrite above.
+`CompressionProviderRegistry` (4 identical pairs) — **done**. `Default/*` providers
+(`XStream.CreateAsync(...)` → `Create(...)` maps cleanly), `CompressionProviderBase`, and
+`ContextRequiredDecompressionProviderBase` remain. The `GZipCompressionProvider` rewrite was
+completed in the prior GZip batch.
 
 ---
 

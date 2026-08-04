@@ -32,6 +32,7 @@ internal partial class WinzipAesCryptoStream
     }
 #endif
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,

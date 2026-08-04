@@ -47,7 +47,7 @@ internal enum ZlibStreamFlavor
     GZIP = 1952,
 }
 
-internal class ZlibBaseStream : Stream, IStreamStack
+internal partial class ZlibBaseStream : Stream, IStreamStack
 {
     Stream IStreamStack.BaseStream() => _stream;
 
@@ -139,58 +139,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
 
     private byte[] workingBuffer => _workingBuffer ??= ArrayPool<byte>.Shared.Rent(_bufferSize);
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        // workitem 7159
-        // calculate the CRC on the unccompressed data  (before writing)
-        if (crc != null)
-        {
-            crc.SlurpBlock(buffer, offset, count);
-        }
-
-        if (_streamMode == StreamMode.Undefined)
-        {
-            _streamMode = StreamMode.Writer;
-        }
-        else if (_streamMode != StreamMode.Writer)
-        {
-            throw new ZlibException("Cannot Write after Reading.");
-        }
-
-        if (count == 0)
-        {
-            return;
-        }
-
-        // first reference of z property will initialize the private var _z
-        z.InputBuffer = buffer;
-        _z.NextIn = offset;
-        _z.AvailableBytesIn = count;
-        var done = false;
-        do
-        {
-            _z.OutputBuffer = workingBuffer;
-            _z.NextOut = 0;
-            _z.AvailableBytesOut = _workingBuffer.Length;
-            var rc = (_wantCompress) ? _z.Deflate(_flushMode) : _z.Inflate(_flushMode);
-            if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
-            {
-                throw new ZlibException((_wantCompress ? "de" : "in") + "flating: " + _z.Message);
-            }
-
-            //if (_workingBuffer.Length - _z.AvailableBytesOut > 0)
-            _stream.Write(_workingBuffer, 0, _workingBuffer.Length - _z.AvailableBytesOut);
-
-            done = _z.AvailableBytesIn == 0 && _z.AvailableBytesOut != 0;
-
-            // If GZIP and de-compress, we're done when 8 bytes remain.
-            if (_flavor == ZlibStreamFlavor.GZIP && !_wantCompress)
-            {
-                done = (_z.AvailableBytesIn == 8 && _z.AvailableBytesOut != 0);
-            }
-        } while (!done);
-    }
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task WriteAsync(
         byte[] buffer,
         int offset,
@@ -607,27 +556,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         _workingBuffer = null;
     }
 
-    public override void Flush()
-    {
-        // Only flush the underlying stream when in write mode
-        // Flushing input streams during read operations is not meaningful
-        // and can cause issues with forward-only/non-seekable streams
-        if (_streamMode == StreamMode.Writer)
-        {
-            _stream.Flush();
-        }
-        else if (z.AvailableBytesIn > 0)
-        {
-            // Rewind the underlying stream by the number of unconsumed bytes in the buffer
-            // This handles the case where the decompressor over-read past the end of the entry
-            if (_stream is IStreamStack stack)
-            {
-                stack.RewindBytes(z.AvailableBytesIn);
-            }
-            z.AvailableBytesIn = 0;
-        }
-    }
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task FlushAsync(CancellationToken cancellationToken)
     {
         // Only flush the underlying stream when in write mode
@@ -670,31 +599,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
     private bool nomoreinput;
     private bool isDisposed;
 
-    private string ReadZeroTerminatedString()
-    {
-        var list = new List<byte>();
-        var done = false;
-        do
-        {
-            // workitem 7740
-            var n = _stream.Read(_buf1, 0, 1);
-            if (n != 1)
-            {
-                throw new ZlibException("Unexpected EOF reading GZIP header.");
-            }
-            if (_buf1[0] == 0)
-            {
-                done = true;
-            }
-            else
-            {
-                list.Add(_buf1[0]);
-            }
-        } while (!done);
-        var buffer = list.ToArray();
-        return _encoding.GetString(buffer, 0, buffer.Length);
-    }
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask<string> ReadZeroTerminatedStringAsync(
         CancellationToken cancellationToken
     )
@@ -844,192 +749,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         return totalBytesRead;
     }
 
-    public override Int32 Read(Byte[] buffer, Int32 offset, Int32 count)
-    {
-        // According to MS documentation, any implementation of the IO.Stream.Read function must:
-        // (a) throw an exception if offset & count reference an invalid part of the buffer,
-        //     or if count < 0, or if buffer is null
-        // (b) return 0 only upon EOF, or if count = 0
-        // (c) if not EOF, then return at least 1 byte, up to <count> bytes
-
-        if (_streamMode == StreamMode.Undefined)
-        {
-            if (!_stream.CanRead)
-            {
-                throw new ZlibException("The stream is not readable.");
-            }
-
-            // for the first read, set up some controls.
-            _streamMode = StreamMode.Reader;
-
-            // (The first reference to _z goes through the private accessor which
-            // may initialize it.)
-            z.AvailableBytesIn = 0;
-            if (_flavor == ZlibStreamFlavor.GZIP)
-            {
-                _gzipHeaderByteCount = _ReadAndValidateGzipHeader();
-
-                // workitem 8501: handle edge case (decompress empty stream)
-                if (_gzipHeaderByteCount == 0)
-                {
-                    return 0;
-                }
-            }
-        }
-
-        if (_streamMode != StreamMode.Reader)
-        {
-            throw new ZlibException("Cannot Read after Writing.");
-        }
-
-        var rc = 0;
-
-        // set up the output of the deflate/inflate codec:
-        _z.OutputBuffer = buffer;
-        _z.NextOut = offset;
-        _z.AvailableBytesOut = count;
-
-        if (count == 0)
-        {
-            return 0;
-        }
-        if (nomoreinput && _wantCompress)
-        {
-            // no more input data available; therefore we flush to
-            // try to complete the read
-            rc = _z.Deflate(FlushType.Finish);
-
-            if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
-            {
-                throw new ZlibException(
-                    String.Format(
-                        Constants.DefaultCultureInfo,
-                        "Deflating:  rc={0}  msg={1}",
-                        rc,
-                        _z.Message
-                    )
-                );
-            }
-
-            rc = (count - _z.AvailableBytesOut);
-
-            // calculate CRC after reading
-            if (crc != null)
-            {
-                crc.SlurpBlock(buffer, offset, rc);
-            }
-
-            return rc;
-        }
-        ThrowHelper.ThrowIfNull(buffer);
-        ThrowHelper.ThrowIfNegative(count);
-        ThrowHelper.ThrowIfLessThan(offset, buffer.GetLowerBound(0));
-        if ((offset + count) > buffer.GetLength(0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
-
-        // This is necessary in case _workingBuffer has been resized. (new byte[])
-        // (The first reference to _workingBuffer goes through the private accessor which
-        // may initialize it.)
-        _z.InputBuffer = workingBuffer;
-
-        do
-        {
-            // need data in _workingBuffer in order to deflate/inflate.  Here, we check if we have any.
-            if ((_z.AvailableBytesIn == 0) && (!nomoreinput))
-            {
-                // No data available, so try to Read data from the captive stream.
-                _z.NextIn = 0;
-                _z.AvailableBytesIn = _stream.Read(_workingBuffer, 0, _workingBuffer.Length);
-                if (_z.AvailableBytesIn == 0)
-                {
-                    nomoreinput = true;
-                }
-            }
-
-            // we have data in InputBuffer; now compress or decompress as appropriate
-            rc = (_wantCompress) ? _z.Deflate(_flushMode) : _z.Inflate(_flushMode);
-
-            if (nomoreinput && (rc == ZlibConstants.Z_BUF_ERROR))
-            {
-                return 0;
-            }
-
-            if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
-            {
-                throw new ZlibException(
-                    String.Format(
-                        Constants.DefaultCultureInfo,
-                        "{0}flating:  rc={1}  msg={2}",
-                        (_wantCompress ? "de" : "in"),
-                        rc,
-                        _z.Message
-                    )
-                );
-            }
-
-            if (
-                (nomoreinput || rc == ZlibConstants.Z_STREAM_END) && (_z.AvailableBytesOut == count)
-            )
-            {
-                break; // nothing more to read
-            }
-        } //while (_z.AvailableBytesOut == count && rc == ZlibConstants.Z_OK);
-        while (_z.AvailableBytesOut > 0 && !nomoreinput && rc == ZlibConstants.Z_OK);
-
-        // workitem 8557
-        // is there more room in output?
-        if (_z.AvailableBytesOut > 0)
-        {
-            if (rc == ZlibConstants.Z_OK && _z.AvailableBytesIn == 0)
-            {
-                // deferred
-            }
-
-            // are we completely done reading?
-            if (nomoreinput)
-            {
-                // and in compression?
-                if (_wantCompress)
-                {
-                    // no more input data available; therefore we flush to
-                    // try to complete the read
-                    rc = _z.Deflate(FlushType.Finish);
-
-                    if (rc != ZlibConstants.Z_OK && rc != ZlibConstants.Z_STREAM_END)
-                    {
-                        throw new ZlibException(
-                            String.Format(
-                                Constants.DefaultCultureInfo,
-                                "Deflating:  rc={0}  msg={1}",
-                                rc,
-                                _z.Message
-                            )
-                        );
-                    }
-                }
-            }
-        }
-
-        rc = (count - _z.AvailableBytesOut);
-
-        // calculate CRC after reading
-        if (crc != null)
-        {
-            crc.SlurpBlock(buffer, offset, rc);
-        }
-
-        if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
-        {
-            //rewind the buffer
-            this.RewindBytes(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
-        }
-
-        return rc;
-    }
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
