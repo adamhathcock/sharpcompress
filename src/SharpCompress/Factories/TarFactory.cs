@@ -322,10 +322,21 @@ public class TarFactory
     /// never allocates a rewind ring buffer. For non-seekable streams, a ring-buffered
     /// <see cref="SharpCompressStream"/> is required to support rewinding during format detection.
     /// </remarks>
-    private static SharpCompressStream CreateNestedRecordingStream(Stream stream) =>
-        IsGenuinelySeekable(stream)
-            ? new SeekableSharpCompressStream(stream, leaveStreamOpen: false)
-            : new SharpCompressStream(stream);
+private static SharpCompressStream CreateNestedRecordingStream(Stream stream)
+{
+    if (!IsGenuinelySeekable(stream))
+    {
+        return new SharpCompressStream(stream);
+    }
+
+    // Unwrap buffered SharpCompressStream wrappers so we use the real stream's native Seek.
+    while (stream is SharpCompressStream scs && !scs.IsPassthrough)
+    {
+        stream = scs.BaseStream();
+    }
+
+    return new SeekableSharpCompressStream(stream, leaveStreamOpen: false);
+}
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options)
