@@ -3,7 +3,11 @@ using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Options;
 
-public interface IReaderOptions : IStreamOptions, IEncodingOptions, IProgressOptions
+public interface IReaderOptions
+    : IStreamOptions,
+        IEncodingOptions,
+        IProgressOptions,
+        IParallelismOptions
 {
     /// <summary>
     /// Look for RarArchive (Check for self-extracting archives or cases where RarArchive isn't at the start of the file)

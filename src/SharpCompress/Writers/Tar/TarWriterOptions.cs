@@ -57,6 +57,12 @@ public sealed record TarWriterOptions : IWriterOptions
         CompressionProviderRegistry.Default;
 
     /// <summary>
+    /// When true, opts in to a format's optional parallel encode. No writer currently implements
+    /// parallel encoding; reserved for future use. Default is false.
+    /// </summary>
+    public bool EnableParallelism { get; set; }
+
+    /// <summary>
     /// Indicates if archive should be finalized (by 2 empty blocks) on close.
     /// </summary>
     public bool FinalizeArchiveOnClose { get; set; } = true;

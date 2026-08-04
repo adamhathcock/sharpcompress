@@ -334,6 +334,10 @@ var hinted = ReaderOptions.ForExternalStream.WithExtensionHint("tar.gz");
 // Increase for non-seekable streams with large detection probes, such as SFX RAR
 var buffered = ReaderOptions.ForExternalStream.WithRewindableBufferSize(1_048_576);
 
+// Opt in to formats' optional parallel decode (e.g. 7-Zip's automatic parallel LZMA2
+// solid-folder decode); default is sequential decoding
+var parallel = ReaderOptions.ForExternalStream.WithEnableParallelism(true);
+
 // Extraction presets
 var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
 var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
@@ -364,6 +368,7 @@ var options = new ReaderOptions
     DisableCheckIncomplete = false,
     BufferSize = 81920,
     RewindableBufferSize = 1_048_576,
+    EnableParallelism = false,
 };
 
 var extractionOptions = new ExtractionOptions
@@ -445,6 +450,8 @@ var options = new WriterOptions(CompressionType.Deflate)
 };
 archive.SaveTo("output.zip", options);
 ```
+
+`WriterOptions.EnableParallelism` (also available on `ZipWriterOptions`, `TarWriterOptions`, `GZipWriterOptions`, and `SevenZipWriterOptions`) opts in to a format's optional parallel encode. No writer currently implements parallel encoding, so this is a no-op today; it is reserved for future use and mirrors `ReaderOptions.EnableParallelism`.
 
 ### Extraction behavior
 

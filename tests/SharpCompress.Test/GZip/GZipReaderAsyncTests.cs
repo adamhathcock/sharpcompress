@@ -1,4 +1,5 @@
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -36,5 +37,34 @@ public class GZipReaderAsyncTests : ReaderTests
                 await entryStream.CopyToAsync(ms);
             }
         }
+    }
+
+    [Fact]
+    public async ValueTask GZip_ReaderFactory_FlatGZip_Async()
+    {
+        var source = new byte[2048];
+        for (var i = 0; i < source.Length; i++)
+        {
+            source[i] = 0xFF;
+        }
+
+        var gzipPath = Path.Combine(SCRATCH_FILES_PATH, "Flat.bin.gz");
+        using (var output = File.Create(gzipPath))
+        using (var gzip = new GZipStream(output, CompressionMode.Compress))
+        {
+            await gzip.WriteAsync(source, 0, source.Length);
+        }
+
+        using Stream stream = File.OpenRead(gzipPath);
+        await using var reader = await ReaderFactory.OpenAsyncReader(stream);
+        Assert.IsType<GZipReader>(reader);
+        Assert.True(await reader.MoveToNextEntryAsync());
+
+        using var ms = new MemoryStream();
+        await reader.WriteEntryToAsync(ms);
+        Assert.Equal(source.Length, ms.Length);
+        Assert.Equal(source, ms.ToArray());
+
+        Assert.False(await reader.MoveToNextEntryAsync());
     }
 }

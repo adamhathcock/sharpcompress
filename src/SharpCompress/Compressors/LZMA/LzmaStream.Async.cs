@@ -175,6 +175,11 @@ public partial class LzmaStream
         CancellationToken cancellationToken
     )
     {
+        if (count > 0)
+        {
+            EnsureReadMode(ReadMode.Asynchronous);
+        }
+
         if (_endReached)
         {
             return 0;
@@ -289,6 +294,11 @@ public partial class LzmaStream
         CancellationToken cancellationToken = default
     )
     {
+        if (!buffer.IsEmpty)
+        {
+            EnsureReadMode(ReadMode.Asynchronous);
+        }
+
         if (_endReached)
         {
             return 0;

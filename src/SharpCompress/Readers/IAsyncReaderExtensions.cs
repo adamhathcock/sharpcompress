@@ -108,15 +108,9 @@ public static class IAsyncReaderExtensions
         CancellationToken cancellationToken
     )
     {
-#if LEGACY_DOTNET
-        using var entryStream = await reader
-            .OpenEntryStreamAsync(cancellationToken)
-            .ConfigureAwait(false);
-#else
         await using var entryStream = await reader
             .OpenEntryStreamAsync(cancellationToken)
             .ConfigureAwait(false);
-#endif
         var checkedStream = IEntryExtensions.WrapWithChecksumValidation(
             reader.Entry,
             entryStream,

@@ -331,6 +331,12 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         _outWindow = null;
     }
 
+#if !LEGACY_DOTNET
+    // On modern .NET targets, the hot decode loop uses the unsafe flat-array fast path
+    // (see LzmaDecoder.Fast.cs) instead of the per-array, method-call based loop below.
+    internal bool Code(int dictionarySize, OutWindow outWindow, RangeCoder.Decoder rangeDecoder) =>
+        CodeFast(dictionarySize, outWindow, rangeDecoder);
+#else
     internal bool Code(int dictionarySize, OutWindow outWindow, RangeCoder.Decoder rangeDecoder)
     {
         var dictionarySizeCheck = Math.Max(dictionarySize, 1);
@@ -456,6 +462,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         }
         return false;
     }
+#endif
 
     public void SetDecoderProperties(byte[] properties) =>
         SetDecoderProperties(properties.AsSpan());
@@ -477,6 +484,10 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         SetLiteralProperties(lp, lc);
         SetPosBitsProperties(pb);
         Init();
+#if !LEGACY_DOTNET
+        CreateFastModel(lp, lc);
+        InitFastModel();
+#endif
         if (properties.Length >= 5)
         {
             _dictionarySize = 0;
