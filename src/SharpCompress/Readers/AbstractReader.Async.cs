@@ -104,13 +104,8 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             }
         }
         //don't know the size so we have to try to decompress to skip
-#if LEGACY_DOTNET
-        using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
-        await s.SkipEntryAsync(cancellationToken).ConfigureAwait(false);
-#else
         await using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         await s.SkipEntryAsync(cancellationToken).ConfigureAwait(false);
-#endif
     }
 
     public async ValueTask WriteEntryToAsync(
@@ -139,19 +134,11 @@ public abstract partial class AbstractReader<TEntry, TVolume>
 
     private async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
-#if LEGACY_DOTNET
-        using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
+        await using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream
             .CopyToAsync(writeStream, Options.BufferSize, cancellationToken)
             .ConfigureAwait(false);
-#else
-        await using Stream s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
-        var sourceStream = WrapWithProgress(s, Entry);
-        await sourceStream
-            .CopyToAsync(writeStream, Options.BufferSize, cancellationToken)
-            .ConfigureAwait(false);
-#endif
     }
 
     public async ValueTask<EntryStream> OpenEntryStreamAsync(

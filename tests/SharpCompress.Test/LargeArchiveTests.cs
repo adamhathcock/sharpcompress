@@ -40,24 +40,15 @@ public class LargeArchiveTests : TestBase
     [InlineData("Large/Large.7z")]
     public async Task OpenAsyncArchive_ShouldStreamLargeEntry(string fixtureName)
     {
-#if LEGACY_DOTNET
-        using var stream = new AsyncOnlyStream(
-            File.OpenRead(await GetMaterializedFixturePathAsync(fixtureName))
-        );
-#else
         await using var stream = new AsyncOnlyStream(
             File.OpenRead(await GetMaterializedFixturePathAsync(fixtureName))
         );
-#endif
         await using var archive = await ArchiveFactory.OpenAsyncArchive(stream);
 
         var entry = await GetSingleEntryAsync(archive);
 
-#if LEGACY_DOTNET
-        using var entryStream = await entry.OpenEntryStreamAsync();
-#else
-        await using var entryStream = await entry.OpenEntryStreamAsync();
-#endif
+        var entryStream = await entry.OpenEntryStreamAsync();
+        await using var entryStreamScope = entryStream.DisposeAsyncScope();
         await VerifyContentAsync(entry.Key, entryStream);
     }
 
@@ -83,25 +74,15 @@ public class LargeArchiveTests : TestBase
     [InlineData("Large/Large.tar.gz")]
     public async Task OpenAsyncReader_ShouldStreamLargeEntry(string fixtureName)
     {
-#if LEGACY_DOTNET
-        using var stream = new AsyncOnlyStream(
-            File.OpenRead(await GetMaterializedFixturePathAsync(fixtureName))
-        );
-#else
         await using var stream = new AsyncOnlyStream(
             File.OpenRead(await GetMaterializedFixturePathAsync(fixtureName))
         );
-#endif
         await using var reader = await ReaderFactory.OpenAsyncReader(stream);
 
         Assert.True(await reader.MoveToNextEntryAsync());
         Assert.False(reader.Entry.IsDirectory);
 
-#if LEGACY_DOTNET
-        using var entryStream = await reader.OpenEntryStreamAsync();
-#else
         await using var entryStream = await reader.OpenEntryStreamAsync();
-#endif
         await VerifyContentAsync(reader.Entry.Key, entryStream);
         Assert.False(await reader.MoveToNextEntryAsync());
     }
