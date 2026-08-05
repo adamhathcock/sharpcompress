@@ -39,6 +39,8 @@ public interface IExtractionOptions
     /// Delegate for writing symbolic links to disk.
     /// The first parameter is the source path (where the symlink is created).
     /// The second parameter is the target path (what the symlink refers to).
+    /// Directory extraction rejects link targets outside the destination directory and does not
+    /// follow symbolic links or reparse points in later entry paths.
     /// </summary>
     Action<string, string>? SymbolicLinkHandler { get; set; }
 }

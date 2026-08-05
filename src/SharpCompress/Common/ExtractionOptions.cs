@@ -60,6 +60,8 @@ public sealed record ExtractionOptions : IExtractionOptions
     /// <remarks>
     /// <b>Breaking change:</b> Changed from field to property in version 0.40.0.
     /// If no handler is provided, symbolic links are silently skipped during extraction.
+    /// Directory extraction rejects link targets outside the destination directory and does not
+    /// follow symbolic links or reparse points in later entry paths.
     /// </remarks>
     public Action<string, string>? SymbolicLinkHandler { get; set; }
 
