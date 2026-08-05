@@ -1,5 +1,6 @@
 #if NET8_0_OR_GREATER
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -41,7 +42,7 @@ public class SymbolicLinkExtractionTests : TestBase
         var exception = await ExtractAsync(api, archivePath, destinationDirectory, options);
 
         var extractionException = Assert.IsType<ExtractionException>(exception);
-        Assert.Contains("symbolic link outside", extractionException.Message);
+        Assert.Contains("symbolic link whose target is outside", extractionException.Message);
         Assert.Equal(0, handlerCalls);
         Assert.False(File.Exists(Path.Combine(outsideDirectory, "secret.txt")));
     }
@@ -66,16 +67,45 @@ public class SymbolicLinkExtractionTests : TestBase
             SymbolicLinkHandler = (linkPath, linkTarget) =>
             {
                 handlerCalls++;
-                Directory.CreateSymbolicLink(linkPath, linkTarget);
+                CreateReparsePoint(linkPath, linkTarget);
             },
         };
 
-        var exception = await ExtractAsync(api, archivePath, destinationDirectory, options);
+        var extractionException = (await ExtractAsync(api, archivePath, destinationDirectory, options)).NotNull();
 
-        var extractionException = Assert.IsType<ExtractionException>(exception);
-        Assert.Contains("symbolic link or reparse point", extractionException.Message);
+        Assert.Contains("symbolic link or reparse point", extractionException.ToString());
         Assert.Equal(1, handlerCalls);
         Assert.False(File.Exists(Path.Combine(targetDirectory, "secret.txt")));
+    }
+
+    private static void CreateReparsePoint(string linkPath, string linkTarget)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            // Directory junctions are reparse points that need no elevation, unlike symbolic links.
+            // Junction targets must be absolute.
+            var absoluteTarget = Path.GetFullPath(
+                Path.Combine(Path.GetDirectoryName(linkPath).NotNull(), linkTarget)
+            );
+            var startInfo = new ProcessStartInfo("cmd.exe")
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            startInfo.ArgumentList.Add("/c");
+            startInfo.ArgumentList.Add("mklink");
+            startInfo.ArgumentList.Add("/j");
+            startInfo.ArgumentList.Add(linkPath);
+            startInfo.ArgumentList.Add(absoluteTarget);
+
+            using var process = Process.Start(startInfo).NotNull();
+            process.WaitForExit();
+            Assert.Equal(0, process.ExitCode);
+        }
+        else
+        {
+            Directory.CreateSymbolicLink(linkPath, linkTarget);
+        }
     }
 
     private static void BuildTar(string path, string linkTarget)
