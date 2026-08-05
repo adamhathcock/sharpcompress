@@ -258,7 +258,10 @@ public static partial class ArchiveFactory
     {
         var entries = archive.Entries.ToArray();
         var volumes = archive.Volumes.ToArray();
-        var zip = GetZipInformation(entries);
+        var (zipInformation, deferredSizeEntryCount) = GetZipInformation(
+            archive.Type == ArchiveType.Zip,
+            entries
+        );
         var (isSolid, solidStreamCount) = GetSolidInformation(archive, entries);
         var isMultiVolume = GetIsMultiVolume(archive.Type, volumes);
         var comment = GetArchiveComment(volumes);
@@ -281,7 +284,7 @@ public static partial class ArchiveFactory
             limitations,
             GetFormatVersion(volumes),
             entries.LongLength,
-            zip?.DataDescriptorEntryCount ?? 0,
+            deferredSizeEntryCount,
             physicalSize,
             isComplete ? GetCompressedPayloadSize(archive, entries) : null,
             isComplete && archive.Type != ArchiveType.GZip
@@ -296,7 +299,7 @@ public static partial class ArchiveFactory
             volumes.Length,
             isComplete,
             comment,
-            zip
+            zipInformation
         );
     }
 
@@ -384,23 +387,33 @@ public static partial class ArchiveFactory
             ? ArchiveInformationStatus.Complete
             : ArchiveInformationStatus.Partial;
 
-    private static ZipArchiveInformation? GetZipInformation(IEnumerable<IArchiveEntry> entries)
+    private static (
+        ZipArchiveInformation? Information,
+        long DeferredSizeEntryCount
+    ) GetZipInformation(bool isZipArchive, IEnumerable<IArchiveEntry> entries)
     {
-        var dataDescriptorEntryCount = entries
-            .OfType<ZipArchiveEntry>()
-            .LongCount(entry =>
-                entry
-                    .Parts.OfType<ZipFilePart>()
-                    .Any(part =>
-                        FlagUtility.HasFlag(
-                            part.Header.Flags,
-                            SharpCompress.Common.Zip.Headers.HeaderFlags.UsePostDataDescriptor
-                        )
-                    )
-            );
-        return dataDescriptorEntryCount == 0 && !entries.OfType<ZipArchiveEntry>().Any()
-            ? null
-            : new ZipArchiveInformation(dataDescriptorEntryCount);
+        if (!isZipArchive)
+        {
+            return (null, 0);
+        }
+
+        long deferredSizeEntryCount = 0;
+        foreach (var entry in entries.OfType<ZipArchiveEntry>())
+        {
+            var filePart = entry.Parts.OfType<SeekableZipFilePart>().Single();
+            if (!filePart.HasDeferredSizes)
+            {
+                continue;
+            }
+
+            var localHeader = filePart.GetRawLocalHeader();
+            if (localHeader.CompressedSize == 0 && localHeader.UncompressedSize == 0)
+            {
+                deferredSizeEntryCount++;
+            }
+        }
+
+        return (new ZipArchiveInformation(deferredSizeEntryCount > 0), deferredSizeEntryCount);
     }
 
     private static (bool IsSolid, long SolidStreamCount) GetSolidInformation(
@@ -563,7 +576,7 @@ public static partial class ArchiveFactory
         private readonly ArchiveDetection detection;
         private long? compressedPayloadSize = 0;
         private long? uncompressedPayloadSize = 0;
-        private long dataDescriptorEntryCount;
+        private long deferredSizeEntryCount;
         private long entriesWithUnknownSizeCount;
         private bool isEncrypted;
         private ArchiveInformationLimitations limitations;
@@ -595,15 +608,15 @@ public static partial class ArchiveFactory
             EntryCount++;
             isEncrypted |= entry.IsEncrypted;
 
-            var usesDataDescriptor = UsesZipDataDescriptor(entry);
-            if (usesDataDescriptor)
+            var hasDeferredSizes = HasDeferredSizes(entry);
+            if (hasDeferredSizes)
             {
-                dataDescriptorEntryCount++;
+                deferredSizeEntryCount++;
             }
 
             if (
                 detection.ContainerType == ArchiveType.Lzw
-                || usesDataDescriptor
+                || hasDeferredSizes
                 || !TryGetSize(entry, out var size)
             )
             {
@@ -650,7 +663,7 @@ public static partial class ArchiveFactory
                 true,
                 null,
                 detection.ContainerType == ArchiveType.Zip
-                    ? new ZipArchiveInformation(dataDescriptorEntryCount)
+                    ? new ZipArchiveInformation(deferredSizeEntryCount > 0)
                     : null
             );
 
@@ -668,7 +681,7 @@ public static partial class ArchiveFactory
             }
         }
 
-        private static bool UsesZipDataDescriptor(IEntry entry) =>
+        private static bool HasDeferredSizes(IEntry entry) =>
             entry is ZipEntry zipEntry
             && zipEntry
                 .Parts.OfType<ZipFilePart>()
@@ -677,6 +690,8 @@ public static partial class ArchiveFactory
                         part.Header.Flags,
                         SharpCompress.Common.Zip.Headers.HeaderFlags.UsePostDataDescriptor
                     )
+                    && part.Header.CompressedSize == 0
+                    && part.Header.UncompressedSize == 0
                 );
     }
 }

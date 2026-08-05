@@ -66,7 +66,7 @@ if (information is not null)
 {
     Console.WriteLine($"Entries: {information.EntryCount}");
     Console.WriteLine($"Solid streams: {information.SolidStreamCount}");
-    Console.WriteLine($"ZIP data descriptor entries: {information.Zip?.DataDescriptorEntryCount}");
+    Console.WriteLine($"Some ZIP entry sizes arrive after their data: {information.Zip?.HasEntriesWithDeferredSizes}");
 }
 
 var asyncInformation = await ArchiveFactory.InspectArchiveAsync("archive.zip", cancellationToken);
@@ -96,7 +96,7 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 | `GetArchiveInformationAsync(...)` | `DetectArchiveAsync(...)` or `InspectArchiveAsync(...)` |
 | `Type` | `Detection.ContainerType` |
 | `SupportsRandomAccess` | `Detection.SupportedApis.HasFlag(ArchiveAccessMode.Archive)` |
-| `ZipDataDescriptorEntryCount` | `Zip.DataDescriptorEntryCount` |
+| `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |
 | `SolidStreamCount` | `SolidStreamCount` |
 
 ### Creating Archives

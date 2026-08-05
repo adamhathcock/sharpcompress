@@ -5,11 +5,12 @@ namespace SharpCompress.Archives;
 /// </summary>
 public sealed class ZipArchiveInformation
 {
-    internal ZipArchiveInformation(long dataDescriptorEntryCount) =>
-        DataDescriptorEntryCount = dataDescriptorEntryCount;
+    internal ZipArchiveInformation(bool hasEntriesWithDeferredSizes) =>
+        HasEntriesWithDeferredSizes = hasEntriesWithDeferredSizes;
 
     /// <summary>
-    /// Gets the number of entries whose local header defers its CRC and sizes to a data descriptor.
+    /// Gets whether any entry sizes are available only after reading the entry data.
+    /// When <see langword="true"/>, a forward-only reader can initially report zero sizes for those entries.
     /// </summary>
-    public long DataDescriptorEntryCount { get; }
+    public bool HasEntriesWithDeferredSizes { get; }
 }

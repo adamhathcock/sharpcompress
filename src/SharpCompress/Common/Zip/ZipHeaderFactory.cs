@@ -42,8 +42,7 @@ internal partial class ZipHeaderFactory
         {
             case ENTRY_HEADER_BYTES:
             {
-                var entryHeader = new LocalEntryHeader(_archiveEncoding);
-                entryHeader.Read(reader);
+                var entryHeader = ReadLocalHeader(reader);
                 LoadHeader(entryHeader, reader.BaseStream);
 
                 _lastEntryHeader = entryHeader;
@@ -107,6 +106,13 @@ internal partial class ZipHeaderFactory
             default:
                 return null;
         }
+    }
+
+    protected LocalEntryHeader ReadLocalHeader(BinaryReader reader)
+    {
+        var entryHeader = new LocalEntryHeader(_archiveEncoding);
+        entryHeader.Read(reader);
+        return entryHeader;
     }
 
     internal static bool IsHeader(uint headerBytes)

@@ -760,11 +760,13 @@ public class ArchiveFactoryTests : TestBase
     }
 
     [Theory]
-    [InlineData("Zip.none.datadescriptors.zip", 2)]
-    [InlineData("Zip.deflate.zip", 0)]
-    public void InspectArchive_ZipDataDescriptorEntryCount(
+    [InlineData("Zip.none.datadescriptors.zip", true, 2)]
+    [InlineData("Zip.deflate.dd.zip", true, 3)]
+    [InlineData("Zip.deflate.zip", false, 0)]
+    public void InspectArchive_ZipReportsEntriesWithDeferredSizes(
         string archiveName,
-        long expectedDataDescriptorEntryCount
+        bool expectedHasEntriesWithDeferredSizes,
+        long expectedUnknownSizeEntryCount
     )
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
@@ -774,8 +776,23 @@ public class ArchiveFactoryTests : TestBase
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Zip, info.Detection.ContainerType);
         Assert.NotNull(info.Zip);
-        Assert.Equal(expectedDataDescriptorEntryCount, info.Zip.DataDescriptorEntryCount);
-        Assert.Equal(expectedDataDescriptorEntryCount, info.EntriesWithUnknownSizeCount);
+        Assert.Equal(expectedHasEntriesWithDeferredSizes, info.Zip.HasEntriesWithDeferredSizes);
+        Assert.Equal(expectedUnknownSizeEntryCount, info.EntriesWithUnknownSizeCount);
+    }
+
+    [Theory]
+    [InlineData("Zip.none.datadescriptors.zip", true)]
+    [InlineData("Zip.deflate.zip", false)]
+    public async ValueTask InspectArchiveAsync_ZipReportsEntriesWithDeferredSizes(
+        string archiveName,
+        bool expectedHasEntriesWithDeferredSizes
+    )
+    {
+        var info = await ArchiveFactory.InspectArchiveAsync(GetTestArchivePath(archiveName));
+
+        Assert.NotNull(info);
+        Assert.NotNull(info.Zip);
+        Assert.Equal(expectedHasEntriesWithDeferredSizes, info.Zip.HasEntriesWithDeferredSizes);
     }
 
     [Theory]

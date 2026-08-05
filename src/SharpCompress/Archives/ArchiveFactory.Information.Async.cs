@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Common.Ace.Headers;
 using SharpCompress.Common.Rar;
@@ -389,7 +390,12 @@ public static partial class ArchiveFactory
 
         var entryArray = entries.ToArray();
         var volumeArray = volumes.ToArray();
-        var zip = GetZipInformation(entryArray);
+        var (zipInformation, deferredSizeEntryCount) = await GetZipInformationAsync(
+                archive.Type == ArchiveType.Zip,
+                entryArray,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
         var (isSolid, solidStreamCount) = await GetSolidInformationAsync(archive, entryArray)
             .ConfigureAwait(false);
         var isComplete = await archive.IsCompleteAsync().ConfigureAwait(false);
@@ -411,7 +417,7 @@ public static partial class ArchiveFactory
             limitations,
             GetFormatVersion(volumeArray),
             entryArray.LongLength,
-            zip?.DataDescriptorEntryCount ?? 0,
+            deferredSizeEntryCount,
             physicalSize,
             isComplete ? GetCompressedPayloadSize(archive, entryArray) : null,
             isComplete && archive.Type != ArchiveType.GZip
@@ -426,7 +432,7 @@ public static partial class ArchiveFactory
             volumeArray.Length,
             isComplete,
             GetArchiveComment(volumeArray),
-            zip
+            zipInformation
         );
     }
 
@@ -521,6 +527,40 @@ public static partial class ArchiveFactory
                 sevenZipArchive.TotalSize,
             _ => entries.Aggregate(0L, (total, entry) => total + entry.CompressedSize),
         };
+
+    private static async ValueTask<(
+        ZipArchiveInformation? Information,
+        long DeferredSizeEntryCount
+    )> GetZipInformationAsync(
+        bool isZipArchive,
+        IEnumerable<IArchiveEntry> entries,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!isZipArchive)
+        {
+            return (null, 0);
+        }
+
+        long deferredSizeEntryCount = 0;
+        foreach (var entry in entries.OfType<ZipArchiveEntry>())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var filePart = entry.Parts.OfType<SeekableZipFilePart>().Single();
+            if (!filePart.HasDeferredSizes)
+            {
+                continue;
+            }
+
+            var localHeader = await filePart.GetRawLocalHeaderAsync().ConfigureAwait(false);
+            if (localHeader.CompressedSize == 0 && localHeader.UncompressedSize == 0)
+            {
+                deferredSizeEntryCount++;
+            }
+        }
+
+        return (new ZipArchiveInformation(deferredSizeEntryCount > 0), deferredSizeEntryCount);
+    }
 
     private static async ValueTask<ArchiveDetection?> RedetectArchiveAsync(
         Stream stream,

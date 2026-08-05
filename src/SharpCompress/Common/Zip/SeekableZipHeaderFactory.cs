@@ -151,6 +151,31 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
             throw new ArchiveOperationException();
         }
 
+        PopulateDirectoryEntryMetadata(localEntryHeader, directoryEntryHeader);
+        return localEntryHeader;
+    }
+
+    internal LocalEntryHeader GetRawLocalHeader(
+        Stream stream,
+        DirectoryEntryHeader directoryEntryHeader
+    )
+    {
+        stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
+        var reader = new BinaryReader(stream);
+        var signature = reader.ReadUInt32();
+        if (signature != ENTRY_HEADER_BYTES)
+        {
+            throw new ArchiveOperationException();
+        }
+
+        return ReadLocalHeader(reader);
+    }
+
+    private static void PopulateDirectoryEntryMetadata(
+        LocalEntryHeader localEntryHeader,
+        DirectoryEntryHeader directoryEntryHeader
+    )
+    {
         // populate fields only known from the DirectoryEntryHeader
         localEntryHeader.HasData = directoryEntryHeader.HasData;
         localEntryHeader.ExternalFileAttributes = directoryEntryHeader.ExternalFileAttributes;
@@ -163,6 +188,5 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
             localEntryHeader.CompressedSize = directoryEntryHeader.CompressedSize;
             localEntryHeader.UncompressedSize = directoryEntryHeader.UncompressedSize;
         }
-        return localEntryHeader;
     }
 }
