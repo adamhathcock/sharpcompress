@@ -10,7 +10,7 @@ internal static class DirectoryManagement
     internal const string WriteFileOutsideDestinationMessage =
         "Entry is trying to write a file outside of the destination directory.";
     internal const string LinkTargetOutsideDestinationMessage =
-        "Entry is trying to create a symbolic link outside of the destination directory.";
+        "Entry is trying to create a symbolic link whose target is outside of the destination directory.";
     internal const string ReparsePointInDestinationMessage =
         "Entry is trying to extract through a symbolic link or reparse point.";
 
@@ -133,6 +133,11 @@ internal static class DirectoryManagement
 
     internal static void EnsurePathIsNotReparsePoint(string path)
     {
+        var destinationDirectory = Path.GetDirectoryName(path);
+        if (destinationDirectory is not null)
+        {
+            PathExistsAndIsNotReparsePoint(destinationDirectory);
+        }
         PathExistsAndIsNotReparsePoint(path);
     }
 
