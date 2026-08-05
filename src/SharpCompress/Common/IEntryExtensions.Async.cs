@@ -38,6 +38,11 @@ internal static partial class IEntryExtensions
             CancellationToken cancellationToken = default
         )
         {
+            if (entry.LinkTarget is not null && options.SymbolicLinkHandler is null)
+            {
+                return;
+            }
+
             var destinationFileName = GetEntryDestinationFileName(
                 entry,
                 fullDestinationDirectoryPath,
@@ -54,6 +59,20 @@ internal static partial class IEntryExtensions
                     DirectoryManagement.WriteFileOutsideDestinationMessage
                 );
 
+                DirectoryManagement.EnsureNoReparsePointInDestinationDirectory(
+                    destinationFileName,
+                    fullDestinationDirectoryPath
+                );
+
+                if (entry.LinkTarget is not null)
+                {
+                    DirectoryManagement.EnsureLinkTargetInDestinationDirectory(
+                        destinationFileName,
+                        entry.LinkTarget,
+                        fullDestinationDirectoryPath
+                    );
+                }
+
                 if (writeAsync != null)
                 {
                     await writeAsync(destinationFileName, cancellationToken).ConfigureAwait(false);
@@ -69,10 +88,10 @@ internal static partial class IEntryExtensions
                     DirectoryManagement.CreateDirectoryOutsideDestinationMessage
                 );
 
-                if (!Directory.Exists(destinationFileName))
-                {
-                    Directory.CreateDirectory(destinationFileName);
-                }
+                DirectoryManagement.CreateDirectory(
+                    destinationFileName,
+                    fullDestinationDirectoryPath
+                );
             }
         }
 
@@ -90,6 +109,8 @@ internal static partial class IEntryExtensions
             }
             else
             {
+                DirectoryManagement.EnsurePathIsNotReparsePoint(destinationFileName);
+
                 var fm = FileMode.Create;
 
                 if (!options.Overwrite)
