@@ -71,7 +71,9 @@ public class SymbolicLinkExtractionTests : TestBase
             },
         };
 
-        var extractionException = (await ExtractAsync(api, archivePath, destinationDirectory, options)).NotNull();
+        var extractionException = (
+            await ExtractAsync(api, archivePath, destinationDirectory, options)
+        ).NotNull();
 
         Assert.Contains("symbolic link or reparse point", extractionException.ToString());
         Assert.Equal(1, handlerCalls);
