@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace SharpCompress.Common;
@@ -8,6 +9,10 @@ internal static class DirectoryManagement
         "Entry is trying to create a directory outside of the destination directory.";
     internal const string WriteFileOutsideDestinationMessage =
         "Entry is trying to write a file outside of the destination directory.";
+    internal const string LinkTargetOutsideDestinationMessage =
+        "Entry is trying to create a symbolic link whose target is outside of the destination directory.";
+    internal const string ReparsePointInDestinationMessage =
+        "Entry is trying to extract through a symbolic link or reparse point.";
 
     internal static string GetFullDestinationDirectoryPath(string destinationDirectory)
     {
@@ -56,6 +61,119 @@ internal static class DirectoryManagement
         }
 
         throw new ExtractionException(exceptionMessage);
+    }
+
+    internal static void EnsureNoReparsePointInDestinationDirectory(
+        string destinationPath,
+        string fullDestinationDirectoryPath
+    )
+    {
+        var destinationDirectoryPath = TrimTrailingDirectorySeparators(
+            fullDestinationDirectoryPath
+        );
+        EnsurePathIsNotReparsePoint(destinationDirectoryPath);
+
+        if (string.Equals(destinationPath, destinationDirectoryPath, Utility.PathComparison))
+        {
+            return;
+        }
+
+        var relativeDestinationPath = destinationPath.Substring(
+            fullDestinationDirectoryPath.Length
+        );
+        var path = destinationDirectoryPath;
+
+        foreach (
+            var pathPart in relativeDestinationPath.Split(
+                new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar },
+                StringSplitOptions.RemoveEmptyEntries
+            )
+        )
+        {
+            path = Path.Combine(path, pathPart);
+
+            if (!PathExistsAndIsNotReparsePoint(path))
+            {
+                return;
+            }
+        }
+    }
+
+    internal static void CreateDirectory(
+        string destinationPath,
+        string fullDestinationDirectoryPath
+    )
+    {
+        EnsureNoReparsePointInDestinationDirectory(destinationPath, fullDestinationDirectoryPath);
+
+        if (!Directory.Exists(destinationPath))
+        {
+            Directory.CreateDirectory(destinationPath);
+        }
+
+        EnsureNoReparsePointInDestinationDirectory(destinationPath, fullDestinationDirectoryPath);
+    }
+
+    internal static void EnsureLinkTargetInDestinationDirectory(
+        string destinationFileName,
+        string linkTarget,
+        string fullDestinationDirectoryPath
+    )
+    {
+        var destinationDirectory = Path.GetDirectoryName(destinationFileName)
+            .NotNull("Destination directory is null");
+        var fullLinkTargetPath = Path.GetFullPath(Path.Combine(destinationDirectory, linkTarget));
+
+        EnsurePathInDestinationDirectory(
+            fullLinkTargetPath,
+            fullDestinationDirectoryPath,
+            LinkTargetOutsideDestinationMessage
+        );
+    }
+
+    internal static void EnsurePathIsNotReparsePoint(string path)
+    {
+        var destinationDirectory = Path.GetDirectoryName(path);
+        if (destinationDirectory is not null)
+        {
+            PathExistsAndIsNotReparsePoint(destinationDirectory);
+        }
+        PathExistsAndIsNotReparsePoint(path);
+    }
+
+    private static bool PathExistsAndIsNotReparsePoint(string path)
+    {
+        try
+        {
+            if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+            {
+                throw new ExtractionException(ReparsePointInDestinationMessage);
+            }
+
+            return true;
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            throw new ExtractionException(
+                "Unable to verify the extraction path for symbolic links or reparse points.",
+                exception
+            );
+        }
+        catch (IOException exception)
+        {
+            throw new ExtractionException(
+                "Unable to verify the extraction path for symbolic links or reparse points.",
+                exception
+            );
+        }
     }
 
     private static bool IsDirectorySeparator(char value) =>
