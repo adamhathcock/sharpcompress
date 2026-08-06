@@ -20,11 +20,12 @@ namespace SharpCompress.Archives;
 public static partial class ArchiveFactory
 {
     /// <summary>
-    /// Asynchronously collects metadata for the archive at the given file path.
+    /// Collects metadata for the archive at the given file path.
     /// </summary>
     /// <param name="filePath">Path to the archive file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the file is not a supported archive.</returns>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
@@ -33,12 +34,13 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
 
     /// <summary>
-    /// Asynchronously collects metadata for the archive at the given file path.
+    /// Collects metadata for the archive at the given file path.
     /// </summary>
     /// <param name="filePath">Path to the archive file.</param>
     /// <param name="readerOptions">Options controlling archive inspection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the file is not a supported archive.</returns>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         string filePath,
         ReaderOptions? readerOptions,
@@ -68,11 +70,12 @@ public static partial class ArchiveFactory
     }
 
     /// <summary>
-    /// Asynchronously collects metadata for the archive in the given stream.
+    /// Collects metadata for the archive in the given stream.
     /// </summary>
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the stream is not a supported archive.</returns>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
@@ -81,13 +84,14 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
 
     /// <summary>
-    /// Asynchronously collects metadata for the archive in the given stream.
+    /// Collects metadata for the archive in the given stream.
     /// </summary>
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
     /// <param name="readerOptions">Options controlling archive inspection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the stream is not a supported archive.</returns>
     /// <remarks>The supplied stream remains open and is restored to its original position.</remarks>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         Stream stream,
         ReaderOptions? readerOptions,
@@ -96,7 +100,9 @@ public static partial class ArchiveFactory
     {
         stream.RequireReadable();
         stream.RequireSeekable();
+#if !SYNC_ONLY
         cancellationToken.ThrowIfCancellationRequested();
+#endif
 
         var options = readerOptions ?? ReaderOptions.ForExternalStream;
         var startPosition = stream.Position;
@@ -119,6 +125,10 @@ public static partial class ArchiveFactory
 
             if ((detection.SupportedApis & ArchiveAccessMode.Archive) != 0)
             {
+#if SYNC_ONLY
+                using var archive = OpenArchive(archiveStream, inspectionOptions);
+                return InspectOpenedArchive(archive, detection, physicalSize, 1);
+#else
                 await using var archive = await OpenAsyncArchive(
                         archiveStream,
                         inspectionOptions,
@@ -133,8 +143,14 @@ public static partial class ArchiveFactory
                         cancellationToken
                     )
                     .ConfigureAwait(false);
+#endif
             }
 
+#if SYNC_ONLY
+            var aceHeader = ReadAceHeader(archiveStream, detection, inspectionOptions);
+            using var reader = ReaderFactory.OpenReader(archiveStream, inspectionOptions);
+            return InspectOpenedReader(reader, detection, physicalSize, 1, aceHeader);
+#else
             var aceHeader = await ReadAceHeaderAsync(
                     archiveStream,
                     detection,
@@ -154,6 +170,7 @@ public static partial class ArchiveFactory
                     cancellationToken
                 )
                 .ConfigureAwait(false);
+#endif
         }
         catch (CryptographicException) when (string.IsNullOrEmpty(options.Password))
         {
@@ -198,12 +215,13 @@ public static partial class ArchiveFactory
     }
 
     /// <summary>
-    /// Asynchronously collects metadata for an archive opened from multiple files.
+    /// Collects metadata for an archive opened from multiple files.
     /// </summary>
     /// <param name="fileInfos">Archive source files in archive order.</param>
     /// <param name="readerOptions">Options controlling archive inspection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the files are not a supported archive.</returns>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
@@ -242,6 +260,10 @@ public static partial class ArchiveFactory
         var physicalSize = GetPhysicalSize(fileInfos);
         try
         {
+#if SYNC_ONLY
+            using var archive = OpenArchive(fileInfos, options);
+            return InspectOpenedArchive(archive, detection, physicalSize, fileInfos.Count);
+#else
             await using var archive = await OpenAsyncArchive(fileInfos, options, cancellationToken)
                 .ConfigureAwait(false);
             return await InspectOpenedArchiveAsync(
@@ -252,6 +274,7 @@ public static partial class ArchiveFactory
                     cancellationToken
                 )
                 .ConfigureAwait(false);
+#endif
         }
         catch (CryptographicException) when (string.IsNullOrEmpty(options.Password))
         {
@@ -265,12 +288,13 @@ public static partial class ArchiveFactory
     }
 
     /// <summary>
-    /// Asynchronously collects metadata for an archive opened from multiple streams.
+    /// Collects metadata for an archive opened from multiple streams.
     /// </summary>
     /// <param name="streams">Archive source streams in archive order.</param>
     /// <param name="readerOptions">Options controlling archive inspection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the streams are not a supported archive.</returns>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
@@ -317,6 +341,10 @@ public static partial class ArchiveFactory
             archiveStreams.AddRange(
                 streams.Skip(1).Select(stream => new ArchiveOffsetStream(stream))
             );
+#if SYNC_ONLY
+            using var archive = OpenArchive(archiveStreams, inspectionOptions);
+            return InspectOpenedArchive(archive, detection, physicalSize, streams.Count);
+#else
             await using var archive = await OpenAsyncArchive(
                     archiveStreams,
                     inspectionOptions,
@@ -331,6 +359,7 @@ public static partial class ArchiveFactory
                     cancellationToken
                 )
                 .ConfigureAwait(false);
+#endif
         }
         catch (CryptographicException) when (string.IsNullOrEmpty(options.Password))
         {
@@ -466,6 +495,7 @@ public static partial class ArchiveFactory
         );
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private static async ValueTask<AceMainHeader?> ReadAceHeaderAsync(
         Stream stream,
         ArchiveDetection detection,
@@ -566,6 +596,7 @@ public static partial class ArchiveFactory
         return (new ZipArchiveInformation(deferredSizeEntryCount > 0), deferredSizeEntryCount);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private static async ValueTask<ArchiveDetection?> RedetectArchiveAsync(
         Stream stream,
         long startPosition,

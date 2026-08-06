@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
@@ -12,7 +10,6 @@ using SharpCompress.Common.Rar;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Detection;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 using AceMainHeader = SharpCompress.Common.Ace.Headers.AceMainHeader;
 
@@ -20,236 +17,6 @@ namespace SharpCompress.Archives;
 
 public static partial class ArchiveFactory
 {
-    /// <summary>
-    /// Collects metadata for the archive at the given file path.
-    /// </summary>
-    /// <param name="filePath">Path to the archive file.</param>
-    /// <returns>Archive metadata, or <see langword="null"/> when the file is not a supported archive.</returns>
-    public static ArchiveInformation? InspectArchive(string filePath) =>
-        InspectArchive(filePath, ReaderOptions.ForFilePath);
-
-    /// <summary>
-    /// Collects metadata for the archive at the given file path.
-    /// </summary>
-    /// <param name="filePath">Path to the archive file.</param>
-    /// <param name="readerOptions">Options controlling archive inspection.</param>
-    /// <returns>Archive metadata, or <see langword="null"/> when the file is not a supported archive.</returns>
-    public static ArchiveInformation? InspectArchive(string filePath, ReaderOptions? readerOptions)
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        var options = readerOptions ?? ReaderOptions.ForFilePath;
-        var detection = DetectArchive(filePath, options);
-        if (detection is null)
-        {
-            return null;
-        }
-        if ((detection.SupportedApis & ArchiveAccessMode.Archive) != 0)
-        {
-            var fileInfos = GetArchiveFileParts(new FileInfo(filePath), options);
-            if (fileInfos.Length > 1)
-            {
-                return InspectArchive(fileInfos, options);
-            }
-        }
-
-        using Stream stream = File.OpenRead(filePath);
-        return InspectArchive(stream, options);
-    }
-
-    /// <summary>
-    /// Collects metadata for the archive in the given stream.
-    /// </summary>
-    /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
-    /// <returns>Archive metadata, or <see langword="null"/> when the stream is not a supported archive.</returns>
-    public static ArchiveInformation? InspectArchive(Stream stream) =>
-        InspectArchive(stream, ReaderOptions.ForExternalStream);
-
-    /// <summary>
-    /// Collects metadata for the archive in the given stream.
-    /// </summary>
-    /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
-    /// <param name="readerOptions">Options controlling archive inspection.</param>
-    /// <returns>Archive metadata, or <see langword="null"/> when the stream is not a supported archive.</returns>
-    /// <remarks>The supplied stream remains open and is restored to its original position.</remarks>
-    public static ArchiveInformation? InspectArchive(Stream stream, ReaderOptions? readerOptions)
-    {
-        stream.RequireReadable();
-        stream.RequireSeekable();
-
-        var options = readerOptions ?? ReaderOptions.ForExternalStream;
-        var startPosition = stream.Position;
-        var physicalSize = GetPhysicalSize(stream, startPosition);
-
-        try
-        {
-            using var archiveStream = new ArchiveOffsetStream(stream);
-            var inspectionOptions = options with { LeaveStreamOpen = true };
-            var detection = TryDetectArchive(archiveStream, inspectionOptions);
-            if (detection is null)
-            {
-                return null;
-            }
-
-            if ((detection.SupportedApis & ArchiveAccessMode.Archive) != 0)
-            {
-                using var archive = OpenArchive(archiveStream, inspectionOptions);
-                return InspectOpenedArchive(archive, detection, physicalSize, 1);
-            }
-
-            var aceHeader = ReadAceHeader(archiveStream, detection, inspectionOptions);
-            using var reader = ReaderFactory.OpenReader(archiveStream, inspectionOptions);
-            return InspectOpenedReader(reader, detection, physicalSize, 1, aceHeader);
-        }
-        catch (CryptographicException) when (string.IsNullOrEmpty(options.Password))
-        {
-            var detection = RedetectArchive(stream, startPosition, options);
-            return detection is null
-                ? null
-                : CreatePartialInformation(
-                    detection,
-                    physicalSize,
-                    1,
-                    ArchiveInformationLimitations.EncryptedHeaders
-                );
-        }
-        catch (MultipartStreamRequiredException)
-        {
-            var detection = RedetectArchive(stream, startPosition, options);
-            return detection is null
-                ? null
-                : CreatePartialInformation(
-                    detection,
-                    physicalSize,
-                    1,
-                    ArchiveInformationLimitations.MissingVolumes
-                );
-        }
-        finally
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-        }
-    }
-
-    /// <summary>
-    /// Collects metadata for an archive opened from multiple files.
-    /// </summary>
-    /// <param name="fileInfos">Archive source files in archive order.</param>
-    /// <param name="readerOptions">Options controlling archive inspection.</param>
-    /// <returns>Archive metadata, or <see langword="null"/> when the files are not a supported archive.</returns>
-    public static ArchiveInformation? InspectArchive(
-        IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null
-    )
-    {
-        fileInfos.NotNull(nameof(fileInfos));
-        if (fileInfos.Count == 0)
-        {
-            throw new ArchiveOperationException("No files to inspect");
-        }
-        if (fileInfos.Count == 1)
-        {
-            return InspectArchive(fileInfos[0].FullName, readerOptions);
-        }
-
-        var options = readerOptions ?? ReaderOptions.ForFilePath;
-        var detection = DetectArchive(fileInfos[0].FullName, options);
-        if (detection is null)
-        {
-            return null;
-        }
-        if ((detection.SupportedApis & ArchiveAccessMode.Archive) == 0)
-        {
-            throw new NotSupportedException(
-                "Inspecting multiple source files is supported only for formats with an Archive API."
-            );
-        }
-
-        var physicalSize = GetPhysicalSize(fileInfos);
-        try
-        {
-            using var archive = OpenArchive(fileInfos, options);
-            return InspectOpenedArchive(archive, detection, physicalSize, fileInfos.Count);
-        }
-        catch (CryptographicException) when (string.IsNullOrEmpty(options.Password))
-        {
-            return CreatePartialInformation(
-                detection,
-                physicalSize,
-                fileInfos.Count,
-                ArchiveInformationLimitations.EncryptedHeaders
-            );
-        }
-    }
-
-    /// <summary>
-    /// Collects metadata for an archive opened from multiple streams.
-    /// </summary>
-    /// <param name="streams">Archive source streams in archive order.</param>
-    /// <param name="readerOptions">Options controlling archive inspection.</param>
-    /// <returns>Archive metadata, or <see langword="null"/> when the streams are not a supported archive.</returns>
-    public static ArchiveInformation? InspectArchive(
-        IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null
-    )
-    {
-        streams.NotNull(nameof(streams));
-        if (streams.Count == 0)
-        {
-            throw new ArchiveOperationException("No streams to inspect");
-        }
-        if (streams.Count == 1)
-        {
-            return InspectArchive(streams[0], readerOptions);
-        }
-
-        var options = readerOptions ?? ReaderOptions.ForExternalStream;
-        var startPositions = streams.Select(stream => stream.Position).ToArray();
-        var physicalSize = GetPhysicalSize(streams, startPositions);
-
-        try
-        {
-            using var firstArchiveStream = new ArchiveOffsetStream(streams[0]);
-            var inspectionOptions = options with { LeaveStreamOpen = true };
-            var detection = TryDetectArchive(firstArchiveStream, inspectionOptions);
-            if (detection is null)
-            {
-                return null;
-            }
-            if ((detection.SupportedApis & ArchiveAccessMode.Archive) == 0)
-            {
-                throw new NotSupportedException(
-                    "Inspecting multiple source streams is supported only for formats with an Archive API."
-                );
-            }
-
-            var archiveStreams = new List<Stream> { firstArchiveStream };
-            archiveStreams.AddRange(
-                streams.Skip(1).Select(stream => new ArchiveOffsetStream(stream))
-            );
-            using var archive = OpenArchive(archiveStreams, inspectionOptions);
-            return InspectOpenedArchive(archive, detection, physicalSize, streams.Count);
-        }
-        catch (CryptographicException) when (string.IsNullOrEmpty(options.Password))
-        {
-            var detection = RedetectArchive(streams[0], startPositions[0], options);
-            return detection is null
-                ? null
-                : CreatePartialInformation(
-                    detection,
-                    physicalSize,
-                    streams.Count,
-                    ArchiveInformationLimitations.EncryptedHeaders
-                );
-        }
-        finally
-        {
-            for (var i = 0; i < streams.Count; i++)
-            {
-                streams[i].Seek(startPositions[i], SeekOrigin.Begin);
-            }
-        }
-    }
-
     private static ArchiveInformation InspectOpenedArchive(
         IArchive archive,
         ArchiveDetection detection,
@@ -329,28 +96,6 @@ public static partial class ArchiveFactory
             isMultiVolume,
             formatVersion
         );
-    }
-
-    private static AceMainHeader? ReadAceHeader(
-        Stream stream,
-        ArchiveDetection detection,
-        ReaderOptions options
-    )
-    {
-        if (detection.ContainerType != ArchiveType.Ace)
-        {
-            return null;
-        }
-
-        try
-        {
-            stream.Position = 0;
-            return new AceMainHeader(options.ArchiveEncoding).Read(stream) as AceMainHeader;
-        }
-        finally
-        {
-            stream.Position = 0;
-        }
     }
 
     private static ArchiveInformation CreatePartialInformation(
@@ -484,17 +229,6 @@ public static partial class ArchiveFactory
         {
             return null;
         }
-    }
-
-    private static ArchiveDetection? RedetectArchive(
-        Stream stream,
-        long startPosition,
-        ReaderOptions options
-    )
-    {
-        stream.Seek(startPosition, SeekOrigin.Begin);
-        using var archiveStream = new ArchiveOffsetStream(stream);
-        return TryDetectArchive(archiveStream, options);
     }
 
     private static FileInfo[] GetArchiveFileParts(FileInfo firstPart, ReaderOptions options)
