@@ -22,9 +22,6 @@ internal partial class SeekableZipFilePart : ZipFilePart
         _directoryEntryHeader = header;
     }
 
-    internal LocalEntryHeader GetRawLocalHeader() =>
-        _headerFactory.GetRawLocalHeader(BaseStream, _directoryEntryHeader);
-
     internal bool HasDeferredSizes =>
         FlagUtility.HasFlag(_directoryEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor);
 

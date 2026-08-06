@@ -26,6 +26,9 @@ internal partial class SeekableZipFilePart
             .GetLocalHeaderAsync(BaseStream, _directoryEntryHeader)
             .ConfigureAwait(false);
 
-    internal ValueTask<LocalEntryHeader> GetRawLocalHeaderAsync() =>
-        _headerFactory.GetRawLocalHeaderAsync(BaseStream, _directoryEntryHeader);
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    internal async ValueTask<LocalEntryHeader> GetRawLocalHeaderAsync() =>
+        await _headerFactory
+            .GetRawLocalHeaderAsync(BaseStream, _directoryEntryHeader)
+            .ConfigureAwait(false);
 }

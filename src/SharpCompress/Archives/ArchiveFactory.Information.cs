@@ -387,35 +387,6 @@ public static partial class ArchiveFactory
             ? ArchiveInformationStatus.Complete
             : ArchiveInformationStatus.Partial;
 
-    private static (
-        ZipArchiveInformation? Information,
-        long DeferredSizeEntryCount
-    ) GetZipInformation(bool isZipArchive, IEnumerable<IArchiveEntry> entries)
-    {
-        if (!isZipArchive)
-        {
-            return (null, 0);
-        }
-
-        long deferredSizeEntryCount = 0;
-        foreach (var entry in entries.OfType<ZipArchiveEntry>())
-        {
-            var filePart = entry.Parts.OfType<SeekableZipFilePart>().Single();
-            if (!filePart.HasDeferredSizes)
-            {
-                continue;
-            }
-
-            var localHeader = filePart.GetRawLocalHeader();
-            if (localHeader.CompressedSize == 0 && localHeader.UncompressedSize == 0)
-            {
-                deferredSizeEntryCount++;
-            }
-        }
-
-        return (new ZipArchiveInformation(deferredSizeEntryCount > 0), deferredSizeEntryCount);
-    }
-
     private static (bool IsSolid, long SolidStreamCount) GetSolidInformation(
         IArchive archive,
         IReadOnlyCollection<IArchiveEntry> entries

@@ -528,6 +528,7 @@ public static partial class ArchiveFactory
             _ => entries.Aggregate(0L, (total, entry) => total + entry.CompressedSize),
         };
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private static async ValueTask<(
         ZipArchiveInformation? Information,
         long DeferredSizeEntryCount
@@ -545,7 +546,9 @@ public static partial class ArchiveFactory
         long deferredSizeEntryCount = 0;
         foreach (var entry in entries.OfType<ZipArchiveEntry>())
         {
+#if !SYNC_ONLY
             cancellationToken.ThrowIfCancellationRequested();
+#endif
             var filePart = entry.Parts.OfType<SeekableZipFilePart>().Single();
             if (!filePart.HasDeferredSizes)
             {
