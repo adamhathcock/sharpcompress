@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Detection;
 
 /// <summary>
 /// Specifies the APIs available for an archive format.

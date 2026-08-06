@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Detection;
 
 /// <summary>
 /// Identifies which archive data is encrypted.

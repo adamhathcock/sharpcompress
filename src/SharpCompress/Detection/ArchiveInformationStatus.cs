@@ -1,4 +1,4 @@
-namespace SharpCompress.Archives;
+namespace SharpCompress.Detection;
 
 /// <summary>
 /// Describes whether archive metadata could be collected completely.

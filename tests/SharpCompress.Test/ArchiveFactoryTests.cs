@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Detection;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;

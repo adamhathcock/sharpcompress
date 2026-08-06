@@ -11,6 +11,7 @@ using SharpCompress.Common;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.Detection;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using AceMainHeader = SharpCompress.Common.Ace.Headers.AceMainHeader;

@@ -1,6 +1,6 @@
 using SharpCompress.Common;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Detection;
 
 /// <summary>
 /// Identifies an archive format without enumerating its entries.

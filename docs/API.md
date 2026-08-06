@@ -85,6 +85,8 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 
 `InspectArchive` enumerates metadata and returns `ArchiveInformation`. It reports `Partial` status for missing volumes or encrypted headers without a password; malformed archives and incorrect passwords throw. ZIP-specific metadata is exposed through `ArchiveInformation.Zip`.
 
+Detection and inspection result types are in the `SharpCompress.Detection` namespace.
+
 The stream overloads of `DetectArchive` and `InspectArchive` preserve the supplied stream's position and leave it open, including when `ReaderOptions.LeaveStreamOpen` is `false`.
 
 #### Migrating from `GetArchiveInformation`

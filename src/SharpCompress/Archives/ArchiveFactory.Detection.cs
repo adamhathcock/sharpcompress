@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Detection;
 using SharpCompress.Factories;
 using SharpCompress.IO;
 using SharpCompress.Providers;

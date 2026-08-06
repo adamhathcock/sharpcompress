@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Detection;
 
 /// <summary>
 /// Identifies conditions that prevented complete archive metadata inspection.

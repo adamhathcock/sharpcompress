@@ -230,6 +230,8 @@ using (var archive = ArchiveFactory.OpenArchive("archive.zip"))
 ### Detect the format and choose the right API
 
 ```C#
+using SharpCompress.Detection;
+
 var archivePath = "archive.arc";
 var detection = ArchiveFactory.DetectArchive(archivePath);
 if (detection is null)
@@ -263,6 +265,8 @@ if (information is not null)
 ```
 
 `InspectArchive` parses archive metadata, which can require a complete sequential scan for TAR and compressed TAR files. It returns partial information for encrypted headers without a password or missing archive parts; inspect `Status` and `Limitations` before using nullable metadata values.
+
+Detection and inspection result types are in the `SharpCompress.Detection` namespace.
 
 The stream overload preserves the caller's current position and leaves the supplied stream open.
 

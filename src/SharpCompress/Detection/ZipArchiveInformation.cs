@@ -1,4 +1,4 @@
-namespace SharpCompress.Archives;
+namespace SharpCompress.Detection;
 
 /// <summary>
 /// Contains ZIP-specific metadata.
