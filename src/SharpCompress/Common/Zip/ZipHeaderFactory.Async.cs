@@ -20,8 +20,7 @@ internal partial class ZipHeaderFactory
         {
             case ENTRY_HEADER_BYTES:
             {
-                var entryHeader = new LocalEntryHeader(_archiveEncoding);
-                await entryHeader.Read(reader).ConfigureAwait(false);
+                var entryHeader = await ReadLocalHeader(reader).ConfigureAwait(false);
                 await LoadHeaderAsync(entryHeader, reader.BaseStream).ConfigureAwait(false);
 
                 _lastEntryHeader = entryHeader;
@@ -85,6 +84,13 @@ internal partial class ZipHeaderFactory
             default:
                 return null;
         }
+    }
+
+    protected async ValueTask<LocalEntryHeader> ReadLocalHeader(AsyncBinaryReader reader)
+    {
+        var entryHeader = new LocalEntryHeader(_archiveEncoding);
+        await entryHeader.Read(reader).ConfigureAwait(false);
+        return entryHeader;
     }
 
     /// <summary>

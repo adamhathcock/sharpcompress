@@ -8,6 +8,7 @@ internal partial class SeekableZipFilePart : ZipFilePart
 {
     private bool _isLocalHeaderLoaded;
     private readonly SeekableZipHeaderFactory _headerFactory;
+    private readonly DirectoryEntryHeader _directoryEntryHeader;
 
     internal SeekableZipFilePart(
         SeekableZipHeaderFactory headerFactory,
@@ -15,7 +16,14 @@ internal partial class SeekableZipFilePart : ZipFilePart
         Stream stream,
         CompressionProviderRegistry compressionProviders
     )
-        : base(header, stream, compressionProviders) => _headerFactory = headerFactory;
+        : base(header, stream, compressionProviders)
+    {
+        _headerFactory = headerFactory;
+        _directoryEntryHeader = header;
+    }
+
+    internal bool HasDeferredSizes =>
+        FlagUtility.HasFlag(_directoryEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor);
 
     protected override Stream CreateBaseStream()
     {

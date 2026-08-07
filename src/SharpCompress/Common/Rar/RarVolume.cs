@@ -25,6 +25,8 @@ public abstract class RarVolume : Volume
 
     private ArchiveHeader? ArchiveHeader { get; set; }
 
+    internal bool IsHeaderEncrypted => _headerFactory.IsEncrypted;
+
     private StreamingMode Mode => _headerFactory.StreamingMode;
 
     internal abstract IEnumerable<RarFilePart> ReadFileParts();
