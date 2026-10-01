@@ -165,6 +165,7 @@ referenced for every project via `Directory.Packages.props`).
   suffix, `CancellationToken` and `IProgress<T>` (unless `PreserveCancellationToken` /
   `PreserveProgress`), maps `Task`/`ValueTask` to `void`/`T` and `Memory<T>` to `Span<T>`, and
   rewrites `FooAsync(...)` calls to `Foo(...)`. Modifiers, including `override`/`virtual`, are kept.
+  Memory collection elements and iterator locals remain `Memory<T>` / `ReadOnlyMemory<T>`.
 - **Attribute individual methods, never the whole type.** A type-level attribute also generates the
   members that must not exist (see below), so you would need more `[SkipSyncVersion]` than
   `[CreateSyncVersion]`.
@@ -179,6 +180,9 @@ referenced for every project via `Directory.Packages.props`).
   specified stream.") — it is emitted onto both copies.
 - Use `#if SYNC_ONLY` / `#if !SYNC_ONLY` only for a localised I/O idiom that genuinely differs; if it
   would cover more than a small part of the method, keep two hand-written methods instead.
+- Do not define `SYNC_ONLY` as a compilation symbol. `ZSMGEN006` warns when dropping a
+  `CancellationToken` makes a loop endless; preserve the token only when the existing sync
+  signature has it, or retain a terminating sync implementation.
 - To see what was generated, build with `-p:EmitCompilerGeneratedFiles=true` and look in
   `obj/<config>/<tfm>/generated/Zomp.SyncMethodGenerator/`. A sync stack frame may therefore name a
   method that has no file in the repo — debug it via the async source.
