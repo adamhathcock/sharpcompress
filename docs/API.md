@@ -85,6 +85,10 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 
 `InspectArchive` enumerates metadata and returns `ArchiveInformation`. It reports `Partial` status for missing volumes or encrypted headers without a password; malformed archives and incorrect passwords throw. ZIP-specific metadata is exposed through `ArchiveInformation.Zip`.
 
+`ArchiveInformation.Detection` contains the format identification collected during inspection, so there is no need to call `DetectArchive` first when requesting metadata. Inspection reuses the selected factory and compression wrapper to open the source.
+
+`Status.Complete` means no known inspection limitations apply; it does not guarantee that every nullable metadata property has a value. `EntriesWithUnknownSizeCount` counts entries whose uncompressed sizes a forward-only reader cannot know before reading their data. For example, ZIP inspection can obtain final sizes from the central directory while still reporting entries with deferred local-header sizes.
+
 Detection and inspection result types are in the `SharpCompress.Detection` namespace.
 
 The stream overloads of `DetectArchive` and `InspectArchive` preserve the supplied stream's position and leave it open, including when `ReaderOptions.LeaveStreamOpen` is `false`.
@@ -101,7 +105,7 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 | `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |
 | `SolidStreamCount` | `SolidStreamCount` |
 
-### Creating Archives
+### Creating Archives with the Writer API
 
 ```csharp
 // Writer Factory
@@ -220,7 +224,7 @@ foreach (var entry in archive.Entries)
 }
 ```
 
-### Creating Archives
+### Creating Archives with the Archive API
 
 ```csharp
 using (var archive = ZipArchive.CreateArchive())
@@ -750,6 +754,7 @@ using (var bufferedStream = new SharpCompressStream(rawStream))
 ```
 
 Useful for:
+
 - Non-seekable streams (network streams, pipes)
 - Forward-only reading with limited look-ahead
 - Buffering unbuffered streams for better performance

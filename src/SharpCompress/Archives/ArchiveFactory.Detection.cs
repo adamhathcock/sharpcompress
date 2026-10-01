@@ -8,6 +8,13 @@ namespace SharpCompress.Archives;
 
 public static partial class ArchiveFactory
 {
+    // Keep the selected factory internal so inspection can open the source without probing it again.
+    private sealed class ArchiveRecognition(IFactory? factory, ArchiveDetection detection)
+    {
+        public IFactory? Factory { get; } = factory;
+        public ArchiveDetection Detection { get; } = detection;
+    }
+
     private static void DisposeProbeStream(Stream stream)
     {
         try

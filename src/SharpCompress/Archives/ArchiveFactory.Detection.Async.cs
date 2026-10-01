@@ -174,57 +174,11 @@ public static partial class ArchiveFactory
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
-    )
-    {
-        var startPosition = stream.Position;
-
-        try
-        {
-            foreach (var factory in Factory.Factories)
-            {
-                stream.Seek(startPosition, SeekOrigin.Begin);
-                var isArchive = await factory
-                    .IsArchiveAsync(stream, readerOptions, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (isArchive)
-                {
-                    stream.Seek(startPosition, SeekOrigin.Begin);
-                    if (
-                        await IsCompressedTarAsync(
-                                stream,
-                                factory,
-                                readerOptions,
-                                cancellationToken
-                            )
-                            .ConfigureAwait(false)
-                    )
-                    {
-                        continue;
-                    }
-
-                    return factory;
-                }
-            }
-
-            return null;
-        }
-        finally
-        {
-            stream.Seek(startPosition, SeekOrigin.Begin);
-        }
-    }
-
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private static async ValueTask<bool> IsCompressedTarAsync(
-        Stream stream,
-        IFactory factory,
-        ReaderOptions readerOptions,
-        CancellationToken cancellationToken
     ) =>
-        GetCompressedTarType(factory) is { } compressionType
-        && await IsCompressedTarAsync(stream, readerOptions, compressionType, cancellationToken)
-            .ConfigureAwait(false);
+        (
+            await TryRecognizeArchiveAsync(stream, readerOptions, false, cancellationToken)
+                .ConfigureAwait(false)
+        )?.Factory;
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private static async ValueTask<bool> IsCompressedTarAsync(
@@ -272,6 +226,18 @@ public static partial class ArchiveFactory
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
+    ) =>
+        (
+            await TryRecognizeArchiveAsync(stream, readerOptions, true, cancellationToken)
+                .ConfigureAwait(false)
+        )?.Detection;
+
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    private static async ValueTask<ArchiveRecognition?> TryRecognizeArchiveAsync(
+        Stream stream,
+        ReaderOptions readerOptions,
+        bool includeCompressedTar,
+        CancellationToken cancellationToken
     )
     {
         var startPosition = stream.Position;
@@ -303,13 +269,26 @@ public static partial class ArchiveFactory
                             .ConfigureAwait(false)
                     )
                     {
-                        return CreateCompressedTarDetection(compressionType);
+                        if (includeCompressedTar)
+                        {
+                            return new ArchiveRecognition(
+                                factory,
+                                CreateCompressedTarDetection(compressionType)
+                            );
+                        }
+                        // Legacy factory discovery rejects compressed TAR, but later registered
+                        // factories must still have an opportunity to recognize the source.
+                        continue;
                     }
                 }
 
-                return CreateDetection(factory);
+                return new ArchiveRecognition(factory, CreateDetection(factory));
             }
 
+            if (!includeCompressedTar)
+            {
+                return null;
+            }
             var compressedTarType = await TryDetectCompressedTarAsync(
                     stream,
                     readerOptions,
@@ -317,7 +296,9 @@ public static partial class ArchiveFactory
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            return compressedTarType is { } value ? CreateCompressedTarDetection(value) : null;
+            return compressedTarType is { } value
+                ? new ArchiveRecognition(null, CreateCompressedTarDetection(value))
+                : null;
         }
         finally
         {

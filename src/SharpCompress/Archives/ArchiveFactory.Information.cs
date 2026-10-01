@@ -10,6 +10,7 @@ using SharpCompress.Common.Rar;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Detection;
+using SharpCompress.Factories;
 using SharpCompress.Readers;
 using AceMainHeader = SharpCompress.Common.Ace.Headers.AceMainHeader;
 
@@ -31,17 +32,48 @@ public static partial class ArchiveFactory
             entries
         );
         var (isSolid, solidStreamCount) = GetSolidInformation(archive, entries);
-        var isMultiVolume = GetIsMultiVolume(archive.Type, volumes);
-        var comment = GetArchiveComment(volumes);
+        var isComplete = archive.IsComplete;
+        return CreateArchiveInformation(
+            archive.Type,
+            entries,
+            volumes,
+            detection,
+            physicalSize,
+            physicalPartCount,
+            zipInformation,
+            deferredSizeEntryCount,
+            isSolid,
+            solidStreamCount,
+            isComplete,
+            isComplete
+                ? GetCompressedPayloadSize(archive.Type, archive as SevenZipArchive, entries)
+                : null
+        );
+    }
+
+    private static ArchiveInformation CreateArchiveInformation(
+        ArchiveType type,
+        IArchiveEntry[] entries,
+        IVolume[] volumes,
+        ArchiveDetection detection,
+        long? physicalSize,
+        int physicalPartCount,
+        ZipArchiveInformation? zipInformation,
+        long deferredSizeEntryCount,
+        bool isSolid,
+        long solidStreamCount,
+        bool isComplete,
+        long? compressedPayloadSize
+    )
+    {
         var hasEncryptedHeaders = volumes
             .OfType<RarVolume>()
             .Any(volume => volume.IsHeaderEncrypted);
         var hasEncryptedEntries = entries.Any(entry => entry.IsEncrypted);
-        var isComplete = archive.IsComplete;
         var limitations = isComplete
             ? ArchiveInformationLimitations.None
             : ArchiveInformationLimitations.MissingVolumes;
-        if (archive.Type == ArchiveType.GZip)
+        if (type == ArchiveType.GZip)
         {
             limitations |= ArchiveInformationLimitations.UnavailableMetadata;
         }
@@ -54,19 +86,19 @@ public static partial class ArchiveFactory
             entries.LongLength,
             deferredSizeEntryCount,
             physicalSize,
-            isComplete ? GetCompressedPayloadSize(archive, entries) : null,
-            isComplete && archive.Type != ArchiveType.GZip
+            isComplete ? compressedPayloadSize : null,
+            isComplete && type != ArchiveType.GZip
                 ? entries.Aggregate(0L, (total, entry) => total + entry.Size)
                 : null,
             isSolid,
             solidStreamCount,
             GetEncryptionScope(hasEncryptedHeaders, hasEncryptedEntries),
             hasEncryptedHeaders || hasEncryptedEntries,
-            isMultiVolume,
+            GetIsMultiVolume(type, volumes),
             physicalPartCount,
             volumes.Length,
             isComplete,
-            comment,
+            GetArchiveComment(volumes),
             zipInformation
         );
     }
@@ -85,6 +117,16 @@ public static partial class ArchiveFactory
             inspection.Add(reader.Entry);
         }
 
+        return CreateReaderInformation(inspection, physicalSize, physicalPartCount, aceHeader);
+    }
+
+    private static ArchiveInformation CreateReaderInformation(
+        ReaderInspection inspection,
+        long? physicalSize,
+        int physicalPartCount,
+        AceMainHeader? aceHeader
+    )
+    {
         var isSolid = aceHeader?.IsSolid ?? false;
         var isMultiVolume = aceHeader?.IsMultiVolume ?? false;
         var formatVersion = aceHeader is null ? null : $"ACE {aceHeader.AceVersion / 10.0:0.0}";
@@ -140,11 +182,7 @@ public static partial class ArchiveFactory
     {
         if (archive.Type == ArchiveType.SevenZip)
         {
-            var solidStreamCount = entries
-                .OfType<SevenZipArchiveEntry>()
-                .Where(entry => !entry.IsDirectory && entry.FilePart.Folder is not null)
-                .GroupBy(entry => entry.FilePart.Folder)
-                .LongCount(group => group.Skip(1).Any());
+            var solidStreamCount = CountSevenZipSolidStreams(entries);
             return (solidStreamCount > 0, solidStreamCount);
         }
 
@@ -156,6 +194,13 @@ public static partial class ArchiveFactory
 
         return (false, 0);
     }
+
+    private static long CountSevenZipSolidStreams(IEnumerable<IArchiveEntry> entries) =>
+        entries
+            .OfType<SevenZipArchiveEntry>()
+            .Where(entry => !entry.IsDirectory && entry.FilePart.Folder is not null)
+            .GroupBy(entry => entry.FilePart.Folder)
+            .LongCount(group => group.Skip(1).Any());
 
     private static long CountRarSolidStreams(IEnumerable<IArchiveEntry> entries)
     {
@@ -208,14 +253,14 @@ public static partial class ArchiveFactory
     }
 
     private static long? GetCompressedPayloadSize(
-        IArchive archive,
+        ArchiveType type,
+        SevenZipArchive? sevenZipArchive,
         IReadOnlyCollection<IArchiveEntry> entries
     ) =>
-        archive.Type switch
+        type switch
         {
             ArchiveType.GZip => null,
-            ArchiveType.SevenZip when archive is SevenZipArchive sevenZipArchive =>
-                sevenZipArchive.TotalSize,
+            ArchiveType.SevenZip when sevenZipArchive is not null => sevenZipArchive.TotalSize,
             _ => entries.Aggregate(0L, (total, entry) => total + entry.CompressedSize),
         };
 
@@ -231,15 +276,8 @@ public static partial class ArchiveFactory
         }
     }
 
-    private static FileInfo[] GetArchiveFileParts(FileInfo firstPart, ReaderOptions options)
+    private static FileInfo[] GetArchiveFileParts(FileInfo firstPart, IFactory factory)
     {
-        using Stream stream = firstPart.OpenRead();
-        var factory = TryFindFactory(stream, options);
-        if (factory is null)
-        {
-            return [firstPart];
-        }
-
         var parts = new List<FileInfo> { firstPart };
         for (var index = 1; factory.GetFilePart(index, firstPart) is { } part; index++)
         {
