@@ -15,9 +15,11 @@ namespace SharpCompress.Archives.GZip;
 
 public partial class GZipArchive
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public ValueTask SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
         SaveToAsync(new FileInfo(filePath), cancellationToken);
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public async ValueTask SaveToAsync(
         FileInfo fileInfo,
         CancellationToken cancellationToken = default
@@ -28,6 +30,7 @@ public partial class GZipArchive
             .ConfigureAwait(false);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     protected override async ValueTask SaveToAsync(
         Stream stream,
         GZipWriterOptions options,
@@ -54,6 +57,7 @@ public partial class GZipArchive
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
                         entryStream,
+                        entry.LastModifiedTime,
                         cancellationToken
                     )
                     .ConfigureAwait(false);
@@ -65,7 +69,12 @@ public partial class GZipArchive
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
             await writer
-                .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
+                .WriteAsync(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entryStream,
+                    entry.LastModifiedTime,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
         }
     }

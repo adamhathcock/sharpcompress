@@ -46,7 +46,14 @@ public partial class SevenZipArchive
             var file = _database._files[i];
             entries[i] = new SevenZipArchiveEntry(
                 this,
-                new SevenZipFilePart(stream, _database, i, file, ReaderOptions.ArchiveEncoding),
+                new SevenZipFilePart(
+                    stream,
+                    _database,
+                    i,
+                    file,
+                    ReaderOptions.ArchiveEncoding,
+                    ReaderOptions.EnableParallelism
+                ),
                 ReaderOptions
             );
         }

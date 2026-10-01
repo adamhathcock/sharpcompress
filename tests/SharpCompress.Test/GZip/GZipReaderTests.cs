@@ -48,6 +48,12 @@ public class GZipReaderTests : ReaderTests
         using var reader = ReaderFactory.OpenReader(stream);
         Assert.IsType<GZipReader>(reader);
         Assert.True(reader.MoveToNextEntry());
+
+        using var ms = new MemoryStream();
+        reader.WriteEntryTo(ms);
+        Assert.Equal(source.Length, ms.Length);
+        Assert.Equal(source, ms.ToArray());
+
         Assert.False(reader.MoveToNextEntry());
     }
 }

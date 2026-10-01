@@ -73,6 +73,28 @@ internal partial class BufferedSubStream : Stream, IStreamStack
         return _cache![_cacheOffset++];
     }
 
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        if (count > Length)
+        {
+            count = (int)Length;
+        }
+
+        if (count > 0)
+        {
+            if (_cacheOffset == _cacheLength)
+            {
+                RefillCache();
+            }
+
+            count = Math.Min(count, _cacheLength - _cacheOffset);
+            Buffer.BlockCopy(_cache!, _cacheOffset, buffer, offset, count);
+            _cacheOffset += count;
+        }
+
+        return count;
+    }
+
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();

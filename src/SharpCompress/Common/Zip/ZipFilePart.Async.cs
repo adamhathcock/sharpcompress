@@ -13,6 +13,7 @@ namespace SharpCompress.Common.Zip;
 
 internal abstract partial class ZipFilePart
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     internal override async ValueTask<Stream?> GetCompressedStreamAsync(
         CancellationToken cancellationToken = default
     )
@@ -35,6 +36,7 @@ internal abstract partial class ZipFilePart
         return decompressionStream;
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     protected async ValueTask<Stream> GetCryptoStreamAsync(
         Stream plainStream,
         CancellationToken cancellationToken = default
@@ -242,6 +244,7 @@ internal abstract partial class ZipFilePart
         }
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask<Stream> CreateWinzipAesDecompressionStreamAsync(
         Stream stream,
         CancellationToken cancellationToken = default

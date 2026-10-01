@@ -18,7 +18,6 @@ public partial class EntryStream
         _completed = true;
     }
 
-#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (_isDisposed)
@@ -44,9 +43,8 @@ public partial class EntryStream
             }
         }
         await base.DisposeAsync().ConfigureAwait(false);
-        await _stream.DisposeAsync().ConfigureAwait(false);
+        await _stream.DisposeAsyncCompat().ConfigureAwait(false);
     }
-#endif
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(

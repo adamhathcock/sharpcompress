@@ -25,6 +25,20 @@ public static class StreamExtensions
 
         public void Skip() => stream.CopyTo(Stream.Null);
 
+        /// <summary>
+        /// Returns a scope that disposes this stream when awaited, asynchronously where the runtime type
+        /// supports it. Lets <c>await using</c> be written against a <see cref="Stream"/>-typed local on
+        /// every target framework.
+        /// </summary>
+        internal AsyncDisposeScope DisposeAsyncScope() => new(stream);
+
+        /// <summary>
+        /// Disposes this stream, asynchronously where the runtime type supports it. Use where the static
+        /// type is <see cref="Stream"/>, which has no <c>DisposeAsync</c> on .NET Framework 4.8 /
+        /// .NET Standard 2.0.
+        /// </summary>
+        internal ValueTask DisposeAsyncCompat() => new AsyncDisposeScope(stream).DisposeAsync();
+
         public async ValueTask SkipAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();

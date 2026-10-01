@@ -151,19 +151,8 @@ public class BZip2StreamAsyncTests
             Assert.True(compressed.Length > 0);
 
             // Decompress and verify
-#if LEGACY_DOTNET
+            // MemoryStream has nothing to dispose asynchronously
             using (var readStream = new MemoryStream(compressed))
-            {
-                using (
-                    var bzip2Stream = await BZip2Stream.CreateAsync(
-                        new AsyncOnlyStream(readStream),
-                        SharpCompress.Compressors.CompressionMode.Decompress,
-                        false
-                    )
-                )
-                {
-#else
-            await using (var readStream = new MemoryStream(compressed))
             {
                 await using (
                     var bzip2Stream = await BZip2Stream.CreateAsync(
@@ -173,7 +162,6 @@ public class BZip2StreamAsyncTests
                     )
                 )
                 {
-#endif
                     var result = new StringBuilder();
                     var buffer = new byte[256];
                     int bytesRead;

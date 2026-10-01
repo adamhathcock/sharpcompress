@@ -10,7 +10,7 @@ Quick reference for commonly used SharpCompress APIs.
 // Auto-detect format
 using (var reader = ReaderFactory.OpenReader(stream))
 {
-    // Works with Zip, Tar, GZip, Rar, 7Zip, etc.
+    // Works with Zip, Tar, GZip, Rar, etc. Reading 7Zip needs the Archive API
 }
 
 // Specific format - Archive API
@@ -50,18 +50,26 @@ if (ArchiveFactory.IsArchive("archive.zip", out var archiveType))
     Console.WriteLine($"Detected {archiveType}");
 }
 
-// Detect capabilities before choosing Archive API vs Reader API
-var info = ArchiveFactory.GetArchiveInformation("archive.arc");
-if (info is not null)
+// Detect the format and choose an API without enumerating entries.
+var detection = ArchiveFactory.DetectArchive("archive.tar.xz");
+if (detection is not null)
 {
-    Console.WriteLine($"Type: {info.Type}");
-    Console.WriteLine($"Supports random access: {info.SupportsRandomAccess}");
+    Console.WriteLine($"Container: {detection.ContainerType}");
+    Console.WriteLine($"Outer compression: {detection.OuterCompressionType}");
+    Console.WriteLine($"Supported APIs: {detection.SupportedApis}");
 }
 
-var asyncInfo = await ArchiveFactory.GetArchiveInformationAsync(
-    "archive.zip",
-    cancellationToken
-);
+// InspectArchive parses complete archive metadata. It can be expensive for
+// sequential formats such as TAR and compressed TAR.
+var information = ArchiveFactory.InspectArchive("archive.zip");
+if (information is not null)
+{
+    Console.WriteLine($"Entries: {information.EntryCount}");
+    Console.WriteLine($"Solid streams: {information.SolidStreamCount}");
+    Console.WriteLine($"Some ZIP entry sizes arrive after their data: {information.Zip?.HasEntriesWithDeferredSizes}");
+}
+
+var asyncInformation = await ArchiveFactory.InspectArchiveAsync("archive.zip", cancellationToken);
 
 // Multi-volume archives
 var parts = ArchiveFactory.GetFileParts("archive.part1.rar")
@@ -73,7 +81,25 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 }
 ```
 
-`ArchiveInformation.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFactory.GetArchiveInformation` returns `null` for them and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files.
+`DetectArchive` identifies the logical container, its outer compression wrapper, and whether the Archive and Reader APIs are available without enumerating entries. Compressed TAR wrappers such as `.tar.gz` and `.tar.xz` are identified as `ArchiveType.Tar` with an outer compression type and `ArchiveAccessMode.Reader`.
+
+`InspectArchive` enumerates metadata and returns `ArchiveInformation`. It reports `Partial` status for missing volumes or encrypted headers without a password; malformed archives and incorrect passwords throw. ZIP-specific metadata is exposed through `ArchiveInformation.Zip`.
+
+Detection and inspection result types are in the `SharpCompress.Detection` namespace.
+
+The stream overloads of `DetectArchive` and `InspectArchive` preserve the supplied stream's position and leave it open, including when `ReaderOptions.LeaveStreamOpen` is `false`.
+
+#### Migrating from `GetArchiveInformation`
+
+| Removed API | Replacement |
+| --- | --- |
+| `GetArchiveInformation(...)` used only to identify a format | `DetectArchive(...)` |
+| `GetArchiveInformation(...)` used to enumerate archive details | `InspectArchive(...)` |
+| `GetArchiveInformationAsync(...)` | `DetectArchiveAsync(...)` or `InspectArchiveAsync(...)` |
+| `Type` | `Detection.ContainerType` |
+| `SupportsRandomAccess` | `Detection.SupportedApis.HasFlag(ArchiveAccessMode.Archive)` |
+| `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |
+| `SolidStreamCount` | `SolidStreamCount` |
 
 ### Creating Archives
 
@@ -230,7 +256,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 {
     while (reader.MoveToNextEntry())
     {
-        IArchiveEntry entry = reader.Entry;
+        IEntry entry = reader.Entry;
 
         if (!entry.IsDirectory)
         {
@@ -332,6 +358,10 @@ var hinted = ReaderOptions.ForExternalStream.WithExtensionHint("tar.gz");
 // Increase for non-seekable streams with large detection probes, such as SFX RAR
 var buffered = ReaderOptions.ForExternalStream.WithRewindableBufferSize(1_048_576);
 
+// Opt in to formats' optional parallel decode (e.g. 7-Zip's automatic parallel LZMA2
+// solid-folder decode); default is sequential decoding
+var parallel = ReaderOptions.ForExternalStream.WithEnableParallelism(true);
+
 // Extraction presets
 var safeOptions = ExtractionOptions.SafeExtract;  // No overwrite
 var flatOptions = ExtractionOptions.FlatExtract;  // No directory structure
@@ -362,6 +392,7 @@ var options = new ReaderOptions
     DisableCheckIncomplete = false,
     BufferSize = 81920,
     RewindableBufferSize = 1_048_576,
+    EnableParallelism = false,
 };
 
 var extractionOptions = new ExtractionOptions
@@ -444,6 +475,8 @@ var options = new WriterOptions(CompressionType.Deflate)
 archive.SaveTo("output.zip", options);
 ```
 
+`WriterOptions.EnableParallelism` (also available on `ZipWriterOptions`, `TarWriterOptions`, `GZipWriterOptions`, and `SevenZipWriterOptions`) opts in to a format's optional parallel encode. No writer currently implements parallel encoding, so this is a no-op today; it is reserved for future use and mirrors `ReaderOptions.EnableParallelism`.
+
 ### Extraction behavior
 
 ```csharp
@@ -462,6 +495,8 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
 ```
 
 `CheckCrc` validates archive-level payload checksums when the format stores reliable metadata, such as ZIP CRC32 values. Formats without payload checksums skip this validation. Decompressor integrity checks that are required to decode a stream may still fail even when `CheckCrc` is disabled.
+
+When using `SymbolicLinkHandler`, directory extraction rejects link targets outside the extraction root and never follows symbolic links or reparse points while extracting later entries. The handler itself remains trusted application code.
 
 ### Options matrix
 
@@ -576,7 +611,6 @@ using (var writer = WriterFactory.OpenWriter(stream, ArchiveType.Tar, Compressio
 ArchiveType.Zip
 ArchiveType.Tar
 ArchiveType.GZip
-ArchiveType.BZip2
 ArchiveType.Rar
 ArchiveType.SevenZip
 ArchiveType.Arc
@@ -600,11 +634,11 @@ try
         archive.WriteToDirectory(@"C:\output");
     }
 }
-catch (PasswordRequiredException)
+catch (CryptographicException)
 {
     Console.WriteLine("Password required");
 }
-catch (InvalidArchiveException)
+catch (ArchiveException)
 {
     Console.WriteLine("Archive is invalid");
 }

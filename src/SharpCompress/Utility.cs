@@ -23,15 +23,6 @@ internal static partial class Utility
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
 
-    public static bool UseSyncOverAsyncDispose()
-    {
-        var useSyncOverAsync = false;
-#if LEGACY_DOTNET
-        useSyncOverAsync = true;
-#endif
-        return useSyncOverAsync;
-    }
-
     private static readonly HashSet<char> invalidChars = new(Path.GetInvalidFileNameChars());
 
     public static ReadOnlyCollection<T> ToReadOnly<T>(this IList<T> items) => new(items);

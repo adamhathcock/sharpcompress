@@ -8,7 +8,6 @@ using SharpCompress.Common.Options;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.GZip;
-using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
 
 namespace SharpCompress.Archives.GZip;
@@ -26,14 +25,6 @@ public partial class GZipArchive
     {
         sourceStream.LoadAllParts();
         return sourceStream.Streams.Select(a => new GZipVolume(a, ReaderOptions, 0));
-    }
-
-    public void SaveTo(string filePath) => SaveTo(new FileInfo(filePath));
-
-    public void SaveTo(FileInfo fileInfo)
-    {
-        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        SaveTo(stream, new GZipWriterOptions(CompressionType.GZip));
     }
 
     protected override GZipArchiveEntry CreateEntryInternal(
@@ -54,31 +45,9 @@ public partial class GZipArchive
     protected override GZipArchiveEntry CreateDirectoryEntry(string key, DateTime? modified) =>
         throw new NotSupportedException("GZip archives do not support directory entries.");
 
-    protected override void SaveTo(
-        Stream stream,
-        GZipWriterOptions options,
-        IEnumerable<GZipArchiveEntry> oldEntries,
-        IEnumerable<GZipArchiveEntry> newEntries
-    )
-    {
-        if (Entries.Count > 1)
-        {
-            throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
-        }
-        using var writer = new GZipWriter(stream, options);
-        foreach (var entry in oldEntries.Concat(newEntries).Where(x => !x.IsDirectory))
-        {
-            using var entryStream = entry.OpenEntryStream();
-            writer.Write(
-                entry.Key.NotNull("Entry Key is null"),
-                entryStream,
-                entry.LastModifiedTime
-            );
-        }
-    }
-
     protected override IEnumerable<GZipArchiveEntry> LoadEntries(IEnumerable<GZipVolume> volumes)
     {
+        // Kept hand-written: the generator cannot map IAsyncEnumerable.SingleAsync to LINQ Single.
         var stream = volumes.Single().Stream;
         yield return new GZipArchiveEntry(
             this,

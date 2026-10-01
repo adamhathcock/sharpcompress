@@ -1,6 +1,5 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors;
 using SharpCompress.Providers;
 
 namespace SharpCompress.Common.Zip;
@@ -9,6 +8,7 @@ internal partial class SeekableZipFilePart : ZipFilePart
 {
     private bool _isLocalHeaderLoaded;
     private readonly SeekableZipHeaderFactory _headerFactory;
+    private readonly DirectoryEntryHeader _directoryEntryHeader;
 
     internal SeekableZipFilePart(
         SeekableZipHeaderFactory headerFactory,
@@ -16,20 +16,14 @@ internal partial class SeekableZipFilePart : ZipFilePart
         Stream stream,
         CompressionProviderRegistry compressionProviders
     )
-        : base(header, stream, compressionProviders) => _headerFactory = headerFactory;
-
-    internal override Stream GetCompressedStream()
+        : base(header, stream, compressionProviders)
     {
-        if (!_isLocalHeaderLoaded)
-        {
-            LoadLocalHeader();
-            _isLocalHeaderLoaded = true;
-        }
-        return base.GetCompressedStream();
+        _headerFactory = headerFactory;
+        _directoryEntryHeader = header;
     }
 
-    private void LoadLocalHeader() =>
-        Header = _headerFactory.GetLocalHeader(BaseStream, (DirectoryEntryHeader)Header);
+    internal bool HasDeferredSizes =>
+        FlagUtility.HasFlag(_directoryEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor);
 
     protected override Stream CreateBaseStream()
     {

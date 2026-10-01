@@ -71,13 +71,14 @@ public static partial class IArchiveEntryExtensions
                 throw new ExtractionException("Entry is a file directory and cannot be extracted.");
             }
 
-#if LEGACY_DOTNET
-            using var entryStream = await archiveEntry
+#if SYNC_ONLY
+            using var entryStream = archiveEntry.OpenEntryStream();
+#else
+            var entryStream = await archiveEntry
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
-#else
-            await using var entryStream = await archiveEntry
-                .OpenEntryStreamAsync(cancellationToken)
+            await using var entryStreamScope = entryStream
+                .DisposeAsyncScope()
                 .ConfigureAwait(false);
 #endif
             var checkedStream = options is null

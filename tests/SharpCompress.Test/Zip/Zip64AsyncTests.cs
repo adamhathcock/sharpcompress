@@ -198,11 +198,7 @@ public class Zip64AsyncTests : WriterTests
             count++;
             lastKey = rd.Entry.Key;
 
-#if LEGACY_DOTNET
-            using var entryStream = await rd.OpenEntryStreamAsync();
-#else
             await using var entryStream = await rd.OpenEntryStreamAsync();
-#endif
             if (rd.Entry.Key == "small")
             {
                 using var ms = new MemoryStream();
@@ -337,17 +333,10 @@ public class Zip64AsyncTests : WriterTests
             );
             while (await rd.MoveToNextEntryAsync())
             {
-#if LEGACY_DOTNET
-                using (var entryStream = await rd.OpenEntryStreamAsync())
-                {
-                    await entryStream.SkipEntryAsync();
-                }
-#else
                 await using (var entryStream = await rd.OpenEntryStreamAsync())
                 {
                     await entryStream.SkipEntryAsync();
                 }
-#endif
                 count++;
                 if (prev != null)
                 {

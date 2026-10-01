@@ -7,23 +7,12 @@ using SharpCompress.Common.Options;
 
 namespace SharpCompress.Archives.GZip;
 
-public class GZipArchiveEntry : GZipEntry, IArchiveEntry
+public partial class GZipArchiveEntry : GZipEntry, IArchiveEntry
 {
     internal GZipArchiveEntry(GZipArchive archive, GZipFilePart? part, IReaderOptions readerOptions)
         : base(part, readerOptions) => Archive = archive;
 
-    public virtual Stream OpenEntryStream()
-    {
-        //this is to reset the stream to be read multiple times
-        var part = (GZipFilePart)Parts.Single();
-        var rawStream = part.GetRawStream();
-        if (rawStream.CanSeek && rawStream.Position != part.EntryStartPosition)
-        {
-            rawStream.Position = part.EntryStartPosition;
-        }
-        return Parts.Single().GetCompressedStream().NotNull();
-    }
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public virtual async ValueTask<Stream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
     )

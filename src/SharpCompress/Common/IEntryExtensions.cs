@@ -45,6 +45,11 @@ internal static partial class IEntryExtensions
             Action<string>? write
         )
         {
+            if (entry.LinkTarget is not null && options.SymbolicLinkHandler is null)
+            {
+                return;
+            }
+
             var destinationFileName = GetEntryDestinationFileName(
                 entry,
                 fullDestinationDirectoryPath,
@@ -60,6 +65,21 @@ internal static partial class IEntryExtensions
                     fullDestinationDirectoryPath,
                     DirectoryManagement.WriteFileOutsideDestinationMessage
                 );
+
+                DirectoryManagement.EnsureNoReparsePointInDestinationDirectory(
+                    destinationFileName,
+                    fullDestinationDirectoryPath
+                );
+
+                if (entry.LinkTarget is not null)
+                {
+                    DirectoryManagement.EnsureLinkTargetInDestinationDirectory(
+                        destinationFileName,
+                        entry.LinkTarget,
+                        fullDestinationDirectoryPath
+                    );
+                }
+
                 write?.Invoke(destinationFileName);
             }
             else if (options.ExtractFullPath)
@@ -72,10 +92,10 @@ internal static partial class IEntryExtensions
                     DirectoryManagement.CreateDirectoryOutsideDestinationMessage
                 );
 
-                if (!Directory.Exists(destinationFileName))
-                {
-                    Directory.CreateDirectory(destinationFileName);
-                }
+                DirectoryManagement.CreateDirectory(
+                    destinationFileName,
+                    fullDestinationDirectoryPath
+                );
             }
         }
 
@@ -102,10 +122,7 @@ internal static partial class IEntryExtensions
                         : DirectoryManagement.WriteFileOutsideDestinationMessage
                 );
 
-                if (!Directory.Exists(destdir))
-                {
-                    Directory.CreateDirectory(destdir);
-                }
+                DirectoryManagement.CreateDirectory(destdir, fullDestinationDirectoryPath);
 
                 return Path.Combine(destdir, file);
             }
@@ -126,6 +143,8 @@ internal static partial class IEntryExtensions
             }
             else
             {
+                DirectoryManagement.EnsurePathIsNotReparsePoint(destinationFileName);
+
                 var fm = FileMode.Create;
 
                 if (!options.Overwrite)

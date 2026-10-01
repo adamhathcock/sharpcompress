@@ -146,17 +146,27 @@ internal sealed partial class SeekableZipHeaderFactory
             throw new ArchiveOperationException();
         }
 
-        // populate fields only known from the DirectoryEntryHeader
-        localEntryHeader.HasData = directoryEntryHeader.HasData;
-        localEntryHeader.ExternalFileAttributes = directoryEntryHeader.ExternalFileAttributes;
-        localEntryHeader.Comment = directoryEntryHeader.Comment;
-
-        if (FlagUtility.HasFlag(localEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
-        {
-            localEntryHeader.Crc = directoryEntryHeader.Crc;
-            localEntryHeader.CompressedSize = directoryEntryHeader.CompressedSize;
-            localEntryHeader.UncompressedSize = directoryEntryHeader.UncompressedSize;
-        }
+        PopulateDirectoryEntryMetadata(localEntryHeader, directoryEntryHeader);
         return localEntryHeader;
+    }
+
+    internal async ValueTask<LocalEntryHeader> GetRawLocalHeaderAsync(
+        Stream stream,
+        DirectoryEntryHeader directoryEntryHeader
+    )
+    {
+        stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
+#if NET8_0_OR_GREATER
+        await using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#else
+        using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#endif
+        var signature = await reader.ReadUInt32Async().ConfigureAwait(false);
+        if (signature != ENTRY_HEADER_BYTES)
+        {
+            throw new ArchiveOperationException();
+        }
+
+        return await ReadLocalHeader(reader).ConfigureAwait(false);
     }
 }

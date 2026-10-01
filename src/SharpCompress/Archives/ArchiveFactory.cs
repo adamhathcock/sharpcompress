@@ -123,37 +123,6 @@ public static partial class ArchiveFactory
     public static T FindFactory<T>(Stream stream)
         where T : IFactory => FindFactory<T>(stream, ReaderOptions.ForExternalStream);
 
-    private static T FindFactory<T>(FileInfo fileInfo, ReaderOptions readerOptions)
-        where T : IFactory
-    {
-        fileInfo.NotNull(nameof(fileInfo));
-        using Stream stream = fileInfo.OpenRead();
-        return FindFactory<T>(stream, readerOptions);
-    }
-
-    private static T FindFactory<T>(Stream stream, ReaderOptions readerOptions)
-        where T : IFactory
-    {
-        stream.RequireReadable();
-        stream.RequireSeekable();
-
-        // Use the shared detection loop over all factories. If the matched factory
-        // implements T we return it; otherwise (or if nothing matched) we fall through
-        // to the same "unsupported format" exception that the original code produced,
-        // listing the T-typed factories as the hint for the caller.
-        var factory = TryFindFactory(stream, readerOptions);
-        if (factory is T typedFactory)
-        {
-            return typedFactory;
-        }
-
-        var extensions = string.Join(", ", Factory.Factories.OfType<T>().Select(item => item.Name));
-
-        throw new ArchiveOperationException(
-            $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
-        );
-    }
-
     public static bool IsArchive(string filePath, out ArchiveType? type)
     {
         return IsArchive(filePath, ReaderOptions.ForFilePath, out type);

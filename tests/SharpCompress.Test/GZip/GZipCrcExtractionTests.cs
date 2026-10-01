@@ -68,11 +68,8 @@ public class GZipCrcExtractionTests : TestBase
     [Fact]
     public async Task GZipArchive_WriteToFileAsync_Throws_On_Crc_Mismatch()
     {
-#if LEGACY_DOTNET
+        // MemoryStream has nothing to dispose asynchronously
         using var stream = new MemoryStream(ReadCorruptedGZipTrailer(corruptCrc: true));
-#else
-        await using var stream = new MemoryStream(ReadCorruptedGZipTrailer(corruptCrc: true));
-#endif
         await using var archive = await GZipArchive.OpenAsyncArchive(stream);
         var entry = await archive.EntriesAsync.SingleAsync();
         var destination = Path.Combine(SCRATCH_FILES_PATH, Guid.NewGuid().ToString());

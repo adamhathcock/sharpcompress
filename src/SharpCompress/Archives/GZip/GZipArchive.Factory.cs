@@ -182,7 +182,12 @@ public partial class GZipArchive
         var header = ArrayPool<byte>.Shared.Rent(10);
         try
         {
-            await stream.ReadFullyAsync(header, 0, 10, cancellationToken).ConfigureAwait(false);
+            if (
+                !await stream.ReadFullyAsync(header, 0, 10, cancellationToken).ConfigureAwait(false)
+            )
+            {
+                return false;
+            }
 
             if (header[0] != 0x1F || header[1] != 0x8B || header[2] != 8)
             {

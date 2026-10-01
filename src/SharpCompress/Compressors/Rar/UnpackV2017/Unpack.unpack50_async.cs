@@ -394,28 +394,34 @@ internal partial class Unpack
                         {
                             await UnpIO_UnpWriteAsync(OutMem, 0, BlockLength, cancellationToken)
                                 .ConfigureAwait(false);
-                            WrittenFileSize += BlockLength;
                         }
 
+                        UnpSomeRead = true;
+                        WrittenFileSize += BlockLength;
                         WrittenBorder = BlockEnd;
                         WriteSizeLeft = (UnpPtr - WrittenBorder) & MaxWinMask;
                     }
                 }
                 else
                 {
-                    NotAllFiltersProcessed = true;
+                    // Current filter intersects the window write border, so we adjust
+                    // the window border to process this filter next time, not now.
+                    WrPtr = WrittenBorder;
+
+                    // Since Filter start position can only increase, we quit processing
+                    // all following filters for this data block and reset 'NextWindow'
+                    // flag for them.
                     for (var J = I; J < Filters.Count; J++)
                     {
                         var fltj = Filters[J];
-                        if (
-                            fltj.Type != FILTER_NONE
-                            && fltj.NextWindow == false
-                            && ((fltj.BlockStart - WrPtr) & MaxWinMask) < FullWriteSize
-                        )
+                        if (fltj.Type != FILTER_NONE)
                         {
-                            fltj.NextWindow = true;
+                            fltj.NextWindow = false;
                         }
                     }
+
+                    // Do not write data left after current filter now.
+                    NotAllFiltersProcessed = true;
                     break;
                 }
             }

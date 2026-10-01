@@ -29,18 +29,7 @@ internal class TarReadOnlySubStream : Stream
         _isDisposed = true;
         if (disposing)
         {
-            if (Utility.UseSyncOverAsyncDispose())
-            {
-#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
-#pragma warning disable CA2012
-                AdvanceToNextHeaderAsync().GetAwaiter().GetResult();
-#pragma warning restore CA2012
-#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
-            }
-            else
-            {
-                AdvanceToNextHeader();
-            }
+            AdvanceToNextHeader();
         }
         base.Dispose(disposing);
     }

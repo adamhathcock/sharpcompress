@@ -28,8 +28,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Deflate;
@@ -231,53 +229,6 @@ public partial class ZlibStream : Stream
         }
     }
 
-    /// <summary>
-    /// Flush the stream.
-    /// </summary>
-    public override void Flush()
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        _baseStream.Flush();
-    }
-
-    /// <summary>
-    /// Read data from the stream.
-    /// </summary>
-    ///
-    /// <remarks>
-    ///
-    /// <para>
-    ///   If you wish to use the <c>ZlibStream</c> to compress data while reading,
-    ///   you can create a <c>ZlibStream</c> with <c>CompressionMode.Compress</c>,
-    ///   providing an uncompressed data stream.  Then call <c>Read()</c> on that
-    ///   <c>ZlibStream</c>, and the data read will be compressed.  If you wish to
-    ///   use the <c>ZlibStream</c> to decompress data while reading, you can create
-    ///   a <c>ZlibStream</c> with <c>CompressionMode.Decompress</c>, providing a
-    ///   readable compressed data stream.  Then call <c>Read()</c> on that
-    ///   <c>ZlibStream</c>, and the data will be decompressed as it is read.
-    /// </para>
-    ///
-    /// <para>
-    ///   A <c>ZlibStream</c> can be used for <c>Read()</c> or <c>Write()</c>, but
-    ///   not both.
-    /// </para>
-    ///
-    /// </remarks>
-    /// <param name="buffer">The buffer into which the read data should be placed.</param>
-    /// <param name="offset">the offset within that data array to put the first byte read.</param>
-    /// <param name="count">the number of bytes to read.</param>
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        return _baseStream.Read(buffer, offset, count);
-    }
-
     public override int ReadByte()
     {
         if (_disposed)
@@ -296,41 +247,6 @@ public partial class ZlibStream : Stream
     /// Calling this method always throws a <see cref="NotImplementedException"/>.
     /// </summary>
     public override void SetLength(long value) => throw new NotSupportedException();
-
-    /// <summary>
-    /// Write data to the stream.
-    /// </summary>
-    ///
-    /// <remarks>
-    ///
-    /// <para>
-    ///   If you wish to use the <c>ZlibStream</c> to compress data while writing,
-    ///   you can create a <c>ZlibStream</c> with <c>CompressionMode.Compress</c>,
-    ///   and a writable output stream.  Then call <c>Write()</c> on that
-    ///   <c>ZlibStream</c>, providing uncompressed data as input.  The data sent to
-    ///   the output stream will be the compressed form of the data written.  If you
-    ///   wish to use the <c>ZlibStream</c> to decompress data while writing, you
-    ///   can create a <c>ZlibStream</c> with <c>CompressionMode.Decompress</c>, and a
-    ///   writable output stream.  Then call <c>Write()</c> on that stream,
-    ///   providing previously compressed data. The data sent to the output stream
-    ///   will be the decompressed form of the data written.
-    /// </para>
-    ///
-    /// <para>
-    ///   A <c>ZlibStream</c> can be used for <c>Read()</c> or <c>Write()</c>, but not both.
-    /// </para>
-    /// </remarks>
-    /// <param name="buffer">The buffer holding data to write to the stream.</param>
-    /// <param name="offset">the offset within that data array to find the first byte to write.</param>
-    /// <param name="count">the number of bytes to write.</param>
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        if (_disposed)
-        {
-            throw new ObjectDisposedException("ZlibStream");
-        }
-        _baseStream.Write(buffer, offset, count);
-    }
 
     public override void WriteByte(byte value)
     {

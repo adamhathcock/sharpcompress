@@ -7,7 +7,11 @@ namespace SharpCompress.Common.Options;
 /// <summary>
 /// Options for configuring writer behavior when creating archives.
 /// </summary>
-public interface IWriterOptions : IStreamOptions, IEncodingOptions, IProgressOptions
+public interface IWriterOptions
+    : IStreamOptions,
+        IEncodingOptions,
+        IProgressOptions,
+        IParallelismOptions
 {
     /// <summary>
     /// The compression type to use for the archive.

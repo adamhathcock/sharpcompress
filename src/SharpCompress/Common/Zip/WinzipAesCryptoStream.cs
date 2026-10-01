@@ -69,28 +69,27 @@ internal partial class WinzipAesCryptoStream : Stream
         _isDisposed = true;
         if (disposing)
         {
-            // Read out last 10 auth bytes - catch exceptions for async-only streams
-            if (Utility.UseSyncOverAsyncDispose())
+            // Read out last 10 auth bytes
+#if LEGACY_DOTNET
+            // Stream has no DisposeAsync on legacy targets, so async flows fall back to this
+            // sync Dispose while the underlying stream may be async-only.
+            var ten = ArrayPool<byte>.Shared.Rent(10);
+            try
             {
-                var ten = ArrayPool<byte>.Shared.Rent(10);
-                try
-                {
 #pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
 #pragma warning disable CA2012
-                    _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
+                _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
 #pragma warning restore CA2012
 #pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(ten);
-                }
             }
-            else
+            finally
             {
-                Span<byte> ten = stackalloc byte[10];
-                _stream.ReadFully(ten);
+                ArrayPool<byte>.Shared.Return(ten);
             }
+#else
+            Span<byte> ten = stackalloc byte[10];
+            _stream.ReadFully(ten);
+#endif
             _stream.Dispose();
         }
         base.Dispose(disposing);
@@ -103,25 +102,6 @@ internal partial class WinzipAesCryptoStream : Stream
     }
 
     public override void Flush() { }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (_totalBytesLeftToRead == 0)
-        {
-            return 0;
-        }
-        var bytesToRead = count;
-        if (count > _totalBytesLeftToRead)
-        {
-            bytesToRead = (int)_totalBytesLeftToRead;
-        }
-        var read = _stream.Read(buffer, offset, bytesToRead);
-        _totalBytesLeftToRead -= read;
-
-        ReadTransformBlocks(buffer, offset, read);
-
-        return read;
-    }
 
     private void FillCounterOut()
     {
