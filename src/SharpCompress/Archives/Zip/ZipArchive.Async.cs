@@ -101,7 +101,9 @@ public partial class ZipArchive
             }
             else
             {
+#pragma warning disable VSTHRD103
                 using var entryStream = entry.OpenEntryStream();
+#pragma warning restore VSTHRD103
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -125,7 +127,9 @@ public partial class ZipArchive
             }
             else
             {
+#pragma warning disable VSTHRD103
                 using var entryStream = entry.OpenEntryStream();
+#pragma warning restore VSTHRD103
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
