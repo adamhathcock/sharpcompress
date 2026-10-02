@@ -67,10 +67,8 @@ public partial class RarHeaderFactory
                 await _cryptInfo
                     .ReadInitVAsync(new AsyncMarkingBinaryReader(stream))
                     .ConfigureAwait(false);
-                var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
-
                 reader = await AsyncRarCryptoBinaryReader
-                    .Create(stream, _headerKey, _cryptInfo.Salt)
+                    .Create(stream, GetHeaderKey(), _cryptInfo.Salt)
                     .ConfigureAwait(false);
             }
             else
@@ -215,6 +213,7 @@ public partial class RarHeaderFactory
                     .ConfigureAwait(false);
                 IsEncrypted = true;
                 _cryptInfo = cryptoHeader.CryptInfo;
+                _headerKey = null;
 
                 return cryptoHeader;
             }
