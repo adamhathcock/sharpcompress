@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -66,9 +67,25 @@ public abstract class RarVolume : Volume
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
                         {
-                            var buffer = new byte[fh.CompressedSize];
-                            fh.PackedStream.NotNull().ReadFully(buffer);
-                            Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+                            var commentSize = checked((int)fh.CompressedSize);
+                            var buffer = ArrayPool<byte>.Shared.Rent(commentSize);
+                            try
+                            {
+                                // Pooled buffers can be larger than the comment payload.
+                                if (
+                                    !fh
+                                        .PackedStream.NotNull()
+                                        .ReadFully(buffer.AsSpan(0, commentSize))
+                                )
+                                {
+                                    throw new EndOfStreamException();
+                                }
+                                Comment = Encoding.UTF8.GetString(buffer, 0, commentSize - 1);
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(buffer);
+                            }
                         }
                     }
                     break;
@@ -115,12 +132,26 @@ public abstract class RarVolume : Volume
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
                         {
-                            var buffer = new byte[fh.CompressedSize];
-                            await fh
-                                .PackedStream.NotNull()
-                                .ReadFullyAsync(buffer, cancellationToken)
-                                .ConfigureAwait(false);
-                            Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+                            var commentSize = checked((int)fh.CompressedSize);
+                            var buffer = ArrayPool<byte>.Shared.Rent(commentSize);
+                            try
+                            {
+                                // Pooled buffers can be larger than the comment payload.
+                                if (
+                                    !await fh
+                                        .PackedStream.NotNull()
+                                        .ReadFullyAsync(buffer, 0, commentSize, cancellationToken)
+                                        .ConfigureAwait(false)
+                                )
+                                {
+                                    throw new EndOfStreamException();
+                                }
+                                Comment = Encoding.UTF8.GetString(buffer, 0, commentSize - 1);
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(buffer);
+                            }
                         }
                     }
                     break;

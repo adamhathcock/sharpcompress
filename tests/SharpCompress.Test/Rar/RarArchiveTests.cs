@@ -4,6 +4,7 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
+using SharpCompress.Common.Rar;
 using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
@@ -13,6 +14,16 @@ namespace SharpCompress.Test.Rar;
 
 public class RarArchiveTests : ArchiveTests
 {
+    [Fact]
+    public void Rar5_Comment_Archive()
+    {
+        using var archive = RarArchive.OpenArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar5.comment.rar")
+        );
+        Assert.NotEmpty(archive.Entries);
+        Assert.Equal("This is another comment\n", ((RarVolume)archive.Volumes.First()).Comment);
+    }
+
     [Theory]
     [InlineData("Rar15.rar")]
     [InlineData("Rar2.rar")]

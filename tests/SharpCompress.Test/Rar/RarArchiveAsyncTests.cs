@@ -1,9 +1,11 @@
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
+using SharpCompress.Common.Rar;
 using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
@@ -13,6 +15,25 @@ namespace SharpCompress.Test.Rar;
 
 public class RarArchiveAsyncTests : ArchiveTests
 {
+    [Fact]
+    public async ValueTask Rar5_Comment_Archive_Async()
+    {
+        await using var archive = await RarArchive.OpenAsyncArchive(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar5.comment.rar"),
+            cancellationToken: CancellationToken.None
+        );
+        var entryCount = 0;
+        await foreach (var entry in archive.EntriesAsync.WithCancellation(CancellationToken.None))
+        {
+            entryCount++;
+        }
+        Assert.True(entryCount > 0);
+        await foreach (var volume in archive.VolumesAsync.WithCancellation(CancellationToken.None))
+        {
+            Assert.Equal("This is another comment\n", ((RarVolume)volume).Comment);
+        }
+    }
+
     [Theory]
     [InlineData("Rar15.rar")]
     [InlineData("Rar2.rar")]
