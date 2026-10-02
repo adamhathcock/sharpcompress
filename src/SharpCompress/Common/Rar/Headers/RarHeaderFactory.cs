@@ -13,6 +13,20 @@ public partial class RarHeaderFactory
     private bool _isRar5;
 
     private Rar5CryptoInfo? _cryptInfo;
+    private CryptKey5? _headerKey;
+    private string? _headerPassword;
+
+    private CryptKey5 GetHeaderKey()
+    {
+        // ReaderOptions is mutable; changing its password must not keep using
+        // a key derived from the previous password.
+        if (_headerKey is null || _headerPassword != Options.Password)
+        {
+            _headerPassword = Options.Password;
+            _headerKey = new CryptKey5(_headerPassword, _cryptInfo.NotNull());
+        }
+        return _headerKey;
+    }
 
     public RarHeaderFactory(StreamingMode mode, ReaderOptions options)
     {
@@ -62,9 +76,7 @@ public partial class RarHeaderFactory
             if (_isRar5 && _cryptInfo != null)
             {
                 _cryptInfo.ReadInitV(new MarkingBinaryReader(stream));
-                var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
-
-                reader = RarCryptoBinaryReader.Create(stream, _headerKey, _cryptInfo.Salt);
+                reader = RarCryptoBinaryReader.Create(stream, GetHeaderKey(), _cryptInfo.Salt);
             }
             else
             {
@@ -191,6 +203,7 @@ public partial class RarHeaderFactory
                 var cryptoHeader = ArchiveCryptHeader.Create(header, reader);
                 IsEncrypted = true;
                 _cryptInfo = cryptoHeader.CryptInfo;
+                _headerKey = null;
 
                 return cryptoHeader;
             }
