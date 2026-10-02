@@ -66,9 +66,11 @@ public abstract class RarVolume : Volume
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
                         {
-                            var buffer = new byte[fh.CompressedSize];
-                            fh.PackedStream.NotNull().ReadFully(buffer);
-                            Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+                            // Read the logical service size, not the potentially padded packed size.
+                            var buffer = new byte[checked((int)fh.UncompressedSize)];
+                            using var packedStream = fh.PackedStream.NotNull();
+                            packedStream.ReadFully(buffer);
+                            Comment = DecodeComment(buffer);
                         }
                     }
                     break;
@@ -115,17 +117,26 @@ public abstract class RarVolume : Volume
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
                         {
-                            var buffer = new byte[fh.CompressedSize];
-                            await fh
-                                .PackedStream.NotNull()
+                            var buffer = new byte[checked((int)fh.UncompressedSize)];
+                            using var packedStream = fh.PackedStream.NotNull();
+                            await packedStream
                                 .ReadFullyAsync(buffer, cancellationToken)
                                 .ConfigureAwait(false);
-                            Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+                            Comment = DecodeComment(buffer);
                         }
                     }
                     break;
             }
         }
+    }
+
+    private static string DecodeComment(byte[] buffer)
+    {
+        // Like UnRAR, stop at the first NUL. Encrypted comments can include
+        // padding in their unpacked size as well as their packed size.
+        var terminator = Array.IndexOf(buffer, (byte)0);
+        var length = terminator < 0 ? buffer.Length : terminator;
+        return Encoding.UTF8.GetString(buffer, 0, length);
     }
 
     private void EnsureArchiveHeaderLoaded()
