@@ -104,7 +104,7 @@ public class RarCommentTests : TestBase
         using var output = new MemoryStream();
         if (useAsync)
         {
-            await using var reader = await RarReader.OpenAsyncReader(forwardOnly, options);
+            await using var reader = await ReaderFactory.OpenAsyncReader(forwardOnly, options);
             Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
             Assert.Equal(expected, ((RarReader)reader).Volume!.Comment);
             await reader.WriteEntryToAsync(output, CancellationToken.None);
