@@ -47,83 +47,83 @@ public class TarWrapper(
     public IEnumerable<string> KnownExtensions { get; } = knownExtensions;
 
     // https://en.wikipedia.org/wiki/Tar_(computing)#Suffixes_for_compressed_files
-    public static TarWrapper[] Wrappers { get; } =
-    [
-        new(
-            CompressionType.None,
-            (_) => true,
-            (_, _) => new ValueTask<bool>(true),
-            (stream) => stream,
-            (stream, _) => new ValueTask<Stream>(stream),
-            ["tar"],
-            false
-        ), // We always do a test for IsTarFile later
-        new(
-            CompressionType.BZip2,
-            BZip2Stream.IsBZip2,
-            BZip2Stream.IsBZip2Async,
-            (stream) => BZip2Stream.Create(stream, CompressionMode.Decompress, false),
-            async (stream, _) =>
-                await BZip2Stream
-                    .CreateAsync(stream, CompressionMode.Decompress, false)
-                    .ConfigureAwait(false),
-            ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"],
-            // BZip2 decompresses in whole blocks; the compressed size of the first block
-            // can be close to the uncompressed maximum (9 × 100 000 = 900 000 bytes).
-            // The ring buffer must hold all compressed bytes read during format detection.
-            minimumRewindBufferSize: BZip2Constants.baseBlockSize * 9
-        ),
-        new(
-            CompressionType.GZip,
-            GZipArchive.IsGZipFile,
-            GZipArchive.IsGZipFileAsync,
-            (stream) => new GZipStream(stream, CompressionMode.Decompress),
-            (stream, _) =>
-                new ValueTask<Stream>(new GZipStream(stream, CompressionMode.Decompress)),
-            ["tar.gz", "taz", "tgz"]
-        ),
-        new(
-            CompressionType.ZStandard,
-            ZStandardStream.IsZStandard,
-            ZStandardStream.IsZStandardAsync,
-            (stream) => new ZStandardStream(stream),
-            (stream, _) => new ValueTask<Stream>(new ZStandardStream(stream)),
-            ["tar.zst", "tar.zstd", "tzst", "tzstd"],
-            // ZStandard decompresses in blocks; the compressed size of the first block
-            // can be up to ZSTD_BLOCKSIZE_MAX + ZSTD_blockHeaderSize = 131075 bytes.
-            // The ring buffer must hold all compressed bytes read during format detection.
-            minimumRewindBufferSize: ZstandardConstants.DStreamInSize
-        ),
-        new(
-            CompressionType.LZip,
-            LZipStream.IsLZipFile,
-            LZipStream.IsLZipFileAsync,
-            (stream) => LZipStream.Create(stream, CompressionMode.Decompress),
-            async (stream, _) =>
-                await LZipStream
-                    .CreateAsync(stream, CompressionMode.Decompress)
-                    .ConfigureAwait(false),
-            ["tar.lz"]
-        ),
-        new(
-            CompressionType.Xz,
-            XZStream.IsXZStream,
-            XZStream.IsXZStreamAsync,
-            (stream) => new XZStream(stream),
-            (stream, _) => new ValueTask<Stream>(new XZStream(stream)),
-            ["tar.xz", "txz"],
-            false
-        ),
-        new(
-            CompressionType.Lzw,
-            LzwStream.IsLzwStream,
-            LzwStream.IsLzwStreamAsync,
-            (stream) => new LzwStream(stream),
-            (stream, _) => new ValueTask<Stream>(new LzwStream(stream)),
-            ["tar.Z", "tZ", "taZ"],
-            false
-        ),
-    ];
+    public static IReadOnlyList<TarWrapper> Wrappers { get; } =
+        Array.AsReadOnly<TarWrapper>([
+            new(
+                CompressionType.None,
+                (_) => true,
+                (_, _) => new ValueTask<bool>(true),
+                (stream) => stream,
+                (stream, _) => new ValueTask<Stream>(stream),
+                ["tar"],
+                false
+            ), // We always do a test for IsTarFile later
+            new(
+                CompressionType.BZip2,
+                BZip2Stream.IsBZip2,
+                BZip2Stream.IsBZip2Async,
+                (stream) => BZip2Stream.Create(stream, CompressionMode.Decompress, false),
+                async (stream, _) =>
+                    await BZip2Stream
+                        .CreateAsync(stream, CompressionMode.Decompress, false)
+                        .ConfigureAwait(false),
+                ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"],
+                // BZip2 decompresses in whole blocks; the compressed size of the first block
+                // can be close to the uncompressed maximum (9 × 100 000 = 900 000 bytes).
+                // The ring buffer must hold all compressed bytes read during format detection.
+                minimumRewindBufferSize: BZip2Constants.baseBlockSize * 9
+            ),
+            new(
+                CompressionType.GZip,
+                GZipArchive.IsGZipFile,
+                GZipArchive.IsGZipFileAsync,
+                (stream) => new GZipStream(stream, CompressionMode.Decompress),
+                (stream, _) =>
+                    new ValueTask<Stream>(new GZipStream(stream, CompressionMode.Decompress)),
+                ["tar.gz", "taz", "tgz"]
+            ),
+            new(
+                CompressionType.ZStandard,
+                ZStandardStream.IsZStandard,
+                ZStandardStream.IsZStandardAsync,
+                (stream) => new ZStandardStream(stream),
+                (stream, _) => new ValueTask<Stream>(new ZStandardStream(stream)),
+                ["tar.zst", "tar.zstd", "tzst", "tzstd"],
+                // ZStandard decompresses in blocks; the compressed size of the first block
+                // can be up to ZSTD_BLOCKSIZE_MAX + ZSTD_blockHeaderSize = 131075 bytes.
+                // The ring buffer must hold all compressed bytes read during format detection.
+                minimumRewindBufferSize: ZstandardConstants.DStreamInSize
+            ),
+            new(
+                CompressionType.LZip,
+                LZipStream.IsLZipFile,
+                LZipStream.IsLZipFileAsync,
+                (stream) => LZipStream.Create(stream, CompressionMode.Decompress),
+                async (stream, _) =>
+                    await LZipStream
+                        .CreateAsync(stream, CompressionMode.Decompress)
+                        .ConfigureAwait(false),
+                ["tar.lz"]
+            ),
+            new(
+                CompressionType.Xz,
+                XZStream.IsXZStream,
+                XZStream.IsXZStreamAsync,
+                (stream) => new XZStream(stream),
+                (stream, _) => new ValueTask<Stream>(new XZStream(stream)),
+                ["tar.xz", "txz"],
+                false
+            ),
+            new(
+                CompressionType.Lzw,
+                LzwStream.IsLzwStream,
+                LzwStream.IsLzwStreamAsync,
+                (stream) => new LzwStream(stream),
+                (stream, _) => new ValueTask<Stream>(new LzwStream(stream)),
+                ["tar.Z", "tZ", "taZ"],
+                false
+            ),
+        ]);
 
     /// <summary>
     /// The largest <see cref="MinimumRewindBufferSize"/> across all registered wrappers.

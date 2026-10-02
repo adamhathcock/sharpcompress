@@ -16,9 +16,25 @@ Post Issues on Github!
 
 Check the [Supported Formats](docs/FORMATS.md), [API Reference](docs/API.md), and [Basic Usage](docs/USAGE.md).
 
+## Instance-Based Client
+
+Use `SharpCompressClient` for reusable, independently configured opening, inspection, extraction, and filesystem-writing services:
+
+```csharp
+using SharpCompress;
+
+var client = new SharpCompressClient();
+await using var archive = await client.OpenAsyncArchive(
+    "archive.zip", cancellationToken: cancellationToken);
+await client.Extractor.ExtractToDirectoryAsync(
+    archive, "output", cancellationToken: cancellationToken);
+```
+
+The output directory must already exist. `ISharpCompressClient`, `IArchiveInspector`, `IArchiveExtractor`, and `IArchiveFileWriter` can be constructor-injected using any DI system. Internally, Pure.DI generates the service graph at build time; consumers need no Pure.DI package or runtime container. See [instance-based usage](docs/USAGE.md#instance-based-usage) and [migration guidance](docs/API.md#migrating-to-instance-services).
+
 ## Custom Compression Providers
 
-If you need to swap out SharpCompress’s built-in codecs, the `Providers` property (and `WithProviders(...)` extensions) on `ReaderOptions` and `WriterOptions` lets you supply a `CompressionProviderRegistry`. The selected registry is used by Reader/Writer APIs, Archive APIs, and async extraction paths, so the same provider choice is applied consistently across open/read/write flows. The default registry is already wired up, so customization is only necessary when you want to plug in alternatives such as `SystemGZipCompressionProvider` or a third-party `CompressionProvider`. See [docs/USAGE.md#custom-compression-providers](docs/USAGE.md#custom-compression-providers) for guided examples.
+Configure a client's default codecs with `new SharpCompressConfiguration(providers: registry)`. An explicitly assigned `Providers` property (or `WithProviders(...)`) on reader/writer options overrides that default for one operation. The selected registry is used by Reader/Writer APIs, Archive APIs, and async extraction paths. See [docs/USAGE.md#custom-compression-providers](docs/USAGE.md#custom-compression-providers) for guided examples.
 
 ## Recommended Formats
 

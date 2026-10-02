@@ -12,38 +12,6 @@ namespace SharpCompress.Factories;
 /// <inheritdoc/>
 public abstract class Factory : IFactory
 {
-    static Factory()
-    {
-        RegisterFactory(new ZipFactory());
-        RegisterFactory(new RarFactory());
-        RegisterFactory(new TarFactory()); //put tar before most
-        RegisterFactory(new GZipFactory());
-        RegisterFactory(new LzwFactory());
-        RegisterFactory(new ArcFactory());
-        RegisterFactory(new ArjFactory());
-        RegisterFactory(new AceFactory());
-        RegisterFactory(new SevenZipFactory());
-    }
-
-    private static readonly HashSet<Factory> _factories = new();
-
-    /// <summary>
-    /// Gets the collection of registered <see cref="IFactory"/>.
-    /// </summary>
-    public static IEnumerable<IFactory> Factories => _factories;
-
-    /// <summary>
-    /// Registers an archive factory.
-    /// </summary>
-    /// <param name="factory">The factory to register.</param>
-    /// <exception cref="ArgumentNullException"><paramref name="factory"/> must not be null.</exception>
-    public static void RegisterFactory(Factory factory)
-    {
-        factory.NotNull(nameof(factory));
-
-        _factories.Add(factory);
-    }
-
     /// <inheritdoc/>
     public abstract string Name { get; }
 

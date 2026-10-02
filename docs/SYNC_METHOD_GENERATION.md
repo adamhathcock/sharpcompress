@@ -20,6 +20,30 @@ the verification workflow, and the record of what is blocked and why.
 
 ## Status
 
+### Upstream compatibility
+
+The current reference is **2.0.56**, the latest upstream release as checked on October 1, 2026.
+`GlobalPackageReference` implicitly keeps the generator private to the build; consumers do not need
+a runtime reference. Continue using method-level attributes and the existing preservation options.
+
+Recent releases relevant to migrations:
+
+- [2.0.56](https://github.com/zompinc/sync-method-generator/releases/tag/v2.0.56) preserves
+  `Memory<T>` / `ReadOnlyMemory<T>` locals in generated iterators, rather than turning them into
+  spans that cannot survive a `yield` boundary. Do not assume every memory local becomes a span
+  when comparing generated iterator bodies. It also adds `ZSMGEN006` for cancellation-dependent
+  loops that become endless after synchronization.
+- [2.0.53](https://github.com/zompinc/sync-method-generator/releases/tag/v2.0.53) fixes async LINQ
+  translations and static-form queryable extension calls, and preserves the line break after an
+  opening parenthesis. Inspect the selected synchronous overload when migrating query code.
+- [2.0.41](https://github.com/zompinc/sync-method-generator/releases/tag/v2.0.41) carries source-file
+  `using` directives into generated files, including those needed by XML documentation `cref`s;
+  [2.0.42](https://github.com/zompinc/sync-method-generator/releases/tag/v2.0.42) preserves rewritten
+  argument-list spacing. `SYNC_ONLY` code is still copied verbatim, so keep its names fully qualified.
+
+An all-six-TFM Release rebuild with generated-source emission and targeted net10.0 tests for
+streams, providers, archive detection, ZIP, and GZip passed with 2.0.56 during this review.
+
 | Batch | Area | Status |
 | --- | --- | --- |
 | 0 | `Archives/IArchiveEntryExtensions` (5 methods) | done — `c303856c` |
@@ -43,7 +67,8 @@ Proven on batch 1. Per file pair:
 1. **Map the signature by hand** for each async method: drop the `Async` suffix; `Task`/`ValueTask`→
    `void`, `Task<T>`/`ValueTask<T>`→`T`; drop `CancellationToken` and `IProgress<T>` (unless
    `PreserveCancellationToken` / `PreserveProgress`); `Memory<T>`→`Span<T>`,
-   `ReadOnlyMemory<T>`→`ReadOnlySpan<T>`; modifiers (`public`, `override`, `virtual`, `static`,
+   `ReadOnlyMemory<T>`→`ReadOnlySpan<T>` (memory collection elements and iterator locals stay memory);
+   modifiers (`public`, `override`, `virtual`, `static`,
    `sealed`) copied verbatim.
 2. **Attribute only when that mapped signature already exists by hand.** Generating a member that
    did not exist before is a behaviour change, not a deduplication — a generated `Read(Span<byte>)`
@@ -314,6 +339,11 @@ Constraints: works in statements, parameter lists and argument lists; cannot nes
 (`ZSMGEN003`); contents are copied **verbatim**, so fully qualify names. `ZSMGEN004` tells you to use
 it when the async method awaits several operations at once.
 
+`ZSMGEN006` warns when removing a `CancellationToken` makes a loop condition always true with no
+other exit. With this repository's `TreatWarningsAsErrors`, it fails the build. Preserve the token
+only if the existing sync signature includes it; otherwise provide a terminating sync implementation
+in `SYNC_ONLY` or leave the pair hand-written.
+
 **Budget: at most two `SYNC_ONLY` sites per method, and never more than ~15% of its lines.** Past
 that, two honest files beat one half-preprocessor file.
 
@@ -442,7 +472,7 @@ one is ever active. Collisions that *are* possible (two async overloads differin
 `TreatWarningsAsErrors` is on. Analyzers skip `.g.cs`, but **compiler CS warnings do not**: `CS0162`
 unreachable (a `return`/`break` that vanishes from the sync copy), `CS0219`/`CS0168` unused local (a
 result only checked on the async side), `CS8602`/`CS8604` nullable (the generator emits
-`#nullable enable` unconditionally — `OmitNullableDirective = true` is the escape hatch),
+`#nullable enable` on C# 8 and above — `OmitNullableDirective = true` is the escape hatch),
 `CS0108`/`CS0114` hiding. Fix in the async source, or `#pragma warning disable`/`restore` there — it
 is copied into the generated file. `CS0111`/`CS0534` are the *desired* safety net for "did I delete
 the right thing".

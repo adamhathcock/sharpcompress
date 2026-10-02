@@ -2,6 +2,86 @@
 
 Quick reference for commonly used SharpCompress APIs.
 
+## Instance Services
+
+The recommended entry point is `SharpCompressClient` in the `SharpCompress` namespace. Its constructor accepts an optional immutable `SharpCompressConfiguration` containing `Formats` and `Providers`. The client implements `ISharpCompressClient` and exposes independently injectable workflow services:
+
+| API | Purpose |
+| --- | --- |
+| `client.OpenArchive(...)` / `OpenAsyncArchive(...)` | Random access to seekable archives |
+| `client.OpenReader(...)` / `OpenAsyncReader(...)` | Forward-only reading, including non-seekable streams |
+| `client.OpenWriter(..., ArchiveType, IWriterOptions)` / `OpenAsyncWriter(...)` | Streaming archive writing |
+| `client.CreateArchive<TOptions>()` | Create a writable archive for the options type |
+| `client.Inspector` (`IArchiveInspector`) | Detection, inspection, and multipart path discovery |
+| `client.Extractor` (`IArchiveExtractor`) | Directory, file, and stream extraction |
+| `client.FileWriter` (`IArchiveFileWriter`) | Filesystem source writing and writable-archive saving |
+
+Open methods accept paths, `FileInfo`, or streams. Archive opening also accepts ordered lists of files or streams for multipart archives. Async methods accept `CancellationToken`. The caller disposes returned archives, readers, and writers; the reusable client needs no disposal. Client services may be shared concurrently when custom factories and providers are thread-safe. Individual opened archives/readers/writers remain operation-local.
+
+```csharp
+using SharpCompress;
+using SharpCompress.Archives;
+using SharpCompress.Common;
+using SharpCompress.Writers;
+
+var client = new SharpCompressClient();
+using var archive = client.OpenArchive("archive.zip");
+client.Extractor.ExtractToDirectory(archive, "output", new ExtractionOptions());
+
+var detection = client.Inspector.DetectArchive("archive.tar.gz");
+var information = await client.Inspector.InspectArchiveAsync(
+    "archive.zip", cancellationToken: cancellationToken);
+
+await using var writer = await client.OpenAsyncWriter(
+    "output.zip", ArchiveType.Zip, new WriterOptions(CompressionType.Deflate),
+    cancellationToken);
+await client.FileWriter.WriteDirectoryAsync(
+    writer, "input", searchOption: SearchOption.AllDirectories,
+    cancellationToken: cancellationToken);
+```
+
+`IArchiveInspector`, `IArchiveExtractor`, and `IArchiveFileWriter` are in `SharpCompress.Archives`. `ArchiveExtractor` is a public stateless implementation, and `ArchiveFileWriter` can be constructed with a `SharpCompressConfiguration` or defaults. Applications can constructor-inject these interfaces separately, or use the client properties. No public API requires Pure.DI.
+
+### Extraction Service
+
+- `ExtractToDirectory(IArchive, ...)` and `ExtractToDirectoryAsync(IAsyncArchive, ...)` extract all entries, handling solid archives sequentially. They accept extraction options and an optional archive-level progress reporter.
+- `ExtractToDirectory(IReader, ...)` and its `IAsyncReader` equivalent advance to and extract every remaining unread entry.
+- `ExtractEntryToDirectory(IReader, ...)` and its async equivalent extract only the current entry.
+- Entry overloads of `ExtractToDirectory`, `ExtractToFile`, and `ExtractToStream` operate on `IArchiveEntry`; reader overloads of `ExtractToFile` and `ExtractToStream` operate on the current reader entry.
+- Extraction leaves supplied archives/readers/destination streams open. Directory extraction requires an existing destination and retains path/link protection, overwrite and metadata options. File/directory extraction validates checksums by default. Archive-entry stream extraction validates optional checksums when an `ExtractionOptions` value is supplied, matching `entry.WriteTo(...)` behavior.
+
+### Filesystem Writing Service
+
+`WriteFile` and `WriteDirectory` accept `IWriter`; their async equivalents accept `IAsyncWriter`. Directory writing accepts a search pattern, optional `Func<string, bool>` filter, and `SearchOption`. Entry paths are relative to the source directory and use `/` separators. `AddFile` and `AddDirectory` operate on writable archives, transferring accepted file-stream ownership to the archive. Async versions accept cancellation tokens. `SaveToFile<TOptions>` and `SaveToFileAsync<TOptions>` save to a `FileInfo` using the client's default providers unless the supplied options explicitly override them.
+
+### Format Configuration
+
+`FormatRegistry` is in `SharpCompress.Factories`. It copies its input collections and exposes read-only `Factories` and `TarWrappers` lists. `Default` contains built-in factories in recognition order; `Empty` contains neither factories nor wrappers. A constructor supplied only factories uses the default wrappers. Use `WithTarWrappers(...)` to select wrappers explicitly.
+
+`With(factory, prepend: false)` creates a copy. A matching known archive type is replaced in place; custom formats with no known type match by ordinal name. New formats append by default; `prepend: true` places a new format first. Factory ordering is explicit and consistent across opening and inspection. `WithTarWrappers(...)` also recomputes the required rewind-buffer size. Factories can implement `IFactory` and capability interfaces directly without deriving from `Factory`.
+
+Provider precedence is **explicit operation options → client configuration → built-in default**. Explicitly assigning `CompressionProviderRegistry.Default` overrides a custom client default. Client operations copy built-in reader/writer options before resolving dependencies, preserving caller-owned settings and format-specific fields. Custom `IWriterOptions` implementations retain their own provider settings and are passed to their custom factory unchanged.
+
+### Migrating to Instance Services
+
+| Existing usage | Instance-based usage |
+| --- | --- |
+| `ArchiveFactory.OpenArchive(...)` | `client.OpenArchive(...)` |
+| `ReaderFactory.OpenReader(...)` | `client.OpenReader(...)` |
+| `WriterFactory.OpenWriter(...)` | `client.OpenWriter(...)` |
+| `ArchiveFactory.DetectArchive(...)` / `InspectArchive(...)` | `client.Inspector.DetectArchive(...)` / `InspectArchive(...)` |
+| `archive.WriteToDirectory(...)` | `client.Extractor.ExtractToDirectory(archive, ...)` |
+| `reader.WriteAllToDirectory(...)` | `client.Extractor.ExtractToDirectory(reader, ...)` |
+| `reader.WriteEntryToDirectory(...)` | `client.Extractor.ExtractEntryToDirectory(reader, ...)` |
+| `entry.WriteTo(...)` | `client.Extractor.ExtractToStream(entry, ...)` |
+| `writer.WriteAll(...)` | `client.FileWriter.WriteDirectory(writer, ...)` |
+| `archive.AddAllFromDirectory(...)` | `client.FileWriter.AddDirectory(archive, ...)` |
+| `archive.SaveTo(filePath, options)` | `client.FileWriter.SaveToFile(archive, new FileInfo(filePath), options)` |
+| Removed `Factory.RegisterFactory(factory)` | `new SharpCompressClient(new SharpCompressConfiguration(FormatRegistry.Default.With(factory)))` |
+| Removed `Factory.Factories` | `client.Configuration.Formats.Factories` on the concrete client |
+
+Async usages follow the equivalent async service methods. Static convenience factories and workflow extensions delegate to the immutable default client's instance services. Their configuration is independent of custom clients. `TarWrapper.Wrappers` now exposes `IReadOnlyList<TarWrapper>` instead of a mutable array; use `FormatRegistry.WithTarWrappers(...)` for customization.
+
 ## Factory Methods
 
 ### Opening Archives
@@ -85,6 +165,10 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 
 `InspectArchive` enumerates metadata and returns `ArchiveInformation`. It reports `Partial` status for missing volumes or encrypted headers without a password; malformed archives and incorrect passwords throw. ZIP-specific metadata is exposed through `ArchiveInformation.Zip`.
 
+`ArchiveInformation.Detection` contains the format identification collected during inspection, so there is no need to call `DetectArchive` first when requesting metadata. Inspection reuses the selected factory and compression wrapper to open the source.
+
+`Status.Complete` means no known inspection limitations apply; it does not guarantee that every nullable metadata property has a value. `EntriesWithUnknownSizeCount` counts entries whose uncompressed sizes a forward-only reader cannot know before reading their data. For example, ZIP inspection can obtain final sizes from the central directory while still reporting entries with deferred local-header sizes.
+
 Detection and inspection result types are in the `SharpCompress.Detection` namespace.
 
 The stream overloads of `DetectArchive` and `InspectArchive` preserve the supplied stream's position and leave it open, including when `ReaderOptions.LeaveStreamOpen` is `false`.
@@ -101,7 +185,7 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 | `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |
 | `SolidStreamCount` | `SolidStreamCount` |
 
-### Creating Archives
+### Creating Archives with the Writer API
 
 ```csharp
 // Writer Factory
@@ -220,7 +304,7 @@ foreach (var entry in archive.Entries)
 }
 ```
 
-### Creating Archives
+### Creating Archives with the Archive API
 
 ```csharp
 using (var archive = ZipArchive.CreateArchive())
@@ -750,6 +834,7 @@ using (var bufferedStream = new SharpCompressStream(rawStream))
 ```
 
 Useful for:
+
 - Non-seekable streams (network streams, pipes)
 - Forward-only reading with limited look-ahead
 - Buffering unbuffered streams for better performance

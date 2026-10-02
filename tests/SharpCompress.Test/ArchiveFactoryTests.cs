@@ -1015,6 +1015,49 @@ public class ArchiveFactoryTests : TestBase
         Assert.True(info.IsMultiVolume);
     }
 
+    [Theory]
+    [InlineData("Zip.none.datadescriptors.zip")]
+    [InlineData("7Zip.solid.7z")]
+    [InlineData("Rar.rar")]
+    [InlineData("Rar.multi.solid.part01.rar")]
+    [InlineData("Tar.tar.gz")]
+    [InlineData("Tar.tar.bz2")]
+    [InlineData("Tar.tar.lz")]
+    [InlineData("Tar.tar.xz")]
+    [InlineData("Tar.tar.zst")]
+    [InlineData("Tar.tar.Z")]
+    [InlineData("Ace.method1-solid.ace")]
+    [InlineData("Arj.store.arj")]
+    [InlineData("Arc.uncompressed.arc")]
+    [InlineData("large_test.txt.Z")]
+    public async ValueTask InspectArchive_SyncAndAsyncMetadataMatch(string archiveName)
+    {
+        using var stream = CreatePrefixedArchiveStream(archiveName, 13);
+        var options = new ReaderOptions { LeaveStreamOpen = false };
+        var syncInformation = ArchiveFactory.InspectArchive(stream, options);
+        var asyncInformation = await ArchiveFactory.InspectArchiveAsync(stream, options);
+
+        Assert.NotNull(syncInformation);
+        Assert.NotNull(asyncInformation);
+        Assert.Equivalent(syncInformation, asyncInformation);
+        Assert.Equal(13, stream.Position);
+        Assert.True(stream.CanRead);
+    }
+
+    [Fact]
+    public async ValueTask InspectArchiveAsync_Cancelled_PreservesStream()
+    {
+        using var stream = CreatePrefixedArchiveStream("Zip.deflate.zip", 13);
+        using var cancellation = new System.Threading.CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            ArchiveFactory.InspectArchiveAsync(stream, cancellation.Token).AsTask()
+        );
+        Assert.Equal(13, stream.Position);
+        Assert.True(stream.CanRead);
+    }
+
     private MemoryStream CreatePrefixedArchiveStream(string archiveName, int prefixLength)
     {
         var archiveBytes = File.ReadAllBytes(GetTestArchivePath(archiveName));

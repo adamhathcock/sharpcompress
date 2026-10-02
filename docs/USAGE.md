@@ -1,10 +1,66 @@
 # SharpCompress Usage
 
+## Instance-Based Usage
+
+Create a reusable `SharpCompressClient`, or constructor-inject `ISharpCompressClient` and the workflow interfaces from `SharpCompress.Archives`. Consumers can use any DI container or ordinary constructors; Pure.DI only generates SharpCompress's internal service wiring.
+
+```csharp
+using System.IO;
+using SharpCompress;
+using SharpCompress.Common;
+using SharpCompress.Factories;
+using SharpCompress.Providers;
+using SharpCompress.Providers.System;
+using SharpCompress.Writers;
+
+var providers = CompressionProviderRegistry.Default
+    .With(new SystemDeflateCompressionProvider());
+var client = new SharpCompressClient(
+    new SharpCompressConfiguration(providers: providers));
+
+Directory.CreateDirectory("output");
+await using (var archive = await client.OpenAsyncArchive(
+    "archive.zip", cancellationToken: cancellationToken))
+{
+    await client.Extractor.ExtractToDirectoryAsync(
+        archive, "output", cancellationToken: cancellationToken);
+}
+
+// Use a reader for compressed TAR and non-seekable sources.
+await using (var reader = await client.OpenAsyncReader(
+    "archive.tar.gz", cancellationToken: cancellationToken))
+{
+    await client.Extractor.ExtractToDirectoryAsync(
+        reader, "output", cancellationToken: cancellationToken);
+}
+
+await using (var writer = await client.OpenAsyncWriter(
+    "output.zip", ArchiveType.Zip, new WriterOptions(CompressionType.Deflate),
+    cancellationToken))
+{
+    await client.FileWriter.WriteDirectoryAsync(
+        writer, "input", searchOption: SearchOption.AllDirectories,
+        cancellationToken: cancellationToken);
+}
+
+var information = await client.Inspector.InspectArchiveAsync(
+    "output.zip", cancellationToken: cancellationToken);
+
+// Limit one client to ZIP. Other clients and convenience factories are unaffected.
+var zipOnly = new SharpCompressClient(new SharpCompressConfiguration(
+    new FormatRegistry([new ZipFactory()], [])));
+```
+
+Client configuration and registries are immutable. Per-operation options override client provider defaults only when `Providers` is explicitly assigned (including explicitly selecting the built-in default). Options passed by the caller are not mutated. Factories and providers shared by a client must be thread-safe; opened archives/readers/writers and their streams are independent, caller-disposed objects.
+
+`client.Inspector` preserves caller stream positions during detection and inspection. `client.Extractor` handles solid archives sequentially and keeps supplied destination streams open. Filesystem writing normalizes entry names relative to the source directory. See the [instance API reference](API.md#instance-services), including [migration from global registration](API.md#migrating-to-instance-services).
+
 ## Async/Await Support
 
 SharpCompress now provides full async/await support for all I/O operations. All `Read`, `Write`, and extraction operations have async equivalents ending in `Async` that accept an optional `CancellationToken`. This enables better performance and scalability for I/O-bound operations.
 
 **Key Async Methods:**
+
 - `reader.WriteEntryToAsync(stream, cancellationToken)` - Extract entry asynchronously  
 - `reader.WriteAllToDirectoryAsync(path, cancellationToken: cancellationToken)` - Extract all asynchronously
 - `writer.WriteAsync(filename, stream, modTime, cancellationToken)` - Write entry asynchronously
@@ -15,7 +71,7 @@ See [Async Examples](#async-examples) section below for usage patterns.
 
 ## Stream Rules
 
-When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it. 
+When dealing with Streams, the rule should be that you don't close a stream you didn't create. This, in effect, should mean you should always put a Stream in a using block to dispose it.
 
 However, the .NET Framework often has classes that will dispose streams by default to make things "easy" like the following:
 
@@ -41,6 +97,7 @@ To deal with the "correct" rules as well as the expectations of users, I've deci
 To be explicit though, consider always using the overloads that use `ReaderOptions` or `WriterOptions` and explicitly set `LeaveStreamOpen` the way you want.
 
 Default behavior in factory APIs:
+
 - File path / `FileInfo` overloads set `LeaveStreamOpen = false`.
 - Caller-provided `Stream` overloads set `LeaveStreamOpen = true`.
 
@@ -51,6 +108,7 @@ If using Compression Stream classes directly and you don't want the wrapped stre
 Also, look over the tests for more thorough [examples](https://github.com/adamhathcock/sharpcompress/tree/master/tests/SharpCompress.Test)
 
 ### Create Zip Archive from multiple files
+
 ```C#
 using(var archive = ZipArchive.CreateArchive())
 {
@@ -164,7 +222,7 @@ using (var reader = archive.ExtractAllEntries())
 }
 ```
 
-### Use ReaderFactory to autodetect archive type and Open the entry stream
+### Use ReaderFactory to autodetect archive type and Open the entry stream to write
 
 ```C#
 using (Stream stream = File.OpenRead("Tar.tar.bz2"))
@@ -181,7 +239,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 }
 ```
 
-### Use ReaderFactory to autodetect archive type and Open the entry stream
+### Use ReaderFactory to autodetect archive type and Open the entry stream to copy
 
 ```C#
 using (Stream stream = File.OpenRead("Tar.tar.bz2"))
@@ -200,7 +258,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 }
 ```
 
-### Use WriterFactory to write all files from a directory in a streaming manner.
+### Use WriterFactory to write all files from a directory in a streaming manner
 
 ```C#
 using (Stream stream = File.OpenWrite("C:\\temp.tgz"))
@@ -265,6 +323,8 @@ if (information is not null)
 ```
 
 `InspectArchive` parses archive metadata, which can require a complete sequential scan for TAR and compressed TAR files. It returns partial information for encrypted headers without a password or missing archive parts; inspect `Status` and `Limitations` before using nullable metadata values.
+
+Use `information.Detection` for format identification when inspecting an archive; calling `DetectArchive` first adds an unnecessary probe. Nullable metadata can still be absent when `Status` is `Complete`. `EntriesWithUnknownSizeCount` describes sizes unavailable to a forward-only reader before entry data, rather than sizes unavailable to the completed inspection.
 
 Detection and inspection result types are in the `SharpCompress.Detection` namespace.
 
@@ -396,6 +456,7 @@ The registry also exposes `GetCompressingProvider` (now returning `ICompressionP
 ### Async Reader Examples
 
 **Extract single entry asynchronously:**
+
 ```C#
 using Stream stream = File.OpenRead("archive.zip");
 await using var reader = await ReaderFactory.OpenAsyncReader(stream, cancellationToken: cancellationToken);
@@ -410,6 +471,7 @@ while (await reader.MoveToNextEntryAsync(cancellationToken))
 ```
 
 **Extract all entries asynchronously:**
+
 ```C#
 using Stream stream = File.OpenRead("archive.tar.gz");
 await using var reader = await ReaderFactory.OpenAsyncReader(stream, cancellationToken: cancellationToken);
@@ -420,6 +482,7 @@ await reader.WriteAllToDirectoryAsync(
 ```
 
 **Open and process entry stream asynchronously:**
+
 ```C#
 await using var archive = await ZipArchive.OpenAsyncArchive("archive.zip", cancellationToken: cancellationToken);
 await foreach (var entry in archive.EntriesAsync)
@@ -436,6 +499,7 @@ await foreach (var entry in archive.EntriesAsync)
 ### Async Writer Examples
 
 **Write single file asynchronously:**
+
 ```C#
 using Stream archiveStream = File.OpenWrite("output.zip");
 await using var writer = await WriterFactory.OpenAsyncWriter(archiveStream, ArchiveType.Zip, new WriterOptions(CompressionType.Deflate), cancellationToken);
@@ -444,6 +508,7 @@ await writer.WriteAsync("entry.txt", fileStream, DateTime.Now, cancellationToken
 ```
 
 **Write entire directory asynchronously:**
+
 ```C#
 using Stream stream = File.OpenWrite("backup.tar.gz");
 await using var writer = await WriterFactory.OpenAsyncWriter(stream, ArchiveType.Tar, new WriterOptions(CompressionType.GZip), cancellationToken);
@@ -456,6 +521,7 @@ await writer.WriteAllAsync(
 ```
 
 **Write with progress tracking and cancellation:**
+
 ```C#
 var cts = new CancellationTokenSource();
 
@@ -477,6 +543,7 @@ catch (OperationCanceledException)
 ### Archive Async Examples
 
 **Extract from archive asynchronously:**
+
 ```C#
 await using var archive = await ZipArchive.OpenAsyncArchive("archive.zip", cancellationToken: cancellationToken);
 // Simple async extraction - works for all archive types
@@ -487,6 +554,7 @@ await archive.WriteToDirectoryAsync(
 ```
 
 **Benefits of Async Operations:**
+
 - Non-blocking I/O for better application responsiveness
 - Improved scalability for server applications
 - Support for cancellation via CancellationToken

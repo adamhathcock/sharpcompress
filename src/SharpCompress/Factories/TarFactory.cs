@@ -129,7 +129,10 @@ public class TarFactory
     )
     {
         stream.Seek(0, SeekOrigin.Begin);
-        foreach (var wrapper in TarWrapper.Wrappers)
+        foreach (
+            var wrapper in (readerOptions as ReaderOptions)?.Formats.TarWrappers
+                ?? TarWrapper.Wrappers
+        )
         {
             stream.Seek(0, SeekOrigin.Begin);
             if (wrapper.IsMatch(stream))
@@ -156,7 +159,10 @@ public class TarFactory
     )
     {
         stream.Seek(0, SeekOrigin.Begin);
-        foreach (var wrapper in TarWrapper.Wrappers)
+        foreach (
+            var wrapper in (readerOptions as ReaderOptions)?.Formats.TarWrappers
+                ?? TarWrapper.Wrappers
+        )
         {
             stream.Seek(0, SeekOrigin.Begin);
             if (await wrapper.IsMatchAsync(stream, cancellationToken).ConfigureAwait(false))
@@ -343,8 +349,8 @@ public class TarFactory
     {
         options ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = CreateNestedRecordingStream(stream);
-        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
-        foreach (var wrapper in TarWrapper.Wrappers)
+        sharpCompressStream.StartRecording(options.Formats.MaximumRewindBufferSize);
+        foreach (var wrapper in options.Formats.TarWrappers)
         {
             sharpCompressStream.Rewind();
             if (wrapper.IsMatch(sharpCompressStream))
@@ -376,8 +382,8 @@ public class TarFactory
         cancellationToken.ThrowIfCancellationRequested();
         options ??= ReaderOptions.ForExternalStream;
         var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
-        foreach (var wrapper in TarWrapper.Wrappers)
+        sharpCompressStream.StartRecording(options.Formats.MaximumRewindBufferSize);
+        foreach (var wrapper in options.Formats.TarWrappers)
         {
             sharpCompressStream.Rewind();
             if (

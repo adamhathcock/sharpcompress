@@ -1,98 +1,74 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Detection;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Archives;
 
-public static partial class ArchiveFactory
+/// <summary>
+/// Convenience entry points using the immutable default client.
+/// Use <see cref="SharpCompressClient"/> for client-local configuration and injectable services.
+/// </summary>
+public static class ArchiveFactory
 {
-    public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
-    {
-        readerOptions ??= ReaderOptions.ForExternalStream;
-        return FindFactory<IArchiveFactory>(stream, readerOptions)
-            .OpenArchive(stream, readerOptions);
-    }
+    private static ArchiveService Service => ClientDefaults.Client.Services.Archives;
 
-    public static IWritableArchive<TOptions> CreateArchive<TOptions>()
-        where TOptions : IWriterOptions
-    {
-        var factory = Factory
-            .Factories.OfType<IWritableArchiveFactory<TOptions>>()
-            .FirstOrDefault();
+    public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
+        Service.OpenArchive(stream, readerOptions);
 
-        if (factory != null)
-        {
-            return factory.CreateArchive();
-        }
+    public static IArchive OpenArchive(string filePath, ReaderOptions? options = null) =>
+        Service.OpenArchive(filePath, options);
 
-        throw new NotSupportedException("Cannot create Archives of type: " + typeof(TOptions));
-    }
-
-    public static IArchive OpenArchive(string filePath, ReaderOptions? options = null)
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenArchive(new FileInfo(filePath), options ?? ReaderOptions.ForFilePath);
-    }
-
-    public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? options = null)
-    {
-        options ??= ReaderOptions.ForFilePath;
-
-        return FindFactory<IArchiveFactory>(fileInfo, options).OpenArchive(fileInfo, options);
-    }
+    public static IArchive OpenArchive(FileInfo fileInfo, ReaderOptions? options = null) =>
+        Service.OpenArchive(fileInfo, options);
 
     public static IArchive OpenArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? options = null
-    )
-    {
-        fileInfos.NotNull(nameof(fileInfos));
-        var filesArray = fileInfos;
-        if (filesArray.Count == 0)
-        {
-            throw new ArchiveOperationException("No files to open");
-        }
+    ) => Service.OpenArchive(fileInfos, options);
 
-        var fileInfo = filesArray[0];
-        if (filesArray.Count == 1)
-        {
-            return OpenArchive(fileInfo, options);
-        }
+    public static IArchive OpenArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? options = null
+    ) => Service.OpenArchive(streams, options);
 
-        fileInfo.NotNull(nameof(fileInfo));
-        options ??= ReaderOptions.ForFilePath;
+    public static IWritableArchive<TOptions> CreateArchive<TOptions>()
+        where TOptions : IWriterOptions => Service.CreateArchive<TOptions>();
 
-        return FindFactory<IMultiArchiveFactory>(fileInfo, options)
-            .OpenArchive(filesArray, options);
-    }
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        Stream stream,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => Service.OpenAsyncArchive(stream, readerOptions, cancellationToken);
 
-    public static IArchive OpenArchive(IReadOnlyList<Stream> streams, ReaderOptions? options = null)
-    {
-        var streamsArray = streams.RequireReadable().RequireSeekable().ToList();
-        if (streamsArray.Count == 0)
-        {
-            throw new ArchiveOperationException("No streams");
-        }
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        string filePath,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) => Service.OpenAsyncArchive(filePath, options, cancellationToken);
 
-        var firstStream = streamsArray[0];
-        if (streamsArray.Count == 1)
-        {
-            return OpenArchive(firstStream, options);
-        }
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        FileInfo fileInfo,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) => Service.OpenAsyncArchive(fileInfo, options, cancellationToken);
 
-        firstStream.NotNull(nameof(firstStream));
-        options ??= ReaderOptions.ForExternalStream;
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) => Service.OpenAsyncArchive(fileInfos, options, cancellationToken);
 
-        return FindFactory<IMultiArchiveFactory>(firstStream, options)
-            .OpenArchive(streamsArray, options);
-    }
+    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) => Service.OpenAsyncArchive(streams, options, cancellationToken);
 
     public static void WriteToDirectory(
         string sourceArchive,
@@ -100,134 +76,169 @@ public static partial class ArchiveFactory
         ExtractionOptions? options = null
     )
     {
-        using var archive = OpenArchive(sourceArchive);
-        archive.WriteToDirectory(destinationDirectory, options);
+        using var archive = Service.OpenArchive(sourceArchive);
+        ClientDefaults.Client.Extractor.ExtractToDirectory(archive, destinationDirectory, options);
     }
 
     public static T FindFactory<T>(string filePath)
-        where T : IFactory
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        using Stream stream = File.OpenRead(filePath);
-        return FindFactory<T>(stream);
-    }
+        where T : IFactory => Service.FindFactory<T>(filePath);
 
     public static T FindFactory<T>(FileInfo finfo)
-        where T : IFactory
-    {
-        finfo.NotNull(nameof(finfo));
-        using Stream stream = finfo.OpenRead();
-        return FindFactory<T>(stream);
-    }
+        where T : IFactory => Service.FindFactory<T>(finfo);
 
     public static T FindFactory<T>(Stream stream)
-        where T : IFactory => FindFactory<T>(stream, ReaderOptions.ForExternalStream);
+        where T : IFactory => Service.FindFactory<T>(stream);
 
-    public static bool IsArchive(string filePath, out ArchiveType? type)
-    {
-        return IsArchive(filePath, ReaderOptions.ForFilePath, out type);
-    }
+    internal static ValueTask<T> FindFactoryAsync<T>(
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory => Service.FindFactoryAsync<T>(filePath, cancellationToken);
+
+    internal static ValueTask<T> FindFactoryAsync<T>(
+        FileInfo fileInfo,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory => Service.FindFactoryAsync<T>(fileInfo, cancellationToken);
+
+    internal static ValueTask<T> FindFactoryAsync<T>(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+        where T : IFactory => Service.FindFactoryAsync<T>(stream, cancellationToken);
+
+    public static bool IsArchive(string filePath, out ArchiveType? type) =>
+        Service.IsArchive(filePath, out type);
 
     public static bool IsArchive(
         string filePath,
         ReaderOptions? readerOptions,
         out ArchiveType? type
-    )
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        using Stream s = File.OpenRead(filePath);
-        return IsArchive(s, readerOptions ?? ReaderOptions.ForFilePath, out type);
-    }
+    ) => Service.IsArchive(filePath, readerOptions, out type);
 
-    public static bool IsArchive(Stream stream, out ArchiveType? type)
-    {
-        return IsArchive(stream, ReaderOptions.ForExternalStream, out type);
-    }
+    public static bool IsArchive(Stream stream, out ArchiveType? type) =>
+        Service.IsArchive(stream, out type);
 
-    public static bool IsArchive(Stream stream, ReaderOptions? readerOptions, out ArchiveType? type)
-    {
-        stream.RequireReadable();
-        stream.RequireSeekable();
+    public static bool IsArchive(
+        Stream stream,
+        ReaderOptions? readerOptions,
+        out ArchiveType? type
+    ) => Service.IsArchive(stream, readerOptions, out type);
 
-        var factory = TryFindFactory(stream, readerOptions ?? ReaderOptions.ForExternalStream);
-        type = factory?.KnownArchiveType;
-        return factory is not null;
-    }
-
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
+    public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
-    ) =>
-        await IsArchiveAsync(filePath, ReaderOptions.ForFilePath, cancellationToken)
-            .ConfigureAwait(false);
+    ) => Service.IsArchiveAsync(filePath, cancellationToken);
 
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
+    public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    )
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        using Stream stream = File.OpenRead(filePath);
-        return await IsArchiveAsync(
-                stream,
-                readerOptions ?? ReaderOptions.ForFilePath,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-    }
+    ) => Service.IsArchiveAsync(filePath, readerOptions, cancellationToken);
 
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
+    public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
-    ) =>
-        await IsArchiveAsync(stream, ReaderOptions.ForExternalStream, cancellationToken)
-            .ConfigureAwait(false);
+    ) => Service.IsArchiveAsync(stream, cancellationToken);
 
-    public static async ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
+    public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    )
-    {
-        stream.RequireReadable();
-        stream.RequireSeekable();
+    ) => Service.IsArchiveAsync(stream, readerOptions, cancellationToken);
 
-        var factory = await TryFindFactoryAsync(
-                stream,
-                readerOptions ?? ReaderOptions.ForExternalStream,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
-        return (factory is not null, factory?.KnownArchiveType);
-    }
+    public static ArchiveDetection? DetectArchive(string filePath) =>
+        Service.DetectArchive(filePath);
 
-    public static IEnumerable<string> GetFileParts(string part1)
-    {
-        part1.NotNullOrEmpty(nameof(part1));
-        return GetFileParts(new FileInfo(part1)).Select(a => a.FullName);
-    }
+    public static ArchiveDetection? DetectArchive(string filePath, ReaderOptions? readerOptions) =>
+        Service.DetectArchive(filePath, readerOptions);
 
-    public static IEnumerable<FileInfo> GetFileParts(FileInfo part1)
-    {
-        part1.NotNull(nameof(part1));
-        yield return part1;
+    public static ArchiveDetection? DetectArchive(Stream stream) => Service.DetectArchive(stream);
 
-        foreach (var factory in Factory.Factories.OfType<IFactory>())
-        {
-            var i = 1;
-            var part = factory.GetFilePart(i++, part1);
+    public static ArchiveDetection? DetectArchive(Stream stream, ReaderOptions? readerOptions) =>
+        Service.DetectArchive(stream, readerOptions);
 
-            if (part != null)
-            {
-                yield return part;
-                while ((part = factory.GetFilePart(i++, part1)) != null)
-                {
-                    yield return part;
-                }
+    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    ) => Service.DetectArchiveAsync(filePath, cancellationToken);
 
-                yield break;
-            }
-        }
-    }
+    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
+        string filePath,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
+    ) => Service.DetectArchiveAsync(filePath, readerOptions, cancellationToken);
+
+    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    ) => Service.DetectArchiveAsync(stream, cancellationToken);
+
+    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
+        Stream stream,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
+    ) => Service.DetectArchiveAsync(stream, readerOptions, cancellationToken);
+
+    public static ArchiveInformation? InspectArchive(string filePath) =>
+        Service.InspectArchive(filePath);
+
+    public static ArchiveInformation? InspectArchive(
+        string filePath,
+        ReaderOptions? readerOptions
+    ) => Service.InspectArchive(filePath, readerOptions);
+
+    public static ArchiveInformation? InspectArchive(Stream stream) =>
+        Service.InspectArchive(stream);
+
+    public static ArchiveInformation? InspectArchive(Stream stream, ReaderOptions? readerOptions) =>
+        Service.InspectArchive(stream, readerOptions);
+
+    public static ArchiveInformation? InspectArchive(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null
+    ) => Service.InspectArchive(fileInfos, readerOptions);
+
+    public static ArchiveInformation? InspectArchive(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null
+    ) => Service.InspectArchive(streams, readerOptions);
+
+    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
+        string filePath,
+        CancellationToken cancellationToken = default
+    ) => Service.InspectArchiveAsync(filePath, cancellationToken);
+
+    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
+        string filePath,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
+    ) => Service.InspectArchiveAsync(filePath, readerOptions, cancellationToken);
+
+    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    ) => Service.InspectArchiveAsync(stream, cancellationToken);
+
+    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
+        Stream stream,
+        ReaderOptions? readerOptions,
+        CancellationToken cancellationToken = default
+    ) => Service.InspectArchiveAsync(stream, readerOptions, cancellationToken);
+
+    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
+        IReadOnlyList<FileInfo> fileInfos,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => Service.InspectArchiveAsync(fileInfos, readerOptions, cancellationToken);
+
+    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
+        IReadOnlyList<Stream> streams,
+        ReaderOptions? readerOptions = null,
+        CancellationToken cancellationToken = default
+    ) => Service.InspectArchiveAsync(streams, readerOptions, cancellationToken);
+
+    public static IEnumerable<string> GetFileParts(string part1) => Service.GetFileParts(part1);
+
+    public static IEnumerable<FileInfo> GetFileParts(FileInfo part1) => Service.GetFileParts(part1);
 }

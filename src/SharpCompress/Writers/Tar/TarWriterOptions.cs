@@ -19,6 +19,8 @@ namespace SharpCompress.Writers.Tar;
 /// </remarks>
 public sealed record TarWriterOptions : IWriterOptions
 {
+    private CompressionProviderRegistry? providers;
+
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
@@ -53,8 +55,16 @@ public sealed record TarWriterOptions : IWriterOptions
     /// Registry of compression providers.
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; set; } =
-        CompressionProviderRegistry.Default;
+    public CompressionProviderRegistry Providers
+    {
+        get => providers ?? CompressionProviderRegistry.Default;
+        set
+        {
+            ThrowHelper.ThrowIfNull(value);
+            providers = value;
+        }
+    }
+    internal bool HasProviderOverride => providers is not null;
 
     /// <summary>
     /// When true, opts in to a format's optional parallel encode. No writer currently implements
@@ -116,7 +126,7 @@ public sealed record TarWriterOptions : IWriterOptions
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
         BufferSize = options.BufferSize;
-        Providers = options.Providers;
+        providers = SharpCompressConfiguration.GetProviderOverride(options);
     }
 
     /// <summary>
@@ -131,7 +141,7 @@ public sealed record TarWriterOptions : IWriterOptions
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
         BufferSize = options.BufferSize;
-        Providers = options.Providers;
+        providers = SharpCompressConfiguration.GetProviderOverride(options);
     }
 
     /// <summary>
