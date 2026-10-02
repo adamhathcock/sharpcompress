@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -66,9 +67,23 @@ public abstract class RarVolume : Volume
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
                         {
-                            var buffer = new byte[fh.CompressedSize];
-                            fh.PackedStream.NotNull().ReadFully(buffer);
-                            Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+                            // Read the logical service size, not the potentially padded packed size.
+                            var commentSize = checked((int)fh.UncompressedSize);
+                            var buffer = ArrayPool<byte>.Shared.Rent(commentSize);
+                            try
+                            {
+                                using var packedStream = fh.PackedStream.NotNull();
+                                if (!packedStream.ReadFully(buffer.AsSpan(0, commentSize)))
+                                {
+                                    // Never decode unread bytes from a pooled buffer.
+                                    throw new EndOfStreamException();
+                                }
+                                Comment = DecodeComment(buffer, commentSize);
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(buffer);
+                            }
                         }
                     }
                     break;
@@ -115,17 +130,41 @@ public abstract class RarVolume : Volume
                         var fh = (FileHeader)header;
                         if (fh.FileName == "CMT")
                         {
-                            var buffer = new byte[fh.CompressedSize];
-                            await fh
-                                .PackedStream.NotNull()
-                                .ReadFullyAsync(buffer, cancellationToken)
-                                .ConfigureAwait(false);
-                            Comment = Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1);
+                            var commentSize = checked((int)fh.UncompressedSize);
+                            var buffer = ArrayPool<byte>.Shared.Rent(commentSize);
+                            try
+                            {
+                                using var packedStream = fh.PackedStream.NotNull();
+                                if (
+                                    !await packedStream
+                                        .ReadFullyAsync(buffer, 0, commentSize, cancellationToken)
+                                        .ConfigureAwait(false)
+                                )
+                                {
+                                    // Never decode unread bytes from a pooled buffer.
+                                    throw new EndOfStreamException();
+                                }
+                                Comment = DecodeComment(buffer, commentSize);
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(buffer);
+                            }
                         }
                     }
                     break;
             }
         }
+    }
+
+    private static string DecodeComment(byte[] buffer, int commentSize)
+    {
+        // Like UnRAR, stop at the first NUL. Encrypted comments can include
+        // padding in their unpacked size as well as their packed size.
+        // Limit decoding to the payload, since rented buffers can be larger.
+        var terminator = Array.IndexOf(buffer, (byte)0, 0, commentSize);
+        var length = terminator < 0 ? commentSize : terminator;
+        return Encoding.UTF8.GetString(buffer, 0, length);
     }
 
     private void EnsureArchiveHeaderLoaded()

@@ -75,6 +75,25 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 
 `ArchiveInformation.SupportsRandomAccess` is `true` when the detected format supports `IArchive` random access. It is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW, where `ReaderFactory.OpenReader` should be used instead. Compressed tar wrappers such as `.tar.gz` and `.tar.xz` are also reader-only; `ArchiveFactory.GetArchiveInformation` returns `null` for them and `ArchiveFactory.OpenArchive` does not open them as the outer compression wrapper. Use `ReaderFactory.OpenReader` or `TarReader.OpenReader` for those files.
 
+### RAR5 Archive Comments
+
+`SharpCompress.Common.Rar.RarVolume.Comment` exposes UTF-8 archive comments, including encrypted comments when `ReaderOptions.Password` is supplied. Comments are loaded while entries are enumerated; the property can be `null` before enumeration or when no comment is present.
+
+```csharp
+using var archive = RarArchive.OpenArchive(
+    "encrypted.rar",
+    ReaderOptions.ForFilePath.WithPassword("password")
+);
+foreach (var entry in archive.Entries)
+{
+    Console.WriteLine(entry.Key);
+}
+foreach (var volume in archive.Volumes.OfType<SharpCompress.Common.Rar.RarVolume>())
+{
+    Console.WriteLine(volume.Comment);
+}
+```
+
 ### Creating Archives
 
 ```csharp

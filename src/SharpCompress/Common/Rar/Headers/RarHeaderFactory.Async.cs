@@ -136,7 +136,7 @@ public partial class RarHeaderFactory
                     .ConfigureAwait(false);
                 if (fh.FileName == "CMT")
                 {
-                    fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                    fh.PackedStream = CreatePackedStream(fh, reader.BaseStream);
                 }
                 else
                 {

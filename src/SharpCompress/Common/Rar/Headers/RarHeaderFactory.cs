@@ -134,7 +134,7 @@ public partial class RarHeaderFactory
                 var fh = FileHeader.Create(header, reader, HeaderType.Service);
                 if (fh.FileName == "CMT")
                 {
-                    fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                    fh.PackedStream = CreatePackedStream(fh, reader.BaseStream);
                 }
                 else
                 {
@@ -235,5 +235,21 @@ public partial class RarHeaderFactory
                 throw new InvalidFormatException("Invalid StreamingMode");
             }
         }
+    }
+
+    private Stream CreatePackedStream(FileHeader header, Stream stream)
+    {
+        var packedStream = new ReadOnlySubStream(stream, header.CompressedSize);
+        // Service data has its own encryption metadata, independent of header encryption.
+        if (header.Rar5CryptoInfo is not null)
+        {
+            return new RarCryptoWrapper(
+                packedStream,
+                header.Rar5CryptoInfo.Salt,
+                new CryptKey5(Options.Password, header.Rar5CryptoInfo)
+            );
+        }
+
+        return packedStream;
     }
 }
