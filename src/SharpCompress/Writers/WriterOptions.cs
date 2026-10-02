@@ -17,6 +17,8 @@ namespace SharpCompress.Writers;
 /// </remarks>
 public sealed record WriterOptions : IWriterOptions
 {
+    private CompressionProviderRegistry? providers;
+
     /// <summary>
     /// The compression type to use for the archive.
     /// </summary>
@@ -66,8 +68,16 @@ public sealed record WriterOptions : IWriterOptions
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; set; } =
-        CompressionProviderRegistry.Default;
+    public CompressionProviderRegistry Providers
+    {
+        get => providers ?? CompressionProviderRegistry.Default;
+        set
+        {
+            ThrowHelper.ThrowIfNull(value);
+            providers = value;
+        }
+    }
+    internal bool HasProviderOverride => providers is not null;
 
     /// <summary>
     /// When true, opts in to a format's optional parallel encode. No writer currently implements

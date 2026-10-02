@@ -13,22 +13,16 @@ using Xunit;
 
 namespace SharpCompress.Test;
 
-// Factory registration is process-wide; isolate registration and counters from parallel tests.
-[CollectionDefinition("Archive inspection reuse", DisableParallelization = true)]
-public class ArchiveInspectionReuseCollection;
-
-[Collection("Archive inspection reuse")]
 public class ArchiveInspectionReuseTests : TestBase
 {
-    private static readonly CountingFactory countingFactory = new();
-
-    static ArchiveInspectionReuseTests() => Factory.RegisterFactory(countingFactory);
+    private readonly CountingFactory countingFactory = new();
+    private readonly IArchiveInspector inspector;
 
     public ArchiveInspectionReuseTests()
     {
-        countingFactory.ProbeCount = 0;
-        countingFactory.OpenCount = 0;
-        countingFactory.FailWithEncryptedHeaders = false;
+        inspector = new SharpCompressClient(
+            new SharpCompressConfiguration(FormatRegistry.Default.With(countingFactory))
+        ).Inspector;
     }
 
     [Theory]
@@ -56,15 +50,15 @@ public class ArchiveInspectionReuseTests : TestBase
         if (source == "stream")
         {
             information = useAsync
-                ? await ArchiveFactory.InspectArchiveAsync(first, options)
-                : ArchiveFactory.InspectArchive(first, options);
+                ? await inspector.InspectArchiveAsync(first, options)
+                : inspector.InspectArchive(first, options);
         }
         else if (source == "streams")
         {
             Stream[] streams = [first, second];
             information = useAsync
-                ? await ArchiveFactory.InspectArchiveAsync(streams, options)
-                : ArchiveFactory.InspectArchive(streams, options);
+                ? await inspector.InspectArchiveAsync(streams, options)
+                : inspector.InspectArchive(streams, options);
         }
         else
         {
@@ -77,11 +71,11 @@ public class ArchiveInspectionReuseTests : TestBase
             FileInfo[] files = [new(path), new(path + ".part2")];
             information = source is "path" or "singlePath"
                 ? useAsync
-                    ? await ArchiveFactory.InspectArchiveAsync(path, options)
-                    : ArchiveFactory.InspectArchive(path, options)
+                    ? await inspector.InspectArchiveAsync(path, options)
+                    : inspector.InspectArchive(path, options)
                 : useAsync
-                    ? await ArchiveFactory.InspectArchiveAsync(files, options)
-                    : ArchiveFactory.InspectArchive(files, options);
+                    ? await inspector.InspectArchiveAsync(files, options)
+                    : inspector.InspectArchive(files, options);
         }
 
         Assert.NotNull(information);
@@ -107,8 +101,8 @@ public class ArchiveInspectionReuseTests : TestBase
         stream.Position = 0;
 
         var information = useAsync
-            ? await ArchiveFactory.InspectArchiveAsync(stream)
-            : ArchiveFactory.InspectArchive(stream);
+            ? await inspector.InspectArchiveAsync(stream)
+            : inspector.InspectArchive(stream);
 
         Assert.NotNull(information);
         Assert.Equal(ArchiveInformationLimitations.EncryptedHeaders, information.Limitations);

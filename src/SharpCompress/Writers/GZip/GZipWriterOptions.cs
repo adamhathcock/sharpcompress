@@ -19,6 +19,7 @@ namespace SharpCompress.Writers.GZip;
 /// </remarks>
 public sealed record GZipWriterOptions : IWriterOptions
 {
+    private CompressionProviderRegistry? providers;
     private int _compressionLevel = (int)D.CompressionLevel.Default;
 
     /// <summary>
@@ -78,8 +79,16 @@ public sealed record GZipWriterOptions : IWriterOptions
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; set; } =
-        CompressionProviderRegistry.Default;
+    public CompressionProviderRegistry Providers
+    {
+        get => providers ?? CompressionProviderRegistry.Default;
+        set
+        {
+            ThrowHelper.ThrowIfNull(value);
+            providers = value;
+        }
+    }
+    internal bool HasProviderOverride => providers is not null;
 
     /// <summary>
     /// When true, opts in to a format's optional parallel encode. No writer currently implements
@@ -127,7 +136,7 @@ public sealed record GZipWriterOptions : IWriterOptions
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
         BufferSize = options.BufferSize;
-        Providers = options.Providers;
+        providers = SharpCompressConfiguration.GetProviderOverride(options);
     }
 
     /// <summary>
@@ -141,6 +150,6 @@ public sealed record GZipWriterOptions : IWriterOptions
         ArchiveEncoding = options.ArchiveEncoding;
         Progress = options.Progress;
         BufferSize = options.BufferSize;
-        Providers = options.Providers;
+        providers = SharpCompressConfiguration.GetProviderOverride(options);
     }
 }

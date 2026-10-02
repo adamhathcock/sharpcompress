@@ -1,5 +1,60 @@
 # SharpCompress Usage
 
+## Instance-Based Usage
+
+Create a reusable `SharpCompressClient`, or constructor-inject `ISharpCompressClient` and the workflow interfaces from `SharpCompress.Archives`. Consumers can use any DI container or ordinary constructors; Pure.DI only generates SharpCompress's internal service wiring.
+
+```csharp
+using System.IO;
+using SharpCompress;
+using SharpCompress.Common;
+using SharpCompress.Factories;
+using SharpCompress.Providers;
+using SharpCompress.Providers.System;
+using SharpCompress.Writers;
+
+var providers = CompressionProviderRegistry.Default
+    .With(new SystemDeflateCompressionProvider());
+var client = new SharpCompressClient(
+    new SharpCompressConfiguration(providers: providers));
+
+Directory.CreateDirectory("output");
+await using (var archive = await client.OpenAsyncArchive(
+    "archive.zip", cancellationToken: cancellationToken))
+{
+    await client.Extractor.ExtractToDirectoryAsync(
+        archive, "output", cancellationToken: cancellationToken);
+}
+
+// Use a reader for compressed TAR and non-seekable sources.
+await using (var reader = await client.OpenAsyncReader(
+    "archive.tar.gz", cancellationToken: cancellationToken))
+{
+    await client.Extractor.ExtractToDirectoryAsync(
+        reader, "output", cancellationToken: cancellationToken);
+}
+
+await using (var writer = await client.OpenAsyncWriter(
+    "output.zip", ArchiveType.Zip, new WriterOptions(CompressionType.Deflate),
+    cancellationToken))
+{
+    await client.FileWriter.WriteDirectoryAsync(
+        writer, "input", searchOption: SearchOption.AllDirectories,
+        cancellationToken: cancellationToken);
+}
+
+var information = await client.Inspector.InspectArchiveAsync(
+    "output.zip", cancellationToken: cancellationToken);
+
+// Limit one client to ZIP. Other clients and convenience factories are unaffected.
+var zipOnly = new SharpCompressClient(new SharpCompressConfiguration(
+    new FormatRegistry([new ZipFactory()], [])));
+```
+
+Client configuration and registries are immutable. Per-operation options override client provider defaults only when `Providers` is explicitly assigned (including explicitly selecting the built-in default). Options passed by the caller are not mutated. Factories and providers shared by a client must be thread-safe; opened archives/readers/writers and their streams are independent, caller-disposed objects.
+
+`client.Inspector` preserves caller stream positions during detection and inspection. `client.Extractor` handles solid archives sequentially and keeps supplied destination streams open. Filesystem writing normalizes entry names relative to the source directory. See the [instance API reference](API.md#instance-services), including [migration from global registration](API.md#migrating-to-instance-services).
+
 ## Async/Await Support
 
 SharpCompress now provides full async/await support for all I/O operations. All `Read`, `Write`, and extraction operations have async equivalents ending in `Async` that accept an optional `CancellationToken`. This enables better performance and scalability for I/O-bound operations.

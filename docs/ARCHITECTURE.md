@@ -9,7 +9,7 @@ SharpCompress is organized into three main layers:
 ```
 ┌─────────────────────────────────────────┐
 │     User-Facing APIs (Top Layer)        │
-│  Archive, Reader, Writer Factories      │
+│  Client and Workflow Services          │
 ├─────────────────────────────────────────┤
 │     Format-Specific Implementations     │
 │  ZipArchive, TarReader, GZipWriter,     │
@@ -22,6 +22,18 @@ SharpCompress is organized into three main layers:
 
 ---
 
+## Instance Composition and Ownership
+
+`SharpCompressClient` is the public instance entry point. `SharpCompressConfiguration` supplies immutable `FormatRegistry` and `CompressionProviderRegistry` dependencies. `ServiceComposition.cs` uses the private Pure.DI source-generator dependency to construct `ArchiveService`, `ReaderService`, `WriterService`, `ArchiveExtractor`, and `ArchiveFileWriter`. Its explicit root returns the service graph once per client, with generated `Resolve` methods disabled. Generated composition types are internal and consumers do not require Pure.DI.
+
+Format registration is an immutable ordered snapshot instead of a process-wide mutable set. Custom runtime factories are supplied as registry values, not generated DI registrations. `Factory` retains reusable format-probing behavior without global registration. `TarWrapper.Wrappers` is a read-only default list; client registries contain their selected wrapper list and derived maximum rewind-buffer size.
+
+Opening services resolve providers into copied operation options. Explicit per-call providers override client defaults, including an explicitly selected built-in default registry. Built-in writer records retain their format-specific settings; custom writer options remain owned by their custom factory. Passwords, progress callbacks, and cancellation tokens are per-operation values.
+
+The composition owns only reusable services. Opening returns independent caller-owned archives/readers/writers, and extraction leaves supplied objects and destination streams open. It does not track opened streams in a client-wide DI scope. Custom shared factories/providers must implement thread-safe creation. Solid extraction remains sequential.
+
+Policy-heavy filesystem workflows live in `ArchiveExtractor` and `ArchiveFileWriter`, with existing internal path-validation helpers reused. Public workflow extensions and static factory APIs are convenience adapters to the immutable default client. Pure algorithm, encoding, option-copy, and stream helper functions remain static where appropriate.
+
 ## Directory Structure
 
 ### `src/SharpCompress/`
@@ -32,7 +44,9 @@ Contains `IArchive` implementations for seekable, random-access APIs.
 **Key Files:**
 - `AbstractArchive.cs` - Base class for all archives
 - `IArchive.cs` - Archive interface definition
-- `ArchiveFactory.cs` - Factory for opening archives
+- `ArchiveService*.cs` - Instance archive opening, recognition, and inspection
+- `ArchiveExtractor.cs` / `ArchiveFileWriter.cs` - Extraction and filesystem-writing workflows
+- `ArchiveFactory.cs` - Default-client convenience adapters
 - Format-specific: `ZipArchive.cs`, `TarArchive.cs`, `RarArchive.cs`, `SevenZipArchive.cs`, `GZipArchive.cs`
 
 **Use Archive API when:**
@@ -47,7 +61,8 @@ Contains `IReader` implementations for forward-only, non-seekable APIs.
 **Key Files:**
 - `AbstractReader.cs` - Base reader class
 - `IReader.cs` - Reader interface
-- `ReaderFactory.cs` - Auto-detection factory
+- `ReaderService*.cs` - Instance auto-detection and reader opening
+- `ReaderFactory.cs` - Default-client convenience adapters
 - `ReaderOptions.cs` - Configuration for readers
 - Format-specific: `ZipReader.cs`, `TarReader.cs`, `GZipReader.cs`, `RarReader.cs`, etc.
 
@@ -63,7 +78,8 @@ Contains `IWriter` implementations for forward-only writing.
 **Key Files:**
 - `AbstractWriter.cs` - Base writer class
 - `IWriter.cs` - Writer interface
-- `WriterFactory.cs` - Factory for creating writers
+- `WriterService.cs` - Instance writer opening
+- `WriterFactory.cs` - Default-client convenience adapters
 - `WriterOptions.cs` - Configuration for writers
 - Format-specific: `ZipWriter.cs`, `TarWriter.cs`, `GZipWriter.cs`
 
@@ -72,11 +88,12 @@ Factory classes for auto-detecting archive format and creating appropriate reade
 
 **Key Files:**
 - `Factory.cs` - Base factory class
+- `FormatRegistry.cs` - Immutable ordered format and TAR-wrapper configuration
 - `IFactory.cs` - Factory interface
 - Format-specific: `ZipFactory.cs`, `TarFactory.cs`, `RarFactory.cs`, etc.
 
 **How It Works:**
-1. `ReaderFactory.OpenReader(stream)` probes stream signatures
+1. `client.OpenReader(stream)` probes stream signatures using its configured registry
 2. Identifies format by magic bytes
 3. Creates appropriate reader instance
 4. Returns generic `IReader` interface

@@ -1,81 +1,36 @@
-using System;
 using System.IO;
-using System.Linq;
-using SharpCompress.Common;
-using SharpCompress.Factories;
-using SharpCompress.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SharpCompress.Readers;
 
-public static partial class ReaderFactory
+/// <summary>Convenience reader opening using the immutable default client.</summary>
+public static class ReaderFactory
 {
-    public static IReader OpenReader(string filePath, ReaderOptions? options = null)
-    {
-        filePath.NotNullOrEmpty(nameof(filePath));
-        return OpenReader(new FileInfo(filePath), options ?? ReaderOptions.ForFilePath);
-    }
+    public static IReader OpenReader(Stream stream, ReaderOptions? options = null) =>
+        ClientDefaults.Client.OpenReader(stream, options);
 
-    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null)
-    {
-        options ??= ReaderOptions.ForFilePath;
-        return OpenReader(fileInfo.OpenRead(), options);
-    }
+    public static IReader OpenReader(string filePath, ReaderOptions? options = null) =>
+        ClientDefaults.Client.OpenReader(filePath, options);
 
-    /// <summary>
-    /// Opens a Reader for Non-seeking usage
-    /// </summary>
-    /// <param name="stream"></param>
-    /// <param name="options"></param>
-    /// <returns></returns>
-    public static IReader OpenReader(Stream stream, ReaderOptions? options = null)
-    {
-        stream.RequireReadable();
-        options ??= ReaderOptions.ForExternalStream;
+    public static IReader OpenReader(FileInfo fileInfo, ReaderOptions? options = null) =>
+        ClientDefaults.Client.OpenReader(fileInfo, options);
 
-        var sharpCompressStream = SharpCompressStream.Create(
-            stream,
-            bufferSize: options.RewindableBufferSize
-        );
-        sharpCompressStream.StartRecording();
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        Stream stream,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) => ClientDefaults.Client.OpenAsyncReader(stream, options, cancellationToken);
 
-        var factories = Factories.Factory.Factories.OfType<Factories.Factory>();
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        string filePath,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) => ClientDefaults.Client.OpenAsyncReader(filePath, options, cancellationToken);
 
-        Factory? testedFactory = null;
-
-        if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
-        {
-            testedFactory = factories.FirstOrDefault(a =>
-                a.GetSupportedExtensions()
-                    .Contains(options.ExtensionHint, StringComparer.CurrentCultureIgnoreCase)
-            );
-            if (
-                testedFactory?.TryOpenReader(sharpCompressStream, options, out var reader) == true
-                && reader != null
-            )
-            {
-                sharpCompressStream.Rewind(true);
-                return reader;
-            }
-        }
-
-        foreach (var factory in factories)
-        {
-            if (testedFactory == factory)
-            {
-                continue; // Already tested above
-            }
-            sharpCompressStream.Rewind();
-            if (
-                factory.TryOpenReader(sharpCompressStream, options, out var reader)
-                && reader != null
-            )
-            {
-                return reader;
-            }
-        }
-
-        throw new InvalidFormatException(
-            "Cannot determine compressed stream type.  Supported Reader Formats: Ace, Arc, Arj, Zip, GZip, BZip2, Tar, Rar, LZip, Lzw, XZ, ZStandard"
-        );
-    }
+    public static ValueTask<IAsyncReader> OpenAsyncReader(
+        FileInfo fileInfo,
+        ReaderOptions? options = null,
+        CancellationToken cancellationToken = default
+    ) => ClientDefaults.Client.OpenAsyncReader(fileInfo, options, cancellationToken);
 }

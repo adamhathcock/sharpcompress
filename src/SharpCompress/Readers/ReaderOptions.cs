@@ -2,6 +2,7 @@ using System;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Compressors;
+using SharpCompress.Factories;
 using SharpCompress.Providers;
 
 namespace SharpCompress.Readers;
@@ -23,6 +24,8 @@ namespace SharpCompress.Readers;
 /// </remarks>
 public sealed record ReaderOptions : IReaderOptions
 {
+    private CompressionProviderRegistry? providers;
+
     /// <summary>
     /// Whether SharpCompress leaves the supplied streams open when the reader/archive is disposed.
     /// As of v0.21, the library is documented to close streams by default; this option now defaults to false.
@@ -140,8 +143,18 @@ public sealed record ReaderOptions : IReaderOptions
     /// Defaults to <see cref="CompressionProviderRegistry.Default" /> but can be replaced with custom implementations, such as
     /// System.IO.Compression for Deflate/GZip on modern .NET.
     /// </summary>
-    public CompressionProviderRegistry Providers { get; set; } =
-        CompressionProviderRegistry.Default;
+    public CompressionProviderRegistry Providers
+    {
+        get => providers ?? CompressionProviderRegistry.Default;
+        set
+        {
+            ThrowHelper.ThrowIfNull(value);
+            providers = value;
+        }
+    }
+
+    internal bool HasProviderOverride => providers is not null;
+    internal FormatRegistry Formats { get; set; } = FormatRegistry.Default;
 
     /// <summary>
     /// When true, opts in to a format's optional parallel decode (e.g. 7-Zip's automatic

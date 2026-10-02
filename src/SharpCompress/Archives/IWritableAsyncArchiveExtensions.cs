@@ -6,39 +6,24 @@ using SharpCompress.Common.Options;
 
 namespace SharpCompress.Archives;
 
+/// <summary>Convenience overloads and default filesystem writing workflows.</summary>
 public static class IWritableAsyncArchiveExtensions
 {
     extension(IWritableAsyncArchive writableArchive)
     {
-        public async ValueTask AddAllFromDirectoryAsync(
+        public ValueTask AddAllFromDirectoryAsync(
             string directoryPath,
             string searchPattern = "*.*",
-            SearchOption searchOption = SearchOption.AllDirectories
-        )
-        {
-            using (writableArchive.PauseEntryRebuilding())
-            {
-                foreach (
-                    var filePath in Directory.EnumerateFiles(
-                        directoryPath,
-                        searchPattern,
-                        searchOption
-                    )
-                )
-                {
-                    var fileInfo = new FileInfo(filePath);
-                    await writableArchive
-                        .AddEntryAsync(
-                            filePath.Substring(directoryPath.Length),
-                            fileInfo.OpenRead(),
-                            true,
-                            fileInfo.Length,
-                            fileInfo.LastWriteTime
-                        )
-                        .ConfigureAwait(false);
-                }
-            }
-        }
+            SearchOption searchOption = SearchOption.AllDirectories,
+            CancellationToken cancellationToken = default
+        ) =>
+            ClientDefaults.Client.FileWriter.AddDirectoryAsync(
+                writableArchive,
+                directoryPath,
+                searchPattern,
+                searchOption,
+                cancellationToken
+            );
 
         public ValueTask<IArchiveEntry> AddEntryAsync(string key, string file) =>
             writableArchive.AddEntryAsync(key, new FileInfo(file));
@@ -50,20 +35,8 @@ public static class IWritableAsyncArchiveExtensions
             DateTime? modified = null
         ) => writableArchive.AddEntryAsync(key, source, false, size, modified);
 
-        public ValueTask<IArchiveEntry> AddEntryAsync(string key, FileInfo fileInfo)
-        {
-            if (!fileInfo.Exists)
-            {
-                throw new ArgumentException("FileInfo does not exist.");
-            }
-            return writableArchive.AddEntryAsync(
-                key,
-                fileInfo.OpenRead(),
-                true,
-                fileInfo.Length,
-                fileInfo.LastWriteTime
-            );
-        }
+        public ValueTask<IArchiveEntry> AddEntryAsync(string key, FileInfo fileInfo) =>
+            ClientDefaults.Client.FileWriter.AddFileAsync(writableArchive, key, fileInfo);
     }
 
     public static ValueTask SaveToAsync<TOptions>(
@@ -73,17 +46,24 @@ public static class IWritableAsyncArchiveExtensions
         CancellationToken cancellationToken = default
     )
         where TOptions : IWriterOptions =>
-        writableArchive.SaveToAsync(new FileInfo(filePath), options, cancellationToken);
+        ClientDefaults.Client.FileWriter.SaveToFileAsync(
+            writableArchive,
+            new FileInfo(filePath),
+            options,
+            cancellationToken
+        );
 
-    public static async ValueTask SaveToAsync<TOptions>(
+    public static ValueTask SaveToAsync<TOptions>(
         this IWritableAsyncArchive<TOptions> writableArchive,
         FileInfo fileInfo,
         TOptions options,
         CancellationToken cancellationToken = default
     )
-        where TOptions : IWriterOptions
-    {
-        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-        await writableArchive.SaveToAsync(stream, options, cancellationToken).ConfigureAwait(false);
-    }
+        where TOptions : IWriterOptions =>
+        ClientDefaults.Client.FileWriter.SaveToFileAsync(
+            writableArchive,
+            fileInfo,
+            options,
+            cancellationToken
+        );
 }

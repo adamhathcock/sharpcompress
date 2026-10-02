@@ -94,11 +94,11 @@ public partial class TarReader
             stream,
             bufferSize: Math.Max(
                 readerOptions.RewindableBufferSize ?? 0,
-                TarWrapper.MaximumRewindBufferSize
+                readerOptions.Formats.MaximumRewindBufferSize
             )
         );
         long pos = sharpCompressStream.Position;
-        foreach (var wrapper in TarWrapper.Wrappers)
+        foreach (var wrapper in readerOptions.Formats.TarWrappers)
         {
             sharpCompressStream.Position = pos;
             if (
@@ -176,11 +176,11 @@ public partial class TarReader
             stream,
             bufferSize: Math.Max(
                 readerOptions.RewindableBufferSize ?? 0,
-                TarWrapper.MaximumRewindBufferSize
+                readerOptions.Formats.MaximumRewindBufferSize
             )
         );
         long pos = sharpCompressStream.Position;
-        foreach (var wrapper in TarWrapper.Wrappers)
+        foreach (var wrapper in readerOptions.Formats.TarWrappers)
         {
             sharpCompressStream.Position = pos;
             if (!wrapper.IsMatch(sharpCompressStream))

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
@@ -88,9 +89,8 @@ public class TarReaderTests : ReaderTests
     {
         // The BZip2 TarWrapper must declare a MinimumRewindBufferSize large enough
         // to hold an entire maximum-size compressed BZip2 block (9 × 100 000 bytes).
-        var bzip2Wrapper = Array.Find(
-            TarWrapper.Wrappers,
-            w => w.CompressionType == CompressionType.BZip2
+        var bzip2Wrapper = TarWrapper.Wrappers.First(w =>
+            w.CompressionType == CompressionType.BZip2
         );
         Assert.NotNull(bzip2Wrapper);
         Assert.Equal(BZip2Constants.baseBlockSize * 9, bzip2Wrapper.MinimumRewindBufferSize);
@@ -101,10 +101,7 @@ public class TarReaderTests : ReaderTests
     {
         // Non-BZip2 wrappers that don't specify a custom size default to
         // Constants.RewindableBufferSize so existing behaviour is unchanged.
-        var noneWrapper = Array.Find(
-            TarWrapper.Wrappers,
-            w => w.CompressionType == CompressionType.None
-        );
+        var noneWrapper = TarWrapper.Wrappers.First(w => w.CompressionType == CompressionType.None);
         Assert.NotNull(noneWrapper);
         Assert.Equal(Common.Constants.RewindableBufferSize, noneWrapper.MinimumRewindBufferSize);
     }

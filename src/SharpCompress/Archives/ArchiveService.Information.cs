@@ -16,7 +16,7 @@ using AceMainHeader = SharpCompress.Common.Ace.Headers.AceMainHeader;
 
 namespace SharpCompress.Archives;
 
-public static partial class ArchiveFactory
+internal sealed partial class ArchiveService
 {
     private static ArchiveInformation InspectOpenedArchive(
         IArchive archive,

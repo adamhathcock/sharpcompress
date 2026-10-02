@@ -31,7 +31,9 @@
 4. The 7Zip format doesn't allow for reading as a forward-only stream, so 7Zip read support is only through the Archive API. Writing is supported through SevenZipWriter for non-solid archives with LZMA/LZMA2 and requires a seekable output stream. See [7Zip Format Notes](#7zip-format-notes) for details on async extraction behavior.
 5. LZip has no support for extra data like the file name or timestamp. There is a default filename used when looking at the entry Key on the archive.
 
-`ArchiveFactory.DetectArchive(...)` reports which APIs in this table are available through `SharpCompress.Detection.ArchiveDetection.SupportedApis`. Reader-only formats include Ace, Arc, Arj, and standalone LZW. Compressed TAR wrappers are detected as a TAR container with an outer compression type and support the Reader API, not the Archive API. Use `ArchiveFactory.InspectArchive(...)` when complete archive metadata is required.
+`client.Inspector.DetectArchive(...)` reports which APIs in this table are available through `SharpCompress.Detection.ArchiveDetection.SupportedApis`. Reader-only formats include Ace, Arc, Arj, and standalone LZW. Compressed TAR wrappers are detected as a TAR container with an outer compression type and support the Reader API, not the Archive API. Use `client.Inspector.InspectArchive(...)` when complete archive metadata is required. The static `ArchiveFactory` convenience methods delegate to the default client's inspector.
+
+Clients can select an immutable, ordered `FormatRegistry` through `SharpCompressConfiguration`. Recognition order and the configured compressed-TAR wrappers apply to that client only. Registry customization does not add capabilities to a format; the table above describes the built-in implementations. Use `FormatRegistry.WithTarWrappers(...)` instead of changing a global wrapper array.
 
 ### Zip Format Notes
 
