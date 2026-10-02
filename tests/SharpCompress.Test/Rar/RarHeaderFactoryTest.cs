@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -49,6 +51,66 @@ public class RarHeaderFactoryTest : TestBase
             {
                 Assert.Equal(isEncrypted, _rarHeaderFactory.IsEncrypted);
                 break;
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Rar5_ReadHeaders_WithCachedKey(bool useAsync)
+    {
+        var options = ReaderOptions.ForExternalStream.WithPassword("test");
+        Assert.Equal(6, await CountEncryptedFileHeaders(useAsync, options, false));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Rar5_ReadHeaders_RejectChangedPassword(bool useAsync)
+    {
+        var options = ReaderOptions.ForExternalStream.WithPassword("test");
+        await Assert.ThrowsAsync<CryptographicException>(async () =>
+            await CountEncryptedFileHeaders(useAsync, options, true)
+        );
+    }
+
+    private async Task<int> CountEncryptedFileHeaders(
+        bool useAsync,
+        ReaderOptions options,
+        bool changePassword
+    )
+    {
+        using var stream = File.OpenRead(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar5.encrypted_filesAndHeader.rar")
+        );
+        var factory = new RarHeaderFactory(StreamingMode.Seekable, options);
+        var count = 0;
+        if (useAsync)
+        {
+            await foreach (var header in factory.ReadHeadersAsync(stream))
+            {
+                CountHeader(header);
+            }
+        }
+        else
+        {
+            foreach (var header in factory.ReadHeaders(stream))
+            {
+                CountHeader(header);
+            }
+        }
+        return count;
+
+        void CountHeader(IRarHeader header)
+        {
+            if (header.HeaderType == HeaderType.File)
+            {
+                count++;
+                if (changePassword)
+                {
+                    options.Password = "failed";
+                }
             }
         }
     }
