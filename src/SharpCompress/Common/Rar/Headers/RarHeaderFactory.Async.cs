@@ -185,7 +185,8 @@ public partial class RarHeaderFactory
                                     fh.R4Salt is null
                                         ? new CryptKey5(
                                             Options.Password,
-                                            fh.Rar5CryptoInfo.NotNull()
+                                            fh.Rar5CryptoInfo.NotNull(),
+                                            KeyCache
                                         )
                                         : new CryptKey3(Options.Password)
                                 );

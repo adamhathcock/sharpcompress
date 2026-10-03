@@ -210,6 +210,32 @@ public class RarReaderAsyncTests : ReaderTests
     public async ValueTask Rar5_Encrypted_Reader_Async() =>
         await ReadRar_Async("Rar5.encrypted_filesOnly.rar", "test");
 
+    [Theory]
+    [InlineData("Rar5.encrypted_filesOnly.rar")]
+    [InlineData("Rar5.encrypted_filesAndHeader.rar")]
+    public async ValueTask Rar5_Encrypted_Reader_DerivesKeyOnce_Async(string testArchive)
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
+        using (
+            var baseReader = RarReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
+        {
+            var reader = (IAsyncReader)baseReader;
+            while (await reader.MoveToNextEntryAsync())
+            {
+                await reader.WriteEntryToDirectoryAsync(SCRATCH_FILES_PATH);
+            }
+            Assert.Equal(1, ((RarReader)baseReader).Volume!.KeyCache.DerivationCount);
+        }
+        VerifyFiles();
+    }
+
     private async ValueTask ReadRar_Async(string testArchive, string password) =>
         await ReadAsync(
             testArchive,

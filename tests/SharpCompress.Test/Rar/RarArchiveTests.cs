@@ -4,6 +4,7 @@ using System.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
+using SharpCompress.Common.Rar;
 using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
@@ -85,6 +86,37 @@ public class RarArchiveTests : ArchiveTests
     [Fact]
     public void Rar5_Encrypted_Archive() =>
         ReadRarPassword("Rar5.encrypted_filesAndHeader.rar", "test");
+
+    [Theory]
+    [InlineData("Rar5.encrypted_filesOnly.rar", false)]
+    [InlineData("Rar5.encrypted_filesOnly.rar", true)]
+    [InlineData("Rar5.encrypted_filesAndHeader.rar", false)]
+    [InlineData("Rar5.encrypted_filesAndHeader.rar", true)]
+    public void Rar5_Encrypted_Archive_DerivesKeyOnce(string testArchive, bool fromStream)
+    {
+        var path = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
+        using (Stream stream = File.OpenRead(path))
+        using (
+            var archive = fromStream
+                ? RarArchive.OpenArchive(
+                    stream,
+                    ReaderOptions.ForExternalStream with
+                    {
+                        Password = "test",
+                    }
+                )
+                : RarArchive.OpenArchive(path, ReaderOptions.ForFilePath with { Password = "test" })
+        )
+        {
+            foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+            {
+                entry.WriteToDirectory(SCRATCH_FILES_PATH);
+            }
+            var volume = archive.Volumes.Cast<RarVolume>().Single();
+            Assert.Equal(1, volume.KeyCache.DerivationCount);
+        }
+        VerifyFiles();
+    }
 
     private void ReadRarPassword(string testArchive, string? password)
     {

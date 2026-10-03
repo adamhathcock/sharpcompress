@@ -27,6 +27,11 @@ public abstract class RarVolume : Volume
 
     private StreamingMode Mode => _headerFactory.StreamingMode;
 
+    /// <summary>
+    /// Lets the volume's file parts reuse the RAR5 keys derived while reading its headers.
+    /// </summary>
+    internal Rar5KeyCache KeyCache => _headerFactory.KeyCache;
+
     internal abstract IEnumerable<RarFilePart> ReadFileParts();
 
     internal abstract IAsyncEnumerable<RarFilePart> ReadFilePartsAsync();

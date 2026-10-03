@@ -8,18 +8,21 @@ internal class SeekableFilePart : RarFilePart
 {
     private readonly Stream _stream;
     private readonly string? _password;
+    private readonly Rar5KeyCache _keyCache;
 
     internal SeekableFilePart(
         MarkHeader mh,
         FileHeader fh,
         int index,
         Stream stream,
-        string? password
+        string? password,
+        Rar5KeyCache keyCache
     )
         : base(mh, fh, index)
     {
         _stream = stream;
         _password = password;
+        _keyCache = keyCache;
     }
 
     internal override Stream GetCompressedStream()
@@ -34,7 +37,7 @@ internal class SeekableFilePart : RarFilePart
 
         if (FileHeader.Rar5CryptoInfo != null)
         {
-            var cryptKey = new CryptKey5(_password!, FileHeader.Rar5CryptoInfo);
+            var cryptKey = new CryptKey5(_password!, FileHeader.Rar5CryptoInfo, _keyCache);
             return new RarCryptoWrapper(_stream, FileHeader.Rar5CryptoInfo.Salt, cryptKey);
         }
 
