@@ -16,6 +16,11 @@ public partial class RarHeaderFactory
     private CryptKey5? _headerKey;
     private string? _headerPassword;
 
+    /// <summary>
+    /// PBKDF2 results shared by every encrypted header and file of this volume.
+    /// </summary>
+    internal Rar5KeyCache KeyCache { get; } = new();
+
     private CryptKey5 GetHeaderKey()
     {
         // ReaderOptions is mutable; changing its password must not keep using
@@ -23,7 +28,7 @@ public partial class RarHeaderFactory
         if (_headerKey is null || _headerPassword != Options.Password)
         {
             _headerPassword = Options.Password;
-            _headerKey = new CryptKey5(_headerPassword, _cryptInfo.NotNull());
+            _headerKey = new CryptKey5(_headerPassword, _cryptInfo.NotNull(), KeyCache);
         }
         return _headerKey;
     }
@@ -179,7 +184,8 @@ public partial class RarHeaderFactory
                                     fh.R4Salt is null
                                         ? new CryptKey5(
                                             Options.Password,
-                                            fh.Rar5CryptoInfo.NotNull()
+                                            fh.Rar5CryptoInfo.NotNull(),
+                                            KeyCache
                                         )
                                         : new CryptKey3(Options.Password)
                                 );

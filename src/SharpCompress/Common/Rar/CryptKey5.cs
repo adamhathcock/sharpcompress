@@ -14,21 +14,23 @@ internal class CryptKey5 : ICryptKey
 
     private readonly string _password;
     private readonly Rar5CryptoInfo _cryptoInfo;
-    private byte[]? _aesKey;
-    private byte[] _derivedSalt = [];
-    private int _derivedLg2Count;
-    private byte[] _pswCheck = [];
-    private byte[] _hashKey = [];
+    private readonly Rar5KeyCache _keyCache;
+    private Rar5DerivedKey? _derivedKey;
 
-    public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo)
+    /// <param name="keyCache">
+    /// Cache shared by the keys of one volume so that encrypted headers and files derive the
+    /// PBKDF2 key once. When null, the key still reuses its own derivation across calls.
+    /// </param>
+    public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo, Rar5KeyCache? keyCache = null)
     {
         _password = password ?? "";
         _cryptoInfo = rar5CryptoInfo;
+        _keyCache = keyCache ?? new Rar5KeyCache();
     }
 
-    public byte[] PswCheck => _pswCheck;
+    public byte[] PswCheck => _derivedKey?.PswCheck ?? [];
 
-    public byte[] HashKey => _hashKey;
+    public byte[] HashKey => _derivedKey?.HashKey ?? [];
 
     private static List<byte[]> GenerateRarPBKDF2Key(
         string password,
@@ -70,34 +72,28 @@ internal class CryptKey5 : ICryptKey
         return res;
     }
 
+    private static Rar5DerivedKey DeriveKey(string password, byte[] salt, int lg2Count)
+    {
+        var derivedKey = GenerateRarPBKDF2Key(
+            password,
+            salt.Concat(new byte[] { 0, 0, 0, 1 }).ToArray(),
+            1 << lg2Count,
+            DERIVED_KEY_LENGTH
+        );
+        var pswCheck = new byte[EncryptionConstV5.SIZE_PSWCHECK];
+        for (var i = 0; i < SHA256_DIGEST_SIZE; i++)
+        {
+            pswCheck[i % EncryptionConstV5.SIZE_PSWCHECK] ^= derivedKey[2][i];
+        }
+        return new Rar5DerivedKey(derivedKey[0], derivedKey[1], pswCheck);
+    }
+
     public ICryptoTransform Transformer(byte[] salt)
     {
-        // Header IVs change for each block, but the expensive KDF inputs do not.
-        // Snapshot the salt so in-place changes cannot reuse an unrelated key.
-        if (
-            _aesKey is null
-            || _derivedLg2Count != _cryptoInfo.LG2Count
-            || !_derivedSalt.SequenceEqual(salt)
-        )
-        {
-            var derivedKey = GenerateRarPBKDF2Key(
-                _password,
-                salt.Concat(new byte[] { 0, 0, 0, 1 }).ToArray(),
-                1 << _cryptoInfo.LG2Count,
-                DERIVED_KEY_LENGTH
-            );
-            _hashKey = derivedKey[1];
-            _pswCheck = new byte[EncryptionConstV5.SIZE_PSWCHECK];
-            for (var i = 0; i < SHA256_DIGEST_SIZE; i++)
-            {
-                _pswCheck[i % EncryptionConstV5.SIZE_PSWCHECK] ^= derivedKey[2][i];
-            }
-            _derivedSalt = (byte[])salt.Clone();
-            _derivedLg2Count = _cryptoInfo.LG2Count;
-            _aesKey = derivedKey[0];
-        }
+        // IVs change for each header block and file, but the expensive KDF inputs do not.
+        _derivedKey = _keyCache.GetOrDerive(_password, salt, _cryptoInfo.LG2Count, DeriveKey);
 
-        if (_cryptoInfo.UsePswCheck && !_cryptoInfo.PswCheck.SequenceEqual(_pswCheck))
+        if (_cryptoInfo.UsePswCheck && !_cryptoInfo.PswCheck.SequenceEqual(_derivedKey.PswCheck))
         {
             throw new CryptographicException("The password did not match.");
         }
@@ -106,7 +102,7 @@ internal class CryptKey5 : ICryptKey
         aes.KeySize = AES_256;
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.None;
-        aes.Key = _aesKey;
+        aes.Key = _derivedKey.AesKey;
         aes.IV = _cryptoInfo.InitV;
         return aes.CreateDecryptor();
     }

@@ -81,4 +81,35 @@ public class CryptKey5Tests : TestBase
             key.Transformer(info.Salt)
         );
     }
+
+    [Fact]
+    public void Rar5_Keys_ShareDerivedMaterial_ThroughCache()
+    {
+        var cache = new Rar5KeyCache();
+        var firstInfo = ReadCryptoInfo();
+        var secondInfo = ReadCryptoInfo();
+        secondInfo.InitV[0] = 1;
+
+        using var first = new CryptKey5("test", firstInfo, cache).Transformer(firstInfo.Salt);
+        using var second = new CryptKey5("test", secondInfo, cache).Transformer(secondInfo.Salt);
+        Assert.Equal(1, cache.DerivationCount);
+
+        using var fresh = new CryptKey5("test", secondInfo).Transformer(secondInfo.Salt);
+        Assert.Equal(
+            fresh.TransformFinalBlock(new byte[16], 0, 16),
+            second.TransformFinalBlock(new byte[16], 0, 16)
+        );
+    }
+
+    [Fact]
+    public void Rar5_KeyCache_SeparatesPasswords()
+    {
+        var cache = new Rar5KeyCache();
+        var info = ReadCryptoInfo();
+        using var first = new CryptKey5("test", info, cache).Transformer(info.Salt);
+        Assert.Throws<SharpCompress.Common.CryptographicException>(() =>
+            new CryptKey5("failed", info, cache).Transformer(info.Salt)
+        );
+        Assert.Equal(2, cache.DerivationCount);
+    }
 }

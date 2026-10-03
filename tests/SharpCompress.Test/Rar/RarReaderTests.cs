@@ -175,6 +175,31 @@ public class RarReaderTests : ReaderTests
     [Fact]
     public void Rar5_Encrypted_Reader() => ReadRar("Rar5.encrypted_filesOnly.rar", "test");
 
+    [Theory]
+    [InlineData("Rar5.encrypted_filesOnly.rar")]
+    [InlineData("Rar5.encrypted_filesAndHeader.rar")]
+    public void Rar5_Encrypted_Reader_DerivesKeyOnce(string testArchive)
+    {
+        using (Stream stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive)))
+        using (
+            var reader = RarReader.OpenReader(
+                stream,
+                ReaderOptions.ForExternalStream with
+                {
+                    Password = "test",
+                }
+            )
+        )
+        {
+            while (reader.MoveToNextEntry())
+            {
+                reader.WriteEntryToDirectory(SCRATCH_FILES_PATH);
+            }
+            Assert.Equal(1, ((RarReader)reader).Volume!.KeyCache.DerivationCount);
+        }
+        VerifyFiles();
+    }
+
     private void ReadRar(string testArchive, string password) =>
         Read(
             testArchive,
