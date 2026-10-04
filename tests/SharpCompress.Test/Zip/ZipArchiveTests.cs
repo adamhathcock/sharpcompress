@@ -149,6 +149,17 @@ public class ZipArchiveTests : ArchiveTests
         ArchiveGetParts(new[] { "WinZip26.nocomp.multi.zipx", "WinZip26.nocomp.multi.zx01" });
 
     [Fact]
+    public void Zip_GetParts_UpperCaseZip()
+    {
+        var zip = Path.Combine(SCRATCH2_FILES_PATH, "MULTI.ZIP");
+        var z01 = Path.Combine(SCRATCH2_FILES_PATH, "MULTI.z01");
+        File.Copy(Path.Combine(TEST_ARCHIVES_PATH, "Infozip.nocomp.multi.zip"), zip);
+        File.Copy(Path.Combine(TEST_ARCHIVES_PATH, "Infozip.nocomp.multi.z01"), z01);
+
+        Assert.Equal(new[] { zip, z01 }, ArchiveFactory.GetFileParts(zip));
+    }
+
+    [Fact]
     public void Zip_GetPartsSplit() =>
         //uses first part to search for all parts and compares against this array
         ArchiveGetParts(
