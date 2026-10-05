@@ -134,9 +134,9 @@ public partial class RarHeaderFactory
                 var fh = await FileHeader
                     .CreateAsync(header, reader, HeaderType.Service, cancellationToken)
                     .ConfigureAwait(false);
-                if (fh.FileName == "CMT")
+                if (fh.FileName == "CMT" && fh.IsStored)
                 {
-                    fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                    fh.PackedStream = CreatePackedStream(fh, reader.BaseStream);
                 }
                 else
                 {

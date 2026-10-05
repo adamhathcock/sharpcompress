@@ -132,9 +132,10 @@ public partial class RarHeaderFactory
             case HeaderCodeV.RAR5_SERVICE_HEADER:
             {
                 var fh = FileHeader.Create(header, reader, HeaderType.Service);
-                if (fh.FileName == "CMT")
+                // Only stored comments are supported; skip other methods without decrypting.
+                if (fh.FileName == "CMT" && fh.IsStored)
                 {
-                    fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                    fh.PackedStream = CreatePackedStream(fh, reader.BaseStream);
                 }
                 else
                 {
@@ -235,5 +236,21 @@ public partial class RarHeaderFactory
                 throw new InvalidFormatException("Invalid StreamingMode");
             }
         }
+    }
+
+    private Stream CreatePackedStream(FileHeader header, Stream stream)
+    {
+        var packedStream = new ReadOnlySubStream(stream, header.CompressedSize);
+        // Service data has its own encryption metadata, independent of header encryption.
+        if (header.Rar5CryptoInfo is not null)
+        {
+            return new RarCryptoWrapper(
+                packedStream,
+                header.Rar5CryptoInfo.Salt,
+                new CryptKey5(Options.Password, header.Rar5CryptoInfo)
+            );
+        }
+
+        return packedStream;
     }
 }
