@@ -18,6 +18,8 @@ namespace SharpCompress.Common.Rar;
 /// </summary>
 public abstract class RarVolume : Volume
 {
+    private const int MaxCommentSize = 16 * 1024 * 1024;
+
     private readonly RarHeaderFactory _headerFactory;
     private int _maxCompressionAlgorithm;
 
@@ -65,10 +67,10 @@ public abstract class RarVolume : Volume
                 case HeaderType.Service:
                     {
                         var fh = (FileHeader)header;
-                        if (fh.FileName == "CMT")
+                        if (fh.FileName == "CMT" && fh.IsStored)
                         {
                             // Read the logical service size, not the potentially padded packed size.
-                            var commentSize = checked((int)fh.UncompressedSize);
+                            var commentSize = GetCommentSize(fh);
                             var buffer = ArrayPool<byte>.Shared.Rent(commentSize);
                             try
                             {
@@ -128,9 +130,9 @@ public abstract class RarVolume : Volume
                 case HeaderType.Service:
                     {
                         var fh = (FileHeader)header;
-                        if (fh.FileName == "CMT")
+                        if (fh.FileName == "CMT" && fh.IsStored)
                         {
-                            var commentSize = checked((int)fh.UncompressedSize);
+                            var commentSize = GetCommentSize(fh);
                             var buffer = ArrayPool<byte>.Shared.Rent(commentSize);
                             try
                             {
@@ -155,6 +157,18 @@ public abstract class RarVolume : Volume
                     break;
             }
         }
+    }
+
+    private static int GetCommentSize(FileHeader header)
+    {
+        // Match UnRAR's limit for in-memory service data before renting a buffer.
+        // Unknown unpacked sizes are represented by long.MaxValue and rejected too.
+        if (header.UncompressedSize < 0 || header.UncompressedSize > MaxCommentSize)
+        {
+            throw new InvalidFormatException("RAR archive comment exceeds the 16 MiB size limit.");
+        }
+
+        return (int)header.UncompressedSize;
     }
 
     private static string DecodeComment(byte[] buffer, int commentSize)

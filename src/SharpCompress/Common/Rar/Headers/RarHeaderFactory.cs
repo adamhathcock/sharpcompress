@@ -132,7 +132,8 @@ public partial class RarHeaderFactory
             case HeaderCodeV.RAR5_SERVICE_HEADER:
             {
                 var fh = FileHeader.Create(header, reader, HeaderType.Service);
-                if (fh.FileName == "CMT")
+                // Only stored comments are supported; skip other methods without decrypting.
+                if (fh.FileName == "CMT" && fh.IsStored)
                 {
                     fh.PackedStream = CreatePackedStream(fh, reader.BaseStream);
                 }
