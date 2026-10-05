@@ -14,6 +14,7 @@ public partial class RarHeaderFactory
 {
     public async IAsyncEnumerable<IRarHeader> ReadHeadersAsync(Stream stream)
     {
+        ResetHeaderScanState();
         var markHeader = await MarkHeader
             .ReadAsync(
                 stream,
