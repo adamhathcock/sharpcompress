@@ -22,6 +22,51 @@ public class CryptKey5Tests : TestBase
     }
 
     [Fact]
+    public void Rar5_Key_SharesDerivedMaterial_AcrossEntries()
+    {
+        var cache = new Rar5KeyCache();
+        var firstInfo = ReadCryptoInfo();
+        var secondInfo = ReadCryptoInfo();
+        secondInfo.InitV[0] = 1;
+        var first = new CryptKey5("test", firstInfo, cache);
+        var second = new CryptKey5("test", secondInfo, cache);
+        using var firstTransform = first.Transformer(firstInfo.Salt);
+        using var secondTransform = second.Transformer(secondInfo.Salt);
+        Assert.Same(first.HashKey, second.HashKey);
+        Assert.Equal(first.PswCheck, second.PswCheck);
+        var firstBlock = firstTransform.TransformFinalBlock(new byte[16], 0, 16);
+        var secondBlock = secondTransform.TransformFinalBlock(new byte[16], 0, 16);
+        Assert.False(firstBlock.SequenceEqual(secondBlock));
+        using var fresh = new CryptKey5("test", secondInfo).Transformer(secondInfo.Salt);
+        Assert.Equal(fresh.TransformFinalBlock(new byte[16], 0, 16), secondBlock);
+
+        secondInfo.PswCheck[0] ^= 1;
+        Assert.Throws<SharpCompress.Common.CryptographicException>(() =>
+            new CryptKey5("test", secondInfo, cache).Transformer(secondInfo.Salt)
+        );
+        Assert.Throws<SharpCompress.Common.CryptographicException>(() =>
+            new CryptKey5("failed", firstInfo, cache).Transformer(firstInfo.Salt)
+        );
+    }
+
+    [Fact]
+    public void Rar5_KeyCache_MatchesInputs_AndBoundsRetention()
+    {
+        var cache = new Rar5KeyCache();
+        var salt = new byte[16];
+        var original = cache.GetKeys("test", salt, 0);
+        Assert.Same(original, cache.GetKeys("test", (byte[])salt.Clone(), 0));
+        Assert.NotSame(original, cache.GetKeys("other", salt, 0));
+        Assert.NotSame(original, cache.GetKeys("test", salt, 1));
+        salt[0] = 1;
+        Assert.NotSame(original, cache.GetKeys("test", salt, 0));
+        Assert.Same(original, cache.GetKeys("test", new byte[16], 0));
+        salt[0] = 2;
+        cache.GetKeys("test", salt, 0);
+        Assert.NotSame(original, cache.GetKeys("test", new byte[16], 0));
+    }
+
+    [Fact]
     public void Rar5_Key_ReusesDerivedMaterial_WithDifferentIVs()
     {
         var info = ReadCryptoInfo();

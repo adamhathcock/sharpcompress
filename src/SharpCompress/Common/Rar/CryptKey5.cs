@@ -9,35 +9,32 @@ namespace SharpCompress.Common.Rar;
 internal class CryptKey5 : ICryptKey
 {
     const int AES_256 = 256;
-    const int DERIVED_KEY_LENGTH = 0x10;
     const int SHA256_DIGEST_SIZE = 32;
 
     private readonly string _password;
     private readonly Rar5CryptoInfo _cryptoInfo;
+    private readonly Rar5KeyCache _keyCache;
     private byte[]? _aesKey;
     private byte[] _derivedSalt = [];
     private int _derivedLg2Count;
     private byte[] _pswCheck = [];
     private byte[] _hashKey = [];
 
-    public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo)
+    public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo, Rar5KeyCache? keyCache = null)
     {
         _password = password ?? "";
         _cryptoInfo = rar5CryptoInfo;
+        _keyCache = keyCache ?? new Rar5KeyCache();
     }
 
     public byte[] PswCheck => _pswCheck;
 
     public byte[] HashKey => _hashKey;
 
-    private static List<byte[]> GenerateRarPBKDF2Key(
-        string password,
-        byte[] salt,
-        int iterations,
-        int keyLength
-    )
+    internal static List<byte[]> GenerateRarPBKDF2Key(string password, byte[] salt, int iterations)
     {
         var passwordBytes = Encoding.UTF8.GetBytes(password);
+        salt = salt.Concat(new byte[] { 0, 0, 0, 1 }).ToArray();
 #if LEGACY_DOTNET
         using var hmac = new HMACSHA256(passwordBytes);
         var block = hmac.ComputeHash(salt);
@@ -80,12 +77,7 @@ internal class CryptKey5 : ICryptKey
             || !_derivedSalt.SequenceEqual(salt)
         )
         {
-            var derivedKey = GenerateRarPBKDF2Key(
-                _password,
-                salt.Concat(new byte[] { 0, 0, 0, 1 }).ToArray(),
-                1 << _cryptoInfo.LG2Count,
-                DERIVED_KEY_LENGTH
-            );
+            var derivedKey = _keyCache.GetKeys(_password, salt, _cryptoInfo.LG2Count);
             _hashKey = derivedKey[1];
             _pswCheck = new byte[EncryptionConstV5.SIZE_PSWCHECK];
             for (var i = 0; i < SHA256_DIGEST_SIZE; i++)
