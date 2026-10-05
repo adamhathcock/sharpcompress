@@ -39,8 +39,20 @@ public partial class RarHeaderFactory
     public StreamingMode StreamingMode { get; }
     public bool IsEncrypted { get; private set; }
 
+    private void ResetHeaderScanState()
+    {
+        // Metadata probes rewind the stream. Each new scan must rediscover encryption
+        // from the plaintext archive headers, rather than reuse the previous scan's state.
+        IsEncrypted = false;
+        _cryptInfo = null;
+        _headerKey = null;
+        _headerPassword = null;
+        // Keep the password/salt/iteration-keyed KDF cache across scans.
+    }
+
     public IEnumerable<IRarHeader> ReadHeaders(Stream stream)
     {
+        ResetHeaderScanState();
         var markHeader = MarkHeader.Read(stream, Options.LeaveStreamOpen, Options.LookForHeader);
         _isRar5 = markHeader.IsRar5;
         yield return markHeader;
