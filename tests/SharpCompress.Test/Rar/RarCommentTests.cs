@@ -243,7 +243,7 @@ public class RarCommentTests : TestBase
             string? comment;
             if (useAsync)
             {
-                await using var reader = await RarReader.OpenAsyncReader(
+                await using var reader = await ReaderFactory.OpenAsyncReader(
                     forwardOnly,
                     options,
                     CancellationToken.None
