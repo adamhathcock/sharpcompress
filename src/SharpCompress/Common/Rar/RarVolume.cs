@@ -21,6 +21,7 @@ public abstract class RarVolume : Volume
     private const int MaxCommentSize = 16 * 1024 * 1024;
 
     private readonly RarHeaderFactory _headerFactory;
+    internal Rar5KeyCache KeyCache => _headerFactory.KeyCache;
     private int _maxCompressionAlgorithm;
 
     internal RarVolume(StreamingMode mode, Stream stream, ReaderOptions options, int index)

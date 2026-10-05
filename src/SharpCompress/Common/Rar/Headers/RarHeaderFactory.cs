@@ -15,6 +15,7 @@ public partial class RarHeaderFactory
     private Rar5CryptoInfo? _cryptInfo;
     private CryptKey5? _headerKey;
     private string? _headerPassword;
+    internal Rar5KeyCache KeyCache { get; } = new();
 
     private CryptKey5 GetHeaderKey()
     {
@@ -23,7 +24,7 @@ public partial class RarHeaderFactory
         if (_headerKey is null || _headerPassword != Options.Password)
         {
             _headerPassword = Options.Password;
-            _headerKey = new CryptKey5(_headerPassword, _cryptInfo.NotNull());
+            _headerKey = new CryptKey5(_headerPassword, _cryptInfo.NotNull(), KeyCache);
         }
         return _headerKey;
     }
@@ -180,7 +181,8 @@ public partial class RarHeaderFactory
                                     fh.R4Salt is null
                                         ? new CryptKey5(
                                             Options.Password,
-                                            fh.Rar5CryptoInfo.NotNull()
+                                            fh.Rar5CryptoInfo.NotNull(),
+                                            KeyCache
                                         )
                                         : new CryptKey3(Options.Password)
                                 );
@@ -247,7 +249,7 @@ public partial class RarHeaderFactory
             return new RarCryptoWrapper(
                 packedStream,
                 header.Rar5CryptoInfo.Salt,
-                new CryptKey5(Options.Password, header.Rar5CryptoInfo)
+                new CryptKey5(Options.Password, header.Rar5CryptoInfo, KeyCache)
             );
         }
 
