@@ -82,7 +82,7 @@ internal sealed partial class GZipFilePart
             var lengthField = new byte[2];
             _ = await _stream.ReadAsync(lengthField, 0, 2, cancellationToken).ConfigureAwait(false);
 
-            var extraLength = (short)(lengthField[0] + (lengthField[1] * 256));
+            var extraLength = lengthField[0] + (lengthField[1] * 256);
             var extra = new byte[extraLength];
 
             if (!await _stream.ReadFullyAsync(extra, cancellationToken).ConfigureAwait(false))
