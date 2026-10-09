@@ -1,7 +1,7 @@
 <Project>
   <ItemGroup>
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="Bullseye" Version="6.2.0" />
+    <PackageVersion Include="Bullseye" Version="6.3.0" />
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
     <PackageVersion Include="Glob" Version="1.1.9" />
     <PackageVersion Include="JetBrains.Profiler.SelfApi" Version="2.5.18" />
@@ -19,6 +19,6 @@
       Version="17.14.15"
     />
     <GlobalPackageReference Include="PolySharp" Version="1.16.0" />
-    <GlobalPackageReference Include="Zomp.SyncMethodGenerator" Version="2.0.56" />
+    <GlobalPackageReference Include="Zomp.SyncMethodGenerator" Version="2.0.66" />
   </ItemGroup>
 </Project>
