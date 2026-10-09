@@ -87,7 +87,7 @@ internal sealed partial class GZipFilePart : FilePart
             // read and discard extra field
             n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
 
-            var extraLength = (short)(header[0] + (header[1] * 256));
+            var extraLength = header[0] + (header[1] * 256);
             var extra = new byte[extraLength];
 
             if (!_stream.ReadFully(extra))

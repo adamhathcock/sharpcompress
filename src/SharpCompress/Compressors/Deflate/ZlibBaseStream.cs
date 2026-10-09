@@ -660,7 +660,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
             totalBytesRead += n;
 
-            var extraLength = (short)(header[0] + header[1] * 256);
+            var extraLength = header[0] + (header[1] * 256);
             var extra = new byte[extraLength];
             n = _stream.Read(extra, 0, extra.Length);
             if (n != extraLength)
@@ -720,7 +720,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             n = await _stream.ReadAsync(header, 0, 2, cancellationToken).ConfigureAwait(false); // 2-byte length field
             totalBytesRead += n;
 
-            var extraLength = (short)(header[0] + header[1] * 256);
+            var extraLength = header[0] + (header[1] * 256);
             var extra = new byte[extraLength];
             n = await _stream
                 .ReadAsync(extra, 0, extra.Length, cancellationToken)

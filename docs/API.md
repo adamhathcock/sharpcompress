@@ -101,6 +101,27 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 | `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |
 | `SolidStreamCount` | `SolidStreamCount` |
 
+### RAR5 Archive Comments
+
+`SharpCompress.Common.Rar.RarVolume.Comment` exposes UTF-8 archive comments, including encrypted comments when `ReaderOptions.Password` is supplied. Comments are loaded while entries are enumerated; the property can be `null` before enumeration or when no comment is present.
+
+Stored (compression method 0) comments are supported up to 16 MiB of unpacked data; larger or unknown-size comments throw `InvalidFormatException`. Comments using other compression methods are skipped without affecting entry extraction.
+
+```csharp
+using var archive = RarArchive.OpenArchive(
+    "encrypted.rar",
+    ReaderOptions.ForFilePath.WithPassword("password")
+);
+foreach (var entry in archive.Entries)
+{
+    Console.WriteLine(entry.Key);
+}
+foreach (var volume in archive.Volumes.OfType<SharpCompress.Common.Rar.RarVolume>())
+{
+    Console.WriteLine(volume.Comment);
+}
+```
+
 ### Creating Archives
 
 ```csharp

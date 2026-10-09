@@ -9,32 +9,32 @@ namespace SharpCompress.Common.Rar;
 internal class CryptKey5 : ICryptKey
 {
     const int AES_256 = 256;
-    const int DERIVED_KEY_LENGTH = 0x10;
     const int SHA256_DIGEST_SIZE = 32;
 
-    private string _password;
-    private Rar5CryptoInfo _cryptoInfo;
+    private readonly string _password;
+    private readonly Rar5CryptoInfo _cryptoInfo;
+    private readonly Rar5KeyCache _keyCache;
+    private byte[]? _aesKey;
+    private byte[] _derivedSalt = [];
+    private int _derivedLg2Count;
     private byte[] _pswCheck = [];
     private byte[] _hashKey = [];
 
-    public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo)
+    public CryptKey5(string? password, Rar5CryptoInfo rar5CryptoInfo, Rar5KeyCache? keyCache = null)
     {
         _password = password ?? "";
         _cryptoInfo = rar5CryptoInfo;
+        _keyCache = keyCache ?? new Rar5KeyCache();
     }
 
     public byte[] PswCheck => _pswCheck;
 
     public byte[] HashKey => _hashKey;
 
-    private static List<byte[]> GenerateRarPBKDF2Key(
-        string password,
-        byte[] salt,
-        int iterations,
-        int keyLength
-    )
+    internal static List<byte[]> GenerateRarPBKDF2Key(string password, byte[] salt, int iterations)
     {
         var passwordBytes = Encoding.UTF8.GetBytes(password);
+        salt = salt.Concat(new byte[] { 0, 0, 0, 1 }).ToArray();
 #if LEGACY_DOTNET
         using var hmac = new HMACSHA256(passwordBytes);
         var block = hmac.ComputeHash(salt);
@@ -69,23 +69,24 @@ internal class CryptKey5 : ICryptKey
 
     public ICryptoTransform Transformer(byte[] salt)
     {
-        var iterations = (1 << _cryptoInfo.LG2Count); // Adjust the number of iterations as needed
-
-        var salt_rar5 = salt.Concat(new byte[] { 0, 0, 0, 1 });
-        var derivedKey = GenerateRarPBKDF2Key(
-            _password,
-            salt_rar5.ToArray(),
-            iterations,
-            DERIVED_KEY_LENGTH
-        );
-
-        _hashKey = derivedKey[1];
-
-        _pswCheck = new byte[EncryptionConstV5.SIZE_PSWCHECK];
-
-        for (var i = 0; i < SHA256_DIGEST_SIZE; i++)
+        // Header IVs change for each block, but the expensive KDF inputs do not.
+        // Snapshot the salt so in-place changes cannot reuse an unrelated key.
+        if (
+            _aesKey is null
+            || _derivedLg2Count != _cryptoInfo.LG2Count
+            || !_derivedSalt.SequenceEqual(salt)
+        )
         {
-            _pswCheck[i % EncryptionConstV5.SIZE_PSWCHECK] ^= derivedKey[2][i];
+            var derivedKey = _keyCache.GetKeys(_password, salt, _cryptoInfo.LG2Count);
+            _hashKey = derivedKey[1];
+            _pswCheck = new byte[EncryptionConstV5.SIZE_PSWCHECK];
+            for (var i = 0; i < SHA256_DIGEST_SIZE; i++)
+            {
+                _pswCheck[i % EncryptionConstV5.SIZE_PSWCHECK] ^= derivedKey[2][i];
+            }
+            _derivedSalt = (byte[])salt.Clone();
+            _derivedLg2Count = _cryptoInfo.LG2Count;
+            _aesKey = derivedKey[0];
         }
 
         if (_cryptoInfo.UsePswCheck && !_cryptoInfo.PswCheck.SequenceEqual(_pswCheck))
@@ -93,11 +94,11 @@ internal class CryptKey5 : ICryptKey
             throw new CryptographicException("The password did not match.");
         }
 
-        var aes = Aes.Create();
+        using var aes = Aes.Create();
         aes.KeySize = AES_256;
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.None;
-        aes.Key = derivedKey[0];
+        aes.Key = _aesKey;
         aes.IV = _cryptoInfo.InitV;
         return aes.CreateDecryptor();
     }

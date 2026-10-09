@@ -14,6 +14,7 @@ public partial class RarHeaderFactory
 {
     public async IAsyncEnumerable<IRarHeader> ReadHeadersAsync(Stream stream)
     {
+        ResetHeaderScanState();
         var markHeader = await MarkHeader
             .ReadAsync(
                 stream,
@@ -67,10 +68,8 @@ public partial class RarHeaderFactory
                 await _cryptInfo
                     .ReadInitVAsync(new AsyncMarkingBinaryReader(stream))
                     .ConfigureAwait(false);
-                var _headerKey = new CryptKey5(Options.Password!, _cryptInfo);
-
                 reader = await AsyncRarCryptoBinaryReader
-                    .Create(stream, _headerKey, _cryptInfo.Salt)
+                    .Create(stream, GetHeaderKey(), _cryptInfo.Salt)
                     .ConfigureAwait(false);
             }
             else
@@ -136,9 +135,9 @@ public partial class RarHeaderFactory
                 var fh = await FileHeader
                     .CreateAsync(header, reader, HeaderType.Service, cancellationToken)
                     .ConfigureAwait(false);
-                if (fh.FileName == "CMT")
+                if (fh.FileName == "CMT" && fh.IsStored)
                 {
-                    fh.PackedStream = new ReadOnlySubStream(reader.BaseStream, fh.CompressedSize);
+                    fh.PackedStream = CreatePackedStream(fh, reader.BaseStream);
                 }
                 else
                 {
@@ -187,7 +186,8 @@ public partial class RarHeaderFactory
                                     fh.R4Salt is null
                                         ? new CryptKey5(
                                             Options.Password,
-                                            fh.Rar5CryptoInfo.NotNull()
+                                            fh.Rar5CryptoInfo.NotNull(),
+                                            KeyCache
                                         )
                                         : new CryptKey3(Options.Password)
                                 );
@@ -215,6 +215,7 @@ public partial class RarHeaderFactory
                     .ConfigureAwait(false);
                 IsEncrypted = true;
                 _cryptInfo = cryptoHeader.CryptInfo;
+                _headerKey = null;
 
                 return cryptoHeader;
             }
