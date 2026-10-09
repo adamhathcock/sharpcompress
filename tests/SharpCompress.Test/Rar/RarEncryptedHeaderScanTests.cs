@@ -125,7 +125,7 @@ public class RarEncryptedHeaderScanTests : TestBase
         while (await reader.MoveToNextEntryAsync(CancellationToken.None))
         {
             Assert.Equal($"f{count:D3}.txt", reader.Entry.Key);
-            await using var entryStream = await reader.OpenEntryStreamAsync(CancellationToken.None);
+            using var entryStream = await reader.OpenEntryStreamAsync(CancellationToken.None);
             using var textReader = new StreamReader(entryStream);
             Assert.Equal(
                 "Solid encrypted header regression test.\n",
