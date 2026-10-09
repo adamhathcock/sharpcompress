@@ -74,10 +74,8 @@ public class GZipExtraFieldTests
     [Fact]
     public async ValueTask GZipReader_ReadAsync_WithLargeExtraFieldAndName_ShouldReturnEntry()
     {
-        await using var input = new AsyncOnlyStream(
-            new MemoryStream(CreateGZipWithExtraField(65535, "payload.bin")),
-            disposeStream: false
-        );
+        using var rawInput = new MemoryStream(CreateGZipWithExtraField(65535, "payload.bin"));
+        using var input = new AsyncOnlyStream(rawInput, disposeStream: false);
         await using var reader = await GZipReader.OpenAsyncReader(input);
 
         Assert.True(await reader.MoveToNextEntryAsync());
@@ -107,10 +105,8 @@ public class GZipExtraFieldTests
     [Fact]
     public async ValueTask GZipArchive_ReadAsync_WithLargeExtraFieldAndName_ShouldReturnEntry()
     {
-        await using var input = new AsyncOnlyStream(
-            new MemoryStream(CreateGZipWithExtraField(65535, "payload.bin")),
-            disposeStream: false
-        );
+        using var rawInput = new MemoryStream(CreateGZipWithExtraField(65535, "payload.bin"));
+        using var input = new AsyncOnlyStream(rawInput, disposeStream: false);
         await using var archive = await GZipArchive.OpenAsyncArchive(input);
         var entry = await archive.EntriesAsync.FirstAsync();
 
