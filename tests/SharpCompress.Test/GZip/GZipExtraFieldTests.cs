@@ -40,7 +40,7 @@ public class GZipExtraFieldTests
     )
     {
         using var rawInput = new MemoryStream(CreateGZipWithExtraField(extraLength));
-        await using var input = new AsyncOnlyStream(rawInput, disposeStream: false);
+        using var input = new AsyncOnlyStream(rawInput, disposeStream: false);
         await using var gzip = new SharpCompress.Compressors.Deflate.GZipStream(
             input,
             SharpCompressionMode.Decompress
