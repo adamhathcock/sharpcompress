@@ -16,6 +16,47 @@ public class SymbolicLinkExtractionTests : TestBase
 {
     private const int TarBlockSize = 512;
 
+    private static readonly string[] ExtractionApis =
+    [
+        "ReaderAll",
+        "ReaderEntry",
+        "Archive",
+        "ArchiveEntry",
+        "AsyncReaderAll",
+        "AsyncReaderEntry",
+        "AsyncArchive",
+        "AsyncArchiveEntry",
+    ];
+
+    public static TheoryData<string, bool> OutsideLinkCases
+    {
+        get
+        {
+            var cases = new TheoryData<string, bool>();
+            foreach (var api in ExtractionApis)
+            {
+                cases.Add(api, false);
+                cases.Add(api, true);
+            }
+            return cases;
+        }
+    }
+
+    public static TheoryData<string, string> ExistingLinkCases
+    {
+        get
+        {
+            var cases = new TheoryData<string, string>();
+            foreach (var api in ExtractionApis)
+            {
+                cases.Add(api, "link/secret.txt");
+                cases.Add(api, "link/child/secret.txt");
+                cases.Add(api, "link");
+            }
+            return cases;
+        }
+    }
+
     [Theory]
     [InlineData("ReaderAll")]
     [InlineData("ReaderEntry")]
@@ -45,6 +86,109 @@ public class SymbolicLinkExtractionTests : TestBase
         Assert.Contains("symbolic link whose target is outside", extractionException.Message);
         Assert.Equal(0, handlerCalls);
         Assert.False(File.Exists(Path.Combine(outsideDirectory, "secret.txt")));
+    }
+
+    [Theory]
+    [MemberData(nameof(OutsideLinkCases))]
+    public async Task SymbolicLinkChainingOutsideDestination_ShouldNotOverwriteFiles(
+        string api,
+        bool absoluteTarget
+    )
+    {
+        var destinationDirectory = GetScratchPath("extract");
+        var outsideDirectory = GetScratchPath("outside");
+        var outsideFile = Path.Combine(outsideDirectory, "secret.txt");
+        var archivePath = GetScratch2Path("symbolic-link-overwrite.tar");
+        Directory.CreateDirectory(destinationDirectory);
+        Directory.CreateDirectory(outsideDirectory);
+        File.WriteAllText(outsideFile, "original");
+        BuildTar(archivePath, absoluteTarget ? outsideDirectory : "../outside");
+
+        var handlerCalls = 0;
+        var options = new ExtractionOptions
+        {
+            ExtractFullPath = true,
+            Overwrite = true,
+            SymbolicLinkHandler = (linkPath, linkTarget) =>
+            {
+                handlerCalls++;
+                CreateReparsePoint(linkPath, linkTarget);
+            },
+        };
+
+        var exception = await ExtractAsync(api, archivePath, destinationDirectory, options);
+
+        Assert.IsType<ExtractionException>(exception);
+        Assert.Equal(0, handlerCalls);
+        Assert.Equal("original", File.ReadAllText(outsideFile));
+        Assert.False(File.Exists(Path.Combine(outsideDirectory, "created.txt")));
+        Assert.False(Directory.Exists(Path.Combine(destinationDirectory, "link")));
+    }
+
+    [Theory]
+    [MemberData(nameof(ExistingLinkCases))]
+    public async Task ExistingSymbolicLink_ShouldNotBeFollowed(string api, string entryName)
+    {
+        var destinationDirectory = GetScratchPath("extract");
+        var outsideDirectory = GetScratchPath("outside");
+        var outsideFile = Path.Combine(outsideDirectory, "secret.txt");
+        var archivePath = GetScratch2Path("existing-symbolic-link.tar");
+        Directory.CreateDirectory(destinationDirectory);
+        Directory.CreateDirectory(outsideDirectory);
+        File.WriteAllText(outsideFile, "original");
+        var linkPath = Path.Combine(destinationDirectory, "link");
+        CreateReparsePoint(linkPath, outsideDirectory);
+        BuildFileTar(archivePath, entryName);
+
+        try
+        {
+            var exception = await ExtractAsync(
+                api,
+                archivePath,
+                destinationDirectory,
+                new ExtractionOptions { ExtractFullPath = true, Overwrite = true }
+            );
+
+            var extractionException = Assert.IsType<ExtractionException>(exception);
+            Assert.Contains("symbolic link or reparse point", extractionException.Message);
+            Assert.Equal("original", File.ReadAllText(outsideFile));
+            Assert.False(Directory.Exists(Path.Combine(outsideDirectory, "child")));
+        }
+        finally
+        {
+            // Remove the link itself so test cleanup cannot traverse the outside directory.
+            Directory.Delete(linkPath);
+        }
+    }
+
+    [Theory]
+    [InlineData("ReaderAll")]
+    [InlineData("ReaderEntry")]
+    [InlineData("Archive")]
+    [InlineData("ArchiveEntry")]
+    [InlineData("AsyncReaderAll")]
+    [InlineData("AsyncReaderEntry")]
+    [InlineData("AsyncArchive")]
+    [InlineData("AsyncArchiveEntry")]
+    public async Task NestedFileWithoutSymbolicLinks_ShouldBeExtracted(string api)
+    {
+        var destinationDirectory = GetScratchPath("extract");
+        var archivePath = GetScratch2Path("nested-file.tar");
+        Directory.CreateDirectory(destinationDirectory);
+        BuildFileTar(archivePath, "nested/child/secret.txt");
+
+        var exception = await ExtractAsync(
+            api,
+            archivePath,
+            destinationDirectory,
+            new ExtractionOptions { ExtractFullPath = true }
+        );
+
+        Assert.Null(exception);
+        Assert.Equal(
+            "secret",
+            File.ReadAllText(Path.Combine(destinationDirectory, "nested", "child", "secret.txt"))
+        );
     }
 
     [Theory]
@@ -115,6 +259,20 @@ public class SymbolicLinkExtractionTests : TestBase
         using var stream = File.Create(path);
         WriteTarEntry(stream, "link", (byte)'2', linkTarget, Array.Empty<byte>());
         WriteTarEntry(stream, "link/secret.txt", (byte)'0', null, Encoding.UTF8.GetBytes("secret"));
+        WriteTarEntry(
+            stream,
+            "link/created.txt",
+            (byte)'0',
+            null,
+            Encoding.UTF8.GetBytes("created")
+        );
+        stream.Write(new byte[TarBlockSize * 2]);
+    }
+
+    private static void BuildFileTar(string path, string entryName)
+    {
+        using var stream = File.Create(path);
+        WriteTarEntry(stream, entryName, (byte)'0', null, Encoding.UTF8.GetBytes("secret"));
         stream.Write(new byte[TarBlockSize * 2]);
     }
 
