@@ -15,6 +15,7 @@ internal sealed partial class GZipFilePart : FilePart
     private string? _name;
     private readonly Stream _stream;
     private readonly CompressionProviderRegistry _compressionProviders;
+    private Stream? _decompressor;
 
     internal static GZipFilePart Create(
         Stream stream,
@@ -64,11 +65,22 @@ internal sealed partial class GZipFilePart : FilePart
     internal override Stream GetCompressedStream()
     {
         //GZip uses Deflate compression, at this point we need a deflate stream
-        return _compressionProviders.CreateDecompressStream(CompressionType.Deflate, _stream);
+        _decompressor = _compressionProviders.CreateDecompressStream(
+            CompressionType.Deflate,
+            _stream
+        );
+        return _decompressor;
     }
 
     internal Stream WrapWithChecksumValidation(Stream source, string? entryName) =>
-        new GZipChecksumValidationStream(source, _stream, entryName, Crc, UncompressedSize);
+        new GZipChecksumValidationStream(
+            source,
+            _stream,
+            entryName,
+            Crc,
+            UncompressedSize,
+            () => (_decompressor as DeflateStream)?.InputBuffer
+        );
 
     internal override Stream GetRawStream() => _stream;
 
@@ -76,7 +88,10 @@ internal sealed partial class GZipFilePart : FilePart
     {
         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
         Span<byte> trailer = stackalloc byte[8];
-        _stream.ReadFully(trailer);
+        if (!_stream.ReadFully(trailer))
+        {
+            throw new ZlibException("Unexpected end-of-file reading GZIP trailer.");
+        }
 
         Crc = BinaryPrimitives.ReadUInt32LittleEndian(trailer);
         UncompressedSize = BinaryPrimitives.ReadUInt32LittleEndian(trailer.Slice(4));

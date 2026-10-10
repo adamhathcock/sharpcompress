@@ -44,7 +44,10 @@ internal sealed partial class GZipFilePart
     {
         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
         var trailer = new byte[8];
-        _ = await _stream.ReadFullyAsync(trailer, 0, 8, cancellationToken).ConfigureAwait(false);
+        if (!await _stream.ReadFullyAsync(trailer, cancellationToken).ConfigureAwait(false))
+        {
+            throw new ZlibException("Unexpected end-of-file reading GZIP trailer.");
+        }
 
         Crc = BinaryPrimitives.ReadUInt32LittleEndian(trailer);
         UncompressedSize = BinaryPrimitives.ReadUInt32LittleEndian(trailer.AsSpan().Slice(4));
@@ -150,8 +153,9 @@ internal sealed partial class GZipFilePart
     )
     {
         // GZip uses Deflate compression
-        return await _compressionProviders
+        _decompressor = await _compressionProviders
             .CreateDecompressStreamAsync(CompressionType.Deflate, _stream, cancellationToken)
             .ConfigureAwait(false);
+        return _decompressor;
     }
 }
