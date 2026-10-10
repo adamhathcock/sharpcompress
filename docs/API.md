@@ -486,6 +486,8 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
 
 `CheckCrc` validates archive-level payload checksums when the format stores reliable metadata, such as ZIP CRC32 values. Formats without payload checksums skip this validation. Decompressor integrity checks that are required to decode a stream may still fail even when `CheckCrc` is disabled.
 
+WinZip AES authentication is always checked, including when `CheckCrc` is disabled. Complete or dispose entry streams to verify authentication; plaintext returned before completion must not be treated as authenticated. Invalid authentication tags throw `InvalidFormatException`, and missing ciphertext or tag bytes throw `IncompleteArchiveException`.
+
 7z AES key derivation accepts iteration exponents 0 through 24 and the special `0x3F` direct-key mode. Larger iteration exponents throw `NotSupportedException` before key derivation, including when salt and IV are absent.
 
 When using `SymbolicLinkHandler`, directory extraction rejects link targets outside the extraction root and never follows symbolic links or reparse points while extracting later entries. The handler itself remains trusted application code.

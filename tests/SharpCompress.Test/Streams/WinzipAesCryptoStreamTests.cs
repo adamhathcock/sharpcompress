@@ -4,14 +4,175 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Zip;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
 
 public class WinzipAesCryptoStreamTests
 {
+    [Fact]
+    public void Dispose_Verifies_Unread_Ciphertext()
+    {
+        byte[] salt = [0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87];
+        var stream = CreateStream(
+            new byte[33],
+            "password",
+            salt,
+            fragmented: true,
+            corruption: "ciphertext"
+        );
+        Assert.Equal(1, stream.Read(new byte[1], 0, 1));
+        Assert.Throws<SharpCompress.Common.InvalidFormatException>(() => stream.Dispose());
+        stream.Dispose();
+    }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public async Task DisposeAsync_Verifies_Unread_Ciphertext()
+    {
+        byte[] salt = [0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87];
+        var stream = CreateStream(
+            new byte[33],
+            "password",
+            salt,
+            fragmented: true,
+            corruption: "ciphertext"
+        );
+        Assert.Equal(1, await stream.ReadAsync(new byte[1], 0, 1, CancellationToken.None));
+        await Assert.ThrowsAsync<SharpCompress.Common.InvalidFormatException>(async () =>
+            await stream.DisposeAsync()
+        );
+        await stream.DisposeAsync();
+    }
+#endif
+
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(true, 0)]
+    [InlineData(false, 33)]
+    [InlineData(true, 33)]
+    public async Task Authentication_Allows_Fragmented_Reads_And_Empty_Payloads(
+        bool async,
+        int length
+    )
+    {
+        byte[] salt = [0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87];
+        byte[] payload = Enumerable.Range(0, length).Select(i => (byte)i).ToArray();
+        using var stream = CreateStream(payload, "password", salt, fragmented: true);
+        Assert.Equal(0, stream.Read(Array.Empty<byte>(), 0, 0));
+        using var output = new MemoryStream();
+        if (async)
+        {
+            await stream.CopyToAsync(output, 81920, CancellationToken.None);
+        }
+        else
+        {
+            stream.CopyTo(output);
+        }
+        Assert.Equal(payload, output.ToArray());
+    }
+
+    [Theory]
+    [InlineData(false, "ciphertext")]
+    [InlineData(true, "ciphertext")]
+    [InlineData(false, "missing-tag")]
+    [InlineData(true, "missing-tag")]
+    public async Task Authentication_Rejects_Tampering_And_Truncated_Tags(
+        bool async,
+        string corruption
+    )
+    {
+        byte[] salt = [0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87];
+        using var stream = CreateStream(
+            new byte[33],
+            "password",
+            salt,
+            fragmented: true,
+            corruption: corruption
+        );
+        using var output = new MemoryStream();
+        if (async)
+        {
+            var error = await Record.ExceptionAsync(async () =>
+                await stream.CopyToAsync(output, 81920, CancellationToken.None)
+            );
+            Assert.Equal(
+                corruption == "ciphertext"
+                    ? typeof(SharpCompress.Common.InvalidFormatException)
+                    : typeof(SharpCompress.Common.IncompleteArchiveException),
+                error!.GetType()
+            );
+            Assert.Same(
+                error,
+                await Record.ExceptionAsync(async () =>
+                    await stream.ReadAsync(new byte[1], 0, 1, CancellationToken.None)
+                )
+            );
+        }
+        else
+        {
+            var error = Record.Exception(() => stream.CopyTo(output));
+            Assert.Equal(
+                corruption == "ciphertext"
+                    ? typeof(SharpCompress.Common.InvalidFormatException)
+                    : typeof(SharpCompress.Common.IncompleteArchiveException),
+                error!.GetType()
+            );
+            Assert.Same(error, Record.Exception(() => stream.Read(new byte[1], 0, 1)));
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Read_Rejects_Modified_Authentication_Tag(bool async)
+    {
+        byte[] salt = [0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87];
+        var data = CreateEncryptionData("password", salt);
+        var cipher = EncryptCtr(new byte[32], data.KeyBytes);
+        using var input = new MemoryStream(cipher.Concat(new byte[10]).ToArray());
+        using var stream = new WinzipAesCryptoStream(input, data, cipher.Length);
+        if (async)
+        {
+            await Assert.ThrowsAsync<SharpCompress.Common.InvalidFormatException>(async () =>
+                await stream.ReadAsync(new byte[32], 0, 32)
+            );
+        }
+        else
+        {
+            Assert.Throws<SharpCompress.Common.InvalidFormatException>(() =>
+                stream.Read(new byte[32], 0, 32)
+            );
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Read_Rejects_Truncated_Ciphertext(bool async)
+    {
+        byte[] salt = [0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87];
+        var data = CreateEncryptionData("password", salt);
+        using var input = new MemoryStream();
+        using var stream = new WinzipAesCryptoStream(input, data, 32);
+        if (async)
+        {
+            await Assert.ThrowsAsync<SharpCompress.Common.IncompleteArchiveException>(async () =>
+                await stream.ReadAsync(new byte[32], 0, 32)
+            );
+        }
+        else
+        {
+            Assert.Throws<SharpCompress.Common.IncompleteArchiveException>(() =>
+                stream.Read(new byte[32], 0, 32)
+            );
+        }
+    }
+
     [Fact]
     public void Read_Decrypts_Data_For_Aligned_Buffer_Size()
     {
@@ -104,17 +265,33 @@ public class WinzipAesCryptoStreamTests
     private static WinzipAesCryptoStream CreateStream(
         byte[] plainText,
         string password,
-        byte[] salt
+        byte[] salt,
+        bool fragmented = false,
+        string? corruption = null
     )
     {
         var encryptionData = CreateEncryptionData(password, salt);
         byte[] cipherText = EncryptCtr(plainText, encryptionData.KeyBytes);
-        byte[] archiveBytes = cipherText.Concat(new byte[10]).ToArray();
-        return new WinzipAesCryptoStream(
-            new MemoryStream(archiveBytes, writable: false),
-            encryptionData,
-            cipherText.Length
-        );
+#pragma warning disable CA5350 // WinZip AES mandates HMAC-SHA1-80.
+        using var authentication = new HMACSHA1(encryptionData.IvBytes);
+#pragma warning restore CA5350
+        byte[] archiveBytes = cipherText
+            .Concat(authentication.ComputeHash(cipherText).Take(10))
+            .ToArray();
+        if (corruption == "ciphertext")
+        {
+            archiveBytes[0] ^= 1;
+        }
+        else if (corruption == "missing-tag")
+        {
+            archiveBytes = archiveBytes.Take(archiveBytes.Length - 1).ToArray();
+        }
+        Stream input = new MemoryStream(archiveBytes, writable: false);
+        if (fragmented)
+        {
+            input = new ShortReadStream(input);
+        }
+        return new WinzipAesCryptoStream(input, encryptionData, cipherText.Length);
     }
 
     [SuppressMessage(

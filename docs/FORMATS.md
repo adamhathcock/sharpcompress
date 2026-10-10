@@ -37,6 +37,7 @@
 
 - Multi-volume/split ZIP archives require ZipArchive (seekable streams) as ZipReader cannot seek across volume files.
 - ZIP/ZIPX companion volumes are discovered with a case-insensitive filename fallback, including on case-sensitive filesystems. An exact generated filename takes precedence; ambiguous fallback matches throw `InvalidFormatException`.
+- WinZip AES authentication (HMAC-SHA1-80 over ciphertext) is verified independently of `CheckCrc`. Incorrect tags throw `InvalidFormatException`; truncated ciphertext or tags throw `IncompleteArchiveException`. Reading an entry to completion or disposing its stream verifies authentication.
 - ZipReader processes entries from LocalEntry headers (which include directory entries ending with `/`) and intentionally skips DirectoryEntry headers from the central directory, as they are redundant in streaming mode - all entry data comes from LocalEntry headers which ZipReader has already processed.
 - ZIP supports ZStandard for reading and writing. Tar.Zstandard support is read/decompress only.
 
