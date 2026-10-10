@@ -97,6 +97,28 @@ public class GZipExtraFieldTests
         Assert.Equal(EXPECTED_PAYLOAD, output.ToArray());
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(4)]
+    public async Task GZip_Async_Dispose_Rejects_Corrupt_Trailer(int offset)
+    {
+        var bytes = CreateGZipWithExtraField(0, null);
+        bytes[bytes.Length - 8 + offset] ^= 1;
+        using var input = new ShortReadStream(new MemoryStream(bytes));
+        var gzip = new SharpCompress.Compressors.Deflate.GZipStream(
+            input,
+            SharpCompressionMode.Decompress,
+            CompressionLevel.Default,
+            Encoding.UTF8,
+            leaveOpen: true
+        );
+        using var output = new MemoryStream();
+        await gzip.CopyToAsync(output, 81920, CancellationToken.None);
+        await Assert.ThrowsAsync<SharpCompress.Compressors.Deflate.ZlibException>(async () =>
+            await gzip.DisposeAsync()
+        );
+    }
+
     public static IEnumerable<object[]> FragmentedExtraFields()
     {
         foreach (var api in new[] { "Stream", "Reader", "Archive" })

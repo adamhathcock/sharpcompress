@@ -327,7 +327,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                 if (!_wantCompress)
                 {
                     // workitem 8501: handle edge case (decompress empty stream)
-                    if (_z.TotalBytesOut == 0L)
+                    if (_z.TotalBytesOut == 0L && !_readCompleted)
                     {
                         return;
                     }
@@ -336,7 +336,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     Span<byte> trailer = stackalloc byte[8];
 
                     // workitem 8679
-                    if (_z.AvailableBytesIn != 8)
+                    if (_z.AvailableBytesIn < 8)
                     {
                         // Make sure we have read to the end of the stream
                         _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
@@ -351,34 +351,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                         _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
                     }
 
-                    var crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
-                    var crc32_actual = crc.Crc32Result;
-                    var isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
-                    var isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
-
-                    if (crc32_actual != crc32_expected)
-                    {
-                        throw new ZlibException(
-                            String.Format(
-                                Constants.DefaultCultureInfo,
-                                "Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
-                                crc32_actual,
-                                crc32_expected
-                            )
-                        );
-                    }
-
-                    if (isize_actual != isize_expected)
-                    {
-                        throw new ZlibException(
-                            String.Format(
-                                Constants.DefaultCultureInfo,
-                                "Bad size in GZIP stream. (actual({0})!=expected({1}))",
-                                isize_actual,
-                                isize_expected
-                            )
-                        );
-                    }
+                    ValidateGzipTrailer(trailer);
                 }
                 else
                 {
@@ -468,7 +441,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                 if (!_wantCompress)
                 {
                     // workitem 8501: handle edge case (decompress empty stream)
-                    if (_z.TotalBytesOut == 0L)
+                    if (_z.TotalBytesOut == 0L && !_readCompleted)
                     {
                         return;
                     }
@@ -477,7 +450,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
                     byte[] trailer = new byte[8];
 
                     // workitem 8679
-                    if (_z.AvailableBytesIn != 8)
+                    if (_z.AvailableBytesIn < 8)
                     {
                         // Make sure we have read to the end of the stream
                         _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
@@ -496,12 +469,47 @@ internal class ZlibBaseStream : Stream, IStreamStack
                             throw new ZlibException("Unexpected end-of-file reading GZIP trailer.");
                         }
                     }
+                    else
+                    {
+                        _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
+                    }
+                    ValidateGzipTrailer(trailer);
                 }
                 else
                 {
                     throw new ZlibException("Reading with compression is not supported.");
                 }
             }
+        }
+    }
+
+    private void ValidateGzipTrailer(ReadOnlySpan<byte> trailer)
+    {
+        var expectedCrc = BinaryPrimitives.ReadInt32LittleEndian(trailer);
+        var actualCrc = crc.Crc32Result;
+        if (actualCrc != expectedCrc)
+        {
+            throw new ZlibException(
+                String.Format(
+                    Constants.DefaultCultureInfo,
+                    "Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
+                    actualCrc,
+                    expectedCrc
+                )
+            );
+        }
+        var expectedSize = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
+        var actualSize = unchecked((int)_z.TotalBytesOut);
+        if (actualSize != expectedSize)
+        {
+            throw new ZlibException(
+                String.Format(
+                    Constants.DefaultCultureInfo,
+                    "Bad size in GZIP stream. (actual({0})!=expected({1}))",
+                    actualSize,
+                    expectedSize
+                )
+            );
         }
     }
 
