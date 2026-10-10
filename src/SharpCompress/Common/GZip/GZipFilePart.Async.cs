@@ -108,8 +108,11 @@ internal sealed partial class GZipFilePart
         }
         if ((header[3] & 0x02) == 0x02)
         {
-            var buf = new byte[1];
-            _ = await _stream.ReadAsync(buf, 0, 1, cancellationToken).ConfigureAwait(false); // CRC16, ignore
+            var headerCrc = new byte[2];
+            if (!await _stream.ReadFullyAsync(headerCrc, cancellationToken).ConfigureAwait(false))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header CRC.");
+            }
         }
     }
 

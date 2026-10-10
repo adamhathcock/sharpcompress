@@ -21,6 +21,82 @@ public class GZipExtraFieldTests
 {
     private static readonly byte[] EXPECTED_PAYLOAD = [.. "gzip payload"u8];
 
+    [Theory]
+    [InlineData("Stream", false)]
+    [InlineData("Stream", true)]
+    [InlineData("Archive", false)]
+    [InlineData("Archive", true)]
+    [InlineData("Reader", false)]
+    [InlineData("Reader", true)]
+    public async Task GZip_Rejects_Truncated_Header_Crc(string api, bool async)
+    {
+        byte[] bytes = [0x1F, 0x8B, 8, 2, 0, 0, 0, 0, 0, 3, 0];
+        using var input = new ShortReadStream(new MemoryStream(bytes));
+        await Assert.ThrowsAsync<ZlibException>(() =>
+            ReadPayload(input, api, async, CancellationToken.None)
+        );
+        Assert.False(input.IsDisposed);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GZip_Header_Crc_Field_Is_Two_Bytes(bool async)
+    {
+        var original = CreateGZipWithExtraField(0, null);
+        original[3] |= 2;
+        var headerCrc = SharpCompress.Crypto.Crc32Stream.Compute(original.AsSpan(0, 12).ToArray());
+        byte[] bytes =
+        [
+            .. original.AsSpan(0, 12),
+            (byte)headerCrc,
+            (byte)(headerCrc >> 8),
+            .. original.AsSpan(12),
+        ];
+        using var input = new ShortReadStream(new MemoryStream(bytes));
+        using var output = new MemoryStream();
+        if (async)
+        {
+            await using var gzip = new SharpCompress.Compressors.Deflate.GZipStream(
+                input,
+                SharpCompressionMode.Decompress,
+                CompressionLevel.Default,
+                Encoding.UTF8,
+                leaveOpen: true
+            );
+            await gzip.CopyToAsync(output, 81920, CancellationToken.None);
+        }
+        else
+        {
+            using var gzip = new SharpCompress.Compressors.Deflate.GZipStream(
+                input,
+                SharpCompressionMode.Decompress,
+                CompressionLevel.Default,
+                Encoding.UTF8,
+                leaveOpen: true
+            );
+            gzip.CopyTo(output);
+        }
+        Assert.Equal(EXPECTED_PAYLOAD, output.ToArray());
+        using var archiveInput = new ShortReadStream(new MemoryStream(bytes));
+        if (async)
+        {
+            await using var archive = await GZipArchive.OpenAsyncArchive(archiveInput);
+            var entry = await archive.EntriesAsync.FirstAsync();
+            using var entryStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+            output.SetLength(0);
+            await entryStream.CopyToAsync(output, 81920, CancellationToken.None);
+        }
+        else
+        {
+            using var archive = GZipArchive.OpenArchive(archiveInput);
+            using var entryStream = archive.Entries.Single().OpenEntryStream();
+            output.SetLength(0);
+            entryStream.CopyTo(output);
+        }
+        Assert.Equal(EXPECTED_PAYLOAD, output.ToArray());
+    }
+
     public static IEnumerable<object[]> FragmentedExtraFields()
     {
         foreach (var api in new[] { "Stream", "Reader", "Archive" })

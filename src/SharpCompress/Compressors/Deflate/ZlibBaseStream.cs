@@ -778,7 +778,12 @@ internal class ZlibBaseStream : Stream, IStreamStack
         }
         if ((header[3] & 0x02) == 0x02)
         {
-            Read(_buf1, 0, 1); // CRC16, ignore
+            Span<byte> headerCrc = stackalloc byte[2];
+            if (!_stream.ReadFully(headerCrc))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header CRC.");
+            }
+            totalBytesRead += 2;
         }
 
         return totalBytesRead;
@@ -848,7 +853,12 @@ internal class ZlibBaseStream : Stream, IStreamStack
         }
         if ((header[3] & 0x02) == 0x02)
         {
-            await _stream.ReadAsync(_buf1, 0, 1, cancellationToken).ConfigureAwait(false); // CRC16, ignore
+            var headerCrc = new byte[2];
+            if (!await _stream.ReadFullyAsync(headerCrc, cancellationToken).ConfigureAwait(false))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header CRC.");
+            }
+            totalBytesRead += 2;
         }
 
         return totalBytesRead;

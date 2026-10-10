@@ -133,7 +133,11 @@ internal sealed partial class GZipFilePart : FilePart
         }
         if ((header[3] & 0x02) == 0x02)
         {
-            _stream.ReadByte(); // CRC16, ignore
+            Span<byte> headerCrc = stackalloc byte[2];
+            if (!_stream.ReadFully(headerCrc))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header CRC.");
+            }
         }
     }
 
