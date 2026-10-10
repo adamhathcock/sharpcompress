@@ -81,6 +81,8 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 
 Stored (compression method 0) comments are supported up to 16 MiB of unpacked data; larger or unknown-size comments throw `InvalidFormatException`. Comments using other compression methods are skipped without affecting entry extraction.
 
+Truncated encrypted comment data throws `InvalidFormatException` on synchronous reads or `IncompleteArchiveException` on asynchronous reads. RAR5 KDF counts above 24 are rejected with `CryptographicException` before deriving encryption keys.
+
 ```csharp
 using var archive = RarArchive.OpenArchive(
     "encrypted.rar",

@@ -159,6 +159,72 @@ public class ZipArchiveTests : ArchiveTests
         Assert.Equal(new[] { zip, z01 }, ArchiveFactory.GetFileParts(zip));
     }
 
+    [Theory]
+    [InlineData("MULTI.ZIP", "MULTI.Z01", "Infozip.nocomp.multi")]
+    [InlineData("MULTI.ZiP", "Multi.z01", "Infozip.nocomp.multi")]
+    [InlineData("MULTI.ZIPX", "MULTI.ZX01", "WinZip26.nocomp.multi")]
+    [InlineData("MULTI.ZiPx", "Multi.zX01", "WinZip26.nocomp.multi")]
+    public void Zip_GetParts_MixedCaseCompanions(
+        string archiveName,
+        string partName,
+        string fixture
+    )
+    {
+        var zip = Path.Combine(SCRATCH2_FILES_PATH, archiveName);
+        var part = Path.Combine(SCRATCH2_FILES_PATH, partName);
+        var isZipX = archiveName.EndsWith("zipx", StringComparison.OrdinalIgnoreCase);
+        File.Copy(Path.Combine(TEST_ARCHIVES_PATH, fixture + (isZipX ? ".zipx" : ".zip")), zip);
+        File.Copy(Path.Combine(TEST_ARCHIVES_PATH, fixture + (isZipX ? ".zx01" : ".z01")), part);
+
+        var parts = ArchiveFactory.GetFileParts(zip).ToArray();
+        Assert.Equal(2, parts.Length);
+        Assert.Equal(zip, parts[0]);
+        Assert.True(string.Equals(part, parts[1], StringComparison.OrdinalIgnoreCase));
+        using var archive = ZipArchive.OpenArchive(zip);
+        Assert.NotEmpty(archive.Entries);
+    }
+
+    [Fact]
+    public void Zip_GetParts_RejectsAmbiguousCaseInsensitiveMatches()
+    {
+        var zip = Path.Combine(SCRATCH2_FILES_PATH, "MULTI.ZIP");
+        File.WriteAllBytes(zip, []);
+        File.WriteAllBytes(Path.Combine(SCRATCH2_FILES_PATH, "Multi.Z01"), []);
+        var other = Path.Combine(SCRATCH2_FILES_PATH, "multi.Z01");
+        if (File.Exists(other))
+        {
+            // Case-insensitive filesystems cannot represent an ambiguous pair.
+            return;
+        }
+        File.WriteAllBytes(other, []);
+
+        Assert.Throws<InvalidFormatException>(() => ArchiveFactory.GetFileParts(zip).ToArray());
+    }
+
+    [Fact]
+    public void Zip_GetParts_PrefersExactMatch()
+    {
+        var zip = Path.Combine(SCRATCH2_FILES_PATH, "MULTI.ZIP");
+        var part = Path.Combine(SCRATCH2_FILES_PATH, "MULTI.z01");
+        File.WriteAllBytes(zip, []);
+        File.WriteAllBytes(part, []);
+        var other = Path.Combine(SCRATCH2_FILES_PATH, "Multi.Z01");
+        if (!File.Exists(other))
+        {
+            File.WriteAllBytes(other, []);
+        }
+
+        Assert.Equal(new[] { zip, part }, ArchiveFactory.GetFileParts(zip));
+    }
+
+    [Fact]
+    public void Zip_GetParts_AllowsMissingCompanion()
+    {
+        var zip = Path.Combine(SCRATCH2_FILES_PATH, "MULTI.ZIP");
+        File.WriteAllBytes(zip, []);
+        Assert.Equal(new[] { zip }, ArchiveFactory.GetFileParts(zip));
+    }
+
     [Fact]
     public void Zip_GetPartsSplit() =>
         //uses first part to search for all parts and compares against this array

@@ -37,6 +37,26 @@ internal static class ZipArchiveVolumeFactory
             return item;
         }
 
+        // Generated suffixes are lowercase, but split archives can use any on-disk casing.
+        // Prefer the exact path above and never choose arbitrarily between fallback matches.
+        if (item is not null && item.Directory!.Exists)
+        {
+            FileInfo? match = null;
+            foreach (var file in item.Directory!.EnumerateFiles())
+            {
+                if (!string.Equals(file.Name, item.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                if (match is not null)
+                {
+                    throw new InvalidFormatException($"Ambiguous ZIP volume name: {item.Name}");
+                }
+                match = file;
+            }
+            return match;
+        }
+
         return null; //no more items
     }
 }

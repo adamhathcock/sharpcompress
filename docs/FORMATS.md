@@ -36,8 +36,14 @@
 ### Zip Format Notes
 
 - Multi-volume/split ZIP archives require ZipArchive (seekable streams) as ZipReader cannot seek across volume files.
+- ZIP/ZIPX companion volumes are discovered with a case-insensitive filename fallback, including on case-sensitive filesystems. An exact generated filename takes precedence; ambiguous fallback matches throw `InvalidFormatException`.
 - ZipReader processes entries from LocalEntry headers (which include directory entries ending with `/`) and intentionally skips DirectoryEntry headers from the central directory, as they are redundant in streaming mode - all entry data comes from LocalEntry headers which ZipReader has already processed.
 - ZIP supports ZStandard for reading and writing. Tar.Zstandard support is read/decompress only.
+
+### Rar Format Notes
+
+- RAR5 encrypted headers and data accept KDF counts from 0 through 24 (the binary logarithm of the PBKDF2 iteration count), matching UnRAR's acceptance limit. Larger counts are rejected before key derivation.
+- Encrypted ciphertext must contain complete AES blocks. Truncation throws `InvalidFormatException` on synchronous reads or `IncompleteArchiveException` on asynchronous reads.
 
 ### 7Zip Format Notes
 

@@ -94,7 +94,7 @@ internal sealed partial class GZipFilePart : FilePart
             return;
         }
 
-        if (n != 10)
+        if (!_stream.ReadFully(header.Slice(n)))
         {
             throw new ZlibException("Not a valid GZIP stream.");
         }
@@ -109,7 +109,10 @@ internal sealed partial class GZipFilePart : FilePart
         if ((header[3] & 0x04) == 0x04)
         {
             // read and discard extra field
-            n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
+            if (!_stream.ReadFully(header.Slice(0, 2)))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+            }
 
             var extraLength = header[0] + (header[1] * 256);
             var extra = new byte[extraLength];

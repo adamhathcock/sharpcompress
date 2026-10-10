@@ -53,7 +53,7 @@ internal static class EncryptionFlagsV5
 internal static class EncryptionConstV5
 {
     public const int VERSION = 0;
-    public const uint CRYPT5_KDF_LG2_COUNT_MAX = 0x24;
+    public const uint CRYPT5_KDF_LG2_COUNT_MAX = 24;
     public const int SIZE_SALT30 = 0x08;
     public const int SIZE_SALT50 = 0x10;
     public const int SIZE_INITV = 0x10;

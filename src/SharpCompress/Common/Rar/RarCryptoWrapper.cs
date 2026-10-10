@@ -40,8 +40,11 @@ internal sealed class RarCryptoWrapper : Stream
             Span<byte> cipherText = stackalloc byte[16];
             for (var i = 0; i < alignedSize / 16; i++)
             {
-                //long ax = System.currentTimeMillis();
-                _actualStream.Read(cipherText);
+                if (!_actualStream.ReadFully(cipherText))
+                {
+                    // Preserve the synchronous API's malformed-archive exception type.
+                    throw new InvalidFormatException("Unexpected end of encrypted stream");
+                }
 
                 var readBytes = _rijndael.ProcessBlock(cipherText);
                 foreach (var readByte in readBytes)
@@ -49,11 +52,11 @@ internal sealed class RarCryptoWrapper : Stream
                     _data.Enqueue(readByte);
                 }
             }
+        }
 
-            for (var i = 0; i < count; i++)
-            {
-                buffer[offset + i] = _data.Dequeue();
-            }
+        for (var i = 0; i < count; i++)
+        {
+            buffer[offset + i] = _data.Dequeue();
         }
         return count;
     }

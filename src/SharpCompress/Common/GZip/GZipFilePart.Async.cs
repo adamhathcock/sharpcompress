@@ -64,7 +64,11 @@ internal sealed partial class GZipFilePart
             return;
         }
 
-        if (n != 10)
+        if (
+            !await _stream
+                .ReadFullyAsync(header, n, header.Length - n, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             throw new ZlibException("Not a valid GZIP stream.");
         }
@@ -80,7 +84,10 @@ internal sealed partial class GZipFilePart
         {
             // read and discard extra field
             var lengthField = new byte[2];
-            _ = await _stream.ReadAsync(lengthField, 0, 2, cancellationToken).ConfigureAwait(false);
+            if (!await _stream.ReadFullyAsync(lengthField, cancellationToken).ConfigureAwait(false))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+            }
 
             var extraLength = lengthField[0] + (lengthField[1] * 256);
             var extra = new byte[extraLength];

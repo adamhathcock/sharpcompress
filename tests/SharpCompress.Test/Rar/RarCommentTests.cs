@@ -9,6 +9,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Common;
 using SharpCompress.Common.Rar;
+using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Compressors.Rar;
 using SharpCompress.IO;
 using SharpCompress.Readers;
@@ -203,7 +204,61 @@ public class RarCommentTests : TestBase
         Assert.True(stream.CanRead);
     }
 
-    public static IEnumerable<object[]> UnsupportedCommentMethods()
+    public static IEnumerable<object[]> TruncatedEncryptedComments()
+    {
+        foreach (var useAsync in new[] { false, true })
+        {
+            foreach (var useReader in new[] { false, true })
+            {
+                foreach (var length in new[] { 0, 15, 16, 31 })
+                {
+                    yield return [useAsync, useReader, length];
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(TruncatedEncryptedComments))]
+    public async Task Rar5_Comment_Rejects_Truncated_Encrypted_Data(
+        bool useAsync,
+        bool useReader,
+        int length
+    )
+    {
+        var data = File.ReadAllBytes(
+            Path.Combine(TEST_ARCHIVES_PATH, "Rar5.comment.encrypted17.rar")
+        );
+        using var source = new MemoryStream(data);
+        var factory = new RarHeaderFactory(
+            StreamingMode.Seekable,
+            ReaderOptions.ForExternalStream.WithPassword("test")
+        );
+        var comment = factory
+            .ReadHeaders(source)
+            .OfType<FileHeader>()
+            .First(x => x.FileName == "CMT");
+        using var packed = comment.PackedStream!;
+        Assert.NotNull(comment.Rar5CryptoInfo);
+        Assert.True(comment.CompressedSize > length);
+        using var truncated = new MemoryStream(data.Take((int)source.Position + length).ToArray());
+
+        if (useAsync)
+        {
+            await Assert.ThrowsAsync<IncompleteArchiveException>(() =>
+                ReadCommentArchive(truncated, useAsync, useReader, "test")
+            );
+        }
+        else
+        {
+            await Assert.ThrowsAsync<InvalidFormatException>(() =>
+                ReadCommentArchive(truncated, useAsync, useReader, "test")
+            );
+        }
+        Assert.True(truncated.CanRead);
+    }
+
+    public static IEnumerable<object[]> NonStoredCommentMethods()
     {
         foreach (var useAsync in new[] { false, true })
         {
@@ -218,8 +273,12 @@ public class RarCommentTests : TestBase
     }
 
     [Theory]
-    [MemberData(nameof(UnsupportedCommentMethods))]
-    public async Task Rar5_Comment_Skips_Nonzero_Methods(int method, bool useAsync, bool useReader)
+    [MemberData(nameof(NonStoredCommentMethods))]
+    public async Task Rar5_Comment_Skips_NonStored_Methods(
+        int method,
+        bool useAsync,
+        bool useReader
+    )
     {
         // Ignored comments must not allocate from their unpacked size or disturb the next entry.
         using var stream = CreateCommentArchive(int.MaxValue, method, [1, 2, 3]);
@@ -230,10 +289,11 @@ public class RarCommentTests : TestBase
     private static async Task<string?> ReadCommentArchive(
         Stream stream,
         bool useAsync,
-        bool useReader
+        bool useReader,
+        string? password = null
     )
     {
-        var options = ReaderOptions.ForExternalStream;
+        var options = ReaderOptions.ForExternalStream with { Password = password };
         if (useReader)
         {
             using var forwardOnly = new ForwardOnlyStream(
