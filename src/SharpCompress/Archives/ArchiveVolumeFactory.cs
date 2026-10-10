@@ -28,11 +28,32 @@ internal abstract class ArchiveVolumeFactory
             );
         }
 
-        if (item != null && item.Exists)
+        return item is null ? null : ResolveFilePart(item);
+    }
+
+    internal static FileInfo? ResolveFilePart(FileInfo item)
+    {
+        if (item.Exists)
         {
             return item;
         }
-
-        return null;
+        if (!item.Directory!.Exists)
+        {
+            return null;
+        }
+        FileInfo? match = null;
+        foreach (var file in item.Directory.EnumerateFiles())
+        {
+            if (!string.Equals(file.Name, item.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+            if (match is not null)
+            {
+                throw new InvalidFormatException($"Ambiguous archive volume name: {item.Name}");
+            }
+            match = file;
+        }
+        return match;
     }
 }
