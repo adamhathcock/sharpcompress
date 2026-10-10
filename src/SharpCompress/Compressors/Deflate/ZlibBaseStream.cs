@@ -669,6 +669,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
 #endif
 
     private bool nomoreinput;
+    private bool _readCompleted;
     private bool isDisposed;
 
     private string ReadZeroTerminatedString()
@@ -898,7 +899,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         _z.NextOut = offset;
         _z.AvailableBytesOut = count;
 
-        if (count == 0)
+        if (count == 0 || _readCompleted)
         {
             return 0;
         }
@@ -1021,6 +1022,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             }
         }
 
+        _readCompleted = !_wantCompress && rc == ZlibConstants.Z_STREAM_END;
         rc = (count - _z.AvailableBytesOut);
 
         // calculate CRC after reading
@@ -1029,12 +1031,8 @@ internal class ZlibBaseStream : Stream, IStreamStack
             crc.SlurpBlock(buffer, offset, rc);
         }
 
-        if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
-        {
-            //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
-        }
+        // Preserve read-ahead bytes for trailer validation or the entry stream's Flush.
+        // rc is now an output byte count, not a codec status.
 
         return rc;
     }
@@ -1090,7 +1088,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
         _z.NextOut = offset;
         _z.AvailableBytesOut = count;
 
-        if (count == 0)
+        if (count == 0 || _readCompleted)
         {
             return 0;
         }
@@ -1215,6 +1213,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             }
         }
 
+        _readCompleted = !_wantCompress && rc == ZlibConstants.Z_STREAM_END;
         rc = (count - _z.AvailableBytesOut);
 
         // calculate CRC after reading
@@ -1223,12 +1222,7 @@ internal class ZlibBaseStream : Stream, IStreamStack
             crc.SlurpBlock(buffer, offset, rc);
         }
 
-        if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
-        {
-            //rewind the buffer
-            this.Rewind(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
-        }
+        // Preserve read-ahead bytes, as in the synchronous path.
 
         return rc;
     }
