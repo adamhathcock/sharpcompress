@@ -43,7 +43,10 @@ internal sealed class ChecksumValidationStream : Stream
     public override int Read(byte[] buffer, int offset, int count)
     {
         var read = _stream.Read(buffer, offset, count);
-        UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        if (count != 0)
+        {
+            UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        }
         return read;
     }
 
@@ -51,7 +54,10 @@ internal sealed class ChecksumValidationStream : Stream
     public override int Read(Span<byte> buffer)
     {
         var read = _stream.Read(buffer);
-        UpdateAndValidateAtEof(buffer[..read], read);
+        if (!buffer.IsEmpty)
+        {
+            UpdateAndValidateAtEof(buffer[..read], read);
+        }
         return read;
     }
 #endif
@@ -68,7 +74,10 @@ internal sealed class ChecksumValidationStream : Stream
         var read = await _stream
             .ReadAsync(buffer, offset, count, cancellationToken)
             .ConfigureAwait(false);
-        UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        if (count != 0)
+        {
+            UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        }
         return read;
     }
 
@@ -79,7 +88,10 @@ internal sealed class ChecksumValidationStream : Stream
     )
     {
         var read = await _stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        UpdateAndValidateAtEof(buffer.Span[..read], read);
+        if (!buffer.IsEmpty)
+        {
+            UpdateAndValidateAtEof(buffer.Span[..read], read);
+        }
         return read;
     }
 #endif

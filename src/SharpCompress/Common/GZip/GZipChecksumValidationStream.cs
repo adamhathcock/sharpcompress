@@ -54,7 +54,10 @@ internal sealed class GZipChecksumValidationStream : Stream
     public override int Read(byte[] buffer, int offset, int count)
     {
         var read = _source.Read(buffer, offset, count);
-        UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        if (count != 0)
+        {
+            UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        }
         return read;
     }
 
@@ -62,7 +65,10 @@ internal sealed class GZipChecksumValidationStream : Stream
     public override int Read(Span<byte> buffer)
     {
         var read = _source.Read(buffer);
-        UpdateAndValidateAtEof(buffer[..read], read);
+        if (!buffer.IsEmpty)
+        {
+            UpdateAndValidateAtEof(buffer[..read], read);
+        }
         return read;
     }
 #endif
@@ -93,7 +99,10 @@ internal sealed class GZipChecksumValidationStream : Stream
         var read = await _source
             .ReadAsync(buffer, offset, count, cancellationToken)
             .ConfigureAwait(false);
-        UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        if (count != 0)
+        {
+            UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        }
         return read;
     }
 
@@ -104,7 +113,10 @@ internal sealed class GZipChecksumValidationStream : Stream
     )
     {
         var read = await _source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        UpdateAndValidateAtEof(buffer.Span[..read], read);
+        if (!buffer.IsEmpty)
+        {
+            UpdateAndValidateAtEof(buffer.Span[..read], read);
+        }
         return read;
     }
 #endif
