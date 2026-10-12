@@ -119,7 +119,5 @@ internal class SevenZipFilePart : FilePart
         };
     }
 
-    internal bool IsEncrypted =>
-        !Header.IsDir
-        && Folder?._coders.FindIndex(c => c._methodId._id == CMethodId.K_AES_ID) != -1;
+    internal bool IsEncrypted => !Header.IsDir && Folder?.IsEncrypted() == true;
 }
