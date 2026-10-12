@@ -831,3 +831,7 @@ using (var reader = ReaderFactory.OpenReader(stream))
 - [USAGE.md](USAGE.md) - Complete code examples
 - [FORMATS.md](FORMATS.md) - Supported formats
 - [PERFORMANCE.md](PERFORMANCE.md) - API selection guide
+## 7z Encryption Detection
+
+For 7z archives, `IsEncrypted` is true when any entry has an AES-encrypted data stream.
+Streamless empty files and directories are not encrypted. Archives without files return false.
