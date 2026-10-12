@@ -100,7 +100,7 @@ public abstract partial class AceHeader
         // First two bytes are typically 0x60 0xEA (signature bytes)
         // At offset 7, there should be "**ACE**" (7 bytes)
         var bytes = new byte[14];
-        if (stream.Read(bytes, 0, 14) != 14)
+        if (!stream.ReadFully(bytes))
         {
             return false;
         }

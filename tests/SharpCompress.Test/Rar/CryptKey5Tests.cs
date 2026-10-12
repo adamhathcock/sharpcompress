@@ -1,5 +1,6 @@
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.IO;
@@ -10,6 +11,76 @@ namespace SharpCompress.Test.Rar;
 
 public class CryptKey5Tests : TestBase
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(24)]
+    [InlineData(25)]
+    [InlineData(30)]
+    [InlineData(31)]
+    [InlineData(32)]
+    [InlineData(36)]
+    [InlineData(128)]
+    [InlineData(255)]
+    public async Task Rar5_CryptoInfo_Validates_Kdf_Count(int lg2Count)
+    {
+        // The KDF count is one raw byte, not a vint. Test the upper bound without deriving a key.
+        var data = new byte[35];
+        data[2] = (byte)lg2Count;
+        using var syncStream = new MemoryStream(data);
+        using var asyncStream = new MemoryStream(data);
+        using var syncReader = new MarkingBinaryReader(syncStream);
+        using var asyncReader = new AsyncMarkingBinaryReader(asyncStream);
+        if (lg2Count <= 24)
+        {
+            Assert.Equal(lg2Count, Rar5CryptoInfo.Create(syncReader, true).LG2Count);
+            Assert.Equal(lg2Count, (await Rar5CryptoInfo.CreateAsync(asyncReader, true)).LG2Count);
+        }
+        else
+        {
+            Assert.Throws<SharpCompress.Common.CryptographicException>(() =>
+                Rar5CryptoInfo.Create(syncReader, true)
+            );
+            await Assert.ThrowsAsync<SharpCompress.Common.CryptographicException>(async () =>
+                await Rar5CryptoInfo.CreateAsync(asyncReader, true)
+            );
+            Assert.Equal(3, syncStream.Position);
+            Assert.Equal(3, asyncStream.Position);
+        }
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(25)]
+    [InlineData(30)]
+    [InlineData(31)]
+    [InlineData(32)]
+    [InlineData(33)]
+    [InlineData(34)]
+    [InlineData(35)]
+    [InlineData(36)]
+    [InlineData(255)]
+    [InlineData(int.MaxValue)]
+    public void Rar5_KeyCache_Rejects_Invalid_Kdf_Count(int lg2Count)
+    {
+        var cache = new Rar5KeyCache();
+        Assert.Throws<SharpCompress.Common.CryptographicException>(() =>
+            cache.GetKeys("test", new byte[16], lg2Count)
+        );
+    }
+
+    [Fact]
+    public void Rar5_Key_Rejects_Mutated_Kdf_Count()
+    {
+        var info = ReadCryptoInfo();
+        var key = new CryptKey5("test", info);
+        using var transform = key.Transformer(info.Salt);
+        info.LG2Count = 32;
+
+        Assert.Throws<SharpCompress.Common.CryptographicException>(() =>
+            key.Transformer(info.Salt)
+        );
+    }
+
     private Rar5CryptoInfo ReadCryptoInfo()
     {
         using var stream = File.OpenRead(

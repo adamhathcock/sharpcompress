@@ -1,6 +1,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,20 +19,56 @@ internal partial class WinzipAesCryptoStream
             return;
         }
         _isDisposed = true;
-        // Read out last 10 auth bytes asynchronously
-        byte[] authBytes = ArrayPool<byte>.Shared.Rent(10);
         try
         {
-            await _stream.ReadFullyAsync(authBytes, 0, 10).ConfigureAwait(false);
+            if (!_authRead)
+            {
+                await DrainAndVerifyAsync().ConfigureAwait(false);
+            }
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(authBytes);
+            _authentication.Dispose();
+            _transform.Dispose();
+            _cipher.Dispose();
             await _stream.DisposeAsync().ConfigureAwait(false);
         }
         await base.DisposeAsync().ConfigureAwait(false);
     }
 #endif
+
+    private async ValueTask VerifyAuthenticationAsync(CancellationToken cancellationToken)
+    {
+        _authenticationFailure?.Throw();
+        if (_authRead)
+        {
+            return;
+        }
+        _authRead = true;
+        var tag = new byte[10];
+        try
+        {
+            await _stream
+                .ReadExactAsync(tag, 0, tag.Length, cancellationToken)
+                .ConfigureAwait(false);
+            ValidateAuthentication(tag);
+        }
+        catch (Exception exception)
+        {
+            _authenticationFailure = ExceptionDispatchInfo.Capture(exception);
+            throw;
+        }
+    }
+
+    private async ValueTask DrainAndVerifyAsync()
+    {
+        var buffer = new byte[4096];
+        while (_totalBytesLeftToRead > 0)
+        {
+            await ReadAsync(buffer, 0, buffer.Length, CancellationToken.None).ConfigureAwait(false);
+        }
+        await VerifyAuthenticationAsync(CancellationToken.None).ConfigureAwait(false);
+    }
 
     public override async Task<int> ReadAsync(
         byte[] buffer,
@@ -39,8 +77,15 @@ internal partial class WinzipAesCryptoStream
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        _authenticationFailure?.Throw();
+        if (count == 0)
+        {
+            return 0;
+        }
         if (_totalBytesLeftToRead == 0)
         {
+            await VerifyAuthenticationAsync(cancellationToken).ConfigureAwait(false);
             return 0;
         }
         var bytesToRead = count;
@@ -51,7 +96,17 @@ internal partial class WinzipAesCryptoStream
         var read = await _stream
             .ReadAsync(buffer, offset, bytesToRead, cancellationToken)
             .ConfigureAwait(false);
+        if (read == 0)
+        {
+            _authRead = true;
+            throw new IncompleteArchiveException("Unexpected end of WinZip AES ciphertext.");
+        }
+        _authentication.TransformBlock(buffer, offset, read, null, 0);
         _totalBytesLeftToRead -= read;
+        if (_totalBytesLeftToRead == 0)
+        {
+            await VerifyAuthenticationAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         ReadTransformBlocks(buffer, offset, read);
 
@@ -64,56 +119,22 @@ internal partial class WinzipAesCryptoStream
         CancellationToken cancellationToken = default
     )
     {
-        if (_totalBytesLeftToRead == 0)
+        if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer, out var segment))
         {
-            return 0;
+            return await ReadAsync(segment.Array!, segment.Offset, segment.Count, cancellationToken)
+                .ConfigureAwait(false);
         }
-        var bytesToRead = buffer.Length;
-        if (buffer.Length > _totalBytesLeftToRead)
+        var rented = ArrayPool<byte>.Shared.Rent(buffer.Length);
+        try
         {
-            bytesToRead = (int)_totalBytesLeftToRead;
+            var read = await ReadAsync(rented, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
+            rented.AsSpan(0, read).CopyTo(buffer.Span);
+            return read;
         }
-        var read = await _stream
-            .ReadAsync(buffer.Slice(0, bytesToRead), cancellationToken)
-            .ConfigureAwait(false);
-        _totalBytesLeftToRead -= read;
-
-        ReadTransformBlocks(buffer.Span, read);
-
-        return read;
-    }
-
-    private void ReadTransformBlocks(Span<byte> buffer, int count)
-    {
-        var posn = 0;
-        var remaining = count;
-
-        while (posn < buffer.Length && remaining > 0)
+        finally
         {
-            var n = ReadTransformOneBlock(buffer, posn, remaining);
-            posn += n;
-            remaining -= n;
-        }
-    }
-
-    private int ReadTransformOneBlock(Span<byte> buffer, int offset, int remaining)
-    {
-        if (_counterOutOffset == BLOCK_SIZE_IN_BYTES)
-        {
-            FillCounterOut();
-        }
-
-        var bytesToXor = Math.Min(BLOCK_SIZE_IN_BYTES - _counterOutOffset, remaining);
-        XorInPlace(buffer, offset, bytesToXor, _counterOutOffset);
-        _counterOutOffset += bytesToXor;
-        return bytesToXor;
-    }
-
-    private void XorInPlace(Span<byte> buffer, int offset, int count, int counterOffset)
-    {
-        for (var i = 0; i < count; i++)
-        {
-            buffer[offset + i] = (byte)(_counterOut[counterOffset + i] ^ buffer[offset + i]);
+            ArrayPool<byte>.Shared.Return(rented, clearArray: true);
         }
     }
 #endif

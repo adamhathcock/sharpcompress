@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using SharpCompress.Common.Rar.Headers;
 
 namespace SharpCompress.Common.Rar;
 
@@ -12,6 +13,12 @@ internal sealed class Rar5KeyCache
 
     internal List<byte[]> GetKeys(string password, byte[] salt, int lg2Count)
     {
+        // Metadata can be mutated after parsing; validate before C# masks the shift count.
+        if (lg2Count < 0 || lg2Count > EncryptionConstV5.CRYPT5_KDF_LG2_COUNT_MAX)
+        {
+            throw new CryptographicException($"Unsupported LG2 count of {lg2Count}.");
+        }
+
         lock (entries)
         {
             foreach (var (cachedPassword, cachedSalt, cachedCount, cachedKeys) in entries)
