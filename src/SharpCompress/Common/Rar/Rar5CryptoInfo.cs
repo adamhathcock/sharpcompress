@@ -24,7 +24,7 @@ internal class Rar5CryptoInfo
             encryptionFlags,
             EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK
         );
-        cryptoInfo.LG2Count = reader.ReadRarVIntByte(1);
+        cryptoInfo.LG2Count = reader.ReadByte();
 
         if (cryptoInfo.LG2Count > EncryptionConstV5.CRYPT5_KDF_LG2_COUNT_MAX)
         {
@@ -78,10 +78,9 @@ internal class Rar5CryptoInfo
             encryptionFlags,
             EncryptionFlagsV5.CHFL_CRYPT_PSWCHECK
         );
-        cryptoInfo.LG2Count = (int)
-            await reader
-                .ReadRarVIntUInt32Async(cancellationToken: CancellationToken.None)
-                .ConfigureAwait(false);
+        cryptoInfo.LG2Count = await reader
+            .ReadByteAsync(CancellationToken.None)
+            .ConfigureAwait(false);
         if (cryptoInfo.LG2Count > EncryptionConstV5.CRYPT5_KDF_LG2_COUNT_MAX)
         {
             throw new CryptographicException($"Unsupported LG2 count of {cryptoInfo.LG2Count}.");

@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.GZip;
@@ -15,6 +16,49 @@ namespace SharpCompress.Test.GZip;
 
 public class GZipCrcExtractionTests : TestBase
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GZipReader_Async_Only_NonSeekable_Validates_Fragmented_Trailer(bool corrupt)
+    {
+        var bytes = corrupt
+            ? ReadCorruptedGZipTrailer(true)
+            : File.ReadAllBytes(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var fragmented = new ShortReadStream(
+            new MemoryStream(bytes),
+            maxReadSize: 7,
+            seekable: false
+        );
+        using var input = new AsyncOnlyStream(fragmented, disposeStream: false);
+        await using var reader = await GZipReader.OpenAsyncReader(
+            input,
+            new ReaderOptions { LeaveStreamOpen = true },
+            CancellationToken.None
+        );
+        Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
+        var destination = Path.Combine(SCRATCH_FILES_PATH, Guid.NewGuid().ToString());
+        if (corrupt)
+        {
+            await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+                await reader.WriteEntryToFileAsync(
+                    destination,
+                    cancellationToken: CancellationToken.None
+                )
+            );
+        }
+        else
+        {
+            await reader.WriteEntryToFileAsync(
+                destination,
+                cancellationToken: CancellationToken.None
+            );
+            Assert.Equal(
+                File.ReadAllBytes(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar")),
+                File.ReadAllBytes(destination)
+            );
+        }
+    }
+
     [Fact]
     public void GZipArchive_WriteToFile_Throws_On_Crc_Mismatch()
     {

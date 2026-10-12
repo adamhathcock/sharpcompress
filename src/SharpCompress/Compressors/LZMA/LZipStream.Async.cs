@@ -129,11 +129,7 @@ public sealed partial class LZipStream
         var header = ArrayPool<byte>.Shared.Rent(6);
         try
         {
-            var n = await stream.ReadAsync(header, 0, 6, cancellationToken).ConfigureAwait(false);
-
-            // TODO: Handle reading only part of the header?
-
-            if (n != 6)
+            if (!await stream.ReadFullyAsync(header, 0, 6, cancellationToken).ConfigureAwait(false))
             {
                 return 0;
             }
@@ -148,13 +144,7 @@ public sealed partial class LZipStream
             {
                 return 0;
             }
-            var basePower = header[5] & 0x1F;
-            var subtractionNumerator = (header[5] & 0xE0) >> 5;
-            if (basePower < 4 || basePower > 30)
-            {
-                return 0;
-            }
-            return (1 << basePower) - (subtractionNumerator * (1 << (basePower - 4)));
+            return DecodeDictionarySize(header[5]);
         }
         finally
         {

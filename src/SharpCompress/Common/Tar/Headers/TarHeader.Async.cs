@@ -260,46 +260,46 @@ internal sealed partial class TarHeader
 
                 break;
             }
+
+            // Check header checksum
+            if (!checkChecksum(buffer))
+            {
+                return false;
+            }
+
+            Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+            EntryType = entryType;
+            Size = ReadSize(buffer);
+            LinkName = null;
+
+            // for symlinks, additionally read the linkname
+            if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
+            {
+                LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+            }
+
+            Mode = ReadAsciiInt64Base8(buffer, 100, 7);
+            UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
+            GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
+
+            var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
+
+            LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
+            Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
+
+            if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic, StringComparison.Ordinal))
+            {
+                var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
+
+                if (!string.IsNullOrEmpty(namePrefix))
+                {
+                    Name = namePrefix + "/" + Name;
+                }
+            }
         }
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
-        }
-
-        // Check header checksum
-        if (!checkChecksum(buffer))
-        {
-            return false;
-        }
-
-        Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
-        EntryType = entryType;
-        Size = ReadSize(buffer);
-        LinkName = null;
-
-        // for symlinks, additionally read the linkname
-        if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
-        {
-            LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
-        }
-
-        Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-        UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
-        GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
-
-        var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
-
-        LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
-        Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
-
-        if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic, StringComparison.Ordinal))
-        {
-            var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
-
-            if (!string.IsNullOrEmpty(namePrefix))
-            {
-                Name = namePrefix + "/" + Name;
-            }
         }
 
         pendingMetadata.ApplyTo(this);

@@ -37,7 +37,7 @@ public abstract partial class ArjHeader
     {
         // check for magic bytes
         var magic = new byte[2];
-        if (stream.Read(magic) != 2)
+        if (!stream.ReadFully(magic))
         {
             return Array.Empty<byte>();
         }
@@ -49,7 +49,7 @@ public abstract partial class ArjHeader
 
         // read header_size
         byte[] headerBytes = new byte[2];
-        stream.Read(headerBytes, 0, 2);
+        stream.ReadExact(headerBytes, 0, 2);
         var headerSize = (ushort)(headerBytes[0] | headerBytes[1] << 8);
         if (headerSize < 1)
         {
@@ -57,14 +57,13 @@ public abstract partial class ArjHeader
         }
 
         var body = new byte[headerSize];
-        var read = stream.Read(body, 0, headerSize);
-        if (read < headerSize)
+        if (!stream.ReadFully(body))
         {
             return Array.Empty<byte>();
         }
 
         byte[] crc = new byte[4];
-        read = stream.Read(crc, 0, 4);
+        stream.ReadExact(crc, 0, 4);
         var checksum = Crc32Stream.Compute(body);
         // Compute the hash value
         if (checksum != BitConverter.ToUInt32(crc, 0))
@@ -83,8 +82,7 @@ public abstract partial class ArjHeader
 
         while (true)
         {
-            int bytesRead = reader.Read(buffer, 0, 2);
-            if (bytesRead < 2)
+            if (!reader.ReadFully(buffer))
             {
                 throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header size."
@@ -98,8 +96,7 @@ public abstract partial class ArjHeader
             }
 
             byte[] header = new byte[extHeaderSize];
-            bytesRead = reader.Read(header, 0, extHeaderSize);
-            if (bytesRead < extHeaderSize)
+            if (!reader.ReadFully(header))
             {
                 throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header data."
@@ -107,8 +104,7 @@ public abstract partial class ArjHeader
             }
 
             byte[] crc = new byte[4];
-            bytesRead = reader.Read(crc, 0, 4);
-            if (bytesRead < 4)
+            if (!reader.ReadFully(crc))
             {
                 throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header CRC."
@@ -147,7 +143,7 @@ public abstract partial class ArjHeader
     public static bool IsArchive(Stream stream)
     {
         var bytes = new byte[2];
-        if (stream.Read(bytes, 0, 2) != 2)
+        if (!stream.ReadFully(bytes))
         {
             return false;
         }
