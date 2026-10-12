@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -77,7 +78,9 @@ public class SevenZipWriterStreamlessTests
 
         Assert.True(output.CanRead);
         var bytes = output.ToArray();
-        var offset = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(bytes.AsSpan(12));
+        var offset = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(
+            bytes.AsSpan(12)
+        );
         var size = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(bytes.AsSpan(20));
         Assert.Equal((ulong)bytes.Length, 32 + offset + size);
         output.Position = 0;
