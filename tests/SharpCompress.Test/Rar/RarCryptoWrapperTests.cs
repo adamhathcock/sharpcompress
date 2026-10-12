@@ -81,7 +81,7 @@ public class RarCryptoWrapperTests
             new CryptKey5("test", info)
         );
         Assert.Throws<InvalidFormatException>(() => syncCrypto.Read(new byte[32], 0, 32));
-        await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+        await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             await asyncCrypto.ReadAsync(new byte[32], 0, 32, CancellationToken.None)
         );
     }

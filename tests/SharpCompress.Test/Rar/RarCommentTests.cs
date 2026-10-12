@@ -243,18 +243,9 @@ public class RarCommentTests : TestBase
         Assert.True(comment.CompressedSize > length);
         using var truncated = new MemoryStream(data.Take((int)source.Position + length).ToArray());
 
-        if (useAsync)
-        {
-            await Assert.ThrowsAsync<IncompleteArchiveException>(() =>
-                ReadCommentArchive(truncated, useAsync, useReader, "test")
-            );
-        }
-        else
-        {
-            await Assert.ThrowsAsync<InvalidFormatException>(() =>
-                ReadCommentArchive(truncated, useAsync, useReader, "test")
-            );
-        }
+        await Assert.ThrowsAsync<InvalidFormatException>(() =>
+            ReadCommentArchive(truncated, useAsync, useReader, "test")
+        );
         Assert.True(truncated.CanRead);
     }
 

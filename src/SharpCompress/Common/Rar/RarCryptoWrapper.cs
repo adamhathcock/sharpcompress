@@ -100,7 +100,7 @@ internal sealed class RarCryptoWrapper : Stream
                     }
                 }
             }
-            catch (EndOfStreamException e)
+            catch (IncompleteArchiveException e)
             {
                 throw new InvalidFormatException("Unexpected end of encrypted stream", e);
             }
