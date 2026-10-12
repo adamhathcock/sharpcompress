@@ -831,3 +831,11 @@ using (var reader = ReaderFactory.OpenReader(stream))
 - [USAGE.md](USAGE.md) - Complete code examples
 - [FORMATS.md](FORMATS.md) - Supported formats
 - [PERFORMANCE.md](PERFORMANCE.md) - API selection guide
+## 7z Encrypted Decoding Errors
+
+AES-encrypted 7z codec data errors and encrypted-header CRC failures throw `SharpCompress.Common.CryptographicException`,
+with the original decoder error in `InnerException`. The exception can indicate either an
+incorrect password or corrupt encrypted data; 7z AES has no independent password verifier.
+`CryptographicException(string message, Exception inner)` preserves an underlying failure.
+Unencrypted codec errors retain their existing behavior. This does not guarantee detection
+of every incorrect password, particularly for data without compression or integrity checking.

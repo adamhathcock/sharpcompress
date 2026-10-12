@@ -303,14 +303,23 @@ internal static class DecoderStreamHelper
             out var primaryCoderIndex,
             out var primaryOutStreamIndex
         );
-        return CreateDecoderStream(
-            inStreams,
-            packSizes,
-            outStreams,
-            folderInfo,
-            primaryCoderIndex,
-            pass
-        );
+        var encrypted = folderInfo.IsEncrypted();
+        try
+        {
+            var decoder = CreateDecoderStream(
+                inStreams,
+                packSizes,
+                outStreams,
+                folderInfo,
+                primaryCoderIndex,
+                pass
+            );
+            return encrypted ? new EncryptedDecoderStream(decoder) : decoder;
+        }
+        catch (DataErrorException ex) when (encrypted)
+        {
+            throw EncryptedDecoderStream.DecodingException(ex);
+        }
     }
 
     internal static async ValueTask<Stream> CreateDecoderStreamAsync(
@@ -341,15 +350,24 @@ internal static class DecoderStreamHelper
             out var primaryCoderIndex,
             out var primaryOutStreamIndex
         );
-        return await CreateDecoderStreamAsync(
-                inStreams,
-                packSizes,
-                outStreams,
-                folderInfo,
-                primaryCoderIndex,
-                pass,
-                cancellationToken
-            )
-            .ConfigureAwait(false);
+        var encrypted = folderInfo.IsEncrypted();
+        try
+        {
+            var decoder = await CreateDecoderStreamAsync(
+                    inStreams,
+                    packSizes,
+                    outStreams,
+                    folderInfo,
+                    primaryCoderIndex,
+                    pass,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+            return encrypted ? new EncryptedDecoderStream(decoder) : decoder;
+        }
+        catch (DataErrorException ex) when (encrypted)
+        {
+            throw EncryptedDecoderStream.DecodingException(ex);
+        }
     }
 }
