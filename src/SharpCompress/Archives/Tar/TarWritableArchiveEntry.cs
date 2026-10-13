@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.IO;
 
@@ -80,6 +82,15 @@ internal sealed class TarWritableArchiveEntry : TarArchiveEntry, IWritableArchiv
         //ensure new stream is at the start, this could be reset
         stream.Seek(0, SeekOrigin.Begin);
         return SharpCompressStream.CreateNonDisposing(stream);
+    }
+
+    public override ValueTask<Stream> OpenEntryStreamAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Writable entries have no archive parts; opening only rewinds the supplied stream.
+        return new(OpenEntryStream());
     }
 
     internal override void Close()

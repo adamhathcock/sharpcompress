@@ -33,6 +33,9 @@ using SharpCompress.Common;
 namespace SharpCompress.Compressors.Deflate;
 
 public partial class ZlibStream : Stream
+#if !STREAM_DISPOSEASYNC
+        , IAsyncDisposable
+#endif
 {
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;

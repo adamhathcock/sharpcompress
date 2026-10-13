@@ -45,7 +45,8 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(x, fm);
+                        var fs = File.Open(x, fm);
+                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
                         await CopyEntryToAsync(reader, fs, options, ct).ConfigureAwait(false);
                     },
                     cancellationToken
@@ -83,7 +84,8 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(x, fm);
+                        var fs = File.Open(x, fm);
+                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
                         await CopyEntryToAsync(reader, fs, options, ct).ConfigureAwait(false);
                     },
                     cancellationToken

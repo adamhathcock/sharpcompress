@@ -28,12 +28,14 @@ internal sealed partial class SeekableSharpCompressStream
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
     ) => _stream.WriteAsync(buffer, cancellationToken);
+#endif
 
-    public override ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         if (_isDisposed)
         {
-            return base.DisposeAsync();
+            await base.DisposeAsync().ConfigureAwait(false);
+            return;
         }
         if (ThrowOnDispose)
         {
@@ -44,11 +46,10 @@ internal sealed partial class SeekableSharpCompressStream
         _isDisposed = true;
         if (!LeaveStreamOpen)
         {
-            _stream.Dispose();
+            await _stream.DisposeAsyncCompat().ConfigureAwait(false);
         }
-        return base.DisposeAsync();
+        await base.DisposeAsync().ConfigureAwait(false);
     }
-#endif
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override Task WriteAsync(

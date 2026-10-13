@@ -707,7 +707,7 @@ internal partial class CBZip2InputStream
         }
         else
         {
-            SetupNoRandPartA();
+            await SetupNoRandPartAAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -792,7 +792,7 @@ internal partial class CBZip2InputStream
                 z ^= (char)((rNToGo == 1) ? 1 : 0);
                 j2 = 0;
                 currentState = RAND_PART_C_STATE;
-                SetupRandPartC();
+                await SetupRandPartCAsync(cancellationToken).ConfigureAwait(false);
             }
             else
             {

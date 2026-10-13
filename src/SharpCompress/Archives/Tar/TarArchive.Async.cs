@@ -22,7 +22,7 @@ public partial class TarArchive
         CancellationToken cancellationToken = default
     )
     {
-        using var writer = new TarWriter(stream, options);
+        await using var writer = new TarWriter(stream, options);
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
@@ -39,7 +39,12 @@ public partial class TarArchive
             }
             else
             {
-                using var entryStream = entry.OpenEntryStream();
+                var entryStream = await entry
+                    .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                await using var entryStreamScope = entryStream
+                    .DisposeAsyncScope()
+                    .ConfigureAwait(false);
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -65,7 +70,12 @@ public partial class TarArchive
             }
             else
             {
-                using var entryStream = entry.OpenEntryStream();
+                var entryStream = await entry
+                    .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                await using var entryStreamScope = entryStream
+                    .DisposeAsyncScope()
+                    .ConfigureAwait(false);
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),

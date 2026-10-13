@@ -22,11 +22,11 @@ namespace SharpCompress.IO;
 /// </para>
 /// </remarks>
 public abstract class AsyncDisposableStream : Stream
-#if NO_STREAM_DISPOSEASYNC
+#if !STREAM_DISPOSEASYNC
         , IAsyncDisposable
 #endif
 {
-#if NO_STREAM_DISPOSEASYNC
+#if !STREAM_DISPOSEASYNC
     public virtual ValueTask DisposeAsync()
     {
         Dispose();

@@ -9,7 +9,7 @@ namespace SharpCompress.Test.Streams;
 
 public class SharpCompressStreamEdgeAsyncTest
 {
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
 
     [Fact]
     public async ValueTask DisposeAsync_WithLeaveStreamOpenTrue_DoesNotDisposeUnderlying()

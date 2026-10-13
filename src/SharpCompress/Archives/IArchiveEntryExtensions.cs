@@ -164,7 +164,12 @@ public static partial class IArchiveEntryExtensions
                     options,
                     async (x, fm, ct) =>
                     {
+#if SYNC_ONLY
                         using var fs = File.Open(x, fm);
+#else
+                        var fs = File.Open(x, fm);
+                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
+#endif
                         await entry
                             .WriteToAsync(fs, options.BufferSize, options, null, ct)
                             .ConfigureAwait(false);

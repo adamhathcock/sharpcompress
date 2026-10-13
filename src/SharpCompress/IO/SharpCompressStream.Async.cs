@@ -251,8 +251,11 @@ public partial class SharpCompressStream
         }
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
+#else
+    public virtual async ValueTask DisposeAsync()
+#endif
     {
         if (!isDisposed)
         {
@@ -267,7 +270,7 @@ public partial class SharpCompressStream
             {
                 if (!LeaveStreamOpen)
                 {
-                    await stream.DisposeAsync().ConfigureAwait(false);
+                    await stream.DisposeAsyncCompat().ConfigureAwait(false);
                 }
             }
             finally
@@ -276,7 +279,11 @@ public partial class SharpCompressStream
                 _ringBuffer = null;
             }
         }
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
-    }
+#else
+        base.Dispose();
+        GC.SuppressFinalize(this);
 #endif
+    }
 }

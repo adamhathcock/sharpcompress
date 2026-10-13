@@ -21,8 +21,11 @@ public partial class ZlibStream
         await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
+#else
+    public virtual async ValueTask DisposeAsync()
+#endif
     {
         if (_disposed)
         {
@@ -33,9 +36,13 @@ public partial class ZlibStream
         {
             await _baseStream.DisposeAsync().ConfigureAwait(false);
         }
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
-    }
+#else
+        base.Dispose();
+        GC.SuppressFinalize(this);
 #endif
+    }
 
     /// <summary>
     /// Read data from the stream.

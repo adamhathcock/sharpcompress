@@ -20,7 +20,7 @@ public class TarArchiveEntry : TarEntry, IArchiveEntry
 
     public virtual Stream OpenEntryStream() => Parts.Single().GetCompressedStream().NotNull();
 
-    public async ValueTask<Stream> OpenEntryStreamAsync(
+    public virtual async ValueTask<Stream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
     ) =>
         (

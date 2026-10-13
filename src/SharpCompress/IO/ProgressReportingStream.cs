@@ -8,7 +8,7 @@ namespace SharpCompress.IO;
 /// A stream wrapper that reports progress as data is read from the source.
 /// Used to track compression or extraction progress by wrapping the source stream.
 /// </summary>
-internal sealed partial class ProgressReportingStream : Stream
+internal sealed partial class ProgressReportingStream : AsyncDisposableStream
 {
     private readonly Stream _baseStream;
     private readonly IProgress<ProgressReport> _progress;

@@ -122,11 +122,7 @@ internal partial class MarkHeader
         {
             if (!leaveStreamOpen)
             {
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-                stream.Dispose();
-#else
-                await stream.DisposeAsync().ConfigureAwait(false);
-#endif
+                await stream.DisposeAsyncCompat().ConfigureAwait(false);
             }
             throw new InvalidFormatException("Error trying to read rar signature.", e);
         }

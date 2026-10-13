@@ -107,7 +107,7 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 
 Stored (compression method 0) comments are supported up to 16 MiB of unpacked data; larger or unknown-size comments throw `InvalidFormatException`. Comments using other compression methods are skipped without affecting entry extraction.
 
-Truncated encrypted comment data throws `InvalidFormatException` on synchronous reads or `IncompleteArchiveException` on asynchronous reads. RAR5 KDF counts above 24 are rejected with `CryptographicException` before deriving encryption keys.
+Truncated encrypted comment data throws `InvalidFormatException` on both synchronous and asynchronous reads. RAR5 KDF counts above 24 are rejected with `CryptographicException` before deriving encryption keys.
 
 ```csharp
 using var archive = RarArchive.OpenArchive(
@@ -502,6 +502,8 @@ archive.SaveTo("output.zip", options);
 
 ### Extraction behavior
 
+`ZipArchiveEntry.OpenEntryStreamAsync` and `TarArchiveEntry.OpenEntryStreamAsync` are virtual and support newly added writable entries as well as entries read from an archive. Opening a new writable entry checks cancellation, rewinds its supplied stream, and returns a non-owning wrapper. Disposing that wrapper leaves the supplied stream open; archive disposal follows the entry's `closeStream` setting.
+
 ```csharp
 var options = new ExtractionOptions
 {
@@ -691,6 +693,8 @@ using (var archive = ZipArchive.OpenArchive("archive.zip", options))
 ```
 
 ### Async Extract with Cancellation
+
+Async archive and reader/writer operations dispose SharpCompress resources asynchronously on every target, including .NET Framework 4.8 and .NET Standard 2.0. `SharpCompressStream.DisposeAsync()` and `ZlibStream.DisposeAsync()` are available on every target; stream wrappers forward disposal to runtime `IAsyncDisposable` implementations where available, falling back to synchronous disposal only for streams that do not support it.
 
 ```csharp
 var cts = new CancellationTokenSource();

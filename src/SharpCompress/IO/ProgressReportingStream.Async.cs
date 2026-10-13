@@ -45,14 +45,12 @@ internal sealed partial class ProgressReportingStream
     }
 #endif
 
-#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (!_leaveOpen)
         {
-            await _baseStream.DisposeAsync().ConfigureAwait(false);
+            await _baseStream.DisposeAsyncCompat().ConfigureAwait(false);
         }
         await base.DisposeAsync().ConfigureAwait(false);
     }
-#endif
 }

@@ -8,7 +8,7 @@ namespace SharpCompress.Compressors.ZStandard;
 
 public partial class CompressionStream
 {
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -16,7 +16,7 @@ public partial class CompressionStream
     {
         if (compressor == null)
         {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
             Dispose(true);
             GC.SuppressFinalize(this);
             await Task.CompletedTask.ConfigureAwait(false);
@@ -35,7 +35,7 @@ public partial class CompressionStream
             ReleaseUnmanagedResources();
             GC.SuppressFinalize(this);
         }
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         Dispose(true);
         await Task.CompletedTask.ConfigureAwait(false);
 #else
