@@ -400,6 +400,38 @@ public class SevenZipArchiveTests : ArchiveTests
     }
 
     [Fact]
+    public void SevenZipArchive_Solid_ReaderOpenEntryStream_DisposesPreviousEntryStream()
+    {
+        var testArchive = Path.Combine(TEST_ARCHIVES_PATH, "7Zip.solid.7z");
+        using var archive = SevenZipArchive.OpenArchive(testArchive);
+        using var reader = archive.ExtractAllEntries();
+
+        while (reader.MoveToNextEntry() && reader.Entry.IsDirectory) { }
+
+        Assert.False(reader.Entry.IsDirectory);
+        using var firstEntryStream = reader.OpenEntryStream();
+        Assert.NotEqual(-1, firstEntryStream.ReadByte());
+
+        while (reader.MoveToNextEntry() && reader.Entry.IsDirectory) { }
+
+        Assert.False(reader.Entry.IsDirectory);
+        var secondEntrySize = reader.Entry.Size;
+        using var secondEntryStream = reader.OpenEntryStream();
+
+        Assert.Throws<ObjectDisposedException>(() => firstEntryStream.ReadByte());
+
+        var buffer = new byte[4096];
+        long bytesRead = 0;
+        int read;
+        while ((read = secondEntryStream.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            bytesRead += read;
+        }
+
+        Assert.Equal(secondEntrySize, bytesRead);
+    }
+
+    [Fact]
     public void SevenZipArchive_EmptyStream_WriteToDirectory()
     {
         // This test specifically verifies that archives with empty-stream entries
