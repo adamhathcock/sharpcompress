@@ -193,6 +193,8 @@ public partial class SevenZipWriter : AbstractWriter
 
     private void FinalizeArchive()
     {
+        // Directory-only and empty archives never pass through Write().
+        EnsurePlaceholderWritten();
         var output = OutputStream.NotNull();
 
         // Current position = end of packed data streams

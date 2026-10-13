@@ -107,6 +107,8 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 
 Stored (compression method 0) comments are supported up to 16 MiB of unpacked data; larger or unknown-size comments throw `InvalidFormatException`. Comments using other compression methods are skipped without affecting entry extraction.
 
+Truncated encrypted comment data throws `InvalidFormatException` on synchronous reads or `IncompleteArchiveException` on asynchronous reads. RAR5 KDF counts above 24 are rejected with `CryptographicException` before deriving encryption keys.
+
 ```csharp
 using var archive = RarArchive.OpenArchive(
     "encrypted.rar",
@@ -517,6 +519,10 @@ using (var archive = ZipArchive.OpenArchive("file.zip"))
 
 `CheckCrc` validates archive-level payload checksums when the format stores reliable metadata, such as ZIP CRC32 values. Formats without payload checksums skip this validation. Decompressor integrity checks that are required to decode a stream may still fail even when `CheckCrc` is disabled.
 
+WinZip AES authentication is always checked, including when `CheckCrc` is disabled. Complete or dispose entry streams to verify authentication; plaintext returned before completion must not be treated as authenticated. Invalid authentication tags throw `InvalidFormatException`, and missing ciphertext or tag bytes throw `IncompleteArchiveException`.
+
+7z AES key derivation accepts iteration exponents 0 through 24 and the special `0x3F` direct-key mode. Larger iteration exponents throw `NotSupportedException` before key derivation, including when salt and IV are absent.
+
 When using `SymbolicLinkHandler`, directory extraction rejects link targets outside the extraction root and never follows symbolic links or reparse points while extracting later entries. The handler itself remains trusted application code.
 
 ### Options matrix
@@ -863,3 +869,17 @@ using (var reader = ReaderFactory.OpenReader(stream))
 - [USAGE.md](USAGE.md) - Complete code examples
 - [FORMATS.md](FORMATS.md) - Supported formats
 - [PERFORMANCE.md](PERFORMANCE.md) - API selection guide
+
+## 7z Encrypted Decoding Errors
+
+AES-encrypted 7z codec data errors and encrypted-header CRC failures throw `SharpCompress.Common.CryptographicException`,
+with the original decoder error in `InnerException`. The exception can indicate either an
+incorrect password or corrupt encrypted data; 7z AES has no independent password verifier.
+`CryptographicException(string message, Exception inner)` preserves an underlying failure.
+Unencrypted codec errors retain their existing behavior. This does not guarantee detection
+of every incorrect password, particularly for data without compression or integrity checking.
+
+## 7z Encryption Detection
+
+For 7z archives, `IsEncrypted` is true when any entry has an AES-encrypted data stream.
+Streamless empty files and directories are not encrypted. Archives without files return false.

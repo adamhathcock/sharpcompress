@@ -18,13 +18,15 @@ internal sealed partial class GZipChecksumValidationStream : Stream
     private uint _seed = Crc32Stream.DEFAULT_SEED;
     private uint _size;
     private bool _validated;
+    private readonly Func<Stream?>? _bufferedInput;
 
     internal GZipChecksumValidationStream(
         Stream source,
         Stream rawStream,
         string? entryName,
         uint? expectedCrc,
-        uint? expectedSize
+        uint? expectedSize,
+        Func<Stream?>? bufferedInput = null
     )
     {
         _source = source;
@@ -32,6 +34,7 @@ internal sealed partial class GZipChecksumValidationStream : Stream
         _entryName = string.IsNullOrEmpty(entryName) ? "Entry" : entryName!;
         _expectedCrc = expectedCrc;
         _expectedSize = expectedSize;
+        _bufferedInput = bufferedInput;
         _crc32Table = Crc32Stream.InitializeTable(Crc32Stream.DEFAULT_POLYNOMIAL);
     }
 
@@ -61,7 +64,17 @@ internal sealed partial class GZipChecksumValidationStream : Stream
         var read = await _source
             .ReadAsync(buffer, offset, count, cancellationToken)
             .ConfigureAwait(false);
-        UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+        if (count != 0)
+        {
+            if (read == 0)
+            {
+                await ValidateAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
+            }
+        }
         return read;
     }
 
@@ -73,11 +86,21 @@ internal sealed partial class GZipChecksumValidationStream : Stream
     )
     {
         var read = await _source.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+        if (!buffer.IsEmpty)
+        {
+            if (read == 0)
+            {
+                await ValidateAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
 #if SYNC_ONLY
-        UpdateAndValidateAtEof(buffer[..read], read);
+                UpdateAndValidateAtEof(buffer[..read], read);
 #else
-        UpdateAndValidateAtEof(buffer.Span[..read], read);
+                UpdateAndValidateAtEof(buffer.Span[..read], read);
 #endif
+            }
+        }
         return read;
     }
 #endif
@@ -124,31 +147,77 @@ internal sealed partial class GZipChecksumValidationStream : Stream
             return;
         }
 
-        _validated = true;
-
         var expectedCrc = _expectedCrc;
         var expectedSize = _expectedSize;
         if (!expectedCrc.HasValue || !expectedSize.HasValue)
         {
             Span<byte> trailer = stackalloc byte[8];
-            _rawStream.ReadFully(trailer);
+            var bufferedCount = ReadBufferedTrailer(trailer);
+            if (!_rawStream.ReadFully(trailer.Slice(bufferedCount)))
+            {
+                throw new IncompleteArchiveException("Unexpected end of GZIP trailer.");
+            }
             expectedCrc = BinaryPrimitives.ReadUInt32LittleEndian(trailer);
             expectedSize = BinaryPrimitives.ReadUInt32LittleEndian(trailer[4..]);
         }
 
+        ValidateValues(expectedCrc.Value, expectedSize.Value);
+    }
+
+    private async ValueTask ValidateAsync(CancellationToken cancellationToken)
+    {
+        if (_validated)
+        {
+            return;
+        }
+        var expectedCrc = _expectedCrc;
+        var expectedSize = _expectedSize;
+        if (!expectedCrc.HasValue || !expectedSize.HasValue)
+        {
+            var trailer = new byte[8];
+            var bufferedCount = ReadBufferedTrailer(trailer);
+            if (
+                !await _rawStream
+                    .ReadFullyAsync(
+                        trailer,
+                        bufferedCount,
+                        trailer.Length - bufferedCount,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false)
+            )
+            {
+                throw new IncompleteArchiveException("Unexpected end of GZIP trailer.");
+            }
+            expectedCrc = BinaryPrimitives.ReadUInt32LittleEndian(trailer);
+            expectedSize = BinaryPrimitives.ReadUInt32LittleEndian(trailer.AsSpan(4));
+        }
+        ValidateValues(expectedCrc.Value, expectedSize.Value);
+    }
+
+    private int ReadBufferedTrailer(Span<byte> trailer)
+    {
+        // The inflater may have read ahead beyond the final compressed bit.
+        using var buffered = _bufferedInput?.Invoke();
+        return buffered?.Read(trailer) ?? 0;
+    }
+
+    private void ValidateValues(uint expectedCrc, uint expectedSize)
+    {
         var actualCrc = ~_seed;
-        if (actualCrc != expectedCrc.Value)
+        if (actualCrc != expectedCrc)
         {
             throw new InvalidFormatException(
-                $"CRC mismatch for entry '{_entryName}'. Expected 0x{expectedCrc.Value:X8}, actual 0x{actualCrc:X8}."
+                $"CRC mismatch for entry '{_entryName}'. Expected 0x{expectedCrc:X8}, actual 0x{actualCrc:X8}."
             );
         }
 
-        if (_size != expectedSize.Value)
+        if (_size != expectedSize)
         {
             throw new InvalidFormatException(
-                $"Size mismatch for entry '{_entryName}'. Expected {expectedSize.Value}, actual {_size}."
+                $"Size mismatch for entry '{_entryName}'. Expected {expectedSize}, actual {_size}."
             );
         }
+        _validated = true;
     }
 }

@@ -32,11 +32,6 @@ internal static class ZipArchiveVolumeFactory
             return ArchiveVolumeFactory.GetFilePart(index, part1);
         }
 
-        if (item != null && item.Exists)
-        {
-            return item;
-        }
-
-        return null; //no more items
+        return item is null ? null : ArchiveVolumeFactory.ResolveFilePart(item);
     }
 }

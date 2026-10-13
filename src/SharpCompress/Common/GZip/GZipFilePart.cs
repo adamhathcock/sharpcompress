@@ -15,6 +15,7 @@ internal sealed partial class GZipFilePart : FilePart
     private string? _name;
     private readonly Stream _stream;
     private readonly CompressionProviderRegistry _compressionProviders;
+    private Stream? _decompressor;
 
     private GZipFilePart(
         Stream stream,
@@ -38,11 +39,22 @@ internal sealed partial class GZipFilePart : FilePart
     internal override Stream GetCompressedStream()
     {
         //GZip uses Deflate compression, at this point we need a deflate stream
-        return _compressionProviders.CreateDecompressStream(CompressionType.Deflate, _stream);
+        _decompressor = _compressionProviders.CreateDecompressStream(
+            CompressionType.Deflate,
+            _stream
+        );
+        return _decompressor;
     }
 
     internal Stream WrapWithChecksumValidation(Stream source, string? entryName) =>
-        new GZipChecksumValidationStream(source, _stream, entryName, Crc, UncompressedSize);
+        new GZipChecksumValidationStream(
+            source,
+            _stream,
+            entryName,
+            Crc,
+            UncompressedSize,
+            () => (_decompressor as DeflateStream)?.InputBuffer
+        );
 
     internal override Stream GetRawStream() => _stream;
 
@@ -51,7 +63,10 @@ internal sealed partial class GZipFilePart : FilePart
         // Keep this sync implementation for its stack allocation on the parser hot path.
         // Read and potentially verify the GZIP trailer: CRC32 and  size mod 2^32
         Span<byte> trailer = stackalloc byte[8];
-        _stream.ReadFully(trailer);
+        if (!_stream.ReadFully(trailer))
+        {
+            throw new ZlibException("Unexpected end-of-file reading GZIP trailer.");
+        }
 
         Crc = BinaryPrimitives.ReadUInt32LittleEndian(trailer);
         UncompressedSize = BinaryPrimitives.ReadUInt32LittleEndian(trailer.Slice(4));
@@ -70,7 +85,7 @@ internal sealed partial class GZipFilePart : FilePart
             return;
         }
 
-        if (n != 10)
+        if (!_stream.ReadFully(header.Slice(n)))
         {
             throw new ZlibException("Not a valid GZIP stream.");
         }
@@ -85,7 +100,10 @@ internal sealed partial class GZipFilePart : FilePart
         if ((header[3] & 0x04) == 0x04)
         {
             // read and discard extra field
-            n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
+            if (!_stream.ReadFully(header.Slice(0, 2)))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+            }
 
             var extraLength = header[0] + (header[1] * 256);
             var extra = new byte[extraLength];
@@ -106,7 +124,11 @@ internal sealed partial class GZipFilePart : FilePart
         }
         if ((header[3] & 0x02) == 0x02)
         {
-            _stream.ReadByte(); // CRC16, ignore
+            Span<byte> headerCrc = stackalloc byte[2];
+            if (!_stream.ReadFully(headerCrc))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header CRC.");
+            }
         }
     }
 

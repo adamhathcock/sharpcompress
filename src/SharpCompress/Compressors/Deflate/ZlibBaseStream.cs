@@ -276,7 +276,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
                 if (!_wantCompress)
                 {
                     // workitem 8501: handle edge case (decompress empty stream)
-                    if (_z.TotalBytesOut == 0L)
+                    if (_z.TotalBytesOut == 0L && !_readCompleted)
                     {
                         return;
                     }
@@ -285,23 +285,14 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
                     Span<byte> trailer = stackalloc byte[8];
 
                     // workitem 8679
-                    if (_z.AvailableBytesIn != 8)
+                    if (_z.AvailableBytesIn < 8)
                     {
                         // Make sure we have read to the end of the stream
                         _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
                         var bytesNeeded = 8 - _z.AvailableBytesIn;
-                        var bytesRead = _stream.Read(
-                            trailer.Slice(_z.AvailableBytesIn, bytesNeeded)
-                        );
-                        if (bytesNeeded != bytesRead)
+                        if (!_stream.ReadFully(trailer.Slice(_z.AvailableBytesIn, bytesNeeded)))
                         {
-                            throw new ZlibException(
-                                String.Format(
-                                    Constants.DefaultCultureInfo,
-                                    "Protocol error. AvailableBytesIn={0}, expected 8",
-                                    _z.AvailableBytesIn + bytesRead
-                                )
-                            );
+                            throw new ZlibException("Unexpected end-of-file reading GZIP trailer.");
                         }
                     }
                     else
@@ -309,34 +300,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
                         _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
                     }
 
-                    var crc32_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer);
-                    var crc32_actual = crc.Crc32Result;
-                    var isize_expected = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
-                    var isize_actual = (Int32)(_z.TotalBytesOut & 0x00000000FFFFFFFF);
-
-                    if (crc32_actual != crc32_expected)
-                    {
-                        throw new ZlibException(
-                            String.Format(
-                                Constants.DefaultCultureInfo,
-                                "Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
-                                crc32_actual,
-                                crc32_expected
-                            )
-                        );
-                    }
-
-                    if (isize_actual != isize_expected)
-                    {
-                        throw new ZlibException(
-                            String.Format(
-                                Constants.DefaultCultureInfo,
-                                "Bad size in GZIP stream. (actual({0})!=expected({1}))",
-                                isize_actual,
-                                isize_expected
-                            )
-                        );
-                    }
+                    ValidateGzipTrailer(trailer);
                 }
                 else
                 {
@@ -426,7 +390,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
                 if (!_wantCompress)
                 {
                     // workitem 8501: handle edge case (decompress empty stream)
-                    if (_z.TotalBytesOut == 0L)
+                    if (_z.TotalBytesOut == 0L && !_readCompleted)
                     {
                         return;
                     }
@@ -435,21 +399,66 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
                     byte[] trailer = new byte[8];
 
                     // workitem 8679
-                    if (_z.AvailableBytesIn != 8)
+                    if (_z.AvailableBytesIn < 8)
                     {
                         // Make sure we have read to the end of the stream
                         _z.InputBuffer.AsSpan(_z.NextIn, _z.AvailableBytesIn).CopyTo(trailer);
                         var bytesNeeded = 8 - _z.AvailableBytesIn;
-                        var bytesRead = await _stream
-                            .ReadAsync(trailer, _z.AvailableBytesIn, bytesNeeded, cancellationToken)
-                            .ConfigureAwait(false);
+                        if (
+                            !await _stream
+                                .ReadFullyAsync(
+                                    trailer,
+                                    _z.AvailableBytesIn,
+                                    bytesNeeded,
+                                    cancellationToken
+                                )
+                                .ConfigureAwait(false)
+                        )
+                        {
+                            throw new ZlibException("Unexpected end-of-file reading GZIP trailer.");
+                        }
                     }
+                    else
+                    {
+                        _z.InputBuffer.AsSpan(_z.NextIn, trailer.Length).CopyTo(trailer);
+                    }
+                    ValidateGzipTrailer(trailer);
                 }
                 else
                 {
                     throw new ZlibException("Reading with compression is not supported.");
                 }
             }
+        }
+    }
+
+    private void ValidateGzipTrailer(ReadOnlySpan<byte> trailer)
+    {
+        var expectedCrc = BinaryPrimitives.ReadInt32LittleEndian(trailer);
+        var actualCrc = crc.Crc32Result;
+        if (actualCrc != expectedCrc)
+        {
+            throw new ZlibException(
+                String.Format(
+                    Constants.DefaultCultureInfo,
+                    "Bad CRC32 in GZIP stream. (actual({0:X8})!=expected({1:X8}))",
+                    actualCrc,
+                    expectedCrc
+                )
+            );
+        }
+        var expectedSize = BinaryPrimitives.ReadInt32LittleEndian(trailer.Slice(4));
+        var actualSize = unchecked((int)_z.TotalBytesOut);
+        if (actualSize != expectedSize)
+        {
+            throw new ZlibException(
+                String.Format(
+                    Constants.DefaultCultureInfo,
+                    "Bad size in GZIP stream. (actual({0})!=expected({1}))",
+                    actualSize,
+                    expectedSize
+                )
+            );
         }
     }
 
@@ -597,6 +606,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
 #endif
 
     private bool nomoreinput;
+    private bool _readCompleted;
     private bool isDisposed;
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -641,7 +651,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             return 0;
         }
 
-        if (n != 10)
+        if (!_stream.ReadFully(header.Slice(n)))
         {
             throw new ZlibException("Not a valid GZIP stream.");
         }
@@ -653,21 +663,23 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
 
         var timet = BinaryPrimitives.ReadInt32LittleEndian(header.Slice(4));
         _GzipMtime = TarHeader.EPOCH.AddSeconds(timet);
-        totalBytesRead += n;
+        totalBytesRead += header.Length;
         if ((header[3] & 0x04) == 0x04)
         {
             // read and discard extra field
-            n = _stream.Read(header.Slice(0, 2)); // 2-byte length field
-            totalBytesRead += n;
-
-            var extraLength = header[0] + (header[1] * 256);
-            var extra = new byte[extraLength];
-            n = _stream.Read(extra, 0, extra.Length);
-            if (n != extraLength)
+            if (!_stream.ReadFully(header.Slice(0, 2)))
             {
                 throw new ZlibException("Unexpected end-of-file reading GZIP header.");
             }
-            totalBytesRead += n;
+            totalBytesRead += 2;
+
+            var extraLength = header[0] + (header[1] * 256);
+            var extra = new byte[extraLength];
+            if (!_stream.ReadFully(extra))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+            }
+            totalBytesRead += extraLength;
         }
         if ((header[3] & 0x08) == 0x08)
         {
@@ -679,7 +691,12 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         }
         if ((header[3] & 0x02) == 0x02)
         {
-            Read(_buf1, 0, 1); // CRC16, ignore
+            Span<byte> headerCrc = stackalloc byte[2];
+            if (!_stream.ReadFully(headerCrc))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header CRC.");
+            }
+            totalBytesRead += 2;
         }
 
         return totalBytesRead;
@@ -701,7 +718,11 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             return 0;
         }
 
-        if (n != 10)
+        if (
+            !await _stream
+                .ReadFullyAsync(header, n, header.Length - n, cancellationToken)
+                .ConfigureAwait(false)
+        )
         {
             throw new ZlibException("Not a valid GZIP stream.");
         }
@@ -713,23 +734,25 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
 
         var timet = BinaryPrimitives.ReadInt32LittleEndian(header.AsSpan(4));
         _GzipMtime = TarHeader.EPOCH.AddSeconds(timet);
-        totalBytesRead += n;
+        totalBytesRead += header.Length;
         if ((header[3] & 0x04) == 0x04)
         {
             // read and discard extra field
-            n = await _stream.ReadAsync(header, 0, 2, cancellationToken).ConfigureAwait(false); // 2-byte length field
-            totalBytesRead += n;
-
-            var extraLength = header[0] + (header[1] * 256);
-            var extra = new byte[extraLength];
-            n = await _stream
-                .ReadAsync(extra, 0, extra.Length, cancellationToken)
-                .ConfigureAwait(false);
-            if (n != extraLength)
+            if (
+                !await _stream.ReadFullyAsync(header, 0, 2, cancellationToken).ConfigureAwait(false)
+            )
             {
                 throw new ZlibException("Unexpected end-of-file reading GZIP header.");
             }
-            totalBytesRead += n;
+            totalBytesRead += 2;
+
+            var extraLength = header[0] + (header[1] * 256);
+            var extra = new byte[extraLength];
+            if (!await _stream.ReadFullyAsync(extra, cancellationToken).ConfigureAwait(false))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header.");
+            }
+            totalBytesRead += extraLength;
         }
         if ((header[3] & 0x08) == 0x08)
         {
@@ -743,7 +766,12 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         }
         if ((header[3] & 0x02) == 0x02)
         {
-            await _stream.ReadAsync(_buf1, 0, 1, cancellationToken).ConfigureAwait(false); // CRC16, ignore
+            var headerCrc = new byte[2];
+            if (!await _stream.ReadFullyAsync(headerCrc, cancellationToken).ConfigureAwait(false))
+            {
+                throw new ZlibException("Unexpected end-of-file reading GZIP header CRC.");
+            }
+            totalBytesRead += 2;
         }
 
         return totalBytesRead;
@@ -801,7 +829,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         _z.NextOut = offset;
         _z.AvailableBytesOut = count;
 
-        if (count == 0)
+        if (count == 0 || _readCompleted)
         {
             return 0;
         }
@@ -926,6 +954,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             }
         }
 
+        _readCompleted = !_wantCompress && rc == ZlibConstants.Z_STREAM_END;
         rc = (count - _z.AvailableBytesOut);
 
         // calculate CRC after reading
@@ -934,12 +963,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             crc.SlurpBlock(buffer, offset, rc);
         }
 
-        if (rc == ZlibConstants.Z_STREAM_END && z.AvailableBytesIn != 0 && !_wantCompress)
-        {
-            //rewind the buffer
-            this.RewindBytes(z.AvailableBytesIn);
-            z.AvailableBytesIn = 0;
-        }
+        // Preserve read-ahead bytes, as in the synchronous path.
 
         return rc;
     }
