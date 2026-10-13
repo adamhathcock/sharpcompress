@@ -100,12 +100,18 @@ public partial class SharpCompressStream : Stream, IStreamStack
         base.Dispose(disposing);
         if (disposing)
         {
-            if (!LeaveStreamOpen)
+            try
             {
-                stream.Dispose();
+                if (!LeaveStreamOpen)
+                {
+                    stream.Dispose();
+                }
             }
-            _ringBuffer?.Dispose();
-            _ringBuffer = null;
+            finally
+            {
+                _ringBuffer?.Dispose();
+                _ringBuffer = null;
+            }
         }
     }
 
@@ -187,6 +193,7 @@ public partial class SharpCompressStream : Stream, IStreamStack
     /// </param>
     public virtual void StartRecording(int? minBufferSize = null)
     {
+        ThrowIfDisposed();
         if (_isPassthrough)
         {
             throw new ArchiveOperationException(
@@ -222,7 +229,15 @@ public partial class SharpCompressStream : Stream, IStreamStack
         _isRecording = true;
     }
 
-    public override bool CanRead => true;
+    private void ThrowIfDisposed()
+    {
+        if (isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(SharpCompressStream));
+        }
+    }
+
+    public override bool CanRead => !isDisposed;
 
     public override bool CanSeek => !_isPassthrough || stream.CanSeek;
 
@@ -316,6 +331,7 @@ public partial class SharpCompressStream : Stream, IStreamStack
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        ThrowIfDisposed();
         if (count == 0)
         {
             return 0;
@@ -430,6 +446,7 @@ public partial class SharpCompressStream : Stream, IStreamStack
 #if !LEGACY_DOTNET
     public override int Read(Span<byte> buffer)
     {
+        ThrowIfDisposed();
         if (_isPassthrough)
         {
             return stream.Read(buffer);
