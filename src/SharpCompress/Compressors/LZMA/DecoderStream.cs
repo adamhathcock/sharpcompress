@@ -1,4 +1,6 @@
 using System;
+using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -281,7 +283,8 @@ internal static class DecoderStreamHelper
         long startPos,
         long[] packSizes,
         CFolder folderInfo,
-        IPasswordProvider pass
+        IPasswordProvider pass,
+        ArrayPool<byte>? bufferPool = null
     )
     {
         if (!folderInfo.CheckStructure())
@@ -290,22 +293,25 @@ internal static class DecoderStreamHelper
         }
 
         var inStreams = new Stream[folderInfo._packStreams.Count];
-        for (var j = 0; j < folderInfo._packStreams.Count; j++)
-        {
-            inStreams[j] = new BufferedSubStream(inStream, startPos, packSizes[j]);
-            startPos += packSizes[j];
-        }
-
         var outStreams = new Stream[folderInfo._unpackSizes.Count];
-
-        FindPrimaryOutStreamIndex(
-            folderInfo,
-            out var primaryCoderIndex,
-            out var primaryOutStreamIndex
-        );
         var encrypted = folderInfo.IsEncrypted();
         try
         {
+            for (var j = 0; j < folderInfo._packStreams.Count; j++)
+            {
+                inStreams[j] = new BufferedSubStream(
+                    inStream,
+                    startPos,
+                    packSizes[j],
+                    bufferPool ?? ArrayPool<byte>.Shared
+                );
+                startPos += packSizes[j];
+            }
+            FindPrimaryOutStreamIndex(
+                folderInfo,
+                out var primaryCoderIndex,
+                out var primaryOutStreamIndex
+            );
             var decoder = CreateDecoderStream(
                 inStreams,
                 packSizes,
@@ -318,7 +324,13 @@ internal static class DecoderStreamHelper
         }
         catch (DataErrorException ex) when (encrypted)
         {
+            DisposeFailedStreams(outStreams, inStreams);
             throw EncryptedDecoderStream.DecodingException(ex);
+        }
+        catch
+        {
+            DisposeFailedStreams(outStreams, inStreams);
+            throw;
         }
     }
 
@@ -328,7 +340,8 @@ internal static class DecoderStreamHelper
         long[] packSizes,
         CFolder folderInfo,
         IPasswordProvider pass,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        ArrayPool<byte>? bufferPool = null
     )
     {
         if (!folderInfo.CheckStructure())
@@ -337,22 +350,25 @@ internal static class DecoderStreamHelper
         }
 
         var inStreams = new Stream[folderInfo._packStreams.Count];
-        for (var j = 0; j < folderInfo._packStreams.Count; j++)
-        {
-            inStreams[j] = new BufferedSubStream(inStream, startPos, packSizes[j]);
-            startPos += packSizes[j];
-        }
-
         var outStreams = new Stream[folderInfo._unpackSizes.Count];
-
-        FindPrimaryOutStreamIndex(
-            folderInfo,
-            out var primaryCoderIndex,
-            out var primaryOutStreamIndex
-        );
         var encrypted = folderInfo.IsEncrypted();
         try
         {
+            for (var j = 0; j < folderInfo._packStreams.Count; j++)
+            {
+                inStreams[j] = new BufferedSubStream(
+                    inStream,
+                    startPos,
+                    packSizes[j],
+                    bufferPool ?? ArrayPool<byte>.Shared
+                );
+                startPos += packSizes[j];
+            }
+            FindPrimaryOutStreamIndex(
+                folderInfo,
+                out var primaryCoderIndex,
+                out var primaryOutStreamIndex
+            );
             var decoder = await CreateDecoderStreamAsync(
                     inStreams,
                     packSizes,
@@ -367,7 +383,68 @@ internal static class DecoderStreamHelper
         }
         catch (DataErrorException ex) when (encrypted)
         {
+            await DisposeFailedStreamsAsync(outStreams, inStreams).ConfigureAwait(false);
             throw EncryptedDecoderStream.DecodingException(ex);
+        }
+        catch
+        {
+            await DisposeFailedStreamsAsync(outStreams, inStreams).ConfigureAwait(false);
+            throw;
+        }
+    }
+
+    private static void DisposeFailedStreams(Stream[] outputs, Stream[] inputs)
+    {
+        var seen = new HashSet<Stream>();
+        foreach (var streams in new[] { outputs, inputs })
+        {
+            foreach (var stream in streams)
+            {
+                if (stream is null || !seen.Add(stream))
+                {
+                    continue;
+                }
+                try
+                {
+                    stream.Dispose();
+                }
+                catch (Exception)
+                {
+                    // Preserve the construction exception and still release the other streams.
+                }
+            }
+        }
+    }
+
+    private static async ValueTask DisposeFailedStreamsAsync(Stream[] outputs, Stream[] inputs)
+    {
+        var seen = new HashSet<Stream>();
+        foreach (var streams in new[] { outputs, inputs })
+        {
+            foreach (var stream in streams)
+            {
+                if (stream is null || !seen.Add(stream))
+                {
+                    continue;
+                }
+                try
+                {
+                    if (stream is IAsyncDisposable asyncDisposable)
+                    {
+                        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                    }
+                    else
+                    {
+#pragma warning disable VSTHRD103 // Legacy streams expose only synchronous disposal.
+                        stream.Dispose();
+#pragma warning restore VSTHRD103
+                    }
+                }
+                catch (Exception)
+                {
+                    // Preserve the construction exception and still release the other streams.
+                }
+            }
         }
     }
 }
