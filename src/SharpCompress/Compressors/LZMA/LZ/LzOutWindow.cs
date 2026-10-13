@@ -58,13 +58,20 @@ internal partial class OutWindow : IDisposable
 
     public void Dispose()
     {
-        ReleaseStream();
-        if (_buffer is null)
+        try
         {
-            return;
+            ReleaseStream();
         }
-        _pool.Return(_buffer);
-        _buffer = null;
+        finally
+        {
+            var buffer = _buffer;
+            _buffer = null;
+            _stream = null;
+            if (buffer is not null)
+            {
+                _pool.Return(buffer);
+            }
+        }
     }
 
     public void Reset()

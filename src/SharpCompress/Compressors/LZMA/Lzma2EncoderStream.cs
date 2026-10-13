@@ -354,7 +354,7 @@ internal sealed class Lzma2EncoderStream : Stream
         props[3] = (byte)(_dictionarySize >> 16);
         props[4] = (byte)(_dictionarySize >> 24);
 
-        var decoder = new Decoder();
+        using var decoder = new Decoder();
         decoder.SetDecoderProperties(props);
 
         using var input = new MemoryStream(compressedData, 0, compressedSize, writable: false);

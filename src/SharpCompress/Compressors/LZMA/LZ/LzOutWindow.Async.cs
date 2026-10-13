@@ -24,13 +24,20 @@ internal partial class OutWindow : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        await ReleaseStreamAsync().ConfigureAwait(false);
-        if (_buffer is null)
+        try
         {
-            return;
+            await ReleaseStreamAsync().ConfigureAwait(false);
         }
-        _pool.Return(_buffer);
-        _buffer = null;
+        finally
+        {
+            var buffer = _buffer;
+            _buffer = null;
+            _stream = null;
+            if (buffer is not null)
+            {
+                _pool.Return(buffer);
+            }
+        }
     }
 
     private async ValueTask FlushAsync(CancellationToken cancellationToken = default)

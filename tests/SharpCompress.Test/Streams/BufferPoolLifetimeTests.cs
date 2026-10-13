@@ -19,6 +19,31 @@ public class BufferPoolLifetimeTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task OutWindow_FailedFlush_ReturnsBuffer(bool asyncDispose)
+    {
+        var pool = new TrackingPool<byte>();
+        using var output = new ThrowingOutputStream();
+        var window = new OutWindow(pool);
+        window.Create(32);
+        window.Init(output);
+        window.SetLimit(1);
+        window.PutByte(42);
+        if (asyncDispose)
+        {
+            await Assert.ThrowsAsync<IOException>(async () => await window.DisposeAsync());
+        }
+        else
+        {
+            Assert.Throws<IOException>(() => window.Dispose());
+        }
+        window.Dispose();
+        Assert.Equal(1, pool.ReturnCount);
+        Assert.Empty(pool.Active);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task CrcCheckStream_Dispose_ReturnsBufferOnce(bool invalidCrc)
     {
         var pool = new TrackingPool<long>();
