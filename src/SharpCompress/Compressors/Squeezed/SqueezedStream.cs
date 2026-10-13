@@ -16,6 +16,7 @@ public partial class SqueezeStream : Stream
     private const int SPEOF = 256;
 
     private Stream _decodedStream = null!;
+    private PooledMemoryStream? _huffmanDecoded;
 
     private SqueezeStream(Stream stream, int compressedSize)
     {
@@ -25,15 +26,36 @@ public partial class SqueezeStream : Stream
     public static SqueezeStream Create(Stream stream, int compressedSize)
     {
         var squeezeStream = new SqueezeStream(stream, compressedSize);
-        squeezeStream._decodedStream = squeezeStream.BuildDecodedStream();
-
-        return squeezeStream;
+        try
+        {
+            squeezeStream._decodedStream = squeezeStream.BuildDecodedStream();
+            return squeezeStream;
+        }
+        catch
+        {
+            squeezeStream.Dispose();
+            throw;
+        }
     }
 
     protected override void Dispose(bool disposing)
     {
-        _decodedStream?.Dispose();
-        base.Dispose(disposing);
+        try
+        {
+            if (disposing)
+            {
+                _decodedStream?.Dispose();
+            }
+        }
+        finally
+        {
+            if (disposing)
+            {
+                // RunLength90Stream deliberately does not own its input.
+                _huffmanDecoded?.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 
     public override bool CanRead => true;
@@ -79,7 +101,7 @@ public partial class SqueezeStream : Stream
         }
 
         var bitReader = new BitReader(_stream);
-        var huffmanDecoded = new PooledMemoryStream();
+        var huffmanDecoded = _huffmanDecoded = new PooledMemoryStream();
         int i = 0;
 
         while (true)

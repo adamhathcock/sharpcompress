@@ -54,7 +54,15 @@ public sealed class PooledMemoryStream : MemoryStream
         _length = 0;
         _capacity = capacity;
 
-        EnsureSegmentedAllocated(capacity);
+        try
+        {
+            EnsureSegmentedAllocated(capacity);
+        }
+        catch
+        {
+            ReturnPooledBuffers();
+            throw;
+        }
     }
 
     public override bool CanRead => _isOpen;
@@ -565,7 +573,17 @@ public sealed class PooledMemoryStream : MemoryStream
 
         while (_blocks.Count < requiredBlocks)
         {
-            _blocks.Add(_arrayPool.Rent(_blockSize));
+            var block = _arrayPool.Rent(_blockSize);
+            try
+            {
+                _blocks.Add(block);
+            }
+            catch
+            {
+                // A failed list expansion must not lose the rental either.
+                _arrayPool.Return(block);
+                throw;
+            }
         }
 
         while (_blocks.Count > requiredBlocks)

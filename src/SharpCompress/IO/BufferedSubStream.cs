@@ -13,8 +13,13 @@ internal partial class BufferedSubStream : Stream, IStreamStack
     private readonly Stream _stream;
 
     public BufferedSubStream(Stream stream, long origin, long bytesToRead)
+        : this(stream, origin, bytesToRead, ArrayPool<byte>.Shared) { }
+
+    internal BufferedSubStream(Stream stream, long origin, long bytesToRead, ArrayPool<byte> pool)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        _pool = pool;
+        _cache = pool.Rent(81920);
         this.origin = origin;
         this.BytesLeftToRead = bytesToRead;
     }
@@ -29,7 +34,7 @@ internal partial class BufferedSubStream : Stream, IStreamStack
 
         if (disposing && _cache is not null)
         {
-            ArrayPool<byte>.Shared.Return(_cache);
+            _pool.Return(_cache);
             _cache = null;
         }
         base.Dispose(disposing);
@@ -37,7 +42,8 @@ internal partial class BufferedSubStream : Stream, IStreamStack
 
     private int _cacheOffset;
     private int _cacheLength;
-    private byte[]? _cache = ArrayPool<byte>.Shared.Rent(81920);
+    private readonly ArrayPool<byte> _pool;
+    private byte[]? _cache;
     private long origin;
     private bool _isDisposed;
 

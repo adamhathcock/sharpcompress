@@ -17,11 +17,20 @@ public partial class SqueezeStream
     )
     {
         var squeezeStream = new SqueezeStream(stream, compressedSize);
-        squeezeStream._decodedStream = await squeezeStream
-            .BuildDecodedStreamAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        return squeezeStream;
+        try
+        {
+            squeezeStream._decodedStream = await squeezeStream
+                .BuildDecodedStreamAsync(cancellationToken)
+                .ConfigureAwait(false);
+            return squeezeStream;
+        }
+        catch
+        {
+#pragma warning disable VSTHRD103 // Cleanup only releases in-memory buffers; the source remains open.
+            squeezeStream.Dispose();
+#pragma warning restore VSTHRD103
+            throw;
+        }
     }
 
     public override async Task<int> ReadAsync(
@@ -83,7 +92,7 @@ public partial class SqueezeStream
         }
 
         var bitReader = new BitReader(_stream);
-        var huffmanDecoded = new PooledMemoryStream();
+        var huffmanDecoded = _huffmanDecoded = new PooledMemoryStream();
         int i = 0;
 
         while (true)

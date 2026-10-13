@@ -832,6 +832,14 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 ---
 
+## CRC-Checking Stream Lifetime
+
+`SharpCompressStream` rejects reading and starting recording after disposal. Its pooled ring buffer is released even when disposal of the underlying stream fails.
+
+`LzmaStream` also rejects reads and writes after disposal. Failed initialization releases internal buffers without closing the supplied stream; successful construction retains the specified `leaveOpen` semantics. Disposal releases internal buffers even if finalization or underlying stream disposal throws.
+
+`SharpCompress.Compressors.LZMA.Utilities.CrcCheckStream` validates its expected CRC on disposal. A mismatch throws `ArchiveOperationException`, but pooled buffers are still released. Repeated disposal is safe, including after failed CRC validation. Once disposed, `CanWrite` is `false`, and `Write` / `WriteAsync` throw `ObjectDisposedException`.
+
 ## Related Documentation
 
 - [USAGE.md](USAGE.md) - Complete code examples
