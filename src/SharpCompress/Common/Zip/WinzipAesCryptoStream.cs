@@ -87,7 +87,7 @@ internal partial class WinzipAesCryptoStream : Stream
             {
                 if (!_authRead)
                 {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                     // Legacy Stream lacks DisposeAsync, including for async-only inputs.
 #pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
 #pragma warning disable CA2012

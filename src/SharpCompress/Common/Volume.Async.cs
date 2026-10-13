@@ -7,7 +7,7 @@ public abstract partial class Volume
 {
     public virtual async ValueTask DisposeAsync()
     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         _actualStream.Dispose();
         await Task.CompletedTask.ConfigureAwait(false);
 #else

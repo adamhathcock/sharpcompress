@@ -115,7 +115,7 @@ public sealed partial class BZip2Stream : IAsyncDisposable
         CancellationToken cancellationToken = default
     ) => await stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -136,7 +136,7 @@ public sealed partial class BZip2Stream : IAsyncDisposable
             stream.Dispose();
         }
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
 #else
         await Task.CompletedTask.ConfigureAwait(false);

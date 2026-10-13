@@ -510,7 +510,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         }
     }
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -521,7 +521,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             return;
         }
         isDisposed = true;
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
 #endif
         if (_stream is null)

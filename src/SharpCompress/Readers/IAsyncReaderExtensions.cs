@@ -45,7 +45,7 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                         using var fs = File.Open(x, fm);
 #else
                         await using var fs = File.Open(x, fm);
@@ -87,7 +87,7 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                         using var fs = File.Open(x, fm);
 #else
                         await using var fs = File.Open(x, fm);
@@ -116,7 +116,7 @@ public static class IAsyncReaderExtensions
         CancellationToken cancellationToken
     )
     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         using var entryStream = await reader
 #else
         await using var entryStream = await reader

@@ -21,7 +21,7 @@ public partial class ZlibStream
         await _baseStream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
     {
         if (_disposed)

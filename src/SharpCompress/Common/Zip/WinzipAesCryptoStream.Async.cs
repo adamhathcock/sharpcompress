@@ -10,7 +10,7 @@ namespace SharpCompress.Common.Zip;
 
 internal partial class WinzipAesCryptoStream
 {
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
     {
         if (_isDisposed)

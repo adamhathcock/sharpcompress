@@ -104,7 +104,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             }
         }
         //don't know the size so we have to try to decompress to skip
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
 #else
         await using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
@@ -138,7 +138,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
 
     private async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
 #else
         await using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);

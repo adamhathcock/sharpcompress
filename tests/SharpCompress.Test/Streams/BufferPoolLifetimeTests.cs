@@ -58,7 +58,7 @@ public class BufferPoolLifetimeTests
             stream.Dispose();
         }
         stream.Dispose();
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
         await stream.DisposeAsync();
 #else
         await Task.CompletedTask;

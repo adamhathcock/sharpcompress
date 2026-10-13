@@ -122,7 +122,7 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
             uint inputCrc2;
             long inputSize2;
             {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                 using var lzma2Stream = new Lzma2EncoderStream(
 #else
                 await using var lzma2Stream = new Lzma2EncoderStream(
@@ -156,7 +156,7 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
         uint inputCrc;
         long inputSize;
         {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
             using var lzmaStream = LzmaStream.Create(encoderProperties, false, outCrcStream);
 #else
             await using var lzmaStream = LzmaStream.Create(encoderProperties, false, outCrcStream);

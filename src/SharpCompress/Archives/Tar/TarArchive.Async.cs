@@ -22,7 +22,7 @@ public partial class TarArchive
         CancellationToken cancellationToken = default
     )
     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         using var writer = new TarWriter(stream, options);
 #else
         await using var writer = new TarWriter(stream, options);
@@ -43,7 +43,7 @@ public partial class TarArchive
             }
             else
             {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                 using var entryStream = await entry
 #else
                 await using var entryStream = await entry
@@ -75,7 +75,7 @@ public partial class TarArchive
             }
             else
             {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                 using var entryStream = await entry
                     .OpenEntryStreamAsync(cancellationToken)
                     .ConfigureAwait(false);

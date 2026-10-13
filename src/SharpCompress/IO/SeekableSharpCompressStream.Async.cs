@@ -28,7 +28,9 @@ internal sealed partial class SeekableSharpCompressStream
         ReadOnlyMemory<byte> buffer,
         CancellationToken cancellationToken = default
     ) => _stream.WriteAsync(buffer, cancellationToken);
+#endif
 
+#if STREAM_DISPOSEASYNC
     public override ValueTask DisposeAsync()
     {
         if (_isDisposed)

@@ -83,7 +83,7 @@ public static class IWritableAsyncArchiveExtensions
     )
         where TOptions : IWriterOptions
     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
 #else
         await using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);

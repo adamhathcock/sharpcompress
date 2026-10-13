@@ -49,7 +49,7 @@ public class SharpCompressStreamErrorAsyncTest
         }
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     [Fact]
     public async ValueTask DisposeAsync_WithThrowOnDisposeTrue_ThrowsInvalidOperation()
     {

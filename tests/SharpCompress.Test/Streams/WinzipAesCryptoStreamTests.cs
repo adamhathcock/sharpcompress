@@ -82,7 +82,7 @@ public class WinzipAesCryptoStreamTests
             {
                 stream.Dispose();
             }
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
             else if (completion == "dispose-async")
             {
                 await stream.DisposeAsync();
@@ -153,7 +153,7 @@ public class WinzipAesCryptoStreamTests
         stream.Dispose();
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     [Fact]
     public async Task DisposeAsync_Verifies_Unread_Ciphertext()
     {

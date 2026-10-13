@@ -77,7 +77,7 @@ public static partial class IArchiveEntryExtensions
             var entryStream = await archiveEntry
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
             using var entryStreamScope = entryStream;
 #else
             await using var entryStreamScope = entryStream
@@ -168,7 +168,7 @@ public static partial class IArchiveEntryExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                         using var fs = File.Open(x, fm);
 #else
                         await using var fs = File.Open(x, fm);

@@ -160,7 +160,7 @@ public class PpmdStream : Stream, IAsyncDisposable
         }
         catch
         {
-#if LEGACY_DOTNET && !NETSTANDARD2_1
+#if !STREAM_DISPOSEASYNC
             instance.Dispose();
 #else
             await instance.DisposeAsync().ConfigureAwait(false);
@@ -196,7 +196,7 @@ public class PpmdStream : Stream, IAsyncDisposable
         base.Dispose(disposing);
     }
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -215,7 +215,7 @@ public class PpmdStream : Stream, IAsyncDisposable
         _modelH?.Dispose();
         _modelH = null;
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
 #endif
     }

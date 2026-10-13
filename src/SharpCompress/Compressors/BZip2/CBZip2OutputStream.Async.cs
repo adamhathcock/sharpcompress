@@ -670,7 +670,7 @@ internal sealed partial class CBZip2OutputStream : IAsyncDisposable
         await bsStream.FlushAsync(cancellationToken).ConfigureAwait(false);
     }
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -696,7 +696,7 @@ internal sealed partial class CBZip2OutputStream : IAsyncDisposable
         }
         bsStream = null;
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
 #else
         await Task.CompletedTask.ConfigureAwait(false);

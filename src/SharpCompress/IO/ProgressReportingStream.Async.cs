@@ -45,7 +45,7 @@ internal sealed partial class ProgressReportingStream
     }
 #endif
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
     {
         if (!_leaveOpen)

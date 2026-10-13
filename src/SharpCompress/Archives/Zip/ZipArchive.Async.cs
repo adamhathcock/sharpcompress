@@ -84,7 +84,7 @@ public partial class ZipArchive
         CancellationToken cancellationToken = default
     )
     {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
         using var writer = new ZipWriter(stream, options);
 #else
         await using var writer = new ZipWriter(stream, options);
@@ -105,7 +105,7 @@ public partial class ZipArchive
             }
             else
             {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                 using var entryStream = await entry
 #else
                 await using var entryStream = await entry
@@ -135,7 +135,7 @@ public partial class ZipArchive
             }
             else
             {
-#if LEGACY_DOTNET
+#if !STREAM_DISPOSEASYNC
                 using var entryStream = await entry
 #else
                 await using var entryStream = await entry

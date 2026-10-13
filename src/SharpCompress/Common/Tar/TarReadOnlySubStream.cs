@@ -34,7 +34,7 @@ internal class TarReadOnlySubStream : Stream
         base.Dispose(disposing);
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     public override async System.Threading.Tasks.ValueTask DisposeAsync()
     {
         if (_isDisposed)

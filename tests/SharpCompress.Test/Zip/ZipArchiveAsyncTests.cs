@@ -265,7 +265,7 @@ public class ZipArchiveAsyncTests : ArchiveTests
         Assert.Equal(0, opened.Length);
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     [Fact]
     public async ValueTask Zip_Save_New_Entry_Async_Only_Streams()
     {

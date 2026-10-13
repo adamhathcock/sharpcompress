@@ -84,7 +84,7 @@ public class SharpCompressStreamPassthroughAsyncTest
         Assert.Equal(3, ms.Length);
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     [Fact]
     public async ValueTask CreateNonDisposing_DoesNotDisposeUnderlying_Async()
     {
