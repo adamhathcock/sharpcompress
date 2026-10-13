@@ -231,9 +231,12 @@ internal sealed partial class ArchiveReader
                         != folder._unpackCrc
                     )
                     {
-                        throw new InvalidFormatException(
+                        var exception = new InvalidFormatException(
                             "Decoded stream does not match expected CRC."
                         );
+                        throw folder.IsEncrypted()
+                            ? EncryptedDecoderStream.DecodingException(exception)
+                            : exception;
                     }
                 }
             }
