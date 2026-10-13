@@ -11,6 +11,13 @@ namespace SharpCompress.Compressors.LZMA.LZ;
 
 internal partial class OutWindow : IDisposable
 {
+    private readonly ArrayPool<byte> _pool;
+
+    public OutWindow()
+        : this(ArrayPool<byte>.Shared) { }
+
+    internal OutWindow(ArrayPool<byte> pool) => _pool = pool;
+
     private byte[] _buffer;
     private int _windowSize;
     private int _pos;
@@ -32,11 +39,13 @@ internal partial class OutWindow : IDisposable
         }
         if (_windowSize != windowSize)
         {
+            // Allocate first so failed growth leaves the existing buffer owned by this window.
+            var replacement = _pool.Rent(windowSize);
             if (_buffer is not null)
             {
-                ArrayPool<byte>.Shared.Return(_buffer);
+                _pool.Return(_buffer);
             }
-            _buffer = ArrayPool<byte>.Shared.Rent(windowSize);
+            _buffer = replacement;
         }
         _buffer[windowSize - 1] = 0;
         _windowSize = windowSize;
@@ -54,7 +63,7 @@ internal partial class OutWindow : IDisposable
         {
             return;
         }
-        ArrayPool<byte>.Shared.Return(_buffer);
+        _pool.Return(_buffer);
         _buffer = null;
     }
 

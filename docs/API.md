@@ -832,6 +832,10 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 ---
 
+## CRC-Checking Stream Lifetime
+
+`SharpCompress.Compressors.LZMA.Utilities.CrcCheckStream` validates its expected CRC on disposal. A mismatch throws `ArchiveOperationException`, but pooled buffers are still released. Repeated disposal is safe, including after failed CRC validation. Once disposed, `CanWrite` is `false`, and `Write` / `WriteAsync` throw `ObjectDisposedException`.
+
 ## Related Documentation
 
 - [USAGE.md](USAGE.md) - Complete code examples

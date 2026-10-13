@@ -29,7 +29,7 @@ internal partial class OutWindow : IAsyncDisposable
         {
             return;
         }
-        ArrayPool<byte>.Shared.Return(_buffer);
+        _pool.Return(_buffer);
         _buffer = null;
     }
 

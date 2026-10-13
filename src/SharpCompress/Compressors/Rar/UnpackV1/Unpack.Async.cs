@@ -564,8 +564,10 @@ internal sealed partial class Unpack
                             FilteredDataSize = NextPrg.FilteredDataSize;
                             if (FilteredData.Length < FilteredDataSize)
                             {
+                                // Keep ownership of the old buffer if renting its replacement fails.
+                                var replacement = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
                                 ArrayPool<byte>.Shared.Return(FilteredData);
-                                FilteredData = ArrayPool<byte>.Shared.Rent(FilteredDataSize);
+                                FilteredData = replacement;
                             }
 
                             for (var i = 0; i < FilteredDataSize; i++)
