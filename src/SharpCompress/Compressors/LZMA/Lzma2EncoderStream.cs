@@ -55,7 +55,6 @@ internal sealed class Lzma2EncoderStream : Stream
         _dictionarySize = dictionarySize;
         _numFastBytes = numFastBytes;
         _bufferPool = bufferPool;
-        _buffer = bufferPool.Rent(MAX_UNCOMPRESSED_CHUNK_SIZE);
         _bufferPosition = 0;
 
         var encoderProps = new LzmaEncoderProperties(eos: false, _dictionarySize, _numFastBytes);
@@ -66,6 +65,9 @@ internal sealed class Lzma2EncoderStream : Stream
         _encoder.WriteCoderProperties(lzmaProperties);
         _lzmaPropertiesByte = lzmaProperties[0];
         _properties = [EncodeDictionarySize(_dictionarySize)];
+
+        // Rent last so failed property validation or setup cannot strand a pooled buffer.
+        _buffer = bufferPool.Rent(MAX_UNCOMPRESSED_CHUNK_SIZE);
     }
 
     /// <summary>
@@ -75,7 +77,7 @@ internal sealed class Lzma2EncoderStream : Stream
 
     public override bool CanRead => false;
     public override bool CanSeek => false;
-    public override bool CanWrite => true;
+    public override bool CanWrite => !_isDisposed;
     public override long Length => throw new NotSupportedException();
 
     public override long Position
@@ -86,6 +88,7 @@ internal sealed class Lzma2EncoderStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count)
     {
+        ThrowIfDisposed();
         while (count > 0)
         {
             var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
@@ -108,6 +111,7 @@ internal sealed class Lzma2EncoderStream : Stream
         CancellationToken cancellationToken
     )
     {
+        ThrowIfDisposed();
         while (count > 0)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -131,6 +135,7 @@ internal sealed class Lzma2EncoderStream : Stream
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfDisposed();
         var offset = 0;
         var count = buffer.Length;
         while (count > 0)
@@ -152,6 +157,14 @@ internal sealed class Lzma2EncoderStream : Stream
 #endif
 
     public override void Flush() { }
+
+    private void ThrowIfDisposed()
+    {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(Lzma2EncoderStream));
+        }
+    }
 
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();

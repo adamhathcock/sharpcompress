@@ -103,6 +103,56 @@ public class BufferPoolLifetimeTests
     }
 
     [Theory]
+    [InlineData(0, 32)]
+    [InlineData(-1, 32)]
+    [InlineData(1073741825, 32)]
+    [InlineData(65536, 4)]
+    [InlineData(65536, 274)]
+    public void Lzma2Encoder_InvalidProperties_DoesNotRentBuffer(
+        int dictionarySize,
+        int numFastBytes
+    )
+    {
+        var pool = new TrackingPool<byte>();
+        using var output = new MemoryStream();
+
+        Assert.Throws<InvalidParamException>(() =>
+            new Lzma2EncoderStream(output, dictionarySize, numFastBytes, pool)
+        );
+        Assert.Equal(0, pool.RentCount);
+        Assert.Empty(pool.Active);
+        Assert.True(output.CanWrite);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Lzma2Encoder_Dispose_RejectsWrites(bool asyncDispose)
+    {
+        var pool = new TrackingPool<byte>();
+        using var output = new MemoryStream();
+        var encoder = new Lzma2EncoderStream(output, 1 << 16, 32, pool);
+        Assert.True(encoder.CanWrite);
+        encoder.Write(new byte[128], 0, 128);
+
+        if (asyncDispose)
+        {
+            await encoder.DisposeAsync();
+        }
+        else
+        {
+            encoder.Dispose();
+        }
+
+        var length = output.Length;
+        await AssertWritesRejected(encoder);
+        Assert.Equal(length, output.Length);
+        Assert.Equal(1, pool.ReturnCount);
+        Assert.Empty(pool.Active);
+        Assert.True(output.CanWrite);
+    }
+
+    [Theory]
     [InlineData(false, false)]
     [InlineData(false, true)]
     [InlineData(true, false)]
@@ -130,6 +180,27 @@ public class BufferPoolLifetimeTests
         Assert.Equal(1, pool.ReturnCount);
         Assert.Empty(pool.Active);
         Assert.True(output.CanWrite);
+        await AssertWritesRejected(encoder);
+    }
+
+    private static async Task AssertWritesRejected(Lzma2EncoderStream encoder)
+    {
+        Assert.False(encoder.CanWrite);
+        foreach (var count in new[] { 0, 1 })
+        {
+            var data = new byte[count];
+            Assert.Throws<ObjectDisposedException>(() => encoder.Write(data, 0, count));
+            await Assert.ThrowsAsync<ObjectDisposedException>(() =>
+                encoder.WriteAsync(data, 0, count, CancellationToken.None)
+            );
+#if !LEGACY_DOTNET
+            await Assert.ThrowsAsync<ObjectDisposedException>(async () =>
+                await encoder.WriteAsync(data.AsMemory(), CancellationToken.None)
+            );
+            Assert.Throws<ObjectDisposedException>(() => encoder.Write(data.AsSpan()));
+#endif
+        }
+        Assert.Throws<ObjectDisposedException>(() => encoder.WriteByte(1));
     }
 
     [Fact]
@@ -203,11 +274,13 @@ public class BufferPoolLifetimeTests
     private sealed class TrackingPool<T> : ArrayPool<T>
     {
         internal HashSet<T[]> Active { get; } = new();
+        internal int RentCount { get; private set; }
         internal int ReturnCount { get; private set; }
         internal bool FailNextRent { get; set; }
 
         public override T[] Rent(int minimumLength)
         {
+            RentCount++;
             if (FailNextRent)
             {
                 FailNextRent = false;
