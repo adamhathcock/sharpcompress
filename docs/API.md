@@ -694,6 +694,8 @@ using (var archive = ZipArchive.OpenArchive("archive.zip", options))
 
 ### Async Extract with Cancellation
 
+Async archive and reader/writer operations dispose SharpCompress resources asynchronously on every target, including .NET Framework 4.8 and .NET Standard 2.0. `SharpCompressStream.DisposeAsync()` and `ZlibStream.DisposeAsync()` are available on every target; stream wrappers forward disposal to runtime `IAsyncDisposable` implementations where available, falling back to synchronous disposal only for streams that do not support it.
+
 ```csharp
 var cts = new CancellationTokenSource();
 cts.CancelAfter(TimeSpan.FromMinutes(5));

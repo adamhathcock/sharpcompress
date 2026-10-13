@@ -25,12 +25,6 @@ public class WinzipAesCryptoStreamTests
                 {
                     foreach (var completion in new[] { "dispose", "retry", "dispose-async" })
                     {
-#if LEGACY_DOTNET
-                        if (completion == "dispose-async")
-                        {
-                            continue;
-                        }
-#endif
                         yield return [length, tagBytesRead, corruption, completion];
                     }
                 }
@@ -82,12 +76,10 @@ public class WinzipAesCryptoStreamTests
             {
                 stream.Dispose();
             }
-#if STREAM_DISPOSEASYNC
             else if (completion == "dispose-async")
             {
                 await stream.DisposeAsync();
             }
-#endif
             else
             {
                 Assert.Equal(0, await stream.ReadAsync(new byte[1], 0, 1, CancellationToken.None));
@@ -153,7 +145,6 @@ public class WinzipAesCryptoStreamTests
         stream.Dispose();
     }
 
-#if STREAM_DISPOSEASYNC
     [Fact]
     public async Task DisposeAsync_Verifies_Unread_Ciphertext()
     {
@@ -171,7 +162,6 @@ public class WinzipAesCryptoStreamTests
         );
         await stream.DisposeAsync();
     }
-#endif
 
     [Theory]
     [InlineData(false, 0)]

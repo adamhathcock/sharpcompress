@@ -25,10 +25,11 @@ public partial class GZipArchive
         CancellationToken cancellationToken = default
     )
     {
-#if !STREAM_DISPOSEASYNC
+#if SYNC_ONLY
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
 #else
-        await using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
 #endif
         await SaveToAsync(stream, new GZipWriterOptions(CompressionType.GZip), cancellationToken)
             .ConfigureAwait(false);
@@ -47,24 +48,23 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
-#if !STREAM_DISPOSEASYNC
-        using var writer = new GZipWriter(stream, options);
-#else
         await using var writer = new GZipWriter(stream, options);
-#endif
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
         {
             if (!entry.IsDirectory)
             {
-#if !STREAM_DISPOSEASYNC
-                using var entryStream = await entry
+#if SYNC_ONLY
+                using var entryStream = entry.OpenEntryStream();
 #else
-                await using var entryStream = await entry
-#endif
+                var entryStream = await entry
                     .OpenEntryStreamAsync(cancellationToken)
                     .ConfigureAwait(false);
+                await using var entryStreamScope = entryStream
+                    .DisposeAsyncScope()
+                    .ConfigureAwait(false);
+#endif
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -77,13 +77,16 @@ public partial class GZipArchive
         }
         foreach (var entry in newEntries.Where(x => !x.IsDirectory))
         {
-#if !STREAM_DISPOSEASYNC
-            using var entryStream = await entry
+#if SYNC_ONLY
+            using var entryStream = entry.OpenEntryStream();
 #else
-            await using var entryStream = await entry
-#endif
+            var entryStream = await entry
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
+            await using var entryStreamScope = entryStream
+                .DisposeAsyncScope()
+                .ConfigureAwait(false);
+#endif
             await writer
                 .WriteAsync(
                     entry.Key.NotNull("Entry Key is null"),

@@ -83,11 +83,7 @@ public partial class ZipWriter
 #if !SYNC_ONLY
         cancellationToken.ThrowIfCancellationRequested();
 #endif
-#if !STREAM_DISPOSEASYNC
-        using var output = await WriteToStreamAsync(
-#else
         await using var output = await WriteToStreamAsync(
-#endif
                 entryPath,
                 zipWriterEntryOptions,
                 cancellationToken

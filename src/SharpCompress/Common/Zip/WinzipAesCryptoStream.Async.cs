@@ -10,7 +10,6 @@ namespace SharpCompress.Common.Zip;
 
 internal partial class WinzipAesCryptoStream
 {
-#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
     {
         if (_isDisposed)
@@ -31,11 +30,10 @@ internal partial class WinzipAesCryptoStream
             _authentication.Dispose();
             _transform.Dispose();
             _cipher.Dispose();
-            await _stream.DisposeAsync().ConfigureAwait(false);
+            await _stream.DisposeAsyncCompat().ConfigureAwait(false);
         }
         await base.DisposeAsync().ConfigureAwait(false);
     }
-#endif
 
     private async ValueTask VerifyAuthenticationAsync(CancellationToken cancellationToken)
     {

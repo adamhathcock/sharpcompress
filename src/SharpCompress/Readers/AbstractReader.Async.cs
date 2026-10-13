@@ -104,11 +104,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             }
         }
         //don't know the size so we have to try to decompress to skip
-#if !STREAM_DISPOSEASYNC
-        using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
-#else
         await using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
-#endif
         await s.SkipEntryAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -138,11 +134,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
 
     private async ValueTask WriteAsync(Stream writeStream, CancellationToken cancellationToken)
     {
-#if !STREAM_DISPOSEASYNC
-        using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
-#else
         await using var s = await OpenEntryStreamAsync(cancellationToken).ConfigureAwait(false);
-#endif
         var sourceStream = WrapWithProgress(s, Entry);
         await sourceStream
             .CopyToAsync(writeStream, Options.BufferSize, cancellationToken)

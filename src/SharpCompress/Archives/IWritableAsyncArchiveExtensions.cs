@@ -83,11 +83,8 @@ public static class IWritableAsyncArchiveExtensions
     )
         where TOptions : IWriterOptions
     {
-#if !STREAM_DISPOSEASYNC
-        using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-#else
-        await using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
-#endif
+        var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
         await writableArchive.SaveToAsync(stream, options, cancellationToken).ConfigureAwait(false);
     }
 }

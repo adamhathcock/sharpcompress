@@ -265,7 +265,6 @@ public class ZipArchiveAsyncTests : ArchiveTests
         Assert.Equal(0, opened.Length);
     }
 
-#if STREAM_DISPOSEASYNC
     [Fact]
     public async ValueTask Zip_Save_New_Entry_Async_Only_Streams()
     {
@@ -284,11 +283,11 @@ public class ZipArchiveAsyncTests : ArchiveTests
         destination.Position = 0;
         await using var reopened = await ZipArchive.OpenAsyncArchive(destination);
         var entry = await reopened.EntriesAsync.SingleAsync();
-        await using var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+        var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+        await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
         using var reader = new StreamReader(stream);
         Assert.Equal("test", await reader.ReadToEndAsync());
     }
-#endif
 
     [Fact]
     public async ValueTask Zip_Deflate_Entry_Stream_Async()

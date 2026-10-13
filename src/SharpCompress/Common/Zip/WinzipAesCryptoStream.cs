@@ -3,10 +3,11 @@ using System.Buffers.Binary;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
-internal partial class WinzipAesCryptoStream : Stream
+internal partial class WinzipAesCryptoStream : AsyncDisposableStream
 {
     private const int BLOCK_SIZE_IN_BYTES = 16;
     private readonly Aes _cipher;

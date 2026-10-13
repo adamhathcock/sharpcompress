@@ -7,12 +7,7 @@ public abstract partial class Volume
 {
     public virtual async ValueTask DisposeAsync()
     {
-#if !STREAM_DISPOSEASYNC
-        _actualStream.Dispose();
-        await Task.CompletedTask.ConfigureAwait(false);
-#else
-        await _actualStream.DisposeAsync().ConfigureAwait(false);
-#endif
+        await _actualStream.DisposeAsyncCompat().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 }

@@ -160,11 +160,7 @@ public class PpmdStream : Stream, IAsyncDisposable
         }
         catch
         {
-#if !STREAM_DISPOSEASYNC
-            instance.Dispose();
-#else
             await instance.DisposeAsync().ConfigureAwait(false);
-#endif
             throw;
         }
     }

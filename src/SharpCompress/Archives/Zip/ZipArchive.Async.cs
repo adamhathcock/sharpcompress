@@ -84,11 +84,7 @@ public partial class ZipArchive
         CancellationToken cancellationToken = default
     )
     {
-#if !STREAM_DISPOSEASYNC
-        using var writer = new ZipWriter(stream, options);
-#else
         await using var writer = new ZipWriter(stream, options);
-#endif
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
@@ -105,12 +101,11 @@ public partial class ZipArchive
             }
             else
             {
-#if !STREAM_DISPOSEASYNC
-                using var entryStream = await entry
-#else
-                await using var entryStream = await entry
-#endif
+                var entryStream = await entry
                     .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                await using var entryStreamScope = entryStream
+                    .DisposeAsyncScope()
                     .ConfigureAwait(false);
                 await writer
                     .WriteAsync(
@@ -135,12 +130,11 @@ public partial class ZipArchive
             }
             else
             {
-#if !STREAM_DISPOSEASYNC
-                using var entryStream = await entry
-#else
-                await using var entryStream = await entry
-#endif
+                var entryStream = await entry
                     .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                await using var entryStreamScope = entryStream
+                    .DisposeAsyncScope()
                     .ConfigureAwait(false);
                 await writer
                     .WriteAsync(
