@@ -101,7 +101,9 @@ public partial class ZipArchive
             }
             else
             {
-                using var entryStream = entry.OpenEntryStream();
+                using var entryStream = await entry
+                    .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
@@ -125,7 +127,9 @@ public partial class ZipArchive
             }
             else
             {
+#pragma warning disable VSTHRD103 // New writable entries only rewind and wrap their supplied stream; the base async method cannot open them.
                 using var entryStream = entry.OpenEntryStream();
+#pragma warning restore VSTHRD103
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),

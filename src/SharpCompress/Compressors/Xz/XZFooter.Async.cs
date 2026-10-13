@@ -36,7 +36,9 @@ public partial class XZFooter
         using (var reader = new BinaryReader(stream))
         {
             BackwardSize = (reader.ReadLittleEndianUInt32() + 1) * 4;
+#pragma warning disable VSTHRD103 // The footer bytes are already buffered in a MemoryStream.
             StreamFlags = reader.ReadBytes(2);
+#pragma warning restore VSTHRD103
         }
         var magBy = await _reader.ReadBytesAsync(2, cancellationToken).ConfigureAwait(false);
         if (!magBy.AsSpan().SequenceEqual(_magicBytes))

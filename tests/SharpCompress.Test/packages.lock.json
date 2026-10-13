@@ -42,9 +42,9 @@
       },
       "Microsoft.VisualStudio.Threading.Analyzers": {
         "type": "Direct",
-        "requested": "[17.14.15, )",
-        "resolved": "17.14.15",
-        "contentHash": "mXQPJsbuUD2ydq4/ffd8h8tSOFCXec+2xJOVNCvXjuMOq/+5EKHq3D2m2MC2+nUaXeFMSt66VS/J4HdKBixgcw=="
+        "requested": "[18.12.1, )",
+        "resolved": "18.12.1",
+        "contentHash": "sQt7NpnselT1gP1a7bTfhmfHYV0jbavst/8mOoWTMSjXhXzWPssqgBoIwrxNsgJUa7XQzD2raSRMAFfmlepxNw=="
       },
       "PolySharp": {
         "type": "Direct",
@@ -72,9 +72,9 @@
       },
       "Zomp.SyncMethodGenerator": {
         "type": "Direct",
-        "requested": "[2.0.56, )",
-        "resolved": "2.0.56",
-        "contentHash": "P1iMA1meu0uX8YcPWhkFnpzV3e+QFDDYMU6hMNyofS+pBlLgeVV7QevBmJmJ/mrxA1jujo3cqNaO1IapdfjOlA=="
+        "requested": "[2.0.66, )",
+        "resolved": "2.0.66",
+        "contentHash": "iYnF185851PEX5vnxrhUj2av30HoxvjUlPd0HVVuSAif7TCgc/Noc5xVf9jiLhMlI8Rt9QrJdef3KB8+opAJQA=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
@@ -236,6 +236,11 @@
           "System.Runtime.CompilerServices.Unsafe": "4.5.3"
         }
       },
+      "System.ValueTuple": {
+        "type": "Transitive",
+        "resolved": "4.6.2",
+        "contentHash": "yQgmjfFximrNm9LIV3mL6T5MzjeC+epeE5rl4hXxAlYmxby7RM1dPSkIKXk9HNkl6G54h2JHOmLD46+Pey+IRg=="
+      },
       "xunit.analyzers": {
         "type": "Transitive",
         "resolved": "1.27.0",
@@ -311,7 +316,7 @@
         "type": "Project",
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "[8.0.0, )",
-          "System.Text.Encoding.CodePages": "[8.0.0, )"
+          "System.Text.Encoding.CodePages": "[10.0.12, )"
         }
       },
       "Microsoft.Bcl.AsyncInterfaces": {
@@ -325,12 +330,13 @@
       },
       "System.Text.Encoding.CodePages": {
         "type": "CentralTransitive",
-        "requested": "[8.0.0, )",
-        "resolved": "8.0.0",
-        "contentHash": "OZIsVplFGaVY90G2SbpgU7EnCoOO5pw1t4ic21dBF3/1omrJFpAGoNAVpPyMVOC90/hvgkGG3VFqR13YgZMQfg==",
+        "requested": "[10.0.12, )",
+        "resolved": "10.0.12",
+        "contentHash": "rt1G/LdKC6oc3xPyQhMn5vRTp9iTTt1BS9Dx/67TpW9KWgFJ39lyEz0y4CbDksx7iTZEfgG61UsQMoGEXEpF4A==",
         "dependencies": {
-          "System.Memory": "4.5.5",
-          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+          "System.Memory": "4.6.3",
+          "System.Runtime.CompilerServices.Unsafe": "6.1.2",
+          "System.ValueTuple": "4.6.2"
         }
       }
     },
@@ -373,9 +379,9 @@
       },
       "Microsoft.VisualStudio.Threading.Analyzers": {
         "type": "Direct",
-        "requested": "[17.14.15, )",
-        "resolved": "17.14.15",
-        "contentHash": "mXQPJsbuUD2ydq4/ffd8h8tSOFCXec+2xJOVNCvXjuMOq/+5EKHq3D2m2MC2+nUaXeFMSt66VS/J4HdKBixgcw=="
+        "requested": "[18.12.1, )",
+        "resolved": "18.12.1",
+        "contentHash": "sQt7NpnselT1gP1a7bTfhmfHYV0jbavst/8mOoWTMSjXhXzWPssqgBoIwrxNsgJUa7XQzD2raSRMAFfmlepxNw=="
       },
       "PolySharp": {
         "type": "Direct",
@@ -400,9 +406,9 @@
       },
       "Zomp.SyncMethodGenerator": {
         "type": "Direct",
-        "requested": "[2.0.56, )",
-        "resolved": "2.0.56",
-        "contentHash": "P1iMA1meu0uX8YcPWhkFnpzV3e+QFDDYMU6hMNyofS+pBlLgeVV7QevBmJmJ/mrxA1jujo3cqNaO1IapdfjOlA=="
+        "requested": "[2.0.66, )",
+        "resolved": "2.0.66",
+        "contentHash": "iYnF185851PEX5vnxrhUj2av30HoxvjUlPd0HVVuSAif7TCgc/Noc5xVf9jiLhMlI8Rt9QrJdef3KB8+opAJQA=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
