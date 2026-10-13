@@ -13,7 +13,9 @@ internal sealed class SevenZipWriteEntry
 {
     public string Name { get; init; } = string.Empty;
     public DateTime? ModificationTime { get; init; }
-    public uint? Attributes { get; init; }
+
+    // Define attributes for files too: libarchive misreads partially defined vectors.
+    public uint? Attributes { get; init; } = 0x20; // FILE_ATTRIBUTE_ARCHIVE
     public bool IsDirectory { get; init; }
     public bool IsEmpty { get; init; }
 }

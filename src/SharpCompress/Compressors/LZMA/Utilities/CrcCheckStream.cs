@@ -8,32 +8,47 @@ using SharpCompress.Common;
 namespace SharpCompress.Compressors.LZMA.Utilities;
 
 [CLSCompliant(false)]
-public class CrcCheckStream(uint crc) : Stream
+public class CrcCheckStream : Stream
 {
+    private readonly uint _crc;
+    private readonly ArrayPool<long> _pool;
     private uint _mCurrentCrc = Crc.INIT_CRC;
     private bool _mClosed;
 
-    private readonly long[] _mBytes = ArrayPool<long>.Shared.Rent(256);
+    private readonly long[] _mBytes;
+
+    public CrcCheckStream(uint crc)
+        : this(crc, ArrayPool<long>.Shared) { }
+
+    internal CrcCheckStream(uint crc, ArrayPool<long> pool)
+    {
+        _crc = crc;
+        _pool = pool;
+        _mBytes = pool.Rent(256);
+    }
 
     protected override void Dispose(bool disposing)
     {
+        if (!disposing || _mClosed)
+        {
+            base.Dispose(disposing);
+            return;
+        }
+
+        // Claim disposal before validation, which can throw. The buffer must be returned only once.
+        _mClosed = true;
         try
         {
-            if (disposing && !_mClosed)
+            _mCurrentCrc = Crc.Finish(_mCurrentCrc);
+            if (_mCurrentCrc != _crc)
             {
-                _mClosed = true;
-                _mCurrentCrc = Crc.Finish(_mCurrentCrc); //now becomes equal
-
-                if (_mCurrentCrc != crc) //moved test to here
-                {
-                    throw new ArchiveOperationException();
-                }
+                throw new ArchiveOperationException();
             }
         }
         finally
         {
             base.Dispose(disposing);
-            ArrayPool<long>.Shared.Return(_mBytes);
+            _pool.Return(_mBytes);
         }
     }
 
@@ -41,7 +56,7 @@ public class CrcCheckStream(uint crc) : Stream
 
     public override bool CanSeek => false;
 
-    public override bool CanWrite => true;
+    public override bool CanWrite => !_mClosed;
 
     public override void Flush() { }
 
@@ -62,6 +77,10 @@ public class CrcCheckStream(uint crc) : Stream
 
     public override void Write(byte[] buffer, int offset, int count)
     {
+        if (_mClosed)
+        {
+            throw new ObjectDisposedException(nameof(CrcCheckStream));
+        }
         for (var i = 0; i < count; i++)
         {
             _mBytes[buffer[offset + i]]++;
