@@ -15,6 +15,10 @@ internal partial class WinzipAesCryptoStream : Stream
     private readonly ICryptoTransform _transform;
     private readonly HMACSHA1 _authentication;
     private bool _authRead;
+
+    // Retain tag progress across canceled reads, including a subsequent synchronous disposal.
+    private readonly byte[] _authenticationTag = new byte[10];
+    private int _authenticationTagBytesRead;
     private ExceptionDispatchInfo? _authenticationFailure;
     private int _nonce = 1;
     private byte[] _counterOut = new byte[BLOCK_SIZE_IN_BYTES];
@@ -118,15 +122,33 @@ internal partial class WinzipAesCryptoStream : Stream
         {
             return;
         }
-        _authRead = true;
-        var tag = new byte[10];
         try
         {
-            _stream.ReadExact(tag, 0, tag.Length);
-            ValidateAuthentication(tag);
+            while (_authenticationTagBytesRead < _authenticationTag.Length)
+            {
+                var read = _stream.Read(
+                    _authenticationTag,
+                    _authenticationTagBytesRead,
+                    _authenticationTag.Length - _authenticationTagBytesRead
+                );
+                if (read == 0)
+                {
+                    throw new IncompleteArchiveException(
+                        "Unexpected end of WinZip AES authentication tag."
+                    );
+                }
+                _authenticationTagBytesRead += read;
+            }
+            ValidateAuthentication(_authenticationTag);
+            _authRead = true;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception exception)
         {
+            _authRead = true;
             _authenticationFailure = ExceptionDispatchInfo.Capture(exception);
             throw;
         }

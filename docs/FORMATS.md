@@ -45,7 +45,7 @@
 
 - RAR5 encrypted headers and data accept KDF counts from 0 through 24 (the binary logarithm of the PBKDF2 iteration count), matching UnRAR's acceptance limit. Larger counts are rejected before key derivation.
 - RAR companion filenames use the same exact-match-first, case-insensitive fallback as ZIP, with ambiguous fallback matches rejected.
-- Encrypted ciphertext must contain complete AES blocks. Truncation throws `InvalidFormatException` on synchronous reads or `IncompleteArchiveException` on asynchronous reads.
+- Encrypted ciphertext must contain complete AES blocks. Truncation throws `InvalidFormatException` on both synchronous and asynchronous reads.
 
 ### 7Zip Format Notes
 

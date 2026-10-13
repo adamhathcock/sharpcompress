@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,128 @@ namespace SharpCompress.Test.Streams;
 
 public class WinzipAesCryptoStreamTests
 {
+    public static IEnumerable<object[]> AuthenticationCancellationCases()
+    {
+        foreach (var length in new[] { 0, 33 })
+        {
+            foreach (var tagBytesRead in new[] { 0, 4 })
+            {
+                foreach (var corruption in new[] { "none", "tag", "missing-tag" })
+                {
+                    foreach (var completion in new[] { "dispose", "retry", "dispose-async" })
+                    {
+#if LEGACY_DOTNET
+                        if (completion == "dispose-async")
+                        {
+                            continue;
+                        }
+#endif
+                        yield return [length, tagBytesRead, corruption, completion];
+                    }
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(AuthenticationCancellationCases))]
+    public async Task Authentication_Resumes_After_Cancelled_Tag_Read(
+        int length,
+        int tagBytesRead,
+        string corruption,
+        string completion
+    )
+    {
+        byte[] salt = [0x10, 0x21, 0x32, 0x43, 0x54, 0x65, 0x76, 0x87];
+        var data = CreateEncryptionData("password", salt);
+        var ciphertext = EncryptCtr(new byte[length], data.KeyBytes);
+#pragma warning disable CA5350 // WinZip AES mandates HMAC-SHA1-80.
+        using var authentication = new HMACSHA1(data.IvBytes);
+#pragma warning restore CA5350
+        var bytes = ciphertext.Concat(authentication.ComputeHash(ciphertext).Take(10)).ToArray();
+        if (corruption == "tag")
+        {
+            // Corrupt the prefix, which must survive cancellation and be verified on retry.
+            bytes[length] ^= 1;
+        }
+        else if (corruption == "missing-tag")
+        {
+            bytes = bytes.Take(bytes.Length - 1).ToArray();
+        }
+        using var cancellation = new CancellationTokenSource();
+        using var input = new CancelTagReadStream(bytes, length + tagBytesRead, cancellation);
+        using var stream = new WinzipAesCryptoStream(input, data, length);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await stream.ReadAsync(
+                new byte[Math.Max(1, length)],
+                0,
+                Math.Max(1, length),
+                cancellation.Token
+            )
+        );
+        Assert.Equal(length + tagBytesRead, input.Position);
+
+        var error = await Record.ExceptionAsync(async () =>
+        {
+            if (completion == "dispose")
+            {
+                stream.Dispose();
+            }
+#if !LEGACY_DOTNET
+            else if (completion == "dispose-async")
+            {
+                await stream.DisposeAsync();
+            }
+#endif
+            else
+            {
+                Assert.Equal(0, await stream.ReadAsync(new byte[1], 0, 1, CancellationToken.None));
+            }
+        });
+        if (corruption == "none")
+        {
+            Assert.Null(error);
+        }
+        else
+        {
+            Assert.Equal(
+                corruption == "tag"
+                    ? typeof(SharpCompress.Common.InvalidFormatException)
+                    : typeof(SharpCompress.Common.IncompleteArchiveException),
+                error?.GetType()
+            );
+        }
+    }
+
+    private sealed class CancelTagReadStream(
+        byte[] bytes,
+        int cancelPosition,
+        CancellationTokenSource cancellation
+    ) : MemoryStream(bytes)
+    {
+        private bool cancelled;
+
+        public override Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
+        {
+            if (!cancelled)
+            {
+                if (Position == cancelPosition)
+                {
+                    cancelled = true;
+                    cancellation.Cancel();
+                    return Task.FromCanceled<int>(cancellation.Token);
+                }
+                count = Math.Min(count, (int)(cancelPosition - Position));
+            }
+            return base.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+    }
+
     [Fact]
     public void Dispose_Verifies_Unread_Ciphertext()
     {

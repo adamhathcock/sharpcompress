@@ -44,17 +44,37 @@ internal partial class WinzipAesCryptoStream
         {
             return;
         }
-        _authRead = true;
-        var tag = new byte[10];
         try
         {
-            await _stream
-                .ReadExactAsync(tag, 0, tag.Length, cancellationToken)
-                .ConfigureAwait(false);
-            ValidateAuthentication(tag);
+            while (_authenticationTagBytesRead < _authenticationTag.Length)
+            {
+                var read = await _stream
+                    .ReadAsync(
+                        _authenticationTag,
+                        _authenticationTagBytesRead,
+                        _authenticationTag.Length - _authenticationTagBytesRead,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+                if (read == 0)
+                {
+                    throw new IncompleteArchiveException(
+                        "Unexpected end of WinZip AES authentication tag."
+                    );
+                }
+                _authenticationTagBytesRead += read;
+            }
+            ValidateAuthentication(_authenticationTag);
+            _authRead = true;
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellation is transient; keep the tag prefix so disposal can finish verification.
+            throw;
         }
         catch (Exception exception)
         {
+            _authRead = true;
             _authenticationFailure = ExceptionDispatchInfo.Capture(exception);
             throw;
         }
