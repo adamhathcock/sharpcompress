@@ -77,9 +77,13 @@ public static partial class IArchiveEntryExtensions
             var entryStream = await archiveEntry
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
+#if LEGACY_DOTNET
+            using var entryStreamScope = entryStream;
+#else
             await using var entryStreamScope = entryStream
                 .DisposeAsyncScope()
                 .ConfigureAwait(false);
+#endif
 #endif
             var checkedStream = options is null
                 ? entryStream
@@ -164,7 +168,11 @@ public static partial class IArchiveEntryExtensions
                     options,
                     async (x, fm, ct) =>
                     {
+#if LEGACY_DOTNET
                         using var fs = File.Open(x, fm);
+#else
+                        await using var fs = File.Open(x, fm);
+#endif
                         await entry
                             .WriteToAsync(fs, options.BufferSize, options, null, ct)
                             .ConfigureAwait(false);

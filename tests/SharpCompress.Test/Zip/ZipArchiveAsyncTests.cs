@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress;
 using SharpCompress.Archives;
@@ -207,6 +208,87 @@ public class ZipArchiveAsyncTests : ArchiveTests
 
         Assert.True(entryStream.IsDisposed);
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async ValueTask Zip_New_Entry_OpenEntryStreamAsync_Rewinds_And_Preserves_Ownership(
+        bool closeStream
+    )
+    {
+        var bytes = Encoding.UTF8.GetBytes("test");
+        using var source = new TestStream(new MemoryStream(bytes));
+        await using (var archive = await ZipArchive.CreateAsyncArchive())
+        {
+            IArchiveEntry entry = await archive.AddEntryAsync(
+                "test.txt",
+                source,
+                closeStream: closeStream,
+                size: source.Length
+            );
+            for (var i = 0; i < 2; i++)
+            {
+                source.Position = source.Length;
+                using (var opened = await entry.OpenEntryStreamAsync(CancellationToken.None))
+                {
+                    using var destination = new MemoryStream();
+                    await opened.CopyToAsync(destination, 81920, CancellationToken.None);
+                    Assert.Equal(bytes, destination.ToArray());
+                }
+                Assert.False(source.IsDisposed);
+            }
+        }
+        Assert.Equal(closeStream, source.IsDisposed);
+    }
+
+    [Fact]
+    public async ValueTask Zip_New_Entry_OpenEntryStreamAsync_Cancelled_Does_Not_Rewind()
+    {
+        using var source = new MemoryStream(Encoding.UTF8.GetBytes("test"));
+        await using var archive = await ZipArchive.CreateAsyncArchive();
+        var entry = await archive.AddEntryAsync("test.txt", source, size: source.Length);
+        source.Position = source.Length;
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await entry.OpenEntryStreamAsync(cancellation.Token)
+        );
+        Assert.Equal(source.Length, source.Position);
+    }
+
+    [Fact]
+    public async ValueTask Zip_New_Directory_OpenEntryStreamAsync()
+    {
+        await using var archive = await ZipArchive.CreateAsyncArchive();
+        var entry = await archive.AddDirectoryEntryAsync("directory");
+        using var opened = await entry.OpenEntryStreamAsync(CancellationToken.None);
+        Assert.Equal(0, opened.Length);
+    }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public async ValueTask Zip_Save_New_Entry_Async_Only_Streams()
+    {
+        using var source = new AsyncOnlyStream(new MemoryStream(Encoding.UTF8.GetBytes("test")));
+        using var destination = new MemoryStream();
+        using var output = new AsyncOnlyStream(destination, disposeStream: false);
+        await using (var archive = await ZipArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync("test.txt", source, size: source.Length);
+            await archive.SaveToAsync(
+                output,
+                new ZipWriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true },
+                CancellationToken.None
+            );
+        }
+        destination.Position = 0;
+        await using var reopened = await ZipArchive.OpenAsyncArchive(destination);
+        var entry = await reopened.EntriesAsync.SingleAsync();
+        await using var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+        using var reader = new StreamReader(stream);
+        Assert.Equal("test", await reader.ReadToEndAsync());
+    }
+#endif
 
     [Fact]
     public async ValueTask Zip_Deflate_Entry_Stream_Async()

@@ -8,7 +8,7 @@ namespace SharpCompress.Archives.Zip;
 
 public partial class ZipArchiveEntry
 {
-    public async ValueTask<Stream> OpenEntryStreamAsync(
+    public virtual async ValueTask<Stream> OpenEntryStreamAsync(
         CancellationToken cancellationToken = default
     )
     {

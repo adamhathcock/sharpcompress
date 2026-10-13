@@ -70,7 +70,11 @@ internal static partial class Utility
         )
         {
             // Use ReadOnlySubStream to limit reading and leverage framework's CopyToAsync
+#if LEGACY_DOTNET
             using var limitedStream = new IO.ReadOnlySubStream(source, maxLength);
+#else
+            await using var limitedStream = new IO.ReadOnlySubStream(source, maxLength);
+#endif
             await limitedStream
                 .CopyToAsync(destination, bufferSize ?? Constants.BufferSize, cancellationToken)
                 .ConfigureAwait(false);

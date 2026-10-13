@@ -25,7 +25,11 @@ public partial class GZipArchive
         CancellationToken cancellationToken = default
     )
     {
+#if LEGACY_DOTNET
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+#else
+        await using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+#endif
         await SaveToAsync(stream, new GZipWriterOptions(CompressionType.GZip), cancellationToken)
             .ConfigureAwait(false);
     }
@@ -43,14 +47,22 @@ public partial class GZipArchive
         {
             throw new InvalidFormatException("Only one entry is allowed in a GZip Archive");
         }
+#if LEGACY_DOTNET
+        using var writer = new GZipWriter(stream, options);
+#else
         await using var writer = new GZipWriter(stream, options);
+#endif
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
         {
             if (!entry.IsDirectory)
             {
+#if LEGACY_DOTNET
                 using var entryStream = await entry
+#else
+                await using var entryStream = await entry
+#endif
                     .OpenEntryStreamAsync(cancellationToken)
                     .ConfigureAwait(false);
                 await writer
@@ -65,7 +77,11 @@ public partial class GZipArchive
         }
         foreach (var entry in newEntries.Where(x => !x.IsDirectory))
         {
+#if LEGACY_DOTNET
             using var entryStream = await entry
+#else
+            await using var entryStream = await entry
+#endif
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
             await writer

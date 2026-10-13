@@ -502,6 +502,8 @@ archive.SaveTo("output.zip", options);
 
 ### Extraction behavior
 
+`ZipArchiveEntry.OpenEntryStreamAsync` and `TarArchiveEntry.OpenEntryStreamAsync` are virtual and support newly added writable entries as well as entries read from an archive. Opening a new writable entry checks cancellation, rewinds its supplied stream, and returns a non-owning wrapper. Disposing that wrapper leaves the supplied stream open; archive disposal follows the entry's `closeStream` setting.
+
 ```csharp
 var options = new ExtractionOptions
 {

@@ -77,7 +77,11 @@ public static class IWriterExtensions
             {
                 throw new ArgumentException("Source does not exist: " + source.FullName);
             }
+#if LEGACY_DOTNET
             using var stream = source.OpenRead();
+#else
+            await using var stream = source.OpenRead();
+#endif
             await writer
                 .WriteAsync(entryPath, stream, source.LastWriteTime, cancellationToken)
                 .ConfigureAwait(false);

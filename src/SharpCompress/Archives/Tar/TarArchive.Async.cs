@@ -22,7 +22,11 @@ public partial class TarArchive
         CancellationToken cancellationToken = default
     )
     {
+#if LEGACY_DOTNET
         using var writer = new TarWriter(stream, options);
+#else
+        await using var writer = new TarWriter(stream, options);
+#endif
         await foreach (
             var entry in oldEntries.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
@@ -39,7 +43,11 @@ public partial class TarArchive
             }
             else
             {
+#if LEGACY_DOTNET
                 using var entryStream = await entry
+#else
+                await using var entryStream = await entry
+#endif
                     .OpenEntryStreamAsync(cancellationToken)
                     .ConfigureAwait(false);
                 await writer
@@ -67,9 +75,15 @@ public partial class TarArchive
             }
             else
             {
-#pragma warning disable VSTHRD103 // New writable entries only rewind and wrap their supplied stream; the base async method cannot open them.
-                using var entryStream = entry.OpenEntryStream();
-#pragma warning restore VSTHRD103
+#if LEGACY_DOTNET
+                using var entryStream = await entry
+                    .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+#else
+                await using var entryStream = await entry
+                    .OpenEntryStreamAsync(cancellationToken)
+                    .ConfigureAwait(false);
+#endif
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
