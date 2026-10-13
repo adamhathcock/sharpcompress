@@ -667,11 +667,12 @@ internal sealed partial class Unpack
     {
         var bitLengthArray = ArrayPool<byte>.Shared.Rent(PackDef.BC);
         var bitLength = new Memory<byte>(bitLengthArray, 0, PackDef.BC);
-        var tableArray = ArrayPool<byte>.Shared.Rent(PackDef.HUFF_TABLE_SIZE);
-        var table = new Memory<byte>(tableArray, 0, PackDef.HUFF_TABLE_SIZE);
+        byte[]? tableArray = null;
 
         try
         {
+            tableArray = ArrayPool<byte>.Shared.Rent(PackDef.HUFF_TABLE_SIZE);
+            var table = new Memory<byte>(tableArray, 0, PackDef.HUFF_TABLE_SIZE);
             if (inAddr > readTop - 25)
             {
                 if (!await unpReadBufAsync(cancellationToken).ConfigureAwait(false))
@@ -813,7 +814,10 @@ internal sealed partial class Unpack
         finally
         {
             ArrayPool<byte>.Shared.Return(bitLengthArray);
-            ArrayPool<byte>.Shared.Return(tableArray);
+            if (tableArray is not null)
+            {
+                ArrayPool<byte>.Shared.Return(tableArray);
+            }
         }
     }
 

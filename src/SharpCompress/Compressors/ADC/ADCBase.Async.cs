@@ -53,10 +53,11 @@ public static partial class ADCBase
         var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
         var outPosition = 0;
         var full = false;
-        byte[] temp = ArrayPool<byte>.Shared.Rent(3);
+        byte[]? temp = null;
 
         try
         {
+            temp = ArrayPool<byte>.Shared.Rent(3);
             while (position < input.Length)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -170,7 +171,10 @@ public static partial class ADCBase
         finally
         {
             ArrayPool<byte>.Shared.Return(buffer);
-            ArrayPool<byte>.Shared.Return(temp);
+            if (temp is not null)
+            {
+                ArrayPool<byte>.Shared.Return(temp);
+            }
         }
     }
 }
