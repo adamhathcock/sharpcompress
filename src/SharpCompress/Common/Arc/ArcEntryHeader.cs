@@ -26,7 +26,7 @@ public class ArcEntryHeader
     public ArcEntryHeader? ReadHeader(Stream stream)
     {
         byte[] headerBytes = new byte[29];
-        if (stream.Read(headerBytes, 0, headerBytes.Length) != headerBytes.Length)
+        if (!stream.ReadFully(headerBytes))
         {
             return null;
         }
@@ -40,11 +40,7 @@ public class ArcEntryHeader
     )
     {
         byte[] headerBytes = new byte[29];
-        if (
-            await stream
-                .ReadAsync(headerBytes, 0, headerBytes.Length, cancellationToken)
-                .ConfigureAwait(false) != headerBytes.Length
-        )
+        if (!await stream.ReadFullyAsync(headerBytes, cancellationToken).ConfigureAwait(false))
         {
             return null;
         }

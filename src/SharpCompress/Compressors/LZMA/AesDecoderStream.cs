@@ -24,7 +24,7 @@ internal sealed partial class AesDecoderStream : DecoderStream2
     public AesDecoderStream(Stream input, byte[] info, IPasswordProvider pass, long limit)
     {
         var password = pass.CryptoGetTextPassword();
-        if (password == null)
+        if (password is null)
         {
             throw new SharpCompress.Common.CryptographicException(
                 "Encrypted 7Zip archive has no password specified."
@@ -43,7 +43,7 @@ internal sealed partial class AesDecoderStream : DecoderStream2
 
         var passwordBytes = Encoding.Unicode.GetBytes(password);
         var key = InitKey(numCyclesPower, salt, passwordBytes);
-        if (key == null)
+        if (key is null)
         {
             throw new ArchiveOperationException("Initialized with null key");
         }
@@ -147,13 +147,24 @@ internal sealed partial class AesDecoderStream : DecoderStream2
 
     private void Init(byte[] info, out int numCyclesPower, out byte[] salt, out byte[] iv)
     {
+        if (info.Length == 0)
+        {
+            throw new InvalidFormatException("Missing 7z AES properties.");
+        }
         var bt = info[0];
         numCyclesPower = bt & 0x3F;
+
+        // Check before the no-salt/no-IV return, and before starting expensive key derivation.
+        // 0x3F is the format's direct-key mode, not an iteration exponent.
+        if (numCyclesPower > 24 && numCyclesPower != 0x3F)
+        {
+            throw new NotSupportedException("Unsupported 7z AES KDF count.");
+        }
 
         if ((bt & 0xC0) == 0)
         {
             salt = Array.Empty<byte>();
-            iv = Array.Empty<byte>();
+            iv = new byte[16];
             return;
         }
 
@@ -182,11 +193,6 @@ internal sealed partial class AesDecoderStream : DecoderStream2
         for (var i = 0; i < ivSize; i++)
         {
             iv[i] = info[i + saltSize + 2];
-        }
-
-        if (numCyclesPower > 24)
-        {
-            throw new NotSupportedException();
         }
     }
 

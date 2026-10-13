@@ -98,7 +98,7 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
             .GroupBy(x => x.FilePart.Folder)
             .Any(folder => folder.Skip(1).Any());
 
-    public override bool IsEncrypted => Entries.First(x => !x.IsDirectory).IsEncrypted;
+    public override bool IsEncrypted => Entries.Any(x => x.IsEncrypted);
 
     public override long TotalSize =>
         _database?._packSizes.Aggregate(0L, (total, packSize) => total + packSize) ?? 0;
