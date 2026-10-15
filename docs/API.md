@@ -416,6 +416,11 @@ archive.SaveTo("output.zip", zipOptions);
 
 Use typed writer options when a format exposes extra settings:
 
+`WriterFactory.OpenWriter` and `WriterFactory.OpenAsyncWriter` accept `ZipWriterOptions`
+through `IWriterOptions`. `UseZip64` supports both seekable and non-seekable output;
+non-seekable entries use 64-bit data descriptors, even when their final sizes are small.
+Enable it before writing an entry whose compressed or uncompressed size may reach 4 GiB.
+
 ```csharp
 // ZIP archive-level options
 var zipWriterOptions = new ZipWriterOptions(CompressionType.Deflate)

@@ -185,7 +185,11 @@ public partial class ZipWriter
             return;
         }
 
-        var options = new ZipWriterEntryOptions { ModificationDateTime = modificationTime };
+        var options = new ZipWriterEntryOptions
+        {
+            CompressionType = CompressionType.None,
+            ModificationDateTime = modificationTime,
+        };
         await WriteDirectoryEntryAsync(normalizedName, options, cancellationToken)
             .ConfigureAwait(false);
     }

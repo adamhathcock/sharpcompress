@@ -170,7 +170,11 @@ public partial class ZipWriter : AbstractWriter
             return; // Skip empty or root directory
         }
 
-        var options = new ZipWriterEntryOptions { ModificationDateTime = modificationTime };
+        var options = new ZipWriterEntryOptions
+        {
+            CompressionType = CompressionType.None,
+            ModificationDateTime = modificationTime,
+        };
         WriteDirectoryEntry(normalizedName, options);
     }
 
@@ -245,15 +249,8 @@ public partial class ZipWriter : AbstractWriter
         bool usesDataDescriptor
     )
     {
-        // We err on the side of caution until the zip specification clarifies how to support this
-        if (!outputCanSeek && useZip64)
-        {
-            throw new NotSupportedException(
-                "Zip64 extensions are not supported on non-seekable streams"
-            );
-        }
-
         entry.UsesDataDescriptor = usesDataDescriptor;
+        entry.UsesZip64 = useZip64;
 
         var explicitZipCompressionInfo = ToZipCompressionMethod(
             zipWriterEntryOptions.CompressionType ?? compressionType
@@ -263,9 +260,12 @@ public partial class ZipWriter : AbstractWriter
         Span<byte> intBuf = stackalloc byte[4];
         BinaryPrimitives.WriteUInt32LittleEndian(intBuf, ZipHeaderFactory.ENTRY_HEADER_BYTES);
         stream.Write(intBuf);
-        if (explicitZipCompressionInfo == ZipCompressionMethod.Deflate)
+        if (
+            explicitZipCompressionInfo == ZipCompressionMethod.Deflate
+            || explicitZipCompressionInfo == ZipCompressionMethod.None
+        )
         {
-            if (outputCanSeek && useZip64)
+            if (useZip64)
             {
                 stream.Write(stackalloc byte[] { 45, 0 }); //smallest allowed version for zip64
             }
@@ -301,15 +301,16 @@ public partial class ZipWriter : AbstractWriter
         );
         stream.Write(intBuf);
 
-        // zipping date and time
-        stream.Write(stackalloc byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+        // Non-seekable ZIP64 headers must identify the 64-bit sizes before data is written.
+        // The extra field starts with zero sizes; the descriptor supplies their final values.
+        var sizePlaceholder = useZip64 && !outputCanSeek ? uint.MaxValue : 0;
+        WriteFooter(stream, 0, sizePlaceholder, sizePlaceholder);
 
-        // unused CRC, un/compressed size, updated later
         BinaryPrimitives.WriteUInt16LittleEndian(intBuf, (ushort)encodedFilename.Length);
         stream.Write(intBuf.Slice(0, 2)); // filename length
 
         var extralength = 0;
-        if (outputCanSeek && useZip64)
+        if (useZip64)
         {
             extralength = 2 + 2 + 8 + 8;
         }
@@ -320,8 +321,20 @@ public partial class ZipWriter : AbstractWriter
 
         if (extralength != 0)
         {
-            stream.Write(new byte[extralength], 0, extralength); // reserve space for zip64 data
-            entry.Zip64HeaderOffset = (ushort)(6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length);
+            var extra = new byte[extralength];
+            if (outputCanSeek)
+            {
+                // Seekable entries fill the reserved extra field when their data is complete.
+                entry.Zip64HeaderOffset = (ushort)(
+                    6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length
+                );
+            }
+            else
+            {
+                BinaryPrimitives.WriteUInt16LittleEndian(extra, 0x0001);
+                BinaryPrimitives.WriteUInt16LittleEndian(extra.AsSpan(2), 16);
+            }
+            stream.Write(extra, 0, extra.Length);
         }
 
         return 6 + 2 + 2 + 4 + 12 + 2 + 2 + encodedFilename.Length + extralength;

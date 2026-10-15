@@ -67,16 +67,8 @@ public class Zip64Tests : WriterTests
 
     //[Fact]
     [Trait("zip64", "true")]
-    public void Zip64_Single_Large_File_Zip64_Streaming_Fail()
-    {
-        try
-        {
-            // One single file, should fail (fast) with zip64
-            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
-            throw new InvalidOperationException("Test did not fail?");
-        }
-        catch (NotSupportedException) { }
-    }
+    public void Zip64_Single_Large_File_Zip64_Streaming() =>
+        RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
 
     // [Fact]
     [Trait("zip64", "true")]
