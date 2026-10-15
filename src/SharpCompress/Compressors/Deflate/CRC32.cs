@@ -34,6 +34,7 @@
 
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using System.IO;
 
 namespace SharpCompress.Compressors.Deflate;
@@ -64,7 +65,7 @@ public class CRC32
             uint i,
                 j;
 
-            crc32Table = new uint[256];
+            crc32Table = new uint[8 * 256];
 
             uint dwCrc;
             for (i = 0; i < 256; i++)
@@ -82,6 +83,18 @@ public class CRC32
                     }
                 }
                 crc32Table[i] = dwCrc;
+            }
+
+            // Slicing-by-8 tables advance each byte by another zero byte. This keeps
+            // the IEEE polynomial and reflected state used by ComputeCrc32 and Combine.
+            for (i = 0; i < 256; i++)
+            {
+                dwCrc = crc32Table[i];
+                for (j = 1; j < 8; j++)
+                {
+                    dwCrc = (dwCrc >> 8) ^ crc32Table[dwCrc & 0xFF];
+                    crc32Table[j * 256 + i] = dwCrc;
+                }
             }
         }
     }
@@ -173,13 +186,31 @@ public class CRC32
             throw new ZlibException("The data buffer must not be null.");
         }
 
-        for (var i = 0; i < count; i++)
+        var crc = runningCrc32Result;
+        var remaining = count;
+        // Explicit little-endian reads work on every supported platform without
+        // unsafe access or the incompatible CRC32C polynomial of x86 SSE4.2.
+        while (remaining >= 8)
         {
-            var x = offset + i;
-            runningCrc32Result =
-                ((runningCrc32Result) >> 8)
-                ^ crc32Table[(block[x]) ^ ((runningCrc32Result) & 0x000000FF)];
+            var first = crc ^ BinaryPrimitives.ReadUInt32LittleEndian(block.AsSpan(offset, 4));
+            var second = BinaryPrimitives.ReadUInt32LittleEndian(block.AsSpan(offset + 4, 4));
+            crc =
+                crc32Table[0x700 + (first & 0xFF)]
+                ^ crc32Table[0x600 + ((first >> 8) & 0xFF)]
+                ^ crc32Table[0x500 + ((first >> 16) & 0xFF)]
+                ^ crc32Table[0x400 + (first >> 24)]
+                ^ crc32Table[0x300 + (second & 0xFF)]
+                ^ crc32Table[0x200 + ((second >> 8) & 0xFF)]
+                ^ crc32Table[0x100 + ((second >> 16) & 0xFF)]
+                ^ crc32Table[second >> 24];
+            offset += 8;
+            remaining -= 8;
         }
+        while (remaining-- > 0)
+        {
+            crc = (crc >> 8) ^ crc32Table[(block[offset++] ^ crc) & 0xFF];
+        }
+        runningCrc32Result = crc;
         TotalBytesRead += count;
     }
 

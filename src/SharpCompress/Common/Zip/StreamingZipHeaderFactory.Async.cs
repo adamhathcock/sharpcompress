@@ -146,11 +146,11 @@ internal sealed partial class StreamingZipHeaderFactory
                     {
                         //reshuffle into 64-bit values
                         compressedSize = (uncompressedSize << 32) | compressedSize;
-                        uncompressedSize =
-                            ((ulong)headerBytes << 32)
-                            | await _reader
-                                .ReadUInt32Async(_cancellationToken)
-                                .ConfigureAwait(false);
+                        // headerBytes holds the low word; the high word follows on the wire.
+                        var highUncompressedSize = await _reader
+                            .ReadUInt32Async(_cancellationToken)
+                            .ConfigureAwait(false);
+                        uncompressedSize = headerBytes | ((ulong)highUncompressedSize << 32);
                         headerBytes = await _reader
                             .ReadUInt32Async(_cancellationToken)
                             .ConfigureAwait(false);

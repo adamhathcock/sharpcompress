@@ -74,7 +74,8 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                     {
                         //reshuffle into 64-bit values
                         compSize = (uncompSize << 32) | compSize;
-                        uncompSize = ((ulong)headerBytes << 32) | reader.ReadUInt32();
+                        // headerBytes holds the low word; the high word follows on the wire.
+                        uncompSize = headerBytes | ((ulong)reader.ReadUInt32() << 32);
                         headerBytes = reader.ReadUInt32();
                     }
                     else if (isSentinel)

@@ -16,8 +16,10 @@ namespace SharpCompress.Test.Zip;
 
 public class Zip64Tests : WriterTests
 {
-    public Zip64Tests()
-        : base(ArchiveType.Zip) { }
+    private readonly ITestOutputHelper output;
+
+    public Zip64Tests(ITestOutputHelper output)
+        : base(ArchiveType.Zip) => this.output = output;
 
     // 4GiB + 1
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
@@ -59,7 +61,7 @@ public class Zip64Tests : WriterTests
         catch (NotSupportedException) { }
     }
 
-    //[Fact]
+    [Fact]
     public void Zip64_Single_Large_File_Zip64_Streaming() =>
         RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
 
@@ -137,6 +139,7 @@ public class Zip64Tests : WriterTests
     )
     {
         var data = new byte[chunksize];
+        using var progress = new Zip64TestProgress(output, "write", files * filesize);
 
         // Use deflate for speed
         var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = setZip64 };
@@ -156,12 +159,15 @@ public class Zip64Tests : WriterTests
                 var b = (int)Math.Min(left, data.Length);
                 str.Write(data, 0, b);
                 left -= b;
+                progress.Advance(b);
             }
         }
     }
 
     public Tuple<long, long> ReadForwardOnly(string filename)
     {
+        using var progress = new Zip64TestProgress(output, "stream-read");
+        var buffer = new byte[81920];
         long count = 0;
         long size = 0;
         IEntry? prev = null;
@@ -178,7 +184,14 @@ public class Zip64Tests : WriterTests
         {
             while (rd.MoveToNextEntry())
             {
-                using (rd.OpenEntryStream()) { }
+                using (var entryStream = rd.OpenEntryStream())
+                {
+                    int read;
+                    while ((read = entryStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        progress.Advance(read);
+                    }
+                }
 
                 count++;
                 if (prev != null)
@@ -200,6 +213,7 @@ public class Zip64Tests : WriterTests
 
     public Tuple<long, long> ReadArchive(string filename)
     {
+        using var progress = new Zip64TestProgress(output, "archive-metadata");
         using var archive = ArchiveFactory.OpenArchive(filename);
         return new Tuple<long, long>(
             archive.Entries.Count(),
