@@ -44,6 +44,8 @@ I'm always looking for help or ideas. Please submit code or email with ideas. Un
 
 ## Notes
 
+The default `DeflateCompressionProvider` now uses a **64 KiB compression-output buffer** (previously 16 KiB) to reduce downstream writes. This adds 48 KiB per active compressor. Decompression buffers and directly constructed `DeflateStream` defaults remain unchanged at 16 KiB.
+
 XZ implementation based on: https://github.com/sambott/XZ.NET by @sambott
 
 XZ BCJ filters support contributed by Louis-Michel Bergeron, on behalf of aDolus Technology Inc. - 2022
