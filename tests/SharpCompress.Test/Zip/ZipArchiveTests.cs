@@ -669,8 +669,7 @@ public class ZipArchiveTests : ArchiveTests
         VerifyMixedZstandardArchive(archive);
     }
 
-    [Fact(Explicit = true)]
-    [Trait("zip64", "generated")]
+    [Fact]
     public void Zip_Zip64_GeneratedArchive_StreamIsBoundedToEntryLength()
     {
         var zipPath = Path.Combine(SCRATCH2_FILES_PATH, "generated.zip64.large.zip");
