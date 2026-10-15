@@ -106,10 +106,8 @@ internal sealed partial class SeekableZipHeaderFactory
             var span = memory.Span;
             span.Reverse();
 
-            // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
-            var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
-
-            for (var pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
+            // Include the minimum EOCD region, but never read beyond the populated span.
+            for (var pos_from_end = 0; pos_from_end <= len - needle.Length; ++pos_from_end)
             {
                 if (IsMatch(span, pos_from_end, needle))
                 {
