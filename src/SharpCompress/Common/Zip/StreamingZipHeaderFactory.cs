@@ -6,7 +6,7 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
-internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
+internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
 {
     private IEnumerable<ZipEntry>? _entries;
 
@@ -47,6 +47,7 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                     }
 
                     // removed requirement for FixStreamedFileLocation()
+                    SeekPastResolvedEntry(_lastEntryHeader, sharpCompressStream);
 
                     var pos = sharpCompressStream.CanSeek
                         ? (long?)sharpCompressStream.Position
@@ -209,8 +210,12 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                         localHeader.IsCrcAvailable = true;
                     }
 
+                    if (IsResolvedDirectory(localHeader))
+                    {
+                        header.HasData = false;
+                    }
                     // If we have CompressedSize, there is data to be read
-                    if (localHeader.CompressedSize > 0)
+                    else if (localHeader.CompressedSize > 0)
                     {
                         header.HasData = true;
                     } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
@@ -223,6 +228,7 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
 
                         // Check if next data is PostDataDescriptor, streamed file with 0 length
                         header.HasData = !IsHeader(nextHeaderBytes);
+                        ThrowIfUnreadableEncryptedDirectory(localHeader, header.HasData);
                     }
                     else // We are not streaming and compressed size is 0, we have no data
                     {
