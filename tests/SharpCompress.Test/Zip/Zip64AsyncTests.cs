@@ -17,8 +17,10 @@ namespace SharpCompress.Test.Zip;
 
 public class Zip64AsyncTests : WriterTests
 {
-    public Zip64AsyncTests()
-        : base(ArchiveType.Zip) { }
+    private readonly ITestOutputHelper output;
+
+    public Zip64AsyncTests(ITestOutputHelper output)
+        : base(ArchiveType.Zip) => this.output = output;
 
     // 4GiB + 1
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
@@ -57,7 +59,7 @@ public class Zip64AsyncTests : WriterTests
         catch (NotSupportedException) { }
     }
 
-   // [Fact]
+    [Fact]
     public async ValueTask Zip64_Single_Large_File_Zip64_Streaming_Async() =>
         await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
 
@@ -273,6 +275,7 @@ public class Zip64AsyncTests : WriterTests
     )
     {
         var data = new byte[chunksize];
+        using var progress = new Zip64TestProgress(output, "write-async", files * filesize);
 
         // Use deflate for speed
         var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = setZip64 };
@@ -290,15 +293,17 @@ public class Zip64AsyncTests : WriterTests
             while (left > 0)
             {
                 var b = (int)Math.Min(left, data.Length);
-                // Use synchronous Write to match the sync version and avoid ForwardOnlyStream issues
                 await str.WriteAsync(data, 0, b);
                 left -= b;
+                progress.Advance(b);
             }
         }
     }
 
     public async ValueTask<Tuple<long, long>> ReadForwardOnlyAsync(string filename)
     {
+        using var progress = new Zip64TestProgress(output, "stream-read-async");
+        var buffer = new byte[81920];
         long count = 0;
         long size = 0;
         ZipEntry? prev = null;
@@ -315,7 +320,11 @@ public class Zip64AsyncTests : WriterTests
             {
                 await using (var entryStream = await rd.OpenEntryStreamAsync())
                 {
-                    await entryStream.SkipEntryAsync();
+                    int read;
+                    while ((read = await entryStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                    {
+                        progress.Advance(read);
+                    }
                 }
                 count++;
                 if (prev != null)
@@ -337,6 +346,7 @@ public class Zip64AsyncTests : WriterTests
 
     public Tuple<long, long> ReadArchive(string filename)
     {
+        using var progress = new Zip64TestProgress(output, "archive-metadata");
         using var archive = ArchiveFactory.OpenArchive(filename);
         return new Tuple<long, long>(
             archive.Entries.Count(),
