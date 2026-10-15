@@ -70,6 +70,7 @@
 
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using SharpCompress.Algorithms;
 using SharpCompress.Common;
 
@@ -1178,9 +1179,7 @@ internal sealed partial class DeflateManager
     //    option -- not supported here).
     private void _fillWindow()
     {
-        int n,
-            m;
-        int p;
+        int n;
         int more; // Amount of free space at the end of the window.
 
         do
@@ -1215,21 +1214,8 @@ internal sealed partial class DeflateManager
                 // switch back to matching and must see the same history.
                 if (hashChainsPopulated)
                 {
-                    n = hash_size;
-                    p = n;
-                    do
-                    {
-                        m = (head[--p] & 0xffff);
-                        head[p] = (short)((m >= w_size) ? (m - w_size) : 0);
-                    } while (--n != 0);
-
-                    n = w_size;
-                    p = n;
-                    do
-                    {
-                        m = (prev[--p] & 0xffff);
-                        prev[p] = (short)((m >= w_size) ? (m - w_size) : 0);
-                    } while (--n != 0);
+                    SlideHashTable(head, hash_size, w_size);
+                    SlideHashTable(prev, w_size, w_size);
                 }
                 more += w_size;
             }
@@ -1581,7 +1567,6 @@ internal sealed partial class DeflateManager
     {
         var chain_length = config.MaxChainLength; // max hash chain length
         var scan = strstart; // current string
-        int match; // matched string
         int len; // length of current match
         var best_len = prev_length; // best match length so far
         var limit = strstart > (w_size - MIN_LOOKAHEAD) ? strstart - (w_size - MIN_LOOKAHEAD) : 0;
@@ -1593,12 +1578,10 @@ internal sealed partial class DeflateManager
 
         var wmask = w_mask;
 
-        var strend = strstart + MAX_MATCH;
-        var scan_end1 = window[scan + best_len - 1];
-        var scan_end = window[scan + best_len];
-
-        // The code is optimized for HASH_BITS >= 8 and MAX_MATCH-2 multiple of 16.
-        // It is easy to get rid of this optimization if necessary.
+        var scanStart = BinaryPrimitives.ReadUInt16LittleEndian(window.AsSpan(scan, 2));
+        var scanEnd = BinaryPrimitives.ReadUInt16LittleEndian(
+            window.AsSpan(scan + best_len - 1, 2)
+        );
 
         // Do not waste too much time if we already have a good match:
         if (prev_length >= config.GoodLength)
@@ -1615,15 +1598,12 @@ internal sealed partial class DeflateManager
 
         do
         {
-            match = cur_match;
-
             // Skip to next match if the match length cannot increase
             // or if the match length is less than 2:
             if (
-                window[match + best_len] != scan_end
-                || window[match + best_len - 1] != scan_end1
-                || window[match] != window[scan]
-                || window[++match] != window[scan + 1]
+                BinaryPrimitives.ReadUInt16LittleEndian(window.AsSpan(cur_match + best_len - 1, 2))
+                    != scanEnd
+                || BinaryPrimitives.ReadUInt16LittleEndian(window.AsSpan(cur_match, 2)) != scanStart
             )
             {
                 continue;
@@ -1634,25 +1614,14 @@ internal sealed partial class DeflateManager
             // It is not necessary to compare scan[2] and match[2] since they
             // are always equal when the other bytes match, given that
             // the hash keys are equal and that HASH_BITS >= 8.
-            scan += 2;
-            match++;
-
-            // We check for insufficient lookahead only every 8th comparison;
-            // the 256th check will be made at strstart+258.
-            do { } while (
-                window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && scan < strend
-            );
-
-            len = MAX_MATCH - (strend - scan);
-            scan = strend - MAX_MATCH;
+            // Keep the original chain order, MAX_MATCH cap, and final lookahead
+            // clamp. Only the byte comparison changes; match selection does not.
+            len =
+                MIN_MATCH
+                + CountMatchBytes(
+                    window.AsSpan(scan + MIN_MATCH, MAX_MATCH - MIN_MATCH),
+                    window.AsSpan(cur_match + MIN_MATCH, MAX_MATCH - MIN_MATCH)
+                );
 
             if (len > best_len)
             {
@@ -1662,8 +1631,9 @@ internal sealed partial class DeflateManager
                 {
                     break;
                 }
-                scan_end1 = window[scan + best_len - 1];
-                scan_end = window[scan + best_len];
+                scanEnd = BinaryPrimitives.ReadUInt16LittleEndian(
+                    window.AsSpan(scan + best_len - 1, 2)
+                );
             }
         } while ((cur_match = (prev[cur_match & wmask] & 0xffff)) > limit && --chain_length != 0);
 
