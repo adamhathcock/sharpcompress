@@ -19,7 +19,11 @@ public abstract partial class AbstractReader<TEntry, TVolume>
             await _entriesForCurrentReadStreamAsync.DisposeAsync().ConfigureAwait(false);
         }
 
-        // If Volume implements IAsyncDisposable, use async disposal
+        // Readers created by an archive borrow its volume, just as on the sync path.
+        if (!_disposeVolume)
+        {
+            return;
+        }
         if (Volume is IAsyncDisposable asyncDisposable)
         {
             await asyncDisposable.DisposeAsync().ConfigureAwait(false);
