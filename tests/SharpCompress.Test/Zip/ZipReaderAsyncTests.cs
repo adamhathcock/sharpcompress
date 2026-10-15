@@ -3,11 +3,13 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Zip;
 using SharpCompress.Test.Mocks;
+using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Test.Zip;
@@ -15,6 +17,62 @@ namespace SharpCompress.Test.Zip;
 public class ZipReaderAsyncTests : ReaderTests
 {
     public ZipReaderAsyncTests() => UseExtensionInsteadOfNameToVerify = true;
+
+    [Fact]
+    public async ValueTask ZipArchive_Created_Entry_Reports_Size_With_AsyncReader()
+    {
+        byte[] content = [1, 2, 3, 4, 5];
+        using var source = new MemoryStream(content);
+        using var archiveStream = new MemoryStream();
+        using (var archive = ZipArchive.CreateArchive())
+        {
+            archive.AddEntry("test.bin", source, source.Length);
+            archive.SaveTo(archiveStream, new ZipWriterOptions(CompressionType.Deflate));
+        }
+
+        archiveStream.Position = 0;
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            archiveStream,
+            ReaderOptions.ForExternalStream
+        );
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.Equal(content.Length, reader.Entry.Size);
+
+        using var extracted = new MemoryStream();
+        await reader.WriteEntryToAsync(extracted);
+        Assert.Equal(content, extracted.ToArray());
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
+
+    [Fact]
+    public async ValueTask ZipWriter_Created_Entry_Reports_Size_With_AsyncReader_ForwardOnly()
+    {
+        byte[] content = [1, 2, 3, 4, 5];
+        using var source = new ForwardOnlyStream(new MemoryStream(content));
+        using var destination = new MemoryStream();
+        using var archiveStream = new ForwardOnlyStream(destination);
+        using (
+            var writer = new ZipWriter(archiveStream, new ZipWriterOptions(CompressionType.Deflate))
+        )
+        {
+            writer.Write("test.bin", source, modificationTime: null);
+        }
+
+        destination.Position = 0;
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            destination,
+            ReaderOptions.ForExternalStream
+        );
+
+        Assert.True(await reader.MoveToNextEntryAsync());
+        Assert.Equal(0, reader.Entry.Size);
+
+        using var extracted = new MemoryStream();
+        await reader.WriteEntryToAsync(extracted);
+        Assert.Equal(content, extracted.ToArray());
+        Assert.False(await reader.MoveToNextEntryAsync());
+    }
 
     [Fact]
     public async ValueTask Issue_269_Double_Skip_Async()
