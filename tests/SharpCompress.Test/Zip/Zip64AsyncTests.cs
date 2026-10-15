@@ -23,35 +23,29 @@ public class Zip64AsyncTests : WriterTests
     // 4GiB + 1
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public async ValueTask Zip64_Single_Large_File_Async() =>
         await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public async ValueTask Zip64_Two_Large_Files_Async() =>
         await RunSingleTestAsync(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public async ValueTask Zip64_Two_Small_files_Async() =>
         // Multiple files, does not require zip64
         await RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: false);
 
-    // [Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public async ValueTask Zip64_Two_Small_files_stream_Async() =>
         await RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
 
-    // [Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public async ValueTask Zip64_Two_Small_Files_Zip64_Async() =>
         // Multiple files, use zip64 even though it is not required
         await RunSingleTestAsync(2, FOUR_GB_LIMIT / 2, setZip64: true, forwardOnly: false);
 
-    //  [Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public async ValueTask Zip64_Single_Large_File_Fail_Async()
     {
         try
@@ -63,13 +57,11 @@ public class Zip64AsyncTests : WriterTests
         catch (NotSupportedException) { }
     }
 
-    // [Fact]
-    [Trait("zip64", "true")]
+   // [Fact]
     public async ValueTask Zip64_Single_Large_File_Zip64_Streaming_Async() =>
         await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
 
-    // [Fact]
-    [Trait("zip64", "true")]
+    [Fact]
     public async ValueTask Zip64_Single_Large_File_Streaming_Fail_Async()
     {
         try
@@ -89,11 +81,7 @@ public class Zip64AsyncTests : WriterTests
     // leaving the reader misaligned so the *following* local header was parsed from garbage
     // and extraction threw near the very end. A seekable stream rewinds correctly and works,
     // which is exactly the "works seekable, fails non-seekable" symptom that was reported.
-    //
-    // NOTE: heavy (~4GB) like the other Zip64 large-file tests in this file, hence disabled
-    // by default. Enable to verify the fix.
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public async ValueTask Zip64_Large_File_Then_Small_File_NonSeekable_Async()
     {
         var filename = Path.Combine(SCRATCH2_FILES_PATH, "zip64-nonseekable-async.zip");
