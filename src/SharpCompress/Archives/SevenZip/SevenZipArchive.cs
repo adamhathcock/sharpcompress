@@ -207,9 +207,39 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 
         public override void Dispose()
         {
-            _currentFolderStream?.Dispose();
+            var stream = _currentFolderStream;
             _currentFolderStream = null;
-            base.Dispose();
+            _currentFolder = null;
+            try
+            {
+                stream?.Dispose();
+            }
+            finally
+            {
+                base.Dispose();
+            }
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            var stream = _currentFolderStream;
+            _currentFolderStream = null;
+            _currentFolder = null;
+            try
+            {
+                if (stream is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                }
+                else
+                {
+                    stream?.Dispose();
+                }
+            }
+            finally
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
         }
     }
 
