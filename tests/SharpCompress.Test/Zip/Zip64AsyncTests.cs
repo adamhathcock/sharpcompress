@@ -65,16 +65,8 @@ public class Zip64AsyncTests : WriterTests
 
     // [Fact]
     [Trait("zip64", "true")]
-    public async ValueTask Zip64_Single_Large_File_Zip64_Streaming_Fail_Async()
-    {
-        try
-        {
-            // One single file, should fail (fast) with zip64
-            await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
-            throw new InvalidOperationException("Test did not fail?");
-        }
-        catch (NotSupportedException) { }
-    }
+    public async ValueTask Zip64_Single_Large_File_Zip64_Streaming_Async() =>
+        await RunSingleTestAsync(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
 
     // [Fact]
     [Trait("zip64", "true")]

@@ -316,27 +316,9 @@ public partial class ZipWriter
                 }
                 else
                 {
-                    // We have a streaming archive, so we should add a post-data-descriptor,
-                    // but we cannot as it does not hold the zip64 values
-                    // Throwing an exception until the zip specification is clarified
-
-                    // Ideally, we should not throw from Dispose()
-                    // We should not get here as the Write call checks the limits
-                    if (zip64)
-                    {
-                        throw new NotSupportedException(
-                            "Streams larger than 4GiB are not supported for non-seekable streams"
-                        );
-                    }
-
-                    Span<byte> intBuf = stackalloc byte[4];
-                    BinaryPrimitives.WriteUInt32LittleEndian(
-                        intBuf,
-                        ZipHeaderFactory.POST_DATA_DESCRIPTOR
-                    );
-                    originalStream.Write(intBuf);
-                    writer.WriteFooter(entry.Crc, compressedvalue, decompressedvalue);
-                    writer.streamPosition += (long)entry.Compressed + 16;
+                    var descriptor = entry.CreateDataDescriptor();
+                    originalStream.Write(descriptor, 0, descriptor.Length);
+                    writer.streamPosition += (long)entry.Compressed + descriptor.Length;
                 }
                 writer.entries.Add(entry);
             }
@@ -404,7 +386,7 @@ public partial class ZipWriter
             // We check the limits first, because we can keep the archive consistent
             // if we can prevent the writes from happening. The compressed byte count
             // is only an estimate until compression has actually happened.
-            if (entry.Zip64HeaderOffset != 0)
+            if (entry.UsesZip64)
             {
                 return;
             }
@@ -412,8 +394,8 @@ public partial class ZipWriter
             var countingCount = counting?.BytesWritten ?? 0;
             if (
                 limitsExceeded
-                || ((decompressed + (uint)count) > uint.MaxValue)
-                || (countingCount + (uint)count) > uint.MaxValue
+                || ((decompressed + (uint)count) >= uint.MaxValue)
+                || (countingCount + (uint)count) >= uint.MaxValue
             )
             {
                 throw new NotSupportedException(
@@ -424,13 +406,13 @@ public partial class ZipWriter
 
         private void CheckPostWriteLimits()
         {
-            if (entry.Zip64HeaderOffset != 0)
+            if (entry.UsesZip64)
             {
                 return;
             }
 
             var countingCount = counting?.BytesWritten ?? 0;
-            if ((decompressed > uint.MaxValue) || countingCount > uint.MaxValue)
+            if ((decompressed >= uint.MaxValue) || countingCount >= uint.MaxValue)
             {
                 // We have written the data, so the archive is now broken. Throwing
                 // here avoids throwing from Dispose(), which can mask other errors.
@@ -566,27 +548,11 @@ public partial class ZipWriter
             }
             else
             {
-                if (zip64)
-                {
-                    throw new NotSupportedException(
-                        "Streams larger than 4GiB are not supported for non-seekable streams"
-                    );
-                }
-
-                var intBuf = new byte[4];
-                BinaryPrimitives.WriteUInt32LittleEndian(
-                    intBuf,
-                    ZipHeaderFactory.POST_DATA_DESCRIPTOR
-                );
-                await originalStream.WriteAsync(intBuf, 0, 4).ConfigureAwait(false);
-                await WriteFooterAsync(
-                        originalStream,
-                        entry.Crc,
-                        compressedvalue,
-                        decompressedvalue
-                    )
+                var descriptor = entry.CreateDataDescriptor();
+                await originalStream
+                    .WriteAsync(descriptor, 0, descriptor.Length)
                     .ConfigureAwait(false);
-                writer.streamPosition += (long)entry.Compressed + 16;
+                writer.streamPosition += (long)entry.Compressed + descriptor.Length;
             }
             writer.entries.Add(entry);
 #if !NET48 && !NETSTANDARD2_0
