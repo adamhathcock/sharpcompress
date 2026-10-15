@@ -304,6 +304,7 @@ internal sealed partial class DeflateManager
     // An index in this array is thus a window index modulo 32K.
 
     private short[] head; // Heads of the hash chains or NIL.
+    private bool hashChainsPopulated;
 
     private int ins_h; // hash index of string to be inserted
     private int hash_size; // number of elements in hash table
@@ -419,6 +420,7 @@ internal sealed partial class DeflateManager
 
         // clear the hash - workitem 9063
         Array.Clear(head, 0, hash_size);
+        hashChainsPopulated = false;
 
         //for (int i = 0; i < hash_size; i++) head[i] = 0;
 
@@ -1206,30 +1208,29 @@ internal sealed partial class DeflateManager
                 strstart -= w_size; // we now have strstart >= MAX_DIST
                 blockStart -= w_size;
 
-                // Slide the hash table (could be avoided with 32 bit values
-                // at the expense of memory usage). We slide even when level == 0
-                // to keep the hash table consistent if we switch back to level > 0
-                // later. (Using level 0 permanently is not an optimal usage of
-                // zlib, so we don't care about this pathological case.)
-
-                n = hash_size;
-                p = n;
-                do
+                // Stored blocks never add hash entries. Until a dictionary or a
+                // matching deflater has used the tables, head remains all NIL and
+                // prev is unreachable, so sliding either table is wasted work.
+                // Once populated, keep sliding even at level 0: SetParams may
+                // switch back to matching and must see the same history.
+                if (hashChainsPopulated)
                 {
-                    m = (head[--p] & 0xffff);
-                    head[p] = (short)((m >= w_size) ? (m - w_size) : 0);
-                } while (--n != 0);
+                    n = hash_size;
+                    p = n;
+                    do
+                    {
+                        m = (head[--p] & 0xffff);
+                        head[p] = (short)((m >= w_size) ? (m - w_size) : 0);
+                    } while (--n != 0);
 
-                n = w_size;
-                p = n;
-                do
-                {
-                    m = (prev[--p] & 0xffff);
-                    prev[p] = (short)((m >= w_size) ? (m - w_size) : 0);
-
-                    // If n is not on any hash chain, prev[n] is garbage but
-                    // its value will never be used.
-                } while (--n != 0);
+                    n = w_size;
+                    p = n;
+                    do
+                    {
+                        m = (prev[--p] & 0xffff);
+                        prev[p] = (short)((m >= w_size) ? (m - w_size) : 0);
+                    } while (--n != 0);
+                }
                 more += w_size;
             }
 
@@ -1271,6 +1272,7 @@ internal sealed partial class DeflateManager
     // matches. It is used only for the fast compression options.
     internal BlockState DeflateFast(FlushType flush)
     {
+        hashChainsPopulated = true;
         //    short hash_head = 0; // head of the hash chain
         var hash_head = 0; // head of the hash chain
         bool bflush; // set if current block must be flushed
@@ -1401,6 +1403,7 @@ internal sealed partial class DeflateManager
     // no better match at the next window position.
     internal BlockState DeflateSlow(FlushType flush)
     {
+        hashChainsPopulated = true;
         //    short hash_head = 0;    // head of hash chain
         var hash_head = 0; // head of hash chain
         bool bflush; // set if current block must be flushed
@@ -1887,6 +1890,7 @@ internal sealed partial class DeflateManager
         // s->lookahead stays null, so s->ins_h will be recomputed at the next
         // call of fill_window.
 
+        hashChainsPopulated = true;
         ins_h = window[0] & 0xff;
         ins_h = (((ins_h) << hash_shift) ^ (window[1] & 0xff)) & hash_mask;
 
