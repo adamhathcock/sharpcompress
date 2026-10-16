@@ -151,6 +151,12 @@ public partial class Decoder
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly byte GetByte(int distance)
         {
+            // A previous decoding failure can leave a rep distance outside the dictionary.
+            // Unlike a managed array access, this pointer read has no implicit bounds check.
+            if ((uint)distance >= (uint)WindowSize)
+            {
+                throw new DataErrorException();
+            }
             var p = Pos - distance - 1;
             if (p < 0)
             {
@@ -178,6 +184,10 @@ public partial class Decoder
 
         public void CopyBlock(int distance, int len)
         {
+            if ((uint)distance >= (uint)WindowSize || (uint)distance >= Total)
+            {
+                throw new DataErrorException();
+            }
             var rem = len;
             var p = (distance < Pos ? Pos : Pos + WindowSize) - distance - 1;
             var targetSize =
@@ -284,6 +294,12 @@ public partial class Decoder
                 // on every iteration, including non-literal ones, outweighs the latency-hiding
                 // benefit; kept lazy, computed only once IsMatch resolves to 0.)
                 var isCharState = _state.IsCharState();
+                // Validate before the speculative matched-literal read, not only when a
+                // newly decoded match is copied. In particular, retries can retain _rep0.
+                if (!isCharState && (_rep0 >= os.Total || _rep0 >= dictionarySizeCheck))
+                {
+                    throw new DataErrorException();
+                }
                 var prevByte = os.GetByte(0);
                 var matchByte = isCharState ? (byte)0 : os.GetByte((int)_rep0);
 
@@ -326,6 +342,10 @@ public partial class Decoder
                     {
                         if (DecodeBitFast(ref rs, pIsRep0Long, matchIndex) == 0)
                         {
+                            if (_rep0 >= os.Total || _rep0 >= dictionarySizeCheck)
+                            {
+                                throw new DataErrorException();
+                            }
                             _state.UpdateShortRep();
                             os.PutByte(os.GetByte((int)_rep0));
                             continue;
