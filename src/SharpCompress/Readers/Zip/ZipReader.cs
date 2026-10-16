@@ -20,7 +20,8 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
         _headerFactory = new StreamingZipHeaderFactory(
             options.Password,
             options.ArchiveEncoding,
-            null
+            null,
+            options.EnableParallelism
         );
     }
 
@@ -31,7 +32,8 @@ public partial class ZipReader : AbstractReader<ZipEntry, ZipVolume>
         _headerFactory = new StreamingZipHeaderFactory(
             options.Password,
             options.ArchiveEncoding,
-            entries
+            entries,
+            options.EnableParallelism
         );
     }
 

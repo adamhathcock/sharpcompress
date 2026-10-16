@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,9 +14,15 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
     internal StreamingZipHeaderFactory(
         string? password,
         IArchiveEncoding archiveEncoding,
-        IEnumerable<ZipEntry>? entries
+        IEnumerable<ZipEntry>? entries,
+        bool enableParallelism = false
     )
-        : base(StreamingMode.Streaming, password, archiveEncoding) => _entries = entries;
+        : base(StreamingMode.Streaming, password, archiveEncoding)
+    {
+        _entries = entries;
+        _deriveKeysAhead = enableParallelism && Environment.ProcessorCount > 1;
+        _lookaheadDepth = _deriveKeysAhead ? Environment.ProcessorCount * 2 : 1;
+    }
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {

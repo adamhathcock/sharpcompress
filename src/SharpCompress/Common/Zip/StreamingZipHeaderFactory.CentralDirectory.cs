@@ -24,6 +24,8 @@ internal sealed partial class StreamingZipHeaderFactory
     private bool _centralDirectoryExhausted;
     private LocalEntryHeader? _resolvedEntry;
     private long _resolvedEntryDataEnd;
+    private readonly Queue<DirectoryEntryHeader> _lookahead = new();
+    private readonly int _lookaheadDepth;
 
     protected override bool TryResolveDescriptorSizes(ZipFileEntry entryHeader, Stream stream)
     {
@@ -100,9 +102,12 @@ internal sealed partial class StreamingZipHeaderFactory
             _centralDirectory ??= new SeekableZipHeaderFactory(null, ArchiveEncoding)
                 .ReadSeekableHeader(stream)
                 .GetEnumerator();
-            while (!_centralDirectoryExhausted && _centralDirectory.MoveNext())
+            FillLookahead(stream);
+            while (_lookahead.Count > 0)
             {
-                if (IsMatch(_centralDirectory.Current, localHeader) is { } directoryEntry)
+                var directoryEntry = _lookahead.Dequeue();
+                FillLookahead(stream);
+                if (IsMatch(directoryEntry, localHeader))
                 {
                     return directoryEntry;
                 }
@@ -126,12 +131,12 @@ internal sealed partial class StreamingZipHeaderFactory
             _centralDirectoryAsync ??= new SeekableZipHeaderFactory(null, ArchiveEncoding)
                 .ReadSeekableHeaderAsync(stream)
                 .GetAsyncEnumerator();
-            while (
-                !_centralDirectoryExhausted
-                && await _centralDirectoryAsync.MoveNextAsync().ConfigureAwait(false)
-            )
+            await FillLookaheadAsync(stream).ConfigureAwait(false);
+            while (_lookahead.Count > 0)
             {
-                if (IsMatch(_centralDirectoryAsync.Current, localHeader) is { } directoryEntry)
+                var directoryEntry = _lookahead.Dequeue();
+                await FillLookaheadAsync(stream).ConfigureAwait(false);
+                if (IsMatch(directoryEntry, localHeader))
                 {
                     return directoryEntry;
                 }
@@ -143,12 +148,46 @@ internal sealed partial class StreamingZipHeaderFactory
         return null;
     }
 
-    private DirectoryEntryHeader? IsMatch(ZipHeader header, LocalEntryHeader localHeader)
+    /// <summary>
+    /// Reads central directory records ahead of the reader, up to the lookahead depth (one record
+    /// unless WinZip AES keys are derived ahead of time).
+    /// </summary>
+    private void FillLookahead(Stream stream)
+    {
+        while (
+            !_centralDirectoryExhausted
+            && _lookahead.Count < _lookaheadDepth
+            && _centralDirectory!.MoveNext()
+        )
+        {
+            if (Enqueue(_centralDirectory.Current) is { } directoryEntry)
+            {
+                StartKeyDerivation(stream, directoryEntry);
+            }
+        }
+    }
+
+    private async ValueTask FillLookaheadAsync(Stream stream)
+    {
+        while (
+            !_centralDirectoryExhausted
+            && _lookahead.Count < _lookaheadDepth
+            && await _centralDirectoryAsync!.MoveNextAsync().ConfigureAwait(false)
+        )
+        {
+            if (Enqueue(_centralDirectoryAsync.Current) is { } directoryEntry)
+            {
+                await StartKeyDerivationAsync(stream, directoryEntry).ConfigureAwait(false);
+            }
+        }
+    }
+
+    private DirectoryEntryHeader? Enqueue(ZipHeader header)
     {
         switch (header)
         {
-            case DirectoryEntryHeader directoryEntry
-                when string.Equals(directoryEntry.Name, localHeader.Name, StringComparison.Ordinal):
+            case DirectoryEntryHeader directoryEntry:
+                _lookahead.Enqueue(directoryEntry);
                 return directoryEntry;
             case DirectoryEndHeader:
                 // The central directory enumerator does not stop at the end record.
@@ -158,6 +197,11 @@ internal sealed partial class StreamingZipHeaderFactory
                 return null;
         }
     }
+
+    private static bool IsMatch(
+        DirectoryEntryHeader directoryEntry,
+        LocalEntryHeader localHeader
+    ) => string.Equals(directoryEntry.Name, localHeader.Name, StringComparison.Ordinal);
 
     private bool Resolve(
         LocalEntryHeader localHeader,
@@ -179,6 +223,7 @@ internal sealed partial class StreamingZipHeaderFactory
         _centralDirectory?.Dispose();
         _centralDirectory = null;
         _centralDirectoryExhausted = false;
+        _lookahead.Clear();
     }
 
     private async ValueTask ResetCentralDirectoryAsync()
@@ -189,6 +234,7 @@ internal sealed partial class StreamingZipHeaderFactory
         }
         _centralDirectoryAsync = null;
         _centralDirectoryExhausted = false;
+        _lookahead.Clear();
     }
 
     /// <summary>
