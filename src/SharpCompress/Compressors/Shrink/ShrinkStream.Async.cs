@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Shrink;
 
@@ -28,7 +29,7 @@ internal partial class ShrinkStream : Stream
         // Read actual compressed data from the stream rather than pre-allocating based on the
         // declared compressed size, which may be crafted to cause an OutOfMemoryException.
         // The stream is already bounded by ReadOnlySubStream in ZipFilePart.
-        using var srcMs = new MemoryStream();
+        using var srcMs = new PooledMemoryStream();
         await _inStream.CopyToAsync(srcMs, 81920, cancellationToken).ConfigureAwait(false);
         var src = srcMs.ToArray();
         // Decompress synchronously (CPU-bound operation).

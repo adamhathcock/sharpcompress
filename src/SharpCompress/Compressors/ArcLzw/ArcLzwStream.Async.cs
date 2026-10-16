@@ -25,7 +25,7 @@ public partial class ArcLzwStream
         if (!_processed)
         {
             using var limited = new ReadOnlySubStream(_stream, _compressedSize);
-            using var data = new MemoryStream();
+            using var data = new PooledMemoryStream();
             await limited.CopyToAsync(data, 81920, cancellationToken).ConfigureAwait(false);
             FinishDecompression(data);
         }

@@ -191,7 +191,7 @@ public partial class ArcLzwStream : Stream
         if (!_processed)
         {
             using var limited = new ReadOnlySubStream(_stream, _compressedSize);
-            using var data = new MemoryStream();
+            using var data = new PooledMemoryStream();
             limited.CopyTo(data);
             FinishDecompression(data);
         }
@@ -201,7 +201,7 @@ public partial class ArcLzwStream : Stream
         return result;
     }
 
-    private void FinishDecompression(MemoryStream data)
+    private void FinishDecompression(PooledMemoryStream data)
     {
         if (data.Length != _compressedSize)
         {
