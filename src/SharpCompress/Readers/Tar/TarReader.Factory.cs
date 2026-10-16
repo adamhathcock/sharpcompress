@@ -108,59 +108,91 @@ public partial class TarReader
                 TarWrapper.MaximumRewindBufferSize
             )
         );
-        if (!sharpCompressStream.IsRecording)
+        var transferred = false;
+        try
         {
-            sharpCompressStream.StartRecording();
-        }
-        long pos = sharpCompressStream.Position;
-        foreach (var wrapper in TarWrapper.Wrappers)
-        {
-            sharpCompressStream.Position = pos;
-            if (
-                !await wrapper
-                    .IsMatchAsync(sharpCompressStream, cancellationToken)
-                    .ConfigureAwait(false)
-            )
+            if (!sharpCompressStream.IsRecording)
             {
-                continue;
+                sharpCompressStream.StartRecording();
             }
-
-            sharpCompressStream.Position = pos;
-            if (wrapper.CompressionType == CompressionType.LZip)
-            {
-                sharpCompressStream = await TarFactory
-                    .BufferLZipHeaderAsync(sharpCompressStream, cancellationToken)
-                    .ConfigureAwait(false);
-                pos = sharpCompressStream.Position;
-            }
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-            using var testStream = await CreateProbeDecompressionStreamAsync(
-#else
-            await using var testStream = await CreateProbeDecompressionStreamAsync(
-#endif
-                    sharpCompressStream,
-                    wrapper.CompressionType,
-                    readerOptions.Providers,
-                    readerOptions,
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-            if (
-                await TarArchive.IsTarFileAsync(testStream, cancellationToken).ConfigureAwait(false)
-            )
+            long pos = sharpCompressStream.Position;
+            foreach (var wrapper in TarWrapper.Wrappers)
             {
                 sharpCompressStream.Position = pos;
-                return new TarReader(sharpCompressStream, readerOptions, wrapper.CompressionType);
+                if (
+                    !await wrapper
+                        .IsMatchAsync(sharpCompressStream, cancellationToken)
+                        .ConfigureAwait(false)
+                )
+                {
+                    continue;
+                }
+
+                sharpCompressStream.Position = pos;
+                if (wrapper.CompressionType == CompressionType.LZip)
+                {
+                    sharpCompressStream = await TarFactory
+                        .BufferLZipHeaderAsync(sharpCompressStream, cancellationToken)
+                        .ConfigureAwait(false);
+                    pos = sharpCompressStream.Position;
+                }
+                bool isTar;
+                {
+#if STREAM_DISPOSEASYNC
+                    await using var testStream = await CreateProbeDecompressionStreamAsync(
+#else
+                    using var testStream = await CreateProbeDecompressionStreamAsync(
+#endif
+                            sharpCompressStream,
+                            wrapper.CompressionType,
+                            readerOptions.Providers,
+                            readerOptions,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false);
+                    isTar = await TarArchive
+                        .IsTarFileAsync(testStream, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                if (isTar)
+                {
+                    sharpCompressStream.Position = pos;
+                    var reader = new TarReader(
+                        sharpCompressStream,
+                        readerOptions,
+                        wrapper.CompressionType
+                    );
+                    transferred = true;
+                    return reader;
+                }
+
+                if (wrapper.CompressionType != CompressionType.None)
+                {
+                    throw new InvalidFormatException("Not a tar file.");
+                }
             }
 
-            if (wrapper.CompressionType != CompressionType.None)
+            sharpCompressStream.Position = pos;
+            var fallbackReader = new TarReader(
+                sharpCompressStream,
+                readerOptions,
+                CompressionType.None
+            );
+            transferred = true;
+            return fallbackReader;
+        }
+        finally
+        {
+            // The reader owns the probe wrappers only after a successful open.
+            if (!transferred)
             {
-                throw new InvalidFormatException("Not a tar file.");
+#if STREAM_DISPOSEASYNC
+                await sharpCompressStream.DisposeAsync().ConfigureAwait(false);
+#else
+                sharpCompressStream.Dispose();
+#endif
             }
         }
-
-        sharpCompressStream.Position = pos;
-        return new TarReader(sharpCompressStream, readerOptions, CompressionType.None);
     }
 
     public static async ValueTask<IAsyncReader> OpenAsyncReader(
@@ -210,7 +242,10 @@ public partial class TarReader
                 TarWrapper.MaximumRewindBufferSize
             )
         );
-        sharpCompressStream.StartRecording();
+        if (!sharpCompressStream.IsRecording)
+        {
+            sharpCompressStream.StartRecording();
+        }
         long pos = sharpCompressStream.Position;
         foreach (var wrapper in TarWrapper.Wrappers)
         {

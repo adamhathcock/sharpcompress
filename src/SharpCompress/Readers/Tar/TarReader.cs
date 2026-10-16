@@ -68,13 +68,13 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
         }
         finally
         {
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-            ownedSource?.Dispose();
-#else
+#if STREAM_DISPOSEASYNC
             if (ownedSource is not null)
             {
                 await ownedSource.DisposeAsync().ConfigureAwait(false);
             }
+#else
+            ownedSource?.Dispose();
 #endif
         }
     }

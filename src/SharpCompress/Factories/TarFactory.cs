@@ -182,10 +182,10 @@ public class TarFactory
             if (await wrapper.IsMatchAsync(stream, cancellationToken).ConfigureAwait(false))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-                using var decompressedStream = await CreateProbeDecompressionStreamAsync(
-#else
+#if STREAM_DISPOSEASYNC
                 await using var decompressedStream = await CreateProbeDecompressionStreamAsync(
+#else
+                using var decompressedStream = await CreateProbeDecompressionStreamAsync(
 #endif
                         stream,
                         wrapper.CompressionType,
@@ -397,10 +397,10 @@ public class TarFactory
         }
         catch
         {
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-            buffered.Dispose();
-#else
+#if STREAM_DISPOSEASYNC
             await buffered.DisposeAsync().ConfigureAwait(false);
+#else
+            buffered.Dispose();
 #endif
             throw;
         }
@@ -484,10 +484,10 @@ public class TarFactory
                             )
                             .ConfigureAwait(false);
                     }
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-                    using var decompressedStream = await CreateProbeDecompressionStreamAsync(
-#else
+#if STREAM_DISPOSEASYNC
                     await using var decompressedStream = await CreateProbeDecompressionStreamAsync(
+#else
+                    using var decompressedStream = await CreateProbeDecompressionStreamAsync(
 #endif
                             sharpCompressStream,
                             wrapper.CompressionType,
@@ -522,10 +522,10 @@ public class TarFactory
         {
             if (!transferred)
             {
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-                sharpCompressStream.Dispose();
-#else
+#if STREAM_DISPOSEASYNC
                 await sharpCompressStream.DisposeAsync().ConfigureAwait(false);
+#else
+                sharpCompressStream.Dispose();
 #endif
             }
         }

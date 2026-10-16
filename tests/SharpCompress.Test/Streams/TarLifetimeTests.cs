@@ -6,8 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.Compressors.LZMA;
 using SharpCompress.Factories;
 using SharpCompress.IO;
+using SharpCompress.Providers;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
@@ -18,6 +20,117 @@ namespace SharpCompress.Test.Streams;
 
 public class TarLifetimeTests : TestBase
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Reader_Preserves_Existing_Recording_Session(bool async)
+    {
+        using var file = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar"));
+        using var input = new ForwardOnlyStream(file);
+        using var buffered = SharpCompressStream.Create(input, TarWrapper.MaximumRewindBufferSize);
+        buffered.StartRecording();
+        var options = new ReaderOptions { LeaveStreamOpen = false };
+        if (async)
+        {
+            await using var reader = await TarReader.OpenAsyncReader(
+                buffered,
+                options,
+                CancellationToken.None
+            );
+            Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
+        }
+        else
+        {
+            using var reader = TarReader.OpenReader(buffered, options);
+            Assert.True(reader.MoveToNextEntry());
+        }
+    }
+
+    [Theory]
+    [InlineData("invalid", false)]
+    [InlineData("invalid", true)]
+    [InlineData("throw", false)]
+    [InlineData("throw", true)]
+    [InlineData("cancel", false)]
+    [InlineData("cancel", true)]
+    public async Task Failed_LZip_Probe_Releases_Buffer(string failure, bool leaveOpen)
+    {
+        using var source = new MemoryStream();
+        var content = new byte[1024];
+        new Random(42).NextBytes(content);
+        using (
+            var lzip = LZipStream.Create(
+                SharpCompressStream.CreateNonDisposing(source),
+                SharpCompress.Compressors.CompressionMode.Compress
+            )
+        )
+        {
+            lzip.Write(content, 0, content.Length);
+        }
+        source.Position = 0;
+        using var cancellation = new CancellationTokenSource();
+        var rings = new List<RingBuffer>();
+        var provider = new ProbeLZipProvider(stream =>
+        {
+            rings.AddRange(GetRings(stream));
+            if (failure == "throw")
+            {
+                throw new IOException("Probe creation failed.");
+            }
+            if (failure == "cancel")
+            {
+                cancellation.Cancel();
+                cancellation.Token.ThrowIfCancellationRequested();
+            }
+            return LZipStream.Create(stream, SharpCompress.Compressors.CompressionMode.Decompress);
+        });
+        var options = new ReaderOptions
+        {
+            LeaveStreamOpen = leaveOpen,
+            Providers = CompressionProviderRegistry.Default.With(provider),
+        };
+        var exception = await Record.ExceptionAsync(async () =>
+        {
+            await using var reader = await TarReader.OpenAsyncReader(
+                source,
+                options,
+                cancellation.Token
+            );
+        });
+        if (failure == "invalid")
+        {
+            Assert.IsType<InvalidFormatException>(exception);
+        }
+        else if (failure == "throw")
+        {
+            Assert.IsType<IOException>(exception);
+        }
+        else
+        {
+            Assert.IsAssignableFrom<OperationCanceledException>(exception);
+        }
+        Assert.NotEmpty(rings);
+        var buffer = typeof(RingBuffer).GetField(
+            "_buffer",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+        Assert.All(rings, ring => Assert.Null(buffer.GetValue(ring)));
+        Assert.Equal(leaveOpen, source.CanRead);
+    }
+
+    private sealed class ProbeLZipProvider(Func<Stream, Stream> createStream)
+        : CompressionProviderBase
+    {
+        public override CompressionType CompressionType => CompressionType.LZip;
+        public override bool SupportsCompression => false;
+        public override bool SupportsDecompression => true;
+
+        public override Stream CreateCompressStream(Stream destination, int compressionLevel) =>
+            throw new NotSupportedException();
+
+        public override Stream CreateDecompressStream(Stream source) => createStream(source);
+    }
+
     public static IEnumerable<object[]> ReaderCases()
     {
         foreach (
