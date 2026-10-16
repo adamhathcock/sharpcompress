@@ -46,10 +46,6 @@ Default behavior in factory APIs:
 
 If using Compression Stream classes directly and you don't want the wrapped stream to be closed.  Use the `NonDisposingStream` as a wrapper to prevent the stream being disposed.  The change in 0.21 simplified a lot even though the usage is a bit more convoluted.
 
-If an LZMA/LZMA2 decoding stream reports corrupt or truncated data, dispose it rather than
-retrying reads. Subsequent reads from that `LzmaStream` throw a decoding exception; the
-partially decoded state cannot be resumed safely.
-
 ## Samples
 
 Also, look over the tests for more thorough [examples](https://github.com/adamhathcock/sharpcompress/tree/master/tests/SharpCompress.Test)

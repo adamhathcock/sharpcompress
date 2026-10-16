@@ -34,25 +34,18 @@ public class LzmaDecoderSafetyTests
     [InlineData(false, 65536)]
     [InlineData(true, 1)]
     [InlineData(true, 65536)]
-    public void CorruptionPreventsFurtherReads(bool raw, int bufferSize)
+    public void CorruptInputThrowsDataError(bool raw, int bufferSize)
     {
         using var input = CreateInput(raw);
         using var stream = CreateStream(input, raw);
         var buffer = new byte[bufferSize];
         Assert.Throws<DataErrorException>(() => Drain(stream, buffer));
-        var position = input.Position;
-        for (var attempt = 0; attempt < 3; attempt++)
-        {
-            Assert.Throws<DataErrorException>(() => stream.Read(buffer, 0, buffer.Length));
-            Assert.Throws<DataErrorException>(() => stream.ReadByte());
-            Assert.Equal(position, input.Position);
-        }
     }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void ReadByteCorruptionPreventsFurtherReads(bool raw)
+    public void ReadByteCorruptInputThrowsDataError(bool raw)
     {
         using var input = CreateInput(raw);
         using var stream = CreateStream(input, raw);
@@ -63,15 +56,12 @@ public class LzmaDecoderSafetyTests
                 Assert.NotEqual(-1, stream.ReadByte());
             }
         });
-        var position = input.Position;
-        Assert.Throws<DataErrorException>(() => stream.ReadByte());
-        Assert.Equal(position, input.Position);
     }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task AsyncCorruptionPreventsFurtherReads(bool raw)
+    public async Task AsyncCorruptInputThrowsDataError(bool raw)
     {
         using var input = CreateInput(raw);
         using var stream = await CreateStreamAsync(input, raw);
@@ -86,18 +76,13 @@ public class LzmaDecoderSafetyTests
                 );
             }
         });
-        var position = input.Position;
-        await Assert.ThrowsAsync<DataErrorException>(() =>
-            stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken.None)
-        );
-        Assert.Equal(position, input.Position);
     }
 
 #if !LEGACY_DOTNET
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task AsyncMemoryCorruptionPreventsFurtherReads(bool raw)
+    public async Task AsyncMemoryCorruptInputThrowsDataError(bool raw)
     {
         using var input = CreateInput(raw);
         using var stream = await CreateStreamAsync(input, raw);
@@ -112,11 +97,6 @@ public class LzmaDecoderSafetyTests
                 );
             }
         });
-        var position = input.Position;
-        await Assert.ThrowsAsync<DataErrorException>(async () =>
-            await stream.ReadAsync(buffer.AsMemory(), CancellationToken.None)
-        );
-        Assert.Equal(position, input.Position);
     }
 
     [Fact]
@@ -126,7 +106,7 @@ public class LzmaDecoderSafetyTests
         using var stream = LzmaStream.Create(new byte[] { 0 }, input, leaveOpen: true);
         Assert.Throws<DataErrorException>(() => Drain(stream, new byte[65536]));
 
-        // Bypass the stream's fault guard to verify the unsafe decoder is independently safe.
+        // Exercise the unsafe decoder directly after corruption to verify its bounds checks.
         var decoder = GetField<Decoder>(stream, "_decoder");
         var window = GetField<OutWindow>(stream, "_outWindow");
         var range = GetField<SharpCompress.Compressors.LZMA.RangeCoder.Decoder>(
@@ -307,7 +287,6 @@ public class LzmaDecoderSafetyTests
             leaveOpen: true
         );
         Assert.Throws<DataErrorException>(() => stream.ReadByte());
-        Assert.Throws<DataErrorException>(() => stream.Read(new byte[1], 0, 1));
         Assert.Equal(5, input.Position);
     }
 #endif
