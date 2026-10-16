@@ -36,6 +36,16 @@ internal partial class ZipHeaderFactory
         _archiveEncoding = archiveEncoding;
     }
 
+    protected IArchiveEncoding ArchiveEncoding => _archiveEncoding;
+
+    /// <summary>
+    /// Populates the sizes of an encrypted entry that was written with a post data descriptor and
+    /// therefore has no sizes in its local header.
+    /// </summary>
+    /// <returns><see langword="true"/> when <see cref="ZipFileEntry.CompressedSize"/> was populated.</returns>
+    protected virtual bool TryResolveDescriptorSizes(ZipFileEntry entryHeader, Stream stream) =>
+        false;
+
     protected ZipHeader? ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
     {
         switch (headerBytes)
@@ -133,10 +143,20 @@ internal partial class ZipHeaderFactory
         }
     }
 
-    private void LoadHeader(ZipFileEntry entryHeader, Stream stream)
+    protected void LoadHeader(ZipFileEntry entryHeader, Stream stream)
     {
         if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.Encrypted))
         {
+            if (
+                entryHeader.CompressedSize == 0
+                && FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+            )
+            {
+                // The sizes are only in the data descriptor, which cannot be located by scanning
+                // encrypted data; a seekable stream can take them from the central directory.
+                TryResolveDescriptorSizes(entryHeader, stream);
+            }
+
             if (
                 !entryHeader.IsDirectory
                 && entryHeader.CompressedSize == 0

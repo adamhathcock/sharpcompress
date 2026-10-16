@@ -138,15 +138,16 @@ internal sealed partial class SeekableZipHeaderFactory
         using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
 #endif
         var signature = await reader.ReadUInt32Async().ConfigureAwait(false);
-        if (
-            await ReadHeader(signature, reader, _zip64).ConfigureAwait(false)
-            is not LocalEntryHeader localEntryHeader
-        )
+        if (signature != ENTRY_HEADER_BYTES)
         {
             throw new ArchiveOperationException();
         }
 
+        // Sizes written to a data descriptor are only known from the central directory and are
+        // needed before the encryption header is loaded.
+        var localEntryHeader = await ReadLocalHeader(reader).ConfigureAwait(false);
         PopulateDirectoryEntryMetadata(localEntryHeader, directoryEntryHeader);
+        await LoadHeaderAsync(localEntryHeader, stream).ConfigureAwait(false);
         return localEntryHeader;
     }
 
