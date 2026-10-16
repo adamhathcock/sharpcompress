@@ -47,6 +47,72 @@ public class TarLifetimeTests : TestBase
     }
 
     [Theory]
+    [InlineData(false, false, false)]
+    [InlineData(false, false, true)]
+    [InlineData(false, true, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, false, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, false)]
+    [InlineData(true, true, true)]
+    public async Task Reader_Preserves_Frozen_Recording(
+        bool async,
+        bool stopRecording,
+        bool leaveOpen
+    )
+    {
+        using var archive = new MemoryStream();
+        using (
+            var writer = WriterFactory.OpenWriter(
+                archive,
+                ArchiveType.Tar,
+                new WriterOptions(CompressionType.None) { LeaveStreamOpen = true }
+            )
+        )
+        {
+            writer.Write("empty.txt", Stream.Null);
+        }
+        archive.Position = 0;
+        using var input = new ForwardOnlyStream(archive);
+        using var buffered = SharpCompressStream.Create(input, TarWrapper.MaximumRewindBufferSize);
+        buffered.StartRecording();
+        var header = new byte[512];
+        Assert.Equal(header.Length, buffered.Read(header, 0, header.Length));
+        if (stopRecording)
+        {
+            buffered.StopRecording();
+        }
+        else
+        {
+            buffered.Rewind(true);
+        }
+        Assert.Equal(0, buffered.Position);
+        var options = new ReaderOptions { LeaveStreamOpen = leaveOpen };
+        if (async)
+        {
+            await using var reader = await TarReader.OpenAsyncReader(
+                buffered,
+                options,
+                CancellationToken.None
+            );
+            Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
+            Assert.Equal("empty.txt", reader.Entry.Key);
+            Assert.Equal(0, reader.Entry.Size);
+            Assert.False(await reader.MoveToNextEntryAsync(CancellationToken.None));
+        }
+        else
+        {
+            using var reader = TarReader.OpenReader(buffered, options);
+            Assert.True(reader.MoveToNextEntry());
+            Assert.Equal("empty.txt", reader.Entry.Key);
+            Assert.Equal(0, reader.Entry.Size);
+            Assert.False(reader.MoveToNextEntry());
+        }
+        Assert.Equal(leaveOpen, input.CanRead);
+        Assert.Equal(leaveOpen, buffered.CanRead);
+    }
+
+    [Theory]
     [InlineData("invalid", false)]
     [InlineData("invalid", true)]
     [InlineData("throw", false)]

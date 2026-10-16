@@ -15,6 +15,24 @@ public partial class TarReader
     : IReaderOpenable
 #endif
 {
+    private static SharpCompressStream CreateReaderProbeStream(Stream stream, ReaderOptions options)
+    {
+        if (stream is SharpCompressStream { IsPassthrough: false })
+        {
+            // Keep the caller's recording scope and logical position intact, including
+            // frozen recordings whose buffered bytes have not been replayed yet.
+            return new SeekableSharpCompressStream(stream);
+        }
+
+        return SharpCompressStream.Create(
+            stream,
+            bufferSize: Math.Max(
+                options.RewindableBufferSize ?? 0,
+                TarWrapper.MaximumRewindBufferSize
+            )
+        );
+    }
+
     private static Stream CreateProbeDecompressionStream(
         Stream stream,
         CompressionType compressionType,
@@ -101,20 +119,11 @@ public partial class TarReader
             stream = SharpCompressStream.CreateNonDisposing(stream);
             readerOptions = readerOptions with { LeaveStreamOpen = false };
         }
-        var sharpCompressStream = SharpCompressStream.Create(
-            stream,
-            bufferSize: Math.Max(
-                readerOptions.RewindableBufferSize ?? 0,
-                TarWrapper.MaximumRewindBufferSize
-            )
-        );
+        var sharpCompressStream = CreateReaderProbeStream(stream, readerOptions);
         var transferred = false;
         try
         {
-            if (!sharpCompressStream.IsRecording)
-            {
-                sharpCompressStream.StartRecording();
-            }
+            sharpCompressStream.StartRecording();
             long pos = sharpCompressStream.Position;
             foreach (var wrapper in TarWrapper.Wrappers)
             {
@@ -235,17 +244,8 @@ public partial class TarReader
             stream = SharpCompressStream.CreateNonDisposing(stream);
             readerOptions = readerOptions with { LeaveStreamOpen = false };
         }
-        var sharpCompressStream = SharpCompressStream.Create(
-            stream,
-            bufferSize: Math.Max(
-                readerOptions.RewindableBufferSize ?? 0,
-                TarWrapper.MaximumRewindBufferSize
-            )
-        );
-        if (!sharpCompressStream.IsRecording)
-        {
-            sharpCompressStream.StartRecording();
-        }
+        var sharpCompressStream = CreateReaderProbeStream(stream, readerOptions);
+        sharpCompressStream.StartRecording();
         long pos = sharpCompressStream.Position;
         foreach (var wrapper in TarWrapper.Wrappers)
         {
