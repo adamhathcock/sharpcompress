@@ -108,7 +108,10 @@ public partial class TarReader
                 TarWrapper.MaximumRewindBufferSize
             )
         );
-        sharpCompressStream.StartRecording();
+        if (!sharpCompressStream.IsRecording)
+        {
+            sharpCompressStream.StartRecording();
+        }
         long pos = sharpCompressStream.Position;
         foreach (var wrapper in TarWrapper.Wrappers)
         {
