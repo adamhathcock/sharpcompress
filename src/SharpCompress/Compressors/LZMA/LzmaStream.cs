@@ -65,6 +65,11 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         }
         else
         {
+            // Larger standard dictionaries exceed this decoder's positive Int32 window range.
+            if (properties[0] > 37)
+            {
+                throw new InvalidParamException();
+            }
             _dictionarySize = 2 | (properties[0] & 1);
             _dictionarySize <<= (properties[0] >> 1) + 11;
 
