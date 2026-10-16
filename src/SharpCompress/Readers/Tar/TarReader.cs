@@ -20,15 +20,64 @@ namespace SharpCompress.Readers.Tar;
 public partial class TarReader : AbstractReader<TarEntry, TarVolume>
 {
     private readonly CompressionType compressionType;
+    private readonly Stream? ownedSource;
+    private bool disposed;
 
-    internal TarReader(Stream stream, ReaderOptions options, CompressionType compressionType)
+    internal TarReader(
+        Stream stream,
+        ReaderOptions options,
+        CompressionType compressionType,
+        Stream? ownedSource = null
+    )
         : base(options, ArchiveType.Tar)
     {
         this.compressionType = compressionType;
+        this.ownedSource = ownedSource;
         Volume = new TarVolume(stream, options);
     }
 
     public override TarVolume Volume { get; }
+
+    public override void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+        disposed = true;
+        try
+        {
+            base.Dispose();
+        }
+        finally
+        {
+            ownedSource?.Dispose();
+        }
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        if (disposed)
+        {
+            return;
+        }
+        disposed = true;
+        try
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+#if STREAM_DISPOSEASYNC
+            if (ownedSource is not null)
+            {
+                await ownedSource.DisposeAsync().ConfigureAwait(false);
+            }
+#else
+            ownedSource?.Dispose();
+#endif
+        }
+    }
 
     protected override Stream RequestInitialStream()
     {
