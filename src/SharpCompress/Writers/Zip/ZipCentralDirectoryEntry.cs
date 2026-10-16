@@ -35,24 +35,55 @@ internal class ZipCentralDirectoryEntry
     internal ushort Zip64HeaderOffset { get; set; }
     internal ulong HeaderOffset { get; }
     internal bool UsesDataDescriptor { get; set; }
+    internal bool UsesZip64 { get; set; }
+
+    internal byte[] CreateDataDescriptor()
+    {
+        if (!UsesZip64 && (Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue))
+        {
+            throw new NotSupportedException(
+                "Attempted to write a stream that is larger than 4GiB without setting the zip64 option"
+            );
+        }
+
+        // APPNOTE 4.3.9.2: ZIP64 descriptors use 8-byte sizes even for small entries.
+        var descriptor = new byte[UsesZip64 ? 24 : 16];
+        BinaryPrimitives.WriteUInt32LittleEndian(descriptor, ZipHeaderFactory.POST_DATA_DESCRIPTOR);
+        BinaryPrimitives.WriteUInt32LittleEndian(descriptor.AsSpan(4), Crc);
+        if (UsesZip64)
+        {
+            BinaryPrimitives.WriteUInt64LittleEndian(descriptor.AsSpan(8), Compressed);
+            BinaryPrimitives.WriteUInt64LittleEndian(descriptor.AsSpan(16), Decompressed);
+        }
+        else
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(descriptor.AsSpan(8), (uint)Compressed);
+            BinaryPrimitives.WriteUInt32LittleEndian(descriptor.AsSpan(12), (uint)Decompressed);
+        }
+        return descriptor;
+    }
 
     internal uint Write(Stream outputStream)
     {
         var encodedFilename = archiveEncoding.Encode(fileName);
         var encodedComment = archiveEncoding.Encode(Comment ?? string.Empty);
 
-        var zip64_stream = Compressed >= uint.MaxValue || Decompressed >= uint.MaxValue;
+        var zip64_stream =
+            (UsesZip64 && UsesDataDescriptor)
+            || Compressed >= uint.MaxValue
+            || Decompressed >= uint.MaxValue;
         var zip64 = zip64_stream || HeaderOffset >= uint.MaxValue;
         var usedCompression = compression;
 
         var compressedvalue = zip64 ? uint.MaxValue : (uint)Compressed;
         var decompressedvalue = zip64 ? uint.MaxValue : (uint)Decompressed;
         var headeroffsetvalue = zip64 ? uint.MaxValue : (uint)HeaderOffset;
-        var extralength = zip64 ? (2 + 2 + 8 + 8 + 8 + 4) : 0;
+        // The disk number stays zero, so it must not appear in the ZIP64 extra field.
+        var extralength = zip64 ? (2 + 2 + 8 + 8 + 8) : 0;
 
         // Determine version needed to extract:
         // - Version 63 for LZMA, PPMd, BZip2, ZStandard (advanced compression methods)
-        // - Version 45 for Zip64 extensions (when Zip64HeaderOffset != 0 or actual sizes require it)
+        // - Version 45 for Zip64 extensions (when enabled or actual sizes require it)
         // - Version 20 for standard Deflate/None compression
         byte version;
         if (
@@ -64,7 +95,7 @@ internal class ZipCentralDirectoryEntry
         {
             version = 63;
         }
-        else if (zip64 || Zip64HeaderOffset != 0)
+        else if (zip64 || UsesZip64)
         {
             version = 45;
         }
@@ -78,16 +109,7 @@ internal class ZipCentralDirectoryEntry
             : HeaderFlags.None;
         if (UsesDataDescriptor)
         {
-            // Cannot use data descriptors with zip64:
-            // https://blogs.oracle.com/xuemingshen/entry/is_zipinput_outputstream_handling_of
-
-            // We check that streams are not written too large in the ZipWritingStream,
-            // so this extra guard is not required, but kept to simplify changing the code
-            // once the zip64 post-data issue is resolved
-            if (!zip64_stream)
-            {
-                flags |= HeaderFlags.UsePostDataDescriptor;
-            }
+            flags |= HeaderFlags.UsePostDataDescriptor;
 
             if (usedCompression == ZipCompressionMethod.LZMA)
             {
@@ -167,8 +189,6 @@ internal class ZipCentralDirectoryEntry
             outputStream.Write(intBuf);
             BinaryPrimitives.WriteUInt64LittleEndian(intBuf, HeaderOffset);
             outputStream.Write(intBuf);
-            BinaryPrimitives.WriteUInt32LittleEndian(intBuf, 0);
-            outputStream.Write(intBuf.Slice(0, 4)); // VolumeNumber = 0
         }
 
         outputStream.Write(encodedComment, 0, encodedComment.Length);

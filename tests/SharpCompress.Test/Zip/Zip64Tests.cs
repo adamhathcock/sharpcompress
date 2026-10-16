@@ -16,44 +16,40 @@ namespace SharpCompress.Test.Zip;
 
 public class Zip64Tests : WriterTests
 {
-    public Zip64Tests()
-        : base(ArchiveType.Zip) { }
+    private readonly ITestOutputHelper output;
+
+    public Zip64Tests(ITestOutputHelper output)
+        : base(ArchiveType.Zip) => this.output = output;
 
     // 4GiB + 1
     private const long FOUR_GB_LIMIT = ((long)uint.MaxValue) + 1;
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public void Zip64_Single_Large_File() =>
         // One single file, requires zip64
         RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public void Zip64_Two_Large_Files() =>
         // One single file, requires zip64
         RunSingleTest(2, FOUR_GB_LIMIT, setZip64: true, forwardOnly: false);
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public void Zip64_Two_Small_files() =>
         // Multiple files, does not require zip64
         RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: false);
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public void Zip64_Two_Small_files_stream() =>
         // Multiple files, does not require zip64, and works with streams
         RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: false, forwardOnly: true);
 
-    //[Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public void Zip64_Two_Small_Files_Zip64() =>
         // Multiple files, use zip64 even though it is not required
         RunSingleTest(2, FOUR_GB_LIMIT / 2, setZip64: true, forwardOnly: false);
 
-    // [Fact]
-    [Trait("format", "zip64")]
+    [Fact]
     public void Zip64_Single_Large_File_Fail()
     {
         try
@@ -65,21 +61,11 @@ public class Zip64Tests : WriterTests
         catch (NotSupportedException) { }
     }
 
-    //[Fact]
-    [Trait("zip64", "true")]
-    public void Zip64_Single_Large_File_Zip64_Streaming_Fail()
-    {
-        try
-        {
-            // One single file, should fail (fast) with zip64
-            RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
-            throw new InvalidOperationException("Test did not fail?");
-        }
-        catch (NotSupportedException) { }
-    }
+    [Fact]
+    public void Zip64_Single_Large_File_Zip64_Streaming() =>
+        RunSingleTest(1, FOUR_GB_LIMIT, setZip64: true, forwardOnly: true);
 
-    // [Fact]
-    [Trait("zip64", "true")]
+    [Fact]
     public void Zip64_Single_Large_File_Streaming_Fail()
     {
         try
@@ -153,6 +139,7 @@ public class Zip64Tests : WriterTests
     )
     {
         var data = new byte[chunksize];
+        using var progress = new Zip64TestProgress(output, "write", files * filesize);
 
         // Use deflate for speed
         var opts = new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = setZip64 };
@@ -172,12 +159,15 @@ public class Zip64Tests : WriterTests
                 var b = (int)Math.Min(left, data.Length);
                 str.Write(data, 0, b);
                 left -= b;
+                progress.Advance(b);
             }
         }
     }
 
     public Tuple<long, long> ReadForwardOnly(string filename)
     {
+        using var progress = new Zip64TestProgress(output, "stream-read");
+        var buffer = new byte[81920];
         long count = 0;
         long size = 0;
         IEntry? prev = null;
@@ -194,7 +184,14 @@ public class Zip64Tests : WriterTests
         {
             while (rd.MoveToNextEntry())
             {
-                using (rd.OpenEntryStream()) { }
+                using (var entryStream = rd.OpenEntryStream())
+                {
+                    int read;
+                    while ((read = entryStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        progress.Advance(read);
+                    }
+                }
 
                 count++;
                 if (prev != null)
@@ -216,6 +213,7 @@ public class Zip64Tests : WriterTests
 
     public Tuple<long, long> ReadArchive(string filename)
     {
+        using var progress = new Zip64TestProgress(output, "archive-metadata");
         using var archive = ArchiveFactory.OpenArchive(filename);
         return new Tuple<long, long>(
             archive.Entries.Count(),

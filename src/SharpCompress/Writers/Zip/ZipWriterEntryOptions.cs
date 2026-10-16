@@ -52,7 +52,7 @@ public class ZipWriterEntryOptions
     /// Allocate an extra 20 bytes for this entry to store,
     /// 64 bit length values, thus enabling streams
     /// larger than 4GiB.
-    /// This option is not supported with non-seekable streams.
+    /// Non-seekable output streams use 64-bit data descriptors when enabled.
     /// </summary>
     public bool? EnableZip64 { get; set; }
 

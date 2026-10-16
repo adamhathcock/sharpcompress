@@ -40,7 +40,8 @@ public class ZipWriterNonSeekableTests
         ];
 
     private static async Task<byte[]> WriteArchiveToNonSeekableAsync(
-        (string Name, byte[] Content)[] entries
+        (string Name, byte[] Content)[] entries,
+        bool useZip64 = false
     )
     {
         using var ms = new MemoryStream();
@@ -48,7 +49,7 @@ public class ZipWriterNonSeekableTests
             var writer = await WriterFactory.OpenAsyncWriter(
                 new ForwardOnlyStream(ms),
                 ArchiveType.Zip,
-                new ZipWriterOptions(CompressionType.Deflate)
+                new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = useZip64 }
             )
         )
         {
@@ -61,14 +62,17 @@ public class ZipWriterNonSeekableTests
         return ms.ToArray();
     }
 
-    private static byte[] WriteArchiveToNonSeekableSync((string Name, byte[] Content)[] entries)
+    private static byte[] WriteArchiveToNonSeekableSync(
+        (string Name, byte[] Content)[] entries,
+        bool useZip64 = false
+    )
     {
         using var ms = new MemoryStream();
         using (
             var writer = WriterFactory.OpenWriter(
                 new ForwardOnlyStream(ms),
                 ArchiveType.Zip,
-                new ZipWriterOptions(CompressionType.Deflate)
+                new ZipWriterOptions(CompressionType.Deflate) { UseZip64 = useZip64 }
             )
         )
         {
@@ -180,6 +184,16 @@ public class ZipWriterNonSeekableTests
         var syncZip = WriteArchiveToNonSeekableSync(entries);
 
         // The sync writer produces a correct streamed layout; the async writer must match it
+        Assert.Equal(syncZip, asyncZip);
+    }
+
+    [Fact]
+    public async Task Zip64_Async_NonSeekable_Matches_Sync_Output()
+    {
+        var entries = CreateStreamingTestEntries();
+        var asyncZip = await WriteArchiveToNonSeekableAsync(entries, useZip64: true);
+        var syncZip = WriteArchiveToNonSeekableSync(entries, useZip64: true);
+
         Assert.Equal(syncZip, asyncZip);
     }
 }

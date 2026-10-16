@@ -59,6 +59,13 @@ public static partial class ReaderFactory
         stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
+        if (options.LeaveStreamOpen)
+        {
+            // Internal wrappers must still be disposed when the caller retains its stream.
+            stream = SharpCompressStream.CreateNonDisposing(stream);
+            options = options with { LeaveStreamOpen = false };
+        }
+
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
             bufferSize: options.RewindableBufferSize

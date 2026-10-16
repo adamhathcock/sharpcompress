@@ -17,7 +17,12 @@ public sealed class DeflateCompressionProvider : CompressionProviderBase
     public override Stream CreateCompressStream(Stream destination, int compressionLevel)
     {
         var level = (CompressionLevel)compressionLevel;
-        return new DeflateStream(destination, CompressionMode.Compress, level);
+        // Batch output to reduce downstream writes, particularly for stored or
+        // incompressible data. Keep decoder buffers unchanged for read-ahead behavior.
+        return new DeflateStream(destination, CompressionMode.Compress, level)
+        {
+            BufferSize = 64 * 1024,
+        };
     }
 
     public override Stream CreateDecompressStream(Stream source)
