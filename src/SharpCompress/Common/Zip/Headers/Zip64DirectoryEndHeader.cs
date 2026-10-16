@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace SharpCompress.Common.Zip.Headers;
@@ -9,7 +10,7 @@ internal partial class Zip64DirectoryEndHeader : ZipHeader
 
     internal override void Read(BinaryReader reader)
     {
-        SizeOfDirectoryEndRecord = (long)reader.ReadUInt64();
+        SizeOfDirectoryEndRecord = ValidateRecordSize(reader.ReadUInt64());
         VersionMadeBy = reader.ReadUInt16();
         VersionNeededToExtract = reader.ReadUInt16();
         VolumeNumber = reader.ReadUInt32();
@@ -18,12 +19,31 @@ internal partial class Zip64DirectoryEndHeader : ZipHeader
         TotalNumberOfEntries = (long)reader.ReadUInt64();
         DirectorySize = (long)reader.ReadUInt64();
         DirectoryStartOffsetRelativeToDisk = (long)reader.ReadUInt64();
-        DataSector = reader.ReadBytes(
-            (int)(
-                SizeOfDirectoryEndRecord
-                - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
-            )
-        );
+        // Extensible data is not interpreted. Consume it without allocating from its declared size.
+        var remaining =
+            SizeOfDirectoryEndRecord - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS;
+        var buffer = new byte[4096];
+        while (remaining > 0)
+        {
+            var read = reader.Read(buffer, 0, (int)Math.Min(buffer.Length, remaining));
+            if (read == 0)
+            {
+                throw new IncompleteArchiveException("Truncated ZIP64 extensible data.");
+            }
+            remaining -= read;
+        }
+    }
+
+    private static long ValidateRecordSize(ulong size)
+    {
+        if (
+            size < SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS
+            || size > long.MaxValue
+        )
+        {
+            throw new InvalidFormatException("Invalid ZIP64 end record size.");
+        }
+        return (long)size;
     }
 
     private const int SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS = 44;
@@ -45,6 +65,4 @@ internal partial class Zip64DirectoryEndHeader : ZipHeader
     public long DirectorySize { get; private set; }
 
     public long DirectoryStartOffsetRelativeToDisk { get; private set; }
-
-    public byte[]? DataSector { get; private set; }
 }
