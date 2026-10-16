@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.RLE90;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ArcLzw;
 
@@ -15,37 +17,19 @@ public partial class ArcLzwStream
         CancellationToken cancellationToken
     )
     {
-        if (_processed)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (count == 0)
         {
             return 0;
         }
-        _processed = true;
-        var data = new byte[_compressedSize];
-        int totalRead = 0;
-        while (totalRead < _compressedSize)
+        if (!_processed)
         {
-            int read = await _stream
-                .ReadAsync(data, totalRead, _compressedSize - totalRead, cancellationToken)
-                .ConfigureAwait(false);
-            if (read == 0)
-            {
-                break;
-            }
-            totalRead += read;
+            using var limited = new ReadOnlySubStream(_stream, _compressedSize);
+            using var data = new MemoryStream();
+            await limited.CopyToAsync(data, 81920, cancellationToken).ConfigureAwait(false);
+            FinishDecompression(data);
         }
-        var decoded = Decompress(data, _useCrunched);
-        var result = decoded.Count;
-        if (_useCrunched)
-        {
-            var unpacked = RLE.UnpackRLE(decoded.ToArray());
-            unpacked.CopyTo(buffer, 0);
-            result = unpacked.Count;
-        }
-        else
-        {
-            decoded.CopyTo(buffer, 0);
-        }
-        return result;
+        return Read(buffer, offset, count);
     }
 
 #if !LEGACY_DOTNET

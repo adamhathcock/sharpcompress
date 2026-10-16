@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using SharpCompress.Common;
 using SharpCompress.Compressors.RLE90;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.ArcLzw;
 
@@ -13,6 +14,8 @@ public partial class ArcLzwStream : Stream
     private bool _processed;
     private bool _useCrunched;
     private int _compressedSize;
+    private byte[]? _decoded;
+    private int _decodedPosition;
 
     private const int BITS = 12;
     private const int CRUNCH_BITS = 12;
@@ -34,6 +37,10 @@ public partial class ArcLzwStream : Stream
 
     public ArcLzwStream(Stream stream, int compressedSize, bool useCrunched = true)
     {
+        if (compressedSize < 0)
+        {
+            throw new InvalidFormatException("ARC: invalid compressed size.");
+        }
         _stream = stream;
         _useCrunched = useCrunched;
         _compressedSize = compressedSize;
@@ -177,26 +184,33 @@ public partial class ArcLzwStream : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        if (_processed)
+        if (count == 0)
         {
             return 0;
         }
-        _processed = true;
-        var data = new byte[_compressedSize];
-        _stream.Read(data, 0, _compressedSize);
-        var decoded = Decompress(data, _useCrunched);
-        var result = decoded.Count;
-        if (_useCrunched)
+        if (!_processed)
         {
-            var unpacked = RLE.UnpackRLE(decoded.ToArray());
-            unpacked.CopyTo(buffer, 0);
-            result = unpacked.Count;
+            using var limited = new ReadOnlySubStream(_stream, _compressedSize);
+            using var data = new MemoryStream();
+            limited.CopyTo(data);
+            FinishDecompression(data);
         }
-        else
-        {
-            decoded.CopyTo(buffer, 0);
-        }
+        var result = Math.Min(count, _decoded!.Length - _decodedPosition);
+        Buffer.BlockCopy(_decoded, _decodedPosition, buffer, offset, result);
+        _decodedPosition += result;
         return result;
+    }
+
+    private void FinishDecompression(MemoryStream data)
+    {
+        if (data.Length != _compressedSize)
+        {
+            throw new IncompleteArchiveException("Truncated ARC compressed data.");
+        }
+        // Buffer only bytes actually read, never the size claimed by the ARC header.
+        var decoded = Decompress(data.ToArray(), _useCrunched);
+        _decoded = _useCrunched ? RLE.UnpackRLE(decoded.ToArray()).ToArray() : decoded.ToArray();
+        _processed = true;
     }
 
     public override long Seek(long offset, SeekOrigin origin) =>
