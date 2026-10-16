@@ -9,14 +9,14 @@ internal partial class ShrinkStream : Stream
     private readonly Stream _inStream;
 
     private readonly long _uncompressedSize;
-    private readonly byte[] _byteOut;
+    private byte[] _byteOut = Array.Empty<byte>();
     private long _outBytesCount;
     private bool _decompressed;
     private long _position;
 
     public ShrinkStream(Stream stream, long uncompressedSize)
     {
-        if (uncompressedSize > int.MaxValue)
+        if (uncompressedSize < 0 || uncompressedSize > int.MaxValue)
         {
             throw new InvalidFormatException(
                 $"Shrink: declared uncompressed size {uncompressedSize} exceeds maximum supported size."
@@ -26,7 +26,6 @@ internal partial class ShrinkStream : Stream
         _inStream = stream;
 
         _uncompressedSize = uncompressedSize;
-        _byteOut = new byte[(int)_uncompressedSize];
         _outBytesCount = 0L;
     }
 
@@ -56,19 +55,7 @@ internal partial class ShrinkStream : Stream
             using var srcMs = new MemoryStream();
             _inStream.CopyTo(srcMs);
             var src = srcMs.ToArray();
-            var srcLen = src.Length;
-
-            HwUnshrink.Unshrink(
-                src,
-                srcLen,
-                out _,
-                _byteOut,
-                (int)_uncompressedSize,
-                out var dstUsed
-            );
-            _outBytesCount = dstUsed;
-            _decompressed = true;
-            _position = 0;
+            Decode(src);
         }
 
         long remaining = _outBytesCount - _position;
@@ -85,6 +72,24 @@ internal partial class ShrinkStream : Stream
 
     public override long Seek(long offset, SeekOrigin origin) =>
         throw new NotImplementedException();
+
+    private void Decode(byte[] src)
+    {
+        var status = HwUnshrink.UnshrinkGrowing(
+            src,
+            (int)_uncompressedSize,
+            out var output,
+            out var used
+        );
+        if (status != HwUnshrink.UnshrnkStatus.Ok || used != _uncompressedSize)
+        {
+            throw new InvalidFormatException("Shrink: invalid or truncated compressed data.");
+        }
+        _byteOut = output;
+        _outBytesCount = used;
+        _decompressed = true;
+        _position = 0;
+    }
 
     public override void SetLength(long value) => throw new NotImplementedException();
 

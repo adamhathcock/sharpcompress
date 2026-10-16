@@ -477,3 +477,5 @@ await archive.WriteToDirectoryAsync(
 ZIP64 end-record extensible data is skipped with bounded buffering. Invalid record sizes and truncated extensible data are rejected rather than driving allocations from the declared size.
 
 ARC LZW compressed data is buffered incrementally from the bytes actually present. A truncated entry is rejected without preallocating its declared compressed size.
+
+ZIP Shrink output buffering grows with decoded output rather than the declared uncompressed size. Invalid codes and output-size mismatches are rejected.

@@ -31,12 +31,8 @@ internal partial class ShrinkStream : Stream
         using var srcMs = new MemoryStream();
         await _inStream.CopyToAsync(srcMs, 81920, cancellationToken).ConfigureAwait(false);
         var src = srcMs.ToArray();
-        var srcLen = src.Length;
-
-        // Decompress synchronously (CPU-bound operation)
-        HwUnshrink.Unshrink(src, srcLen, out _, _byteOut, (int)_uncompressedSize, out var dstUsed);
-        _outBytesCount = dstUsed;
-        _decompressed = true;
+        // Decompress synchronously (CPU-bound operation).
+        Decode(src);
     }
 
     public override async Task<int> ReadAsync(

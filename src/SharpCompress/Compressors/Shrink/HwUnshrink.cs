@@ -238,6 +238,43 @@ public class HwUnshrink
         byte[] dst,
         int dstCap,
         out int dstUsed
+    ) => UnshrinkCore(src, srcLen, out srcUsed, ref dst, dstCap, out dstUsed, false);
+
+    internal static UnshrnkStatus UnshrinkGrowing(
+        byte[] src,
+        int dstCap,
+        out byte[] dst,
+        out int dstUsed
+    )
+    {
+        dst = Array.Empty<byte>();
+        return UnshrinkCore(src, src.Length, out _, ref dst, dstCap, out dstUsed, true);
+    }
+
+    private static void ReserveOutput(ref byte[] dst, int dstPos, int dstCap, bool grow)
+    {
+        if (!grow)
+        {
+            return;
+        }
+        // A code string is bounded by the code table's ushort length. Reserve at most
+        // one string ahead of actual output, not the size advertised by the ZIP header.
+        var required = (int)Math.Min(dstCap, (long)dstPos + ushort.MaxValue + 1);
+        if (required > dst.Length)
+        {
+            var capacity = (int)Math.Min(dstCap, Math.Max(required, (long)dst.Length * 2));
+            Array.Resize(ref dst, capacity);
+        }
+    }
+
+    private static UnshrnkStatus UnshrinkCore(
+        byte[] src,
+        int srcLen,
+        out int srcUsed,
+        ref byte[] dst,
+        int dstCap,
+        out int dstUsed,
+        bool grow
     )
     {
         var codeTab = new CodeTabEntry[HASHTAB_SIZE];
@@ -279,6 +316,7 @@ public class HwUnshrink
             return UnshrnkStatus.Full;
         }
 
+        ReserveOutput(ref dst, dstPos, dstCap, grow);
         firstByte = (byte)currCode;
         dst[dstPos] = (byte)currCode;
         codeTab[currCode].lastDstPos = dstPos;
@@ -301,6 +339,7 @@ public class HwUnshrink
                 return UnshrnkStatus.Full;
             }
 
+            ReserveOutput(ref dst, dstPos, dstCap, grow);
             // Handle KwKwK: next code used before being added.
             if (currCode == queue.codes[queue.nextIdx])
             {
