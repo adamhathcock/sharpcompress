@@ -94,12 +94,30 @@ internal partial class ZipHeaderFactory
     }
 
     /// <summary>
+    /// Asynchronous counterpart of <see cref="TryResolveDescriptorSizes"/>.
+    /// </summary>
+    protected virtual ValueTask<bool> TryResolveDescriptorSizesAsync(
+        ZipFileEntry entryHeader,
+        Stream stream
+    ) => new(false);
+
+    /// <summary>
     /// Loads encryption metadata and stream positioning for a header using async reads where needed.
     /// </summary>
-    private async ValueTask LoadHeaderAsync(ZipFileEntry entryHeader, Stream stream)
+    protected async ValueTask LoadHeaderAsync(ZipFileEntry entryHeader, Stream stream)
     {
         if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.Encrypted))
         {
+            if (
+                entryHeader.CompressedSize == 0
+                && FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+            )
+            {
+                // The sizes are only in the data descriptor, which cannot be located by scanning
+                // encrypted data; a seekable stream can take them from the central directory.
+                await TryResolveDescriptorSizesAsync(entryHeader, stream).ConfigureAwait(false);
+            }
+
             if (
                 !entryHeader.IsDirectory
                 && entryHeader.CompressedSize == 0
