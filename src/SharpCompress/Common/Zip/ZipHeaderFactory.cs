@@ -38,6 +38,19 @@ internal partial class ZipHeaderFactory
 
     protected IArchiveEncoding ArchiveEncoding => _archiveEncoding;
 
+    protected string? Password => _password;
+
+    /// <summary>
+    /// Creates the WinZip AES key material of an entry; overridden to use keys derived ahead of time.
+    /// </summary>
+    protected virtual WinzipAesEncryptionData CreateWinzipAesEncryptionData(
+        ZipFileEntry entryHeader,
+        WinzipAesKeySize keySize,
+        byte[] salt,
+        byte[] passwordVerifyValue,
+        string password
+    ) => new(keySize, salt, passwordVerifyValue, password);
+
     /// <summary>
     /// Populates the sizes of an encrypted entry that was written with a post data descriptor and
     /// therefore has no sizes in its local header.
@@ -188,7 +201,8 @@ internal partial class ZipHeaderFactory
                     var passwordVerifyValue = new byte[2];
                     stream.ReadExact(salt, 0, salt.Length);
                     stream.ReadExact(passwordVerifyValue, 0, 2);
-                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(
+                    entryHeader.WinzipAesEncryptionData = CreateWinzipAesEncryptionData(
+                        entryHeader,
                         keySize,
                         salt,
                         passwordVerifyValue,

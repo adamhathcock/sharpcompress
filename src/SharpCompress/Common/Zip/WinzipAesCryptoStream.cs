@@ -1,7 +1,9 @@
 using System;
 using System.Buffers.Binary;
 using System.IO;
+using System.Numerics;
 using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using SharpCompress.IO;
 
@@ -10,8 +12,14 @@ namespace SharpCompress.Common.Zip;
 internal partial class WinzipAesCryptoStream : AsyncDisposableStream
 {
     private const int BLOCK_SIZE_IN_BYTES = 16;
+
+    // Counter blocks are encrypted in batches: one native call per 4 KB instead of per 16 bytes.
+    private const int KEYSTREAM_BLOCKS = 256;
     private readonly Aes _cipher;
-    private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
+    private readonly byte[] _counterBlocks = new byte[BLOCK_SIZE_IN_BYTES * KEYSTREAM_BLOCKS];
+    private readonly byte[] _keystream = new byte[BLOCK_SIZE_IN_BYTES * KEYSTREAM_BLOCKS];
+    private int _keystreamOffset;
+    private int _keystreamLength;
     private readonly Stream _stream;
     private readonly ICryptoTransform _transform;
     private readonly HMACSHA1 _authentication;
@@ -22,8 +30,6 @@ internal partial class WinzipAesCryptoStream : AsyncDisposableStream
     private int _authenticationTagBytesRead;
     private ExceptionDispatchInfo? _authenticationFailure;
     private int _nonce = 1;
-    private byte[] _counterOut = new byte[BLOCK_SIZE_IN_BYTES];
-    private int _counterOutOffset = BLOCK_SIZE_IN_BYTES;
     private long _totalBytesLeftToRead;
     private bool _isDisposed;
 
@@ -172,45 +178,65 @@ internal partial class WinzipAesCryptoStream : AsyncDisposableStream
 
     public override void Flush() { }
 
-    private void FillCounterOut()
+    private void FillKeystream(int bytesNeeded)
     {
-        // update the counter
-        BinaryPrimitives.WriteInt32LittleEndian(_counter, _nonce++);
-        _transform.TransformBlock(
-            _counter,
-            0, // offset
-            BLOCK_SIZE_IN_BYTES,
-            _counterOut,
-            0
-        ); // offset
-        _counterOutOffset = 0;
+        // Only as many blocks as the read needs; a partial last block carries over to the next read.
+        var blocks = Math.Min(
+            KEYSTREAM_BLOCKS,
+            (bytesNeeded + BLOCK_SIZE_IN_BYTES - 1) / BLOCK_SIZE_IN_BYTES
+        );
+        for (var i = 0; i < blocks; i++)
+        {
+            // WinZip AES counter: little-endian block number in the first bytes, the rest stays zero
+            BinaryPrimitives.WriteInt32LittleEndian(
+                _counterBlocks.AsSpan(i * BLOCK_SIZE_IN_BYTES),
+                _nonce++
+            );
+        }
+
+        var length = blocks * BLOCK_SIZE_IN_BYTES;
+        _transform.TransformBlock(_counterBlocks, 0, length, _keystream, 0);
+        _keystreamOffset = 0;
+        _keystreamLength = length;
     }
 
-    private void XorInPlace(byte[] buffer, int offset, int count, int counterOffset)
+    private static void XorInPlace(Span<byte> data, ReadOnlySpan<byte> keystream)
     {
-        for (var i = 0; i < count; i++)
+        var i = 0;
+        if (Vector.IsHardwareAccelerated)
         {
-            buffer[offset + i] = (byte)(_counterOut[counterOffset + i] ^ buffer[offset + i]);
+            var dataVectors = MemoryMarshal.Cast<byte, Vector<byte>>(data);
+            var keystreamVectors = MemoryMarshal.Cast<byte, Vector<byte>>(keystream);
+            for (var v = 0; v < dataVectors.Length; v++)
+            {
+                dataVectors[v] ^= keystreamVectors[v];
+            }
+            i = dataVectors.Length * Vector<byte>.Count;
+        }
+
+        for (; i < data.Length; i++)
+        {
+            data[i] ^= keystream[i];
         }
     }
 
     private void ReadTransformBlocks(byte[] buffer, int offset, int count)
     {
-        var posn = offset;
-        var remaining = count;
-
-        while (posn < buffer.Length && remaining > 0)
+        while (count > 0)
         {
-            if (_counterOutOffset == BLOCK_SIZE_IN_BYTES)
+            if (_keystreamOffset == _keystreamLength)
             {
-                FillCounterOut();
+                FillKeystream(count);
             }
 
-            var bytesToXor = Math.Min(BLOCK_SIZE_IN_BYTES - _counterOutOffset, remaining);
-            XorInPlace(buffer, posn, bytesToXor, _counterOutOffset);
-            _counterOutOffset += bytesToXor;
-            posn += bytesToXor;
-            remaining -= bytesToXor;
+            var bytesToXor = Math.Min(count, _keystreamLength - _keystreamOffset);
+            XorInPlace(
+                buffer.AsSpan(offset, bytesToXor),
+                _keystream.AsSpan(_keystreamOffset, bytesToXor)
+            );
+            _keystreamOffset += bytesToXor;
+            offset += bytesToXor;
+            count -= bytesToXor;
         }
     }
 

@@ -102,6 +102,20 @@ internal partial class ZipHeaderFactory
     ) => new(false);
 
     /// <summary>
+    /// Asynchronous counterpart of <see cref="CreateWinzipAesEncryptionData"/>.
+    /// </summary>
+    protected virtual ValueTask<WinzipAesEncryptionData> CreateWinzipAesEncryptionDataAsync(
+        ZipFileEntry entryHeader,
+        WinzipAesKeySize keySize,
+        byte[] salt,
+        byte[] passwordVerifyValue,
+        string password
+    ) =>
+        new(
+            CreateWinzipAesEncryptionData(entryHeader, keySize, salt, passwordVerifyValue, password)
+        );
+
+    /// <summary>
     /// Loads encryption metadata and stream positioning for a header using async reads where needed.
     /// </summary>
     protected async ValueTask LoadHeaderAsync(ZipFileEntry entryHeader, Stream stream)
@@ -150,12 +164,14 @@ internal partial class ZipHeaderFactory
                     await stream.ReadExactAsync(salt, 0, salt.Length).ConfigureAwait(false);
                     await stream.ReadExactAsync(passwordVerifyValue, 0, 2).ConfigureAwait(false);
 
-                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(
-                        keySize,
-                        salt,
-                        passwordVerifyValue,
-                        _password
-                    );
+                    entryHeader.WinzipAesEncryptionData = await CreateWinzipAesEncryptionDataAsync(
+                            entryHeader,
+                            keySize,
+                            salt,
+                            passwordVerifyValue,
+                            _password
+                        )
+                        .ConfigureAwait(false);
 
                     entryHeader.CompressedSize -= (uint)(salt.Length + 2);
                 }
