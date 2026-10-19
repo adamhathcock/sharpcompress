@@ -7,6 +7,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
+using SharpCompress.IO;
 using SharpCompress.Providers;
 using SharpCompress.Providers.System;
 using SharpCompress.Readers;
@@ -124,6 +125,38 @@ public class TarBenchmarks : ArchiveBenchmarkBase
         {
             await using var entryStream = await entry.OpenEntryStreamAsync().ConfigureAwait(false);
             await entryStream.CopyToAsync(Stream.Null).ConfigureAwait(false);
+        }
+    }
+
+    [Benchmark(Description = "Tar: Create archive with small files (Pooled)")]
+    public void TarCreateSmallFilesPooled()
+    {
+        using var outputStream = new PooledMemoryStream();
+        using var writer = WriterFactory.OpenWriter(
+            outputStream,
+            ArchiveType.Tar,
+            new WriterOptions(CompressionType.None) { LeaveStreamOpen = true }
+        );
+        for (var i = 0; i < 10; i++)
+        {
+            using var entryStream = new MemoryStream(new byte[1024]);
+            writer.Write($"file{i}.txt", entryStream);
+        }
+    }
+
+    [Benchmark(Description = "Tar: Create archive with small files (Async, Pooled)")]
+    public async Task TarCreateSmallFilesAsyncPooled()
+    {
+        using var outputStream = new PooledMemoryStream();
+        await using var writer = await WriterFactory.OpenAsyncWriter(
+            outputStream,
+            ArchiveType.Tar,
+            new WriterOptions(CompressionType.None) { LeaveStreamOpen = true }
+        );
+        for (var i = 0; i < 10; i++)
+        {
+            using var entryStream = new MemoryStream(new byte[1024]);
+            await writer.WriteAsync($"file{i}.txt", entryStream).ConfigureAwait(false);
         }
     }
 
