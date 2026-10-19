@@ -215,6 +215,11 @@ public partial class LzmaStream
                 }
             }
 
+            if (_availableBytes < 0)
+            {
+                throw new DataErrorException();
+            }
+
             var toProcess = count - total;
             if (toProcess > _availableBytes)
             {
@@ -238,6 +243,10 @@ public partial class LzmaStream
             }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
+            if (read == 0 && _availableBytes > 0)
+            {
+                throw new DataErrorException();
+            }
             total += read;
             offset += read;
             _position += read;
@@ -337,6 +346,11 @@ public partial class LzmaStream
                 }
             }
 
+            if (_availableBytes < 0)
+            {
+                throw new DataErrorException();
+            }
+
             var toProcess = count - total;
             if (toProcess > _availableBytes)
             {
@@ -360,6 +374,10 @@ public partial class LzmaStream
             }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
+            if (read == 0 && _availableBytes > 0)
+            {
+                throw new DataErrorException();
+            }
             total += read;
             offset += read;
             _position += read;
@@ -447,8 +465,9 @@ public partial class LzmaStream
         cancellationToken.ThrowIfCancellationRequested();
         if (_encoder != null)
         {
+            using var input = new ReadOnlyMemoryStream(buffer);
             _position = await _encoder
-                .CodeAsync(new MemoryStream(buffer.ToArray()), false, cancellationToken)
+                .CodeAsync(input, false, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

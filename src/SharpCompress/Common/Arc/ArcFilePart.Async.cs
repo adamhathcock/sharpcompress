@@ -37,6 +37,12 @@ public partial class ArcFilePart
                         .ConfigureAwait(false);
                     break;
                 case CompressionType.Crunched:
+                    if (Header.CompressedSize > int.MaxValue)
+                    {
+                        throw new InvalidFormatException(
+                            "ARC: compressed size exceeds the supported range."
+                        );
+                    }
                     if (Header.OriginalSize > 128 * 1024)
                     {
                         throw new NotSupportedException(

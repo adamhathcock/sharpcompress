@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.IO;
 
 namespace SharpCompress.Performance.Benchmarks;
 
@@ -41,6 +42,22 @@ public class GZipBenchmarks
     public async Task GZipCompressAsync()
     {
         using var outputStream = new MemoryStream();
+        using var gzipStream = new GZipStream(outputStream, CompressionMode.Compress);
+        await gzipStream.WriteAsync(_sourceData, 0, _sourceData.Length).ConfigureAwait(false);
+    }
+
+    [Benchmark(Description = "GZip: Compress 100KB (Pooled)")]
+    public void GZipCompressPooled()
+    {
+        using var outputStream = new PooledMemoryStream();
+        using var gzipStream = new GZipStream(outputStream, CompressionMode.Compress);
+        gzipStream.Write(_sourceData, 0, _sourceData.Length);
+    }
+
+    [Benchmark(Description = "GZip: Compress 100KB (Async, Pooled)")]
+    public async Task GZipCompressAsyncPooled()
+    {
+        using var outputStream = new PooledMemoryStream();
         using var gzipStream = new GZipStream(outputStream, CompressionMode.Compress);
         await gzipStream.WriteAsync(_sourceData, 0, _sourceData.Length).ConfigureAwait(false);
     }
