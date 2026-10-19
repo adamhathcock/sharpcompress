@@ -151,6 +151,10 @@ public partial class Decoder
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly byte GetByte(int distance)
         {
+            if (Total == 0 && distance == 0)
+            {
+                return 0;
+            }
             // A previous decoding failure can leave a rep distance outside the dictionary.
             // Unlike a managed array access, this pointer read has no implicit bounds check.
             if ((uint)distance >= (uint)WindowSize)
@@ -229,10 +233,30 @@ public partial class Decoder
         RangeCoder.Decoder rangeDecoder
     )
     {
+        do
+        {
+            outWindow.CopyPending();
+            if (!outWindow.HasSpace)
+            {
+                return false;
+            }
+            // Grow only after filling the current allocation, and never while it is pinned.
+            outWindow.EnsureFastCapacity();
+            if (CodeFastCore(dictionarySize, outWindow, rangeDecoder))
+            {
+                return true;
+            }
+        } while (outWindow.HasSpace);
+        return false;
+    }
+
+    private unsafe bool CodeFastCore(
+        int dictionarySize,
+        OutWindow outWindow,
+        RangeCoder.Decoder rangeDecoder
+    )
+    {
         var dictionarySizeCheck = Math.Max(dictionarySize, 1);
-
-        outWindow.CopyPending();
-
         var dic = outWindow.FastBuffer;
         var inBuf = rangeDecoder.FastBufferArray;
         bool result;
@@ -270,7 +294,11 @@ public partial class Decoder
                 Pos = outWindow.FastPos,
                 Total = outWindow.FastTotal,
                 WindowSize = outWindow.FastWindowSize,
-                Limit = outWindow.FastLimit,
+                // The next decode call can grow the dictionary after this pin is released.
+                Limit = Math.Min(
+                    outWindow.FastLimit,
+                    outWindow.FastTotal + dic.Length - outWindow.FastPos
+                ),
                 OutWindow = outWindow,
             };
 
