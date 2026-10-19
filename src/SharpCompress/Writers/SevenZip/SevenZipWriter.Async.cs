@@ -55,7 +55,7 @@ public partial class SevenZipWriter
         var filesInfo = new SevenZipFilesInfoWriter { Entries = entries.ToArray() };
 
         // Write header to a temporary stream first
-        using var headerStream = new MemoryStream();
+        using var headerStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteRawHeader(headerStream, mainStreamsInfo, filesInfo);
 
         // Optionally compress the header
@@ -70,7 +70,7 @@ public partial class SevenZipWriter
     }
 
     private async ValueTask WriteCompressedHeaderAsync(
-        MemoryStream rawHeaderStream,
+        PooledMemoryStream rawHeaderStream,
         long endOfPackedData
     )
     {
@@ -97,7 +97,7 @@ public partial class SevenZipWriter
         };
 
         // Write encoded header to a second temporary stream
-        using var encodedHeaderStream = new MemoryStream();
+        using var encodedHeaderStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteEncodedHeader(encodedHeaderStream, headerStreamsInfo);
 
         // Write the encoded header to the output
@@ -125,7 +125,7 @@ public partial class SevenZipWriter
     }
 
     private async ValueTask WriteRawHeaderToOutputAsync(
-        MemoryStream rawHeaderStream,
+        PooledMemoryStream rawHeaderStream,
         long endOfPackedData
     )
     {

@@ -6,9 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar.Headers;
+using SharpCompress.Common.Zip.Headers;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.Utilities;
+using SharpCompress.Compressors.Shrink;
 using SharpCompress.IO;
 using Xunit;
 
@@ -16,6 +18,184 @@ namespace SharpCompress.Test.Streams;
 
 public class BufferPoolLifetimeTests
 {
+    [Theory]
+    [InlineData(false, 0, false)]
+    [InlineData(true, 0, false)]
+    [InlineData(false, 10000, false)]
+    [InlineData(true, 10000, false)]
+    [InlineData(false, 1, true)]
+    [InlineData(true, 1, true)]
+    public async Task Zip64_ExtensibleData_ReturnsBuffer(
+        bool useAsync,
+        int payloadSize,
+        bool truncated
+    )
+    {
+        var pool = new TrackingPool<byte> { ExtraCapacity = 32 };
+        using var input = new MemoryStream();
+        using (var writer = new BinaryWriter(input, System.Text.Encoding.UTF8, true))
+        {
+            writer.Write((ulong)(44 + payloadSize + (truncated ? 10000 : 0)));
+            writer.Write(new byte[44 + payloadSize]);
+            if (!truncated)
+            {
+                writer.Write((byte)99);
+            }
+        }
+        input.Position = 0;
+        var header = new Zip64DirectoryEndHeader(pool);
+        if (useAsync)
+        {
+            using var reader = new AsyncBinaryReader(input, leaveOpen: true);
+            if (truncated)
+            {
+                await Assert.ThrowsAnyAsync<SharpCompressException>(async () =>
+                    await header.Read(reader)
+                );
+            }
+            else
+            {
+                await header.Read(reader);
+            }
+        }
+        else
+        {
+            using var reader = new BinaryReader(input, System.Text.Encoding.UTF8, true);
+            if (truncated)
+            {
+                Assert.ThrowsAny<SharpCompressException>(() => header.Read(reader));
+            }
+            else
+            {
+                header.Read(reader);
+            }
+        }
+        if (!truncated)
+        {
+            Assert.Equal(99, input.ReadByte());
+        }
+        Assert.Equal(payloadSize == 0 ? 0 : 1, pool.RentCount);
+        Assert.Equal(pool.RentCount, pool.ReturnCount);
+        Assert.Empty(pool.Active);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Shrink_Dispose_ReturnsBuffers(bool useAsync, bool asyncDispose)
+    {
+        var pool = new TrackingPool<byte> { ExtraCapacity = 32 };
+        using var input = new MemoryStream(new byte[] { 65, 132, 0 });
+        using var stream = new ShrinkStream(input, 2, pool);
+        var buffer = new byte[1];
+        foreach (var expected in new byte[] { 65, 66 })
+        {
+            var read = useAsync
+                ? await stream.ReadAsync(buffer, 0, 1, CancellationToken.None)
+                : stream.Read(buffer, 0, 1);
+            Assert.Equal(1, read);
+            Assert.Equal(expected, buffer[0]);
+        }
+        Assert.Equal(0, stream.Read(buffer, 0, 1));
+        Assert.Equal(2, pool.RentCount);
+        Assert.Equal(1, pool.ReturnCount);
+        Assert.Single(pool.Active);
+
+#if !LEGACY_DOTNET
+        if (asyncDispose)
+        {
+            await stream.DisposeAsync();
+        }
+        else
+#endif
+        {
+            stream.Dispose();
+        }
+        stream.Dispose();
+        Assert.Equal(2, pool.ReturnCount);
+        Assert.Empty(pool.Active);
+        Assert.True(input.CanRead);
+        Assert.False(stream.CanRead);
+        Assert.Throws<ObjectDisposedException>(() => stream.Read(buffer, 0, 1));
+        await Assert.ThrowsAsync<ObjectDisposedException>(() =>
+            stream.ReadAsync(buffer, 0, 1, CancellationToken.None)
+        );
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Shrink_InvalidData_ReturnsBuffers(bool useAsync)
+    {
+        var pool = new TrackingPool<byte> { ExtraCapacity = 32 };
+        using var input = new MemoryStream(new byte[] { 65, 132, 0 });
+        using var stream = new ShrinkStream(input, int.MaxValue, pool);
+        var buffer = new byte[1];
+        if (useAsync)
+        {
+            await Assert.ThrowsAsync<InvalidFormatException>(() =>
+                stream.ReadAsync(buffer, 0, 1, CancellationToken.None)
+            );
+        }
+        else
+        {
+            Assert.Throws<InvalidFormatException>(() => stream.Read(buffer, 0, 1));
+        }
+        Assert.Equal(2, pool.RentCount);
+        Assert.Equal(2, pool.ReturnCount);
+        Assert.Empty(pool.Active);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Shrink_Growth_ReturnsBuffers(bool failGrowth)
+    {
+        // Literal-only nine-bit codes fill the first output rental without increasing code size.
+        const int count = 70000;
+        var input = new byte[(count * 9 + 7) / 8];
+        for (var i = 0; i < count; i++)
+        {
+            var bit = i * 9;
+            input[bit / 8] |= (byte)(65 << (bit % 8));
+            input[bit / 8 + 1] |= (byte)(65 >> (8 - bit % 8));
+        }
+        var pool = new TrackingPool<byte> { FailRentNumber = failGrowth ? 2 : 0 };
+        if (failGrowth)
+        {
+            Assert.Throws<OutOfMemoryException>(() =>
+                HwUnshrink.UnshrinkGrowing(input, input.Length, count, pool, out _, out _)
+            );
+            Assert.Equal(1, pool.ReturnCount);
+        }
+        else
+        {
+            var status = HwUnshrink.UnshrinkGrowing(
+                input,
+                input.Length,
+                count,
+                pool,
+                out var output,
+                out var used
+            );
+            try
+            {
+                Assert.Equal(HwUnshrink.UnshrnkStatus.Ok, status);
+                Assert.Equal(count, used);
+                Assert.All(output, value => Assert.Equal(65, value));
+                Assert.Equal(1, pool.ReturnCount);
+            }
+            finally
+            {
+                pool.Return(output);
+            }
+            Assert.Equal(2, pool.ReturnCount);
+        }
+        Assert.Empty(pool.Active);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -98,6 +278,74 @@ public class BufferPoolLifetimeTests
         }
         window.Dispose();
         Assert.Equal(1, pool.ReturnCount);
+        Assert.Empty(pool.Active);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task OutWindow_LazyGrowth_PreservesPoolOwnership(bool asyncWrite, bool failGrowth)
+    {
+        var pool = new TrackingPool<byte>();
+        using var window = new OutWindow(pool);
+        window.Create(16384);
+        Assert.Equal(4096, window.BufferCapacity);
+
+        for (var i = 0; i < 4096; i++)
+        {
+            if (asyncWrite)
+            {
+                await window.PutByteAsync(42, CancellationToken.None);
+            }
+            else
+            {
+                window.PutByte(42);
+            }
+        }
+
+        if (failGrowth)
+        {
+            pool.FailNextRent = true;
+            if (asyncWrite)
+            {
+                await Assert.ThrowsAsync<OutOfMemoryException>(async () =>
+                    await window.PutByteAsync(43, CancellationToken.None)
+                );
+            }
+            else
+            {
+                Assert.Throws<OutOfMemoryException>(() => window.PutByte(43));
+            }
+            Assert.Equal(0, pool.ReturnCount);
+            Assert.Equal(4096, window.BufferCapacity);
+            Assert.Equal(42, window.GetByte(0));
+        }
+
+        if (asyncWrite)
+        {
+            await window.PutByteAsync(43, CancellationToken.None);
+        }
+        else
+        {
+            window.PutByte(43);
+        }
+        Assert.Equal(8192, window.BufferCapacity);
+        Assert.Equal(42, window.GetByte(4096));
+        Assert.Equal(43, window.GetByte(0));
+        Assert.Equal(1, pool.ReturnCount);
+        Assert.Single(pool.Active);
+
+        if (asyncWrite)
+        {
+            await window.DisposeAsync();
+        }
+        else
+        {
+            window.Dispose();
+        }
+        Assert.Equal(2, pool.ReturnCount);
         Assert.Empty(pool.Active);
     }
 
@@ -302,18 +550,20 @@ public class BufferPoolLifetimeTests
         internal int RentCount { get; private set; }
         internal int ReturnCount { get; private set; }
         internal bool FailNextRent { get; set; }
+        internal int FailRentNumber { get; set; }
+        internal int ExtraCapacity { get; set; }
 
         public override T[] Rent(int minimumLength)
         {
             RentCount++;
-            if (FailNextRent)
+            if (FailNextRent || RentCount == FailRentNumber)
             {
                 FailNextRent = false;
 #pragma warning disable CA2201 // Simulate allocation failure without exhausting process memory.
                 throw new OutOfMemoryException("Injected pool allocation failure.");
 #pragma warning restore CA2201
             }
-            var buffer = new T[minimumLength];
+            var buffer = new T[minimumLength + ExtraCapacity];
             Assert.True(Active.Add(buffer));
             return buffer;
         }

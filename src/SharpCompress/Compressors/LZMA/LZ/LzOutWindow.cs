@@ -31,29 +31,44 @@ internal partial class OutWindow : IDisposable
 
     public long Total => _total;
 
+    internal int BufferCapacity => _buffer?.Length ?? 0;
+
     public void Create(int windowSize)
     {
         if (windowSize <= 0)
         {
             throw new InvalidFormatException($"LZMA: invalid dictionary size {windowSize}");
         }
-        if (_windowSize != windowSize)
+        if (_windowSize != windowSize || _buffer is null)
         {
             // Allocate first so failed growth leaves the existing buffer owned by this window.
-            var replacement = _pool.Rent(windowSize);
+            var replacement = _pool.Rent(Math.Min(windowSize, 4096));
             if (_buffer is not null)
             {
                 _pool.Return(_buffer);
             }
             _buffer = replacement;
         }
-        _buffer[windowSize - 1] = 0;
         _windowSize = windowSize;
         _pos = 0;
         _streamPos = 0;
         _pendingLen = 0;
         _total = 0;
         _limit = 0;
+    }
+
+    private void EnsureCapacity(int required)
+    {
+        if (required <= _buffer.Length)
+        {
+            return;
+        }
+        // Grow from emitted history, never from the advertised dictionary or output size.
+        var capacity = (int)Math.Min(_windowSize, Math.Max(required, (long)_buffer.Length * 2));
+        var replacement = _pool.Rent(capacity);
+        _buffer.AsSpan(0, _pos).CopyTo(replacement);
+        _pool.Return(_buffer);
+        _buffer = replacement;
     }
 
     public void Dispose()
@@ -93,7 +108,7 @@ internal partial class OutWindow : IDisposable
         stream.Position = len - size;
         _total = 0;
         _limit = size;
-        _pos = _windowSize - size;
+        _pos = 0;
         CopyStream(stream, size);
         if (_pos == _windowSize)
         {
@@ -157,6 +172,7 @@ internal partial class OutWindow : IDisposable
         var fastSize = Math.Min(Math.Min(sizeUntilWindowEnd, sizeUntilOverlap), targetSize);
         if (fastSize >= 2)
         {
+            EnsureCapacity(_pos + fastSize);
             _buffer.AsSpan(pos, fastSize).CopyTo(_buffer.AsSpan(_pos, fastSize));
             _pos += fastSize;
             pos += fastSize;
@@ -182,6 +198,7 @@ internal partial class OutWindow : IDisposable
 
     public void PutByte(byte b)
     {
+        EnsureCapacity(_pos + 1);
         _buffer[_pos++] = b;
         _total++;
         if (_pos >= _windowSize)
@@ -192,6 +209,11 @@ internal partial class OutWindow : IDisposable
 
     public byte GetByte(int distance)
     {
+        // The initial literal context is zero; no dictionary history has been emitted yet.
+        if (_total == 0 && distance == 0)
+        {
+            return 0;
+        }
         var pos = _pos - distance - 1;
         if (pos < 0)
         {
@@ -205,7 +227,7 @@ internal partial class OutWindow : IDisposable
         var size = len;
         while (size > 0 && _pos < _windowSize && _total < _limit)
         {
-            var curSize = _windowSize - _pos;
+            var curSize = Math.Min(4096, _windowSize - _pos);
             if (curSize > _limit - _total)
             {
                 curSize = (int)(_limit - _total);
@@ -214,6 +236,7 @@ internal partial class OutWindow : IDisposable
             {
                 curSize = size;
             }
+            EnsureCapacity(_pos + curSize);
             var numReadBytes = stream.Read(_buffer, _pos, curSize);
             if (numReadBytes == 0)
             {

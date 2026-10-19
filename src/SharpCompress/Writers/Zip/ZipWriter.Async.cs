@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
+using SharpCompress.IO;
 
 namespace SharpCompress.Writers.Zip;
 
@@ -24,7 +25,7 @@ public partial class ZipWriter
 
         // Buffer the entire central directory + end record into memory, then write async.
         // This avoids synchronous writes to the underlying stream during finalization.
-        using var ms = new MemoryStream();
+        using var ms = new PooledMemoryStream();
         ulong size = 0;
         foreach (var entry in entries)
         {
@@ -149,9 +150,9 @@ public partial class ZipWriter
         CancellationToken cancellationToken
     )
     {
-        // Build the header synchronously into a MemoryStream, then async-copy to OutputStream.
+        // Build the header synchronously into a pooled stream, then async-copy to OutputStream.
         // This avoids any synchronous writes to the potentially async-only output stream.
-        using var ms = new MemoryStream();
+        using var ms = new PooledMemoryStream();
         var outputStream = OutputStream.NotNull();
         var result = WriteHeader(
             ms,

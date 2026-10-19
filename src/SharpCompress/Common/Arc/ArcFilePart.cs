@@ -52,6 +52,12 @@ public partial class ArcFilePart : FilePart
                     compressedStream = SqueezeStream.Create(_stream, (int)Header.CompressedSize);
                     break;
                 case CompressionType.Crunched:
+                    if (Header.CompressedSize > int.MaxValue)
+                    {
+                        throw new InvalidFormatException(
+                            "ARC: compressed size exceeds the supported range."
+                        );
+                    }
                     if (Header.OriginalSize > 128 * 1024)
                     {
                         throw new NotSupportedException(
