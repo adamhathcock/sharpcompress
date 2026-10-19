@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -15,6 +16,11 @@ namespace SharpCompress.Common.SevenZip;
 
 internal partial class ArchiveReader
 {
+    private readonly ArrayPool<byte> decoderBufferPool;
+
+    internal ArchiveReader(ArrayPool<byte>? decoderBufferPool = null) =>
+        this.decoderBufferPool = decoderBufferPool ?? ArrayPool<byte>.Shared;
+
     internal Stream _stream = null!;
     internal Stack<DataReader> _readerStack = new();
     internal DataReader _currentReader = null!;
@@ -650,12 +656,15 @@ internal partial class ArchiveReader
                     dataStartPos += packSize;
                 }
 
-                var outStream = DecoderStreamHelper.CreateDecoderStream(
+                // The decoded header bytes outlive this decoder, but its pooled
+                // input and dictionary buffers must be released after parsing.
+                using var outStream = DecoderStreamHelper.CreateDecoderStream(
                     _stream,
                     oldDataStartPos,
                     myPackSizes,
                     folder,
-                    pass
+                    pass,
+                    decoderBufferPool
                 );
 
                 var unpackSize = checked((int)folder.GetUnpackSize());

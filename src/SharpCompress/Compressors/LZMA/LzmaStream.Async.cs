@@ -534,6 +534,7 @@ public partial class LzmaStream
             }
             finally
             {
+                _rangeDecoder.ReleaseStream();
                 ReturnAsyncHeaderBuffer();
             }
         }

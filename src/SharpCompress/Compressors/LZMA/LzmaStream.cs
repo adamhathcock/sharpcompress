@@ -277,6 +277,9 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             finally
             {
+                // Partial reads and failed decodes may not reach the normal
+                // end-of-chunk path that returns the range decoder's fast buffer.
+                _rangeDecoder.ReleaseStream();
                 ReturnAsyncHeaderBuffer();
             }
         }
