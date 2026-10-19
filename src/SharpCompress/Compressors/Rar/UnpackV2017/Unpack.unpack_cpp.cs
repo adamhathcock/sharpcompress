@@ -73,6 +73,18 @@ internal sealed partial class Unpack : BitInput
             FilterDstMemory = Array.Empty<byte>();
         }
 
+        if (tableReadBitLengths.Length != 0)
+        {
+            ArrayPool<byte>.Shared.Return(tableReadBitLengths);
+            tableReadBitLengths = Array.Empty<byte>();
+        }
+
+        if (tableReadLengths.Length != 0)
+        {
+            ArrayPool<byte>.Shared.Return(tableReadLengths);
+            tableReadLengths = Array.Empty<byte>();
+        }
+
         disposed = true;
     }
 

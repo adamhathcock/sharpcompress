@@ -245,6 +245,11 @@ internal partial class Unpack
     private byte[] FilterSrcMemory = Array.Empty<byte>();
     private byte[] FilterDstMemory = Array.Empty<byte>();
 
+    // Async table reads cannot keep stack buffers across awaits. Reuse these for
+    // the unpacker's lifetime, just like its dictionary and filter buffers.
+    private byte[] tableReadBitLengths = Array.Empty<byte>();
+    private byte[] tableReadLengths = Array.Empty<byte>();
+
     // Filters code, one entry per filter.
     private readonly List<UnpackFilter> Filters = new();
     private readonly List<UnpackFilter> FilterPool = new();

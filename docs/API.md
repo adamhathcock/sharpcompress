@@ -101,6 +101,15 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 | `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |
 | `SolidStreamCount` | `SolidStreamCount` |
 
+### RAR Entry Integrity
+
+RAR Archive and Reader entry streams validate CRC32 (or RAR5 BLAKE2sp when
+present) on both synchronous and asynchronous extraction paths. Drain an entry
+stream to the end to perform validation; a mismatch throws
+`InvalidFormatException`. Disposing a partially read stream does not validate
+the unread payload. Encrypted entries retain the existing checksum-checking
+limitations; this does not add authentication for encrypted RAR data.
+
 ### RAR5 Archive Comments
 
 `SharpCompress.Common.Rar.RarVolume.Comment` exposes UTF-8 archive comments, including encrypted comments when `ReaderOptions.Password` is supplied. Comments are loaded while entries are enumerated; the property can be `null` before enumeration or when no comment is present.

@@ -15,29 +15,39 @@ public partial class RarArchiveEntry
         CancellationToken cancellationToken = default
     )
     {
+        var readStream = await MultiVolumeReadOnlyAsyncStream
+            .Create(Parts.ToAsyncEnumerable().CastAsync<RarFilePart>())
+            .ConfigureAwait(false);
         RarStream stream;
         if (IsRarV3)
         {
-            stream = new RarStream(
-                archive.UnpackV1.Value,
-                FileHeader,
-                await MultiVolumeReadOnlyAsyncStream
-                    .Create(Parts.ToAsyncEnumerable().CastAsync<RarFilePart>())
-                    .ConfigureAwait(false)
-            );
+            stream = await RarCrcStream
+                .CreateAsync(archive.UnpackV1.Value, FileHeader, readStream, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        else if (FileHeader.FileCrc?.Length > 5)
+        {
+            stream = await RarBLAKE2spStream
+                .CreateAsync(archive.UnpackV2017.Value, FileHeader, readStream, cancellationToken)
+                .ConfigureAwait(false);
         }
         else
         {
-            stream = new RarStream(
-                archive.UnpackV2017.Value,
-                FileHeader,
-                await MultiVolumeReadOnlyAsyncStream
-                    .Create(Parts.ToAsyncEnumerable().CastAsync<RarFilePart>())
-                    .ConfigureAwait(false)
-            );
+            stream = await RarCrcStream
+                .CreateAsync(archive.UnpackV2017.Value, FileHeader, readStream, cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        await stream.InitializeAsync(cancellationToken).ConfigureAwait(false);
-        return stream;
+        try
+        {
+            await stream.InitializeAsync(cancellationToken).ConfigureAwait(false);
+            return stream;
+        }
+        catch
+        {
+            // Initialization can fail before the caller can dispose the pooled stream buffers.
+            await stream.DisposeAsyncCompat().ConfigureAwait(false);
+            throw;
+        }
     }
 }
