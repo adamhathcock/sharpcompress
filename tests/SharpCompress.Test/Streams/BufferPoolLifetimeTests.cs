@@ -103,13 +103,11 @@ public class BufferPoolLifetimeTests
         Assert.Equal(1, pool.ReturnCount);
         Assert.Single(pool.Active);
 
-#if !LEGACY_DOTNET
         if (asyncDispose)
         {
-            await stream.DisposeAsync();
+            await using (stream.DisposeAsyncScope().ConfigureAwait(false)) { }
         }
         else
-#endif
         {
             stream.Dispose();
         }

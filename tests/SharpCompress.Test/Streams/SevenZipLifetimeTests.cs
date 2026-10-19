@@ -46,11 +46,8 @@ public class SevenZipLifetimeTests : TestBase
         {
             if (!reader.Entry.IsDirectory)
             {
-#if LEGACY_DOTNET
-                using var stream = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#else
-                await using var stream = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#endif
+                var stream = await reader.OpenEntryStreamAsync(CancellationToken.None);
+                await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
                 await stream.CopyToAsync(Stream.Null, Constants.BufferSize, CancellationToken.None);
                 if (!readAll)
                 {
@@ -87,11 +84,8 @@ public class SevenZipLifetimeTests : TestBase
 
             // Disposing a borrowed reader must not prevent another extraction.
             var entry = await archive.EntriesAsync.Where(entry => !entry.IsDirectory).FirstAsync();
-#if LEGACY_DOTNET
-            using var entryStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-#else
-            await using var entryStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-#endif
+            var entryStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+            await using var scope = entryStream.DisposeAsyncScope().ConfigureAwait(false);
             await entryStream.CopyToAsync(
                 Stream.Null,
                 Constants.BufferSize,

@@ -92,11 +92,8 @@ public class Lzma2TruncationTests
             data[i] = Convert.ToByte(TruncatedXzHex.Substring(i * 2, 2), 16);
         }
         using var input = new MemoryStream(data);
-#if LEGACY_DOTNET
-        using var decoder = new XZStream(input);
-#else
-        await using var decoder = new XZStream(input);
-#endif
+        var decoder = new XZStream(input);
+        await using var scope = decoder.DisposeAsyncScope().ConfigureAwait(false);
         if (useAsync)
         {
             await Assert.ThrowsAnyAsync<SharpCompressException>(() =>
@@ -120,11 +117,8 @@ public class Lzma2TruncationTests
             await using var archive = await ArchiveFactory.OpenAsyncArchive(input);
             await foreach (var entry in archive.EntriesAsync)
             {
-#if LEGACY_DOTNET
-                using var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-#else
-                await using var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-#endif
+                var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+                await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
                 await Assert.ThrowsAnyAsync<SharpCompressException>(() =>
                     stream.CopyToAsync(Stream.Null, 81920, CancellationToken.None)
                 );
