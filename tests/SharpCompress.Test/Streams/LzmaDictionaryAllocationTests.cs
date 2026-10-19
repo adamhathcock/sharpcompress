@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,7 +85,7 @@ public class LzmaDictionaryAllocationTests
         bool useAsync
     )
     {
-        using var window = new OutWindow();
+        using var window = new OutWindow(ArrayPool<byte>.Create());
         window.Create(int.MaxValue);
         window.SetLimit(int.MaxValue);
         using var input = new MemoryStream(new byte[] { 1 });
@@ -116,7 +117,7 @@ public class LzmaDictionaryAllocationTests
     [Fact]
     public void Lzma_Huge_Dictionary_Starts_Small_And_Grows_With_History()
     {
-        using var window = new OutWindow();
+        using var window = new OutWindow(ArrayPool<byte>.Create());
         window.Create(int.MaxValue);
         Assert.InRange(window.BufferCapacity, 1, 4096);
         Assert.Equal(0, window.GetByte(0));
@@ -188,7 +189,7 @@ public class LzmaDictionaryAllocationTests
     [InlineData(true)]
     public async Task Lzma_Preset_Dictionary_Does_Not_Allocate_Declared_Window(bool useAsync)
     {
-        using var window = new OutWindow();
+        using var window = new OutWindow(ArrayPool<byte>.Create());
         window.Create(int.MaxValue);
         using var preset = new MemoryStream(new byte[] { 1, 2, 3 });
         if (useAsync)
