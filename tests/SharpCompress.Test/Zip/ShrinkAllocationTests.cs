@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,17 +37,27 @@ public class ShrinkAllocationTests
     [Fact]
     public void Shrink_Grows_Only_For_Actual_Output()
     {
+        var pool = ArrayPool<byte>.Shared;
         var status = HwUnshrink.UnshrinkGrowing(
             new byte[] { 65, 132, 0 },
+            3,
             int.MaxValue,
+            pool,
             out var output,
             out var used
         );
-        Assert.Equal(HwUnshrink.UnshrnkStatus.Ok, status);
-        Assert.Equal(2, used);
-        Assert.Equal(65, output[0]);
-        Assert.Equal(66, output[1]);
-        Assert.InRange(output.Length, 2, 131072);
+        try
+        {
+            Assert.Equal(HwUnshrink.UnshrnkStatus.Ok, status);
+            Assert.Equal(2, used);
+            Assert.Equal(65, output[0]);
+            Assert.Equal(66, output[1]);
+            Assert.InRange(output.Length, 2, 131072);
+        }
+        finally
+        {
+            pool.Return(output);
+        }
     }
 
     [Fact]

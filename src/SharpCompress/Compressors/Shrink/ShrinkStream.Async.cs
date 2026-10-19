@@ -31,9 +31,8 @@ internal partial class ShrinkStream : Stream
         // The stream is already bounded by ReadOnlySubStream in ZipFilePart.
         using var srcMs = new PooledMemoryStream();
         await _inStream.CopyToAsync(srcMs, 81920, cancellationToken).ConfigureAwait(false);
-        var src = srcMs.ToArray();
         // Decompress synchronously (CPU-bound operation).
-        Decode(src);
+        Decode(srcMs);
     }
 
     public override async Task<int> ReadAsync(
@@ -43,6 +42,7 @@ internal partial class ShrinkStream : Stream
         CancellationToken cancellationToken
     )
     {
+        ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
 
         if (!_decompressed)
@@ -69,6 +69,7 @@ internal partial class ShrinkStream : Stream
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
 
         if (!_decompressed)

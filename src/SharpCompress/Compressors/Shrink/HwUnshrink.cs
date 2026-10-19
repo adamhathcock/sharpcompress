@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 
 namespace SharpCompress.Compressors.Shrink;
 
@@ -238,22 +239,36 @@ public class HwUnshrink
         byte[] dst,
         int dstCap,
         out int dstUsed
-    ) => UnshrinkCore(src, srcLen, out srcUsed, ref dst, dstCap, out dstUsed, false);
+    ) => UnshrinkCore(src, srcLen, out srcUsed, ref dst, dstCap, out dstUsed, null);
 
     internal static UnshrnkStatus UnshrinkGrowing(
         byte[] src,
+        int srcLen,
         int dstCap,
+        ArrayPool<byte> pool,
         out byte[] dst,
         out int dstUsed
     )
     {
         dst = Array.Empty<byte>();
-        return UnshrinkCore(src, src.Length, out _, ref dst, dstCap, out dstUsed, true);
+        try
+        {
+            return UnshrinkCore(src, srcLen, out _, ref dst, dstCap, out dstUsed, pool);
+        }
+        catch
+        {
+            if (dst.Length > 0)
+            {
+                pool.Return(dst);
+                dst = Array.Empty<byte>();
+            }
+            throw;
+        }
     }
 
-    private static void ReserveOutput(ref byte[] dst, int dstPos, int dstCap, bool grow)
+    private static void ReserveOutput(ref byte[] dst, int dstPos, int dstCap, ArrayPool<byte>? pool)
     {
-        if (!grow)
+        if (pool is null)
         {
             return;
         }
@@ -263,7 +278,13 @@ public class HwUnshrink
         if (required > dst.Length)
         {
             var capacity = (int)Math.Min(dstCap, Math.Max(required, (long)dst.Length * 2));
-            Array.Resize(ref dst, capacity);
+            var replacement = pool.Rent(capacity);
+            dst.AsSpan(0, dstPos).CopyTo(replacement);
+            if (dst.Length > 0)
+            {
+                pool.Return(dst);
+            }
+            dst = replacement;
         }
     }
 
@@ -274,7 +295,7 @@ public class HwUnshrink
         ref byte[] dst,
         int dstCap,
         out int dstUsed,
-        bool grow
+        ArrayPool<byte>? pool
     )
     {
         var codeTab = new CodeTabEntry[HASHTAB_SIZE];
@@ -316,7 +337,7 @@ public class HwUnshrink
             return UnshrnkStatus.Full;
         }
 
-        ReserveOutput(ref dst, dstPos, dstCap, grow);
+        ReserveOutput(ref dst, dstPos, dstCap, pool);
         firstByte = (byte)currCode;
         dst[dstPos] = (byte)currCode;
         codeTab[currCode].lastDstPos = dstPos;
@@ -339,7 +360,7 @@ public class HwUnshrink
                 return UnshrnkStatus.Full;
             }
 
-            ReserveOutput(ref dst, dstPos, dstCap, grow);
+            ReserveOutput(ref dst, dstPos, dstCap, pool);
             // Handle KwKwK: next code used before being added.
             if (currCode == queue.codes[queue.nextIdx])
             {

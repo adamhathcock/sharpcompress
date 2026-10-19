@@ -23,12 +23,23 @@ internal partial class Zip64DirectoryEndHeader
             await reader.ReadUInt64Async().ConfigureAwait(false);
         var remaining =
             SizeOfDirectoryEndRecord - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS;
-        var buffer = new byte[4096];
-        while (remaining > 0)
+        if (remaining == 0)
         {
-            var size = (int)Math.Min(buffer.Length, remaining);
-            await reader.ReadBytesAsync(buffer, 0, size).ConfigureAwait(false);
-            remaining -= size;
+            return;
+        }
+        var buffer = _pool.Rent(4096);
+        try
+        {
+            while (remaining > 0)
+            {
+                var size = (int)Math.Min(4096, remaining);
+                await reader.ReadBytesAsync(buffer, 0, size).ConfigureAwait(false);
+                remaining -= size;
+            }
+        }
+        finally
+        {
+            _pool.Return(buffer);
         }
     }
 }

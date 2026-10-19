@@ -1,12 +1,18 @@
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace SharpCompress.Common.Zip.Headers;
 
 internal partial class Zip64DirectoryEndHeader : ZipHeader
 {
+    private readonly ArrayPool<byte> _pool;
+
     public Zip64DirectoryEndHeader()
-        : base(ZipHeaderType.Zip64DirectoryEnd) { }
+        : this(ArrayPool<byte>.Shared) { }
+
+    internal Zip64DirectoryEndHeader(ArrayPool<byte> pool)
+        : base(ZipHeaderType.Zip64DirectoryEnd) => _pool = pool;
 
     internal override void Read(BinaryReader reader)
     {
@@ -22,15 +28,26 @@ internal partial class Zip64DirectoryEndHeader : ZipHeader
         // Extensible data is not interpreted. Consume it without allocating from its declared size.
         var remaining =
             SizeOfDirectoryEndRecord - SIZE_OF_FIXED_HEADER_DATA_EXCEPT_SIGNATURE_AND_SIZE_FIELDS;
-        var buffer = new byte[4096];
-        while (remaining > 0)
+        if (remaining == 0)
         {
-            var read = reader.Read(buffer, 0, (int)Math.Min(buffer.Length, remaining));
-            if (read == 0)
+            return;
+        }
+        var buffer = _pool.Rent(4096);
+        try
+        {
+            while (remaining > 0)
             {
-                throw new IncompleteArchiveException("Truncated ZIP64 extensible data.");
+                var read = reader.Read(buffer, 0, (int)Math.Min(4096, remaining));
+                if (read == 0)
+                {
+                    throw new IncompleteArchiveException("Truncated ZIP64 extensible data.");
+                }
+                remaining -= read;
             }
-            remaining -= read;
+        }
+        finally
+        {
+            _pool.Return(buffer);
         }
     }
 
