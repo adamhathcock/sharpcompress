@@ -226,11 +226,12 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
             var requiredModelLength = checked((int)(numStates * 0x300));
             if (_models is null || _models.Length < requiredModelLength)
             {
+                var replacement = ArrayPool<BitEncoder>.Shared.Rent(requiredModelLength);
                 if (_models is not null)
                 {
                     ArrayPool<BitEncoder>.Shared.Return(_models);
                 }
-                _models = ArrayPool<BitEncoder>.Shared.Rent(requiredModelLength);
+                _models = replacement;
             }
             if (_coders is null || _coders.Length != numStates)
             {

@@ -43,6 +43,8 @@ public partial class SevenZipWriter
 
     private async ValueTask FinalizeArchiveAsync()
     {
+        // Reserve the signature even when no file data was written.
+        await EnsurePlaceholderWrittenAsync(CancellationToken.None).ConfigureAwait(false);
         var output = OutputStream.NotNull();
 
         // Current position = end of packed data streams

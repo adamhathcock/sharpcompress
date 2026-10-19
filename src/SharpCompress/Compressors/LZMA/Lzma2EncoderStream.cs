@@ -27,6 +27,7 @@ internal sealed class Lzma2EncoderStream : Stream
     private readonly int _dictionarySize;
     private readonly int _numFastBytes;
     private readonly byte[] _buffer;
+    private readonly ArrayPool<byte> _bufferPool;
     private readonly byte[] _properties;
     private readonly Encoder _encoder;
     private int _bufferPosition;
@@ -41,11 +42,19 @@ internal sealed class Lzma2EncoderStream : Stream
     /// <param name="dictionarySize">Dictionary size for LZMA compression.</param>
     /// <param name="numFastBytes">Number of fast bytes for LZMA compression.</param>
     public Lzma2EncoderStream(Stream output, int dictionarySize, int numFastBytes)
+        : this(output, dictionarySize, numFastBytes, ArrayPool<byte>.Shared) { }
+
+    internal Lzma2EncoderStream(
+        Stream output,
+        int dictionarySize,
+        int numFastBytes,
+        ArrayPool<byte> bufferPool
+    )
     {
         _output = output;
         _dictionarySize = dictionarySize;
         _numFastBytes = numFastBytes;
-        _buffer = ArrayPool<byte>.Shared.Rent(MAX_UNCOMPRESSED_CHUNK_SIZE);
+        _bufferPool = bufferPool;
         _bufferPosition = 0;
 
         var encoderProps = new LzmaEncoderProperties(eos: false, _dictionarySize, _numFastBytes);
@@ -56,6 +65,9 @@ internal sealed class Lzma2EncoderStream : Stream
         _encoder.WriteCoderProperties(lzmaProperties);
         _lzmaPropertiesByte = lzmaProperties[0];
         _properties = [EncodeDictionarySize(_dictionarySize)];
+
+        // Rent last so failed property validation or setup cannot strand a pooled buffer.
+        _buffer = bufferPool.Rent(MAX_UNCOMPRESSED_CHUNK_SIZE);
     }
 
     /// <summary>
@@ -65,7 +77,7 @@ internal sealed class Lzma2EncoderStream : Stream
 
     public override bool CanRead => false;
     public override bool CanSeek => false;
-    public override bool CanWrite => true;
+    public override bool CanWrite => !_isDisposed;
     public override long Length => throw new NotSupportedException();
 
     public override long Position
@@ -76,6 +88,7 @@ internal sealed class Lzma2EncoderStream : Stream
 
     public override void Write(byte[] buffer, int offset, int count)
     {
+        ThrowIfDisposed();
         while (count > 0)
         {
             var toCopy = Math.Min(count, MAX_UNCOMPRESSED_CHUNK_SIZE - _bufferPosition);
@@ -98,6 +111,7 @@ internal sealed class Lzma2EncoderStream : Stream
         CancellationToken cancellationToken
     )
     {
+        ThrowIfDisposed();
         while (count > 0)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -121,6 +135,7 @@ internal sealed class Lzma2EncoderStream : Stream
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfDisposed();
         var offset = 0;
         var count = buffer.Length;
         while (count > 0)
@@ -143,6 +158,14 @@ internal sealed class Lzma2EncoderStream : Stream
 
     public override void Flush() { }
 
+    private void ThrowIfDisposed()
+    {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(Lzma2EncoderStream));
+        }
+    }
+
     public override int Read(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
 
@@ -156,16 +179,21 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             _isDisposed = true;
 
-            // Flush remaining buffered data
-            if (_bufferPosition > 0)
+            try
             {
-                FlushChunk();
-            }
+                // Flush remaining buffered data
+                if (_bufferPosition > 0)
+                {
+                    FlushChunk();
+                }
 
-            // Write LZMA2 end marker
-            _output.WriteByte(0x00);
-            _encoder.Dispose();
-            ArrayPool<byte>.Shared.Return(_buffer);
+                // Write LZMA2 end marker
+                _output.WriteByte(0x00);
+            }
+            finally
+            {
+                ReleaseBuffers();
+            }
         }
         base.Dispose(disposing);
     }
@@ -182,24 +210,41 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             _isDisposed = true;
 
-            if (_bufferPosition > 0)
+            try
             {
-                await FlushChunkAsync().ConfigureAwait(false);
-            }
+                if (_bufferPosition > 0)
+                {
+                    await FlushChunkAsync().ConfigureAwait(false);
+                }
 #if !LEGACY_DOTNET || NETSTANDARD2_1
 
-            await _output.WriteAsync(new Memory<byte>(_endMarker)).ConfigureAwait(false);
+                await _output.WriteAsync(new Memory<byte>(_endMarker)).ConfigureAwait(false);
 #else
-            await _output.WriteAsync(_endMarker, 0, 1).ConfigureAwait(false);
+                await _output.WriteAsync(_endMarker, 0, 1).ConfigureAwait(false);
 #endif
-
-            _encoder.Dispose();
-            ArrayPool<byte>.Shared.Return(_buffer);
+            }
+            finally
+            {
+                ReleaseBuffers();
+            }
         }
 
 #if !LEGACY_DOTNET || NETSTANDARD2_1
         await base.DisposeAsync().ConfigureAwait(false);
 #endif
+    }
+
+    private void ReleaseBuffers()
+    {
+        // Returning the input buffer must not depend on successful output or encoder cleanup.
+        try
+        {
+            _encoder.Dispose();
+        }
+        finally
+        {
+            _bufferPool.Return(_buffer);
+        }
     }
 
     private void FlushChunk()
@@ -309,7 +354,7 @@ internal sealed class Lzma2EncoderStream : Stream
         props[3] = (byte)(_dictionarySize >> 16);
         props[4] = (byte)(_dictionarySize >> 24);
 
-        var decoder = new Decoder();
+        using var decoder = new Decoder();
         decoder.SetDecoderProperties(props);
 
         using var input = new MemoryStream(compressedData, 0, compressedSize, writable: false);

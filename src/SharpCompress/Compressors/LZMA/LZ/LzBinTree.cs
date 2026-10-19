@@ -8,6 +8,13 @@ namespace SharpCompress.Compressors.LZMA.LZ;
 
 internal sealed class BinTree : InWindow
 {
+    private readonly ArrayPool<uint> _pool;
+
+    public BinTree()
+        : this(ArrayPool<uint>.Shared) { }
+
+    internal BinTree(ArrayPool<uint> pool) => _pool = pool;
+
     private uint _cyclicBufferPos;
     private uint _cyclicBufferSize;
     private uint _matchMaxLen;
@@ -109,12 +116,13 @@ internal sealed class BinTree : InWindow
         var cyclicBufferSize = historySize + 1;
         if (_cyclicBufferSize != cyclicBufferSize)
         {
+            var replacement = _pool.Rent(checked((int)(cyclicBufferSize * 2)));
             if (_son.Length != 0)
             {
-                ArrayPool<uint>.Shared.Return(_son);
+                _pool.Return(_son);
             }
             _cyclicBufferSize = cyclicBufferSize;
-            _son = ArrayPool<uint>.Shared.Rent(checked((int)(_cyclicBufferSize * 2)));
+            _son = replacement;
         }
 
         var hs = K_BT2_HASH_SIZE;
@@ -138,12 +146,13 @@ internal sealed class BinTree : InWindow
         }
         if (hs != _hashSizeSum)
         {
+            var replacement = _pool.Rent(checked((int)hs));
             if (_hash.Length != 0)
             {
-                ArrayPool<uint>.Shared.Return(_hash);
+                _pool.Return(_hash);
             }
             _hashSizeSum = hs;
-            _hash = ArrayPool<uint>.Shared.Rent(checked((int)_hashSizeSum));
+            _hash = replacement;
         }
     }
 
@@ -152,12 +161,12 @@ internal sealed class BinTree : InWindow
         base.Dispose();
         if (_son.Length != 0)
         {
-            ArrayPool<uint>.Shared.Return(_son);
+            _pool.Return(_son);
             _son = [];
         }
         if (_hash.Length != 0)
         {
-            ArrayPool<uint>.Shared.Return(_hash);
+            _pool.Return(_hash);
             _hash = [];
         }
     }

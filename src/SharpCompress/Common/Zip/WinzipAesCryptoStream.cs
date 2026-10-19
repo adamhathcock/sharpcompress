@@ -1,9 +1,8 @@
 using System;
-using System.Buffers;
 using System.Buffers.Binary;
 using System.IO;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 
 namespace SharpCompress.Common.Zip;
 
@@ -14,6 +13,9 @@ internal partial class WinzipAesCryptoStream : Stream
     private readonly byte[] _counter = new byte[BLOCK_SIZE_IN_BYTES];
     private readonly Stream _stream;
     private readonly ICryptoTransform _transform;
+    private readonly HMACSHA1 _authentication;
+    private bool _authRead;
+    private ExceptionDispatchInfo? _authenticationFailure;
     private int _nonce = 1;
     private byte[] _counterOut = new byte[BLOCK_SIZE_IN_BYTES];
     private int _counterOutOffset = BLOCK_SIZE_IN_BYTES;
@@ -28,6 +30,14 @@ internal partial class WinzipAesCryptoStream : Stream
     {
         _stream = stream;
         _totalBytesLeftToRead = length;
+        if (length < 0)
+        {
+            throw new InvalidFormatException("Invalid WinZip AES payload size.");
+        }
+        // PBKDF2's second key is the authentication key, not the CTR initialization vector.
+#pragma warning disable CA5350 // WinZip AES mandates HMAC-SHA1-80 for interoperability.
+        _authentication = new HMACSHA1(winzipAesEncryptionData.IvBytes);
+#pragma warning restore CA5350
 
         _cipher = CreateCipher(winzipAesEncryptionData);
 
@@ -69,45 +79,85 @@ internal partial class WinzipAesCryptoStream : Stream
         _isDisposed = true;
         if (disposing)
         {
-            // Read out last 10 auth bytes - catch exceptions for async-only streams
-            if (Utility.UseSyncOverAsyncDispose())
+            try
             {
-                var ten = ArrayPool<byte>.Shared.Rent(10);
-                try
+                if (!_authRead && Utility.UseSyncOverAsyncDispose())
                 {
 #pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
 #pragma warning disable CA2012
-                    _stream.ReadFullyAsync(ten, 0, 10).GetAwaiter().GetResult();
+                    DrainAndVerifyAsync().GetAwaiter().GetResult();
 #pragma warning restore CA2012
 #pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
                 }
-                finally
+                else if (!_authRead)
                 {
-                    ArrayPool<byte>.Shared.Return(ten);
+                    var buffer = new byte[4096];
+                    while (_totalBytesLeftToRead > 0)
+                    {
+                        Read(buffer, 0, buffer.Length);
+                    }
+                    VerifyAuthentication();
                 }
             }
-            else
+            finally
             {
-                Span<byte> ten = stackalloc byte[10];
-                _stream.ReadFully(ten);
+                _authentication.Dispose();
+                _transform.Dispose();
+                _cipher.Dispose();
+                _stream.Dispose();
             }
-            _stream.Dispose();
         }
         base.Dispose(disposing);
     }
 
-    private async ValueTask ReadAuthBytesAsync()
+    private void VerifyAuthentication()
     {
-        byte[] authBytes = new byte[10];
-        await _stream.ReadFullyAsync(authBytes, 0, 10).ConfigureAwait(false);
+        _authenticationFailure?.Throw();
+        if (_authRead)
+        {
+            return;
+        }
+        _authRead = true;
+        var tag = new byte[10];
+        try
+        {
+            _stream.ReadExact(tag, 0, tag.Length);
+            ValidateAuthentication(tag);
+        }
+        catch (Exception exception)
+        {
+            _authenticationFailure = ExceptionDispatchInfo.Capture(exception);
+            throw;
+        }
+    }
+
+    private void ValidateAuthentication(byte[] tag)
+    {
+        _authentication.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        var expected = _authentication.Hash!;
+        var difference = 0;
+        for (var i = 0; i < tag.Length; i++)
+        {
+            difference |= tag[i] ^ expected[i];
+        }
+        if (difference != 0)
+        {
+            throw new InvalidFormatException("WinZip AES authentication failed.");
+        }
     }
 
     public override void Flush() { }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        _authenticationFailure?.Throw();
+        if (count == 0)
+        {
+            return 0;
+        }
         if (_totalBytesLeftToRead == 0)
         {
+            VerifyAuthentication();
             return 0;
         }
         var bytesToRead = count;
@@ -116,7 +166,17 @@ internal partial class WinzipAesCryptoStream : Stream
             bytesToRead = (int)_totalBytesLeftToRead;
         }
         var read = _stream.Read(buffer, offset, bytesToRead);
+        if (read == 0)
+        {
+            _authRead = true;
+            throw new IncompleteArchiveException("Unexpected end of WinZip AES ciphertext.");
+        }
+        _authentication.TransformBlock(buffer, offset, read, null, 0);
         _totalBytesLeftToRead -= read;
+        if (_totalBytesLeftToRead == 0)
+        {
+            VerifyAuthentication();
+        }
 
         ReadTransformBlocks(buffer, offset, read);
 

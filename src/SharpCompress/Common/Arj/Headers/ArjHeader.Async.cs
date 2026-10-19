@@ -21,7 +21,7 @@ public abstract partial class ArjHeader
     {
         // check for magic bytes
         var magic = new byte[2];
-        if (await stream.ReadAsync(magic, 0, 2, cancellationToken).ConfigureAwait(false) != 2)
+        if (!await stream.ReadFullyAsync(magic, cancellationToken).ConfigureAwait(false))
         {
             return Array.Empty<byte>();
         }
@@ -33,7 +33,7 @@ public abstract partial class ArjHeader
 
         // read header_size
         byte[] headerBytes = new byte[2];
-        await stream.ReadAsync(headerBytes, 0, 2, cancellationToken).ConfigureAwait(false);
+        await stream.ReadExactAsync(headerBytes, 0, 2, cancellationToken).ConfigureAwait(false);
         var headerSize = (ushort)(headerBytes[0] | headerBytes[1] << 8);
         if (headerSize < 1)
         {
@@ -41,16 +41,13 @@ public abstract partial class ArjHeader
         }
 
         var body = new byte[headerSize];
-        var read = await stream
-            .ReadAsync(body, 0, headerSize, cancellationToken)
-            .ConfigureAwait(false);
-        if (read < headerSize)
+        if (!await stream.ReadFullyAsync(body, cancellationToken).ConfigureAwait(false))
         {
             return Array.Empty<byte>();
         }
 
         byte[] crc = new byte[4];
-        await stream.ReadFullyAsync(crc, 0, 4, cancellationToken).ConfigureAwait(false);
+        await stream.ReadExactAsync(crc, 0, 4, cancellationToken).ConfigureAwait(false);
         var checksum = Crc32Stream.Compute(body);
         // Compute the hash value
         if (checksum != BitConverter.ToUInt32(crc, 0))
@@ -70,10 +67,7 @@ public abstract partial class ArjHeader
 
         while (true)
         {
-            int bytesRead = await reader
-                .ReadAsync(buffer, 0, 2, cancellationToken)
-                .ConfigureAwait(false);
-            if (bytesRead < 2)
+            if (!await reader.ReadFullyAsync(buffer, cancellationToken).ConfigureAwait(false))
             {
                 throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header size."
@@ -87,10 +81,7 @@ public abstract partial class ArjHeader
             }
 
             byte[] header = new byte[extHeaderSize];
-            bytesRead = await reader
-                .ReadAsync(header, 0, extHeaderSize, cancellationToken)
-                .ConfigureAwait(false);
-            if (bytesRead < extHeaderSize)
+            if (!await reader.ReadFullyAsync(header, cancellationToken).ConfigureAwait(false))
             {
                 throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header data."
@@ -98,10 +89,7 @@ public abstract partial class ArjHeader
             }
 
             byte[] crcextended = new byte[4];
-            bytesRead = await reader
-                .ReadAsync(crcextended, 0, 4, cancellationToken)
-                .ConfigureAwait(false);
-            if (bytesRead < 4)
+            if (!await reader.ReadFullyAsync(crcextended, cancellationToken).ConfigureAwait(false))
             {
                 throw new IncompleteArchiveException(
                     "Unexpected end of stream while reading extended header CRC."
@@ -130,7 +118,7 @@ public abstract partial class ArjHeader
     )
     {
         var bytes = new byte[2];
-        if (await stream.ReadAsync(bytes, 0, 2, cancellationToken).ConfigureAwait(false) != 2)
+        if (!await stream.ReadFullyAsync(bytes, cancellationToken).ConfigureAwait(false))
         {
             return false;
         }

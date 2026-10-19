@@ -15,6 +15,7 @@ public partial class SharpCompressStream
         CancellationToken cancellationToken
     )
     {
+        ThrowIfDisposed();
         if (count == 0)
         {
             return 0;
@@ -101,6 +102,7 @@ public partial class SharpCompressStream
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfDisposed();
         if (buffer.Length == 0)
         {
             return ValueTask.FromResult(0);
@@ -261,12 +263,18 @@ public partial class SharpCompressStream
                 );
             }
             isDisposed = true;
-            if (!LeaveStreamOpen)
+            try
             {
-                await stream.DisposeAsync().ConfigureAwait(false);
+                if (!LeaveStreamOpen)
+                {
+                    await stream.DisposeAsync().ConfigureAwait(false);
+                }
             }
-            _ringBuffer?.Dispose();
-            _ringBuffer = null;
+            finally
+            {
+                _ringBuffer?.Dispose();
+                _ringBuffer = null;
+            }
         }
         await base.DisposeAsync().ConfigureAwait(false);
     }

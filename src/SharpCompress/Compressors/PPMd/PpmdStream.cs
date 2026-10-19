@@ -28,7 +28,16 @@ public class PpmdStream : Stream, IAsyncDisposable
         _stream = stream;
         _compress = compress;
 
-        InitializeSync(stream, compress);
+        try
+        {
+            InitializeSync(stream, compress);
+        }
+        catch
+        {
+            // Construction has not transferred ownership to a caller yet.
+            _modelH?.Dispose();
+            throw;
+        }
     }
 
     private PpmdStream(
@@ -47,6 +56,13 @@ public class PpmdStream : Stream, IAsyncDisposable
 
     private void InitializeSync(Stream stream, bool compress)
     {
+        if (
+            compress
+            && (_properties.Version == PpmdVersion.H || _properties.Version == PpmdVersion.H7Z)
+        )
+        {
+            throw new NotImplementedException("PPMd H/H7Z compression not supported");
+        }
         if (_properties.Version == PpmdVersion.I1)
         {
             _model = new Model();
@@ -62,19 +78,11 @@ public class PpmdStream : Stream, IAsyncDisposable
         if (_properties.Version == PpmdVersion.H)
         {
             _modelH = new ModelPpm();
-            if (compress)
-            {
-                throw new NotImplementedException();
-            }
             _modelH.DecodeInit(stream, _properties.ModelOrder, _properties.AllocatorSize);
         }
         if (_properties.Version == PpmdVersion.H7Z)
         {
             _modelH = new ModelPpm();
-            if (compress)
-            {
-                throw new NotImplementedException();
-            }
             _modelH.DecodeInit(null, _properties.ModelOrder, _properties.AllocatorSize);
             _decoder = new Decoder();
             _decoder.Init(stream);

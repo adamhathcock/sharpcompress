@@ -253,11 +253,7 @@ public sealed partial class LZipStream : Stream, IFinishable
     {
         // Read the header
         Span<byte> header = stackalloc byte[6];
-        var n = stream.Read(header);
-
-        // TODO: Handle reading only part of the header?
-
-        if (n != 6)
+        if (!stream.ReadFully(header))
         {
             return 0;
         }
@@ -272,9 +268,18 @@ public sealed partial class LZipStream : Stream, IFinishable
         {
             return 0;
         }
-        var basePower = header[5] & 0x1F;
-        var subtractionNumerator = (header[5] & 0xE0) >> 5;
-        return (1 << basePower) - (subtractionNumerator * (1 << (basePower - 4)));
+        return DecodeDictionarySize(header[5]);
+    }
+
+    private static int DecodeDictionarySize(byte encoded)
+    {
+        var basePower = encoded & 0x1F;
+        if (basePower < 12 || basePower > 29)
+        {
+            return 0;
+        }
+        var size = (1 << basePower) - ((encoded >> 5) * (1 << (basePower - 4)));
+        return size >= 4096 ? size : 0;
     }
 
     // Async methods moved to LZipStream.Async.cs

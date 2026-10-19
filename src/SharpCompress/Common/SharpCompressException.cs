@@ -28,7 +28,14 @@ public class ArchiveOperationException : SharpCompressException
 
 public class IncompleteArchiveException(string message) : ArchiveException(message);
 
-public class CryptographicException(string message) : SharpCompressException(message);
+public class CryptographicException : SharpCompressException
+{
+    public CryptographicException(string message)
+        : base(message) { }
+
+    public CryptographicException(string message, Exception inner)
+        : base(message, inner) { }
+}
 
 public class ReaderCancelledException(string message) : SharpCompressException(message);
 

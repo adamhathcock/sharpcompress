@@ -9,6 +9,31 @@ namespace SharpCompress.Test.Streams;
 public class PooledMemoryStreamTests
 {
     [Fact]
+    public void FailedConstructorReturnsPreviouslyRentedBlocks()
+    {
+        var pool = new FailingArrayPool();
+        Assert.Throws<IOException>(() => new PooledMemoryStream(16, 8, pool));
+        Assert.Equal(1, pool.ReturnCount);
+    }
+
+    private sealed class FailingArrayPool : ArrayPool<byte>
+    {
+        private int rentCount;
+        public int ReturnCount { get; private set; }
+
+        public override byte[] Rent(int minimumLength)
+        {
+            if (++rentCount == 2)
+            {
+                throw new IOException("Injected rental failure");
+            }
+            return new byte[minimumLength];
+        }
+
+        public override void Return(byte[] array, bool clearArray = false) => ReturnCount++;
+    }
+
+    [Fact]
     public void GrowsUsingFixedSizeBlocks()
     {
         var pool = new TrackingArrayPool();

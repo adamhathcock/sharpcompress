@@ -11,6 +11,13 @@ namespace SharpCompress.Compressors.LZMA.LZ;
 
 internal partial class OutWindow : IDisposable
 {
+    private readonly ArrayPool<byte> _pool;
+
+    public OutWindow()
+        : this(ArrayPool<byte>.Shared) { }
+
+    internal OutWindow(ArrayPool<byte> pool) => _pool = pool;
+
     private byte[] _buffer;
     private int _windowSize;
     private int _pos;
@@ -34,10 +41,11 @@ internal partial class OutWindow : IDisposable
         }
         if (_windowSize != windowSize || _buffer is null)
         {
-            var replacement = ArrayPool<byte>.Shared.Rent(Math.Min(windowSize, 4096));
+            // Allocate first so failed growth leaves the existing buffer owned by this window.
+            var replacement = _pool.Rent(Math.Min(windowSize, 4096));
             if (_buffer is not null)
             {
-                ArrayPool<byte>.Shared.Return(_buffer);
+                _pool.Return(_buffer);
             }
             _buffer = replacement;
         }
@@ -57,21 +65,28 @@ internal partial class OutWindow : IDisposable
         }
         // Grow from emitted history, never from the advertised dictionary or output size.
         var capacity = (int)Math.Min(_windowSize, Math.Max(required, (long)_buffer.Length * 2));
-        var replacement = ArrayPool<byte>.Shared.Rent(capacity);
+        var replacement = _pool.Rent(capacity);
         _buffer.AsSpan(0, _pos).CopyTo(replacement);
-        ArrayPool<byte>.Shared.Return(_buffer);
+        _pool.Return(_buffer);
         _buffer = replacement;
     }
 
     public void Dispose()
     {
-        ReleaseStream();
-        if (_buffer is null)
+        try
         {
-            return;
+            ReleaseStream();
         }
-        ArrayPool<byte>.Shared.Return(_buffer);
-        _buffer = null;
+        finally
+        {
+            var buffer = _buffer;
+            _buffer = null;
+            _stream = null;
+            if (buffer is not null)
+            {
+                _pool.Return(buffer);
+            }
+        }
     }
 
     public void Reset()
