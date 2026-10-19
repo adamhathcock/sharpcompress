@@ -37,7 +37,7 @@ public class ShrinkAllocationTests
     [Fact]
     public void Shrink_Grows_Only_For_Actual_Output()
     {
-        var pool = ArrayPool<byte>.Shared;
+        var pool = ArrayPool<byte>.Create();
         var status = HwUnshrink.UnshrinkGrowing(
             new byte[] { 65, 132, 0 },
             3,
