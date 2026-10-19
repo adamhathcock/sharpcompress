@@ -182,16 +182,15 @@ public class TarFactory
             if (await wrapper.IsMatchAsync(stream, cancellationToken).ConfigureAwait(false))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-#if STREAM_DISPOSEASYNC
-                await using var decompressedStream = await CreateProbeDecompressionStreamAsync(
-#else
-                using var decompressedStream = await CreateProbeDecompressionStreamAsync(
-#endif
+                var decompressedStream = await CreateProbeDecompressionStreamAsync(
                         stream,
                         wrapper.CompressionType,
                         readerOptions,
                         cancellationToken: cancellationToken
                     )
+                    .ConfigureAwait(false);
+                await using var disposal = decompressedStream
+                    .DisposeAsyncScope()
                     .ConfigureAwait(false);
                 if (
                     await TarArchive
@@ -321,15 +320,21 @@ public class TarFactory
     #region IReaderFactory
 
     /// <summary>
-    /// Checks whether <paramref name="stream"/> is backed by a genuinely seekable stream.
-    /// Note: <see cref="SharpCompressStream.CanSeek"/> always reports <see langword="true"/> for
-    /// non-passthrough instances (it simulates seeking via its ring buffer even over a
-    /// non-seekable underlying stream), so it must be unwrapped to check the real stream.
+    /// Checks whether <paramref name="stream"/> can use native seeking without bypassing buffered data.
+    /// Note: recording wrappers simulate seeking via a ring buffer, even over a non-seekable
+    /// underlying stream. These wrappers must remain in the read chain, regardless of whether
+    /// their backing stream supports native seeking.
     /// </summary>
     private static bool IsGenuinelySeekable(Stream stream)
     {
         while (stream is SharpCompressStream scs)
         {
+            if (!scs.IsPassthrough && scs is not SeekableSharpCompressStream)
+            {
+                // A recording wrapper may have unread bytes even over a seekable source.
+                // Give the probe its own buffer rather than seeking past those bytes.
+                return false;
+            }
             stream = scs.BaseStream();
         }
         return stream.CanSeek;
@@ -351,12 +356,6 @@ public class TarFactory
         if (!IsGenuinelySeekable(stream))
         {
             return new SharpCompressStream(SharpCompressStream.CreateNonDisposing(stream));
-        }
-
-        // Unwrap buffered SharpCompressStream wrappers so we use the real stream's native Seek.
-        while (stream is SharpCompressStream scs && !scs.IsPassthrough)
-        {
-            stream = scs.BaseStream();
         }
 
         return new SeekableSharpCompressStream(SharpCompressStream.CreateNonDisposing(stream));
@@ -397,11 +396,7 @@ public class TarFactory
         }
         catch
         {
-#if STREAM_DISPOSEASYNC
             await buffered.DisposeAsync().ConfigureAwait(false);
-#else
-            buffered.Dispose();
-#endif
             throw;
         }
     }
@@ -420,12 +415,18 @@ public class TarFactory
                 if (wrapper.IsMatch(sharpCompressStream))
                 {
                     sharpCompressStream.Rewind();
-                    using var decompressedStream = CreateProbeDecompressionStream(
-                        sharpCompressStream,
-                        wrapper.CompressionType,
-                        options
-                    );
-                    if (TarArchive.IsTarFile(decompressedStream))
+                    bool isTar;
+                    using (
+                        var decompressedStream = CreateProbeDecompressionStream(
+                            sharpCompressStream,
+                            wrapper.CompressionType,
+                            options
+                        )
+                    )
+                    {
+                        isTar = TarArchive.IsTarFile(decompressedStream);
+                    }
+                    if (isTar)
                     {
                         sharpCompressStream.StopRecording();
                         var reader = new TarReader(
@@ -484,22 +485,23 @@ public class TarFactory
                             )
                             .ConfigureAwait(false);
                     }
-#if STREAM_DISPOSEASYNC
-                    await using var decompressedStream = await CreateProbeDecompressionStreamAsync(
-#else
-                    using var decompressedStream = await CreateProbeDecompressionStreamAsync(
-#endif
-                            sharpCompressStream,
-                            wrapper.CompressionType,
-                            options,
-                            cancellationToken
-                        )
-                        .ConfigureAwait(false);
-                    if (
-                        await TarArchive
+                    bool isTar;
+                    {
+                        var decompressedStream = await CreateProbeDecompressionStreamAsync(
+                                sharpCompressStream,
+                                wrapper.CompressionType,
+                                options,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false);
+                        await using var disposal = decompressedStream
+                            .DisposeAsyncScope()
+                            .ConfigureAwait(false);
+                        isTar = await TarArchive
                             .IsTarFileAsync(decompressedStream, cancellationToken)
-                            .ConfigureAwait(false)
-                    )
+                            .ConfigureAwait(false);
+                    }
+                    if (isTar)
                     {
                         sharpCompressStream.StopRecording();
                         var reader = new TarReader(
@@ -522,11 +524,7 @@ public class TarFactory
         {
             if (!transferred)
             {
-#if STREAM_DISPOSEASYNC
                 await sharpCompressStream.DisposeAsync().ConfigureAwait(false);
-#else
-                sharpCompressStream.Dispose();
-#endif
             }
         }
     }

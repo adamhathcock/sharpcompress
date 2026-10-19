@@ -147,11 +147,7 @@ public partial class TarReader
                 }
                 bool isTar;
                 {
-#if STREAM_DISPOSEASYNC
-                    await using var testStream = await CreateProbeDecompressionStreamAsync(
-#else
-                    using var testStream = await CreateProbeDecompressionStreamAsync(
-#endif
+                    var testStream = await CreateProbeDecompressionStreamAsync(
                             sharpCompressStream,
                             wrapper.CompressionType,
                             readerOptions.Providers,
@@ -159,6 +155,7 @@ public partial class TarReader
                             cancellationToken
                         )
                         .ConfigureAwait(false);
+                    await using var disposal = testStream.DisposeAsyncScope().ConfigureAwait(false);
                     isTar = await TarArchive
                         .IsTarFileAsync(testStream, cancellationToken)
                         .ConfigureAwait(false);
@@ -195,11 +192,7 @@ public partial class TarReader
             // The reader owns the probe wrappers only after a successful open.
             if (!transferred)
             {
-#if STREAM_DISPOSEASYNC
                 await sharpCompressStream.DisposeAsync().ConfigureAwait(false);
-#else
-                sharpCompressStream.Dispose();
-#endif
             }
         }
     }

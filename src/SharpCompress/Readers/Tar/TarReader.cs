@@ -68,14 +68,10 @@ public partial class TarReader : AbstractReader<TarEntry, TarVolume>
         }
         finally
         {
-#if STREAM_DISPOSEASYNC
             if (ownedSource is not null)
             {
-                await ownedSource.DisposeAsync().ConfigureAwait(false);
+                await ownedSource.DisposeAsyncCompat().ConfigureAwait(false);
             }
-#else
-            ownedSource?.Dispose();
-#endif
         }
     }
 
