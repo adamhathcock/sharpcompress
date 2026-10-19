@@ -196,3 +196,121 @@ API remains future benchmarking work; the large-file primary before/after
 profile is explicitly limited to the solid LZMA2 memory-backed case. Optional
 parallel decoding needs a separate evaluation. Generated archives and raw traces
 are kept outside the repository.
+
+## Follow-up: read-chain, copy-buffer and model allocations
+
+This comparison starts at `14d77b67`, **after** the lifetime fixes above. It
+evaluates the five remaining candidates, with separate saved libraries for the
+baseline, pooled-copy/memory-read/decoder-reuse changes, lazy model initialization,
+and an experimental dictionary growth policy. The growth experiment was rejected;
+the retained implementation corresponds to the lazy-model stage.
+
+### Retained changes
+
+1. Writer CRC copies rent a 64 KiB buffer and return it in `finally`, including
+   cancellation/failure. Reads use the logical size rather than rented capacity.
+   This avoids rounding the old 80 KiB allocation up to a 128 KiB pool bucket.
+2. On modern targets, `OutWindow.CopyStreamAsync` and buffered-input refills call
+   the existing `Memory<byte>` / `ValueTask<int>` overloads. Legacy targets keep
+   their byte-array path; generated synchronous refills retain their original
+   byte-array calls. Public signatures and buffering limits are unchanged.
+3. LZMA2 property/state reset controls reuse the stream's decoder instead of
+   constructing a new probability-model object graph. Properties still reset
+   probabilities, match state and distances on every required reset.
+4. Literal/length scalar models and fast probability models initialize only
+   when that backend is first used after a reset. This is lazy initialization,
+   not a global mutable decoder pool. Shared match state is not reset merely
+   because a direct decoder caller activates a backend.
+
+### Measurements
+
+Each library/harness is built before measurement. The large-file comparison uses
+the same solid LZMA2 200 MiB payload, two warmups and three measured extractions;
+microbenchmarks use two warmups and five measured iterations. Tables are medians
+of exact managed allocation deltas. Input buffers and encoded reset fixtures are
+prepared outside measurement; no builds/tests compete with measurements.
+
+| Large extraction | Baseline allocated | Retained changes allocated | Baseline elapsed | Retained changes elapsed |
+| --- | ---: | ---: | ---: | ---: |
+| Archive sync | 108,920 B | 57,640 B | 2.670 s | 2.747 s |
+| Archive async | 729,952 B | 76,024 B | 13.845 s | 13.832 s |
+
+This is approximately **47% lower sync** and **90% lower async** allocation.
+The memory-read/reuse stage alone measured 108,568 B async; lazy models reduced
+that further to 76,024 B. Elapsed time does not establish a large-file speedup.
+
+The copy microbenchmark invokes the actual private CRC-copy methods through
+delegates, using 1,000 independent 4 KiB sources and `Stream.Null` output:
+
+| Copy workload | Baseline allocated | Retained changes allocated |
+| --- | ---: | ---: |
+| 1,000 sync copies | 82,008,040 B | 64,040 B |
+| 1,000 async copies | 82,080,040 B | 64,040 B |
+
+The remaining allocation includes the 1,000 caller-created MemoryStream objects;
+the warm copy buffers no longer allocate per call. This isolated copy benchmark
+does not include encoder/model or archive-metadata costs.
+
+For an end-to-end writer check, one iteration writes 16 independent 4 KiB random
+files to a seekable MemoryStream, including finalization:
+
+| Writer workload | Baseline allocated | Updated allocated | Baseline elapsed | Updated elapsed |
+| --- | ---: | ---: | ---: | ---: |
+| LZMA sync | 7,782,240 B | 6,389,192 B | 21.0 ms | 18.3 ms |
+| LZMA async | 5,733,136 B | 4,338,864 B | 35.5 ms | 35.8 ms |
+| LZMA2 sync | 6,386,152 B | 4,582,864 B | 23.0 ms | 23.3 ms |
+| LZMA2 async | 6,463,480 B | 4,658,968 B | 23.7 ms | 24.7 ms |
+
+Those writer runs use the experimental-growth build, but the changed decoder
+growth policy is not exercised by writing. Pool-state variability affects total
+encoder allocations, so do not attribute every byte saved to the copy buffer.
+There is no general writer throughput claim.
+
+A reset-heavy microbenchmark concatenates 64 independently compressed 4 KiB
+LZMA2 chunks (256 KiB output), verifies the decoded bytes and drains the stream:
+
+| Reset workload | Baseline | Decoder reuse + read changes | With lazy models |
+| --- | ---: | ---: | ---: |
+| Sync allocated | 3,151,832 B | 49,712 B | 24,072 B |
+| Async allocated | 3,151,864 B | 49,744 B | 33,472 B |
+
+### Growth policies rejected
+
+An initial read-limit-based lookahead failed the existing truncated-input
+allocation test: it allocated a 128 KiB bucket where the guard permits at most
+8 KiB. That approach was removed without weakening the test.
+
+A second candidate retained 2x growth below 64 KiB capacity, then used 4x growth.
+A counting, non-retaining pool isolated cold allocation/copy costs. At an 8 MiB
+history, rents fell from 12 to 9 and requested bytes from 16,773,120 to 14,020,608.
+However, a 70 KiB history increased requested bytes from 258,048 to 389,120 and
+retained a 256 KiB instead of 128 KiB buffer. That **128 KiB small-file regression**
+outweighed a cold-only large-history win. Production retains its existing 2x,
+history-driven growth; a regression test protects the small-history case.
+
+### Follow-up artifacts and coverage
+
+The original artifact directory's `round2/` subdirectory contains each library
+and harness snapshot, microbenchmark source, raw logs and follow-up traces.
+`run.py` runs the staged extraction/copy/reset/cold-growth comparisons; `post.py`
+checks the adverse small-history case and full writers. `trace.py` records
+baseline/final copy allocations and final extraction stacks separately.
+
+New regression tests cover LZMA2 dictionary/property/state reset controls
+(`0xE0`, `0xC0`, `0xA0`), changing lc/lp/pb, reuse of the same decoder instance,
+unused model banks, memory-only async sources, small-history buffer ownership,
+and LZMA/LZMA2 writer round-trips across 64 KiB boundaries with verified CRCs.
+
+Follow-up EventPipe traces report zero lost events. The copy trace's measured
+allocation samples change from about 410 MB of temporary byte arrays across
+five batches to MemoryStream objects from the harness, with no corresponding
+recurring copy-buffer samples. The final extraction trace no longer samples
+the previously dominant `Task<int>` allocation sites. Its remaining allocation
+samples are sparse at this smaller total, so exact byte deltas and memory-only
+source tests are stronger evidence than a per-type percentage breakdown.
+
+Validation for this follow-up: **466 targeted tests** and **2,997 complete .NET
+10 Release tests** pass. All six library targets and net48 test compilation
+succeed; net48 tests were not run on macOS. Formatting and whitespace checks
+pass. No public signatures or CRC-validation semantics changed. This phase did
+not introduce a global pool or increase the production dictionary-growth factor.

@@ -233,6 +233,12 @@ public partial class Decoder
         RangeCoder.Decoder rangeDecoder
     )
     {
+        if (!fastModelsReady)
+        {
+            CreateFastModel(literalPosBits, literalContextBits);
+            InitFastModel();
+            fastModelsReady = true;
+        }
         do
         {
             outWindow.CopyPending();

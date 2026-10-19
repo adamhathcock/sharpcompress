@@ -202,6 +202,12 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
     private int _dictionarySize;
 
     private uint _posStateMask;
+    private int literalPosBits;
+    private int literalContextBits;
+    private bool scalarModelsReady;
+#if !LEGACY_DOTNET
+    private bool fastModelsReady;
+#endif
 
     private Base.State _state = new();
     private uint _rep0,
@@ -242,7 +248,8 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         {
             throw new InvalidParamException();
         }
-        _literalDecoder.Create(lp, lc);
+        literalPosBits = lp;
+        literalContextBits = lc;
     }
 
     private void SetPosBitsProperties(int pb)
@@ -252,8 +259,6 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
             throw new InvalidParamException();
         }
         var numPosStates = (uint)1 << pb;
-        _lenDecoder.Create(numPosStates);
-        _repLenDecoder.Create(numPosStates);
         _posStateMask = numPosStates - 1;
     }
 
@@ -289,12 +294,19 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         _lenDecoder.Init();
         _repLenDecoder.Init();
         _posAlignDecoder.Init();
+    }
 
-        _state.Init();
-        _rep0 = 0;
-        _rep1 = 0;
-        _rep2 = 0;
-        _rep3 = 0;
+    private void EnsureScalarModels()
+    {
+        if (scalarModelsReady)
+        {
+            return;
+        }
+        _literalDecoder.Create(literalPosBits, literalContextBits);
+        _lenDecoder.Create(_posStateMask + 1);
+        _repLenDecoder.Create(_posStateMask + 1);
+        Init();
+        scalarModelsReady = true;
     }
 
     public void Code(
@@ -339,6 +351,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
 #else
     internal bool Code(int dictionarySize, OutWindow outWindow, RangeCoder.Decoder rangeDecoder)
     {
+        EnsureScalarModels();
         var dictionarySizeCheck = Math.Max(dictionarySize, 1);
 
         outWindow.CopyPending();
@@ -483,10 +496,14 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         }
         SetLiteralProperties(lp, lc);
         SetPosBitsProperties(pb);
-        Init();
+        // Both backends share match state, but have independent probability banks.
+        // Initialize a bank only on first use after properties/reset, without
+        // resetting shared state if a direct Decoder caller changes backends.
+        scalarModelsReady = false;
+        _state.Init();
+        _rep0 = _rep1 = _rep2 = _rep3 = 0;
 #if !LEGACY_DOTNET
-        CreateFastModel(lp, lc);
-        InitFastModel();
+        fastModelsReady = false;
 #endif
         if (properties.Length >= 5)
         {

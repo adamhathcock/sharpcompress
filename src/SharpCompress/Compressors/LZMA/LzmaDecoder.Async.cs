@@ -176,6 +176,7 @@ public partial class Decoder : IAsyncDisposable
         CancellationToken cancellationToken = default
     )
     {
+        EnsureScalarModels();
         var dictionarySizeCheck = Math.Max(dictionarySize, 1);
 
         await outWindow.CopyPendingAsync(cancellationToken).ConfigureAwait(false);
