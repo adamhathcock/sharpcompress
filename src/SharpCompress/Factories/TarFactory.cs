@@ -7,6 +7,7 @@ using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.IO;
 using SharpCompress.Providers;
 using SharpCompress.Readers;
@@ -65,6 +66,15 @@ public class TarFactory
 
     #endregion
 
+    internal static Stream PrepareProbeStream(Stream stream)
+    {
+        if (stream is GZipStream gzip)
+        {
+            gzip.BaseStream.IsFormatProbe = true;
+        }
+        return stream;
+    }
+
     private static Stream CreateProbeDecompressionStream(
         Stream stream,
         CompressionType compressionType,
@@ -80,14 +90,20 @@ public class TarFactory
 
         if (compressionType == CompressionType.GZip && readerOptions is not null)
         {
-            return providers.CreateDecompressStream(
-                compressionType,
-                nonDisposingStream,
-                CompressionContext.FromStream(nonDisposingStream).WithReaderOptions(readerOptions)
+            return PrepareProbeStream(
+                providers.CreateDecompressStream(
+                    compressionType,
+                    nonDisposingStream,
+                    CompressionContext
+                        .FromStream(nonDisposingStream)
+                        .WithReaderOptions(readerOptions)
+                )
             );
         }
 
-        return providers.CreateDecompressStream(compressionType, nonDisposingStream);
+        return PrepareProbeStream(
+            providers.CreateDecompressStream(compressionType, nonDisposingStream)
+        );
     }
 
     private static async ValueTask<Stream> CreateProbeDecompressionStreamAsync(
@@ -106,21 +122,25 @@ public class TarFactory
 
         if (compressionType == CompressionType.GZip && readerOptions is not null)
         {
-            return await providers
-                .CreateDecompressStreamAsync(
-                    compressionType,
-                    nonDisposingStream,
-                    CompressionContext
-                        .FromStream(nonDisposingStream)
-                        .WithReaderOptions(readerOptions),
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            return PrepareProbeStream(
+                await providers
+                    .CreateDecompressStreamAsync(
+                        compressionType,
+                        nonDisposingStream,
+                        CompressionContext
+                            .FromStream(nonDisposingStream)
+                            .WithReaderOptions(readerOptions),
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false)
+            );
         }
 
-        return await providers
-            .CreateDecompressStreamAsync(compressionType, nonDisposingStream, cancellationToken)
-            .ConfigureAwait(false);
+        return PrepareProbeStream(
+            await providers
+                .CreateDecompressStreamAsync(compressionType, nonDisposingStream, cancellationToken)
+                .ConfigureAwait(false)
+        );
     }
 
     public static CompressionType GetCompressionType(
@@ -135,7 +155,7 @@ public class TarFactory
             if (wrapper.IsMatch(stream))
             {
                 stream.Seek(0, SeekOrigin.Begin);
-                var decompressedStream = CreateProbeDecompressionStream(
+                using var decompressedStream = CreateProbeDecompressionStream(
                     stream,
                     wrapper.CompressionType,
                     readerOptions
@@ -168,6 +188,9 @@ public class TarFactory
                         readerOptions,
                         cancellationToken: cancellationToken
                     )
+                    .ConfigureAwait(false);
+                await using var disposal = decompressedStream
+                    .DisposeAsyncScope()
                     .ConfigureAwait(false);
                 if (
                     await TarArchive
@@ -297,15 +320,21 @@ public class TarFactory
     #region IReaderFactory
 
     /// <summary>
-    /// Checks whether <paramref name="stream"/> is backed by a genuinely seekable stream.
-    /// Note: <see cref="SharpCompressStream.CanSeek"/> always reports <see langword="true"/> for
-    /// non-passthrough instances (it simulates seeking via its ring buffer even over a
-    /// non-seekable underlying stream), so it must be unwrapped to check the real stream.
+    /// Checks whether <paramref name="stream"/> can use native seeking without bypassing buffered data.
+    /// Note: recording wrappers simulate seeking via a ring buffer, even over a non-seekable
+    /// underlying stream. These wrappers must remain in the read chain, regardless of whether
+    /// their backing stream supports native seeking.
     /// </summary>
     private static bool IsGenuinelySeekable(Stream stream)
     {
         while (stream is SharpCompressStream scs)
         {
+            if (!scs.IsPassthrough && scs is not SeekableSharpCompressStream)
+            {
+                // A recording wrapper may have unread bytes even over a seekable source.
+                // Give the probe its own buffer rather than seeking past those bytes.
+                return false;
+            }
             stream = scs.BaseStream();
         }
         return stream.CanSeek;
@@ -326,44 +355,103 @@ public class TarFactory
     {
         if (!IsGenuinelySeekable(stream))
         {
-            return new SharpCompressStream(stream);
+            return new SharpCompressStream(SharpCompressStream.CreateNonDisposing(stream));
         }
 
-        // Unwrap buffered SharpCompressStream wrappers so we use the real stream's native Seek.
-        while (stream is SharpCompressStream scs && !scs.IsPassthrough)
+        return new SeekableSharpCompressStream(SharpCompressStream.CreateNonDisposing(stream));
+    }
+
+    private static SharpCompressStream CreateReaderProbeStream(Stream stream, ReaderOptions options)
+    {
+        var bufferSize = Math.Max(
+            options.RewindableBufferSize ?? 0,
+            TarWrapper.MaximumRewindBufferSize
+        );
+        var probe = CreateNestedRecordingStream(stream);
+        probe.StartRecording(bufferSize);
+        return probe;
+    }
+
+    internal static async ValueTask<SharpCompressStream> BufferLZipHeaderAsync(
+        SharpCompressStream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        if (stream is not SeekableSharpCompressStream)
         {
-            stream = scs.BaseStream();
+            return stream;
         }
-
-        return new SeekableSharpCompressStream(stream, leaveStreamOpen: false);
+        // LZip initializes both its six-byte header and five-byte range coder
+        // synchronously. Cache those bytes with async I/O before creating it.
+        var buffered = new SharpCompressStream(stream);
+        buffered.StartRecording();
+        try
+        {
+            var header = new byte[11];
+            await buffered
+                .ReadFullyAsync(header, 0, header.Length, cancellationToken)
+                .ConfigureAwait(false);
+            buffered.Rewind();
+            return buffered;
+        }
+        catch
+        {
+            await buffered.DisposeAsync().ConfigureAwait(false);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
     public IReader OpenReader(Stream stream, ReaderOptions? options)
     {
         options ??= ReaderOptions.ForExternalStream;
-        var sharpCompressStream = CreateNestedRecordingStream(stream);
-        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
-        foreach (var wrapper in TarWrapper.Wrappers)
+        var sharpCompressStream = CreateReaderProbeStream(stream, options);
+        var transferred = false;
+        try
         {
-            sharpCompressStream.Rewind();
-            if (wrapper.IsMatch(sharpCompressStream))
+            foreach (var wrapper in TarWrapper.Wrappers)
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = CreateProbeDecompressionStream(
-                    sharpCompressStream,
-                    wrapper.CompressionType,
-                    options
-                );
-                if (TarArchive.IsTarFile(decompressedStream))
+                if (wrapper.IsMatch(sharpCompressStream))
                 {
                     sharpCompressStream.Rewind();
-                    sharpCompressStream.StopRecording();
-                    return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
+                    bool isTar;
+                    using (
+                        var decompressedStream = CreateProbeDecompressionStream(
+                            sharpCompressStream,
+                            wrapper.CompressionType,
+                            options
+                        )
+                    )
+                    {
+                        isTar = TarArchive.IsTarFile(decompressedStream);
+                    }
+                    if (isTar)
+                    {
+                        sharpCompressStream.StopRecording();
+                        var reader = new TarReader(
+                            sharpCompressStream,
+                            options with
+                            {
+                                LeaveStreamOpen = false,
+                            },
+                            wrapper.CompressionType,
+                            options.LeaveStreamOpen ? null : stream
+                        );
+                        transferred = true;
+                        return reader;
+                    }
                 }
             }
+            throw new InvalidFormatException("Not a tar file.");
         }
-        throw new InvalidFormatException("Not a tar file.");
+        finally
+        {
+            if (!transferred)
+            {
+                sharpCompressStream.Dispose();
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -375,39 +463,70 @@ public class TarFactory
     {
         cancellationToken.ThrowIfCancellationRequested();
         options ??= ReaderOptions.ForExternalStream;
-        var sharpCompressStream = new SharpCompressStream(stream);
-        sharpCompressStream.StartRecording(TarWrapper.MaximumRewindBufferSize);
-        foreach (var wrapper in TarWrapper.Wrappers)
+        var sharpCompressStream = CreateReaderProbeStream(stream, options);
+        var transferred = false;
+        try
         {
-            sharpCompressStream.Rewind();
-            if (
-                await wrapper
-                    .IsMatchAsync(sharpCompressStream, cancellationToken)
-                    .ConfigureAwait(false)
-            )
+            foreach (var wrapper in TarWrapper.Wrappers)
             {
                 sharpCompressStream.Rewind();
-                var decompressedStream = await CreateProbeDecompressionStreamAsync(
-                        sharpCompressStream,
-                        wrapper.CompressionType,
-                        options,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
                 if (
-                    await TarArchive
-                        .IsTarFileAsync(decompressedStream, cancellationToken)
+                    await wrapper
+                        .IsMatchAsync(sharpCompressStream, cancellationToken)
                         .ConfigureAwait(false)
                 )
                 {
                     sharpCompressStream.Rewind();
-                    sharpCompressStream.StopRecording();
-                    return new TarReader(sharpCompressStream, options, wrapper.CompressionType);
+                    if (wrapper.CompressionType == CompressionType.LZip)
+                    {
+                        sharpCompressStream = await BufferLZipHeaderAsync(
+                                sharpCompressStream,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false);
+                    }
+                    bool isTar;
+                    {
+                        var decompressedStream = await CreateProbeDecompressionStreamAsync(
+                                sharpCompressStream,
+                                wrapper.CompressionType,
+                                options,
+                                cancellationToken
+                            )
+                            .ConfigureAwait(false);
+                        await using var disposal = decompressedStream
+                            .DisposeAsyncScope()
+                            .ConfigureAwait(false);
+                        isTar = await TarArchive
+                            .IsTarFileAsync(decompressedStream, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    if (isTar)
+                    {
+                        sharpCompressStream.StopRecording();
+                        var reader = new TarReader(
+                            sharpCompressStream,
+                            options with
+                            {
+                                LeaveStreamOpen = false,
+                            },
+                            wrapper.CompressionType,
+                            options.LeaveStreamOpen ? null : stream
+                        );
+                        transferred = true;
+                        return reader;
+                    }
                 }
             }
+            throw new InvalidFormatException("Not a tar file.");
         }
-
-        throw new InvalidFormatException("Not a tar file.");
+        finally
+        {
+            if (!transferred)
+            {
+                await sharpCompressStream.DisposeAsync().ConfigureAwait(false);
+            }
+        }
     }
 
     #endregion

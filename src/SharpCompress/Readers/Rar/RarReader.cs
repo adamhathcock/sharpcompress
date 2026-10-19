@@ -27,17 +27,21 @@ public abstract partial class RarReader : AbstractReader<RarReaderEntry, RarVolu
     {
         if (!_disposed)
         {
-            if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
-            {
-                unpackV1.Dispose();
-            }
-            if (UnpackV2017.IsValueCreated && UnpackV2017.Value is IDisposable unpackV2017)
-            {
-                unpackV2017.Dispose();
-            }
-
+            DisposeUnpackers();
             _disposed = true;
             base.Dispose();
+        }
+    }
+
+    private void DisposeUnpackers()
+    {
+        if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
+        {
+            unpackV1.Dispose();
+        }
+        if (UnpackV2017.IsValueCreated && UnpackV2017.Value is IDisposable unpackV2017)
+        {
+            unpackV2017.Dispose();
         }
     }
 

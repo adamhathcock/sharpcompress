@@ -32,6 +32,13 @@ public static partial class ReaderFactory
         stream.RequireReadable();
         options ??= ReaderOptions.ForExternalStream;
 
+        if (options.LeaveStreamOpen)
+        {
+            // Protect the caller's stream, not the internal wrappers and their pooled buffers.
+            stream = SharpCompressStream.CreateNonDisposing(stream);
+            options = options with { LeaveStreamOpen = false };
+        }
+
         var sharpCompressStream = SharpCompressStream.Create(
             stream,
             bufferSize: options.RewindableBufferSize

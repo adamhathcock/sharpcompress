@@ -26,7 +26,7 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
     {
         var reader = new BinaryReader(stream);
 
-        SeekBackToHeader(stream, reader);
+        SeekBackToHeader(stream);
 
         var eocd_location = stream.Position;
         var entry = new DirectoryEndHeader();
@@ -102,7 +102,7 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
         return true;
     }
 
-    private static void SeekBackToHeader(Stream stream, BinaryReader reader)
+    private static void SeekBackToHeader(Stream stream)
     {
         // Minimum EOCD length
         if (stream.Length < MINIMUM_EOCD_LENGTH)
@@ -118,24 +118,30 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
                 : MAX_SEARCH_LENGTH_FOR_EOCD;
         stream.Seek(-len, SeekOrigin.End);
 
-        var seek = reader.ReadBytes(len);
-
-        // Search in reverse
-        Array.Reverse(seek);
-
-        // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
-        var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
-
-        for (var pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
+        var seek = ArrayPool<byte>.Shared.Rent(len);
+        try
         {
-            if (IsMatch(seek, pos_from_end, needle))
-            {
-                stream.Seek(-pos_from_end, SeekOrigin.End);
-                return;
-            }
-        }
+            stream.ReadExact(seek, 0, len);
+            // Only reverse and search the bytes read, not the unused tail of a pooled array.
+            var span = seek.AsSpan(0, len);
+            span.Reverse();
 
-        throw new ArchiveException("Failed to locate the Zip Header");
+            // Include the minimum EOCD region so empty ZIP archives can be found.
+            for (var pos_from_end = 0; pos_from_end <= len - needle.Length; ++pos_from_end)
+            {
+                if (IsMatch(span, pos_from_end, needle))
+                {
+                    stream.Seek(-pos_from_end, SeekOrigin.End);
+                    return;
+                }
+            }
+
+            throw new ArchiveException("Failed to locate the Zip Header");
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(seek);
+        }
     }
 
     internal LocalEntryHeader GetLocalHeader(

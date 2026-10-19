@@ -77,6 +77,9 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
 
     internal int Crc32 => crc?.Crc32Result ?? 0;
 
+    // Format detection reads only a prefix, so no complete GZIP trailer is available.
+    internal bool IsFormatProbe { get; set; }
+
     public ZlibBaseStream(
         Stream stream,
         CompressionMode compressionMode,
@@ -271,7 +274,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         // workitem 7159
         else if (_streamMode == StreamMode.Reader)
         {
-            if (_flavor == ZlibStreamFlavor.GZIP)
+            if (_flavor == ZlibStreamFlavor.GZIP && !IsFormatProbe)
             {
                 if (!_wantCompress)
                 {
@@ -385,7 +388,7 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         // workitem 7159
         else if (_streamMode == StreamMode.Reader)
         {
-            if (_flavor == ZlibStreamFlavor.GZIP)
+            if (_flavor == ZlibStreamFlavor.GZIP && !IsFormatProbe)
             {
                 if (!_wantCompress)
                 {
