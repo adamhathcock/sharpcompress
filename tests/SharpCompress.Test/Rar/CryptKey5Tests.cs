@@ -1,5 +1,8 @@
+using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Common.Rar;
 using SharpCompress.Common.Rar.Headers;
@@ -11,6 +14,61 @@ namespace SharpCompress.Test.Rar;
 
 public class CryptKey5Tests : TestBase
 {
+    [Theory]
+    [InlineData("", 1)]
+    [InlineData("password", 2)]
+    [InlineData("password", 4096)]
+    [InlineData("pässwörd🔐", 32)]
+    [InlineData(
+        "a password longer than the SHA256 block size of sixty-four bytes to exercise HMAC key hashing",
+        128
+    )]
+    public void Rar5_DerivedKeys_MatchPbkdf2_Snapshots(string password, int iterations)
+    {
+        var salt = Enumerable.Range(0, 16).Select(i => (byte)i).ToArray();
+        var originalSalt = (byte[])salt.Clone();
+        var keys = CryptKey5.GenerateRarPBKDF2Key(password, salt, iterations);
+
+        Assert.Equal(3, keys.Count);
+        for (var i = 0; i < keys.Count; i++)
+        {
+#if LEGACY_DOTNET
+            using var reference = new Rfc2898DeriveBytes(
+                Encoding.UTF8.GetBytes(password),
+                salt,
+                iterations + i * 16,
+                HashAlgorithmName.SHA256
+            );
+            Assert.Equal(reference.GetBytes(32), keys[i]);
+#else
+            var expected = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password),
+                salt,
+                iterations + i * 16,
+                HashAlgorithmName.SHA256,
+                32
+            );
+            Assert.Equal(expected, keys[i]);
+#endif
+        }
+        Assert.Equal(originalSalt, salt);
+    }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public void Rar5_DerivedKeys_DoNotAllocate_PerIteration()
+    {
+        var salt = new byte[16];
+        CryptKey5.GenerateRarPBKDF2Key("password", salt, 4096);
+        var before = GC.GetAllocatedBytesForCurrentThread();
+        CryptKey5.GenerateRarPBKDF2Key("password", salt, 4096);
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+        // Allow fixed setup costs, but not a digest array for each iteration.
+        Assert.True(allocated < 16 * 1024, $"Allocated {allocated} bytes.");
+    }
+#endif
+
     [Theory]
     [InlineData(0)]
     [InlineData(24)]

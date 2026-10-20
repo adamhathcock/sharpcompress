@@ -1878,8 +1878,8 @@ internal sealed class InfTree
         int s,
         int[] d,
         int[] e,
-        int[] t,
-        int[] m,
+        ref int t,
+        ref int m,
         int[] hp,
         int[] hn,
         int[] v
@@ -1921,13 +1921,13 @@ internal sealed class InfTree
         if (c[0] == n)
         {
             // null input--all zero length codes
-            t[0] = -1;
-            m[0] = 0;
+            t = -1;
+            m = 0;
             return Z_OK;
         }
 
         // Find minimum and maximum length, bound *m by those
-        l = m[0];
+        l = m;
         for (j = 1; j <= BMAX; j++)
         {
             if (c[j] != 0)
@@ -1952,7 +1952,7 @@ internal sealed class InfTree
         {
             l = i;
         }
-        m[0] = l;
+        m = l;
 
         // Adjust last length count to fill out codes, if needed
         for (y = 1 << j; j < i; j++, y <<= 1)
@@ -2060,7 +2060,7 @@ internal sealed class InfTree
                     }
                     else
                     {
-                        t[0] = q; // first table is returned result
+                        t = q; // first table is returned result
                     }
                 }
 
@@ -2110,18 +2110,18 @@ internal sealed class InfTree
         return y != 0 && g != 1 ? Z_BUF_ERROR : Z_OK;
     }
 
-    internal int inflate_trees_bits(int[] c, int[] bb, int[] tb, int[] hp, ZlibCodec z)
+    internal int inflate_trees_bits(int[] c, ref int bb, ref int tb, int[] hp, ZlibCodec z)
     {
         int result;
         initWorkArea(19);
         hn[0] = 0;
-        result = huft_build(c, 0, 19, 19, null, null, tb, bb, hp, hn, v);
+        result = huft_build(c, 0, 19, 19, null, null, ref tb, ref bb, hp, hn, v);
 
         if (result == Z_DATA_ERROR)
         {
             z.Message = "oversubscribed dynamic bit lengths tree";
         }
-        else if (result == Z_BUF_ERROR || bb[0] == 0)
+        else if (result == Z_BUF_ERROR || bb == 0)
         {
             z.Message = "incomplete dynamic bit lengths tree";
             result = Z_DATA_ERROR;
@@ -2133,10 +2133,10 @@ internal sealed class InfTree
         int nl,
         int nd,
         int[] c,
-        int[] bl,
-        int[] bd,
-        int[] tl,
-        int[] td,
+        ref int bl,
+        ref int bd,
+        ref int tl,
+        ref int td,
         int[] hp,
         ZlibCodec z
     )
@@ -2146,8 +2146,8 @@ internal sealed class InfTree
         // build literal/length tree
         initWorkArea(288);
         hn[0] = 0;
-        result = huft_build(c, 0, nl, 257, cplens, cplext, tl, bl, hp, hn, v);
-        if (result != Z_OK || bl[0] == 0)
+        result = huft_build(c, 0, nl, 257, cplens, cplext, ref tl, ref bl, hp, hn, v);
+        if (result != Z_OK || bl == 0)
         {
             if (result == Z_DATA_ERROR)
             {
@@ -2163,9 +2163,9 @@ internal sealed class InfTree
 
         // build distance tree
         initWorkArea(288);
-        result = huft_build(c, nl, nd, 0, cpdist, cpdext, td, bd, hp, hn, v);
+        result = huft_build(c, nl, nd, 0, cpdist, cpdext, ref td, ref bd, hp, hn, v);
 
-        if (result != Z_OK || (bd[0] == 0 && nl > 257))
+        if (result != Z_OK || (bd == 0 && nl > 257))
         {
             if (result == Z_DATA_ERROR)
             {
@@ -2187,13 +2187,12 @@ internal sealed class InfTree
         return Z_OK;
     }
 
-    internal static int inflate_trees_fixed(int[] bl, int[] bd, int[][] tl, int[][] td, ZlibCodec z)
+    internal static void inflate_trees_fixed(out int bl, out int bd, out int[] tl, out int[] td)
     {
-        bl[0] = fixed_bl;
-        bd[0] = fixed_bd;
-        tl[0] = fixed_tl;
-        td[0] = fixed_td;
-        return Z_OK;
+        bl = fixed_bl;
+        bd = fixed_bd;
+        tl = fixed_tl;
+        td = fixed_td;
     }
 
     private void initWorkArea(int vsize)

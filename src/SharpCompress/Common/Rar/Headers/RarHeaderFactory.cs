@@ -98,6 +98,8 @@ public partial class RarHeaderFactory
             }
         }
 
+        // Readers leave the underlying stream open but own their crypto transforms.
+        using var readerLifetime = reader;
         var header = RarHeader.TryReadBase(reader, _isRar5, Options.ArchiveEncoding);
         if (header is null)
         {

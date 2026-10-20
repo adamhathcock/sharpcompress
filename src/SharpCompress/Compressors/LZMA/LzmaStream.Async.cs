@@ -146,7 +146,7 @@ public partial class LzmaStream
                 Properties[0] = headerBuffer[0];
                 _inputPosition++;
 
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
             else if (_needProps)
@@ -155,7 +155,7 @@ public partial class LzmaStream
             }
             else if (control >= 0xA0)
             {
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
 
@@ -215,6 +215,11 @@ public partial class LzmaStream
                 }
             }
 
+            if (_availableBytes < 0)
+            {
+                throw new DataErrorException();
+            }
+
             var toProcess = count - total;
             if (toProcess > _availableBytes)
             {
@@ -238,6 +243,10 @@ public partial class LzmaStream
             }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
+            if (read == 0 && _availableBytes > 0)
+            {
+                throw new DataErrorException();
+            }
             total += read;
             offset += read;
             _position += read;
@@ -337,6 +346,11 @@ public partial class LzmaStream
                 }
             }
 
+            if (_availableBytes < 0)
+            {
+                throw new DataErrorException();
+            }
+
             var toProcess = count - total;
             if (toProcess > _availableBytes)
             {
@@ -360,6 +374,10 @@ public partial class LzmaStream
             }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
+            if (read == 0 && _availableBytes > 0)
+            {
+                throw new DataErrorException();
+            }
             total += read;
             offset += read;
             _position += read;
@@ -447,8 +465,9 @@ public partial class LzmaStream
         cancellationToken.ThrowIfCancellationRequested();
         if (_encoder != null)
         {
+            using var input = new ReadOnlyMemoryStream(buffer);
             _position = await _encoder
-                .CodeAsync(new MemoryStream(buffer.ToArray()), false, cancellationToken)
+                .CodeAsync(input, false, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
@@ -505,7 +524,17 @@ public partial class LzmaStream
         try
         {
 #pragma warning disable VSTHRD103 // Encoder.Dispose only returns buffers; finalization is separate.
-            _encoder?.Dispose();
+            try
+            {
+                _encoder?.Dispose();
+            }
+            finally
+            {
+                if (_decoder is not null)
+                {
+                    await _decoder.DisposeAsync().ConfigureAwait(false);
+                }
+            }
 #pragma warning restore VSTHRD103
         }
         finally
@@ -516,6 +545,7 @@ public partial class LzmaStream
             }
             finally
             {
+                _rangeDecoder.ReleaseStream();
                 ReturnAsyncHeaderBuffer();
             }
         }

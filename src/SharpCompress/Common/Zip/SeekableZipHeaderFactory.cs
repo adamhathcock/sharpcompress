@@ -152,12 +152,16 @@ internal sealed partial class SeekableZipHeaderFactory : ZipHeaderFactory
         stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
         var reader = new BinaryReader(stream);
         var signature = reader.ReadUInt32();
-        if (ReadHeader(signature, reader, _zip64) is not LocalEntryHeader localEntryHeader)
+        if (signature != ENTRY_HEADER_BYTES)
         {
             throw new ArchiveOperationException();
         }
 
+        // Sizes written to a data descriptor are only known from the central directory and are
+        // needed before the encryption header is loaded.
+        var localEntryHeader = ReadLocalHeader(reader);
         PopulateDirectoryEntryMetadata(localEntryHeader, directoryEntryHeader);
+        LoadHeader(localEntryHeader, stream);
         return localEntryHeader;
     }
 

@@ -199,8 +199,14 @@ internal partial class Unpack
 
     private async ValueTask<bool> ReadTables20Async(CancellationToken cancellationToken = default)
     {
-        byte[] BitLength = new byte[checked((int)BC20)];
-        byte[] Table = new byte[checked((int)MC20 * 4)];
+        var BitLength = tableReadBitLengths = EnsureCapacity(
+            tableReadBitLengths,
+            checked((int)BC20)
+        );
+        var Table = tableReadLengths = EnsureCapacity(tableReadLengths, checked((int)MC20 * 4));
+        // Only TableSize entries are decoded, but the full history table is copied
+        // below. Preserve the zero-filled tail provided by the former new array.
+        Array.Clear(Table, 0, checked((int)MC20 * 4));
         if (Inp.InAddr > ReadTop - 25)
         {
             if (!await UnpReadBufAsync(cancellationToken).ConfigureAwait(false))

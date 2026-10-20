@@ -515,3 +515,12 @@ await archive.WriteToDirectoryAsync(
 - Support for cancellation via CancellationToken
 - Better resource utilization in async/await contexts
 - Compatible with modern .NET async patterns
+## Malformed input and memory use
+
+ZIP64 end-record extensible data is skipped with bounded buffering. Invalid record sizes and truncated extensible data are rejected rather than driving allocations from the declared size.
+
+ARC LZW compressed data is buffered incrementally from the bytes actually present. A truncated entry is rejected without preallocating its declared compressed size.
+
+ZIP Shrink output buffering grows with decoded output rather than the declared uncompressed size. Invalid codes and output-size mismatches are rejected.
+
+LZMA/LZMA2 dictionary storage starts small and grows with decoded history, up to the supported dictionary size. These safeguards avoid allocations based solely on forged sizes; they do not impose an overall decompressed-output or process-memory limit.

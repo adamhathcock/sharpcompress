@@ -9,6 +9,7 @@ internal class BitStream
     private int _bitIdx;
     private int _bitsLeft;
     private ulong _bitBuffer;
+    private bool _lastReadValid;
     private static uint[] _maskBits = new uint[17]
     {
         0U,
@@ -62,6 +63,11 @@ internal class BitStream
                 _bitsLeft += 8;
             }
         }
+        _lastReadValid = _bitsLeft >= nbits;
+        if (!_lastReadValid)
+        {
+            return 0;
+        }
         result = (int)(_bitBuffer & _maskBits[nbits]);
         _bitBuffer >>= nbits;
         _bitsLeft -= nbits;
@@ -70,10 +76,6 @@ internal class BitStream
 
     public bool Advance(int count)
     {
-        if (_byteIdx > _srcLen)
-        {
-            return false;
-        }
-        return true;
+        return _lastReadValid;
     }
 }

@@ -55,7 +55,7 @@ public partial class SevenZipWriter
         var filesInfo = new SevenZipFilesInfoWriter { Entries = entries.ToArray() };
 
         // Write header to a temporary stream first
-        using var headerStream = new MemoryStream();
+        using var headerStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteRawHeader(headerStream, mainStreamsInfo, filesInfo);
 
         // Optionally compress the header
@@ -70,7 +70,7 @@ public partial class SevenZipWriter
     }
 
     private async ValueTask WriteCompressedHeaderAsync(
-        MemoryStream rawHeaderStream,
+        PooledMemoryStream rawHeaderStream,
         long endOfPackedData
     )
     {
@@ -97,27 +97,24 @@ public partial class SevenZipWriter
         };
 
         // Write encoded header to a second temporary stream
-        using var encodedHeaderStream = new MemoryStream();
+        using var encodedHeaderStream = new PooledMemoryStream();
         ArchiveHeaderWriter.WriteEncodedHeader(encodedHeaderStream, headerStreamsInfo);
 
         // Write the encoded header to the output
         var headerStartPos = output.Position;
         encodedHeaderStream.Position = 0;
-        await encodedHeaderStream.CopyToAsync(output).ConfigureAwait(false);
-
-        // Compute CRC of the encoded header
-        var headerCrc = Crc32Stream.Compute(
-            Crc32Stream.DEFAULT_POLYNOMIAL,
-            Crc32Stream.DEFAULT_SEED,
-            encodedHeaderStream.GetBuffer().AsSpan(0, (int)encodedHeaderStream.Length)
-        );
+        // Compute the CRC during the copy without materializing the pooled header.
+        using var crcStream = new Crc32Stream(output);
+        await encodedHeaderStream
+            .CopyToAsync(crcStream, Constants.BufferSize, CancellationToken.None)
+            .ConfigureAwait(false);
 
         // Back-patch signature header
         var nextHeaderOffset = (ulong)(headerStartPos - SevenZipSignatureHeaderWriter.HeaderSize);
         var nextHeaderSize = (ulong)encodedHeaderStream.Length;
 
         await SevenZipSignatureHeaderWriter
-            .WriteFinalAsync(output, nextHeaderOffset, nextHeaderSize, headerCrc)
+            .WriteFinalAsync(output, nextHeaderOffset, nextHeaderSize, crcStream.Crc)
             .ConfigureAwait(false);
 
         // Seek to end
@@ -125,7 +122,7 @@ public partial class SevenZipWriter
     }
 
     private async ValueTask WriteRawHeaderToOutputAsync(
-        MemoryStream rawHeaderStream,
+        PooledMemoryStream rawHeaderStream,
         long endOfPackedData
     )
     {
@@ -134,21 +131,18 @@ public partial class SevenZipWriter
         // Write raw header directly
         var headerStartPos = output.Position;
         rawHeaderStream.Position = 0;
-        await rawHeaderStream.CopyToAsync(output).ConfigureAwait(false);
-
-        // Compute CRC of the raw header
-        var headerCrc = Crc32Stream.Compute(
-            Crc32Stream.DEFAULT_POLYNOMIAL,
-            Crc32Stream.DEFAULT_SEED,
-            rawHeaderStream.GetBuffer().AsSpan(0, (int)rawHeaderStream.Length)
-        );
+        // Compute the CRC during the copy without materializing the pooled header.
+        using var crcStream = new Crc32Stream(output);
+        await rawHeaderStream
+            .CopyToAsync(crcStream, Constants.BufferSize, CancellationToken.None)
+            .ConfigureAwait(false);
 
         // Back-patch signature header
         var nextHeaderOffset = (ulong)(headerStartPos - SevenZipSignatureHeaderWriter.HeaderSize);
         var nextHeaderSize = (ulong)rawHeaderStream.Length;
 
         await SevenZipSignatureHeaderWriter
-            .WriteFinalAsync(output, nextHeaderOffset, nextHeaderSize, headerCrc)
+            .WriteFinalAsync(output, nextHeaderOffset, nextHeaderSize, crcStream.Crc)
             .ConfigureAwait(false);
 
         // Seek to end

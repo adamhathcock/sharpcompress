@@ -94,12 +94,44 @@ internal partial class ZipHeaderFactory
     }
 
     /// <summary>
+    /// Asynchronous counterpart of <see cref="TryResolveDescriptorSizes"/>.
+    /// </summary>
+    protected virtual ValueTask<bool> TryResolveDescriptorSizesAsync(
+        ZipFileEntry entryHeader,
+        Stream stream
+    ) => new(false);
+
+    /// <summary>
+    /// Asynchronous counterpart of <see cref="CreateWinzipAesEncryptionData"/>.
+    /// </summary>
+    protected virtual ValueTask<WinzipAesEncryptionData> CreateWinzipAesEncryptionDataAsync(
+        ZipFileEntry entryHeader,
+        WinzipAesKeySize keySize,
+        byte[] salt,
+        byte[] passwordVerifyValue,
+        string password
+    ) =>
+        new(
+            CreateWinzipAesEncryptionData(entryHeader, keySize, salt, passwordVerifyValue, password)
+        );
+
+    /// <summary>
     /// Loads encryption metadata and stream positioning for a header using async reads where needed.
     /// </summary>
-    private async ValueTask LoadHeaderAsync(ZipFileEntry entryHeader, Stream stream)
+    protected async ValueTask LoadHeaderAsync(ZipFileEntry entryHeader, Stream stream)
     {
         if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.Encrypted))
         {
+            if (
+                entryHeader.CompressedSize == 0
+                && FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+            )
+            {
+                // The sizes are only in the data descriptor, which cannot be located by scanning
+                // encrypted data; a seekable stream can take them from the central directory.
+                await TryResolveDescriptorSizesAsync(entryHeader, stream).ConfigureAwait(false);
+            }
+
             if (
                 !entryHeader.IsDirectory
                 && entryHeader.CompressedSize == 0
@@ -132,12 +164,14 @@ internal partial class ZipHeaderFactory
                     await stream.ReadExactAsync(salt, 0, salt.Length).ConfigureAwait(false);
                     await stream.ReadExactAsync(passwordVerifyValue, 0, 2).ConfigureAwait(false);
 
-                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(
-                        keySize,
-                        salt,
-                        passwordVerifyValue,
-                        _password
-                    );
+                    entryHeader.WinzipAesEncryptionData = await CreateWinzipAesEncryptionDataAsync(
+                            entryHeader,
+                            keySize,
+                            salt,
+                            passwordVerifyValue,
+                            _password
+                        )
+                        .ConfigureAwait(false);
 
                     entryHeader.CompressedSize -= (uint)(salt.Length + 2);
                 }

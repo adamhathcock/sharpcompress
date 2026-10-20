@@ -95,6 +95,7 @@ internal partial class OutWindow : IAsyncDisposable
         var fastSize = Math.Min(Math.Min(sizeUntilWindowEnd, sizeUntilOverlap), targetSize);
         if (fastSize >= 2)
         {
+            EnsureCapacity(_pos + fastSize);
             _buffer.AsSpan(pos, fastSize).CopyTo(_buffer.AsSpan(_pos, fastSize));
             _pos += fastSize;
             pos += fastSize;
@@ -120,6 +121,7 @@ internal partial class OutWindow : IAsyncDisposable
 
     public async ValueTask PutByteAsync(byte b, CancellationToken cancellationToken = default)
     {
+        EnsureCapacity(_pos + 1);
         _buffer[_pos++] = b;
         _total++;
         if (_pos >= _windowSize)
@@ -139,7 +141,7 @@ internal partial class OutWindow : IAsyncDisposable
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var curSize = _windowSize - _pos;
+            var curSize = Math.Min(4096, _windowSize - _pos);
             if (curSize > _limit - _total)
             {
                 curSize = (int)(_limit - _total);
@@ -148,8 +150,13 @@ internal partial class OutWindow : IAsyncDisposable
             {
                 curSize = size;
             }
+            EnsureCapacity(_pos + curSize);
             var numReadBytes = await stream
+#if LEGACY_DOTNET
                 .ReadAsync(_buffer, _pos, curSize, cancellationToken)
+#else
+                .ReadAsync(_buffer.AsMemory(_pos, curSize), cancellationToken)
+#endif
                 .ConfigureAwait(false);
             if (numReadBytes == 0)
             {
@@ -173,7 +180,7 @@ internal partial class OutWindow : IAsyncDisposable
         stream.Position = len - size;
         _total = 0;
         _limit = size;
-        _pos = _windowSize - size;
+        _pos = 0;
         await CopyStreamAsync(stream, size).ConfigureAwait(false);
         if (_pos == _windowSize)
         {

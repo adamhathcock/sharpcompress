@@ -5,13 +5,10 @@ namespace SharpCompress.Crypto;
 
 internal class BlockTransformer(ICryptoTransform transformer) : IDisposable
 {
-    public byte[] ProcessBlock(ReadOnlySpan<byte> cipherText)
-    {
-        var decryptedBytes = new byte[cipherText.Length];
-        transformer.TransformBlock(cipherText.ToArray(), 0, cipherText.Length, decryptedBytes, 0);
+    // AES supports in-place transformation. Callers retain their own bounded buffers
+    // instead of allocating input and output arrays for every 16-byte block.
+    public void ProcessBlocks(byte[] buffer, int count) =>
+        transformer.TransformBlock(buffer, 0, count, buffer, 0);
 
-        return decryptedBytes;
-    }
-
-    public void Dispose() { }
+    public void Dispose() => transformer.Dispose();
 }

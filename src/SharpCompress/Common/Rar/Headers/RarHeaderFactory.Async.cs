@@ -79,6 +79,8 @@ public partial class RarHeaderFactory
             }
         }
 
+        // Readers leave the underlying stream open but own their crypto transforms.
+        using var readerLifetime = reader;
         var header = await RarHeader
             .TryReadBaseAsync(reader, _isRar5, Options.ArchiveEncoding, cancellationToken)
             .ConfigureAwait(false);

@@ -145,7 +145,8 @@ public sealed record ReaderOptions : IReaderOptions
 
     /// <summary>
     /// When true, opts in to a format's optional parallel decode (e.g. 7-Zip's automatic
-    /// parallel LZMA2 solid-folder decode). Formats that do not implement parallel decoding
+    /// parallel LZMA2 solid-folder decode, or ahead-of-time WinZip AES key derivation when
+    /// reading Zip archives forward-only). Formats that do not implement parallel decoding
     /// ignore this setting. Default is false (sequential decode).
     /// </summary>
     public bool EnableParallelism { get; set; }

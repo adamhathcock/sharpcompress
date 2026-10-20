@@ -73,6 +73,11 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         }
         else
         {
+            // Larger standard dictionaries exceed this decoder's positive Int32 window range.
+            if (properties[0] > 37)
+            {
+                throw new InvalidParamException();
+            }
             _dictionarySize = 2 | (properties[0] & 1);
             _dictionarySize <<= (properties[0] >> 1) + 11;
 
@@ -262,7 +267,14 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
     {
         try
         {
-            _encoder?.Dispose();
+            try
+            {
+                _encoder?.Dispose();
+            }
+            finally
+            {
+                _decoder?.Dispose();
+            }
         }
         finally
         {
@@ -272,6 +284,9 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             finally
             {
+                // Partial reads and failed decodes may not reach the normal
+                // end-of-chunk path that returns the range decoder's fast buffer.
+                _rangeDecoder.ReleaseStream();
                 ReturnAsyncHeaderBuffer();
             }
         }
@@ -338,6 +353,11 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
                 }
             }
 
+            if (_availableBytes < 0)
+            {
+                throw new DataErrorException();
+            }
+
             var toProcess = count - total;
             if (toProcess > _availableBytes)
             {
@@ -355,6 +375,11 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
 
             var read = _outWindow.Read(buffer, offset, toProcess);
+            // Unknown-size raw LZMA can end without output; otherwise no progress is corruption.
+            if (read == 0 && _availableBytes > 0)
+            {
+                throw new DataErrorException();
+            }
             total += read;
             offset += read;
             _position += read;
@@ -507,10 +532,21 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         }
     }
 
+    private int ReadChunkHeaderByte()
+    {
+        var value = _inputStream!.ReadByte();
+        // EOF is not an LZMA2 end marker and must never enter chunk-size arithmetic.
+        if (value < 0)
+        {
+            throw new DataErrorException();
+        }
+        _inputPosition++;
+        return value;
+    }
+
     private void DecodeChunkHeader()
     {
-        var control = _inputStream!.ReadByte();
-        _inputPosition++;
+        var control = ReadChunkHeaderByte();
 
         if (control == 0x00)
         {
@@ -539,19 +575,17 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             _uncompressedChunk = false;
 
             _availableBytes = (control & 0x1F) << 16;
-            _availableBytes += (_inputStream.ReadByte() << 8) + _inputStream.ReadByte() + 1;
-            _inputPosition += 2;
+            _availableBytes += (ReadChunkHeaderByte() << 8) + ReadChunkHeaderByte() + 1;
 
-            _rangeDecoderLimit = (_inputStream.ReadByte() << 8) + _inputStream.ReadByte() + 1;
-            _inputPosition += 2;
+            _rangeDecoderLimit = (ReadChunkHeaderByte() << 8) + ReadChunkHeaderByte() + 1;
 
             if (control >= 0xC0)
             {
                 _needProps = false;
-                Properties[0] = (byte)_inputStream.ReadByte();
-                _inputPosition++;
+                Properties[0] = (byte)ReadChunkHeaderByte();
 
-                _decoder = new Decoder();
+                // Properties initialization resets every probability and match-state field.
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
             else if (_needProps)
@@ -560,7 +594,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             else if (control >= 0xA0)
             {
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
 
@@ -580,8 +614,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         else
         {
             _uncompressedChunk = true;
-            _availableBytes = (_inputStream.ReadByte() << 8) + _inputStream.ReadByte() + 1;
-            _inputPosition += 2;
+            _availableBytes = (ReadChunkHeaderByte() << 8) + ReadChunkHeaderByte() + 1;
         }
     }
 

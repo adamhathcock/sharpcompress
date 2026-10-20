@@ -59,6 +59,49 @@ public class LzmaLifetimeTests
         Assert.True(input.CanRead);
     }
 
+#if !LEGACY_DOTNET
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PartiallyReadDecoderReturnsFastBuffer(bool asyncDispose)
+    {
+        var payload = new byte[100_000];
+        new Random(123).NextBytes(payload);
+        using var packed = new MemoryStream();
+        byte[] properties;
+        using (var encoder = LzmaStream.Create(new LzmaEncoderProperties(), false, packed))
+        {
+            properties = encoder.Properties;
+            encoder.Write(payload, 0, payload.Length);
+        }
+        packed.Position = 0;
+        var stream = LzmaStream.Create(
+            properties,
+            packed,
+            packed.Length,
+            payload.Length,
+            leaveOpen: true
+        );
+        var buffer = new byte[1];
+        Assert.Equal(1, stream.Read(buffer, 0, 1));
+        Assert.Equal(payload[0], buffer[0]);
+        var rangeDecoder = GetField(stream, "_rangeDecoder")!;
+        Assert.NotNull(GetField(rangeDecoder, "_fastBuffer"));
+
+        if (asyncDispose)
+        {
+            await stream.DisposeAsync();
+        }
+        else
+        {
+            stream.Dispose();
+        }
+        stream.Dispose();
+        Assert.Null(GetField(rangeDecoder, "_fastBuffer"));
+        Assert.True(packed.CanRead);
+    }
+#endif
+
     private static object? GetField(object instance, string name) =>
         instance
             .GetType()

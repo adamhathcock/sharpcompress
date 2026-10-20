@@ -101,6 +101,19 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 | `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |
 | `SolidStreamCount` | `SolidStreamCount` |
 
+### RAR Entry Integrity
+
+RAR Archive and Reader entry streams validate CRC32 (or RAR5 BLAKE2sp when
+present) on both synchronous and asynchronous extraction paths. Drain an entry
+stream to the end to perform validation; a mismatch throws
+`InvalidFormatException`. Entries without a checksum are extracted without
+checksum validation. Disposing a partially read Archive entry stream does not
+validate the unread payload. Reader entry streams normally drain unread data
+on disposal (synchronous or asynchronous) unless the reader is cancelled, so
+disposal can validate the checksum and throw on a mismatch.
+Encrypted entries retain the existing checksum-checking
+limitations; this does not add authentication for encrypted RAR data.
+
 ### RAR5 Archive Comments
 
 `SharpCompress.Common.Rar.RarVolume.Comment` exposes UTF-8 archive comments, including encrypted comments when `ReaderOptions.Password` is supplied. Comments are loaded while entries are enumerated; the property can be `null` before enumeration or when no comment is present.
@@ -886,6 +899,18 @@ using (var reader = ReaderFactory.OpenReader(stream))
 - [USAGE.md](USAGE.md) - Complete code examples
 - [FORMATS.md](FORMATS.md) - Supported formats
 - [PERFORMANCE.md](PERFORMANCE.md) - API selection guide
+
+## 7z Decoder Lifetime
+
+Both `Dispose()` and `DisposeAsync()` release a 7z archive's cached folder
+decoder, including after partially reading an entry. Temporary encoded-header
+decoders are released after parsing or validation failure. Decoder cleanup
+returns pooled input and dictionary buffers without closing a borrowed archive
+source; the archive's `LeaveStreamOpen` setting still controls source ownership.
+
+For solid archives, prefer `ExtractAllEntries()` / `ExtractAllEntriesAsync()` to
+reuse the folder decoder across entries. A reader borrowed from an archive can
+be disposed without closing that archive's source.
 
 ## 7z Encrypted Decoding Errors
 

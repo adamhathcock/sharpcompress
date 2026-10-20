@@ -2,6 +2,7 @@
 
 #if !LEGACY_DOTNET
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using SharpCompress.Compressors.LZMA.LZ;
 
@@ -46,17 +47,22 @@ public partial class Decoder
     private const int LenHighSize = 1 << Base.K_NUM_HIGH_LEN_BITS; // 256
     private const int LenProbsSize = LenHighBase + LenHighSize;
 
-    private ushort[] _fIsMatch;
-    private ushort[] _fIsRep;
-    private ushort[] _fIsRepG0;
-    private ushort[] _fIsRepG1;
-    private ushort[] _fIsRepG2;
-    private ushort[] _fIsRep0Long;
-    private ushort[] _fPosSlot;
-    private ushort[] _fPosDecoders;
-    private ushort[] _fPosAlign;
-    private ushort[] _fLenProbs;
-    private ushort[] _fRepLenProbs;
+    private const int IsRepOffset = (int)Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX;
+    private const int IsRepG0Offset = IsRepOffset + (int)Base.K_NUM_STATES;
+    private const int IsRepG1Offset = IsRepG0Offset + (int)Base.K_NUM_STATES;
+    private const int IsRepG2Offset = IsRepG1Offset + (int)Base.K_NUM_STATES;
+    private const int IsRep0LongOffset = IsRepG2Offset + (int)Base.K_NUM_STATES;
+    private const int PosSlotOffset = IsRep0LongOffset + IsRepOffset;
+    private const int PosDecodersOffset =
+        PosSlotOffset + ((int)Base.K_NUM_LEN_TO_POS_STATES << Base.K_NUM_POS_SLOT_BITS);
+    private const int PosAlignOffset =
+        PosDecodersOffset + (int)(Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX);
+    private const int LenProbsOffset = PosAlignOffset + (1 << Base.K_NUM_ALIGN_BITS);
+    private const int RepLenProbsOffset = LenProbsOffset + LenProbsSize;
+    private const int LiteralOffset = RepLenProbsOffset + LenProbsSize;
+
+    // Fixed probabilities precede literals in one rental. For default properties the
+    // whole bank fits a 16 KiB bucket, avoiding a separate rounded-up literal rental.
     private ushort[] _fLiteral;
 
     private int _fLiteralNumPrevBits = -1;
@@ -65,43 +71,34 @@ public partial class Decoder
 
     private void CreateFastModel(int lp, int lc)
     {
-        _fIsMatch ??= new ushort[Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX];
-        _fIsRep ??= new ushort[Base.K_NUM_STATES];
-        _fIsRepG0 ??= new ushort[Base.K_NUM_STATES];
-        _fIsRepG1 ??= new ushort[Base.K_NUM_STATES];
-        _fIsRepG2 ??= new ushort[Base.K_NUM_STATES];
-        _fIsRep0Long ??= new ushort[Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX];
-        _fPosSlot ??= new ushort[Base.K_NUM_LEN_TO_POS_STATES << Base.K_NUM_POS_SLOT_BITS];
-        _fPosDecoders ??= new ushort[Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX];
-        _fPosAlign ??= new ushort[1 << Base.K_NUM_ALIGN_BITS];
-        _fLenProbs ??= new ushort[LenProbsSize];
-        _fRepLenProbs ??= new ushort[LenProbsSize];
-
         if (_fLiteralNumPrevBits != lc || _fLiteralNumPosBits != lp)
         {
+            var numStates = (uint)1 << (lc + lp);
+            var required = checked(LiteralOffset + (int)(numStates * 0x300));
+            if (_fLiteral is null || _fLiteral.Length < required || _fLiteral.Length / 2 > required)
+            {
+                var replacement = ArrayPool<ushort>.Shared.Rent(required);
+                if (_fLiteral is not null)
+                {
+                    ArrayPool<ushort>.Shared.Return(_fLiteral);
+                }
+                _fLiteral = replacement;
+            }
             _fLiteralNumPrevBits = lc;
             _fLiteralNumPosBits = lp;
             _fLiteralPosMask = ((uint)1 << lp) - 1;
-            var numStates = (uint)1 << (lc + lp);
-            _fLiteral = new ushort[checked((int)(numStates * 0x300))];
         }
     }
 
     private void InitFastModel()
     {
         const ushort probInit = (ushort)(RangeCoder.BitDecoder.K_BIT_MODEL_TOTAL >> 1);
-        Array.Fill(_fIsMatch, probInit);
-        Array.Fill(_fIsRep, probInit);
-        Array.Fill(_fIsRepG0, probInit);
-        Array.Fill(_fIsRepG1, probInit);
-        Array.Fill(_fIsRepG2, probInit);
-        Array.Fill(_fIsRep0Long, probInit);
-        Array.Fill(_fPosSlot, probInit);
-        Array.Fill(_fPosDecoders, probInit);
-        Array.Fill(_fPosAlign, probInit);
-        Array.Fill(_fLenProbs, probInit);
-        Array.Fill(_fRepLenProbs, probInit);
-        Array.Fill(_fLiteral, probInit);
+        Array.Fill(
+            _fLiteral,
+            probInit,
+            0,
+            LiteralOffset + (0x300 << (_fLiteralNumPrevBits + _fLiteralNumPosBits))
+        );
     }
 
     // Mutable range-coder state threaded through the decode helpers below as a single `ref`
@@ -151,6 +148,16 @@ public partial class Decoder
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly byte GetByte(int distance)
         {
+            if (Total == 0 && distance == 0)
+            {
+                return 0;
+            }
+            // A previous decoding failure can leave a rep distance outside the dictionary.
+            // Unlike a managed array access, this pointer read has no implicit bounds check.
+            if ((uint)distance >= (uint)WindowSize)
+            {
+                throw new DataErrorException();
+            }
             var p = Pos - distance - 1;
             if (p < 0)
             {
@@ -178,6 +185,10 @@ public partial class Decoder
 
         public void CopyBlock(int distance, int len)
         {
+            if ((uint)distance >= (uint)WindowSize || (uint)distance >= Total)
+            {
+                throw new DataErrorException();
+            }
             var rem = len;
             var p = (distance < Pos ? Pos : Pos + WindowSize) - distance - 1;
             var targetSize =
@@ -219,31 +230,55 @@ public partial class Decoder
         RangeCoder.Decoder rangeDecoder
     )
     {
+        if (!fastModelsReady)
+        {
+            CreateFastModel(literalPosBits, literalContextBits);
+            InitFastModel();
+            fastModelsReady = true;
+        }
+        do
+        {
+            outWindow.CopyPending();
+            if (!outWindow.HasSpace)
+            {
+                return false;
+            }
+            // Grow only after filling the current allocation, and never while it is pinned.
+            outWindow.EnsureFastCapacity();
+            if (CodeFastCore(dictionarySize, outWindow, rangeDecoder))
+            {
+                return true;
+            }
+        } while (outWindow.HasSpace);
+        return false;
+    }
+
+    private unsafe bool CodeFastCore(
+        int dictionarySize,
+        OutWindow outWindow,
+        RangeCoder.Decoder rangeDecoder
+    )
+    {
         var dictionarySizeCheck = Math.Max(dictionarySize, 1);
-
-        outWindow.CopyPending();
-
         var dic = outWindow.FastBuffer;
         var inBuf = rangeDecoder.FastBufferArray;
         bool result;
 
         fixed (byte* pDic = dic)
         fixed (byte* pIn = inBuf)
-        fixed (
-            ushort* pIsMatch = _fIsMatch,
-                pIsRep = _fIsRep,
-                pIsRepG0 = _fIsRepG0,
-                pIsRepG1 = _fIsRepG1,
-                pIsRepG2 = _fIsRepG2,
-                pIsRep0Long = _fIsRep0Long,
-                pPosSlot = _fPosSlot,
-                pPosDecoders = _fPosDecoders,
-                pPosAlign = _fPosAlign,
-                pLenProbs = _fLenProbs,
-                pRepLenProbs = _fRepLenProbs,
-                pLiteral = _fLiteral
-        )
+        fixed (ushort* pIsMatch = _fLiteral)
         {
+            var pIsRep = pIsMatch + IsRepOffset;
+            var pIsRepG0 = pIsMatch + IsRepG0Offset;
+            var pIsRepG1 = pIsMatch + IsRepG1Offset;
+            var pIsRepG2 = pIsMatch + IsRepG2Offset;
+            var pIsRep0Long = pIsMatch + IsRep0LongOffset;
+            var pPosSlot = pIsMatch + PosSlotOffset;
+            var pPosDecoders = pIsMatch + PosDecodersOffset;
+            var pPosAlign = pIsMatch + PosAlignOffset;
+            var pLenProbs = pIsMatch + LenProbsOffset;
+            var pRepLenProbs = pIsMatch + RepLenProbsOffset;
+            var pLiteral = pIsMatch + LiteralOffset;
             var rs = new FastRangeState
             {
                 Range = rangeDecoder._range,
@@ -260,7 +295,11 @@ public partial class Decoder
                 Pos = outWindow.FastPos,
                 Total = outWindow.FastTotal,
                 WindowSize = outWindow.FastWindowSize,
-                Limit = outWindow.FastLimit,
+                // The next decode call can grow the dictionary after this pin is released.
+                Limit = Math.Min(
+                    outWindow.FastLimit,
+                    outWindow.FastTotal + dic.Length - outWindow.FastPos
+                ),
                 OutWindow = outWindow,
             };
 
@@ -284,6 +323,12 @@ public partial class Decoder
                 // on every iteration, including non-literal ones, outweighs the latency-hiding
                 // benefit; kept lazy, computed only once IsMatch resolves to 0.)
                 var isCharState = _state.IsCharState();
+                // Validate before the speculative matched-literal read, not only when a
+                // newly decoded match is copied. In particular, retries can retain _rep0.
+                if (!isCharState && (_rep0 >= os.Total || _rep0 >= dictionarySizeCheck))
+                {
+                    throw new DataErrorException();
+                }
                 var prevByte = os.GetByte(0);
                 var matchByte = isCharState ? (byte)0 : os.GetByte((int)_rep0);
 
@@ -326,6 +371,10 @@ public partial class Decoder
                     {
                         if (DecodeBitFast(ref rs, pIsRep0Long, matchIndex) == 0)
                         {
+                            if (_rep0 >= os.Total || _rep0 >= dictionarySizeCheck)
+                            {
+                                throw new DataErrorException();
+                            }
                             _state.UpdateShortRep();
                             os.PutByte(os.GetByte((int)_rep0));
                             continue;
