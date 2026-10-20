@@ -46,14 +46,4 @@ public partial class GZipEntry : Entry
     public override bool IsSplitAfter => false;
 
     internal override IEnumerable<FilePart> Parts => _filePart.Empty();
-
-    internal static IEnumerable<GZipEntry> GetEntries(Stream stream, ReaderOptions options)
-    {
-        yield return new GZipEntry(
-            GZipFilePart.Create(stream, options.ArchiveEncoding, options.Providers),
-            options
-        );
-    }
-
-    // Async methods moved to GZipEntry.Async.cs
 }

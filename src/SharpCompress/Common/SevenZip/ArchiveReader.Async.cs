@@ -209,16 +209,24 @@ internal sealed partial class ArchiveReader
                         myPackSizes,
                         folder,
                         pass,
-                        cancellationToken
+                        cancellationToken,
+                        decoderBufferPool
                     )
                     .ConfigureAwait(false);
+                // Own the decoder even when reading or validating the encoded
+                // header fails; its source stream remains borrowed.
+                await using var decoderScope = outStream.DisposeAsyncScope().ConfigureAwait(false);
 
                 var unpackSize = checked((int)folder.GetUnpackSize());
                 var data = new byte[unpackSize];
                 await outStream
                     .ReadExactAsync(data, 0, data.Length, cancellationToken)
                     .ConfigureAwait(false);
-                if (outStream.ReadByte() >= 0)
+                if (
+                    await outStream
+                        .ReadAsync(new byte[1], 0, 1, cancellationToken)
+                        .ConfigureAwait(false) > 0
+                )
                 {
                     throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }

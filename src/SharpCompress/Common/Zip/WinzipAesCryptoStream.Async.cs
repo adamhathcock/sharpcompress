@@ -10,7 +10,6 @@ namespace SharpCompress.Common.Zip;
 
 internal partial class WinzipAesCryptoStream
 {
-#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (_isDisposed)
@@ -31,11 +30,10 @@ internal partial class WinzipAesCryptoStream
             _authentication.Dispose();
             _transform.Dispose();
             _cipher.Dispose();
-            await _stream.DisposeAsync().ConfigureAwait(false);
+            await _stream.DisposeAsyncCompat().ConfigureAwait(false);
         }
         await base.DisposeAsync().ConfigureAwait(false);
     }
-#endif
 
     private async ValueTask VerifyAuthenticationAsync(CancellationToken cancellationToken)
     {
@@ -44,17 +42,37 @@ internal partial class WinzipAesCryptoStream
         {
             return;
         }
-        _authRead = true;
-        var tag = new byte[10];
         try
         {
-            await _stream
-                .ReadExactAsync(tag, 0, tag.Length, cancellationToken)
-                .ConfigureAwait(false);
-            ValidateAuthentication(tag);
+            while (_authenticationTagBytesRead < _authenticationTag.Length)
+            {
+                var read = await _stream
+                    .ReadAsync(
+                        _authenticationTag,
+                        _authenticationTagBytesRead,
+                        _authenticationTag.Length - _authenticationTagBytesRead,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+                if (read == 0)
+                {
+                    throw new IncompleteArchiveException(
+                        "Unexpected end of WinZip AES authentication tag."
+                    );
+                }
+                _authenticationTagBytesRead += read;
+            }
+            ValidateAuthentication(_authenticationTag);
+            _authRead = true;
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellation is transient; keep the tag prefix so disposal can finish verification.
+            throw;
         }
         catch (Exception exception)
         {
+            _authRead = true;
             _authenticationFailure = ExceptionDispatchInfo.Capture(exception);
             throw;
         }
@@ -70,6 +88,7 @@ internal partial class WinzipAesCryptoStream
         await VerifyAuthenticationAsync(CancellationToken.None).ConfigureAwait(false);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,

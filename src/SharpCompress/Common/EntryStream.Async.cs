@@ -9,15 +9,15 @@ namespace SharpCompress.Common;
 public partial class EntryStream
 {
     /// <summary>
-    /// Asynchronously skip the rest of the entry stream.
+    /// When reading a stream from OpenEntryStream, the stream must be completed so use this to finish reading the entire entry.
     /// </summary>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public async ValueTask SkipEntryAsync(CancellationToken cancellationToken = default)
     {
         await this.SkipAsync(cancellationToken).ConfigureAwait(false);
         _completed = true;
     }
 
-#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (_isDisposed)
@@ -43,10 +43,10 @@ public partial class EntryStream
             }
         }
         await base.DisposeAsync().ConfigureAwait(false);
-        await _stream.DisposeAsync().ConfigureAwait(false);
+        await _stream.DisposeAsyncCompat().ConfigureAwait(false);
     }
-#endif
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,

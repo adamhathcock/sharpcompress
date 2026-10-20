@@ -25,7 +25,7 @@ public class SharpCompressLifetimeTests
         Assert.NotNull(ring.GetValue(stream));
         if (asyncDispose)
         {
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
             await Assert.ThrowsAsync<IOException>(async () => await stream.DisposeAsync());
 #else
             Assert.Throws<IOException>(() => stream.Dispose());

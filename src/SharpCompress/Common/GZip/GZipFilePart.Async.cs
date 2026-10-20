@@ -13,6 +13,7 @@ namespace SharpCompress.Common.GZip;
 
 internal sealed partial class GZipFilePart
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     internal static async ValueTask<GZipFilePart> CreateAsync(
         Stream stream,
         IArchiveEncoding archiveEncoding,

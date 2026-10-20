@@ -5,10 +5,7 @@
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.Common.Zip;
 
 namespace SharpCompress.Compressors.Deflate64;
 
@@ -68,50 +65,6 @@ public sealed partial class Deflate64Stream : Stream
 
     public override void SetLength(long value) =>
         throw new NotSupportedException("Deflate64: not supported");
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        ValidateParameters(buffer, offset, count);
-        EnsureNotDisposed();
-
-        int bytesRead;
-        var currentOffset = offset;
-        var remainingCount = count;
-
-        while (true)
-        {
-            bytesRead = _inflater.Inflate(buffer, currentOffset, remainingCount);
-            currentOffset += bytesRead;
-            remainingCount -= bytesRead;
-
-            if (remainingCount == 0)
-            {
-                break;
-            }
-
-            if (_inflater.Finished())
-            {
-                // if we finished decompressing, we can't have anything left in the outputwindow.
-                break;
-            }
-
-            var bytes = _stream.Read(_buffer, 0, _buffer.Length);
-            if (bytes <= 0)
-            {
-                break;
-            }
-            else if (bytes > _buffer.Length)
-            {
-                // The stream is either malicious or poorly implemented and returned a number of
-                // bytes larger than the buffer supplied to it.
-                throw new InvalidFormatException("Deflate64: invalid data");
-            }
-
-            _inflater.SetInput(_buffer, 0, bytes);
-        }
-
-        return count - remainingCount;
-    }
 
     private void ValidateParameters(byte[] array, int offset, int count)
     {

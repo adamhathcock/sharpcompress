@@ -240,4 +240,35 @@ public class GZipArchiveAsyncTests : ArchiveTests
 
         Assert.True(entryStream.IsDisposed);
     }
+
+    [Fact]
+    public async ValueTask GZip_Archive_SaveTo_Async_Preserves_Modification_Time()
+    {
+        var modificationTime = new DateTime(2024, 1, 2, 3, 4, 5);
+        using var destination = new MemoryStream();
+        await using (var archive = (GZipArchive)await GZipArchive.CreateAsyncArchive())
+        {
+            await archive.AddEntryAsync(
+                "contents.bin",
+                new MemoryStream(new byte[] { 1, 2, 3, 4 }),
+                size: 4,
+                modified: modificationTime
+            );
+            await archive.SaveToAsync(destination, new GZipWriterOptions());
+        }
+
+        destination.Position = 0;
+        await using var result = await GZipArchive.OpenAsyncArchive(destination);
+        var entry = await result.EntriesAsync.FirstAsync();
+
+        Assert.Equal(modificationTime, entry.LastModifiedTime);
+    }
+
+    [Fact]
+    public async ValueTask GZip_Archive_IsGZipFileAsync_ReturnsFalse_For_Truncated_Header()
+    {
+        using var stream = new MemoryStream(new byte[] { 0x1F, 0x8B, 8 });
+
+        Assert.False(await GZipArchive.IsGZipFileAsync(stream));
+    }
 }

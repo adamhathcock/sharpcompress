@@ -602,7 +602,7 @@ internal partial class Unpack
             }
         }
 
-        var BitLength = new byte[checked((int)BC)];
+        var BitLength = tableReadBitLengths = EnsureCapacity(tableReadBitLengths, checked((int)BC));
         for (int I = 0; I < BC; I++)
         {
             uint Length = (byte)(Inp.fgetbits() >> 12);
@@ -618,7 +618,8 @@ internal partial class Unpack
                 else
                 {
                     ZeroCount += 2;
-                    while (ZeroCount-- > 0 && I < BitLength.Length)
+                    // A rented array can be larger than the RAR alphabet.
+                    while (ZeroCount-- > 0 && I < BC)
                     {
                         BitLength[I++] = 0;
                     }
@@ -634,7 +635,10 @@ internal partial class Unpack
 
         MakeDecodeTables(BitLength, 0, BlockTables.BD, BC);
 
-        var Table = new byte[checked((int)HUFF_TABLE_SIZE)];
+        var Table = tableReadLengths = EnsureCapacity(
+            tableReadLengths,
+            checked((int)HUFF_TABLE_SIZE)
+        );
         const int TableSize = checked((int)HUFF_TABLE_SIZE);
         for (int I = 0; I < TableSize; )
         {

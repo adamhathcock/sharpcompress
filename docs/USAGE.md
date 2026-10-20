@@ -227,16 +227,18 @@ using (var archive = ArchiveFactory.OpenArchive("archive.zip"))
 }
 ```
 
-### Use ArchiveInformation to choose the right API
+### Detect the format and choose the right API
 
 ```C#
+using SharpCompress.Detection;
+
 var archivePath = "archive.arc";
-var info = ArchiveFactory.GetArchiveInformation(archivePath);
-if (info is null)
+var detection = ArchiveFactory.DetectArchive(archivePath);
+if (detection is null)
 {
     Console.WriteLine("Not a supported archive");
 }
-else if (info.SupportsRandomAccess)
+else if (detection.SupportedApis.HasFlag(ArchiveAccessMode.Archive))
 {
     using var archive = ArchiveFactory.OpenArchive(archivePath);
     archive.WriteToDirectory(@"D:\output");
@@ -248,7 +250,25 @@ else
 }
 ```
 
-`SupportsRandomAccess` is `false` for reader-only formats such as Ace, Arc, Arj, and standalone LZW. Use the Reader API for those formats.
+`DetectArchive` does not enumerate entries. It reports both Archive and Reader API availability; reader-only formats include Ace, Arc, Arj, standalone LZW, and compressed TAR wrappers.
+
+### Inspect archive metadata
+
+```C#
+var information = ArchiveFactory.InspectArchive(archivePath);
+if (information is not null)
+{
+    Console.WriteLine($"Entries: {information.EntryCount}");
+    Console.WriteLine($"Compressed bytes: {information.CompressedPayloadSize}");
+    Console.WriteLine($"Solid streams: {information.SolidStreamCount}");
+}
+```
+
+`InspectArchive` parses archive metadata, which can require a complete sequential scan for TAR and compressed TAR files. It returns partial information for encrypted headers without a password or missing archive parts; inspect `Status` and `Limitations` before using nullable metadata values.
+
+Detection and inspection result types are in the `SharpCompress.Detection` namespace.
+
+The stream overload preserves the caller's current position and leaves the supplied stream open.
 
 ### Open multi-volume archives
 

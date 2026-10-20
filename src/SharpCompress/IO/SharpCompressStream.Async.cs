@@ -1,5 +1,7 @@
 using System;
+using System.Buffers;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -146,9 +148,11 @@ public partial class SharpCompressStream
         int totalRead = 0;
         int count = buffer.Length;
         int offset = 0;
+        // Deflate refills use array-backed memory. Preserve the ValueTask input read
+        // without allocating temporary arrays just to access the ring buffer.
+        var arrayBacked = MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer, out var segment);
 
         // If logical position is behind stream position, read from ring buffer first
-        // Note: We need to use a temporary byte array because RingBuffer.ReadFromEnd expects byte[]
         while (count > 0 && _logicalPosition < streamPosition)
         {
             long bytesFromEnd = streamPosition - _logicalPosition;
@@ -162,9 +166,30 @@ public partial class SharpCompressStream
                 );
             }
 
-            var tempBuffer = new byte[Math.Min(count, (int)bytesFromEnd)];
-            int available = _ringBuffer.ReadFromEnd(bytesFromEnd, tempBuffer, 0, tempBuffer.Length);
-            tempBuffer.AsSpan(0, available).CopyTo(buffer.Span.Slice(offset));
+            int available;
+            if (arrayBacked)
+            {
+                available = _ringBuffer.ReadFromEnd(
+                    bytesFromEnd,
+                    segment.Array!,
+                    segment.Offset + offset,
+                    count
+                );
+            }
+            else
+            {
+                int replayCount = Math.Min(count, (int)bytesFromEnd);
+                var tempBuffer = ArrayPool<byte>.Shared.Rent(replayCount);
+                try
+                {
+                    available = _ringBuffer.ReadFromEnd(bytesFromEnd, tempBuffer, 0, replayCount);
+                    tempBuffer.AsSpan(0, available).CopyTo(buffer.Span.Slice(offset));
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(tempBuffer);
+                }
+            }
 
             totalRead += available;
             offset += available;
@@ -180,9 +205,24 @@ public partial class SharpCompressStream
                 .ConfigureAwait(false);
             if (read > 0)
             {
-                // RingBuffer.Write expects byte[], so we need to copy
-                var tempBuffer = buffer.Slice(offset, read).ToArray();
-                _ringBuffer!.Write(tempBuffer, 0, read);
+                if (arrayBacked)
+                {
+                    _ringBuffer!.Write(segment.Array!, segment.Offset + offset, read);
+                }
+                else
+                {
+                    // RingBuffer.Write requires an array for non-array memory.
+                    var tempBuffer = ArrayPool<byte>.Shared.Rent(read);
+                    try
+                    {
+                        buffer.Slice(offset, read).Span.CopyTo(tempBuffer);
+                        _ringBuffer!.Write(tempBuffer, 0, read);
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(tempBuffer);
+                    }
+                }
                 streamPosition += read;
                 _logicalPosition += read;
                 totalRead += read;
@@ -251,8 +291,11 @@ public partial class SharpCompressStream
         }
     }
 
-#if !LEGACY_DOTNET
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
+#else
+    public virtual async ValueTask DisposeAsync()
+#endif
     {
         if (!isDisposed)
         {
@@ -267,7 +310,7 @@ public partial class SharpCompressStream
             {
                 if (!LeaveStreamOpen)
                 {
-                    await stream.DisposeAsync().ConfigureAwait(false);
+                    await stream.DisposeAsyncCompat().ConfigureAwait(false);
                 }
             }
             finally
@@ -276,7 +319,11 @@ public partial class SharpCompressStream
                 _ringBuffer = null;
             }
         }
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
-    }
+#else
+        base.Dispose();
+        GC.SuppressFinalize(this);
 #endif
+    }
 }

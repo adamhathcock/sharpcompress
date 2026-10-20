@@ -78,9 +78,13 @@ public class SevenZipBenchmarks : ArchiveBenchmarkBase
         using var stream = new MemoryStream(_lzma2Bytes);
         using var archive = SevenZipArchive.OpenArchive(stream);
         using var reader = archive.ExtractAllEntries();
-        foreach (var entry in archive.Entries.Where(e => !e.IsDirectory))
+        while (reader.MoveToNextEntry())
         {
-            using var entryStream = entry.OpenEntryStream();
+            if (reader.Entry.IsDirectory)
+            {
+                continue;
+            }
+            using var entryStream = reader.OpenEntryStream();
             entryStream.CopyTo(Stream.Null);
         }
     }

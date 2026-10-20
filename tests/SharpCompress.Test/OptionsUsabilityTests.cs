@@ -221,6 +221,36 @@ public class OptionsUsabilityTests : TestBase
     }
 
     [Fact]
+    public async Task GZipWriter_Uses_WriterOptions_BufferSize_Async()
+    {
+        await using var source = new TrackingReadStream(new byte[100]);
+        await using var destination = new MemoryStream();
+        await using var writer = new GZipWriter(
+            destination,
+            new GZipWriterOptions { BufferSize = 23 }
+        );
+
+        await writer.WriteAsync("buffer-size.txt", source, DateTime.Now);
+
+        Assert.Equal(23, source.CopyBufferSize);
+    }
+
+    [Fact]
+    public async Task ZipWriter_Uses_WriterOptions_BufferSize_Async()
+    {
+        await using var source = new TrackingReadStream(new byte[100]);
+        await using var destination = new MemoryStream();
+        await using var writer = new ZipWriter(
+            destination,
+            new ZipWriterOptions(CompressionType.None) { BufferSize = 29 }
+        );
+
+        await writer.WriteAsync("buffer-size.txt", source, DateTime.Now);
+
+        Assert.Equal(29, source.CopyBufferSize);
+    }
+
+    [Fact]
     public void TarWriter_Uses_WriterOptions_BufferSize_ForTransfer()
     {
         using var source = new MemoryStream(new byte[100]);

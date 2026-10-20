@@ -89,11 +89,8 @@ public class TarWriterNonSeekableTests
         {
             var entry = fileEntries.Single(e => e.Key == name);
             using var extracted = new MemoryStream();
-#if LEGACY_DOTNET
-            using (var entryStream = await entry.OpenEntryStreamAsync())
-#else
-            await using (var entryStream = await entry.OpenEntryStreamAsync())
-#endif
+            var entryStream = await entry.OpenEntryStreamAsync();
+            await using (entryStream.DisposeAsyncScope())
             {
                 await entryStream.CopyToAsync(extracted);
             }

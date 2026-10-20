@@ -7,7 +7,7 @@ using SharpCompress.Crypto;
 
 namespace SharpCompress.Common.GZip;
 
-internal sealed class GZipChecksumValidationStream : Stream
+internal sealed partial class GZipChecksumValidationStream : Stream
 {
     private readonly Stream _source;
     private readonly Stream _rawStream;
@@ -49,49 +49,11 @@ internal sealed class GZipChecksumValidationStream : Stream
         set => throw new NotSupportedException();
     }
 
-    public override void Flush() => _source.Flush();
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override Task FlushAsync(CancellationToken cancellationToken) =>
         _source.FlushAsync(cancellationToken);
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var read = _source.Read(buffer, offset, count);
-        if (count != 0)
-        {
-            UpdateAndValidateAtEof(buffer.AsSpan(offset, read), read);
-        }
-        return read;
-    }
-
-#if !LEGACY_DOTNET
-    public override int Read(Span<byte> buffer)
-    {
-        var read = _source.Read(buffer);
-        if (!buffer.IsEmpty)
-        {
-            UpdateAndValidateAtEof(buffer[..read], read);
-        }
-        return read;
-    }
-#endif
-
-    public override int ReadByte()
-    {
-        var value = _source.ReadByte();
-        if (value == -1)
-        {
-            Validate();
-        }
-        else
-        {
-            _seed = Crc32Stream.CalculateCrc(_crc32Table, _seed, (byte)value);
-            _size++;
-        }
-
-        return value;
-    }
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -117,6 +79,7 @@ internal sealed class GZipChecksumValidationStream : Stream
     }
 
 #if !LEGACY_DOTNET
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
@@ -131,12 +94,32 @@ internal sealed class GZipChecksumValidationStream : Stream
             }
             else
             {
+#if SYNC_ONLY
+                UpdateAndValidateAtEof(buffer[..read], read);
+#else
                 UpdateAndValidateAtEof(buffer.Span[..read], read);
+#endif
             }
         }
         return read;
     }
 #endif
+
+    public override int ReadByte()
+    {
+        var value = _source.ReadByte();
+        if (value == -1)
+        {
+            Validate();
+        }
+        else
+        {
+            _seed = Crc32Stream.CalculateCrc(_crc32Table, _seed, (byte)value);
+            _size++;
+        }
+
+        return value;
+    }
 
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 

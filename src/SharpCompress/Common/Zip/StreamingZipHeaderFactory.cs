@@ -7,16 +7,22 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.Zip;
 
-internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
+internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
 {
     private IEnumerable<ZipEntry>? _entries;
 
     internal StreamingZipHeaderFactory(
         string? password,
         IArchiveEncoding archiveEncoding,
-        IEnumerable<ZipEntry>? entries
+        IEnumerable<ZipEntry>? entries,
+        bool enableParallelism = false
     )
-        : base(StreamingMode.Streaming, password, archiveEncoding) => _entries = entries;
+        : base(StreamingMode.Streaming, password, archiveEncoding)
+    {
+        _entries = entries;
+        _deriveKeysAhead = enableParallelism && Environment.ProcessorCount > 1;
+        _lookaheadDepth = _deriveKeysAhead ? Environment.ProcessorCount * 2 : 1;
+    }
 
     internal IEnumerable<ZipHeader> ReadStreamHeader(Stream stream)
     {
@@ -48,6 +54,7 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                     }
 
                     // removed requirement for FixStreamedFileLocation()
+                    SeekPastResolvedEntry(_lastEntryHeader, sharpCompressStream);
 
                     var pos = sharpCompressStream.CanSeek
                         ? (long?)sharpCompressStream.Position
@@ -143,11 +150,11 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                         _lastEntryHeader.IsCrcAvailable = true;
 
                         // The DataDescriptor can be either 64bit or 32bit
-                        var compressed_size = reader.ReadUInt32();
-                        var uncompressed_size = reader.ReadUInt32();
+                        var compressedSize = reader.ReadUInt32();
+                        var uncompressedSize = reader.ReadUInt32();
 
-                        var test_64bit = ((long)uncompressed_size << 32) | compressed_size;
-                        if (test_64bit == _lastEntryHeader.CompressedSize)
+                        var test64Bit = ((long)uncompressedSize << 32) | compressedSize;
+                        if (test64Bit == _lastEntryHeader.CompressedSize)
                         {
                             _lastEntryHeader.UncompressedSize =
                                 ((long)reader.ReadUInt32() << 32) | headerBytes;
@@ -155,7 +162,7 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                         }
                         else
                         {
-                            _lastEntryHeader.UncompressedSize = uncompressed_size;
+                            _lastEntryHeader.UncompressedSize = uncompressedSize;
                         }
 
                         if (pos.HasValue)
@@ -193,37 +200,42 @@ internal partial class StreamingZipHeaderFactory : ZipHeaderFactory
                 //entry could be zero bytes so we need to know that.
                 if (header.ZipHeaderType == ZipHeaderType.LocalEntry)
                 {
-                    var local_header = ((LocalEntryHeader)header);
-                    var dir_header = _entries?.FirstOrDefault(entry =>
-                        entry.Key == local_header.Name
-                        && local_header.CompressedSize == 0
-                        && local_header.UncompressedSize == 0
-                        && local_header.Crc == 0
-                        && local_header.IsDirectory == false
+                    var localHeader = (LocalEntryHeader)header;
+                    var dirHeader = _entries?.FirstOrDefault(entry =>
+                        entry.Key == localHeader.Name
+                        && localHeader.CompressedSize == 0
+                        && localHeader.UncompressedSize == 0
+                        && localHeader.Crc == 0
+                        && localHeader.IsDirectory == false
                     );
 
-                    if (dir_header != null)
+                    if (dirHeader != null)
                     {
-                        local_header.UncompressedSize = dir_header.Size;
-                        local_header.CompressedSize = dir_header.CompressedSize;
-                        local_header.Crc = (uint)dir_header.Crc;
-                        local_header.IsCrcAvailable = true;
+                        localHeader.UncompressedSize = dirHeader.Size;
+                        localHeader.CompressedSize = dirHeader.CompressedSize;
+                        localHeader.Crc = (uint)dirHeader.Crc;
+                        localHeader.IsCrcAvailable = true;
                     }
 
+                    if (IsResolvedDirectory(localHeader))
+                    {
+                        header.HasData = false;
+                    }
                     // If we have CompressedSize, there is data to be read
-                    if (local_header.CompressedSize > 0)
+                    else if (localHeader.CompressedSize > 0)
                     {
                         header.HasData = true;
                     } // Check if zip is streaming ( Length is 0 and is declared in PostDataDescriptor )
-                    else if (local_header.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
+                    else if (localHeader.Flags.HasFlag(HeaderFlags.UsePostDataDescriptor))
                     {
                         // Peek ahead to check if next data is a header or file data.
                         // Use the IStreamStack.Rewind mechanism to give back the peeked bytes.
                         var nextHeaderBytes = reader.ReadUInt32();
-                        sharpCompressStream.Rewind(sizeof(uint));
+                        sharpCompressStream.RewindBytes(sizeof(uint));
 
                         // Check if next data is PostDataDescriptor, streamed file with 0 length
                         header.HasData = !IsHeader(nextHeaderBytes);
+                        ThrowIfUnreadableEncryptedDirectory(localHeader, header.HasData);
                     }
                     else // We are not streaming and compressed size is 0, we have no data
                     {

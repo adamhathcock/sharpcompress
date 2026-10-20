@@ -138,7 +138,8 @@ internal class CFolder
             }
         }
 
-        var mask = new uint[kMaskSize];
+        Span<uint> mask = stackalloc uint[kMaskSize];
+        mask.Clear();
 
         {
             var inStreamToCoder = new List<int>();

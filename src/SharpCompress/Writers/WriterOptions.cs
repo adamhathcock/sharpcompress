@@ -70,6 +70,12 @@ public sealed record WriterOptions : IWriterOptions
         CompressionProviderRegistry.Default;
 
     /// <summary>
+    /// When true, opts in to a format's optional parallel encode. No writer currently implements
+    /// parallel encoding; reserved for future use. Default is false.
+    /// </summary>
+    public bool EnableParallelism { get; set; }
+
+    /// <summary>
     /// Creates a new WriterOptions instance with the specified compression type.
     /// Compression level is automatically set based on the compression type.
     /// </summary>

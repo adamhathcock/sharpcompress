@@ -52,8 +52,5 @@ public partial class Lzma2Filter : BlockFilter
     public override void SetBaseStream(Stream stream) =>
         BaseStream = LzmaStream.Create(new[] { _dictionarySize }, stream);
 
-    public override int Read(byte[] buffer, int offset, int count) =>
-        BaseStream.Read(buffer, offset, count);
-
     public override int ReadByte() => BaseStream.ReadByte();
 }

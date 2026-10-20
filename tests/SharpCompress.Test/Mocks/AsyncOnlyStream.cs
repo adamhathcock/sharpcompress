@@ -2,10 +2,11 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Test.Mocks;
 
-public class AsyncOnlyStream(Stream stream, bool disposeStream = true) : Stream
+public class AsyncOnlyStream(Stream stream, bool disposeStream = true) : AsyncDisposableStream
 {
     private readonly Stream _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 

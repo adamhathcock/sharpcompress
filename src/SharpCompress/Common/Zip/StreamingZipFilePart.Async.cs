@@ -7,6 +7,7 @@ namespace SharpCompress.Common.Zip;
 
 internal sealed partial class StreamingZipFilePart
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     internal override async ValueTask<Stream?> GetCompressedStreamAsync(
         CancellationToken cancellationToken = default
     )
@@ -15,17 +16,18 @@ internal sealed partial class StreamingZipFilePart
         {
             return Stream.Null;
         }
-        _decompressionStream = await CreateDecompressionStreamAsync(
+        var decompressionStream = await CreateDecompressionStreamAsync(
                 await GetCryptoStreamAsync(CreateBaseStream(), cancellationToken)
                     .ConfigureAwait(false),
                 Header.CompressionMethod,
                 cancellationToken
             )
             .ConfigureAwait(false);
+        _decompressionStream = decompressionStream;
         if (LeaveStreamOpen)
         {
-            return SharpCompressStream.CreateNonDisposing(_decompressionStream);
+            return SharpCompressStream.CreateNonDisposing(decompressionStream);
         }
-        return _decompressionStream;
+        return decompressionStream;
     }
 }

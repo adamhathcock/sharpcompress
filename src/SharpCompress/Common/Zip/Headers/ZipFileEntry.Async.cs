@@ -7,6 +7,7 @@ namespace SharpCompress.Common.Zip.Headers;
 
 internal abstract partial class ZipFileEntry
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     internal async ValueTask<PkwareTraditionalEncryptionData> ComposeEncryptionDataAsync(
         Stream archiveStream,
         CancellationToken cancellationToken = default
@@ -15,7 +16,7 @@ internal abstract partial class ZipFileEntry
         ThrowHelper.ThrowIfNull(archiveStream);
 
         var buffer = new byte[12];
-        await archiveStream.ReadFullyAsync(buffer, 0, 12, cancellationToken).ConfigureAwait(false);
+        await archiveStream.ReadFullyAsync(buffer, cancellationToken).ConfigureAwait(false);
 
         var encryptionData = PkwareTraditionalEncryptionData.ForRead(Password!, this, buffer);
 

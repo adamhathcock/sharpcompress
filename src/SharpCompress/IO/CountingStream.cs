@@ -8,7 +8,7 @@ namespace SharpCompress.IO;
 /// <summary>
 /// A simple stream wrapper that counts bytes read and written without buffering.
 /// </summary>
-internal class CountingStream : Stream
+internal partial class CountingStream : Stream
 {
     private readonly Stream _stream;
     private long _bytesRead;
@@ -45,17 +45,9 @@ internal class CountingStream : Stream
         set => _stream.Position = value;
     }
 
-    public override void Flush() => _stream.Flush();
-
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task FlushAsync(CancellationToken cancellationToken) =>
         await _stream.FlushAsync(cancellationToken).ConfigureAwait(false);
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var read = _stream.Read(buffer, offset, count);
-        _bytesRead += read;
-        return read;
-    }
 
     public override int ReadByte()
     {
@@ -68,24 +60,9 @@ internal class CountingStream : Stream
         return value;
     }
 
-#if !LEGACY_DOTNET
-    public override int Read(Span<byte> buffer)
-    {
-        var read = _stream.Read(buffer);
-        _bytesRead += read;
-        return read;
-    }
-#endif
-
     public override long Seek(long offset, SeekOrigin origin) => _stream.Seek(offset, origin);
 
     public override void SetLength(long value) => _stream.SetLength(value);
-
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        _stream.Write(buffer, offset, count);
-        _bytesWritten += count;
-    }
 
     public override void WriteByte(byte value)
     {
@@ -93,6 +70,7 @@ internal class CountingStream : Stream
         _bytesWritten++;
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task WriteAsync(
         byte[] buffer,
         int offset,
@@ -104,6 +82,7 @@ internal class CountingStream : Stream
         _bytesWritten += count;
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -119,6 +98,7 @@ internal class CountingStream : Stream
     }
 
 #if !LEGACY_DOTNET
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default

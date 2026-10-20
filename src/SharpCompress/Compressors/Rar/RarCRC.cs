@@ -1,10 +1,16 @@
 using System;
+using SharpCompress.Crypto;
 
 namespace SharpCompress.Compressors.Rar;
 
 internal static class RarCRC
 {
-    private static readonly uint[] crcTab;
+    // Reuse Crc32Stream's cached slice-by-16 table (same polynomial) instead of a separate
+    // byte-at-a-time table, so bulk CRC checks during Rar extraction get the same throughput
+    // as Zip/GZip/7Zip/LZip CRC32 validation instead of a much slower one-byte-per-iteration loop.
+    private static readonly uint[] crcTab = Crc32Stream.InitializeTable(
+        Crc32Stream.DEFAULT_POLYNOMIAL
+    );
 
     public static uint CheckCrc(uint startCrc, byte b) =>
         (crcTab[((int)startCrc ^ b) & 0xff] ^ (startCrc >> 8));
@@ -12,35 +18,6 @@ internal static class RarCRC
     public static uint CheckCrc(uint startCrc, ReadOnlySpan<byte> data, int offset, int count)
     {
         var size = Math.Min(data.Length - offset, count);
-
-        for (var i = 0; i < size; i++)
-        {
-            startCrc = (crcTab[((int)startCrc ^ data[offset + i]) & 0xff] ^ (startCrc >> 8));
-        }
-        return (startCrc);
-    }
-
-    static RarCRC()
-    {
-        {
-            crcTab = new uint[256];
-            for (uint i = 0; i < 256; i++)
-            {
-                var c = i;
-                for (var j = 0; j < 8; j++)
-                {
-                    if ((c & 1) != 0)
-                    {
-                        c >>= 1;
-                        c ^= 0xEDB88320;
-                    }
-                    else
-                    {
-                        c >>= 1;
-                    }
-                }
-                crcTab[i] = c;
-            }
-        }
+        return Crc32Stream.CalculateCrc(crcTab, startCrc, data.Slice(offset, size));
     }
 }

@@ -36,14 +36,36 @@ internal partial class ZipHeaderFactory
         _archiveEncoding = archiveEncoding;
     }
 
+    protected IArchiveEncoding ArchiveEncoding => _archiveEncoding;
+
+    protected string? Password => _password;
+
+    /// <summary>
+    /// Creates the WinZip AES key material of an entry; overridden to use keys derived ahead of time.
+    /// </summary>
+    protected virtual WinzipAesEncryptionData CreateWinzipAesEncryptionData(
+        ZipFileEntry entryHeader,
+        WinzipAesKeySize keySize,
+        byte[] salt,
+        byte[] passwordVerifyValue,
+        string password
+    ) => new(keySize, salt, passwordVerifyValue, password);
+
+    /// <summary>
+    /// Populates the sizes of an encrypted entry that was written with a post data descriptor and
+    /// therefore has no sizes in its local header.
+    /// </summary>
+    /// <returns><see langword="true"/> when <see cref="ZipFileEntry.CompressedSize"/> was populated.</returns>
+    protected virtual bool TryResolveDescriptorSizes(ZipFileEntry entryHeader, Stream stream) =>
+        false;
+
     protected ZipHeader? ReadHeader(uint headerBytes, BinaryReader reader, bool zip64 = false)
     {
         switch (headerBytes)
         {
             case ENTRY_HEADER_BYTES:
             {
-                var entryHeader = new LocalEntryHeader(_archiveEncoding);
-                entryHeader.Read(reader);
+                var entryHeader = ReadLocalHeader(reader);
                 LoadHeader(entryHeader, reader.BaseStream);
 
                 _lastEntryHeader = entryHeader;
@@ -109,6 +131,13 @@ internal partial class ZipHeaderFactory
         }
     }
 
+    protected LocalEntryHeader ReadLocalHeader(BinaryReader reader)
+    {
+        var entryHeader = new LocalEntryHeader(_archiveEncoding);
+        entryHeader.Read(reader);
+        return entryHeader;
+    }
+
     internal static bool IsHeader(uint headerBytes)
     {
         switch (headerBytes)
@@ -127,10 +156,20 @@ internal partial class ZipHeaderFactory
         }
     }
 
-    private void LoadHeader(ZipFileEntry entryHeader, Stream stream)
+    protected void LoadHeader(ZipFileEntry entryHeader, Stream stream)
     {
         if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.Encrypted))
         {
+            if (
+                entryHeader.CompressedSize == 0
+                && FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor)
+            )
+            {
+                // The sizes are only in the data descriptor, which cannot be located by scanning
+                // encrypted data; a seekable stream can take them from the central directory.
+                TryResolveDescriptorSizes(entryHeader, stream);
+            }
+
             if (
                 !entryHeader.IsDirectory
                 && entryHeader.CompressedSize == 0
@@ -162,7 +201,8 @@ internal partial class ZipHeaderFactory
                     var passwordVerifyValue = new byte[2];
                     stream.ReadExact(salt, 0, salt.Length);
                     stream.ReadExact(passwordVerifyValue, 0, 2);
-                    entryHeader.WinzipAesEncryptionData = new WinzipAesEncryptionData(
+                    entryHeader.WinzipAesEncryptionData = CreateWinzipAesEncryptionData(
+                        entryHeader,
                         keySize,
                         salt,
                         passwordVerifyValue,

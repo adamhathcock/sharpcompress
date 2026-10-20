@@ -17,6 +17,9 @@ namespace SharpCompress.IO;
 /// stream and usage scenario.
 /// </remarks>
 public partial class SharpCompressStream : Stream, IStreamStack
+#if !STREAM_DISPOSEASYNC
+        , IAsyncDisposable
+#endif
 {
     public virtual Stream BaseStream() => stream;
 

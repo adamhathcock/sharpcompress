@@ -146,7 +146,7 @@ public partial class LzmaStream
                 Properties[0] = headerBuffer[0];
                 _inputPosition++;
 
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
             else if (_needProps)
@@ -155,7 +155,7 @@ public partial class LzmaStream
             }
             else if (control >= 0xA0)
             {
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
 
@@ -184,6 +184,11 @@ public partial class LzmaStream
     )
     {
         ThrowIfDisposed();
+        if (count > 0)
+        {
+            EnsureReadMode(ReadMode.Asynchronous);
+        }
+
         if (_endReached)
         {
             return 0;
@@ -308,6 +313,11 @@ public partial class LzmaStream
     )
     {
         ThrowIfDisposed();
+        if (!buffer.IsEmpty)
+        {
+            EnsureReadMode(ReadMode.Asynchronous);
+        }
+
         if (_endReached)
         {
             return 0;
@@ -455,14 +465,15 @@ public partial class LzmaStream
         cancellationToken.ThrowIfCancellationRequested();
         if (_encoder != null)
         {
+            using var input = new ReadOnlyMemoryStream(buffer);
             _position = await _encoder
-                .CodeAsync(new MemoryStream(buffer.ToArray()), false, cancellationToken)
+                .CodeAsync(input, false, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
 #endif
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -502,7 +513,7 @@ public partial class LzmaStream
             }
         }
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
 #endif
         GC.SuppressFinalize(this);
@@ -513,7 +524,17 @@ public partial class LzmaStream
         try
         {
 #pragma warning disable VSTHRD103 // Encoder.Dispose only returns buffers; finalization is separate.
-            _encoder?.Dispose();
+            try
+            {
+                _encoder?.Dispose();
+            }
+            finally
+            {
+                if (_decoder is not null)
+                {
+                    await _decoder.DisposeAsync().ConfigureAwait(false);
+                }
+            }
 #pragma warning restore VSTHRD103
         }
         finally
@@ -524,6 +545,7 @@ public partial class LzmaStream
             }
             finally
             {
+                _rangeDecoder.ReleaseStream();
                 ReturnAsyncHeaderBuffer();
             }
         }

@@ -16,6 +16,10 @@ public partial class SourceStream : Stream, IStreamStack
     private long _prevSize;
     private readonly List<FileInfo> _files;
     private readonly List<Stream> _streams;
+
+    // Parts are read-only archive volumes, so each part's length is read once. Reads query it on every call,
+    // and Stream.Length can be a system call per access (fstat for a FileStream on Unix, a server round trip on NFS).
+    private readonly List<long?> _lengths;
     private readonly Func<int, FileInfo?>? _getFilePart;
     private readonly Func<int, Stream?>? _getStreamPart;
     private int _stream;
@@ -37,12 +41,14 @@ public partial class SourceStream : Stream, IStreamStack
         ReaderOptions = options;
         _files = new List<FileInfo>();
         _streams = new List<Stream>();
+        _lengths = new List<long?>();
         IsFileMode = file != null;
         IsVolumes = false;
 
         if (!IsFileMode)
         {
             _streams.Add(stream!);
+            _lengths.Add(null);
             _getStreamPart = getStreamPart;
             _getFilePart = _ => null;
             if (stream is FileStream fileStream)
@@ -54,6 +60,7 @@ public partial class SourceStream : Stream, IStreamStack
         {
             _files.Add(file!);
             _streams.Add(_files[0].OpenRead());
+            _lengths.Add(null);
             _getFilePart = getFilePart;
             _getStreamPart = _ => null;
         }
@@ -77,6 +84,10 @@ public partial class SourceStream : Stream, IStreamStack
 
     private Stream Current => _streams[_stream];
 
+    private long CurrentLength => GetLength(_stream);
+
+    private long GetLength(int index) => _lengths[index] ??= _streams[index].Length;
+
     public bool LoadStream(int index) //ensure all parts to id are loaded
     {
         while (_streams.Count <= index)
@@ -92,6 +103,7 @@ public partial class SourceStream : Stream, IStreamStack
                 //throw new Exception($"File part {idx} not available.");
                 _files.Add(f);
                 _streams.Add(_files.Last().OpenRead());
+                _lengths.Add(null);
             }
             else
             {
@@ -103,6 +115,7 @@ public partial class SourceStream : Stream, IStreamStack
                 }
                 //throw new Exception($"Stream part {idx} not available.");
                 _streams.Add(s);
+                _lengths.Add(null);
                 if (s is FileStream stream)
                 {
                     _files.Add(new FileInfo(stream.Name));
@@ -128,7 +141,23 @@ public partial class SourceStream : Stream, IStreamStack
 
     public override bool CanWrite => false;
 
-    public override long Length => !IsVolumes ? _streams.Sum(a => a.Length) : Current.Length;
+    public override long Length
+    {
+        get
+        {
+            if (IsVolumes)
+            {
+                return CurrentLength;
+            }
+
+            long length = 0;
+            for (var i = 0; i < _streams.Count; i++)
+            {
+                length += GetLength(i);
+            }
+            return length;
+        }
+    }
 
     public override long Position
     {
@@ -137,47 +166,6 @@ public partial class SourceStream : Stream, IStreamStack
     }
 
     public override void Flush() => Current.Flush();
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (count <= 0)
-        {
-            return 0;
-        }
-
-        var total = count;
-        var r = -1;
-
-        while (count != 0 && r != 0)
-        {
-            r = Current.Read(
-                buffer,
-                offset,
-                (int)Math.Min(count, Current.Length - Current.Position)
-            );
-            count -= r;
-            offset += r;
-
-            if (!IsVolumes && count != 0 && Current.Position == Current.Length)
-            {
-                var length = Current.Length;
-
-                // Load next file if present
-                if (!SetStream(_stream + 1))
-                {
-                    break;
-                }
-
-                // Current stream switched
-                // Add length of previous stream
-                _prevSize += length;
-                Current.Seek(0, SeekOrigin.Begin);
-                r = -1; //BugFix: reset to allow loop if count is still not 0 - was breaking split zipx (lzma xz etc)
-            }
-        }
-
-        return total - count;
-    }
 
     public override long Seek(long offset, SeekOrigin origin)
     {
@@ -199,9 +187,9 @@ public partial class SourceStream : Stream, IStreamStack
         if (!IsVolumes)
         {
             SetStream(0);
-            while (_prevSize + Current.Length < pos)
+            while (_prevSize + CurrentLength < pos)
             {
-                var currentLength = Current.Length;
+                var currentLength = CurrentLength;
                 _prevSize += currentLength;
 
                 if (!SetStream(_stream + 1))
@@ -214,7 +202,7 @@ public partial class SourceStream : Stream, IStreamStack
 
                 // Safety check: if we have a zero-length stream and we're still not
                 // making progress toward the target position, we're in an invalid state
-                if (currentLength <= 0 && Current.Length <= 0)
+                if (currentLength <= 0 && CurrentLength <= 0)
                 {
                     // Both old and new stream have zero length - cannot make progress
                     throw new ArchiveOperationException(
@@ -253,6 +241,7 @@ public partial class SourceStream : Stream, IStreamStack
                 }
             }
             _streams.Clear();
+            _lengths.Clear();
             _files.Clear();
         }
     }

@@ -203,7 +203,7 @@ public partial class DecompressionStream : Stream
         }
     }
 
-#if LEGACY_DOTNET && !NETSTANDARD2_1
+#if !STREAM_DISPOSEASYNC
     public virtual ValueTask DisposeAsync()
     {
         try

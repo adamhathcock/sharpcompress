@@ -77,7 +77,8 @@ public static class IWriterExtensions
             {
                 throw new ArgumentException("Source does not exist: " + source.FullName);
             }
-            using var stream = source.OpenRead();
+            var stream = source.OpenRead();
+            await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
             await writer
                 .WriteAsync(entryPath, stream, source.LastWriteTime, cancellationToken)
                 .ConfigureAwait(false);

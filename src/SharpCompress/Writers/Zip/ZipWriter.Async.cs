@@ -48,8 +48,9 @@ public partial class ZipWriter
     }
 
     /// <summary>
-    /// Asynchronously writes an entry to the ZIP archive.
+    /// Writes an entry to the ZIP archive.
     /// </summary>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async ValueTask WriteAsync(
         string filename,
         Stream source,
@@ -57,7 +58,9 @@ public partial class ZipWriter
         CancellationToken cancellationToken = default
     )
     {
+#if !SYNC_ONLY
         cancellationToken.ThrowIfCancellationRequested();
+#endif
         await WriteAsync(
                 filename,
                 source,
@@ -68,8 +71,9 @@ public partial class ZipWriter
     }
 
     /// <summary>
-    /// Asynchronously writes an entry to the ZIP archive with specified options.
+    /// Writes an entry to the ZIP archive with specified options.
     /// </summary>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public async ValueTask WriteAsync(
         string entryPath,
         Stream source,
@@ -77,7 +81,9 @@ public partial class ZipWriter
         CancellationToken cancellationToken = default
     )
     {
+#if !SYNC_ONLY
         cancellationToken.ThrowIfCancellationRequested();
+#endif
         await using var output = await WriteToStreamAsync(
                 entryPath,
                 zipWriterEntryOptions,
@@ -85,7 +91,9 @@ public partial class ZipWriter
             )
             .ConfigureAwait(false);
         var progressStream = WrapWithProgress(source, entryPath);
-        await progressStream.CopyToAsync(output, 81920, cancellationToken).ConfigureAwait(false);
+        await progressStream
+            .CopyToAsync(output, WriterOptions.BufferSize, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private async ValueTask<ZipWritingStream> WriteToStreamAsync(
@@ -169,16 +177,18 @@ public partial class ZipWriter
     }
 
     /// <summary>
-    /// Asynchronously writes a directory entry to the ZIP archive.
-    /// Uses synchronous implementation for directory entries as they are lightweight.
+    /// Writes a directory entry to the ZIP archive.
     /// </summary>
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
     )
     {
+#if !SYNC_ONLY
         cancellationToken.ThrowIfCancellationRequested();
+#endif
 
         var normalizedName = NormalizeDirectoryName(directoryName);
         if (string.IsNullOrEmpty(normalizedName))
@@ -191,6 +201,7 @@ public partial class ZipWriter
             .ConfigureAwait(false);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask WriteDirectoryEntryAsync(
         string directoryPath,
         ZipWriterEntryOptions options,

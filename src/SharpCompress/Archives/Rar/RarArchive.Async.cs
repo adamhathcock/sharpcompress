@@ -19,11 +19,7 @@ public partial class RarArchive
     {
         if (!_disposed)
         {
-            if (UnpackV1.IsValueCreated && UnpackV1.Value is IDisposable unpackV1)
-            {
-                unpackV1.Dispose();
-            }
-
+            DisposeUnpackers();
             _disposed = true;
             await base.DisposeAsync().ConfigureAwait(false);
         }

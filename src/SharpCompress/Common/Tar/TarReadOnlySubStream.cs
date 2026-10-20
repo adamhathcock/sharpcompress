@@ -1,10 +1,11 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Tar;
 
-internal class TarReadOnlySubStream : Stream
+internal class TarReadOnlySubStream : AsyncDisposableStream
 {
     private readonly Stream _stream;
 
@@ -29,23 +30,11 @@ internal class TarReadOnlySubStream : Stream
         _isDisposed = true;
         if (disposing)
         {
-            if (Utility.UseSyncOverAsyncDispose())
-            {
-#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
-#pragma warning disable CA2012
-                AdvanceToNextHeaderAsync().GetAwaiter().GetResult();
-#pragma warning restore CA2012
-#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
-            }
-            else
-            {
-                AdvanceToNextHeader();
-            }
+            AdvanceToNextHeader();
         }
         base.Dispose(disposing);
     }
 
-#if !LEGACY_DOTNET
     public override async System.Threading.Tasks.ValueTask DisposeAsync()
     {
         if (_isDisposed)
@@ -60,7 +49,6 @@ internal class TarReadOnlySubStream : Stream
         GC.SuppressFinalize(this);
         await base.DisposeAsync().ConfigureAwait(false);
     }
-#endif
 
     private long BytesLeftToRead { get; set; }
 

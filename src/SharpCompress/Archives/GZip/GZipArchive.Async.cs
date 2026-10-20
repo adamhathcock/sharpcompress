@@ -15,19 +15,27 @@ namespace SharpCompress.Archives.GZip;
 
 public partial class GZipArchive
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public ValueTask SaveToAsync(string filePath, CancellationToken cancellationToken = default) =>
         SaveToAsync(new FileInfo(filePath), cancellationToken);
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public async ValueTask SaveToAsync(
         FileInfo fileInfo,
         CancellationToken cancellationToken = default
     )
     {
+#if SYNC_ONLY
         using var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+#else
+        var stream = fileInfo.Open(FileMode.Create, FileAccess.Write);
+        await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
+#endif
         await SaveToAsync(stream, new GZipWriterOptions(CompressionType.GZip), cancellationToken)
             .ConfigureAwait(false);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     protected override async ValueTask SaveToAsync(
         Stream stream,
         GZipWriterOptions options,
@@ -47,13 +55,21 @@ public partial class GZipArchive
         {
             if (!entry.IsDirectory)
             {
-                using var entryStream = await entry
+#if SYNC_ONLY
+                using var entryStream = entry.OpenEntryStream();
+#else
+                var entryStream = await entry
                     .OpenEntryStreamAsync(cancellationToken)
                     .ConfigureAwait(false);
+                await using var entryStreamScope = entryStream
+                    .DisposeAsyncScope()
+                    .ConfigureAwait(false);
+#endif
                 await writer
                     .WriteAsync(
                         entry.Key.NotNull("Entry Key is null"),
                         entryStream,
+                        entry.LastModifiedTime,
                         cancellationToken
                     )
                     .ConfigureAwait(false);
@@ -61,11 +77,23 @@ public partial class GZipArchive
         }
         foreach (var entry in newEntries.Where(x => !x.IsDirectory))
         {
-            using var entryStream = await entry
+#if SYNC_ONLY
+            using var entryStream = entry.OpenEntryStream();
+#else
+            var entryStream = await entry
                 .OpenEntryStreamAsync(cancellationToken)
                 .ConfigureAwait(false);
+            await using var entryStreamScope = entryStream
+                .DisposeAsyncScope()
+                .ConfigureAwait(false);
+#endif
             await writer
-                .WriteAsync(entry.Key.NotNull("Entry Key is null"), entryStream, cancellationToken)
+                .WriteAsync(
+                    entry.Key.NotNull("Entry Key is null"),
+                    entryStream,
+                    entry.LastModifiedTime,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
         }
     }

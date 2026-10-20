@@ -12,6 +12,17 @@ namespace SharpCompress.Readers.Rar;
 
 public abstract partial class RarReader
 {
+    public override async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            // The unpackers own pooled buffers even when extraction uses async I/O.
+            DisposeUnpackers();
+            _disposed = true;
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
     /// <summary>
     /// Returns file parts asynchronously for the current entry.
     /// Used for async stream operations in solid RAR archives.

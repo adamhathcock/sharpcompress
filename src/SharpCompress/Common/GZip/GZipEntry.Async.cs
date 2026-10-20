@@ -6,6 +6,7 @@ namespace SharpCompress.Common.GZip;
 
 public partial class GZipEntry
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     internal static async IAsyncEnumerable<GZipEntry> GetEntriesAsync(
         Stream stream,
         ReaderOptions options

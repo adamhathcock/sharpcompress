@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Detection;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
@@ -247,38 +248,36 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip, true)]
     [InlineData("Ace.store.ace", ArchiveType.Ace, false)]
     [InlineData("Arc.uncompressed.arc", ArchiveType.Arc, false)]
-    public void GetArchiveInformation_ReturnsExpectedInfo(
+    public void DetectArchive_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
         bool expectedRandomAccess
     )
     {
-        var info = ArchiveFactory.GetArchiveInformation(
-            Path.Combine(TEST_ARCHIVES_PATH, archiveName)
-        );
+        var info = ArchiveFactory.DetectArchive(Path.Combine(TEST_ARCHIVES_PATH, archiveName));
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
-        Assert.Equal(expectedRandomAccess, info.SupportsRandomAccess);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(expectedRandomAccess, info.SupportedApis.HasFlag(ArchiveAccessMode.Archive));
     }
 
     [Theory]
     [InlineData("7Zip.LZMA2.exe", ArchiveType.SevenZip, true)]
     [InlineData("Rar.jpeg.jpg", ArchiveType.Rar, true)]
-    public void GetArchiveInformation_WithReaderOptions_ReturnsExpectedInfo(
+    public void DetectArchive_WithReaderOptions_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
         bool expectedRandomAccess
     )
     {
-        var info = ArchiveFactory.GetArchiveInformation(
+        var info = ArchiveFactory.DetectArchive(
             GetTestArchivePath(archiveName),
             ReaderOptions.ForFilePath.WithLookForHeader(true)
         );
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
-        Assert.Equal(expectedRandomAccess, info.SupportsRandomAccess);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(expectedRandomAccess, info.SupportedApis.HasFlag(ArchiveAccessMode.Archive));
     }
 
     [Theory]
@@ -288,38 +287,38 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip, true)]
     [InlineData("Ace.store.ace", ArchiveType.Ace, false)]
     [InlineData("Arc.uncompressed.arc", ArchiveType.Arc, false)]
-    public async ValueTask GetArchiveInformationAsync_ReturnsExpectedInfo(
+    public async ValueTask DetectArchiveAsync_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
         bool expectedRandomAccess
     )
     {
-        var info = await ArchiveFactory.GetArchiveInformationAsync(
+        var info = await ArchiveFactory.DetectArchiveAsync(
             Path.Combine(TEST_ARCHIVES_PATH, archiveName)
         );
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
-        Assert.Equal(expectedRandomAccess, info.SupportsRandomAccess);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(expectedRandomAccess, info.SupportedApis.HasFlag(ArchiveAccessMode.Archive));
     }
 
     [Theory]
     [InlineData("7Zip.LZMA2.exe", ArchiveType.SevenZip, true)]
     [InlineData("Rar.jpeg.jpg", ArchiveType.Rar, true)]
-    public async ValueTask GetArchiveInformationAsync_WithReaderOptions_ReturnsExpectedInfo(
+    public async ValueTask DetectArchiveAsync_WithReaderOptions_ReturnsExpectedInfo(
         string archiveName,
         ArchiveType expectedType,
         bool expectedRandomAccess
     )
     {
-        var info = await ArchiveFactory.GetArchiveInformationAsync(
+        var info = await ArchiveFactory.DetectArchiveAsync(
             GetTestArchivePath(archiveName),
             ReaderOptions.ForFilePath.WithLookForHeader(true)
         );
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
-        Assert.Equal(expectedRandomAccess, info.SupportsRandomAccess);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(expectedRandomAccess, info.SupportedApis.HasFlag(ArchiveAccessMode.Archive));
     }
 
     [Theory]
@@ -466,17 +465,17 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("SharpCompress.AES.zip", ArchiveType.Zip, true)]
     [InlineData("SharpCompress.Encrypted.zip", ArchiveType.Zip, true)]
     [InlineData("SharpCompress.Encrypted2.zip", ArchiveType.Zip, true)]
-    public void GetArchiveInformation_DetectsSingleFileTestArchives(
+    public void DetectArchive_DetectsSingleFileTestArchives(
         string archiveName,
         ArchiveType expectedType,
         bool expectedSeekable
     )
     {
-        var info = ArchiveFactory.GetArchiveInformation(GetTestArchivePath(archiveName));
+        var info = ArchiveFactory.DetectArchive(GetTestArchivePath(archiveName));
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
-        Assert.Equal(expectedSeekable, info.SupportsRandomAccess);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(expectedSeekable, info.SupportedApis.HasFlag(ArchiveAccessMode.Archive));
     }
 
     [Theory]
@@ -623,35 +622,35 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("SharpCompress.AES.zip", ArchiveType.Zip, true)]
     [InlineData("SharpCompress.Encrypted.zip", ArchiveType.Zip, true)]
     [InlineData("SharpCompress.Encrypted2.zip", ArchiveType.Zip, true)]
-    public async ValueTask GetArchiveInformationAsync_DetectsSingleFileTestArchives(
+    public async ValueTask DetectArchiveAsync_DetectsSingleFileTestArchives(
         string archiveName,
         ArchiveType expectedType,
         bool expectedSeekable
     )
     {
-        var info = await ArchiveFactory.GetArchiveInformationAsync(GetTestArchivePath(archiveName));
+        var info = await ArchiveFactory.DetectArchiveAsync(GetTestArchivePath(archiveName));
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
-        Assert.Equal(expectedSeekable, info.SupportsRandomAccess);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(expectedSeekable, info.SupportedApis.HasFlag(ArchiveAccessMode.Archive));
     }
 
     [Fact]
-    public void GetArchiveInformation_ReturnsNull_ForNonArchive()
+    public void DetectArchive_ReturnsNull_ForNonArchive()
     {
         using var stream = new MemoryStream(Encoding.ASCII.GetBytes("not an archive"));
 
-        var info = ArchiveFactory.GetArchiveInformation(stream);
+        var info = ArchiveFactory.DetectArchive(stream);
 
         Assert.Null(info);
     }
 
     [Fact]
-    public async ValueTask GetArchiveInformationAsync_ReturnsNull_ForNonArchive()
+    public async ValueTask DetectArchiveAsync_ReturnsNull_ForNonArchive()
     {
         using var stream = new MemoryStream(Encoding.ASCII.GetBytes("not an archive"));
 
-        var info = await ArchiveFactory.GetArchiveInformationAsync(stream);
+        var info = await ArchiveFactory.DetectArchiveAsync(stream);
 
         Assert.Null(info);
     }
@@ -697,13 +696,16 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("Tar.tar.xz")]
     [InlineData("Tar.tar.zst")]
     [InlineData("Tar.tar.Z")]
-    public void GetArchiveInformation_ReturnsNull_ForCompressedTar(string archiveName)
+    public void DetectArchive_RecognizesCompressedTar(string archiveName)
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
-        var info = ArchiveFactory.GetArchiveInformation(stream);
+        var info = ArchiveFactory.DetectArchive(stream);
 
-        Assert.Null(info);
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Tar, info.ContainerType);
+        Assert.NotNull(info.OuterCompressionType);
+        Assert.Equal(ArchiveAccessMode.Reader, info.SupportedApis);
     }
 
     [Theory]
@@ -713,21 +715,131 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("Tar.tar.xz")]
     [InlineData("Tar.tar.zst")]
     [InlineData("Tar.tar.Z")]
-    public async ValueTask GetArchiveInformationAsync_ReturnsNull_ForCompressedTar(
-        string archiveName
+    public async ValueTask DetectArchiveAsync_RecognizesCompressedTar(string archiveName)
+    {
+        using var stream = File.OpenRead(GetTestArchivePath(archiveName));
+
+        var info = await ArchiveFactory.DetectArchiveAsync(stream);
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Tar, info.ContainerType);
+        Assert.NotNull(info.OuterCompressionType);
+        Assert.Equal(ArchiveAccessMode.Reader, info.SupportedApis);
+    }
+
+    [Theory]
+    [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
+    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
+    public void DetectArchive_Stream_PreservesPosition(string archiveName, ArchiveType expectedType)
+    {
+        using var stream = CreatePrefixedArchiveStream(archiveName, 13);
+        var startPosition = stream.Position;
+
+        var info = ArchiveFactory.DetectArchive(stream);
+
+        Assert.NotNull(info);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(startPosition, stream.Position);
+    }
+
+    [Theory]
+    [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
+    [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
+    public async ValueTask DetectArchiveAsync_Stream_PreservesPosition(
+        string archiveName,
+        ArchiveType expectedType
+    )
+    {
+        using var stream = CreatePrefixedArchiveStream(archiveName, 13);
+        var startPosition = stream.Position;
+
+        var info = await ArchiveFactory.DetectArchiveAsync(stream);
+
+        Assert.NotNull(info);
+        Assert.Equal(expectedType, info.ContainerType);
+        Assert.Equal(startPosition, stream.Position);
+    }
+
+    [Theory]
+    [InlineData("Zip.none.datadescriptors.zip", true, 2)]
+    [InlineData("Zip.deflate.dd.zip", true, 3)]
+    [InlineData("Zip.deflate.zip", false, 0)]
+    public void InspectArchive_ZipReportsEntriesWithDeferredSizes(
+        string archiveName,
+        bool expectedHasEntriesWithDeferredSizes,
+        long expectedUnknownSizeEntryCount
     )
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
-        var info = await ArchiveFactory.GetArchiveInformationAsync(stream);
+        var info = ArchiveFactory.InspectArchive(stream);
 
-        Assert.Null(info);
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Zip, info.Detection.ContainerType);
+        Assert.NotNull(info.Zip);
+        Assert.Equal(expectedHasEntriesWithDeferredSizes, info.Zip.HasEntriesWithDeferredSizes);
+        Assert.Equal(expectedUnknownSizeEntryCount, info.EntriesWithUnknownSizeCount);
+    }
+
+    [Theory]
+    [InlineData("Zip.none.datadescriptors.zip", true)]
+    [InlineData("Zip.deflate.zip", false)]
+    public async ValueTask InspectArchiveAsync_ZipReportsEntriesWithDeferredSizes(
+        string archiveName,
+        bool expectedHasEntriesWithDeferredSizes
+    )
+    {
+        var info = await ArchiveFactory.InspectArchiveAsync(GetTestArchivePath(archiveName));
+
+        Assert.NotNull(info);
+        Assert.NotNull(info.Zip);
+        Assert.Equal(expectedHasEntriesWithDeferredSizes, info.Zip.HasEntriesWithDeferredSizes);
+    }
+
+    [Theory]
+    [InlineData("7Zip.solid.7z", true, 1)]
+    [InlineData("7Zip.nonsolid.7z", false, 0)]
+    [InlineData("Rar.rar", false, 0)]
+    [InlineData("Rar.solid.rar", true, 1)]
+    public void InspectArchive_SolidStreamCount(
+        string archiveName,
+        bool expectedSolid,
+        long expectedSolidStreamCount
+    )
+    {
+        using var stream = File.OpenRead(GetTestArchivePath(archiveName));
+
+        var info = ArchiveFactory.InspectArchive(stream);
+
+        Assert.NotNull(info);
+        Assert.Equal(expectedSolid, info.IsSolid);
+        Assert.Equal(expectedSolidStreamCount, info.SolidStreamCount);
+    }
+
+    [Theory]
+    [InlineData("Zip.none.datadescriptors.zip", ArchiveType.Zip)]
+    [InlineData("7Zip.solid.7z", ArchiveType.SevenZip)]
+    public async ValueTask InspectArchiveAsync_ReturnsMetadata(
+        string archiveName,
+        ArchiveType expectedType
+    )
+    {
+        using var stream = File.OpenRead(GetTestArchivePath(archiveName));
+
+        var info = await ArchiveFactory.InspectArchiveAsync(stream);
+
+        Assert.NotNull(info);
+        Assert.Equal(expectedType, info.Detection.ContainerType);
+        Assert.Equal(ArchiveInformationStatus.Complete, info.Status);
+        Assert.NotNull(info.EntryCount);
     }
 
     [Theory]
     [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
     [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
-    public void GetArchiveInformation_Stream_PreservesPosition(
+    [InlineData("Rar.rar", ArchiveType.Rar)]
+    [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip)]
+    public void InspectArchive_Stream_PreservesPosition(
         string archiveName,
         ArchiveType expectedType
     )
@@ -735,17 +847,19 @@ public class ArchiveFactoryTests : TestBase
         using var stream = CreatePrefixedArchiveStream(archiveName, 13);
         var startPosition = stream.Position;
 
-        var info = ArchiveFactory.GetArchiveInformation(stream);
+        var info = ArchiveFactory.InspectArchive(stream);
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
+        Assert.Equal(expectedType, info.Detection.ContainerType);
         Assert.Equal(startPosition, stream.Position);
     }
 
     [Theory]
     [InlineData("Zip.deflate.zip", ArchiveType.Zip)]
     [InlineData("Tar.noEmptyDirs.tar", ArchiveType.Tar)]
-    public async ValueTask GetArchiveInformationAsync_Stream_PreservesPosition(
+    [InlineData("Rar.rar", ArchiveType.Rar)]
+    [InlineData("7Zip.nonsolid.7z", ArchiveType.SevenZip)]
+    public async ValueTask InspectArchiveAsync_Stream_PreservesPosition(
         string archiveName,
         ArchiveType expectedType
     )
@@ -753,11 +867,152 @@ public class ArchiveFactoryTests : TestBase
         using var stream = CreatePrefixedArchiveStream(archiveName, 13);
         var startPosition = stream.Position;
 
-        var info = await ArchiveFactory.GetArchiveInformationAsync(stream);
+        var info = await ArchiveFactory.InspectArchiveAsync(stream);
 
         Assert.NotNull(info);
-        Assert.Equal(expectedType, info.Type);
+        Assert.Equal(expectedType, info.Detection.ContainerType);
         Assert.Equal(startPosition, stream.Position);
+    }
+
+    [Fact]
+    public void InspectArchive_CompressedTar_ReportsContainerAndWrapper()
+    {
+        var info = ArchiveFactory.InspectArchive(GetTestArchivePath("Tar.tar.xz"));
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Tar, info.Detection.ContainerType);
+        Assert.Equal(CompressionType.Xz, info.Detection.OuterCompressionType);
+        Assert.Equal(ArchiveInformationStatus.Partial, info.Status);
+        Assert.Null(info.CompressedPayloadSize);
+        Assert.NotNull(info.EntryCount);
+    }
+
+    [Theory]
+    [InlineData("Ace.method1-solid.ace", true)]
+    [InlineData("Ace.method1.ace", false)]
+    public void InspectArchive_Ace_ReportsSolidMetadata(string archiveName, bool expectedSolid)
+    {
+        var info = ArchiveFactory.InspectArchive(GetTestArchivePath(archiveName));
+
+        Assert.NotNull(info);
+        Assert.Equal(expectedSolid, info.IsSolid);
+        Assert.Equal(expectedSolid ? 1 : 0, info.SolidStreamCount);
+    }
+
+    [Fact]
+    public void InspectArchive_Arc_ReportsUnavailableUncompressedSizes()
+    {
+        var info = ArchiveFactory.InspectArchive(GetTestArchivePath("Arc.uncompressed.arc"));
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveInformationStatus.Partial, info.Status);
+        Assert.True(info.Limitations.HasFlag(ArchiveInformationLimitations.UnavailableMetadata));
+        Assert.Null(info.UncompressedPayloadSize);
+        Assert.True(info.EntriesWithUnknownSizeCount > 0);
+    }
+
+    [Theory]
+    [InlineData("Arj.store.arj", ArchiveType.Arj, ArchiveInformationStatus.Complete)]
+    [InlineData("large_test.txt.Z", ArchiveType.Lzw, ArchiveInformationStatus.Partial)]
+    public void InspectArchive_ReaderOnlyFormats_ReturnsMetadata(
+        string archiveName,
+        ArchiveType expectedType,
+        ArchiveInformationStatus expectedStatus
+    )
+    {
+        var info = ArchiveFactory.InspectArchive(GetTestArchivePath(archiveName));
+
+        Assert.NotNull(info);
+        Assert.Equal(expectedType, info.Detection.ContainerType);
+        Assert.Equal(expectedStatus, info.Status);
+        Assert.NotNull(info.EntryCount);
+    }
+
+    [Fact]
+    public void InspectArchive_EncryptedHeaders_ReturnsPartialInformation()
+    {
+        var info = ArchiveFactory.InspectArchive(
+            GetTestArchivePath("Rar.encrypted_filesAndHeader.rar")
+        );
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveInformationStatus.Partial, info.Status);
+        Assert.True(info.Limitations.HasFlag(ArchiveInformationLimitations.EncryptedHeaders));
+        Assert.Equal(ArchiveEncryptionScope.Headers, info.Encryption);
+        Assert.True(info.IsEncrypted);
+    }
+
+    [Fact]
+    public void InspectArchive_EncryptedHeadersWithPassword_ReportsBothEncryptionScopes()
+    {
+        var info = ArchiveFactory.InspectArchive(
+            GetTestArchivePath("Rar.encrypted_filesAndHeader.rar"),
+            ReaderOptions.ForFilePath.WithPassword("test")
+        );
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveInformationStatus.Complete, info.Status);
+        Assert.Equal(
+            ArchiveEncryptionScope.Headers | ArchiveEncryptionScope.EntryData,
+            info.Encryption
+        );
+        Assert.True(info.IsEncrypted);
+    }
+
+    [Fact]
+    public void InspectArchive_IncompleteRarStream_ReturnsPartialInformation()
+    {
+        using var stream = File.OpenRead(GetTestArchivePath("Rar.multi.solid.part01.rar"));
+
+        var info = ArchiveFactory.InspectArchive(stream);
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveInformationStatus.Partial, info.Status);
+        Assert.True(info.Limitations.HasFlag(ArchiveInformationLimitations.MissingVolumes));
+        Assert.Null(info.CompressedPayloadSize);
+        Assert.Null(info.UncompressedPayloadSize);
+    }
+
+    [Fact]
+    public async ValueTask InspectArchiveAsync_CompressedTar_ReturnsMetadata()
+    {
+        var info = await ArchiveFactory.InspectArchiveAsync(GetTestArchivePath("Tar.tar.xz"));
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Tar, info.Detection.ContainerType);
+        Assert.Equal(CompressionType.Xz, info.Detection.OuterCompressionType);
+        Assert.NotNull(info.EntryCount);
+    }
+
+    [Fact]
+    public void InspectArchive_MultiVolumeRar_ReturnsVolumeMetadata()
+    {
+        FileInfo[] parts =
+        [
+            new(GetTestArchivePath("Rar.multi.solid.part01.rar")),
+            new(GetTestArchivePath("Rar.multi.solid.part02.rar")),
+            new(GetTestArchivePath("Rar.multi.solid.part03.rar")),
+            new(GetTestArchivePath("Rar.multi.solid.part04.rar")),
+            new(GetTestArchivePath("Rar.multi.solid.part05.rar")),
+            new(GetTestArchivePath("Rar.multi.solid.part06.rar")),
+        ];
+
+        var info = ArchiveFactory.InspectArchive(parts);
+
+        Assert.NotNull(info);
+        Assert.Equal(ArchiveType.Rar, info.Detection.ContainerType);
+        Assert.Equal(parts.Length, info.PhysicalPartCount);
+        Assert.True(info.IsMultiVolume);
+    }
+
+    [Fact]
+    public void InspectArchive_MultiVolumeRarPath_DiscoversAllParts()
+    {
+        var info = ArchiveFactory.InspectArchive(GetTestArchivePath("Rar.multi.solid.part01.rar"));
+
+        Assert.NotNull(info);
+        Assert.Equal(6, info.PhysicalPartCount);
+        Assert.True(info.IsMultiVolume);
     }
 
     private MemoryStream CreatePrefixedArchiveStream(string archiveName, int prefixLength)

@@ -74,6 +74,14 @@ public static class WriterOptionsExtensions
     ) => options with { CompressionLevel = compressionLevel };
 
     /// <summary>
+    /// Creates a copy with the specified EnableParallelism value.
+    /// </summary>
+    public static WriterOptions WithEnableParallelism(
+        this WriterOptions options,
+        bool enableParallelism
+    ) => options with { EnableParallelism = enableParallelism };
+
+    /// <summary>
     /// Creates a copy with the specified archive encoding.
     /// </summary>
     /// <param name="options">The source options.</param>

@@ -2,10 +2,11 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Test.Mocks;
 
-public class TestStream(Stream stream, bool read, bool write, bool seek) : Stream
+public class TestStream(Stream stream, bool read, bool write, bool seek) : AsyncDisposableStream
 {
     public TestStream(Stream stream)
         : this(stream, stream.CanRead, stream.CanWrite, stream.CanSeek) { }
@@ -50,14 +51,14 @@ public class TestStream(Stream stream, bool read, bool write, bool seek) : Strea
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
     ) => stream.ReadAsync(buffer, cancellationToken);
+#endif
 
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
-        await stream.DisposeAsync();
+        await stream.DisposeAsyncCompat();
         IsDisposed = true;
     }
-#endif
 
     public override long Seek(long offset, SeekOrigin origin) => stream.Seek(offset, origin);
 

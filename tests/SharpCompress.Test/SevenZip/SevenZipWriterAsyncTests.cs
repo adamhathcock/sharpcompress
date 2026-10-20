@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Common;
+using SharpCompress.Crypto;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.SevenZip;
@@ -15,6 +17,57 @@ namespace SharpCompress.Test.SevenZip;
 
 public class SevenZipWriterAsyncTests : TestBase
 {
+    [Theory]
+    [InlineData(false, 1)]
+    [InlineData(true, 1)]
+    [InlineData(false, 256)]
+    [InlineData(true, 256)]
+    public async ValueTask SevenZipWriter_Async_HeaderCrc_MatchesWrittenBytes(
+        bool compressHeader,
+        int directoryCount
+    )
+    {
+        using var output = new MemoryStream();
+        await using (
+            var writer = new SevenZipWriter(
+                new AsyncOnlyStream(output),
+                new SevenZipWriterOptions { CompressHeader = compressHeader }
+            )
+        )
+        {
+            // Large names make the raw header span multiple pooled blocks.
+            for (var i = 0; i < directoryCount; i++)
+            {
+                await writer.WriteDirectoryAsync(
+                    $"dir{i}-{new string('x', 512)}",
+                    null,
+                    CancellationToken.None
+                );
+            }
+        }
+
+        Assert.True(output.CanWrite);
+        var bytes = output.ToArray();
+        var headerOffset = BinaryPrimitives.ReadUInt64LittleEndian(bytes.AsSpan(12));
+        var headerSize = BinaryPrimitives.ReadUInt64LittleEndian(bytes.AsSpan(20));
+        var headerCrc = BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(28));
+        Assert.Equal((ulong)bytes.Length, 32 + headerOffset + headerSize);
+        Assert.Equal(
+            Crc32Stream.Compute(
+                Crc32Stream.DEFAULT_POLYNOMIAL,
+                Crc32Stream.DEFAULT_SEED,
+                bytes.AsSpan(checked(32 + (int)headerOffset), checked((int)headerSize))
+            ),
+            headerCrc
+        );
+
+        output.Position = 0;
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(output);
+        var entries = await archive.EntriesAsync.ToListAsync();
+        Assert.Equal(directoryCount, entries.Count);
+        Assert.All(entries, entry => Assert.True(entry.IsDirectory));
+    }
+
     [Fact]
     public async ValueTask SevenZipWriter_Async_SingleFile_RoundTrip()
     {

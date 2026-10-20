@@ -45,7 +45,8 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(x, fm);
+                        var fs = File.Open(x, fm);
+                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
                         await CopyEntryToAsync(reader, fs, options, ct).ConfigureAwait(false);
                     },
                     cancellationToken
@@ -83,7 +84,8 @@ public static class IAsyncReaderExtensions
                     options,
                     async (x, fm, ct) =>
                     {
-                        using var fs = File.Open(x, fm);
+                        var fs = File.Open(x, fm);
+                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
                         await CopyEntryToAsync(reader, fs, options, ct).ConfigureAwait(false);
                     },
                     cancellationToken
@@ -108,15 +110,9 @@ public static class IAsyncReaderExtensions
         CancellationToken cancellationToken
     )
     {
-#if LEGACY_DOTNET
-        using var entryStream = await reader
-            .OpenEntryStreamAsync(cancellationToken)
-            .ConfigureAwait(false);
-#else
         await using var entryStream = await reader
             .OpenEntryStreamAsync(cancellationToken)
             .ConfigureAwait(false);
-#endif
         var checkedStream = IEntryExtensions.WrapWithChecksumValidation(
             reader.Entry,
             entryStream,

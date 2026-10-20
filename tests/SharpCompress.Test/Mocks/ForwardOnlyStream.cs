@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.IO;
 
 namespace SharpCompress.Test.Mocks;
 
@@ -9,7 +10,7 @@ namespace SharpCompress.Test.Mocks;
 /// A forward-only stream wrapper that delegates directly to the underlying stream
 /// without any buffering. Supports reading and writing but not seeking.
 /// </summary>
-public class ForwardOnlyStream : Stream
+public class ForwardOnlyStream : AsyncDisposableStream
 {
     private readonly Stream _stream;
     private bool _isDisposed;
@@ -142,17 +143,15 @@ public class ForwardOnlyStream : Stream
         }
     }
 
-#if !LEGACY_DOTNET
     public override async ValueTask DisposeAsync()
     {
         if (!_isDisposed)
         {
-            await _stream.DisposeAsync();
+            await _stream.DisposeAsyncCompat();
             _isDisposed = true;
         }
         await base.DisposeAsync();
     }
-#endif
 
     private void ThrowIfDisposed()
     {

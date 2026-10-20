@@ -36,7 +36,9 @@ public partial class XZFooter
         using (var reader = new BinaryReader(stream))
         {
             BackwardSize = (reader.ReadLittleEndianUInt32() + 1) * 4;
-            StreamFlags = reader.ReadBytes(2);
+            StreamFlags = await reader
+                .ReadBytesAsync(2, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
         }
         var magBy = await _reader.ReadBytesAsync(2, cancellationToken).ConfigureAwait(false);
         if (!magBy.AsSpan().SequenceEqual(_magicBytes))

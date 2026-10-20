@@ -7,6 +7,7 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 public partial class Lzma2Filter
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,

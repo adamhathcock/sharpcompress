@@ -1,6 +1,8 @@
 using System.IO;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Providers;
+using SharpCompress.Providers.System;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using SharpCompress.Writers.GZip;
@@ -90,5 +92,34 @@ public class GZipWriterAsyncTests : WriterTests
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
             Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")
         );
+    }
+
+    [Fact]
+    public async ValueTask GZip_Writer_Async_With_System_Provider()
+    {
+        var contents = new byte[] { 1, 2, 3, 4 };
+        var providers = CompressionProviderRegistry.Default.With(
+            new SystemGZipCompressionProvider()
+        );
+        using var source = new MemoryStream(contents);
+        using var destination = new MemoryStream();
+        await using (
+            var writer = new GZipWriter(
+                destination,
+                new GZipWriterOptions { LeaveStreamOpen = true, Providers = providers }
+            )
+        )
+        {
+            await writer.WriteAsync("contents.bin", source);
+        }
+
+        destination.Position = 0;
+        using var compressed = new SystemGZipCompressionProvider().CreateDecompressStream(
+            destination
+        );
+        using var actual = new MemoryStream();
+        compressed.CopyTo(actual);
+
+        Assert.Equal(contents, actual.ToArray());
     }
 }

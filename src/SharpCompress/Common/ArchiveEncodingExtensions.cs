@@ -24,14 +24,6 @@ public enum EncodingType
 /// </summary>
 public static class ArchiveEncodingExtensions
 {
-#if !NETFRAMEWORK
-    /// <summary>
-    /// Registers the code pages encoding provider.
-    /// </summary>
-    static ArchiveEncodingExtensions() =>
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
-
     extension(IArchiveEncoding encoding)
     {
         /// <summary>

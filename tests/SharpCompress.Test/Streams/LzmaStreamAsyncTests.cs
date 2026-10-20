@@ -37,6 +37,47 @@ public class LzmaStreamAsyncTests : TestBase
         Assert.Equal((byte)'X', buffer[0]);
     }
 
+    [Fact]
+    public async Task LzmaStream_SynchronousReadThenAsynchronousRead_Throws()
+    {
+        using var stream = CreateRawLzmaStream();
+        var buffer = new byte[1];
+
+        Assert.Equal(1, stream.Read(buffer, 0, buffer.Length));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            stream.ReadAsync(buffer, 0, buffer.Length)
+        );
+    }
+
+#if !LEGACY_DOTNET
+    [Fact]
+    public async Task LzmaStream_AsynchronousMemoryReadThenSynchronousRead_Throws()
+    {
+        using var stream = CreateRawLzmaStream();
+        var buffer = new byte[1];
+
+        Assert.Equal(1, await stream.ReadAsync(buffer.AsMemory()));
+
+        Assert.Throws<InvalidOperationException>(() => stream.Read(buffer, 0, buffer.Length));
+    }
+#endif
+
+    [Fact]
+    public async Task LzmaStream_ZeroLengthReadsDoNotSelectReadMode()
+    {
+        using var stream = CreateRawLzmaStream();
+        var empty = Array.Empty<byte>();
+
+        Assert.Equal(0, stream.Read(empty, 0, 0));
+        Assert.Equal(0, await stream.ReadAsync(empty, 0, 0));
+        Assert.Equal(1, stream.ReadByte());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            stream.ReadAsync(new byte[1], 0, 1)
+        );
+    }
+
     private static byte[] LzmaData { get; } =
     [
         0x5D,
@@ -624,5 +665,15 @@ public class LzmaStreamAsyncTests : TestBase
                 break;
             }
         }
+    }
+
+    private static LzmaStream CreateRawLzmaStream()
+    {
+        var input = new MemoryStream(LzmaData);
+        var properties = new byte[5];
+        Buffer.BlockCopy(LzmaData, 0, properties, 0, properties.Length);
+        var outputSize = BitConverter.ToInt64(LzmaData, 5);
+        input.Position = 13;
+        return LzmaStream.Create(properties, input, input.Length - input.Position, outputSize);
     }
 }

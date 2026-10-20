@@ -36,20 +36,16 @@ public static class StreamStackExtensions
     }
 
     /// <summary>
-    /// Gets the root underlying stream at the bottom of the stack.
-    /// This is useful for seeking when the intermediate streams don't support it.
+    /// Rewinds by <paramref name="count"/> bytes within the buffered region of the nearest
+    /// <see cref="SharpCompressStream"/> in the stack.
     /// </summary>
-    public static Stream GetRootStream(this IStreamStack stack)
-    {
-        var current = stack.BaseStream();
-        while (current is IStreamStack streamStack)
-        {
-            current = streamStack.BaseStream();
-        }
-        return current;
-    }
-
-    internal static void Rewind(this IStreamStack stream, int count)
+    /// <remarks>
+    /// Named distinctly from <see cref="SharpCompressStream.Rewind()"/> and
+    /// <see cref="SharpCompressStream.Rewind(bool)"/>, which rewind to the recording anchor instead.
+    /// A single <c>Rewind</c> name across both would let <c>Rewind(4)</c> and <c>Rewind(true)</c> select
+    /// unrelated semantics on the same variable with no compiler complaint.
+    /// </remarks>
+    internal static void RewindBytes(this IStreamStack stream, int count)
     {
         IStreamStack? current = stream;
 

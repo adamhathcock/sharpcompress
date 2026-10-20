@@ -82,6 +82,12 @@ public sealed record GZipWriterOptions : IWriterOptions
         CompressionProviderRegistry.Default;
 
     /// <summary>
+    /// When true, opts in to a format's optional parallel encode. No writer currently implements
+    /// parallel encoding; reserved for future use. Default is false.
+    /// </summary>
+    public bool EnableParallelism { get; set; }
+
+    /// <summary>
     /// Creates a new GZipWriterOptions instance with default values.
     /// </summary>
     public GZipWriterOptions() { }

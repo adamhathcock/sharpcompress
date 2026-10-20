@@ -151,13 +151,16 @@ public class GZipFactory
                     CompressionContext.FromStream(sharpCompressStream).WithReaderOptions(options)
                 )
             );
-            if (TarArchive.IsTarFile(testStream))
+            var isTarArchive = TarArchive.IsTarFile(testStream);
+
+            // The TAR probe can consume arbitrary compressed input before it rejects a stream.
+            sharpCompressStream.Rewind();
+            sharpCompressStream.StopRecording();
+            if (isTarArchive)
             {
-                sharpCompressStream.StopRecording();
                 reader = new TarReader(sharpCompressStream, options, CompressionType.GZip);
                 return true;
             }
-            sharpCompressStream.StopRecording();
             reader = OpenReader(sharpCompressStream, options);
             return true;
         }
@@ -182,15 +185,27 @@ public class GZipFactory
         }
 
         sharpCompressStream.Rewind();
-        var tarReader = await new TarFactory()
-            .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
+        using var testStream = SharpCompressStream.CreateNonDisposing(
+            await options
+                .Providers.CreateDecompressStreamAsync(
+                    CompressionType.GZip,
+                    SharpCompressStream.CreateNonDisposing(sharpCompressStream),
+                    CompressionContext.FromStream(sharpCompressStream).WithReaderOptions(options),
+                    cancellationToken
+                )
+                .ConfigureAwait(false)
+        );
+        var isTarArchive = await TarArchive
+            .IsTarFileAsync(testStream, cancellationToken)
             .ConfigureAwait(false);
-        if (tarReader is not null)
+
+        sharpCompressStream.Rewind();
+        sharpCompressStream.StopRecording();
+        if (isTarArchive)
         {
-            return tarReader;
+            return new TarReader(sharpCompressStream, options, CompressionType.GZip);
         }
 
-        sharpCompressStream.StopRecording();
         return await OpenAsyncReader(sharpCompressStream, options, cancellationToken)
             .ConfigureAwait(false);
     }

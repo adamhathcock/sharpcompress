@@ -45,21 +45,6 @@ internal partial class ReadOnlySubStream : Stream, IStreamStack
         set => throw new NotSupportedException();
     }
 
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        if (BytesLeftToRead < count)
-        {
-            count = (int)BytesLeftToRead;
-        }
-        var read = _stream.Read(buffer, offset, count);
-        if (read > 0)
-        {
-            BytesLeftToRead -= read;
-            _position += read;
-        }
-        return read;
-    }
-
     public override int ReadByte()
     {
         if (BytesLeftToRead <= 0)
@@ -76,6 +61,8 @@ internal partial class ReadOnlySubStream : Stream, IStreamStack
     }
 
 #if !LEGACY_DOTNET
+    // Not generated from ReadAsync(Memory<byte>): the generator emits `.Span` on the sliced
+    // argument, which is already a Span<byte> once the parameter is converted.
     public override int Read(Span<byte> buffer)
     {
         var sliceLen = BytesLeftToRead < buffer.Length ? BytesLeftToRead : buffer.Length;

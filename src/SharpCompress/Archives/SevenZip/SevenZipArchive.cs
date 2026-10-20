@@ -54,7 +54,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                         _database,
                         i,
                         file,
-                        ReaderOptions.ArchiveEncoding
+                        ReaderOptions.ArchiveEncoding,
+                        ReaderOptions.EnableParallelism
                     ),
                     ReaderOptions
                 );
@@ -76,6 +77,12 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 yield return entry;
             }
         }
+    }
+
+    public override void Dispose()
+    {
+        _database?.DisposeCachedFolderStream();
+        base.Dispose();
     }
 
     private void LoadFactory(Stream stream)
@@ -184,7 +191,8 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 _currentFolderStream = _archive._database!.GetFolderStream(
                     _archive.Volumes.Single().Stream,
                     folder!,
-                    _archive._database.PasswordProvider
+                    _archive._database.PasswordProvider,
+                    Options.EnableParallelism
                 );
             }
 
@@ -199,9 +207,39 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
 
         public override void Dispose()
         {
-            _currentFolderStream?.Dispose();
+            var stream = _currentFolderStream;
             _currentFolderStream = null;
-            base.Dispose();
+            _currentFolder = null;
+            try
+            {
+                stream?.Dispose();
+            }
+            finally
+            {
+                base.Dispose();
+            }
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            var stream = _currentFolderStream;
+            _currentFolderStream = null;
+            _currentFolder = null;
+            try
+            {
+                if (stream is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                }
+                else
+                {
+                    stream?.Dispose();
+                }
+            }
+            finally
+            {
+                await base.DisposeAsync().ConfigureAwait(false);
+            }
         }
     }
 

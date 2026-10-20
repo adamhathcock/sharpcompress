@@ -159,18 +159,12 @@ public abstract class ReaderTests : TestBase
     {
         using var file = File.OpenRead(testArchive);
 
-#if !LEGACY_DOTNET
-        await using var protectedStream = SharpCompressStream.CreateNonDisposing(
+        // SharpCompressStream is not yet an AsyncDisposableStream, so scope its disposal
+        var protectedStream = SharpCompressStream.CreateNonDisposing(
             new ForwardOnlyStream(file, options.BufferSize)
         );
+        await using var protectedStreamScope = protectedStream.DisposeAsyncScope();
         await using var testStream = new TestStream(protectedStream);
-#else
-
-        using var protectedStream = SharpCompressStream.CreateNonDisposing(
-            new ForwardOnlyStream(file, options.BufferSize)
-        );
-        using var testStream = new TestStream(protectedStream);
-#endif
         await using (
             var reader = await ReaderFactory.OpenAsyncReader(
                 new AsyncOnlyStream(testStream),

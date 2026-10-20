@@ -77,20 +77,6 @@ public partial class ZipWriter : AbstractWriter
             _ => throw new InvalidFormatException("Invalid compression method: " + compressionType),
         };
 
-    public override void Write(string filename, Stream source, DateTime? modificationTime) =>
-        Write(
-            filename,
-            source,
-            new ZipWriterEntryOptions() { ModificationDateTime = modificationTime }
-        );
-
-    public void Write(string entryPath, Stream source, ZipWriterEntryOptions zipWriterEntryOptions)
-    {
-        using var output = WriteToStream(entryPath, zipWriterEntryOptions);
-        var progressStream = WrapWithProgress(source, entryPath);
-        progressStream.CopyTo(output, WriterOptions.BufferSize);
-    }
-
     public Stream WriteToStream(string entryPath, ZipWriterEntryOptions options)
     {
         options.ValidateWithFallback(compressionType, compressionLevel);
@@ -160,59 +146,6 @@ public partial class ZipWriter : AbstractWriter
             directoryName += '/';
         }
         return directoryName;
-    }
-
-    public override void WriteDirectory(string directoryName, DateTime? modificationTime)
-    {
-        var normalizedName = NormalizeDirectoryName(directoryName);
-        if (string.IsNullOrEmpty(normalizedName))
-        {
-            return; // Skip empty or root directory
-        }
-
-        var options = new ZipWriterEntryOptions { ModificationDateTime = modificationTime };
-        WriteDirectoryEntry(normalizedName, options);
-    }
-
-    // WriteDirectoryAsync moved to ZipWriter.Async.cs
-
-    private void WriteDirectoryEntry(string directoryPath, ZipWriterEntryOptions options)
-    {
-        var compression = ZipCompressionMethod.None;
-
-        options.ModificationDateTime ??= DateTime.Now;
-        options.EntryComment ??= string.Empty;
-
-        var entry = new ZipCentralDirectoryEntry(
-            compression,
-            directoryPath,
-            (ulong)streamPosition,
-            WriterOptions.ArchiveEncoding
-        )
-        {
-            Comment = options.EntryComment,
-            ModificationTime = options.ModificationDateTime,
-            Crc = 0,
-            Compressed = 0,
-            Decompressed = 0,
-        };
-
-        // Use the archive default setting for zip64 and allow overrides
-        var useZip64 = isZip64;
-        if (options.EnableZip64.HasValue)
-        {
-            useZip64 = options.EnableZip64.Value;
-        }
-
-        var headersize = (uint)WriteHeader(
-            directoryPath,
-            options,
-            entry,
-            useZip64,
-            usesDataDescriptor: false
-        );
-        streamPosition += headersize;
-        entries.Add(entry);
     }
 
     private int WriteHeader(

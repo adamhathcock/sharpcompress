@@ -106,10 +106,8 @@ internal sealed partial class SeekableZipHeaderFactory
             var span = memory.Span;
             span.Reverse();
 
-            // don't exclude the minimum eocd region, otherwise you fail to locate the header in empty zip files
-            var max_search_area = len; // - MINIMUM_EOCD_LENGTH;
-
-            for (var pos_from_end = 0; pos_from_end < max_search_area; ++pos_from_end)
+            // Include the minimum EOCD region, but never read beyond the populated span.
+            for (var pos_from_end = 0; pos_from_end <= len - needle.Length; ++pos_from_end)
             {
                 if (IsMatch(span, pos_from_end, needle))
                 {
@@ -138,25 +136,36 @@ internal sealed partial class SeekableZipHeaderFactory
         using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
 #endif
         var signature = await reader.ReadUInt32Async().ConfigureAwait(false);
-        if (
-            await ReadHeader(signature, reader, _zip64).ConfigureAwait(false)
-            is not LocalEntryHeader localEntryHeader
-        )
+        if (signature != ENTRY_HEADER_BYTES)
         {
             throw new ArchiveOperationException();
         }
 
-        // populate fields only known from the DirectoryEntryHeader
-        localEntryHeader.HasData = directoryEntryHeader.HasData;
-        localEntryHeader.ExternalFileAttributes = directoryEntryHeader.ExternalFileAttributes;
-        localEntryHeader.Comment = directoryEntryHeader.Comment;
-
-        if (FlagUtility.HasFlag(localEntryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
-        {
-            localEntryHeader.Crc = directoryEntryHeader.Crc;
-            localEntryHeader.CompressedSize = directoryEntryHeader.CompressedSize;
-            localEntryHeader.UncompressedSize = directoryEntryHeader.UncompressedSize;
-        }
+        // Sizes written to a data descriptor are only known from the central directory and are
+        // needed before the encryption header is loaded.
+        var localEntryHeader = await ReadLocalHeader(reader).ConfigureAwait(false);
+        PopulateDirectoryEntryMetadata(localEntryHeader, directoryEntryHeader);
+        await LoadHeaderAsync(localEntryHeader, stream).ConfigureAwait(false);
         return localEntryHeader;
+    }
+
+    internal async ValueTask<LocalEntryHeader> GetRawLocalHeaderAsync(
+        Stream stream,
+        DirectoryEntryHeader directoryEntryHeader
+    )
+    {
+        stream.Seek(directoryEntryHeader.RelativeOffsetOfEntryHeader, SeekOrigin.Begin);
+#if NET8_0_OR_GREATER
+        await using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#else
+        using var reader = new AsyncBinaryReader(stream, leaveOpen: true);
+#endif
+        var signature = await reader.ReadUInt32Async().ConfigureAwait(false);
+        if (signature != ENTRY_HEADER_BYTES)
+        {
+            throw new ArchiveOperationException();
+        }
+
+        return await ReadLocalHeader(reader).ConfigureAwait(false);
     }
 }

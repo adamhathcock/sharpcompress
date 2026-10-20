@@ -8,6 +8,7 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 public partial class ArmThumbFilter
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,

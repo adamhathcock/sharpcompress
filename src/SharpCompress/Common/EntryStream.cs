@@ -8,7 +8,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Common;
 
-public partial class EntryStream : Stream
+public partial class EntryStream : AsyncDisposableStream
 {
     private readonly IReader _reader;
     private readonly Stream _stream;
@@ -21,15 +21,6 @@ public partial class EntryStream : Stream
         _stream = stream;
     }
 
-    /// <summary>
-    /// When reading a stream from OpenEntryStream, the stream must be completed so use this to finish reading the entire entry.
-    /// </summary>
-    public void SkipEntry()
-    {
-        this.Skip();
-        _completed = true;
-    }
-
     protected override void Dispose(bool disposing)
     {
         if (_isDisposed)
@@ -39,18 +30,7 @@ public partial class EntryStream : Stream
         _isDisposed = true;
         if (!(_completed || _reader.Cancelled))
         {
-            if (Utility.UseSyncOverAsyncDispose())
-            {
-#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
-#pragma warning disable CA2012
-                SkipEntryAsync().GetAwaiter().GetResult();
-#pragma warning restore CA2012
-#pragma warning restore VSTHRD002 // Avoid problematic synchronous waits
-            }
-            else
-            {
-                SkipEntry();
-            }
+            SkipEntry();
         }
 
         //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
@@ -91,16 +71,6 @@ public partial class EntryStream : Stream
     {
         get => _stream.Position; //throw new NotSupportedException();
         set => throw new NotSupportedException();
-    }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var read = _stream.Read(buffer, offset, count);
-        if (read <= 0)
-        {
-            _completed = true;
-        }
-        return read;
     }
 
     public override int ReadByte()

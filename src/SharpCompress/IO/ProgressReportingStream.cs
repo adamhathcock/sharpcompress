@@ -8,7 +8,7 @@ namespace SharpCompress.IO;
 /// A stream wrapper that reports progress as data is read from the source.
 /// Used to track compression or extraction progress by wrapping the source stream.
 /// </summary>
-internal sealed partial class ProgressReportingStream : Stream
+internal sealed partial class ProgressReportingStream : AsyncDisposableStream
 {
     private readonly Stream _baseStream;
     private readonly IProgress<ProgressReport> _progress;
@@ -50,30 +50,6 @@ internal sealed partial class ProgressReportingStream : Stream
     }
 
     public override void Flush() => _baseStream.Flush();
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var bytesRead = _baseStream.Read(buffer, offset, count);
-        if (bytesRead > 0)
-        {
-            _bytesTransferred += bytesRead;
-            ReportProgress();
-        }
-        return bytesRead;
-    }
-
-#if !LEGACY_DOTNET
-    public override int Read(Span<byte> buffer)
-    {
-        var bytesRead = _baseStream.Read(buffer);
-        if (bytesRead > 0)
-        {
-            _bytesTransferred += bytesRead;
-            ReportProgress();
-        }
-        return bytesRead;
-    }
-#endif
 
     public override int ReadByte()
     {

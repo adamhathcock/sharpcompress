@@ -65,14 +65,17 @@ public class LzwFactory : Factory, IReaderFactory
                 )
             )
             {
-                if (TarArchive.IsTarFile(testStream))
+                var isTarArchive = TarArchive.IsTarFile(testStream);
+
+                // The TAR probe can consume arbitrary compressed input before it rejects a stream.
+                sharpCompressStream.Rewind();
+                sharpCompressStream.StopRecording();
+                if (isTarArchive)
                 {
-                    sharpCompressStream.StopRecording();
                     reader = new TarReader(sharpCompressStream, options, CompressionType.Lzw);
                     return true;
                 }
             }
-            sharpCompressStream.StopRecording();
             reader = OpenReader(sharpCompressStream, options);
             return true;
         }
@@ -97,15 +100,26 @@ public class LzwFactory : Factory, IReaderFactory
         }
 
         sharpCompressStream.Rewind();
-        var tarReader = await new TarFactory()
-            .TryOpenReaderAsync(sharpCompressStream, options, cancellationToken)
+        using var testStream = SharpCompressStream.CreateNonDisposing(
+            await options
+                .Providers.CreateDecompressStreamAsync(
+                    CompressionType.Lzw,
+                    SharpCompressStream.CreateNonDisposing(sharpCompressStream),
+                    cancellationToken
+                )
+                .ConfigureAwait(false)
+        );
+        var isTarArchive = await TarArchive
+            .IsTarFileAsync(testStream, cancellationToken)
             .ConfigureAwait(false);
-        if (tarReader is not null)
+
+        sharpCompressStream.Rewind();
+        sharpCompressStream.StopRecording();
+        if (isTarArchive)
         {
-            return tarReader;
+            return new TarReader(sharpCompressStream, options, CompressionType.Lzw);
         }
 
-        sharpCompressStream.StopRecording();
         return await OpenAsyncReader(sharpCompressStream, options, cancellationToken)
             .ConfigureAwait(false);
     }

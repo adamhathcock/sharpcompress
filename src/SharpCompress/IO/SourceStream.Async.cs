@@ -9,6 +9,7 @@ namespace SharpCompress.IO;
 
 public partial class SourceStream
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -30,16 +31,16 @@ public partial class SourceStream
                 .ReadAsync(
                     buffer,
                     offset,
-                    (int)Math.Min(count, Current.Length - Current.Position),
+                    (int)Math.Min(count, CurrentLength - Current.Position),
                     cancellationToken
                 )
                 .ConfigureAwait(false);
             count -= r;
             offset += r;
 
-            if (!IsVolumes && count != 0 && Current.Position == Current.Length)
+            if (!IsVolumes && count != 0 && Current.Position == CurrentLength)
             {
-                var length = Current.Length;
+                var length = CurrentLength;
 
                 // Load next file if present
                 if (!SetStream(_stream + 1))
@@ -79,16 +80,16 @@ public partial class SourceStream
         {
             r = await Current
                 .ReadAsync(
-                    buffer.Slice(offset, (int)Math.Min(count, Current.Length - Current.Position)),
+                    buffer.Slice(offset, (int)Math.Min(count, CurrentLength - Current.Position)),
                     cancellationToken
                 )
                 .ConfigureAwait(false);
             count -= r;
             offset += r;
 
-            if (!IsVolumes && count != 0 && Current.Position == Current.Length)
+            if (!IsVolumes && count != 0 && Current.Position == CurrentLength)
             {
-                var length = Current.Length;
+                var length = CurrentLength;
 
                 // Load next file if present
                 if (!SetStream(_stream + 1))

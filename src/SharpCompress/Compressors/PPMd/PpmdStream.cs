@@ -160,11 +160,7 @@ public class PpmdStream : Stream, IAsyncDisposable
         }
         catch
         {
-#if LEGACY_DOTNET && !NETSTANDARD2_1
-            instance.Dispose();
-#else
             await instance.DisposeAsync().ConfigureAwait(false);
-#endif
             throw;
         }
     }
@@ -196,7 +192,7 @@ public class PpmdStream : Stream, IAsyncDisposable
         base.Dispose(disposing);
     }
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
     public override async ValueTask DisposeAsync()
 #else
     public async ValueTask DisposeAsync()
@@ -216,7 +212,7 @@ public class PpmdStream : Stream, IAsyncDisposable
         _modelH?.Dispose();
         _modelH = null;
 
-#if !LEGACY_DOTNET || NETSTANDARD2_1
+#if STREAM_DISPOSEASYNC
         await base.DisposeAsync().ConfigureAwait(false);
 #endif
     }
@@ -416,13 +412,9 @@ public class PpmdStream : Stream, IAsyncDisposable
         cancellationToken.ThrowIfCancellationRequested();
         if (_compress)
         {
+            using var input = new ReadOnlyMemoryStream(buffer);
             await _model
-                .EncodeBlockAsync(
-                    _stream,
-                    new MemoryStream(buffer.ToArray()),
-                    false,
-                    cancellationToken
-                )
+                .EncodeBlockAsync(_stream, input, false, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

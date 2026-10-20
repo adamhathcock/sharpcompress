@@ -154,6 +154,35 @@ SharpCompress supports multiple archive and compression formats:
   - `OpenEntryStreamAsync` - Open entry stream asynchronously
 - Always provide `CancellationToken` parameter in async methods
 
+### Generating sync methods from async ones
+Most of the library still keeps a hand-written sync twin beside each async method, usually split as
+`Foo.cs` + `Foo.Async.cs`. Where the two bodies are the same logic, the sync one is generated
+instead, using [Zomp.SyncMethodGenerator](https://github.com/zompinc/sync-method-generator) (already
+referenced for every project via `Directory.Packages.props`).
+
+- Put `[Zomp.SyncMethodGenerator.CreateSyncVersion]` on the **async** method — that body is then the
+  single source of truth — and delete the hand-written sync twin. The generator drops the `Async`
+  suffix, `CancellationToken` and `IProgress<T>` (unless `PreserveCancellationToken` /
+  `PreserveProgress`), maps `Task`/`ValueTask` to `void`/`T` and `Memory<T>` to `Span<T>`, and
+  rewrites `FooAsync(...)` calls to `Foo(...)`. Modifiers, including `override`/`virtual`, are kept.
+- **Attribute individual methods, never the whole type.** A type-level attribute also generates the
+  members that must not exist (see below), so you would need more `[SkipSyncVersion]` than
+  `[CreateSyncVersion]`.
+- Attribute a method **only when the generated signature already exists by hand.** Generating a
+  member that did not exist before is a behaviour change, not a deduplication — in particular, a
+  generated `Read(Span<byte>)` replaces `Stream`'s default rent-and-copy shim.
+- Deliberately **not** generated: `Dispose`/`DisposeAsync` (on a `Stream` the generated `Dispose()`
+  cannot override the non-virtual `Stream.Dispose()`), `ReadByte`/`WriteByte` (generated without
+  `override`, so they would hide `Stream`'s), and the `Memory`/`ReadOnlyMemory` overloads that have no
+  sync twin. `Flush`/`FlushAsync` and `CopyTo`/`CopyToAsync` are OK to generate only when they are pure delegations with identical semantics.
+- Keep one XML doc comment, on the async method, phrased tense-neutrally ("Extract entry to the
+  specified stream.") — it is emitted onto both copies.
+- Use `#if SYNC_ONLY` / `#if !SYNC_ONLY` only for a localised I/O idiom that genuinely differs; if it
+  would cover more than a small part of the method, keep two hand-written methods instead.
+- To see what was generated, build with `-p:EmitCompilerGeneratedFiles=true` and look in
+  `obj/<config>/<tfm>/generated/Zomp.SyncMethodGenerator/`. A sync stack frame may therefore name a
+  method that has no file in the repo — debug it via the async source.
+
 ### Archive APIs vs Reader/Writer APIs
 - **Archive API**: Use for random access with seekable streams (e.g., `ZipArchive`, `TarArchive`)
 - **Reader API**: Use for forward-only reading on non-seekable streams (e.g., `ZipReader`, `TarReader`)

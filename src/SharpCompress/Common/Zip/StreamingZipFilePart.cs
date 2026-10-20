@@ -1,6 +1,5 @@
 using System.IO;
 using SharpCompress.Common.Zip.Headers;
-using SharpCompress.Compressors;
 using SharpCompress.IO;
 using SharpCompress.Providers;
 
@@ -19,23 +18,6 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
 
     protected override Stream CreateBaseStream() => Header.PackedStream.NotNull();
 
-    internal override Stream GetCompressedStream()
-    {
-        if (!Header.HasData)
-        {
-            return Stream.Null;
-        }
-        _decompressionStream = CreateDecompressionStream(
-            GetCryptoStream(CreateBaseStream()),
-            Header.CompressionMethod
-        );
-        if (LeaveStreamOpen)
-        {
-            return SharpCompressStream.CreateNonDisposing(_decompressionStream);
-        }
-        return _decompressionStream;
-    }
-
     internal BinaryReader FixStreamedFileLocation(ref Stream stream)
     {
         if (Header.IsDirectory)
@@ -45,12 +27,12 @@ internal sealed partial class StreamingZipFilePart : ZipFilePart
 
         if (Header.HasData && !Skipped)
         {
-            _decompressionStream ??= GetCompressedStream();
+            var decompressionStream = _decompressionStream ??= GetCompressedStream().NotNull();
 
-            _decompressionStream.Skip();
+            decompressionStream.Skip();
 
             // If we had TotalIn / TotalOut we could have used them
-            Header.CompressedSize = _decompressionStream.Position;
+            Header.CompressedSize = decompressionStream.Position;
 
             Skipped = true;
         }

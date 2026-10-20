@@ -70,26 +70,4 @@ public sealed partial class GZipWriter : AbstractWriter
         }
     }
 #pragma warning restore CA2215
-
-    public override void Write(string filename, Stream source, DateTime? modificationTime)
-    {
-        if (_wroteToStream)
-        {
-            throw new ArgumentException("Can only write a single stream to a GZip file.");
-        }
-
-        // Set metadata on the stream if it's the internal GZipStream
-        if (OutputStream is GZipStream gzipStream)
-        {
-            gzipStream.FileName = filename;
-            gzipStream.LastModified = modificationTime;
-        }
-
-        var progressStream = WrapWithProgress(source, filename);
-        progressStream.CopyTo(OutputStream.NotNull(), WriterOptions.BufferSize);
-        _wroteToStream = true;
-    }
-
-    public override void WriteDirectory(string directoryName, DateTime? modificationTime) =>
-        throw new NotSupportedException("GZip archives do not support directory entries.");
 }

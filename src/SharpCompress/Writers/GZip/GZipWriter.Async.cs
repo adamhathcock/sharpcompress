@@ -3,11 +3,13 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.IO;
 
 namespace SharpCompress.Writers.GZip;
 
 public partial class GZipWriter
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async ValueTask WriteAsync(
         string filename,
         Stream source,
@@ -19,18 +21,28 @@ public partial class GZipWriter
         {
             throw new ArgumentException("Can only write a single stream to a GZip file.");
         }
-        var stream = (GZipStream)OutputStream.NotNull();
-        stream.FileName = filename;
-        stream.LastModified = modificationTime;
+
+        // Custom providers need not expose SharpCompress's internal GZip stream.
+        if (OutputStream is GZipStream gzipStream)
+        {
+            gzipStream.FileName = filename;
+            gzipStream.LastModified = modificationTime;
+        }
+
         var progressStream = WrapWithProgress(source, filename);
 #if LEGACY_DOTNET
-        await progressStream.CopyToAsync(stream).ConfigureAwait(false);
+        await progressStream
+            .CopyToAsync(OutputStream.NotNull(), WriterOptions.BufferSize)
+            .ConfigureAwait(false);
 #else
-        await progressStream.CopyToAsync(stream, cancellationToken).ConfigureAwait(false);
+        await progressStream
+            .CopyToAsync(OutputStream.NotNull(), WriterOptions.BufferSize, cancellationToken)
+            .ConfigureAwait(false);
 #endif
         _wroteToStream = true;
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
