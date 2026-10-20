@@ -465,8 +465,9 @@ public partial class LzmaStream
         cancellationToken.ThrowIfCancellationRequested();
         if (_encoder != null)
         {
+            using var input = new ReadOnlyMemoryStream(buffer);
             _position = await _encoder
-                .CodeAsync(new MemoryStream(buffer.ToArray()), false, cancellationToken)
+                .CodeAsync(input, false, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

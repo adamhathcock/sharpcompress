@@ -412,13 +412,9 @@ public class PpmdStream : Stream, IAsyncDisposable
         cancellationToken.ThrowIfCancellationRequested();
         if (_compress)
         {
+            using var input = new ReadOnlyMemoryStream(buffer);
             await _model
-                .EncodeBlockAsync(
-                    _stream,
-                    new MemoryStream(buffer.ToArray()),
-                    false,
-                    cancellationToken
-                )
+                .EncodeBlockAsync(_stream, input, false, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
