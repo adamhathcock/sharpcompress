@@ -3,6 +3,7 @@ using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.LZMA;
@@ -339,11 +340,12 @@ internal sealed class Lzma2EncoderStream : Stream
         try
         {
             _encoder.Code(inputMs, outputMs, length, -1, null);
+            // Trial-decode to exclude trailing range-encoder bytes from the chunk size.
             outputMs.Position = 0;
-            // Trial decoding excludes range-encoder flush bytes from the chunk size.
-            var consumed = FindConsumedBytes(outputMs, (int)outputMs.Length, length);
+            var consumed = FindConsumedBytes(outputMs, length);
             outputMs.SetLength(consumed);
             outputMs.Position = 0;
+            // The caller owns the pooled output until the chunk write completes.
             return outputMs;
         }
         catch
@@ -356,7 +358,7 @@ internal sealed class Lzma2EncoderStream : Stream
         }
     }
 
-    private int FindConsumedBytes(Stream input, int compressedSize, int uncompressedSize)
+    private int FindConsumedBytes(PooledMemoryStream input, int uncompressedSize)
     {
         // Build 5-byte LZMA property header: [pb/lp/lc byte] [dictSize as LE int32]
         Span<byte> props = stackalloc byte[5];
@@ -369,7 +371,7 @@ internal sealed class Lzma2EncoderStream : Stream
         var decoder = _trialDecoder ??= new Decoder();
         decoder.SetDecoderProperties(props);
 
-        decoder.Code(input, Stream.Null, compressedSize, uncompressedSize, null);
+        decoder.Code(input, Stream.Null, input.Length, uncompressedSize, null);
 
         return (int)input.Position;
     }
@@ -434,7 +436,14 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             ArrayPool<byte>.Shared.Return(header);
         }
-        await compressedData.CopyToAsync(_output, 65536, cancellationToken).ConfigureAwait(false);
+        // Compressed chunks fit 64 KiB; avoid an 80 KiB request rounding to 128 KiB.
+        await compressedData
+            .CopyToAsync(
+                _output,
+                Math.Min(Constants.BufferSize, MAX_COMPRESSED_CHUNK_SIZE),
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     /// <summary>

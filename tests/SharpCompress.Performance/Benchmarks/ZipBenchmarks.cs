@@ -6,6 +6,7 @@ using BenchmarkDotNet.Attributes;
 using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 using SharpCompress.Compressors;
+using SharpCompress.IO;
 using SharpCompress.Providers;
 using SharpCompress.Providers.System;
 using SharpCompress.Readers;
@@ -111,6 +112,38 @@ public class ZipBenchmarks : ArchiveBenchmarkBase
             {
                 await reader.WriteEntryToAsync(Stream.Null).ConfigureAwait(false);
             }
+        }
+    }
+
+    [Benchmark(Description = "Zip: Create archive with small files (Pooled)")]
+    public void ZipCreateSmallFilesPooled()
+    {
+        using var outputStream = new PooledMemoryStream();
+        using var writer = WriterFactory.OpenWriter(
+            outputStream,
+            ArchiveType.Zip,
+            new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true }
+        );
+        for (var i = 0; i < 10; i++)
+        {
+            using var entryStream = new MemoryStream(new byte[1024]);
+            writer.Write($"file{i}.txt", entryStream);
+        }
+    }
+
+    [Benchmark(Description = "Zip: Create archive with small files (Async, Pooled)")]
+    public async Task ZipCreateSmallFilesAsyncPooled()
+    {
+        using var outputStream = new PooledMemoryStream();
+        await using var writer = await WriterFactory.OpenAsyncWriter(
+            outputStream,
+            ArchiveType.Zip,
+            new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true }
+        );
+        for (var i = 0; i < 10; i++)
+        {
+            using var entryStream = new MemoryStream(new byte[1024]);
+            await writer.WriteAsync($"file{i}.txt", entryStream).ConfigureAwait(false);
         }
     }
 

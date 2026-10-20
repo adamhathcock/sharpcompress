@@ -70,11 +70,8 @@ public class RarLifetimeTests : TestBase
         );
         await foreach (var entry in archive.EntriesAsync.Where(entry => !entry.IsDirectory))
         {
-#if LEGACY_DOTNET
-            using var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-#else
-            await using var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
-#endif
+            var stream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+            await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
             await stream.CopyToAsync(Stream.Null, Constants.BufferSize, CancellationToken.None);
         }
 

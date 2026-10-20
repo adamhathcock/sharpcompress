@@ -5,55 +5,80 @@ using System.Threading.Tasks;
 
 namespace SharpCompress.IO;
 
-// Borrows caller memory only until the awaited encoder operation completes.
+// Borrows memory for the lifetime of an encoder call; never copies or owns the backing storage.
 internal sealed class ReadOnlyMemoryStream(ReadOnlyMemory<byte> memory) : Stream
 {
-    private int position;
-    public override bool CanRead => true;
+    private ReadOnlyMemory<byte> _memory = memory;
+    private int _position;
+    private bool _disposed;
+
+    public override bool CanRead => !_disposed;
     public override bool CanSeek => false;
     public override bool CanWrite => false;
-    public override long Length => memory.Length;
+    public override long Length =>
+        !_disposed
+            ? _memory.Length
+            : throw new ObjectDisposedException(nameof(ReadOnlyMemoryStream));
     public override long Position
     {
-        get => position;
+        get =>
+            !_disposed
+                ? _position
+                : throw new ObjectDisposedException(nameof(ReadOnlyMemoryStream));
         set => throw new NotSupportedException();
     }
 
-    private int ReadMemory(Span<byte> buffer)
+    public override int Read(byte[] buffer, int offset, int count)
     {
-        var count = Math.Min(buffer.Length, memory.Length - position);
-        memory.Span.Slice(position, count).CopyTo(buffer);
-        position += count;
+        ThrowHelper.ThrowIfNull(buffer, nameof(buffer));
+        if (offset < 0 || count < 0 || offset > buffer.Length - count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count), "Invalid buffer range.");
+        }
+        return ReadCore(buffer.AsSpan(offset, count));
+    }
+
+    private int ReadCore(Span<byte> buffer)
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(ReadOnlyMemoryStream));
+        }
+        var count = Math.Min(buffer.Length, _memory.Length - _position);
+        _memory.Span.Slice(_position, count).CopyTo(buffer);
+        _position += count;
         return count;
     }
 
-    public override int Read(byte[] buffer, int offset, int count) =>
-        ReadMemory(buffer.AsSpan(offset, count));
-
-    public override int ReadByte() => position < memory.Length ? memory.Span[position++] : -1;
+    public override int ReadByte()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(ReadOnlyMemoryStream));
+        }
+        return _position < _memory.Length ? _memory.Span[_position++] : -1;
+    }
 
     public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(Read(buffer, offset, count));
-    }
+    ) =>
+        cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled<int>(cancellationToken)
+            : Task.FromResult(Read(buffer, offset, count));
 
 #if !LEGACY_DOTNET
-    public override int Read(Span<byte> buffer) => ReadMemory(buffer);
+    public override int Read(Span<byte> buffer) => ReadCore(buffer);
 
     public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
-    )
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return new ValueTask<int>(ReadMemory(buffer.Span));
-    }
+    ) =>
+        cancellationToken.IsCancellationRequested
+            ? ValueTask.FromCanceled<int>(cancellationToken)
+            : ValueTask.FromResult(ReadCore(buffer.Span));
 #endif
 
     public override void Flush() { }
@@ -64,4 +89,11 @@ internal sealed class ReadOnlyMemoryStream(ReadOnlyMemory<byte> memory) : Stream
 
     public override void Write(byte[] buffer, int offset, int count) =>
         throw new NotSupportedException();
+
+    protected override void Dispose(bool disposing)
+    {
+        _disposed = true;
+        _memory = default;
+        base.Dispose(disposing);
+    }
 }

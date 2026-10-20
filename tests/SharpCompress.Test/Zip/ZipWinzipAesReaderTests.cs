@@ -200,11 +200,8 @@ public class ZipWinzipAesReaderTests : TestBase
                 continue;
             }
 
-#if LEGACY_DOTNET
-            using var entryStream = await entry.OpenEntryStreamAsync();
-#else
-            await using var entryStream = await entry.OpenEntryStreamAsync();
-#endif
+            var entryStream = await entry.OpenEntryStreamAsync();
+            await using var scope = entryStream.DisposeAsyncScope().ConfigureAwait(false);
             Assert.Equal(expected, await ReadInChunksAsync(entryStream, bufferSize));
         }
     }
@@ -303,11 +300,8 @@ public class ZipWinzipAesReaderTests : TestBase
 
     private static async ValueTask<byte[]> ReadAsync(IAsyncReader reader)
     {
-#if LEGACY_DOTNET
-        using var entryStream = await reader.OpenEntryStreamAsync();
-#else
-        await using var entryStream = await reader.OpenEntryStreamAsync();
-#endif
+        var entryStream = await reader.OpenEntryStreamAsync();
+        await using var scope = entryStream.DisposeAsyncScope().ConfigureAwait(false);
         using var output = new MemoryStream();
         await entryStream.CopyToAsync(output);
         return output.ToArray();

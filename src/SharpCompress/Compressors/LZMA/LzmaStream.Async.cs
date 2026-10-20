@@ -465,7 +465,7 @@ public partial class LzmaStream
         cancellationToken.ThrowIfCancellationRequested();
         if (_encoder != null)
         {
-            using var input = new SharpCompress.IO.ReadOnlyMemoryStream(buffer);
+            using var input = new ReadOnlyMemoryStream(buffer);
             _position = await _encoder
                 .CodeAsync(input, false, cancellationToken)
                 .ConfigureAwait(false);
