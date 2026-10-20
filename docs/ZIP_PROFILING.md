@@ -322,3 +322,73 @@ initialization do not support a detailed percentage split at this smaller total.
   rejects Span reads protects this behavior.
 - CSharpier formatting/check and Git whitespace checks pass.
 - No staging or commit is performed by this follow-up.
+
+## Ring-buffer follow-up (`c78cc86`)
+
+The original matrix used seekable memory/file inputs, including for Reader API
+measurements. It therefore missed the non-seekable ring-buffer path: switching
+Deflate refills to memory-based reads selected a wrapper implementation that
+allocated a temporary array for every fresh read and buffered replay.
+
+Commit `c78cc86` accesses array-backed memory directly when reading/writing the
+ring buffer. Non-array memory uses `ArrayPool<byte>` rentals returned in
+`finally` blocks. Underlying reads retain the Memory/ValueTask overload.
+
+Reran the 24-case Deflate/stored, memory/file, SharpCompress/.NET matrix with the
+same archives, two warmups, seven measured extractions, CRC/size checks and
+64 KiB output buffer. Added non-seekable Reader cases by wrapping each input in
+a forward-only delegate. Each extraction still checks that the borrowed source
+remains readable. Builds and traces did not overlap timed measurements.
+
+### Non-seekable Reader comparison
+
+Both versions use the extended harness. "Before" is the saved pre-fix
+`optimization/final-library` snapshot; `manifest.json` records both DLL hashes.
+Allocation values are bytes per complete 200 MiB extraction, not retained memory.
+
+| Async Reader / input | Before allocated | Fixed allocated | Before elapsed | Fixed elapsed |
+| --- | ---: | ---: | ---: | ---: |
+| Deflate / memory | 110,149,184 B | 35,256 B | 249.45 ms | 243.41 ms |
+| Deflate / file | 114,237,408 B | 4,226,200 B | 275.71 ms | 265.28 ms |
+| Stored / memory | 209,808,104 B | 10,784 B | 94.71 ms | 86.58 ms |
+| Stored / file | 211,697,560 B | 1,943,216 B | 161.20 ms | 150.70 ms |
+
+The removed allocation volume tracks the compressed payload size. Stored reads
+benefit too because they share the wrapper's memory-based read implementation.
+File-backed async reads retain suspension/state-machine allocations; the fix is
+not a claim of allocation-free file extraction. Sync non-seekable allocations
+are unchanged: **34,696 B / 38,984 B** for Deflate memory/file and
+**10,224 B / 14,512 B** for stored memory/file. Timing differences are descriptive
+single-run medians, not a universal speedup guarantee.
+
+### Seekable Deflate rerun
+
+| API / input | Fixed allocated | Fixed elapsed |
+| --- | ---: | ---: |
+| Archive sync / memory | 34,448 B | 243.22 ms |
+| Reader sync / memory | 34,656 B | 240.99 ms |
+| Archive async / memory | 35,240 B | 241.85 ms |
+| Reader async / memory | 35,216 B | 241.97 ms |
+| Archive sync / file | 38,984 B | 250.24 ms |
+| Reader sync / file | 38,944 B | 249.78 ms |
+| Archive async / file | 2,898,728 B | 262.74 ms |
+| Reader async / file | 2,130,928 B | 265.69 ms |
+
+Seekable-memory allocation totals match the previous final profile exactly.
+Async memory allocations also remain **35,240 B Archive / 35,216 B Reader**
+across the 16/64/256 KiB output-buffer sweep. The full matrix, raw controls and
+non-seekable comparisons contain 49 timed scenarios in total.
+
+Three EventPipe traces cover pre-fix/fixed non-seekable async Reader and fixed
+seekable async Reader. All report zero lost events. The pre-fix non-seekable
+trace samples approximately **1.10 GB of `byte[]`** over ten measured
+extractions under `SharpCompressStream.ReadWithRingBufferAsync`; the fixed
+non-seekable trace has four allocation ticks and no sampled `byte[]` hotspot.
+Exact allocation totals above come from GC counters, not sampled trace sums.
+
+Artifacts are in `zip-200mb-profile/ring-buffer-c78cc86/` under the temporary
+artifact root documented above. `run.py` reproduces the matrix and traces;
+`summary.json`, individual logs, `manifest.json`, library snapshots and trace
+analyses preserve the results. Validation before committing the fix: **2,996
+.NET 10 Release tests pass**, all library targets build without warnings/errors,
+and CSharpier and Git whitespace checks pass.
