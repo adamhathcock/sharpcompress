@@ -12,6 +12,21 @@ namespace SharpCompress.Archives.SevenZip;
 
 public partial class SevenZipArchive
 {
+    public override async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_database is not null)
+            {
+                await _database.DisposeCachedFolderStreamAsync().ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
     private async ValueTask LoadFactoryAsync(
         Stream stream,
         CancellationToken cancellationToken = default

@@ -13,10 +13,17 @@ public partial class Decoder : IAsyncDisposable
 {
     public async ValueTask DisposeAsync()
     {
-        if (_outWindow is not null)
+        try
         {
-            await _outWindow.DisposeAsync().ConfigureAwait(false);
+            if (_outWindow is not null)
+            {
+                await _outWindow.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+        finally
+        {
             _outWindow = null;
+            ReleaseModels();
         }
     }
 
@@ -157,16 +164,20 @@ public partial class Decoder : IAsyncDisposable
         }
 
         var rangeDecoder = new RangeCoder.Decoder();
-        await rangeDecoder.InitAsync(inStream, cancellationToken).ConfigureAwait(false);
-
-        await CodeAsync(_dictionarySize, _outWindow, rangeDecoder, cancellationToken)
-            .ConfigureAwait(false);
-
-        await _outWindow.ReleaseStreamAsync(cancellationToken).ConfigureAwait(false);
-        rangeDecoder.ReleaseStream();
-
-        await _outWindow.DisposeAsync().ConfigureAwait(false);
-        _outWindow = null;
+        try
+        {
+            await rangeDecoder.InitAsync(inStream, cancellationToken).ConfigureAwait(false);
+            await CodeAsync(_dictionarySize, _outWindow, rangeDecoder, cancellationToken)
+                .ConfigureAwait(false);
+            await _outWindow.ReleaseStreamAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            rangeDecoder.ReleaseStream();
+            var window = _outWindow;
+            _outWindow = null;
+            await window.DisposeAsync().ConfigureAwait(false);
+        }
     }
 
     internal async ValueTask<bool> CodeAsync(
@@ -176,6 +187,7 @@ public partial class Decoder : IAsyncDisposable
         CancellationToken cancellationToken = default
     )
     {
+        EnsureScalarModels();
         var dictionarySizeCheck = Math.Max(dictionarySize, 1);
 
         await outWindow.CopyPendingAsync(cancellationToken).ConfigureAwait(false);

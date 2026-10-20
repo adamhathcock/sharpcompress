@@ -99,6 +99,60 @@ public class SevenZipLifetimeTests : TestBase
         Assert.False(input.CanRead);
     }
 
+    [Theory]
+    [InlineData("7Zip.LZMA.7z", false, false)]
+    [InlineData("7Zip.LZMA.7z", true, true)]
+    [InlineData("7Zip.LZMA2.7z", false, true)]
+    [InlineData("7Zip.LZMA2.7z", true, false)]
+    [InlineData("7Zip.solid.7z", true, true)]
+    public async Task Archive_Async_Dispose_Releases_Cached_Decoder(
+        string filename,
+        bool leaveOpen,
+        bool readAll
+    )
+    {
+        using var input = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, filename));
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(
+            input,
+            new ReaderOptions { LeaveStreamOpen = leaveOpen },
+            CancellationToken.None
+        );
+        var entry = await archive.EntriesAsync.Where(e => !e.IsDirectory).FirstAsync();
+        var entryStream = await entry.OpenEntryStreamAsync(CancellationToken.None);
+        await using (entryStream.DisposeAsyncScope())
+        {
+            if (readAll)
+            {
+                await entryStream.CopyToAsync(
+                    Stream.Null,
+                    Constants.BufferSize,
+                    CancellationToken.None
+                );
+            }
+            else
+            {
+                Assert.True(
+                    await entryStream.ReadAsync(new byte[1], 0, 1, CancellationToken.None) > 0
+                );
+            }
+        }
+        var database = GetField(archive, "_database")!;
+        var folderStream = (Stream)GetField(database, "_cachedFolderStream")!;
+        while (folderStream is Filter)
+        {
+            folderStream = (Stream)GetField(folderStream, "_baseStream")!;
+        }
+        var decoder = Assert.IsType<LzmaStream>(folderStream);
+        var window = GetField(decoder, "_outWindow")!;
+        Assert.NotNull(GetField(window, "_buffer"));
+
+        await archive.DisposeAsync();
+        await archive.DisposeAsync();
+        Assert.Null(GetField(database, "_cachedFolderStream"));
+        Assert.Null(GetField(window, "_buffer"));
+        Assert.Equal(leaveOpen, input.CanRead);
+    }
+
     private static object? GetField(object instance, string name) =>
         instance
             .GetType()

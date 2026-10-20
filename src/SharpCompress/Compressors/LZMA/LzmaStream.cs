@@ -267,7 +267,14 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
     {
         try
         {
-            _encoder?.Dispose();
+            try
+            {
+                _encoder?.Dispose();
+            }
+            finally
+            {
+                _decoder?.Dispose();
+            }
         }
         finally
         {
@@ -277,6 +284,9 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             finally
             {
+                // Partial reads and failed decodes may not reach the normal
+                // end-of-chunk path that returns the range decoder's fast buffer.
+                _rangeDecoder.ReleaseStream();
                 ReturnAsyncHeaderBuffer();
             }
         }
@@ -574,7 +584,8 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
                 _needProps = false;
                 Properties[0] = (byte)ReadChunkHeaderByte();
 
-                _decoder = new Decoder();
+                // Properties initialization resets every probability and match-state field.
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
             else if (_needProps)
@@ -583,7 +594,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             else if (control >= 0xA0)
             {
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
 

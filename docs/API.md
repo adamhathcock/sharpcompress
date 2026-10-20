@@ -882,6 +882,18 @@ using (var reader = ReaderFactory.OpenReader(stream))
 - [FORMATS.md](FORMATS.md) - Supported formats
 - [PERFORMANCE.md](PERFORMANCE.md) - API selection guide
 
+## 7z Decoder Lifetime
+
+Both `Dispose()` and `DisposeAsync()` release a 7z archive's cached folder
+decoder, including after partially reading an entry. Temporary encoded-header
+decoders are released after parsing or validation failure. Decoder cleanup
+returns pooled input and dictionary buffers without closing a borrowed archive
+source; the archive's `LeaveStreamOpen` setting still controls source ownership.
+
+For solid archives, prefer `ExtractAllEntries()` / `ExtractAllEntriesAsync()` to
+reuse the folder decoder across entries. A reader borrowed from an archive can
+be disposed without closing that archive's source.
+
 ## 7z Encrypted Decoding Errors
 
 AES-encrypted 7z codec data errors and encrypted-header CRC failures throw `SharpCompress.Common.CryptographicException`,

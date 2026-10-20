@@ -30,7 +30,11 @@ internal partial class BufferedSubStream
             _stream.Position = origin;
         }
         _cacheLength = await _stream
+#if LEGACY_DOTNET || SYNC_ONLY
             .ReadAsync(_cache, 0, count, cancellationToken)
+#else
+            .ReadAsync(_cache.AsMemory(0, count), cancellationToken)
+#endif
             .ConfigureAwait(false);
         origin += _cacheLength;
         BytesLeftToRead -= _cacheLength;

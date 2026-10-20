@@ -11,7 +11,7 @@ namespace SharpCompress.Compressors.LZMA;
 /// <summary>
 /// Write-only stream that compresses data using the LZMA2 framing format.
 /// Buffers input, compresses in chunks, and writes LZMA2-framed output to the underlying stream.
-/// Each chunk is independently compressed with a fresh LZMA encoder.
+/// Each chunk is independently compressed with reset LZMA state and reusable workspaces.
 /// </summary>
 internal sealed class Lzma2EncoderStream : Stream
 {
@@ -31,6 +31,7 @@ internal sealed class Lzma2EncoderStream : Stream
     private readonly ArrayPool<byte> _bufferPool;
     private readonly byte[] _properties;
     private readonly Encoder _encoder;
+    private Decoder? _trialDecoder;
     private int _bufferPosition;
     private bool _isFirstChunk = true;
     private bool _isDisposed;
@@ -240,6 +241,7 @@ internal sealed class Lzma2EncoderStream : Stream
         // Returning the input buffer must not depend on successful output or encoder cleanup.
         try
         {
+            _trialDecoder?.Dispose();
             _encoder.Dispose();
         }
         finally
@@ -349,6 +351,9 @@ internal sealed class Lzma2EncoderStream : Stream
         catch
         {
             outputMs.Dispose();
+            // A failed trial must not carry dictionary/output state into the next block.
+            _trialDecoder?.Dispose();
+            _trialDecoder = null;
             throw;
         }
     }
@@ -363,7 +368,7 @@ internal sealed class Lzma2EncoderStream : Stream
         props[3] = (byte)(_dictionarySize >> 16);
         props[4] = (byte)(_dictionarySize >> 24);
 
-        using var decoder = new Decoder();
+        var decoder = _trialDecoder ??= new Decoder();
         decoder.SetDecoderProperties(props);
 
         decoder.Code(input, Stream.Null, input.Length, uncompressedSize, null);
@@ -384,7 +389,7 @@ internal sealed class Lzma2EncoderStream : Stream
         var uncompSizeMinus1 = uncompressedSize - 1;
         var compSizeMinus1 = compressedSize - 1;
 
-        // Each chunk is compressed independently with a fresh LZMA encoder,
+        // Each chunk is compressed independently with reset LZMA encoder state,
         // so we must use 0xE0 (full reset: dictionary + state + properties) every time.
         // The decoder uses outWindow.Total for literal context and posState;
         // 0xE0 triggers outWindow.Reset() which zeros Total, matching the encoder's
@@ -431,8 +436,13 @@ internal sealed class Lzma2EncoderStream : Stream
         {
             ArrayPool<byte>.Shared.Return(header);
         }
+        // Compressed chunks fit 64 KiB; avoid an 80 KiB request rounding to 128 KiB.
         await compressedData
-            .CopyToAsync(_output, Constants.BufferSize, cancellationToken)
+            .CopyToAsync(
+                _output,
+                Math.Min(Constants.BufferSize, MAX_COMPRESSED_CHUNK_SIZE),
+                cancellationToken
+            )
             .ConfigureAwait(false);
     }
 

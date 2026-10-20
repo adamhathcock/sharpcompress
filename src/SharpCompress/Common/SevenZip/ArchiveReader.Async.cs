@@ -209,9 +209,13 @@ internal sealed partial class ArchiveReader
                         myPackSizes,
                         folder,
                         pass,
-                        cancellationToken
+                        cancellationToken,
+                        decoderBufferPool
                     )
                     .ConfigureAwait(false);
+                // Own the decoder even when reading or validating the encoded
+                // header fails; its source stream remains borrowed.
+                await using var decoderScope = outStream.DisposeAsyncScope().ConfigureAwait(false);
 
                 var unpackSize = checked((int)folder.GetUnpackSize());
                 var data = new byte[unpackSize];

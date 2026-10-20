@@ -29,17 +29,18 @@ internal static class SevenZipSignatureHeaderWriter
     /// </summary>
     public static void WritePlaceholder(Stream stream)
     {
-        var header = new byte[HeaderSize];
+        Span<byte> header = stackalloc byte[HeaderSize];
+        header.Clear();
 
         // magic signature
-        Array.Copy(Signature, 0, header, 0, Signature.Length);
+        Signature.AsSpan().CopyTo(header);
 
         // version: major=0, minor=2 (standard 7z format)
         header[6] = 0;
         header[7] = 2;
 
         // remaining 24 bytes are zero (placeholder for CRC and StartHeader)
-        stream.Write(header, 0, header.Length);
+        stream.Write(header);
     }
 
     /// <summary>
@@ -79,11 +80,12 @@ internal static class SevenZipSignatureHeaderWriter
         uint nextHeaderCrc
     )
     {
-        var header = BuildFinalHeader(nextHeaderOffset, nextHeaderSize, nextHeaderCrc);
+        Span<byte> header = stackalloc byte[HeaderSize];
+        BuildFinalHeader(header, nextHeaderOffset, nextHeaderSize, nextHeaderCrc);
 
         // Write at position 0
         stream.Position = 0;
-        stream.Write(header, 0, header.Length);
+        stream.Write(header);
     }
 
     /// <summary>
@@ -98,24 +100,26 @@ internal static class SevenZipSignatureHeaderWriter
         CancellationToken cancellationToken = default
     )
     {
-        var header = BuildFinalHeader(nextHeaderOffset, nextHeaderSize, nextHeaderCrc);
+        var header = new byte[HeaderSize];
+        BuildFinalHeader(header, nextHeaderOffset, nextHeaderSize, nextHeaderCrc);
 
         // Write at position 0
         stream.Position = 0;
         await stream.WriteAsync(header, 0, header.Length, cancellationToken).ConfigureAwait(false);
     }
 
-    private static byte[] BuildFinalHeader(
+    private static void BuildFinalHeader(
+        Span<byte> header,
         ulong nextHeaderOffset,
         ulong nextHeaderSize,
         uint nextHeaderCrc
     )
     {
         // Build StartHeader (20 bytes): NextHeaderOffset(8) + NextHeaderSize(8) + NextHeaderCRC(4)
-        var startHeader = new byte[20];
-        BinaryPrimitives.WriteUInt64LittleEndian(startHeader.AsSpan(0, 8), nextHeaderOffset);
-        BinaryPrimitives.WriteUInt64LittleEndian(startHeader.AsSpan(8, 8), nextHeaderSize);
-        BinaryPrimitives.WriteUInt32LittleEndian(startHeader.AsSpan(16, 4), nextHeaderCrc);
+        var startHeader = header.Slice(12, 20);
+        BinaryPrimitives.WriteUInt64LittleEndian(startHeader.Slice(0, 8), nextHeaderOffset);
+        BinaryPrimitives.WriteUInt64LittleEndian(startHeader.Slice(8, 8), nextHeaderSize);
+        BinaryPrimitives.WriteUInt32LittleEndian(startHeader.Slice(16, 4), nextHeaderCrc);
 
         // CRC32 of StartHeader
         var startHeaderCrc = Crc32Stream.Compute(
@@ -125,21 +129,14 @@ internal static class SevenZipSignatureHeaderWriter
         );
 
         // Assemble full 32-byte header
-        var header = new byte[HeaderSize];
-
         // magic signature
-        Array.Copy(Signature, 0, header, 0, Signature.Length);
+        Signature.AsSpan().CopyTo(header);
 
         // version
         header[6] = 0;
         header[7] = 2;
 
         // StartHeaderCRC
-        BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(8, 4), startHeaderCrc);
-
-        // StartHeader
-        Array.Copy(startHeader, 0, header, 12, startHeader.Length);
-
-        return header;
+        BinaryPrimitives.WriteUInt32LittleEndian(header.Slice(8, 4), startHeaderCrc);
     }
 }
