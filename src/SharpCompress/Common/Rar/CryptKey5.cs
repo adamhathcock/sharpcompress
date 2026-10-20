@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -35,14 +36,21 @@ internal class CryptKey5 : ICryptKey
     {
         var passwordBytes = Encoding.UTF8.GetBytes(password);
         salt = salt.Concat(new byte[] { 0, 0, 0, 1 }).ToArray();
-#if LEGACY_DOTNET
+        // Reuse keyed HMAC state: recreating it for every iteration is especially
+        // expensive on some platforms. Modern targets also reuse digest buffers.
         using var hmac = new HMACSHA256(passwordBytes);
+#if LEGACY_DOTNET
         var block = hmac.ComputeHash(salt);
-#else
-        var block = HMACSHA256.HashData(passwordBytes, salt);
-#endif
         var finalHash = (byte[])block.Clone();
+#else
+        Span<byte> block = stackalloc byte[SHA256_DIGEST_SIZE];
+        Span<byte> nextBlock = stackalloc byte[SHA256_DIGEST_SIZE];
+        Span<byte> finalHash = stackalloc byte[SHA256_DIGEST_SIZE];
+        hmac.TryComputeHash(salt, block, out _);
+        block.CopyTo(finalHash);
+#endif
 
+        // RAR5 takes snapshots of the same PBKDF2 chain at N, N+16, and N+32.
         var loop = new int[] { iterations, 17, 17 };
         var res = new List<byte[]> { };
 
@@ -53,7 +61,8 @@ internal class CryptKey5 : ICryptKey
 #if LEGACY_DOTNET
                 block = hmac.ComputeHash(block);
 #else
-                block = HMACSHA256.HashData(passwordBytes, block);
+                hmac.TryComputeHash(block, nextBlock, out _);
+                nextBlock.CopyTo(block);
 #endif
                 for (var j = 0; j < finalHash.Length; j++)
                 {
@@ -61,7 +70,7 @@ internal class CryptKey5 : ICryptKey
                 }
             }
 
-            res.Add((byte[])finalHash.Clone());
+            res.Add(finalHash.ToArray());
         }
 
         return res;
