@@ -7,6 +7,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.Deflate;
+using SharpCompress.IO;
+using SharpCompress.Readers;
+using SharpCompress.Test.Mocks;
 using Xunit;
 
 namespace SharpCompress.Test.Streams;
@@ -80,6 +83,127 @@ public class DeflateReadAllocationTests
     }
 
 #if !LEGACY_DOTNET
+    [Fact]
+    public async Task NonSeekable_Reader_Does_Not_Allocate_Compressed_Payload_Copies()
+    {
+        var expected = new byte[2 * 1024 * 1024];
+        new Random(1234).NextBytes(expected);
+        using var packed = new MemoryStream();
+        using (
+            var zip = new System.IO.Compression.ZipArchive(
+                packed,
+                System.IO.Compression.ZipArchiveMode.Create,
+                leaveOpen: true
+            )
+        )
+        {
+            using var entry = zip.CreateEntry("random.bin").Open();
+            entry.Write(expected);
+        }
+        packed.Position = 0;
+        using var input = new ForwardOnlyStream(packed);
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            input,
+            ReaderOptions.ForExternalStream,
+            CancellationToken.None
+        );
+        Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
+        await using var decoded = await reader.OpenEntryStreamAsync(CancellationToken.None);
+        var buffer = new byte[32768];
+        var total = await decoded.ReadAsync(buffer.AsMemory(), CancellationToken.None);
+        Assert.True(expected.AsSpan(0, total).SequenceEqual(buffer.AsSpan(0, total)));
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        int count;
+        while ((count = await decoded.ReadAsync(buffer.AsMemory(), CancellationToken.None)) != 0)
+        {
+            Assert.True(expected.AsSpan(total, count).SequenceEqual(buffer.AsSpan(0, count)));
+            total += count;
+        }
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - start;
+        Assert.Equal(expected.Length, total);
+        // Memory-backed I/O completes synchronously, keeping this counter on one thread.
+        // A temporary array per compressed refill would allocate about 2 MiB.
+        Assert.InRange(allocated, 0, 131072);
+        Assert.True(input.CanRead);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RingBuffered_Memory_Read_Preserves_Slices_Across_Replay_And_Fresh_Input(
+        bool nonArray
+    )
+    {
+        var expected = Enumerable.Range(0, 64).Select(i => (byte)i).ToArray();
+        using var input = new ForwardOnlyStream(new MemoryStream(expected));
+        using var stream = SharpCompressStream.Create(input, 16);
+        var bytes = Enumerable.Repeat((byte)0xCC, 22).ToArray();
+        using var owner = new NonArrayMemory(bytes);
+        var memory = (nonArray ? owner.Memory : bytes.AsMemory()).Slice(5, 12);
+        Assert.Equal(12, await stream.ReadAsync(memory, CancellationToken.None));
+        Assert.Equal(12, await stream.ReadAsync(memory, CancellationToken.None));
+        // The ring has wrapped. Combine six replayed bytes with six fresh bytes.
+        stream.Position = 18;
+        Assert.Equal(12, await stream.ReadAsync(memory, CancellationToken.None));
+        Assert.Equal(expected.Skip(18).Take(12), bytes.Skip(5).Take(12));
+        Assert.Equal(30, stream.Position);
+        // Replay the fresh bytes too, verifying the source offset used when recording.
+        stream.Position = 24;
+        Assert.Equal(12, await stream.ReadAsync(memory, CancellationToken.None));
+        Assert.Equal(expected.Skip(24).Take(12), bytes.Skip(5).Take(12));
+        Assert.Equal(36, stream.Position);
+        Assert.All(bytes.Take(5), b => Assert.Equal(0xCC, b));
+        Assert.All(bytes.Skip(17), b => Assert.Equal(0xCC, b));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RingBuffer_Fresh_Input_Does_Not_Allocate_Per_Read(bool nonArray)
+    {
+        const int length = 1024 * 1024;
+        using var input = new ForwardOnlyStream(new MemoryStream(new byte[length]));
+        using var stream = SharpCompressStream.Create(input, 8192);
+        var buffer = new byte[4106];
+        using var owner = new NonArrayMemory(buffer);
+        var memory = (nonArray ? owner.Memory : buffer.AsMemory()).Slice(5, 4096);
+        var total = await stream.ReadAsync(memory, CancellationToken.None);
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        int count;
+        while ((count = await stream.ReadAsync(memory, CancellationToken.None)) != 0)
+        {
+            total += count;
+        }
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - start;
+        Assert.Equal(length, total);
+        Assert.InRange(allocated, 0, 65536);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RingBuffer_Replay_Does_Not_Allocate_Per_Read(bool nonArray)
+    {
+        using var input = new ForwardOnlyStream(new MemoryStream(new byte[32]));
+        using var stream = SharpCompressStream.Create(input, 16);
+        var buffer = new byte[22];
+        using var owner = new NonArrayMemory(buffer);
+        var memory = (nonArray ? owner.Memory : buffer.AsMemory()).Slice(5, 12);
+        await stream.ReadAsync(memory, CancellationToken.None);
+        stream.Position = 0;
+        await stream.ReadAsync(memory, CancellationToken.None);
+        var start = GC.GetAllocatedBytesForCurrentThread();
+        var total = 0;
+        for (var i = 0; i < 10000; i++)
+        {
+            stream.Position = 0;
+            total += await stream.ReadAsync(memory, CancellationToken.None);
+        }
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - start;
+        Assert.Equal(120000, total);
+        Assert.InRange(allocated, 0, 65536);
+    }
+
     [Fact]
     public async Task NonArray_Fallback_Reuses_Its_Rental_Across_Many_Reads()
     {
