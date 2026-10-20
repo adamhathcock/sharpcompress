@@ -1,14 +1,15 @@
-using System.Collections.Generic;
 using System.IO;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Crypto;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar;
 
 internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
 {
     private BlockTransformer _rijndael = default!;
-    private readonly Queue<byte> _data = new();
+    private readonly byte[] _block = new byte[16];
+    private int _blockOffset = 16;
     private long _readCount;
 
     private RarCryptoBinaryReader(Stream stream)
@@ -42,7 +43,22 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
 
     public override void Mark() => _readCount = 0;
 
-    public override byte ReadByte() => ReadAndDecryptBytes(1)[0];
+    public override byte ReadByte()
+    {
+        if (_blockOffset == _block.Length)
+        {
+            if (!BaseStream.ReadFully(_block))
+            {
+                throw new InvalidFormatException("Unexpected end of encrypted stream");
+            }
+            _rijndael.ProcessBlocks(_block, _block.Length);
+            _blockOffset = 0;
+        }
+        var value = _block[_blockOffset++];
+        UpdateCrc(value);
+        _readCount++;
+        return value;
+    }
 
     public override byte[] ReadBytes(int count) => ReadAndDecryptBytes(count);
 
@@ -50,43 +66,31 @@ internal sealed class RarCryptoBinaryReader : RarCrcBinaryReader
 
     private byte[] ReadAndDecryptBytes(int count)
     {
-        var queueSize = _data.Count;
-        var sizeToRead = count - queueSize;
-
-        if (sizeToRead > 0)
-        {
-            var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-            for (var i = 0; i < alignedSize / 16; i++)
-            {
-                //long ax = System.currentTimeMillis();
-                var cipherText = ReadBytesNoCrc(16);
-                var readBytes = _rijndael.ProcessBlock(cipherText);
-                foreach (var readByte in readBytes)
-                {
-                    _data.Enqueue(readByte);
-                }
-            }
-        }
-
         var decryptedBytes = new byte[count];
 
         for (var i = 0; i < count; i++)
         {
-            var b = _data.Dequeue();
-            decryptedBytes[i] = b;
-            UpdateCrc(b);
+            decryptedBytes[i] = ReadByte();
         }
 
-        _readCount += count;
         return decryptedBytes;
     }
 
-    public void ClearQueue() => _data.Clear();
+    public void ClearQueue() => _blockOffset = _block.Length;
 
     public void SkipQueue()
     {
         var position = BaseStream.Position;
-        BaseStream.Position = position + _data.Count;
+        BaseStream.Position = position + _block.Length - _blockOffset;
         ClearQueue();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _rijndael.Dispose();
+        }
+        base.Dispose(disposing);
     }
 }
