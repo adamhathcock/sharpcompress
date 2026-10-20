@@ -17,7 +17,7 @@ internal static class SevenZipWriteExtensions
     /// </summary>
     public static int WriteEncodedUInt64(this Stream stream, ulong value)
     {
-        var data = new byte[9];
+        Span<byte> data = stackalloc byte[9];
         data[0] = 0xFF;
         byte mask = 0x80;
         var length = 1;
@@ -36,7 +36,7 @@ internal static class SevenZipWriteExtensions
             mask >>= 1;
         }
 
-        stream.Write(data, 0, length);
+        stream.Write(data.Slice(0, length));
         return length;
     }
 

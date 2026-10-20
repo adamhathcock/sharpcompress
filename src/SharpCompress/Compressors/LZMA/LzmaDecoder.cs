@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
@@ -15,8 +16,30 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
 
     public void Dispose()
     {
-        _outWindow?.Dispose();
-        _outWindow = null;
+        try
+        {
+            _outWindow?.Dispose();
+        }
+        finally
+        {
+            _outWindow = null;
+            ReleaseModels();
+        }
+    }
+
+    private void ReleaseModels()
+    {
+        _literalDecoder.ReleaseModels();
+        scalarModelsReady = false;
+#if !LEGACY_DOTNET
+        if (_fLiteral is not null)
+        {
+            ArrayPool<ushort>.Shared.Return(_fLiteral);
+            _fLiteral = null;
+        }
+        _fLiteralNumPrevBits = _fLiteralNumPosBits = -1;
+        fastModelsReady = false;
+#endif
     }
 
     private partial class LenDecoder
@@ -137,16 +160,31 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
             {
                 return;
             }
+            var numStates = (uint)1 << (numPrevBits + numPosBits);
+            var required = checked((int)(numStates * 0x300));
+            // Allocate the reference-bearing wrappers before returning any old rental.
+            var coders =
+                _coders is null || _coders.Length < numStates || _coders.Length / 2 > numStates
+                    ? new Decoder2[numStates]
+                    : _coders;
+            // Do not retain a large property bank after switching to small contexts.
+            if (_models is null || _models.Length < required || _models.Length / 2 > required)
+            {
+                var replacement = ArrayPool<BitDecoder>.Shared.Rent(required);
+                if (_models is not null)
+                {
+                    ArrayPool<BitDecoder>.Shared.Return(_models);
+                }
+                _models = replacement;
+            }
+            for (uint i = 0; i < numStates; i++)
+            {
+                coders[i].Create(_models, checked((int)(i * 0x300)));
+            }
+            _coders = coders;
             _numPosBits = numPosBits;
             _posMask = ((uint)1 << numPosBits) - 1;
             _numPrevBits = numPrevBits;
-            var numStates = (uint)1 << (_numPrevBits + _numPosBits);
-            _models = new BitDecoder[checked((int)(numStates * 0x300))];
-            _coders = new Decoder2[numStates];
-            for (uint i = 0; i < numStates; i++)
-            {
-                _coders[i].Create(_models, checked((int)(i * 0x300)));
-            }
         }
 
         public void Init()
@@ -156,6 +194,16 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
             {
                 _coders[i].Init();
             }
+        }
+
+        public void ReleaseModels()
+        {
+            if (_models is not null)
+            {
+                ArrayPool<BitDecoder>.Shared.Return(_models);
+            }
+            _models = null;
+            _coders = null;
         }
 
         private uint GetState(uint pos, byte prevByte) =>
@@ -174,28 +222,17 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
 
     private OutWindow _outWindow;
 
-    private readonly BitDecoder[] _isMatchDecoders = new BitDecoder[
-        Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX
-    ];
-    private readonly BitDecoder[] _isRepDecoders = new BitDecoder[Base.K_NUM_STATES];
-    private readonly BitDecoder[] _isRepG0Decoders = new BitDecoder[Base.K_NUM_STATES];
-    private readonly BitDecoder[] _isRepG1Decoders = new BitDecoder[Base.K_NUM_STATES];
-    private readonly BitDecoder[] _isRepG2Decoders = new BitDecoder[Base.K_NUM_STATES];
-    private readonly BitDecoder[] _isRep0LongDecoders = new BitDecoder[
-        Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX
-    ];
-
-    private readonly BitTreeDecoder[] _posSlotDecoder = new BitTreeDecoder[
-        Base.K_NUM_LEN_TO_POS_STATES
-    ];
-    private readonly BitDecoder[] _posDecoders = new BitDecoder[
-        Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX
-    ];
-
-    private BitTreeDecoder _posAlignDecoder = new(Base.K_NUM_ALIGN_BITS);
-
-    private readonly LenDecoder _lenDecoder = new();
-    private readonly LenDecoder _repLenDecoder = new();
+    private BitDecoder[] _isMatchDecoders;
+    private BitDecoder[] _isRepDecoders;
+    private BitDecoder[] _isRepG0Decoders;
+    private BitDecoder[] _isRepG1Decoders;
+    private BitDecoder[] _isRepG2Decoders;
+    private BitDecoder[] _isRep0LongDecoders;
+    private BitTreeDecoder[] _posSlotDecoder;
+    private BitDecoder[] _posDecoders;
+    private BitTreeDecoder _posAlignDecoder;
+    private LenDecoder _lenDecoder;
+    private LenDecoder _repLenDecoder;
 
     private readonly LiteralDecoder _literalDecoder = new();
 
@@ -218,10 +255,6 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
     public Decoder()
     {
         _dictionarySize = -1;
-        for (var i = 0; i < Base.K_NUM_LEN_TO_POS_STATES; i++)
-        {
-            _posSlotDecoder[i] = new BitTreeDecoder(Base.K_NUM_POS_SLOT_BITS);
-        }
     }
 
 #if !LEGACY_DOTNET
@@ -302,6 +335,27 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         {
             return;
         }
+        if (_isMatchDecoders is null)
+        {
+            // A sync-only decoder never needs this scalar object graph.
+            _isMatchDecoders = new BitDecoder[Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX];
+            _isRepDecoders = new BitDecoder[Base.K_NUM_STATES];
+            _isRepG0Decoders = new BitDecoder[Base.K_NUM_STATES];
+            _isRepG1Decoders = new BitDecoder[Base.K_NUM_STATES];
+            _isRepG2Decoders = new BitDecoder[Base.K_NUM_STATES];
+            _isRep0LongDecoders = new BitDecoder[
+                Base.K_NUM_STATES << Base.K_NUM_POS_STATES_BITS_MAX
+            ];
+            _posSlotDecoder = new BitTreeDecoder[Base.K_NUM_LEN_TO_POS_STATES];
+            for (var i = 0; i < _posSlotDecoder.Length; i++)
+            {
+                _posSlotDecoder[i] = new BitTreeDecoder(Base.K_NUM_POS_SLOT_BITS);
+            }
+            _posDecoders = new BitDecoder[Base.K_NUM_FULL_DISTANCES - Base.K_END_POS_MODEL_INDEX];
+            _posAlignDecoder = new BitTreeDecoder(Base.K_NUM_ALIGN_BITS);
+            _lenDecoder = new LenDecoder();
+            _repLenDecoder = new LenDecoder();
+        }
         _literalDecoder.Create(literalPosBits, literalContextBits);
         _lenDecoder.Create(_posStateMask + 1);
         _repLenDecoder.Create(_posStateMask + 1);
@@ -332,15 +386,19 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         }
 
         var rangeDecoder = new RangeCoder.Decoder();
-        rangeDecoder.Init(inStream);
-
-        Code(_dictionarySize, _outWindow, rangeDecoder);
-
-        _outWindow.ReleaseStream();
-        rangeDecoder.ReleaseStream();
-
-        _outWindow.Dispose();
-        _outWindow = null;
+        try
+        {
+            rangeDecoder.Init(inStream);
+            Code(_dictionarySize, _outWindow, rangeDecoder);
+            _outWindow.ReleaseStream();
+        }
+        finally
+        {
+            rangeDecoder.ReleaseStream();
+            var window = _outWindow;
+            _outWindow = null;
+            window.Dispose();
+        }
     }
 
 #if !LEGACY_DOTNET

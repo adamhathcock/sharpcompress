@@ -267,7 +267,14 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
     {
         try
         {
-            _encoder?.Dispose();
+            try
+            {
+                _encoder?.Dispose();
+            }
+            finally
+            {
+                _decoder?.Dispose();
+            }
         }
         finally
         {

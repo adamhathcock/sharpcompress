@@ -314,3 +314,140 @@ Validation for this follow-up: **466 targeted tests** and **2,997 complete .NET
 succeed; net48 tests were not run on macOS. Formatting and whitespace checks
 pass. No public signatures or CRC-validation semantics changed. This phase did
 not introduce a global pool or increase the production dictionary-growth factor.
+
+## Follow-up: encoder workspaces and metadata scratch
+
+This round starts at `03056961`, after the preceding changes. Saved libraries,
+benchmark sources, JSON logs and EventPipe traces live in the external artifact
+directory's `round3/` subdirectory. Comparisons use Release net10.0, two warmups
+and five measured microbenchmark iterations. Large extraction uses the existing
+200 MiB solid LZMA2 archive, two warmups and three measured iterations. Inputs,
+metadata objects and reflection delegates are prepared outside measurement.
+Builds and tests do not run concurrently with measured workloads.
+
+### Implementation
+
+- The encoder rents its 4,096-element optimization workspace on first use,
+  clears its logical range on initialization and returns it on disposal. This
+  removes a recurring large-object allocation without pooling encoder objects.
+- LZMA2 block compression keeps its pooled output stream alive through trial
+  decoding and chunk writing instead of materializing it with `ToArray()`.
+  The output is truncated to the trial decoder's consumed byte count, preserving
+  range-coder flush-byte handling. Uncompressed fallback still works; exceptions
+  return the temporary output and invalidate failed trial-decoder state.
+- A trial decoder is reused within each LZMA2 encoder stream. Fixed scalar
+  decoder tables initialize only when scalar decoding is actually needed.
+  Scalar literal probabilities are pooled. Fast probabilities share one pooled
+  bank containing fixed tables followed by literals, keeping the default bank
+  within a 16 KiB pool bucket. Initialization uses logical lengths, not capacity.
+  Both stream-disposal paths now dispose their decoder to return model rentals.
+- Direct `LzmaStream.WriteAsync(ReadOnlyMemory<byte>)` borrows memory through an
+  internal read-only adapter until encoding completes, rather than copying it.
+  This includes memory not backed by an array. The current 7z copy loop calls the
+  array overload, so this benefit is measured separately from archive writing.
+- Synchronous integer, digest, coder-ID, timestamp, attribute and signature-header
+  scratch uses bounded stack buffers. Folder validation's 32-word stack mask is
+  explicitly cleared. Async signature headers retain owned storage across awaits.
+  Legacy span-write compatibility can still rent/copy; it is not a zero-copy claim.
+- FilesInfo computes property sizes and writes directly, eliminating temporary
+  property streams, closures and bool arrays. Names use 512-byte stack scratch
+  for short names on modern targets and a reusable rented buffer for long names.
+  Legacy encoding uses a rented buffer. CRC-defined vectors also write directly.
+
+No public API signatures, dictionary-growth policy, stream ownership defaults
+or checksum-validation semantics change.
+
+### Match-finder bucket experiment rejected
+
+The binary-tree match finder needs `2 * (dictionarySize + 1)` uint entries.
+For a 1 MiB dictionary, its logical payload is 8 MiB + 8 bytes, crossing into a
+16 MiB shared-pool bucket on modern .NET. An experimental build replaced this
+default rental with an exact-size owned array, retaining custom-pool behavior.
+It reduced capacity per active encoder but lost warm buffer reuse: 16 small
+files allocated **145,934,592 B for LZMA** and **143,684,800 B for LZMA2**, with
+median elapsed times of 20.7 ms and 26.7 ms respectively. This is substantially
+worse allocation behavior than the retained shared-pool implementation.
+
+The exact-array experiment was removed. A bounded exact-size reusable cache
+could address both concerns, but was not introduced: it requires a separate
+retention/concurrency policy rather than silently replacing shared pooling with
+an unbounded second cache or reducing the effective dictionary size. Likewise,
+the 17 KiB length-price tables are not independently pooled into 32 KiB buckets;
+this round prioritizes the existing large optimization workspace and model bank.
+
+### Results
+
+Exact managed allocation deltas are medians after warmup. These results describe
+pool reuse, not guaranteed allocation-free cold starts or lower process RSS.
+Pool capacity can exceed logical data sizes; oversized literal banks are released
+when switching to substantially smaller context properties rather than retained
+for the decoder's entire remaining lifetime.
+
+| Workload | Baseline allocated | Updated allocated |
+| --- | ---: | ---: |
+| 16 independent 4 KiB files, LZMA writer sync | 6,389,192 B | 3,319,696 B |
+| Same files, LZMA writer async | 4,338,864 B | 1,269,480 B |
+| Same files, LZMA2 writer sync | 4,582,864 B | 1,071,896 B |
+| Same files, LZMA2 writer async | 4,658,968 B | 1,148,112 B |
+| Three compressible 2 MiB LZMA2 blocks, sync/async | 307,360 B | 55,144 B |
+| Three random 2 MiB LZMA2 blocks, sync/async | 6,684,832 B | 56,704 B |
+| Serialize 10,000 mixed metadata entries | 2,868,992 B | 40 B |
+| 64 direct 4 KiB LZMA memory writes | 501,360 B | 56,408 B |
+| Decode 64 independent reset chunks, sync | 24,072 B | 712 B |
+| Decode 64 independent reset chunks, async | 33,472 B | 8,784 B |
+
+The metadata microbenchmark includes long/short Unicode names, partial times,
+directories and empty files. Metadata objects and delegates already exist; it
+does not include archive creation, header compression, or public entry objects.
+The remaining 40 bytes are the harness stopwatch. The block-compression benchmark
+discards output to `Stream.Null`; round-trip tests independently validate emitted
+data. The writer benchmark includes finalization and seekable MemoryStream output.
+
+| 200 MiB extraction | Baseline allocated | Updated allocated | Baseline elapsed | Updated elapsed |
+| --- | ---: | ---: | ---: | ---: |
+| Archive entries sync | 57,640 B | 9,992 B | 2.612 s | 2.554 s |
+| Archive entries async | 76,024 B | 26,344 B | 14.420 s | 14.130 s |
+
+Allocation savings are approximately **83% sync / 65% async** relative to this
+round's already-optimized baseline. These raw entry-stream extractions retain
+the earlier report's checksum-validation caveat.
+
+Writer elapsed times were noisy in the main run. A separate three-process-pair
+repeat alternated baseline/final execution order; each process warmed twice and
+measured five iterations. Medians across the 15 measured iterations per version:
+
+| Small-file writer | Baseline elapsed | Updated elapsed |
+| --- | ---: | ---: |
+| LZMA sync | 18.57 ms | 18.66 ms |
+| LZMA async | 34.49 ms | 34.87 ms |
+| LZMA2 sync | 22.51 ms | 23.52 ms |
+| LZMA2 async | 22.36 ms | 23.15 ms |
+
+LZMA is essentially unchanged; **small-file LZMA2 costs about 3–5% elapsed time**
+in this repeat while allocating 75–77% less. The allocation-focused changes are
+retained with that tradeoff explicit, not described as a universal throughput
+improvement. Large/block timing variation likewise does not justify a general
+speedup claim.
+
+Separate baseline/final EventPipe sampled-thread-time and allocation traces of
+random-block writing report **zero lost events**. Baseline measured-phase samples
+include about 31.9 MB of byte arrays and 0.90 MB of `Optimal[]`; the final trace
+has no corresponding recurring samples. Remaining samples are sparse. CPU leaves
+remain dominated by encoder block processing, binary-tree matching and trial
+decoding. Exact allocation deltas are stronger evidence than sampled percentages.
+
+`run.py` reproduces microbenchmarks, extraction comparisons and traces;
+`repeat.py` reproduces the interleaved writer timing check; `exact.py` measures
+the rejected exact-array match-finder snapshot. Baseline, intermediate,
+consolidated-final and exact-array libraries are saved separately.
+
+### Validation
+
+- **485 targeted tests** and **3,016 complete .NET 10 Release tests** pass.
+- All six library targets, net48 tests, and the performance project compile
+  without warnings/errors. net48 tests are not executed on macOS.
+- New coverage exercises multiple compressed/uncompressed LZMA2 blocks, partial
+  decoder disposal, failed raw decoding, pooled workspace disposal, shrinking
+  context banks, non-array memory writes, cancellation and caller-memory reuse,
+  long/invalid-surrogate names, partial metadata and digest-vector byte boundaries.
+- CSharpier formatting/check and whitespace validation pass.

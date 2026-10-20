@@ -465,8 +465,9 @@ public partial class LzmaStream
         cancellationToken.ThrowIfCancellationRequested();
         if (_encoder != null)
         {
+            using var input = new SharpCompress.IO.ReadOnlyMemoryStream(buffer);
             _position = await _encoder
-                .CodeAsync(new MemoryStream(buffer.ToArray()), false, cancellationToken)
+                .CodeAsync(input, false, cancellationToken)
                 .ConfigureAwait(false);
         }
     }
@@ -523,7 +524,17 @@ public partial class LzmaStream
         try
         {
 #pragma warning disable VSTHRD103 // Encoder.Dispose only returns buffers; finalization is separate.
-            _encoder?.Dispose();
+            try
+            {
+                _encoder?.Dispose();
+            }
+            finally
+            {
+                if (_decoder is not null)
+                {
+                    await _decoder.DisposeAsync().ConfigureAwait(false);
+                }
+            }
 #pragma warning restore VSTHRD103
         }
         finally
