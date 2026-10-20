@@ -106,8 +106,12 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 RAR Archive and Reader entry streams validate CRC32 (or RAR5 BLAKE2sp when
 present) on both synchronous and asynchronous extraction paths. Drain an entry
 stream to the end to perform validation; a mismatch throws
-`InvalidFormatException`. Disposing a partially read stream does not validate
-the unread payload. Encrypted entries retain the existing checksum-checking
+`InvalidFormatException`. Entries without a checksum are extracted without
+checksum validation. Disposing a partially read Archive entry stream does not
+validate the unread payload. Reader entry streams normally drain unread data
+on disposal (synchronous or asynchronous) unless the reader is cancelled, so
+disposal can validate the checksum and throw on a mismatch.
+Encrypted entries retain the existing checksum-checking
 limitations; this does not add authentication for encrypted RAR data.
 
 ### RAR5 Archive Comments
