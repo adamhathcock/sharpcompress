@@ -99,7 +99,7 @@ internal sealed class InflateBlocks
     };
 
     internal ZlibCodec _codec; // pointer back to this zlib stream
-    internal int[] bb = new int[1]; // bit length tree depth
+    internal int bb; // bit length tree depth
 
     // mode independent information
     internal int bitb; // bit buffer
@@ -117,7 +117,7 @@ internal sealed class InflateBlocks
     private InflateBlockMode mode; // current inflate_block mode
     internal int readAt; // window read pointer
     internal int table; // table lengths (14 bits)
-    internal int[] tb = new int[1]; // bit length decoding tree
+    internal int tb; // bit length decoding tree
     internal IMemoryOwner<byte> window; // sliding window
     internal int writeAt; // window write pointer
 
@@ -211,12 +211,8 @@ internal sealed class InflateBlocks
                             break;
 
                         case 1: // fixed
-                            var bl = new int[1];
-                            var bd = new int[1];
-                            var tl = new int[1][];
-                            var td = new int[1][];
-                            InfTree.inflate_trees_fixed(bl, bd, tl, td, _codec);
-                            codes.Init(bl[0], bd[0], tl[0], 0, td[0], 0);
+                            InfTree.inflate_trees_fixed(out var bl, out var bd, out var tl, out var td);
+                            codes.Init(bl, bd, tl, 0, td, 0);
                             b >>= 3;
                             k -= 3;
                             mode = InflateBlockMode.CODES;
@@ -452,8 +448,8 @@ internal sealed class InflateBlocks
                         blens[border[index++]] = 0;
                     }
 
-                    bb[0] = 7;
-                    t = inftree.inflate_trees_bits(blens, bb, tb, hufts, _codec);
+                    bb = 7;
+                    t = inftree.inflate_trees_bits(blens, ref bb, ref tb, hufts, _codec);
                     if (t != ZlibConstants.Z_OK)
                     {
                         r = t;
@@ -489,7 +485,7 @@ internal sealed class InflateBlocks
                             j,
                             c;
 
-                        t = bb[0];
+                        t = bb;
 
                         while (k < t)
                         {
@@ -513,12 +509,8 @@ internal sealed class InflateBlocks
                             k += 8;
                         }
 
-                        t = hufts[
-                            ((tb[0] + (b & InternalInflateConstants.InflateMask[t])) * 3) + 1
-                        ];
-                        c = hufts[
-                            ((tb[0] + (b & InternalInflateConstants.InflateMask[t])) * 3) + 2
-                        ];
+                        t = hufts[((tb + (b & InternalInflateConstants.InflateMask[t])) * 3) + 1];
+                        c = hufts[((tb + (b & InternalInflateConstants.InflateMask[t])) * 3) + 2];
 
                         if (c < 16)
                         {
@@ -589,23 +581,24 @@ internal sealed class InflateBlocks
                         }
                     }
 
-                    tb[0] = -1;
+                    tb = -1;
 
                     {
-                        var bl = new[] { 9 }; // must be <= 9 for lookahead assumptions
-                        var bd = new[] { 6 }; // must be <= 9 for lookahead assumptions
-                        var tl = new int[1];
-                        var td = new int[1];
+                        // Tree builders return scalar depths/offsets, not per-block arrays.
+                        var bl = 9; // must be <= 9 for lookahead assumptions
+                        var bd = 6; // must be <= 9 for lookahead assumptions
+                        var tl = 0;
+                        var td = 0;
 
                         t = table;
                         t = inftree.inflate_trees_dynamic(
                             257 + (t & 0x1f),
                             1 + ((t >> 5) & 0x1f),
                             blens,
-                            bl,
-                            bd,
-                            tl,
-                            td,
+                            ref bl,
+                            ref bd,
+                            ref tl,
+                            ref td,
                             hufts,
                             _codec
                         );
@@ -627,7 +620,7 @@ internal sealed class InflateBlocks
                             writeAt = q;
                             return Flush(r);
                         }
-                        codes.Init(bl[0], bd[0], hufts, tl[0], hufts, td[0]);
+                        codes.Init(bl, bd, hufts, tl, hufts, td);
                     }
                     mode = InflateBlockMode.CODES;
                     goto case InflateBlockMode.CODES;

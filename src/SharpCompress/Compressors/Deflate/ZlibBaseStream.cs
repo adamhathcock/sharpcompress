@@ -31,6 +31,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -788,6 +789,35 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         CancellationToken cancellationToken
     )
     {
+        try
+        {
+            return await ReadCoreAsync(buffer, offset, count, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            ClearOutputBuffer();
+        }
+    }
+
+    private void ClearOutputBuffer()
+    {
+        if (_z is not null)
+        {
+            _z.OutputBuffer = null;
+        }
+    }
+
+    // The core retains the existing sync Read logic while memory-based callers
+    // can await it without materializing a Task for each decoded output buffer.
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    private async ValueTask<int> ReadCoreAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
         // According to MS documentation, any implementation of the IO.Stream.Read function must:
         // (a) throw an exception if offset & count reference an invalid part of the buffer,
         //     or if count < 0, or if buffer is null
@@ -884,9 +914,17 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
             {
                 // No data available, so try to Read data from the captive stream.
                 _z.NextIn = 0;
+#if SYNC_ONLY
+                _z.AvailableBytesIn = _stream.Read(_workingBuffer, 0, _workingBuffer.Length);
+#else
                 _z.AvailableBytesIn = await _stream
+#if LEGACY_DOTNET
                     .ReadAsync(_workingBuffer, 0, _workingBuffer.Length, cancellationToken)
+#else
+                    .ReadAsync(_workingBuffer.AsMemory(), cancellationToken)
+#endif
                     .ConfigureAwait(false);
+#endif
                 if (_z.AvailableBytesIn == 0)
                 {
                     nomoreinput = true;
@@ -977,17 +1015,37 @@ internal partial class ZlibBaseStream : Stream, IStreamStack
         CancellationToken cancellationToken = default
     )
     {
-        // Use ArrayPool to rent a buffer and delegate to byte[] ReadAsync
+        if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer, out var segment))
+        {
+            try
+            {
+                return await ReadCoreAsync(
+                        segment.Array,
+                        segment.Offset,
+                        segment.Count,
+                        cancellationToken
+                    )
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                // Neither caller memory nor returned rentals may escape this read.
+                ClearOutputBuffer();
+            }
+        }
+
+        // The codec requires an array; non-array memory keeps a bounded rental fallback.
         byte[] array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
         try
         {
-            int read = await ReadAsync(array, 0, buffer.Length, cancellationToken)
+            int read = await ReadCoreAsync(array, 0, buffer.Length, cancellationToken)
                 .ConfigureAwait(false);
             array.AsSpan(0, read).CopyTo(buffer.Span);
             return read;
         }
         finally
         {
+            ClearOutputBuffer();
             System.Buffers.ArrayPool<byte>.Shared.Return(array);
         }
     }
