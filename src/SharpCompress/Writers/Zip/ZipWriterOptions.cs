@@ -86,10 +86,11 @@ public sealed record ZipWriterOptions : IWriterOptions
 
     /// <summary>
     /// Sets a value indicating if zip64 support is enabled.
-    /// If this is not set, individual stream lengths cannot exceed 4 GiB.
-    /// This option is not supported for non-seekable streams.
-    /// Archives larger than 4GiB are supported as long as all streams
-    /// are less than 4GiB in length.
+    /// If this is not set, individual compressed and uncompressed sizes must be
+    /// less than 0xFFFFFFFF bytes (the ZIP64 size sentinel).
+    /// Non-seekable output streams use 64-bit data descriptors when enabled.
+    /// Archives larger than 4GiB are supported without this option as long as
+    /// every entry's sizes remain below that limit.
     /// </summary>
     public bool UseZip64 { get; set; }
 

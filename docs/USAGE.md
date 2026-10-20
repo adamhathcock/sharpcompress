@@ -330,6 +330,29 @@ writer.Write("entry.txt", source, new ZipWriterEntryOptions
 });
 ```
 
+### Write ZIP64 to a non-seekable stream
+
+Pass `ZipWriterOptions` directly to the general writer factory. Enable ZIP64 before
+writing entries whose compressed or uncompressed sizes may reach 4 GiB; it cannot
+be enabled retroactively after a non-seekable entry's header has been written.
+The same options work with seekable output and synchronous `OpenWriter`.
+
+```C#
+// outputStream can be a caller-owned network stream or pipe.
+await using var writer = await WriterFactory.OpenAsyncWriter(
+    outputStream,
+    ArchiveType.Zip,
+    new ZipWriterOptions(CompressionType.Deflate)
+    {
+        UseZip64 = true,
+        LeaveStreamOpen = true,
+    },
+    cancellationToken);
+
+using Stream source = File.OpenRead("large-file.bin");
+await writer.WriteAsync("large-file.bin", source, DateTime.UtcNow, cancellationToken);
+```
+
 ### Write a 7z archive
 
 ```C#

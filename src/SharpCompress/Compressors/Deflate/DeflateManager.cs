@@ -70,6 +70,7 @@
 
 using System;
 using System.Buffers;
+using System.Buffers.Binary;
 using SharpCompress.Algorithms;
 using SharpCompress.Common;
 
@@ -304,6 +305,7 @@ internal sealed partial class DeflateManager
     // An index in this array is thus a window index modulo 32K.
 
     private short[] head; // Heads of the hash chains or NIL.
+    private bool hashChainsPopulated;
 
     private int ins_h; // hash index of string to be inserted
     private int hash_size; // number of elements in hash table
@@ -419,6 +421,7 @@ internal sealed partial class DeflateManager
 
         // clear the hash - workitem 9063
         Array.Clear(head, 0, hash_size);
+        hashChainsPopulated = false;
 
         //for (int i = 0; i < hash_size; i++) head[i] = 0;
 
@@ -1176,9 +1179,7 @@ internal sealed partial class DeflateManager
     //    option -- not supported here).
     private void _fillWindow()
     {
-        int n,
-            m;
-        int p;
+        int n;
         int more; // Amount of free space at the end of the window.
 
         do
@@ -1206,30 +1207,16 @@ internal sealed partial class DeflateManager
                 strstart -= w_size; // we now have strstart >= MAX_DIST
                 blockStart -= w_size;
 
-                // Slide the hash table (could be avoided with 32 bit values
-                // at the expense of memory usage). We slide even when level == 0
-                // to keep the hash table consistent if we switch back to level > 0
-                // later. (Using level 0 permanently is not an optimal usage of
-                // zlib, so we don't care about this pathological case.)
-
-                n = hash_size;
-                p = n;
-                do
+                // Stored blocks never add hash entries. Until a dictionary or a
+                // matching deflater has used the tables, head remains all NIL and
+                // prev is unreachable, so sliding either table is wasted work.
+                // Once populated, keep sliding even at level 0: SetParams may
+                // switch back to matching and must see the same history.
+                if (hashChainsPopulated)
                 {
-                    m = (head[--p] & 0xffff);
-                    head[p] = (short)((m >= w_size) ? (m - w_size) : 0);
-                } while (--n != 0);
-
-                n = w_size;
-                p = n;
-                do
-                {
-                    m = (prev[--p] & 0xffff);
-                    prev[p] = (short)((m >= w_size) ? (m - w_size) : 0);
-
-                    // If n is not on any hash chain, prev[n] is garbage but
-                    // its value will never be used.
-                } while (--n != 0);
+                    SlideHashTable(head, hash_size, w_size);
+                    SlideHashTable(prev, w_size, w_size);
+                }
                 more += w_size;
             }
 
@@ -1271,6 +1258,7 @@ internal sealed partial class DeflateManager
     // matches. It is used only for the fast compression options.
     internal BlockState DeflateFast(FlushType flush)
     {
+        hashChainsPopulated = true;
         //    short hash_head = 0; // head of the hash chain
         var hash_head = 0; // head of the hash chain
         bool bflush; // set if current block must be flushed
@@ -1401,6 +1389,7 @@ internal sealed partial class DeflateManager
     // no better match at the next window position.
     internal BlockState DeflateSlow(FlushType flush)
     {
+        hashChainsPopulated = true;
         //    short hash_head = 0;    // head of hash chain
         var hash_head = 0; // head of hash chain
         bool bflush; // set if current block must be flushed
@@ -1578,7 +1567,6 @@ internal sealed partial class DeflateManager
     {
         var chain_length = config.MaxChainLength; // max hash chain length
         var scan = strstart; // current string
-        int match; // matched string
         int len; // length of current match
         var best_len = prev_length; // best match length so far
         var limit = strstart > (w_size - MIN_LOOKAHEAD) ? strstart - (w_size - MIN_LOOKAHEAD) : 0;
@@ -1590,12 +1578,10 @@ internal sealed partial class DeflateManager
 
         var wmask = w_mask;
 
-        var strend = strstart + MAX_MATCH;
-        var scan_end1 = window[scan + best_len - 1];
-        var scan_end = window[scan + best_len];
-
-        // The code is optimized for HASH_BITS >= 8 and MAX_MATCH-2 multiple of 16.
-        // It is easy to get rid of this optimization if necessary.
+        var scanStart = BinaryPrimitives.ReadUInt16LittleEndian(window.AsSpan(scan, 2));
+        var scanEnd = BinaryPrimitives.ReadUInt16LittleEndian(
+            window.AsSpan(scan + best_len - 1, 2)
+        );
 
         // Do not waste too much time if we already have a good match:
         if (prev_length >= config.GoodLength)
@@ -1612,15 +1598,12 @@ internal sealed partial class DeflateManager
 
         do
         {
-            match = cur_match;
-
             // Skip to next match if the match length cannot increase
             // or if the match length is less than 2:
             if (
-                window[match + best_len] != scan_end
-                || window[match + best_len - 1] != scan_end1
-                || window[match] != window[scan]
-                || window[++match] != window[scan + 1]
+                BinaryPrimitives.ReadUInt16LittleEndian(window.AsSpan(cur_match + best_len - 1, 2))
+                    != scanEnd
+                || BinaryPrimitives.ReadUInt16LittleEndian(window.AsSpan(cur_match, 2)) != scanStart
             )
             {
                 continue;
@@ -1631,25 +1614,14 @@ internal sealed partial class DeflateManager
             // It is not necessary to compare scan[2] and match[2] since they
             // are always equal when the other bytes match, given that
             // the hash keys are equal and that HASH_BITS >= 8.
-            scan += 2;
-            match++;
-
-            // We check for insufficient lookahead only every 8th comparison;
-            // the 256th check will be made at strstart+258.
-            do { } while (
-                window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && window[++scan] == window[++match]
-                && scan < strend
-            );
-
-            len = MAX_MATCH - (strend - scan);
-            scan = strend - MAX_MATCH;
+            // Keep the original chain order, MAX_MATCH cap, and final lookahead
+            // clamp. Only the byte comparison changes; match selection does not.
+            len =
+                MIN_MATCH
+                + CountMatchBytes(
+                    window.AsSpan(scan + MIN_MATCH, MAX_MATCH - MIN_MATCH),
+                    window.AsSpan(cur_match + MIN_MATCH, MAX_MATCH - MIN_MATCH)
+                );
 
             if (len > best_len)
             {
@@ -1659,8 +1631,9 @@ internal sealed partial class DeflateManager
                 {
                     break;
                 }
-                scan_end1 = window[scan + best_len - 1];
-                scan_end = window[scan + best_len];
+                scanEnd = BinaryPrimitives.ReadUInt16LittleEndian(
+                    window.AsSpan(scan + best_len - 1, 2)
+                );
             }
         } while ((cur_match = (prev[cur_match & wmask] & 0xffff)) > limit && --chain_length != 0);
 
@@ -1887,6 +1860,7 @@ internal sealed partial class DeflateManager
         // s->lookahead stays null, so s->ins_h will be recomputed at the next
         // call of fill_window.
 
+        hashChainsPopulated = true;
         ins_h = window[0] & 0xff;
         ins_h = (((ins_h) << hash_shift) ^ (window[1] & 0xff)) & hash_mask;
 
