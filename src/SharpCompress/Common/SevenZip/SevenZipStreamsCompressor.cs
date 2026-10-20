@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -185,25 +186,34 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
     )
     {
         var seed = Crc32Stream.DEFAULT_SEED;
-        var buffer = new byte[81920];
-        long totalRead = 0;
-
-        int read;
-        while ((read = source.Read(buffer, 0, buffer.Length)) > 0)
+        // Stay in the 64 KiB pool bucket rather than rounding an 80 KiB request to 128 KiB.
+        const int bufferSize = 65536;
+        var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+        try
         {
-            // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
-            // so passing ~result as next seed chains correctly.
-            seed = ~Crc32Stream.Compute(
-                Crc32Stream.DEFAULT_POLYNOMIAL,
-                seed,
-                buffer.AsSpan(0, read)
-            );
-            destination.Write(buffer, 0, read);
-            totalRead += read;
-        }
+            long totalRead = 0;
 
-        crc = ~seed;
-        bytesRead = totalRead;
+            int read;
+            while ((read = source.Read(buffer, 0, bufferSize)) > 0)
+            {
+                // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
+                // so passing ~result as next seed chains correctly.
+                seed = ~Crc32Stream.Compute(
+                    Crc32Stream.DEFAULT_POLYNOMIAL,
+                    seed,
+                    buffer.AsSpan(0, read)
+                );
+                destination.Write(buffer, 0, read);
+                totalRead += read;
+            }
+
+            crc = ~seed;
+            bytesRead = totalRead;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     /// <summary>
@@ -217,30 +227,44 @@ internal sealed class SevenZipStreamsCompressor(Stream outputStream)
     )
     {
         var seed = Crc32Stream.DEFAULT_SEED;
-        var buffer = new byte[81920];
-        long totalRead = 0;
-
-        int read;
-        while (
-            (
-                read = await source
-                    .ReadAsync(buffer, 0, buffer.Length, cancellationToken)
-                    .ConfigureAwait(false)
-            ) > 0
-        )
+        const int bufferSize = 65536;
+        var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+        try
         {
-            // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
-            // so passing ~result as next seed chains correctly.
-            seed = ~Crc32Stream.Compute(
-                Crc32Stream.DEFAULT_POLYNOMIAL,
-                seed,
-                buffer.AsSpan(0, read)
-            );
-            await destination.WriteAsync(buffer, 0, read, cancellationToken).ConfigureAwait(false);
-            totalRead += read;
-        }
+            long totalRead = 0;
 
-        return (~seed, totalRead);
+            int read;
+            while (
+                (
+                    read = await source
+#if LEGACY_DOTNET
+                        .ReadAsync(buffer, 0, bufferSize, cancellationToken)
+#else
+                        .ReadAsync(buffer.AsMemory(0, bufferSize), cancellationToken)
+#endif
+                        .ConfigureAwait(false)
+                ) > 0
+            )
+            {
+                // Crc32Stream.Compute returns ~CalculateCrc(table, seed, data),
+                // so passing ~result as next seed chains correctly.
+                seed = ~Crc32Stream.Compute(
+                    Crc32Stream.DEFAULT_POLYNOMIAL,
+                    seed,
+                    buffer.AsSpan(0, read)
+                );
+                await destination
+                    .WriteAsync(buffer, 0, read, cancellationToken)
+                    .ConfigureAwait(false);
+                totalRead += read;
+            }
+
+            return (~seed, totalRead);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     private static PackedStream BuildPackedStream(

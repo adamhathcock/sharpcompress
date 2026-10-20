@@ -491,7 +491,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
         public bool IsShortRep() => (_backPrev == 0);
     }
 
-    private readonly Optimal[] _optimum = new Optimal[K_NUM_OPTS];
+    private Optimal[] _optimum;
     private BinTree _matchFinder;
     private readonly RangeCoder.Encoder _rangeEncoder = new();
 
@@ -605,6 +605,11 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
 
     public void Dispose()
     {
+        if (_optimum is not null)
+        {
+            ArrayPool<Optimal>.Shared.Return(_optimum);
+            _optimum = null;
+        }
         _literalEncoder.Dispose();
         _matchFinder?.Dispose();
         _matchFinder = null;
@@ -614,6 +619,9 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
 
     private void Init()
     {
+        // This large workspace belongs to the encoder, not each input block.
+        _optimum ??= ArrayPool<Optimal>.Shared.Rent((int)K_NUM_OPTS);
+        Array.Clear(_optimum, 0, (int)K_NUM_OPTS);
         BaseInit();
         _rangeEncoder.Init();
 

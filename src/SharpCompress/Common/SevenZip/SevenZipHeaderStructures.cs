@@ -13,21 +13,43 @@ internal sealed class SevenZipDigestsWriter(uint?[] crcs)
 
     public void Write(Stream stream)
     {
-        var defined = new bool[CRCs.Length];
+        var allDefined = true;
         for (var i = 0; i < CRCs.Length; i++)
         {
-            defined[i] = CRCs[i] != null;
+            allDefined &= CRCs[i] is not null;
+        }
+        stream.WriteByte((byte)(allDefined ? 1 : 0));
+        if (!allDefined)
+        {
+            byte mask = 0x80;
+            byte bits = 0;
+            foreach (var crc in CRCs)
+            {
+                if (crc is not null)
+                {
+                    bits |= mask;
+                }
+                mask >>= 1;
+                if (mask == 0)
+                {
+                    stream.WriteByte(bits);
+                    mask = 0x80;
+                    bits = 0;
+                }
+            }
+            if (mask != 0x80)
+            {
+                stream.WriteByte(bits);
+            }
         }
 
-        stream.WriteOptionalBoolVector(defined);
-
-        var buf = new byte[4];
+        Span<byte> buf = stackalloc byte[4];
         for (var i = 0; i < CRCs.Length; i++)
         {
             if (CRCs[i] is { } crcValue)
             {
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(buf, crcValue);
-                stream.Write(buf, 0, 4);
+                stream.Write(buf);
             }
         }
     }
@@ -184,14 +206,14 @@ internal sealed class SevenZipUnPackInfoWriter
         stream.WriteByte(attributes);
 
         // Codec ID bytes (big-endian, most significant byte first)
-        var codecId = new byte[codecIdLength];
+        Span<byte> codecId = stackalloc byte[8];
         var id = coder._methodId._id;
         for (var i = codecIdLength - 1; i >= 0; i--)
         {
             codecId[i] = (byte)(id & 0xFF);
             id >>= 8;
         }
-        stream.Write(codecId, 0, codecIdLength);
+        stream.Write(codecId.Slice(0, codecIdLength));
 
         if (isComplex)
         {

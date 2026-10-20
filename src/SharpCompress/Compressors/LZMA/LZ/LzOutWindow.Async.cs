@@ -152,7 +152,11 @@ internal partial class OutWindow : IAsyncDisposable
             }
             EnsureCapacity(_pos + curSize);
             var numReadBytes = await stream
+#if LEGACY_DOTNET
                 .ReadAsync(_buffer, _pos, curSize, cancellationToken)
+#else
+                .ReadAsync(_buffer.AsMemory(_pos, curSize), cancellationToken)
+#endif
                 .ConfigureAwait(false);
             if (numReadBytes == 0)
             {

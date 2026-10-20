@@ -88,19 +88,21 @@ internal sealed partial class ArchiveDatabase
         return newStream;
     }
 
-    private async ValueTask DisposeCachedFolderStreamAsync()
+    internal async ValueTask DisposeCachedFolderStreamAsync()
     {
-        if (_cachedFolderStream is IAsyncDisposable asyncDisposable)
+        var stream = _cachedFolderStream;
+        _cachedFolderStream = null;
+        _cachedFolder = null;
+        _cachedFolderStreamPosition = 0;
+        if (stream is IAsyncDisposable asyncDisposable)
         {
             await asyncDisposable.DisposeAsync().ConfigureAwait(false);
         }
         else
         {
 #pragma warning disable VSTHRD103 // Fallback for streams that do not support async disposal.
-            _cachedFolderStream?.Dispose();
+            stream?.Dispose();
 #pragma warning restore VSTHRD103
         }
-        _cachedFolderStream = null;
-        _cachedFolder = null;
     }
 }

@@ -146,7 +146,7 @@ public partial class LzmaStream
                 Properties[0] = headerBuffer[0];
                 _inputPosition++;
 
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
             else if (_needProps)
@@ -155,7 +155,7 @@ public partial class LzmaStream
             }
             else if (control >= 0xA0)
             {
-                _decoder = new Decoder();
+                _decoder ??= new Decoder();
                 _decoder.SetDecoderProperties(Properties);
             }
 
@@ -524,7 +524,17 @@ public partial class LzmaStream
         try
         {
 #pragma warning disable VSTHRD103 // Encoder.Dispose only returns buffers; finalization is separate.
-            _encoder?.Dispose();
+            try
+            {
+                _encoder?.Dispose();
+            }
+            finally
+            {
+                if (_decoder is not null)
+                {
+                    await _decoder.DisposeAsync().ConfigureAwait(false);
+                }
+            }
 #pragma warning restore VSTHRD103
         }
         finally
@@ -535,6 +545,7 @@ public partial class LzmaStream
             }
             finally
             {
+                _rangeDecoder.ReleaseStream();
                 ReturnAsyncHeaderBuffer();
             }
         }
