@@ -1,17 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common.Rar.Headers;
 using SharpCompress.Crypto;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.Rar;
 
 internal sealed class AsyncRarCryptoBinaryReader : AsyncRarCrcBinaryReader
 {
     private BlockTransformer _rijndael = default!;
-    private readonly Queue<byte> _data = new();
+    private readonly byte[] _block = new byte[16];
+    private int _blockOffset = 16;
     private long _readCount;
 
     private AsyncRarCryptoBinaryReader(Stream stream)
@@ -50,8 +51,26 @@ internal sealed class AsyncRarCryptoBinaryReader : AsyncRarCrcBinaryReader
         CancellationToken cancellationToken = default
     )
     {
-        var bytes = await ReadAndDecryptBytesAsync(1, cancellationToken).ConfigureAwait(false);
-        return bytes[0];
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_blockOffset == _block.Length)
+        {
+            try
+            {
+                await BaseStream
+                    .ReadExactAsync(_block, 0, _block.Length, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (IncompleteArchiveException e)
+            {
+                throw new InvalidFormatException("Unexpected end of encrypted stream", e);
+            }
+            _rijndael.ProcessBlocks(_block, _block.Length);
+            _blockOffset = 0;
+        }
+        var value = _block[_blockOffset++];
+        UpdateCrc(value);
+        _readCount++;
+        return value;
     }
 
     private ValueTask<byte[]> ReadBytesAsyncBase(int count) => base.ReadBytesAsync(count);
@@ -69,43 +88,36 @@ internal sealed class AsyncRarCryptoBinaryReader : AsyncRarCrcBinaryReader
         CancellationToken cancellationToken
     )
     {
-        var queueSize = _data.Count;
-        var sizeToRead = count - queueSize;
-
-        if (sizeToRead > 0)
-        {
-            var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-            for (var i = 0; i < alignedSize / 16; i++)
-            {
-                var cipherText = await ReadBytesNoCrcAsync(16, cancellationToken)
-                    .ConfigureAwait(false);
-                var readBytes = _rijndael.ProcessBlock(cipherText);
-                foreach (var readByte in readBytes)
-                {
-                    _data.Enqueue(readByte);
-                }
-            }
-        }
-
         var decryptedBytes = new byte[count];
 
         for (var i = 0; i < count; i++)
         {
-            var b = _data.Dequeue();
-            decryptedBytes[i] = b;
-            UpdateCrc(b);
+            decryptedBytes[i] = await ReadByteAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        _readCount += count;
         return decryptedBytes;
     }
 
-    public void ClearQueue() => _data.Clear();
+    public void ClearQueue() => _blockOffset = _block.Length;
 
     public void SkipQueue()
     {
         var position = BaseStream.Position;
-        BaseStream.Position = position + _data.Count;
+        BaseStream.Position = position + _block.Length - _blockOffset;
         ClearQueue();
     }
+
+    public override void Dispose()
+    {
+        _rijndael.Dispose();
+        base.Dispose();
+    }
+
+#if NET8_0_OR_GREATER
+    public override ValueTask DisposeAsync()
+    {
+        _rijndael.Dispose();
+        return base.DisposeAsync();
+    }
+#endif
 }

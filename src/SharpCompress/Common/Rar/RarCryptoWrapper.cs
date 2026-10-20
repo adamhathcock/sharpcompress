@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,8 +10,10 @@ namespace SharpCompress.Common.Rar;
 internal sealed class RarCryptoWrapper : Stream
 {
     private readonly Stream _actualStream;
-    private BlockTransformer _rijndael;
-    private readonly Queue<byte> _data = new();
+    private readonly BlockTransformer _rijndael;
+    private byte[] _buffer = new byte[16];
+    private int _offset;
+    private int _available;
 
     public RarCryptoWrapper(Stream actualStream, byte[] salt, ICryptKey key)
     {
@@ -31,32 +32,43 @@ internal sealed class RarCryptoWrapper : Stream
 
     public int ReadAndDecrypt(byte[] buffer, int offset, int count)
     {
-        var queueSize = _data.Count;
-        var sizeToRead = count - queueSize;
-
-        if (sizeToRead > 0)
+        var destination = buffer.AsSpan(offset, count);
+        if (count == 1 && _available > 0)
         {
-            var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-            Span<byte> cipherText = stackalloc byte[16];
-            for (var i = 0; i < alignedSize / 16; i++)
+            destination[0] = _buffer[_offset++];
+            _available--;
+            return 1;
+        }
+        return ReadAndDecrypt(destination);
+    }
+
+#if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+    public override int Read(Span<byte> buffer) => ReadAndDecrypt(buffer);
+#endif
+
+    private int ReadAndDecrypt(Span<byte> buffer)
+    {
+        var count = buffer.Length;
+        while (!buffer.IsEmpty)
+        {
+            if (_available == 0)
             {
-                if (!_actualStream.ReadFully(cipherText))
+                // Round only the requested bytes to an AES block; never read ahead
+                // into the next entry. The buffer bounds memory independently of read size.
+                var alignedSize = PrepareBuffer(buffer.Length);
+                if (!_actualStream.ReadFully(_buffer.AsSpan(0, alignedSize)))
                 {
-                    // Preserve the synchronous API's malformed-archive exception type.
                     throw new InvalidFormatException("Unexpected end of encrypted stream");
                 }
-
-                var readBytes = _rijndael.ProcessBlock(cipherText);
-                foreach (var readByte in readBytes)
-                {
-                    _data.Enqueue(readByte);
-                }
+                _rijndael.ProcessBlocks(_buffer, alignedSize);
+                _offset = 0;
+                _available = alignedSize;
             }
-        }
-
-        for (var i = 0; i < count; i++)
-        {
-            buffer[offset + i] = _data.Dequeue();
+            var length = Math.Min(buffer.Length, _available);
+            _buffer.AsSpan(_offset, length).CopyTo(buffer);
+            buffer = buffer.Slice(length);
+            _offset += length;
+            _available -= length;
         }
         return count;
     }
@@ -66,75 +78,94 @@ internal sealed class RarCryptoWrapper : Stream
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => ReadAndDecryptAsync(buffer, offset, count, cancellationToken).AsTask();
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var destination = buffer.AsMemory(offset, count);
+        // Most small reads can complete without entering the async state machine.
+        if (count <= _available)
+        {
+            CopyBuffered(destination.Span);
+            return Task.FromResult(count);
+        }
+        return ReadAndDecryptAsync(destination, cancellationToken).AsTask();
+    }
+
+    private void CopyBuffered(Span<byte> destination)
+    {
+        if (destination.Length == 1)
+        {
+            destination[0] = _buffer[_offset];
+        }
+        else
+        {
+            _buffer.AsSpan(_offset, destination.Length).CopyTo(destination);
+        }
+        _offset += destination.Length;
+        _available -= destination.Length;
+    }
+
+    private int PrepareBuffer(int count)
+    {
+        var alignedSize = (Math.Min(count, 8192) + 15) & ~15;
+        if (_buffer.Length < alignedSize)
+        {
+            // Keep tiny entries cheap, growing only when callers request bulk reads.
+            Array.Clear(_buffer, 0, _buffer.Length);
+            _buffer = new byte[alignedSize];
+        }
+        return alignedSize;
+    }
 
     private async ValueTask<int> ReadAndDecryptAsync(
-        byte[] buffer,
-        int offset,
-        int count,
+        Memory<byte> buffer,
         CancellationToken cancellationToken
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var queueSize = _data.Count;
-        var sizeToRead = count - queueSize;
-
-        if (sizeToRead > 0)
+        var count = buffer.Length;
+        while (!buffer.IsEmpty)
         {
-            var alignedSize = sizeToRead + ((~sizeToRead + 1) & 0xf);
-            byte[] cipherText = new byte[16];
-
-            try
+            if (_available == 0)
             {
-                for (var i = 0; i < alignedSize / 16; i++)
+                var alignedSize = PrepareBuffer(buffer.Length);
+                try
                 {
                     await _actualStream
-                        .ReadExactAsync(cipherText, 0, 16, cancellationToken)
+                        .ReadExactAsync(_buffer, 0, alignedSize, cancellationToken)
                         .ConfigureAwait(false);
-
-                    var readBytes = _rijndael.ProcessBlock(cipherText);
-                    foreach (var readByte in readBytes)
-                    {
-                        _data.Enqueue(readByte);
-                    }
                 }
+                catch (IncompleteArchiveException e)
+                {
+                    throw new InvalidFormatException("Unexpected end of encrypted stream", e);
+                }
+                _rijndael.ProcessBlocks(_buffer, alignedSize);
+                _offset = 0;
+                _available = alignedSize;
             }
-            catch (IncompleteArchiveException e)
-            {
-                throw new InvalidFormatException("Unexpected end of encrypted stream", e);
-            }
+            var length = Math.Min(buffer.Length, _available);
+            _buffer.AsMemory(_offset, length).CopyTo(buffer);
+            buffer = buffer.Slice(length);
+            _offset += length;
+            _available -= length;
         }
-
-        var bytesToReturn = Math.Min(count, _data.Count);
-        for (var i = 0; i < bytesToReturn; i++)
-        {
-            buffer[offset + i] = _data.Dequeue();
-        }
-
-        return bytesToReturn;
+        return count;
     }
 
 #if NETCOREAPP2_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-    public override async ValueTask<int> ReadAsync(
+    public override ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        var array = System.Buffers.ArrayPool<byte>.Shared.Rent(buffer.Length);
-        try
+        if (buffer.Length <= _available)
         {
-            var bytesRead = await ReadAndDecryptAsync(array, 0, buffer.Length, cancellationToken)
-                .ConfigureAwait(false);
-            new ReadOnlySpan<byte>(array, 0, bytesRead).CopyTo(buffer.Span);
-            return bytesRead;
+            CopyBuffered(buffer.Span);
+            return new ValueTask<int>(buffer.Length);
         }
-        finally
-        {
-            System.Buffers.ArrayPool<byte>.Shared.Return(array);
-        }
+        return ReadAndDecryptAsync(buffer, cancellationToken);
     }
 #endif
 
@@ -156,6 +187,7 @@ internal sealed class RarCryptoWrapper : Stream
         if (disposing)
         {
             _rijndael.Dispose();
+            Array.Clear(_buffer, 0, _buffer.Length);
         }
 
         base.Dispose(disposing);
