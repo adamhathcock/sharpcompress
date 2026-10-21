@@ -6,7 +6,7 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveExtractor
+internal sealed partial class ArchiveEntryExtractor
 {
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public async ValueTask WriteToDirectoryAsync(

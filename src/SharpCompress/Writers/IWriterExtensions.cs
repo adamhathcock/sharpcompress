@@ -13,7 +13,7 @@ public static class IWriterExtensions
         public void Write(string entryPath, Stream source) => writer.Write(entryPath, source, null);
 
         public void Write(string entryPath, FileInfo source) =>
-            LibraryDefaults.Composition.FileWriter.Write(writer, entryPath, source);
+            LibraryDefaults.Composition.WriterFiles.Write(writer, entryPath, source);
 
         public void Write(string entryPath, string source) =>
             writer.Write(entryPath, new FileInfo(source));
@@ -30,7 +30,7 @@ public static class IWriterExtensions
             Func<string, bool>? fileSearchFunc = null,
             SearchOption option = SearchOption.TopDirectoryOnly
         ) =>
-            LibraryDefaults.Composition.FileWriter.WriteAll(
+            LibraryDefaults.Composition.WriterFiles.WriteAll(
                 writer,
                 directory,
                 searchPattern,
@@ -56,7 +56,7 @@ public static class IWriterExtensions
             CancellationToken cancellationToken = default
         ) =>
             await LibraryDefaults
-                .Composition.FileWriter.WriteAsync(writer, entryPath, source, cancellationToken)
+                .Composition.WriterFiles.WriteAsync(writer, entryPath, source, cancellationToken)
                 .ConfigureAwait(false);
 
         public ValueTask WriteAsync(
@@ -80,7 +80,7 @@ public static class IWriterExtensions
             CancellationToken cancellationToken = default
         ) =>
             await LibraryDefaults
-                .Composition.FileWriter.WriteAllAsync(
+                .Composition.WriterFiles.WriteAllAsync(
                     writer,
                     directory,
                     searchPattern,

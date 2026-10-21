@@ -16,7 +16,7 @@ using AceMainHeader = SharpCompress.Common.Ace.Headers.AceMainHeader;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveService
+internal sealed partial class ArchiveInspector
 {
     private static ArchiveInformation InspectOpenedArchive(
         IArchive archive,
@@ -235,7 +235,7 @@ internal sealed partial class ArchiveService
     private FileInfo[] GetArchiveFileParts(FileInfo firstPart, ReaderOptions options)
     {
         using Stream stream = firstPart.OpenRead();
-        var factory = TryFindFactory(stream, options);
+        var factory = detector.TryFindFactory(stream, options);
         if (factory is null)
         {
             return [firstPart];

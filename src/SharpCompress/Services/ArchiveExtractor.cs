@@ -1,82 +1,83 @@
 using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Pure.DI;
 using SharpCompress.Archives;
 using SharpCompress.Common;
-using SharpCompress.IO;
+using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
-// Destination streams are borrowed, not owned by the reusable extraction service.
 [GenerateInterface(asInternal: true)]
-internal sealed partial class ArchiveExtractor : IArchiveExtractor
+internal sealed partial class ArchiveExtractor(
+    IArchiveService archives,
+    IReaderExtractor readers,
+    IArchiveEntryExtractor entries
+) : IArchiveExtractor
 {
-    [Zomp.SyncMethodGenerator.CreateSyncVersion(PreserveProgress = true)]
-    public async ValueTask WriteToAsync(
-        IArchiveEntry archiveEntry,
-        Stream streamToWriteTo,
-        int? bufferSize,
-        ExtractionOptions? options = null,
-        IProgress<ProgressReport>? progress = null,
-        CancellationToken cancellationToken = default
+    public void WriteToDirectory(
+        string sourceArchive,
+        string destinationDirectory,
+        ExtractionOptions? options = null
     )
     {
-        if (archiveEntry.IsDirectory)
-        {
-            throw new ExtractionException("Entry is a file directory and cannot be extracted.");
-        }
-
-#if SYNC_ONLY
-        using var entryStream = archiveEntry.OpenEntryStream();
-#else
-        var entryStream = await archiveEntry
-            .OpenEntryStreamAsync(cancellationToken)
-            .ConfigureAwait(false);
-        await using var entryStreamScope = entryStream.DisposeAsyncScope().ConfigureAwait(false);
-#endif
-        var checkedStream = options is null
-            ? entryStream
-            : IEntryExtensions.WrapWithChecksumValidation(archiveEntry, entryStream, options);
-        var sourceStream = WrapWithProgress(checkedStream, archiveEntry, progress);
-        await sourceStream
-            .CopyToAsync(streamToWriteTo, bufferSize ?? Constants.BufferSize, cancellationToken)
-            .ConfigureAwait(false);
+        using var archive = archives.OpenArchive(sourceArchive);
+        WriteToDirectory(archive, destinationDirectory, options);
     }
 
-    private static Stream WrapWithProgress(
-        Stream source,
-        IEntry entry,
+    /// <summary>
+    /// Extract to specific directory with progress reporting
+    /// </summary>
+    /// <param name="destinationDirectory">The folder to extract into.</param>
+    /// <param name="options">Extraction options.</param>
+    /// <param name="progress">Optional progress reporter for tracking extraction progress.</param>
+    public void WriteToDirectory(
+        IArchive archive,
+        string destinationDirectory,
+        ExtractionOptions? options = null,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        if (archive.IsSolid || archive.Type == ArchiveType.SevenZip)
+        {
+            using var reader = archive.ExtractAllEntries();
+            readers.WriteAllToDirectory(reader, destinationDirectory, options);
+        }
+        else
+        {
+            WriteToDirectoryInternal(archive, destinationDirectory, options, progress);
+        }
+    }
+
+    private void WriteToDirectoryInternal(
+        IArchive archive,
+        string destinationDirectory,
+        ExtractionOptions? options,
         IProgress<ProgressReport>? progress
     )
     {
-        if (progress is null)
-        {
-            return source;
-        }
-
-        var entryPath = entry.Key ?? string.Empty;
-        var totalBytes = GetEntrySizeSafe(entry);
-        return new ProgressReportingStream(
-            source,
-            progress,
-            entryPath,
-            totalBytes,
-            leaveOpen: true
+        options ??= new ExtractionOptions();
+        var fullDestinationDirectoryPath = DirectoryManagement.GetFullDestinationDirectoryPath(
+            destinationDirectory
         );
-    }
 
-    private static long? GetEntrySizeSafe(IEntry entry)
-    {
-        try
+        var totalBytes = archive.TotalUncompressedSize;
+        var bytesRead = 0L;
+
+        foreach (var entry in archive.Entries)
         {
-            var size = entry.Size;
-            return size >= 0 ? size : null;
-        }
-        catch (NotImplementedException)
-        {
-            return null;
+            if (entry.IsDirectory)
+            {
+                entry.WriteEntryToDirectoryCore(fullDestinationDirectoryPath, options, null);
+                continue;
+            }
+
+            entry.WriteEntryToDirectoryCore(
+                fullDestinationDirectoryPath,
+                options,
+                path => entries.WriteToFile(entry, path, options)
+            );
+
+            bytesRead += entry.Size;
+            progress?.Report(new ProgressReport(entry.Key ?? string.Empty, bytesRead, totalBytes));
         }
     }
 }

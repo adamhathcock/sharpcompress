@@ -9,17 +9,17 @@ public static class IReaderExtensions
     extension(IReader reader)
     {
         public void WriteEntryTo(string filePath) =>
-            LibraryDefaults.Composition.Extractor.WriteEntryTo(reader, filePath);
+            LibraryDefaults.Composition.ReaderExtractor.WriteEntryTo(reader, filePath);
 
         public void WriteEntryTo(FileInfo filePath) =>
-            LibraryDefaults.Composition.Extractor.WriteEntryTo(reader, filePath);
+            LibraryDefaults.Composition.ReaderExtractor.WriteEntryTo(reader, filePath);
 
         /// <summary>Extract all remaining unread entries to specific directory, retaining filename.</summary>
         public void WriteAllToDirectory(
             string destinationDirectory,
             ExtractionOptions? options = null
         ) =>
-            LibraryDefaults.Composition.Extractor.WriteAllToDirectory(
+            LibraryDefaults.Composition.ReaderExtractor.WriteAllToDirectory(
                 reader,
                 destinationDirectory,
                 options
@@ -30,7 +30,7 @@ public static class IReaderExtensions
             string destinationDirectory,
             ExtractionOptions? options = null
         ) =>
-            LibraryDefaults.Composition.Extractor.WriteEntryToDirectory(
+            LibraryDefaults.Composition.ReaderExtractor.WriteEntryToDirectory(
                 reader,
                 destinationDirectory,
                 options
@@ -41,7 +41,7 @@ public static class IReaderExtensions
             string destinationFileName,
             ExtractionOptions? options = null
         ) =>
-            LibraryDefaults.Composition.Extractor.WriteEntryToFile(
+            LibraryDefaults.Composition.ReaderExtractor.WriteEntryToFile(
                 reader,
                 destinationFileName,
                 options

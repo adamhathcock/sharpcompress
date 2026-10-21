@@ -8,6 +8,7 @@ using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Services;
+using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
 
@@ -15,6 +16,58 @@ namespace SharpCompress.Test;
 
 public class ServiceWorkflowTests : TestBase
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task WriterFilesystemOperations_LeaveBorrowedOutputOpen(bool useAsync)
+    {
+        var composition = new ServiceComposition(
+            new FactoryCatalog(() => [new ZipFactory()], () => TarWrapper.Wrappers)
+        );
+        var directory = CreateScratchDirectory("writer-source") + Path.DirectorySeparatorChar;
+        File.WriteAllText(Path.Combine(directory, "payload.txt"), "writer payload");
+        using var output = new MemoryStream();
+        var options = new WriterOptions(CompressionType.Deflate) { LeaveStreamOpen = true };
+        if (useAsync)
+        {
+            await using var writer = await composition.Writers.OpenAsyncWriter(
+                output,
+                ArchiveType.Zip,
+                options,
+                CancellationToken.None
+            );
+            await composition.WriterFiles.WriteAllAsync(
+                writer,
+                directory,
+                "*",
+                null,
+                SearchOption.TopDirectoryOnly,
+                CancellationToken.None
+            );
+        }
+        else
+        {
+            using var writer = composition.Writers.OpenWriter(output, ArchiveType.Zip, options);
+            composition.WriterFiles.WriteAll(
+                writer,
+                directory,
+                "*",
+                null,
+                SearchOption.TopDirectoryOnly
+            );
+        }
+        Assert.True(output.CanWrite);
+        output.Position = 0;
+        using var archive = composition.Archives.OpenArchive(
+            output,
+            ReaderOptions.ForExternalStream
+        );
+        var entry = Assert.Single(archive.Entries);
+        using var content = entry.OpenEntryStream();
+        using var text = new StreamReader(content);
+        Assert.Equal("writer payload", text.ReadToEnd());
+    }
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(false, true)]
@@ -44,20 +97,20 @@ public class ServiceWorkflowTests : TestBase
             }
             else
             {
-                await composition.FileWriter.AddAllFromDirectoryAsync(
+                await composition.ArchiveFiles.AddAllFromDirectoryAsync(
                     archive,
                     sourceDirectory,
                     "*.*",
                     SearchOption.AllDirectories,
                     CancellationToken.None
                 );
-                await composition.FileWriter.AddEntryAsync(
+                await composition.ArchiveFiles.AddEntryAsync(
                     archive,
                     "extra.txt",
                     source,
                     CancellationToken.None
                 );
-                await composition.FileWriter.SaveToAsync(
+                await composition.ArchiveFiles.SaveToAsync(
                     archive,
                     destination,
                     options,
@@ -76,14 +129,14 @@ public class ServiceWorkflowTests : TestBase
             }
             else
             {
-                composition.FileWriter.AddAllFromDirectory(
+                composition.ArchiveFiles.AddAllFromDirectory(
                     archive,
                     sourceDirectory,
                     "*.*",
                     SearchOption.AllDirectories
                 );
-                composition.FileWriter.AddEntry(archive, "extra.txt", source);
-                composition.FileWriter.SaveTo(archive, destination, options);
+                composition.ArchiveFiles.AddEntry(archive, "extra.txt", source);
+                composition.ArchiveFiles.SaveTo(archive, destination, options);
             }
         }
 
@@ -112,7 +165,7 @@ public class ServiceWorkflowTests : TestBase
             }
             else
             {
-                await composition.Extractor.WriteAllToDirectoryAsync(
+                await composition.ReaderExtractor.WriteAllToDirectoryAsync(
                     reader,
                     readerDirectory,
                     cancellationToken: CancellationToken.None
@@ -135,7 +188,7 @@ public class ServiceWorkflowTests : TestBase
             }
             else
             {
-                composition.Extractor.WriteAllToDirectory(reader, readerDirectory);
+                composition.ReaderExtractor.WriteAllToDirectory(reader, readerDirectory);
                 composition.Extractor.WriteToDirectory(archive, archiveDirectory);
             }
         }

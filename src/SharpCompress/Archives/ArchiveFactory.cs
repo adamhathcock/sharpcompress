@@ -14,6 +14,8 @@ namespace SharpCompress.Archives;
 public static partial class ArchiveFactory
 {
     private static IArchiveService Service => LibraryDefaults.Composition.Archives;
+    private static IArchiveDetector Detector => LibraryDefaults.Composition.Detector;
+    private static IArchiveInspector Inspector => LibraryDefaults.Composition.Inspector;
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
         Service.OpenArchive(stream, readerOptions);
@@ -71,81 +73,86 @@ public static partial class ArchiveFactory
         string sourceArchive,
         string destinationDirectory,
         ExtractionOptions? options = null
-    ) => Service.WriteToDirectory(sourceArchive, destinationDirectory, options);
+    ) =>
+        LibraryDefaults.Composition.Extractor.WriteToDirectory(
+            sourceArchive,
+            destinationDirectory,
+            options
+        );
 
     public static T FindFactory<T>(string filePath)
-        where T : IFactory => Service.FindFactory<T>(filePath);
+        where T : IFactory => Detector.FindFactory<T>(filePath);
 
     public static T FindFactory<T>(FileInfo finfo)
-        where T : IFactory => Service.FindFactory<T>(finfo);
+        where T : IFactory => Detector.FindFactory<T>(finfo);
 
     public static T FindFactory<T>(Stream stream)
-        where T : IFactory => Service.FindFactory<T>(stream);
+        where T : IFactory => Detector.FindFactory<T>(stream);
 
     internal static ValueTask<T> FindFactoryAsync<T>(
         string filePath,
         CancellationToken cancellationToken = default
     )
-        where T : IFactory => Service.FindFactoryAsync<T>(filePath, cancellationToken);
+        where T : IFactory => Detector.FindFactoryAsync<T>(filePath, cancellationToken);
 
     internal static ValueTask<T> FindFactoryAsync<T>(
         FileInfo fileInfo,
         CancellationToken cancellationToken = default
     )
-        where T : IFactory => Service.FindFactoryAsync<T>(fileInfo, cancellationToken);
+        where T : IFactory => Detector.FindFactoryAsync<T>(fileInfo, cancellationToken);
 
     internal static ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
         CancellationToken cancellationToken = default
     )
-        where T : IFactory => Service.FindFactoryAsync<T>(stream, cancellationToken);
+        where T : IFactory => Detector.FindFactoryAsync<T>(stream, cancellationToken);
 
     public static bool IsArchive(string filePath, out ArchiveType? type) =>
-        Service.IsArchive(filePath, out type);
+        Detector.IsArchive(filePath, out type);
 
     public static bool IsArchive(
         string filePath,
         ReaderOptions? readerOptions,
         out ArchiveType? type
-    ) => Service.IsArchive(filePath, readerOptions, out type);
+    ) => Detector.IsArchive(filePath, readerOptions, out type);
 
     public static bool IsArchive(Stream stream, out ArchiveType? type) =>
-        Service.IsArchive(stream, out type);
+        Detector.IsArchive(stream, out type);
 
     public static bool IsArchive(
         Stream stream,
         ReaderOptions? readerOptions,
         out ArchiveType? type
-    ) => Service.IsArchive(stream, readerOptions, out type);
+    ) => Detector.IsArchive(stream, readerOptions, out type);
 
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
-    ) => Service.IsArchiveAsync(filePath, cancellationToken);
+    ) => Detector.IsArchiveAsync(filePath, cancellationToken);
 
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Service.IsArchiveAsync(filePath, readerOptions, cancellationToken);
+    ) => Detector.IsArchiveAsync(filePath, readerOptions, cancellationToken);
 
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
-    ) => Service.IsArchiveAsync(stream, cancellationToken);
+    ) => Detector.IsArchiveAsync(stream, cancellationToken);
 
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Service.IsArchiveAsync(stream, readerOptions, cancellationToken);
+    ) => Detector.IsArchiveAsync(stream, readerOptions, cancellationToken);
 
     /// <summary>Identify the archive without enumerating its entries.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
-    ) => Service.DetectArchiveAsync(filePath, cancellationToken);
+    ) => Detector.DetectArchiveAsync(filePath, cancellationToken);
 
     /// <summary>Identify the archive without enumerating its entries.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -153,14 +160,14 @@ public static partial class ArchiveFactory
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Service.DetectArchiveAsync(filePath, readerOptions, cancellationToken);
+    ) => Detector.DetectArchiveAsync(filePath, readerOptions, cancellationToken);
 
     /// <summary>Identify the archive without enumerating its entries. Restore the stream position.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
-    ) => Service.DetectArchiveAsync(stream, cancellationToken);
+    ) => Detector.DetectArchiveAsync(stream, cancellationToken);
 
     /// <summary>Identify the archive without enumerating its entries. Restore the stream position.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -168,14 +175,14 @@ public static partial class ArchiveFactory
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Service.DetectArchiveAsync(stream, readerOptions, cancellationToken);
+    ) => Detector.DetectArchiveAsync(stream, readerOptions, cancellationToken);
 
     /// <summary>Inspect archive metadata.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
-    ) => Service.InspectArchiveAsync(filePath, cancellationToken);
+    ) => Inspector.InspectArchiveAsync(filePath, cancellationToken);
 
     /// <summary>Inspect archive metadata.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -183,14 +190,14 @@ public static partial class ArchiveFactory
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Service.InspectArchiveAsync(filePath, readerOptions, cancellationToken);
+    ) => Inspector.InspectArchiveAsync(filePath, readerOptions, cancellationToken);
 
     /// <summary>Inspect archive metadata, leaving the stream open at its original position.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
-    ) => Service.InspectArchiveAsync(stream, cancellationToken);
+    ) => Inspector.InspectArchiveAsync(stream, cancellationToken);
 
     /// <summary>Inspect archive metadata, leaving the stream open at its original position.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -198,7 +205,7 @@ public static partial class ArchiveFactory
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Service.InspectArchiveAsync(stream, readerOptions, cancellationToken);
+    ) => Inspector.InspectArchiveAsync(stream, readerOptions, cancellationToken);
 
     /// <summary>Inspect multipart archive metadata.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -206,7 +213,7 @@ public static partial class ArchiveFactory
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => Service.InspectArchiveAsync(fileInfos, readerOptions, cancellationToken);
+    ) => Inspector.InspectArchiveAsync(fileInfos, readerOptions, cancellationToken);
 
     /// <summary>Inspect multipart archive metadata, leaving the streams open at their original positions.</summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -214,7 +221,7 @@ public static partial class ArchiveFactory
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
-    ) => Service.InspectArchiveAsync(streams, readerOptions, cancellationToken);
+    ) => Inspector.InspectArchiveAsync(streams, readerOptions, cancellationToken);
 
     public static IEnumerable<string> GetFileParts(string part1) => Service.GetFileParts(part1);
 

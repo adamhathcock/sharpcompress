@@ -7,7 +7,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveService
+internal sealed partial class ArchiveDetector
 {
     private static void DisposeProbeStream(Stream stream)
     {

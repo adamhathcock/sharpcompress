@@ -1,12 +1,12 @@
-using System;
 using System.IO;
+using Pure.DI;
 using SharpCompress.Common;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveExtractor
+[GenerateInterface(asInternal: true)]
+internal sealed partial class ReaderExtractor : IReaderExtractor
 {
     public void WriteEntryTo(IReader reader, string filePath)
     {
@@ -82,12 +82,11 @@ internal sealed partial class ArchiveExtractor
             entryStream,
             options
         );
-        var sourceStream = WrapWithProgress(checkedStream, reader.Entry);
+        var sourceStream = ExtractionStreamHelper.WrapWithProgress(
+            checkedStream,
+            reader.Entry,
+            reader.Entry.Options.Progress
+        );
         sourceStream.CopyTo(writableStream, options.BufferSize);
-    }
-
-    private static Stream WrapWithProgress(Stream source, IEntry entry)
-    {
-        return WrapWithProgress(source, entry, entry.Options.Progress);
     }
 }

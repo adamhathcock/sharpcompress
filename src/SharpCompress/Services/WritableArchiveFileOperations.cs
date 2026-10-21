@@ -2,12 +2,14 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Pure.DI;
 using SharpCompress.Archives;
 using SharpCompress.Common.Options;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveFileWriter
+[GenerateInterface(asInternal: true)]
+internal sealed class WritableArchiveFileOperations : IWritableArchiveFileOperations
 {
     public void AddAllFromDirectory(
         IWritableArchive writableArchive,

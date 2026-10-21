@@ -13,7 +13,7 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveService
+internal sealed partial class ArchiveDetector
 {
     /// <summary>
     /// Identifies the archive at the given file path without enumerating its entries.
@@ -110,7 +110,7 @@ internal sealed partial class ArchiveService
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         FileInfo fileInfo,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
@@ -141,7 +141,7 @@ internal sealed partial class ArchiveService
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
@@ -171,7 +171,7 @@ internal sealed partial class ArchiveService
     /// Stream position is restored to its value at entry on both success and failure.
     /// </summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private async ValueTask<IFactory?> TryFindFactoryAsync(
+    public async ValueTask<IFactory?> TryFindFactoryAsync(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
@@ -270,7 +270,7 @@ internal sealed partial class ArchiveService
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private async ValueTask<ArchiveDetection?> TryDetectArchiveAsync(
+    public async ValueTask<ArchiveDetection?> TryDetectArchiveAsync(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken

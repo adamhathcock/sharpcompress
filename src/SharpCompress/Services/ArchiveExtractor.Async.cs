@@ -36,7 +36,8 @@ internal sealed partial class ArchiveExtractor
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                await WriteEntryToDirectoryAsync(
+                await readers
+                    .WriteEntryToDirectoryAsync(
                         reader,
                         destinationDirectory,
                         options,
@@ -110,7 +111,9 @@ internal sealed partial class ArchiveExtractor
                     fullDestinationDirectoryPath,
                     options,
                     async (path, ct) =>
-                        await WriteToFileAsync(entry, path, options, ct).ConfigureAwait(false),
+                        await entries
+                            .WriteToFileAsync(entry, path, options, ct)
+                            .ConfigureAwait(false),
                     cancellationToken
                 )
                 .ConfigureAwait(false);

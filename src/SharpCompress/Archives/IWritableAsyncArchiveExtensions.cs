@@ -16,7 +16,7 @@ public static class IWritableAsyncArchiveExtensions
             string searchPattern = "*.*",
             SearchOption searchOption = SearchOption.AllDirectories
         ) =>
-            LibraryDefaults.Composition.FileWriter.AddAllFromDirectoryAsync(
+            LibraryDefaults.Composition.ArchiveFiles.AddAllFromDirectoryAsync(
                 writableArchive,
                 directoryPath,
                 searchPattern,
@@ -34,7 +34,7 @@ public static class IWritableAsyncArchiveExtensions
         ) => writableArchive.AddEntryAsync(key, source, false, size, modified);
 
         public ValueTask<IArchiveEntry> AddEntryAsync(string key, FileInfo fileInfo) =>
-            LibraryDefaults.Composition.FileWriter.AddEntryAsync(writableArchive, key, fileInfo);
+            LibraryDefaults.Composition.ArchiveFiles.AddEntryAsync(writableArchive, key, fileInfo);
     }
 
     public static ValueTask SaveToAsync<TOptions>(
@@ -54,7 +54,7 @@ public static class IWritableAsyncArchiveExtensions
     )
         where TOptions : IWriterOptions =>
         await LibraryDefaults
-            .Composition.FileWriter.SaveToAsync(
+            .Composition.ArchiveFiles.SaveToAsync(
                 writableArchive,
                 fileInfo,
                 options,

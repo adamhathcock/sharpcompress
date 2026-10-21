@@ -9,7 +9,7 @@ using SharpCompress.Writers;
 namespace SharpCompress.Services;
 
 [GenerateInterface(asInternal: true)]
-internal sealed partial class ArchiveFileWriter : IArchiveFileWriter
+internal sealed class WriterFileOperations : IWriterFileOperations
 {
     public void Write(IWriter writer, string entryPath, FileInfo source)
     {

@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Detection;
 using SharpCompress.Factories;
 using SharpCompress.Providers;
 using SharpCompress.Providers.Default;
@@ -24,6 +25,20 @@ public class ServiceCompositionTests : TestBase
     private static ServiceComposition CreateComposition(params IFactory[] factories) =>
         new(new FactoryCatalog(() => factories, () => TarWrapper.Wrappers));
 
+    private static object[] GetRoots(ServiceComposition composition) =>
+        [
+            composition.Archives,
+            composition.Detector,
+            composition.Inspector,
+            composition.Readers,
+            composition.Writers,
+            composition.Extractor,
+            composition.ReaderExtractor,
+            composition.EntryExtractor,
+            composition.WriterFiles,
+            composition.ArchiveFiles,
+        ];
+
     [Fact]
     public void Composition_RemainsAnInternalBuildTimeDetail()
     {
@@ -36,13 +51,24 @@ public class ServiceCompositionTests : TestBase
             typeof(ReaderService),
             typeof(WriterService),
             typeof(ArchiveExtractor),
-            typeof(ArchiveFileWriter),
+            typeof(ExtractionStreamHelper),
+            typeof(ArchiveDetector),
+            typeof(ArchiveInspector),
+            typeof(ReaderExtractor),
+            typeof(ArchiveEntryExtractor),
+            typeof(WriterFileOperations),
+            typeof(WritableArchiveFileOperations),
             typeof(IFactoryCatalog),
             typeof(IArchiveService),
             typeof(IReaderService),
             typeof(IWriterService),
             typeof(IArchiveExtractor),
-            typeof(IArchiveFileWriter),
+            typeof(IArchiveDetector),
+            typeof(IArchiveInspector),
+            typeof(IReaderExtractor),
+            typeof(IArchiveEntryExtractor),
+            typeof(IWriterFileOperations),
+            typeof(IWritableArchiveFileOperations),
         ];
         Assert.All(
             serviceTypes,
@@ -69,7 +95,12 @@ public class ServiceCompositionTests : TestBase
             (typeof(IReaderService), typeof(ReaderService)),
             (typeof(IWriterService), typeof(WriterService)),
             (typeof(IArchiveExtractor), typeof(ArchiveExtractor)),
-            (typeof(IArchiveFileWriter), typeof(ArchiveFileWriter)),
+            (typeof(IArchiveDetector), typeof(ArchiveDetector)),
+            (typeof(IArchiveInspector), typeof(ArchiveInspector)),
+            (typeof(IReaderExtractor), typeof(ReaderExtractor)),
+            (typeof(IArchiveEntryExtractor), typeof(ArchiveEntryExtractor)),
+            (typeof(IWriterFileOperations), typeof(WriterFileOperations)),
+            (typeof(IWritableArchiveFileOperations), typeof(WritableArchiveFileOperations)),
         ];
         foreach (var (contract, implementation) in services)
         {
@@ -86,25 +117,9 @@ public class ServiceCompositionTests : TestBase
                 );
             }
         }
-        Assert.Equal(
-            typeof(IArchiveService),
-            typeof(ServiceComposition).GetProperty("Archives")!.PropertyType
-        );
-        Assert.Equal(
-            typeof(IReaderService),
-            typeof(ServiceComposition).GetProperty("Readers")!.PropertyType
-        );
-        Assert.Equal(
-            typeof(IWriterService),
-            typeof(ServiceComposition).GetProperty("Writers")!.PropertyType
-        );
-        Assert.Equal(
-            typeof(IArchiveExtractor),
-            typeof(ServiceComposition).GetProperty("Extractor")!.PropertyType
-        );
-        Assert.Equal(
-            typeof(IArchiveFileWriter),
-            typeof(ServiceComposition).GetProperty("FileWriter")!.PropertyType
+        Assert.All(
+            typeof(ServiceComposition).GetProperties(),
+            root => Assert.Contains(services, service => service.Contract == root.PropertyType)
         );
     }
 
@@ -114,7 +129,7 @@ public class ServiceCompositionTests : TestBase
         IFactoryCatalog catalog = new TestFactoryCatalog();
         var composition = new ServiceComposition(catalog);
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip"));
-        Assert.Equal(ArchiveType.Zip, composition.Archives.DetectArchive(stream)?.ContainerType);
+        Assert.Equal(ArchiveType.Zip, composition.Detector.DetectArchive(stream)?.ContainerType);
         Assert.Equal(0, stream.Position);
     }
 
@@ -130,36 +145,59 @@ public class ServiceCompositionTests : TestBase
         var composition = CreateComposition(new ZipFactory());
         var other = CreateComposition(new ZipFactory());
         var roots = await Task.WhenAll(
-            Enumerable
-                .Range(0, 10)
-                .Select(_ =>
-                    Task.Run(() =>
-                        (
-                            composition.Archives,
-                            composition.Readers,
-                            composition.Writers,
-                            composition.Extractor,
-                            composition.FileWriter
-                        )
+            Enumerable.Range(0, 10).Select(_ => Task.Run(() => GetRoots(composition)))
+        );
+        var expected = GetRoots(composition);
+        var separate = GetRoots(other);
+        for (var i = 0; i < expected.Length; i++)
+        {
+            Assert.All(roots, root => Assert.Same(expected[i], root[i]));
+            Assert.NotSame(expected[i], separate[i]);
+        }
+    }
+
+    [Fact]
+    public async Task Inspector_KeepsMetadataStateLocalToEachOperation()
+    {
+        var composition = CreateComposition(new ZipFactory(), new AceFactory());
+        var expected = new[] { "Zip.deflate.zip", "Ace.store.ace" }
+            .Select(name => Path.Combine(TEST_ARCHIVES_PATH, name))
+            .Select(path =>
+                (
+                    Path: path,
+                    Information: Assert.IsType<ArchiveInformation>(
+                        composition.Inspector.InspectArchive(path)
                     )
                 )
+            )
+            .ToArray();
+        await Task.WhenAll(
+            Enumerable
+                .Range(0, 20)
+                .Select(index =>
+                    Task.Run(async () =>
+                    {
+                        var sample = expected[index % expected.Length];
+                        using var stream = File.OpenRead(sample.Path);
+                        var information = Assert.IsType<ArchiveInformation>(
+                            await composition.Inspector.InspectArchiveAsync(
+                                stream,
+                                CancellationToken.None
+                            )
+                        );
+                        Assert.Equal(sample.Information.EntryCount, information.EntryCount);
+                        Assert.Equal(
+                            sample.Information.UncompressedPayloadSize,
+                            information.UncompressedPayloadSize
+                        );
+                        Assert.Equal(
+                            sample.Information.CompressedPayloadSize,
+                            information.CompressedPayloadSize
+                        );
+                        Assert.Equal(0, stream.Position);
+                    })
+                )
         );
-        Assert.All(
-            roots,
-            root =>
-            {
-                Assert.Same(composition.Archives, root.Archives);
-                Assert.Same(composition.Readers, root.Readers);
-                Assert.Same(composition.Writers, root.Writers);
-                Assert.Same(composition.Extractor, root.Extractor);
-                Assert.Same(composition.FileWriter, root.FileWriter);
-            }
-        );
-        Assert.NotSame(composition.Archives, other.Archives);
-        Assert.NotSame(composition.Readers, other.Readers);
-        Assert.NotSame(composition.Writers, other.Writers);
-        Assert.NotSame(composition.Extractor, other.Extractor);
-        Assert.NotSame(composition.FileWriter, other.FileWriter);
     }
 
     [Fact]
@@ -178,15 +216,15 @@ public class ServiceCompositionTests : TestBase
                     using var stream = File.OpenRead(path);
                     Assert.Equal(
                         ArchiveType.Zip,
-                        zip.Archives.DetectArchive(stream)?.ContainerType
+                        zip.Detector.DetectArchive(stream)?.ContainerType
                     );
-                    Assert.Null(empty.Archives.DetectArchive(stream));
+                    Assert.Null(empty.Detector.DetectArchive(stream));
                     Assert.Equal(0, stream.Position);
                     Assert.NotNull(
-                        await zip.Archives.InspectArchiveAsync(stream, CancellationToken.None)
+                        await zip.Inspector.InspectArchiveAsync(stream, CancellationToken.None)
                     );
                     Assert.Null(
-                        await empty.Archives.InspectArchiveAsync(stream, CancellationToken.None)
+                        await empty.Inspector.InspectArchiveAsync(stream, CancellationToken.None)
                     );
                     Assert.Equal(0, stream.Position);
                     using var archive = zip.Archives.OpenArchive(stream);
@@ -241,7 +279,7 @@ public class ServiceCompositionTests : TestBase
             );
             await foreach (var entry in archive.EntriesAsync)
             {
-                await services.Extractor.WriteToAsync(
+                await services.EntryExtractor.WriteToAsync(
                     entry,
                     output,
                     null,
@@ -252,7 +290,7 @@ public class ServiceCompositionTests : TestBase
         else
         {
             using var archive = services.Archives.OpenArchive(stream, readerOptions);
-            services.Extractor.WriteTo(Assert.Single(archive.Entries), output, null);
+            services.EntryExtractor.WriteTo(Assert.Single(archive.Entries), output, null);
         }
         Assert.True(provider.DecompressionCalls > 0);
         Assert.Equal("instance services", Encoding.UTF8.GetString(output.ToArray()));
@@ -289,7 +327,7 @@ public class ServiceCompositionTests : TestBase
         cancellation.Cancel();
         using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip"));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            services.Archives.DetectArchiveAsync(stream, cancellation.Token).AsTask()
+            services.Detector.DetectArchiveAsync(stream, cancellation.Token).AsTask()
         );
         Assert.Equal(0, stream.Position);
     }

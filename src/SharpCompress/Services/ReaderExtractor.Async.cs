@@ -1,14 +1,12 @@
-using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.IO;
 using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveExtractor
+internal sealed partial class ReaderExtractor
 {
     /// <summary>
     /// Extract to specific directory asynchronously, retaining filename
@@ -92,7 +90,11 @@ internal sealed partial class ArchiveExtractor
             entryStream,
             options
         );
-        var sourceStream = WrapWithProgress(checkedStream, reader.Entry);
+        var sourceStream = ExtractionStreamHelper.WrapWithProgress(
+            checkedStream,
+            reader.Entry,
+            reader.Entry.Options.Progress
+        );
         await sourceStream
             .CopyToAsync(writableStream, options.BufferSize, cancellationToken)
             .ConfigureAwait(false);

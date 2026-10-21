@@ -14,7 +14,7 @@ public static class IWritableArchiveExtensions
             string searchPattern = "*.*",
             SearchOption searchOption = SearchOption.AllDirectories
         ) =>
-            LibraryDefaults.Composition.FileWriter.AddAllFromDirectory(
+            LibraryDefaults.Composition.ArchiveFiles.AddAllFromDirectory(
                 writableArchive,
                 directoryPath,
                 searchPattern,
@@ -32,7 +32,7 @@ public static class IWritableArchiveExtensions
         ) => writableArchive.AddEntry(key, source, false, size, modified);
 
         public IArchiveEntry AddEntry(string key, FileInfo fileInfo) =>
-            LibraryDefaults.Composition.FileWriter.AddEntry(writableArchive, key, fileInfo);
+            LibraryDefaults.Composition.ArchiveFiles.AddEntry(writableArchive, key, fileInfo);
     }
 
     public static void SaveTo<TOptions>(
@@ -48,5 +48,5 @@ public static class IWritableArchiveExtensions
         TOptions options
     )
         where TOptions : IWriterOptions =>
-        LibraryDefaults.Composition.FileWriter.SaveTo(writableArchive, fileInfo, options);
+        LibraryDefaults.Composition.ArchiveFiles.SaveTo(writableArchive, fileInfo, options);
 }
