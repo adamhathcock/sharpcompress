@@ -1,7 +1,6 @@
-using System;
 using System.IO;
 using SharpCompress.Common;
-using SharpCompress.IO;
+using SharpCompress.Services;
 
 namespace SharpCompress.Readers;
 
@@ -9,108 +8,43 @@ public static class IReaderExtensions
 {
     extension(IReader reader)
     {
-        public void WriteEntryTo(string filePath)
-        {
-            using Stream stream = File.Open(filePath, FileMode.Create, FileAccess.Write);
-            reader.WriteEntryTo(stream);
-        }
+        public void WriteEntryTo(string filePath) =>
+            LibraryDefaults.Composition.Extractor.WriteEntryTo(reader, filePath);
 
-        public void WriteEntryTo(FileInfo filePath)
-        {
-            using Stream stream = filePath.Open(FileMode.Create);
-            reader.WriteEntryTo(stream);
-        }
+        public void WriteEntryTo(FileInfo filePath) =>
+            LibraryDefaults.Composition.Extractor.WriteEntryTo(reader, filePath);
 
-        /// <summary>
-        /// Extract all remaining unread entries to specific directory, retaining filename
-        /// </summary>
+        /// <summary>Extract all remaining unread entries to specific directory, retaining filename.</summary>
         public void WriteAllToDirectory(
             string destinationDirectory,
             ExtractionOptions? options = null
-        )
-        {
-            while (reader.MoveToNextEntry())
-            {
-                reader.WriteEntryToDirectory(destinationDirectory, options);
-            }
-        }
+        ) =>
+            LibraryDefaults.Composition.Extractor.WriteAllToDirectory(
+                reader,
+                destinationDirectory,
+                options
+            );
 
-        /// <summary>
-        /// Extract to specific directory, retaining filename
-        /// </summary>
+        /// <summary>Extract to specific directory, retaining filename.</summary>
         public void WriteEntryToDirectory(
             string destinationDirectory,
             ExtractionOptions? options = null
         ) =>
-            reader.Entry.WriteEntryToDirectory(
+            LibraryDefaults.Composition.Extractor.WriteEntryToDirectory(
+                reader,
                 destinationDirectory,
-                options,
-                (path) => reader.WriteEntryToFile(path, options)
+                options
             );
 
-        /// <summary>
-        /// Extract to specific file
-        /// </summary>
-        public void WriteEntryToFile(string destinationFileName, ExtractionOptions? options = null)
-        {
-            options ??= new ExtractionOptions();
-            reader.Entry.WriteEntryToFile(
+        /// <summary>Extract to specific file.</summary>
+        public void WriteEntryToFile(
+            string destinationFileName,
+            ExtractionOptions? options = null
+        ) =>
+            LibraryDefaults.Composition.Extractor.WriteEntryToFile(
+                reader,
                 destinationFileName,
-                options,
-                (x, fm) =>
-                {
-                    using var fs = File.Open(x, fm);
-                    CopyEntryTo(reader, fs, options ?? new ExtractionOptions());
-                }
+                options
             );
-        }
-    }
-
-    private static void CopyEntryTo(
-        IReader reader,
-        Stream writableStream,
-        ExtractionOptions options
-    )
-    {
-        using var entryStream = reader.OpenEntryStream();
-        var checkedStream = IEntryExtensions.WrapWithChecksumValidation(
-            reader.Entry,
-            entryStream,
-            options
-        );
-        var sourceStream = WrapWithProgress(checkedStream, reader.Entry);
-        sourceStream.CopyTo(writableStream, options.BufferSize);
-    }
-
-    private static Stream WrapWithProgress(Stream source, IEntry entry)
-    {
-        var progress = entry.Options.Progress;
-        if (progress is null)
-        {
-            return source;
-        }
-
-        var entryPath = entry.Key ?? string.Empty;
-        var totalBytes = GetEntrySizeSafe(entry);
-        return new ProgressReportingStream(
-            source,
-            progress,
-            entryPath,
-            totalBytes,
-            leaveOpen: true
-        );
-    }
-
-    private static long? GetEntrySizeSafe(IEntry entry)
-    {
-        try
-        {
-            var size = entry.Size;
-            return size >= 0 ? size : null;
-        }
-        catch (NotImplementedException)
-        {
-            return null;
-        }
     }
 }

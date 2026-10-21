@@ -7,7 +7,7 @@ using SharpCompress.Writers;
 
 namespace SharpCompress.Services;
 
-internal sealed class ArchiveFileWriter
+internal sealed partial class ArchiveFileWriter
 {
     public void Write(IWriter writer, string entryPath, FileInfo source)
     {

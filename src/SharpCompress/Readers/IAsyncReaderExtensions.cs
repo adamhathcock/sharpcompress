@@ -1,9 +1,8 @@
-using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.IO;
+using SharpCompress.Services;
 
 namespace SharpCompress.Readers;
 
@@ -11,87 +10,56 @@ public static class IAsyncReaderExtensions
 {
     extension(IAsyncReader reader)
     {
-        /// <summary>
-        /// Extract to specific directory asynchronously, retaining filename
-        /// </summary>
-        public async ValueTask WriteEntryToDirectoryAsync(
+        /// <summary>Extract to specific directory asynchronously, retaining filename.</summary>
+        public ValueTask WriteEntryToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await reader
-                .Entry.WriteEntryToDirectoryAsync(
-                    destinationDirectory,
-                    options,
-                    async (path, ct) =>
-                        await reader.WriteEntryToFileAsync(path, options, ct).ConfigureAwait(false),
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
+            LibraryDefaults.Composition.Extractor.WriteEntryToDirectoryAsync(
+                reader,
+                destinationDirectory,
+                options,
+                cancellationToken
+            );
 
-        /// <summary>
-        /// Extract to specific file asynchronously
-        /// </summary>
-        public async ValueTask WriteEntryToFileAsync(
+        /// <summary>Extract to specific file asynchronously.</summary>
+        public ValueTask WriteEntryToFileAsync(
             string destinationFileName,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
-        )
-        {
-            options ??= new ExtractionOptions();
-            await reader
-                .Entry.WriteEntryToFileAsync(
-                    destinationFileName,
-                    options,
-                    async (x, fm, ct) =>
-                    {
-                        var fs = File.Open(x, fm);
-                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
-                        await CopyEntryToAsync(reader, fs, options, ct).ConfigureAwait(false);
-                    },
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
+        ) =>
+            LibraryDefaults.Composition.Extractor.WriteEntryToFileAsync(
+                reader,
+                destinationFileName,
+                options,
+                cancellationToken
+            );
 
-        /// <summary>
-        /// Extract all remaining unread entries to specific directory asynchronously, retaining filename
-        /// </summary>
-        public async ValueTask WriteAllToDirectoryAsync(
+        /// <summary>Extract all remaining unread entries to specific directory asynchronously, retaining filename.</summary>
+        public ValueTask WriteAllToDirectoryAsync(
             string destinationDirectory,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
-        )
-        {
-            while (await reader.MoveToNextEntryAsync(cancellationToken).ConfigureAwait(false))
-            {
-                await reader
-                    .WriteEntryToDirectoryAsync(destinationDirectory, options, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-        }
+        ) =>
+            LibraryDefaults.Composition.Extractor.WriteAllToDirectoryAsync(
+                reader,
+                destinationDirectory,
+                options,
+                cancellationToken
+            );
 
-        public async ValueTask WriteEntryToAsync(
+        public ValueTask WriteEntryToAsync(
             string destinationFileName,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
-        )
-        {
-            options ??= new ExtractionOptions();
-            await reader
-                .Entry.WriteEntryToFileAsync(
-                    destinationFileName,
-                    options,
-                    async (x, fm, ct) =>
-                    {
-                        var fs = File.Open(x, fm);
-                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
-                        await CopyEntryToAsync(reader, fs, options, ct).ConfigureAwait(false);
-                    },
-                    cancellationToken
-                )
-                .ConfigureAwait(false);
-        }
+        ) =>
+            LibraryDefaults.Composition.Extractor.WriteEntryToFileAsync(
+                reader,
+                destinationFileName,
+                options,
+                cancellationToken
+            );
 
         public async ValueTask WriteEntryToAsync(
             FileInfo destinationFileInfo,
@@ -101,58 +69,5 @@ public static class IAsyncReaderExtensions
             await reader
                 .WriteEntryToAsync(destinationFileInfo.FullName, options, cancellationToken)
                 .ConfigureAwait(false);
-    }
-
-    private static async ValueTask CopyEntryToAsync(
-        IAsyncReader reader,
-        Stream writableStream,
-        ExtractionOptions options,
-        CancellationToken cancellationToken
-    )
-    {
-        await using var entryStream = await reader
-            .OpenEntryStreamAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var checkedStream = IEntryExtensions.WrapWithChecksumValidation(
-            reader.Entry,
-            entryStream,
-            options
-        );
-        var sourceStream = WrapWithProgress(checkedStream, reader.Entry);
-        await sourceStream
-            .CopyToAsync(writableStream, options.BufferSize, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    private static Stream WrapWithProgress(Stream source, IEntry entry)
-    {
-        var progress = entry.Options.Progress;
-        if (progress is null)
-        {
-            return source;
-        }
-
-        var entryPath = entry.Key ?? string.Empty;
-        var totalBytes = GetEntrySizeSafe(entry);
-        return new ProgressReportingStream(
-            source,
-            progress,
-            entryPath,
-            totalBytes,
-            leaveOpen: true
-        );
-    }
-
-    private static long? GetEntrySizeSafe(IEntry entry)
-    {
-        try
-        {
-            var size = entry.Size;
-            return size >= 0 ? size : null;
-        }
-        catch (NotImplementedException)
-        {
-            return null;
-        }
     }
 }

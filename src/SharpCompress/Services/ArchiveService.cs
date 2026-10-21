@@ -12,7 +12,11 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveService(FactoryCatalog catalog, ReaderService readers)
+internal sealed partial class ArchiveService(
+    FactoryCatalog catalog,
+    ReaderService readers,
+    ArchiveExtractor extractor
+)
 {
     public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {
@@ -99,7 +103,7 @@ internal sealed partial class ArchiveService(FactoryCatalog catalog, ReaderServi
     )
     {
         using var archive = OpenArchive(sourceArchive);
-        archive.WriteToDirectory(destinationDirectory, options);
+        extractor.WriteToDirectory(archive, destinationDirectory, options);
     }
 
     public T FindFactory<T>(string filePath)

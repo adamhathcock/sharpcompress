@@ -144,6 +144,9 @@ Pure.DI is a private build-time dependency; consumers
 do not need a container or a new client API. The default graph reuses workflow services, not
 opened archives, readers, writers, or streams, which retain their existing ownership rules.
 Services are exposed directly as typed composition roots, each a singleton within its composition.
+Public extension classes remain beside their public abstractions. Simple overloads supply defaults
+locally; extraction and filesystem workflows delegate to `ArchiveExtractor` and `ArchiveFileWriter`,
+including reader extraction, writable-archive entry creation, and saving archives to files.
 
 An injected `FactoryCatalog` supplies factories and TAR wrappers. The default catalog reads
 through to `Factory.Factories` and the existing `TarWrapper.Wrappers` array rather than freezing

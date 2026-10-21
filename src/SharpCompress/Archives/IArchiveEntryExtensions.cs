@@ -91,14 +91,8 @@ public static partial class IArchiveEntryExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await entry
-                .WriteEntryToDirectoryAsync(
-                    destinationDirectory,
-                    options,
-                    async (path, ct) =>
-                        await entry.WriteToFileAsync(path, options, ct).ConfigureAwait(false),
-                    cancellationToken
-                )
+            await Extractor
+                .WriteToDirectoryAsync(entry, destinationDirectory, options, cancellationToken)
                 .ConfigureAwait(false);
 
         /// <summary>
@@ -109,28 +103,9 @@ public static partial class IArchiveEntryExtensions
             string destinationFileName,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
-        )
-        {
-            options ??= new ExtractionOptions();
-            await entry
-                .WriteEntryToFileAsync(
-                    destinationFileName,
-                    options,
-                    async (x, fm, ct) =>
-                    {
-#if SYNC_ONLY
-                        using var fs = File.Open(x, fm);
-#else
-                        var fs = File.Open(x, fm);
-                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
-#endif
-                        await entry
-                            .WriteToAsync(fs, options.BufferSize, options, null, ct)
-                            .ConfigureAwait(false);
-                    },
-                    cancellationToken
-                )
+        ) =>
+            await Extractor
+                .WriteToFileAsync(entry, destinationFileName, options, cancellationToken)
                 .ConfigureAwait(false);
-        }
     }
 }

@@ -45,7 +45,7 @@ internal sealed partial class ArchiveExtractor
 
     private static Stream WrapWithProgress(
         Stream source,
-        IArchiveEntry entry,
+        IEntry entry,
         IProgress<ProgressReport>? progress
     )
     {
@@ -65,7 +65,7 @@ internal sealed partial class ArchiveExtractor
         );
     }
 
-    private static long? GetEntrySizeSafe(IArchiveEntry entry)
+    private static long? GetEntrySizeSafe(IEntry entry)
     {
         try
         {
