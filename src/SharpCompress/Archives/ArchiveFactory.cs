@@ -13,7 +13,7 @@ namespace SharpCompress.Archives;
 
 public static partial class ArchiveFactory
 {
-    private static ArchiveService Service => LibraryDefaults.Composition.Archives;
+    private static IArchiveService Service => LibraryDefaults.Composition.Archives;
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
         Service.OpenArchive(stream, readerOptions);

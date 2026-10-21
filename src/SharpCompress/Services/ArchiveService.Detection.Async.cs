@@ -88,7 +88,7 @@ internal sealed partial class ArchiveService
             .ConfigureAwait(false);
     }
 
-    internal ValueTask<T> FindFactoryAsync<T>(
+    public ValueTask<T> FindFactoryAsync<T>(
         string filePath,
         CancellationToken cancellationToken = default
     )
@@ -98,7 +98,7 @@ internal sealed partial class ArchiveService
         return FindFactoryAsync<T>(new FileInfo(filePath), cancellationToken);
     }
 
-    internal async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         FileInfo fileInfo,
         CancellationToken cancellationToken = default
     )
@@ -123,7 +123,7 @@ internal sealed partial class ArchiveService
             .ConfigureAwait(false);
     }
 
-    internal async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
         CancellationToken cancellationToken = default
     )
@@ -181,7 +181,8 @@ internal sealed partial class ArchiveService
 
         try
         {
-            foreach (var factory in catalog.Factories)
+            // The explicit type lets Zomp resolve probe overloads before Pure.DI emits catalog members.
+            foreach (IFactory factory in catalog.Factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
                 var isArchive = await factory
@@ -279,7 +280,7 @@ internal sealed partial class ArchiveService
 
         try
         {
-            foreach (var factory in catalog.Factories)
+            foreach (IFactory factory in catalog.Factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
                 if (
@@ -334,7 +335,7 @@ internal sealed partial class ArchiveService
         CancellationToken cancellationToken
     )
     {
-        foreach (var wrapper in catalog.Wrappers)
+        foreach (TarWrapper wrapper in catalog.Wrappers)
         {
 #if !SYNC_ONLY
             cancellationToken.ThrowIfCancellationRequested();

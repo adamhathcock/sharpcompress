@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Pure.DI;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
@@ -12,11 +13,12 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
+[GenerateInterface(asInternal: true)]
 internal sealed partial class ArchiveService(
-    FactoryCatalog catalog,
-    ReaderService readers,
-    ArchiveExtractor extractor
-)
+    IFactoryCatalog catalog,
+    IReaderService readers,
+    IArchiveExtractor extractor
+) : IArchiveService
 {
     public IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null)
     {

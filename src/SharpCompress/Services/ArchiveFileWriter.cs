@@ -3,11 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Pure.DI;
 using SharpCompress.Writers;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ArchiveFileWriter
+[GenerateInterface(asInternal: true)]
+internal sealed partial class ArchiveFileWriter : IArchiveFileWriter
 {
     public void Write(IWriter writer, string entryPath, FileInfo source)
     {

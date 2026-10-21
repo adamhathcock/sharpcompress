@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using Pure.DI;
 using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.IO;
@@ -8,7 +9,8 @@ using SharpCompress.Readers;
 
 namespace SharpCompress.Services;
 
-internal sealed partial class ReaderService(FactoryCatalog catalog)
+[GenerateInterface(asInternal: true)]
+internal sealed partial class ReaderService(IFactoryCatalog catalog) : IReaderService
 {
     public IReader OpenReader(string filePath, ReaderOptions? options = null)
     {

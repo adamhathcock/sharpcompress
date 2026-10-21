@@ -9,27 +9,27 @@ internal partial class ServiceComposition
     private static void Setup() =>
         DI.Setup()
             .Hint(Hint.Resolve, "Off")
-            .Arg<FactoryCatalog>("catalog")
-            .Bind()
+            .Arg<IFactoryCatalog>("catalog")
+            .Bind<IReaderService>()
             .As(Lifetime.Singleton)
             .To<ReaderService>()
-            .Bind()
+            .Bind<IArchiveService>()
             .As(Lifetime.Singleton)
             .To<ArchiveService>()
-            .Bind()
+            .Bind<IWriterService>()
             .As(Lifetime.Singleton)
             .To<WriterService>()
-            .Bind()
+            .Bind<IArchiveExtractor>()
             .As(Lifetime.Singleton)
             .To<ArchiveExtractor>()
-            .Bind()
+            .Bind<IArchiveFileWriter>()
             .As(Lifetime.Singleton)
             .To<ArchiveFileWriter>()
-            .Root<ArchiveService>("Archives")
-            .Root<ReaderService>("Readers")
-            .Root<WriterService>("Writers")
-            .Root<ArchiveExtractor>("Extractor")
-            .Root<ArchiveFileWriter>("FileWriter");
+            .Root<IArchiveService>("Archives")
+            .Root<IReaderService>("Readers")
+            .Root<IWriterService>("Writers")
+            .Root<IArchiveExtractor>("Extractor")
+            .Root<IArchiveFileWriter>("FileWriter");
 }
 
 internal static class LibraryDefaults

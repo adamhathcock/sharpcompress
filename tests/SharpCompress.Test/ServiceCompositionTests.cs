@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,6 +37,12 @@ public class ServiceCompositionTests : TestBase
             typeof(WriterService),
             typeof(ArchiveExtractor),
             typeof(ArchiveFileWriter),
+            typeof(IFactoryCatalog),
+            typeof(IArchiveService),
+            typeof(IReaderService),
+            typeof(IWriterService),
+            typeof(IArchiveExtractor),
+            typeof(IArchiveFileWriter),
         ];
         Assert.All(
             serviceTypes,
@@ -50,6 +57,71 @@ public class ServiceCompositionTests : TestBase
             reference => reference.Name is "Pure.DI" or "Pure.DI.Abstractions"
         );
         Assert.IsType<TarWrapper[]>(TarWrapper.Wrappers);
+    }
+
+    [Fact]
+    public void ServiceContracts_IncludeGeneratedSyncMethods()
+    {
+        (Type Contract, Type Implementation)[] services =
+        [
+            (typeof(IFactoryCatalog), typeof(FactoryCatalog)),
+            (typeof(IArchiveService), typeof(ArchiveService)),
+            (typeof(IReaderService), typeof(ReaderService)),
+            (typeof(IWriterService), typeof(WriterService)),
+            (typeof(IArchiveExtractor), typeof(ArchiveExtractor)),
+            (typeof(IArchiveFileWriter), typeof(ArchiveFileWriter)),
+        ];
+        foreach (var (contract, implementation) in services)
+        {
+            Assert.True(contract.IsAssignableFrom(implementation));
+            foreach (
+                var method in implementation.GetMethods(
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly
+                )
+            )
+            {
+                Assert.Contains(
+                    contract.GetMethods(),
+                    candidate => candidate.ToString() == method.ToString()
+                );
+            }
+        }
+        Assert.Equal(
+            typeof(IArchiveService),
+            typeof(ServiceComposition).GetProperty("Archives")!.PropertyType
+        );
+        Assert.Equal(
+            typeof(IReaderService),
+            typeof(ServiceComposition).GetProperty("Readers")!.PropertyType
+        );
+        Assert.Equal(
+            typeof(IWriterService),
+            typeof(ServiceComposition).GetProperty("Writers")!.PropertyType
+        );
+        Assert.Equal(
+            typeof(IArchiveExtractor),
+            typeof(ServiceComposition).GetProperty("Extractor")!.PropertyType
+        );
+        Assert.Equal(
+            typeof(IArchiveFileWriter),
+            typeof(ServiceComposition).GetProperty("FileWriter")!.PropertyType
+        );
+    }
+
+    [Fact]
+    public void Composition_AcceptsInterfaceOnlyCatalog()
+    {
+        IFactoryCatalog catalog = new TestFactoryCatalog();
+        var composition = new ServiceComposition(catalog);
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Zip.deflate.zip"));
+        Assert.Equal(ArchiveType.Zip, composition.Archives.DetectArchive(stream)?.ContainerType);
+        Assert.Equal(0, stream.Position);
+    }
+
+    private sealed class TestFactoryCatalog : IFactoryCatalog
+    {
+        public IEnumerable<IFactory> Factories { get; } = [new ZipFactory()];
+        public IEnumerable<TarWrapper> Wrappers => TarWrapper.Wrappers;
     }
 
     [Fact]

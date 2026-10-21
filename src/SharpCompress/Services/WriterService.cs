@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Pure.DI;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
 using SharpCompress.Factories;
@@ -10,7 +11,8 @@ using SharpCompress.Writers;
 
 namespace SharpCompress.Services;
 
-internal sealed class WriterService(FactoryCatalog catalog)
+[GenerateInterface(asInternal: true)]
+internal sealed class WriterService(IFactoryCatalog catalog) : IWriterService
 {
     public IWriter OpenWriter(
         string filePath,

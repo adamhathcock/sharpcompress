@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Pure.DI;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.IO;
@@ -9,7 +10,8 @@ using SharpCompress.IO;
 namespace SharpCompress.Services;
 
 // Destination streams are borrowed, not owned by the reusable extraction service.
-internal sealed partial class ArchiveExtractor
+[GenerateInterface(asInternal: true)]
+internal sealed partial class ArchiveExtractor : IArchiveExtractor
 {
     [Zomp.SyncMethodGenerator.CreateSyncVersion(PreserveProgress = true)]
     public async ValueTask WriteToAsync(
