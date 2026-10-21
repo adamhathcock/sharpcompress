@@ -243,7 +243,7 @@ public class SeekableSharpCompressStreamTest
 }
 
 #if !LEGACY_DOTNET
-public partial class SeekableRewindableSpanTest
+public class SeekableRewindableSpanTest
 {
     [Fact]
     public void Read_Span()

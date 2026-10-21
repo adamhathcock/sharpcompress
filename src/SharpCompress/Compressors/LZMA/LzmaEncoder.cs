@@ -11,7 +11,7 @@ using SharpCompress.Compressors.LZMA.RangeCoder;
 
 namespace SharpCompress.Compressors.LZMA;
 
-internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties, IDisposable
+internal class Encoder : ICoder, ISetCoderProperties, IWriteCoderProperties, IDisposable
 {
     private enum EMatchFinderType
     {
@@ -82,9 +82,9 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
     private const int K_DEFAULT_DICTIONARY_LOG_SIZE = 22;
     private const uint K_NUM_FAST_BYTES_DEFAULT = 0x20;
 
-    private partial class LiteralEncoder
+    private class LiteralEncoder
     {
-        public partial struct Encoder2
+        public struct Encoder2
         {
             private BitEncoder[] _encoders;
             private int _baseIndex;
@@ -268,7 +268,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
             _coders[((pos & _posMask) << _numPrevBits) + (uint)(prevByte >> (8 - _numPrevBits))];
     }
 
-    private partial class LenEncoder
+    private class LenEncoder
     {
         private BitEncoder _choice = new();
         private BitEncoder _choice2 = new();
@@ -402,7 +402,7 @@ internal partial class Encoder : ICoder, ISetCoderProperties, IWriteCoderPropert
         }
     }
 
-    private partial class LenPriceTableEncoder : LenEncoder
+    private class LenPriceTableEncoder : LenEncoder
     {
         private readonly uint[] _prices = new uint[
             Base.K_NUM_LEN_SYMBOLS << Base.K_NUM_POS_STATES_BITS_ENCODING_MAX

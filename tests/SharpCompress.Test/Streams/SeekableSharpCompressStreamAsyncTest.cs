@@ -125,7 +125,7 @@ public class SeekableSharpCompressStreamAsyncTest
 }
 
 #if !LEGACY_DOTNET
-public partial class SeekableSharpCompressStreamMemoryAsyncTest
+public class SeekableSharpCompressStreamMemoryAsyncTest
 {
     [Fact]
     public async ValueTask ReadAsync_Memory()

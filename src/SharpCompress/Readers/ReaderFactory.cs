@@ -5,7 +5,7 @@ using SharpCompress.Services;
 
 namespace SharpCompress.Readers;
 
-public static partial class ReaderFactory
+public static class ReaderFactory
 {
     public static IReader OpenReader(string filePath, ReaderOptions? options = null) =>
         LibraryDefaults.Readers.OpenReader(filePath, options);
