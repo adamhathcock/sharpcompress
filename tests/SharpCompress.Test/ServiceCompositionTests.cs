@@ -17,6 +17,11 @@ using SharpCompress.Services;
 using SharpCompress.Test.Mocks;
 using SharpCompress.Writers;
 using Xunit;
+using ArchiveDetector = SharpCompress.Services.ArchiveDetector;
+using ArchiveExtractor = SharpCompress.Services.ArchiveExtractor;
+using ArchiveInspector = SharpCompress.Services.ArchiveInspector;
+
+#pragma warning disable CS0618 // Intentionally exercise obsolete ArchiveFactory compatibility entry points.
 
 namespace SharpCompress.Test;
 

@@ -15,6 +15,8 @@ using SharpCompress.Writers;
 using SharpCompress.Writers.Zip;
 using Xunit;
 
+#pragma warning disable CS0618 // Intentionally exercise obsolete ArchiveFactory compatibility entry points.
+
 namespace SharpCompress.Test;
 
 public class ArchiveTests : ReaderTests

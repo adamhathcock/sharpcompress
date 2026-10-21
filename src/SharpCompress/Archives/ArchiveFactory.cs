@@ -1,21 +1,20 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Common.Options;
-using SharpCompress.Detection;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 using SharpCompress.Services;
+using ArchiveDetector = SharpCompress.Detection.ArchiveDetector;
 
 namespace SharpCompress.Archives;
 
-public static partial class ArchiveFactory
+public static class ArchiveFactory
 {
     private static IArchiveService Service => LibraryDefaults.Archives;
-    private static IArchiveDetector Detector => LibraryDefaults.Detector;
-    private static IArchiveInspector Inspector => LibraryDefaults.Inspector;
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
         Service.OpenArchive(stream, readerOptions);
@@ -69,154 +68,93 @@ public static partial class ArchiveFactory
         CancellationToken cancellationToken = default
     ) => Service.OpenAsyncArchive(streams, options, cancellationToken);
 
+    [Obsolete("Use ArchiveExtractor.WriteToDirectory instead.")]
     public static void WriteToDirectory(
         string sourceArchive,
         string destinationDirectory,
         ExtractionOptions? options = null
-    ) => LibraryDefaults.Extractor.WriteToDirectory(sourceArchive, destinationDirectory, options);
+    ) => ArchiveExtractor.WriteToDirectory(sourceArchive, destinationDirectory, options);
 
+    [Obsolete("Use ArchiveDetector.FindFactory<T> instead.")]
     public static T FindFactory<T>(string filePath)
-        where T : IFactory => Detector.FindFactory<T>(filePath);
+        where T : IFactory => ArchiveDetector.FindFactory<T>(filePath);
 
+    [Obsolete("Use ArchiveDetector.FindFactory<T> instead.")]
     public static T FindFactory<T>(FileInfo finfo)
-        where T : IFactory => Detector.FindFactory<T>(finfo);
+        where T : IFactory => ArchiveDetector.FindFactory<T>(finfo);
 
+    [Obsolete("Use ArchiveDetector.FindFactory<T> instead.")]
     public static T FindFactory<T>(Stream stream)
-        where T : IFactory => Detector.FindFactory<T>(stream);
+        where T : IFactory => ArchiveDetector.FindFactory<T>(stream);
 
+    [Obsolete("Use ArchiveDetector.FindFactoryAsync<T> instead.")]
     internal static ValueTask<T> FindFactoryAsync<T>(
         string filePath,
         CancellationToken cancellationToken = default
     )
-        where T : IFactory => Detector.FindFactoryAsync<T>(filePath, cancellationToken);
+        where T : IFactory => ArchiveDetector.FindFactoryAsync<T>(filePath, cancellationToken);
 
+    [Obsolete("Use ArchiveDetector.FindFactoryAsync<T> instead.")]
     internal static ValueTask<T> FindFactoryAsync<T>(
         FileInfo fileInfo,
         CancellationToken cancellationToken = default
     )
-        where T : IFactory => Detector.FindFactoryAsync<T>(fileInfo, cancellationToken);
+        where T : IFactory => ArchiveDetector.FindFactoryAsync<T>(fileInfo, cancellationToken);
 
+    [Obsolete("Use ArchiveDetector.FindFactoryAsync<T> instead.")]
     internal static ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
         CancellationToken cancellationToken = default
     )
-        where T : IFactory => Detector.FindFactoryAsync<T>(stream, cancellationToken);
+        where T : IFactory => ArchiveDetector.FindFactoryAsync<T>(stream, cancellationToken);
 
+    [Obsolete("Use ArchiveDetector.IsArchive instead.")]
     public static bool IsArchive(string filePath, out ArchiveType? type) =>
-        Detector.IsArchive(filePath, out type);
+        ArchiveDetector.IsArchive(filePath, out type);
 
+    [Obsolete("Use ArchiveDetector.IsArchive instead.")]
     public static bool IsArchive(
         string filePath,
         ReaderOptions? readerOptions,
         out ArchiveType? type
-    ) => Detector.IsArchive(filePath, readerOptions, out type);
+    ) => ArchiveDetector.IsArchive(filePath, readerOptions, out type);
 
+    [Obsolete("Use ArchiveDetector.IsArchive instead.")]
     public static bool IsArchive(Stream stream, out ArchiveType? type) =>
-        Detector.IsArchive(stream, out type);
+        ArchiveDetector.IsArchive(stream, out type);
 
+    [Obsolete("Use ArchiveDetector.IsArchive instead.")]
     public static bool IsArchive(
         Stream stream,
         ReaderOptions? readerOptions,
         out ArchiveType? type
-    ) => Detector.IsArchive(stream, readerOptions, out type);
+    ) => ArchiveDetector.IsArchive(stream, readerOptions, out type);
 
+    [Obsolete("Use ArchiveDetector.IsArchiveAsync instead.")]
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
-    ) => Detector.IsArchiveAsync(filePath, cancellationToken);
+    ) => ArchiveDetector.IsArchiveAsync(filePath, cancellationToken);
 
+    [Obsolete("Use ArchiveDetector.IsArchiveAsync instead.")]
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Detector.IsArchiveAsync(filePath, readerOptions, cancellationToken);
+    ) => ArchiveDetector.IsArchiveAsync(filePath, readerOptions, cancellationToken);
 
+    [Obsolete("Use ArchiveDetector.IsArchiveAsync instead.")]
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
-    ) => Detector.IsArchiveAsync(stream, cancellationToken);
+    ) => ArchiveDetector.IsArchiveAsync(stream, cancellationToken);
 
+    [Obsolete("Use ArchiveDetector.IsArchiveAsync instead.")]
     public static ValueTask<(bool IsArchive, ArchiveType? Type)> IsArchiveAsync(
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
-    ) => Detector.IsArchiveAsync(stream, readerOptions, cancellationToken);
-
-    /// <summary>Identify the archive without enumerating its entries.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
-        string filePath,
-        CancellationToken cancellationToken = default
-    ) => Detector.DetectArchiveAsync(filePath, cancellationToken);
-
-    /// <summary>Identify the archive without enumerating its entries.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
-        string filePath,
-        ReaderOptions? readerOptions,
-        CancellationToken cancellationToken = default
-    ) => Detector.DetectArchiveAsync(filePath, readerOptions, cancellationToken);
-
-    /// <summary>Identify the archive without enumerating its entries. Restore the stream position.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    ) => Detector.DetectArchiveAsync(stream, cancellationToken);
-
-    /// <summary>Identify the archive without enumerating its entries. Restore the stream position.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveDetection?> DetectArchiveAsync(
-        Stream stream,
-        ReaderOptions? readerOptions,
-        CancellationToken cancellationToken = default
-    ) => Detector.DetectArchiveAsync(stream, readerOptions, cancellationToken);
-
-    /// <summary>Inspect archive metadata.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
-        string filePath,
-        CancellationToken cancellationToken = default
-    ) => Inspector.InspectArchiveAsync(filePath, cancellationToken);
-
-    /// <summary>Inspect archive metadata.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
-        string filePath,
-        ReaderOptions? readerOptions,
-        CancellationToken cancellationToken = default
-    ) => Inspector.InspectArchiveAsync(filePath, readerOptions, cancellationToken);
-
-    /// <summary>Inspect archive metadata, leaving the stream open at its original position.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    ) => Inspector.InspectArchiveAsync(stream, cancellationToken);
-
-    /// <summary>Inspect archive metadata, leaving the stream open at its original position.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
-        Stream stream,
-        ReaderOptions? readerOptions,
-        CancellationToken cancellationToken = default
-    ) => Inspector.InspectArchiveAsync(stream, readerOptions, cancellationToken);
-
-    /// <summary>Inspect multipart archive metadata.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
-        IReadOnlyList<FileInfo> fileInfos,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => Inspector.InspectArchiveAsync(fileInfos, readerOptions, cancellationToken);
-
-    /// <summary>Inspect multipart archive metadata, leaving the streams open at their original positions.</summary>
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static ValueTask<ArchiveInformation?> InspectArchiveAsync(
-        IReadOnlyList<Stream> streams,
-        ReaderOptions? readerOptions = null,
-        CancellationToken cancellationToken = default
-    ) => Inspector.InspectArchiveAsync(streams, readerOptions, cancellationToken);
+    ) => ArchiveDetector.IsArchiveAsync(stream, readerOptions, cancellationToken);
 
     public static IEnumerable<string> GetFileParts(string part1) => Service.GetFileParts(part1);
 
