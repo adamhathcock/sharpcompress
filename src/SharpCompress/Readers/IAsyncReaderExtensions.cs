@@ -16,7 +16,7 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            LibraryDefaults.Composition.ReaderExtractor.WriteEntryToDirectoryAsync(
+            LibraryDefaults.ReaderExtractor.WriteEntryToDirectoryAsync(
                 reader,
                 destinationDirectory,
                 options,
@@ -29,7 +29,7 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            LibraryDefaults.Composition.ReaderExtractor.WriteEntryToFileAsync(
+            LibraryDefaults.ReaderExtractor.WriteEntryToFileAsync(
                 reader,
                 destinationFileName,
                 options,
@@ -42,7 +42,7 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            LibraryDefaults.Composition.ReaderExtractor.WriteAllToDirectoryAsync(
+            LibraryDefaults.ReaderExtractor.WriteAllToDirectoryAsync(
                 reader,
                 destinationDirectory,
                 options,
@@ -54,7 +54,7 @@ public static class IAsyncReaderExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            LibraryDefaults.Composition.ReaderExtractor.WriteEntryToFileAsync(
+            LibraryDefaults.ReaderExtractor.WriteEntryToFileAsync(
                 reader,
                 destinationFileName,
                 options,

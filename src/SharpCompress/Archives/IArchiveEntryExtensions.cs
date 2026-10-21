@@ -10,7 +10,7 @@ namespace SharpCompress.Archives;
 public static partial class IArchiveEntryExtensions
 {
     // Give the sync generator a known receiver type before Pure.DI generates the root property.
-    private static IArchiveEntryExtractor Extractor => LibraryDefaults.Composition.EntryExtractor;
+    private static IArchiveEntryExtractor Extractor => LibraryDefaults.EntryExtractor;
 
     /// <param name="archiveEntry">The archive entry to extract.</param>
     extension(IArchiveEntry archiveEntry)

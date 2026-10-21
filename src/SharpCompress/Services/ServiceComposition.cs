@@ -55,6 +55,17 @@ internal partial class ServiceComposition
 internal static class LibraryDefaults
 {
     // Do not construct built-in factories here: Factory owns their initialization and registration.
-    public static ServiceComposition Composition { get; } =
+    private static ServiceComposition Composition { get; } =
         new(new FactoryCatalog(() => Factory.Factories, () => TarWrapper.Wrappers));
+
+    public static IArchiveService Archives => Composition.Archives;
+    public static IReaderService Readers => Composition.Readers;
+    public static IWriterService Writers => Composition.Writers;
+    public static IArchiveExtractor Extractor => Composition.Extractor;
+    public static IArchiveDetector Detector => Composition.Detector;
+    public static IArchiveInspector Inspector => Composition.Inspector;
+    public static IReaderExtractor ReaderExtractor => Composition.ReaderExtractor;
+    public static IArchiveEntryExtractor EntryExtractor => Composition.EntryExtractor;
+    public static IWriterFileOperations WriterFiles => Composition.WriterFiles;
+    public static IWritableArchiveFileOperations ArchiveFiles => Composition.ArchiveFiles;
 }

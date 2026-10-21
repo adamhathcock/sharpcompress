@@ -13,9 +13,9 @@ namespace SharpCompress.Archives;
 
 public static partial class ArchiveFactory
 {
-    private static IArchiveService Service => LibraryDefaults.Composition.Archives;
-    private static IArchiveDetector Detector => LibraryDefaults.Composition.Detector;
-    private static IArchiveInspector Inspector => LibraryDefaults.Composition.Inspector;
+    private static IArchiveService Service => LibraryDefaults.Archives;
+    private static IArchiveDetector Detector => LibraryDefaults.Detector;
+    private static IArchiveInspector Inspector => LibraryDefaults.Inspector;
 
     public static IArchive OpenArchive(Stream stream, ReaderOptions? readerOptions = null) =>
         Service.OpenArchive(stream, readerOptions);
@@ -73,12 +73,7 @@ public static partial class ArchiveFactory
         string sourceArchive,
         string destinationDirectory,
         ExtractionOptions? options = null
-    ) =>
-        LibraryDefaults.Composition.Extractor.WriteToDirectory(
-            sourceArchive,
-            destinationDirectory,
-            options
-        );
+    ) => LibraryDefaults.Extractor.WriteToDirectory(sourceArchive, destinationDirectory, options);
 
     public static T FindFactory<T>(string filePath)
         where T : IFactory => Detector.FindFactory<T>(filePath);

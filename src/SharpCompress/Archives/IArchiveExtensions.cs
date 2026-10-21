@@ -17,7 +17,7 @@ public static class IArchiveExtensions
             ExtractionOptions? options = null,
             IProgress<ProgressReport>? progress = null
         ) =>
-            LibraryDefaults.Composition.Extractor.WriteToDirectory(
+            LibraryDefaults.Extractor.WriteToDirectory(
                 archive,
                 destinationDirectory,
                 options,

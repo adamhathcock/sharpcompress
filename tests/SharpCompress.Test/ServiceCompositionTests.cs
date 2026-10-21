@@ -40,6 +40,22 @@ public class ServiceCompositionTests : TestBase
         ];
 
     [Fact]
+    public void Defaults_ExposeReusableRootsWithoutExposingComposition()
+    {
+        Assert.Null(typeof(LibraryDefaults).GetProperty("Composition"));
+        var roots = typeof(ServiceComposition).GetProperties();
+        Assert.Equal(roots.Length, typeof(LibraryDefaults).GetProperties().Length);
+        foreach (var root in roots)
+        {
+            var property = Assert.IsAssignableFrom<PropertyInfo>(
+                typeof(LibraryDefaults).GetProperty(root.Name)
+            );
+            Assert.Equal(root.PropertyType, property.PropertyType);
+            Assert.Same(property.GetValue(null), property.GetValue(null));
+        }
+    }
+
+    [Fact]
     public void Composition_RemainsAnInternalBuildTimeDetail()
     {
         Type[] serviceTypes =
@@ -365,7 +381,7 @@ public class FactoryRegistrationTests
     [Fact]
     public async Task DefaultComposition_ObservesLateRegistration()
     {
-        _ = LibraryDefaults.Composition.Archives;
+        _ = LibraryDefaults.Archives;
         var factory = new TestFactory();
         Factory.RegisterFactory(factory);
         try

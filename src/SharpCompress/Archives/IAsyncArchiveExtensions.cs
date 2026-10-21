@@ -21,7 +21,7 @@ public static class IAsyncArchiveExtensions
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
         ) =>
-            LibraryDefaults.Composition.Extractor.WriteToDirectoryAsync(
+            LibraryDefaults.Extractor.WriteToDirectoryAsync(
                 archive,
                 destinationDirectory,
                 options,

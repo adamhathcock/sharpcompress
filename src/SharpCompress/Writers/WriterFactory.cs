@@ -13,19 +13,19 @@ public static class WriterFactory
         string filePath,
         ArchiveType archiveType,
         IWriterOptions writerOptions
-    ) => LibraryDefaults.Composition.Writers.OpenWriter(filePath, archiveType, writerOptions);
+    ) => LibraryDefaults.Writers.OpenWriter(filePath, archiveType, writerOptions);
 
     public static IWriter OpenWriter(
         FileInfo fileInfo,
         ArchiveType archiveType,
         IWriterOptions writerOptions
-    ) => LibraryDefaults.Composition.Writers.OpenWriter(fileInfo, archiveType, writerOptions);
+    ) => LibraryDefaults.Writers.OpenWriter(fileInfo, archiveType, writerOptions);
 
     public static IWriter OpenWriter(
         Stream stream,
         ArchiveType archiveType,
         IWriterOptions writerOptions
-    ) => LibraryDefaults.Composition.Writers.OpenWriter(stream, archiveType, writerOptions);
+    ) => LibraryDefaults.Writers.OpenWriter(stream, archiveType, writerOptions);
 
     public static ValueTask<IAsyncWriter> OpenAsyncWriter(
         string filePath,
@@ -33,7 +33,7 @@ public static class WriterFactory
         IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     ) =>
-        LibraryDefaults.Composition.Writers.OpenAsyncWriter(
+        LibraryDefaults.Writers.OpenAsyncWriter(
             filePath,
             archiveType,
             writerOptions,
@@ -46,7 +46,7 @@ public static class WriterFactory
         IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     ) =>
-        LibraryDefaults.Composition.Writers.OpenAsyncWriter(
+        LibraryDefaults.Writers.OpenAsyncWriter(
             fileInfo,
             archiveType,
             writerOptions,
@@ -59,7 +59,7 @@ public static class WriterFactory
         IWriterOptions writerOptions,
         CancellationToken cancellationToken = default
     ) =>
-        LibraryDefaults.Composition.Writers.OpenAsyncWriter(
+        LibraryDefaults.Writers.OpenAsyncWriter(
             stream,
             archiveType,
             writerOptions,
