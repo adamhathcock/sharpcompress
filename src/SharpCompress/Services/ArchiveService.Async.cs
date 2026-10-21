@@ -3,14 +3,15 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Services;
 
-public static partial class ArchiveFactory
+internal sealed partial class ArchiveService
 {
-    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         Stream stream,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -28,7 +29,7 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
-    public static ValueTask<IAsyncArchive> OpenAsyncArchive(
+    public ValueTask<IAsyncArchive> OpenAsyncArchive(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -42,7 +43,7 @@ public static partial class ArchiveFactory
         );
     }
 
-    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -57,7 +58,7 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
-    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -91,7 +92,7 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
-    public static async ValueTask<IAsyncArchive> OpenAsyncArchive(
+    public async ValueTask<IAsyncArchive> OpenAsyncArchive(
         IReadOnlyList<Stream> streams,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default

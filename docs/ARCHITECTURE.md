@@ -136,6 +136,21 @@ Stream wrappers and utilities.
 
 ## Design Patterns
 
+### Internal Service Composition
+
+The public static factories delegate to internal instance services assembled by Pure.DI in
+`src/SharpCompress/Services/ServiceComposition.cs` in the `SharpCompress.Services` namespace.
+Pure.DI is a private build-time dependency; consumers
+do not need a container or a new client API. The default graph reuses workflow services, not
+opened archives, readers, writers, or streams, which retain their existing ownership rules.
+Services are exposed directly as typed composition roots, each a singleton within its composition.
+
+An injected `FactoryCatalog` supplies factories and TAR wrappers. The default catalog reads
+through to `Factory.Factories` and the existing `TarWrapper.Wrappers` array rather than freezing
+them at composition time, so late `Factory.RegisterFactory` calls continue to work. Tests can
+compose independent graphs with their own catalogs without changing global registrations.
+Compression providers still come from each operation's existing reader/writer options.
+
 ### 1. Factory Pattern
 
 **Purpose:** Auto-detect format and create appropriate reader/writer.

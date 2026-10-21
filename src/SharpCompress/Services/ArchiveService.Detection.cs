@@ -1,12 +1,13 @@
 using System.IO;
+using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Detection;
 using SharpCompress.Factories;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Services;
 
-public static partial class ArchiveFactory
+internal sealed partial class ArchiveService
 {
     private static void DisposeProbeStream(Stream stream)
     {

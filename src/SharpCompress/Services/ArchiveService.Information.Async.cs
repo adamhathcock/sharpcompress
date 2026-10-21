@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
@@ -15,9 +16,9 @@ using SharpCompress.Detection;
 using SharpCompress.IO;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Services;
 
-public static partial class ArchiveFactory
+internal sealed partial class ArchiveService
 {
     /// <summary>
     /// Collects metadata for the archive at the given file path.
@@ -26,7 +27,7 @@ public static partial class ArchiveFactory
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the file is not a supported archive.</returns>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
+    public async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
     ) =>
@@ -41,7 +42,7 @@ public static partial class ArchiveFactory
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the file is not a supported archive.</returns>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
+    public async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
@@ -76,7 +77,7 @@ public static partial class ArchiveFactory
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the stream is not a supported archive.</returns>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
+    public async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     ) =>
@@ -92,7 +93,7 @@ public static partial class ArchiveFactory
     /// <returns>Archive metadata, or <see langword="null"/> when the stream is not a supported archive.</returns>
     /// <remarks>The supplied stream remains open and is restored to its original position.</remarks>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
+    public async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
@@ -148,7 +149,7 @@ public static partial class ArchiveFactory
 
 #if SYNC_ONLY
             var aceHeader = ReadAceHeader(archiveStream, detection, inspectionOptions);
-            using var reader = ReaderFactory.OpenReader(archiveStream, inspectionOptions);
+            using var reader = readers.OpenReader(archiveStream, inspectionOptions);
             return InspectOpenedReader(reader, detection, physicalSize, 1, aceHeader);
 #else
             var aceHeader = await ReadAceHeaderAsync(
@@ -158,7 +159,7 @@ public static partial class ArchiveFactory
                     cancellationToken
                 )
                 .ConfigureAwait(false);
-            await using var reader = await ReaderFactory
+            await using var reader = await readers
                 .OpenAsyncReader(archiveStream, inspectionOptions, cancellationToken)
                 .ConfigureAwait(false);
             return await InspectOpenedReaderAsync(
@@ -222,7 +223,7 @@ public static partial class ArchiveFactory
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the files are not a supported archive.</returns>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
+    public async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         IReadOnlyList<FileInfo> fileInfos,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -295,7 +296,7 @@ public static partial class ArchiveFactory
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Archive metadata, or <see langword="null"/> when the streams are not a supported archive.</returns>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveInformation?> InspectArchiveAsync(
+    public async ValueTask<ArchiveInformation?> InspectArchiveAsync(
         IReadOnlyList<Stream> streams,
         ReaderOptions? readerOptions = null,
         CancellationToken cancellationToken = default
@@ -597,7 +598,7 @@ public static partial class ArchiveFactory
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private static async ValueTask<ArchiveDetection?> RedetectArchiveAsync(
+    private async ValueTask<ArchiveDetection?> RedetectArchiveAsync(
         Stream stream,
         long startPosition,
         ReaderOptions options,

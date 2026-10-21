@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Factories;
 using SharpCompress.IO;
+using SharpCompress.Readers;
 
-namespace SharpCompress.Readers;
+namespace SharpCompress.Services;
 
-public static partial class ReaderFactory
+internal sealed partial class ReaderService
 {
     /// <summary>
     /// Opens a Reader from a filepath asynchronously
@@ -18,7 +19,7 @@ public static partial class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static ValueTask<IAsyncReader> OpenAsyncReader(
+    public ValueTask<IAsyncReader> OpenAsyncReader(
         string filePath,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -39,7 +40,7 @@ public static partial class ReaderFactory
     /// <param name="options"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public static async ValueTask<IAsyncReader> OpenAsyncReader(
+    public async ValueTask<IAsyncReader> OpenAsyncReader(
         FileInfo fileInfo,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -50,7 +51,7 @@ public static partial class ReaderFactory
         return await OpenAsyncReader(stream, options, cancellationToken).ConfigureAwait(false);
     }
 
-    public static async ValueTask<IAsyncReader> OpenAsyncReader(
+    public async ValueTask<IAsyncReader> OpenAsyncReader(
         Stream stream,
         ReaderOptions? options = null,
         CancellationToken cancellationToken = default
@@ -72,7 +73,7 @@ public static partial class ReaderFactory
         );
         sharpCompressStream.StartRecording();
 
-        var factories = Factory.Factories.OfType<Factory>();
+        var factories = catalog.Factories.OfType<Factory>();
 
         Factory? testedFactory = null;
         if (!string.IsNullOrWhiteSpace(options.ExtensionHint))
