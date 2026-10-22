@@ -46,54 +46,53 @@ internal sealed partial class ArchiveDatabase
         CFolder folder,
         IPasswordProvider pw,
         long skipSize,
-        long entrySize,
         CancellationToken cancellationToken
     )
     {
-        if (_cachedFolder == folder && _cachedFolderStream != null)
+        var tracker = await GetCachedFolderTrackerAsync(stream, folder, pw, cancellationToken)
+            .ConfigureAwait(false);
+        if (skipSize < tracker.Position)
         {
-            if (skipSize >= _cachedFolderStreamPosition)
-            {
-                var delta = skipSize - _cachedFolderStreamPosition;
-                if (delta > 0)
-                {
-                    await _cachedFolderStream
-                        .SkipAsync(delta, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-                // Assume the caller will fully consume the returned entry stream, advancing the
-                // shared stream by entrySize bytes.
-                _cachedFolderStreamPosition = skipSize + entrySize;
-                return _cachedFolderStream;
-            }
-
             // Non-sequential (backward) access within the same folder requires restarting.
             await DisposeCachedFolderStreamAsync().ConfigureAwait(false);
+            tracker = await GetCachedFolderTrackerAsync(stream, folder, pw, cancellationToken)
+                .ConfigureAwait(false);
         }
-        else if (_cachedFolderStream != null)
+
+        var delta = skipSize - tracker.Position;
+        if (delta > 0)
+        {
+            await tracker.SkipAsync(delta, cancellationToken).ConfigureAwait(false);
+        }
+
+        return tracker;
+    }
+
+    private async ValueTask<FolderStreamTracker> GetCachedFolderTrackerAsync(
+        Stream stream,
+        CFolder folder,
+        IPasswordProvider pw,
+        CancellationToken cancellationToken
+    )
+    {
+        if (_cachedFolderStream is null || _cachedFolder != folder)
         {
             await DisposeCachedFolderStreamAsync().ConfigureAwait(false);
+            _cachedFolderStream = await GetFolderStreamAsync(stream, folder, pw, cancellationToken)
+                .ConfigureAwait(false);
+            _cachedFolderTracker = new FolderStreamTracker(_cachedFolderStream);
+            _cachedFolder = folder;
         }
 
-        var newStream = await GetFolderStreamAsync(stream, folder, pw, cancellationToken)
-            .ConfigureAwait(false);
-        if (skipSize > 0)
-        {
-            await newStream.SkipAsync(skipSize, cancellationToken).ConfigureAwait(false);
-        }
-
-        _cachedFolder = folder;
-        _cachedFolderStream = newStream;
-        _cachedFolderStreamPosition = skipSize + entrySize;
-        return newStream;
+        return _cachedFolderTracker.NotNull();
     }
 
     internal async ValueTask DisposeCachedFolderStreamAsync()
     {
         var stream = _cachedFolderStream;
         _cachedFolderStream = null;
+        _cachedFolderTracker = null;
         _cachedFolder = null;
-        _cachedFolderStreamPosition = 0;
         if (stream is IAsyncDisposable asyncDisposable)
         {
             await asyncDisposable.DisposeAsync().ConfigureAwait(false);

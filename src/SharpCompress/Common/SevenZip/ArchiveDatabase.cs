@@ -9,6 +9,11 @@ using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip;
 
+[SuppressMessage(
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "The cached folder decoder is released by DisposeCachedFolderStream and DisposeCachedFolderStreamAsync, which the owning SevenZipArchive calls. The tracker only observes the decoder and does not own it."
+)]
 internal partial class ArchiveDatabase
 {
     internal byte _majorVersion;
@@ -324,66 +329,67 @@ internal partial class ArchiveDatabase
     // file's stream was previously created fresh from the folder start and skipped forward.
     private CFolder? _cachedFolder;
     private Stream? _cachedFolderStream;
-    private long _cachedFolderStreamPosition;
+    private FolderStreamTracker? _cachedFolderTracker;
 
     /// <summary>
     /// Returns a stream positioned at <paramref name="skipSize"/> bytes into the decompressed
     /// contents of <paramref name="folder"/>. Reuses a cached decoder stream for the folder when
     /// possible instead of recreating and re-decoding from the start.
     /// </summary>
+    /// <remarks>
+    /// The returned stream is shared by every entry of the folder, so the caller must limit the
+    /// reads to the entry it is interested in. The tracker records how much of the folder was
+    /// really consumed, which is what allows the next entry to be positioned correctly even when
+    /// the previous one was not read completely.
+    /// </remarks>
     internal Stream GetFolderStream(
         Stream stream,
         CFolder folder,
         IPasswordProvider pw,
         long skipSize,
-        long entrySize,
         bool enableParallelism = false
     )
     {
-        if (_cachedFolder == folder && _cachedFolderStream != null)
+        var tracker = GetCachedFolderTracker(stream, folder, pw, enableParallelism);
+        if (skipSize < tracker.Position)
         {
-            if (skipSize >= _cachedFolderStreamPosition)
-            {
-                var delta = skipSize - _cachedFolderStreamPosition;
-                if (delta > 0)
-                {
-                    _cachedFolderStream.Skip(delta);
-                }
-                // Assume the caller will fully consume the returned entry stream, advancing the
-                // shared stream by entrySize bytes.
-                _cachedFolderStreamPosition = skipSize + entrySize;
-                return _cachedFolderStream;
-            }
-
             // Non-sequential (backward) access within the same folder requires restarting.
-            _cachedFolderStream.Dispose();
-            _cachedFolderStream = null;
-            _cachedFolder = null;
-        }
-        else if (_cachedFolderStream != null)
-        {
-            _cachedFolderStream.Dispose();
-            _cachedFolderStream = null;
-            _cachedFolder = null;
+            DisposeCachedFolderStream();
+            tracker = GetCachedFolderTracker(stream, folder, pw, enableParallelism);
         }
 
-        var newStream = GetFolderStream(stream, folder, pw, enableParallelism);
-        if (skipSize > 0)
+        var delta = skipSize - tracker.Position;
+        if (delta > 0)
         {
-            newStream.Skip(skipSize);
+            tracker.Skip(delta);
         }
 
-        _cachedFolder = folder;
-        _cachedFolderStream = newStream;
-        _cachedFolderStreamPosition = skipSize + entrySize;
-        return newStream;
+        return tracker;
+    }
+
+    private FolderStreamTracker GetCachedFolderTracker(
+        Stream stream,
+        CFolder folder,
+        IPasswordProvider pw,
+        bool enableParallelism
+    )
+    {
+        if (_cachedFolderStream is null || _cachedFolder != folder)
+        {
+            DisposeCachedFolderStream();
+            _cachedFolderStream = GetFolderStream(stream, folder, pw, enableParallelism);
+            _cachedFolderTracker = new FolderStreamTracker(_cachedFolderStream);
+            _cachedFolder = folder;
+        }
+
+        return _cachedFolderTracker.NotNull();
     }
 
     internal void DisposeCachedFolderStream()
     {
         _cachedFolderStream?.Dispose();
         _cachedFolderStream = null;
+        _cachedFolderTracker = null;
         _cachedFolder = null;
-        _cachedFolderStreamPosition = 0;
     }
 }
