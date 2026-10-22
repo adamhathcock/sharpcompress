@@ -351,9 +351,10 @@ internal partial class ArchiveDatabase
     )
     {
         var tracker = GetCachedFolderTracker(stream, folder, pw, enableParallelism);
-        if (skipSize < tracker.Position)
+        if (tracker.IsFaulted || tracker.IsAsync == true || skipSize < tracker.Position)
         {
-            // Non-sequential (backward) access within the same folder requires restarting.
+            // Restart for backward access, a failed read, or a mode change. LZMA cannot mix
+            // sync and async reads; do not hide synchronous I/O inside the async API (or vice versa).
             DisposeCachedFolderStream();
             tracker = GetCachedFolderTracker(stream, folder, pw, enableParallelism);
         }

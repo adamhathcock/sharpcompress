@@ -919,8 +919,8 @@ of an entry does not corrupt the entries that follow: the decoder skips forward
 over the bytes that were not read when the next entry is opened. Read an entry
 before opening the next entry of the same folder - the shared decoder cannot
 serve two open entry streams of the same folder at the same time. Mixing
-synchronous and asynchronous entry reads of the same folder is supported; the
-decoder keeps the read mode it was first used with.
+synchronous and asynchronous entry APIs restarts the folder decoder when needed;
+same-mode sequential access reuses it. Failed decoder reads also invalidate reuse.
 
 ## 7z Encrypted Decoding Errors
 

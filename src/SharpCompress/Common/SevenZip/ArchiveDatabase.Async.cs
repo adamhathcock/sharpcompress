@@ -49,11 +49,12 @@ internal sealed partial class ArchiveDatabase
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var tracker = await GetCachedFolderTrackerAsync(stream, folder, pw, cancellationToken)
             .ConfigureAwait(false);
-        if (skipSize < tracker.Position)
+        if (tracker.IsFaulted || tracker.IsAsync == false || skipSize < tracker.Position)
         {
-            // Non-sequential (backward) access within the same folder requires restarting.
+            // Failed reads and mode changes invalidate reuse, as does backward access.
             await DisposeCachedFolderStreamAsync().ConfigureAwait(false);
             tracker = await GetCachedFolderTrackerAsync(stream, folder, pw, cancellationToken)
                 .ConfigureAwait(false);

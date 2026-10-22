@@ -165,15 +165,47 @@ public class SevenZipSolidCacheTests : TestBase
     [Fact]
     public void PartialRead_ThenLaterEntry_ReturnsEntryContent()
     {
-        var expected = ExpectedContent(SolidArchive, 2);
+        const string archiveName = "7Zip.delta.7z";
+        var expected = ExpectedContent(archiveName, 2);
 
-        using var archive = SevenZipArchive.OpenArchive(PathOf(SolidArchive));
+        using var archive = SevenZipArchive.OpenArchive(PathOf(archiveName));
         var entries = FileEntries(archive);
         Assert.True(entries.Count >= 3);
+        Assert.Same(
+            ((SevenZipArchiveEntry)entries[0]).FilePart.Folder,
+            ((SevenZipArchiveEntry)entries[2]).FilePart.Folder
+        );
 
         ReadPartial(entries[0], 16);
 
         Assert.Equal(expected, ReadAll(entries[2]));
+    }
+
+    [Fact]
+    public async Task PartialRead_ThenSkippedEntryAsync_ReusesFolder()
+    {
+        const string archiveName = "7Zip.delta.7z";
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(PathOf(archiveName));
+        var entries = await FileEntriesAsync(archive);
+        Assert.Same(
+            ((SevenZipArchiveEntry)entries[0]).FilePart.Folder,
+            ((SevenZipArchiveEntry)entries[2]).FilePart.Folder
+        );
+        await ReadPartialAsync(entries[0], 16);
+        var decoder = CachedFolderStream(archive);
+        Assert.Equal(ExpectedContent(archiveName, 2), await ReadAllAsync(entries[2]));
+        Assert.Same(decoder, CachedFolderStream(archive));
+    }
+
+    [Fact]
+    public async Task FullyReadEntriesAsync_ReuseFolder()
+    {
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(PathOf(SolidArchive));
+        var entries = await FileEntriesAsync(archive);
+        await ReadAllAsync(entries[0]);
+        var decoder = CachedFolderStream(archive);
+        Assert.Equal(ExpectedContent(SolidArchive, 1), await ReadAllAsync(entries[1]));
+        Assert.Same(decoder, CachedFolderStream(archive));
     }
 
     [Theory]
@@ -233,58 +265,112 @@ public class SevenZipSolidCacheTests : TestBase
         Assert.Equal(expected, await ReadAllAsync(entries[0]).ConfigureAwait(false));
     }
 
-    [Fact]
-    public void AlternatingSyncAndAsyncEntryReads_ReturnEntryContent()
+    [Theory]
+    [InlineData(true, 0)]
+    [InlineData(true, 16)]
+    [InlineData(true, -1)]
+    [InlineData(false, 0)]
+    [InlineData(false, 16)]
+    [InlineData(false, -1)]
+    public async Task AlternatingEntryReadModes_ReturnEntryContent(bool syncFirst, int count)
     {
-        var expected = FileEntries(SevenZipArchive.OpenArchive(PathOf(SolidArchive)))
-            .Select((_, index) => ExpectedContent(SolidArchive, index))
-            .ToList();
-
-        using var archive = SevenZipArchive.OpenArchive(PathOf(SolidArchive));
-        var entries = FileEntries(archive);
-        Assert.True(entries.Count >= 3);
-
-        ReadPartial(entries[0], 16);
-
-        var second = entries[1].OpenEntryStream();
-        using (second)
+        var expected = ExpectedContent(SolidArchive, 1);
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(PathOf(SolidArchive));
+        var entries = await FileEntriesAsync(archive);
+        if (syncFirst)
         {
-            using var content = new MemoryStream();
-            second.CopyTo(content);
-            Assert.Equal(expected[1], content.ToArray());
+            if (count < 0)
+            {
+                ReadAll(entries[0]);
+            }
+            else
+            {
+                ReadPartial(entries[0], count);
+            }
+            var decoder = CachedFolderStream(archive);
+            Assert.Equal(expected, await ReadAllAsync(entries[1]));
+            if (count != 0)
+            {
+                Assert.NotSame(decoder, CachedFolderStream(archive));
+            }
         }
-
-        Assert.Equal(expected[2], ReadAll(entries[2]));
+        else
+        {
+            if (count < 0)
+            {
+                await ReadAllAsync(entries[0]);
+            }
+            else
+            {
+                await ReadPartialAsync(entries[0], count);
+            }
+            var decoder = CachedFolderStream(archive);
+            Assert.Equal(expected, ReadAll(entries[1]));
+            if (count != 0)
+            {
+                Assert.NotSame(decoder, CachedFolderStream(archive));
+            }
+        }
     }
 
     [Fact]
-    public async Task AlternatingSyncAndAsyncEntryReads_ReturnEntryContentAsync()
+    public async Task CancellationAfterSourceProgress_RestartsCachedDecoder()
     {
-        var expected = new List<byte[]>();
-        for (var index = 0; index < 3; index++)
+        using var source = new CancelAfterReadStream(File.ReadAllBytes(PathOf(SolidArchive)));
+        await using var archive = await SevenZipArchive.OpenAsyncArchive(
+            source,
+            ReaderOptions.ForExternalStream
+        );
+        var entries = await FileEntriesAsync(archive);
+        var stream = await entries[0].OpenEntryStreamAsync(CancellationToken.None);
+        var decoder = CachedFolderStream(archive);
+        source.CancelNextRead = true;
+        await using (stream.DisposeAsyncScope())
         {
-            expected.Add(await ExpectedContentAsync(SolidArchive, index).ConfigureAwait(false));
+            await Assert.ThrowsAsync<OperationCanceledException>(() =>
+                stream.CopyToAsync(Stream.Null, Constants.BufferSize, CancellationToken.None)
+            );
+        }
+        Assert.False(source.CancelNextRead);
+        Assert.Equal(ExpectedContent(SolidArchive, 1), await ReadAllAsync(entries[1]));
+        Assert.NotSame(decoder, CachedFolderStream(archive));
+    }
+
+    private sealed class CancelAfterReadStream(byte[] bytes) : MemoryStream(bytes)
+    {
+        internal bool CancelNextRead { get; set; }
+
+        public override Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
+        {
+            var read = base.Read(buffer, offset, Math.Min(count, 64));
+            if (CancelNextRead)
+            {
+                CancelNextRead = false;
+                throw new OperationCanceledException();
+            }
+            return Task.FromResult(read);
         }
 
-        await using var archive = await SevenZipArchive
-            .OpenAsyncArchive(PathOf(SolidArchive))
-            .ConfigureAwait(false);
-        var entries = await FileEntriesAsync(archive).ConfigureAwait(false);
-        Assert.True(entries.Count >= 3);
-
-        await ReadPartialAsync(entries[0], 16).ConfigureAwait(false);
-
-        var second = entries[1].OpenEntryStream();
-        using (second)
+#if !LEGACY_DOTNET
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
         {
-            using var content = new MemoryStream();
-            await second
-                .CopyToAsync(content, Constants.BufferSize, CancellationToken.None)
-                .ConfigureAwait(false);
-            Assert.Equal(expected[1], content.ToArray());
+            var read = base.Read(buffer.Span.Slice(0, Math.Min(buffer.Length, 64)));
+            if (CancelNextRead)
+            {
+                CancelNextRead = false;
+                throw new OperationCanceledException();
+            }
+            return new ValueTask<int>(read);
         }
-
-        Assert.Equal(expected[2], await ReadAllAsync(entries[2]).ConfigureAwait(false));
+#endif
     }
 
     [Fact]
