@@ -196,7 +196,7 @@ referenced for every project via `Directory.Packages.props`).
 - Tar writing supports uncompressed Tar, GZip, BZip2, and LZip wrappers
 
 ### Zip-Specific Considerations
-- Supports Zip64 for large files (seekable streams only)
+- Supports Zip64 for large files on seekable streams and non-seekable output when `ZipWriterOptions.UseZip64` is enabled before writing entries; non-seekable output uses 64-bit data descriptors.
 - Supports PKWare and WinZip AES encryption
 - Multiple compression methods: None, Shrink, Reduce, Implode, DEFLATE, Deflate64, BZip2, LZMA, PPMd
 - Encrypted LZMA is not supported
