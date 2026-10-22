@@ -914,6 +914,14 @@ For solid archives, prefer `ExtractAllEntries()` / `ExtractAllEntriesAsync()` to
 reuse the folder decoder across entries. A reader borrowed from an archive can
 be disposed without closing that archive's source.
 
+The entries of a solid folder share one forward-only decoder. Reading only part
+of an entry does not corrupt the entries that follow: the decoder skips forward
+over the bytes that were not read when the next entry is opened. Read an entry
+before opening the next entry of the same folder - the shared decoder cannot
+serve two open entry streams of the same folder at the same time. Mixing
+synchronous and asynchronous entry APIs restarts the folder decoder when needed;
+same-mode sequential access reuses it. Failed decoder reads also invalidate reuse.
+
 ## 7z Encrypted Decoding Errors
 
 AES-encrypted 7z codec data errors and encrypted-header CRC failures throw `SharpCompress.Common.CryptographicException`,

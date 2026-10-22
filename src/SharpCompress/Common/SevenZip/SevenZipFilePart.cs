@@ -61,7 +61,6 @@ internal class SevenZipFilePart : FilePart
             Folder!,
             _database.PasswordProvider,
             skipSize,
-            Header.Size,
             _enableParallelism
         );
         return new ReadOnlySubStream(folderStream, Header.Size, leaveOpen: true);
@@ -90,7 +89,6 @@ internal class SevenZipFilePart : FilePart
                 Folder!,
                 _database.PasswordProvider,
                 skipSize,
-                Header.Size,
                 cancellationToken
             )
             .ConfigureAwait(false);
