@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Services;
 
 namespace SharpCompress.Writers;
 
@@ -12,16 +12,8 @@ public static class IWriterExtensions
     {
         public void Write(string entryPath, Stream source) => writer.Write(entryPath, source, null);
 
-        public void Write(string entryPath, FileInfo source)
-        {
-            if (!source.Exists)
-            {
-                throw new ArgumentException("Source does not exist: " + source.FullName);
-            }
-
-            using var stream = source.OpenRead();
-            writer.Write(entryPath, stream, source.LastWriteTime);
-        }
+        public void Write(string entryPath, FileInfo source) =>
+            LibraryDefaults.WriterFiles.Write(writer, entryPath, source);
 
         public void Write(string entryPath, string source) =>
             writer.Write(entryPath, new FileInfo(source));
@@ -37,23 +29,14 @@ public static class IWriterExtensions
             string searchPattern = "*",
             Func<string, bool>? fileSearchFunc = null,
             SearchOption option = SearchOption.TopDirectoryOnly
-        )
-        {
-            if (!Directory.Exists(directory))
-            {
-                throw new ArgumentException("Directory does not exist: " + directory);
-            }
-
-            fileSearchFunc ??= n => true;
-            foreach (
-                var file in Directory
-                    .EnumerateFiles(directory, searchPattern, option)
-                    .Where(fileSearchFunc)
-            )
-            {
-                writer.Write(file.Substring(directory.Length), file);
-            }
-        }
+        ) =>
+            LibraryDefaults.WriterFiles.WriteAll(
+                writer,
+                directory,
+                searchPattern,
+                fileSearchFunc,
+                option
+            );
 
         public void WriteDirectory(string directoryName) =>
             writer.WriteDirectory(directoryName, null);
@@ -71,18 +54,10 @@ public static class IWriterExtensions
             string entryPath,
             FileInfo source,
             CancellationToken cancellationToken = default
-        )
-        {
-            if (!source.Exists)
-            {
-                throw new ArgumentException("Source does not exist: " + source.FullName);
-            }
-            var stream = source.OpenRead();
-            await using var scope = stream.DisposeAsyncScope().ConfigureAwait(false);
-            await writer
-                .WriteAsync(entryPath, stream, source.LastWriteTime, cancellationToken)
+        ) =>
+            await LibraryDefaults
+                .WriterFiles.WriteAsync(writer, entryPath, source, cancellationToken)
                 .ConfigureAwait(false);
-        }
 
         public ValueTask WriteAsync(
             string entryPath,
@@ -103,25 +78,17 @@ public static class IWriterExtensions
             Func<string, bool>? fileSearchFunc = null,
             SearchOption option = SearchOption.TopDirectoryOnly,
             CancellationToken cancellationToken = default
-        )
-        {
-            if (!Directory.Exists(directory))
-            {
-                throw new ArgumentException("Directory does not exist: " + directory);
-            }
-
-            fileSearchFunc ??= n => true;
-            foreach (
-                var file in Directory
-                    .EnumerateFiles(directory, searchPattern, option)
-                    .Where(fileSearchFunc)
-            )
-            {
-                await writer
-                    .WriteAsync(file.Substring(directory.Length), file, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-        }
+        ) =>
+            await LibraryDefaults
+                .WriterFiles.WriteAllAsync(
+                    writer,
+                    directory,
+                    searchPattern,
+                    fileSearchFunc,
+                    option,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
         public ValueTask WriteDirectoryAsync(
             string directoryName,

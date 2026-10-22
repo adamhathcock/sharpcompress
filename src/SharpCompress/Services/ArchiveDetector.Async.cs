@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
 using SharpCompress.Detection;
@@ -10,9 +11,9 @@ using SharpCompress.IO;
 using SharpCompress.Providers;
 using SharpCompress.Readers;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Services;
 
-public static partial class ArchiveFactory
+internal sealed partial class ArchiveDetector
 {
     /// <summary>
     /// Identifies the archive at the given file path without enumerating its entries.
@@ -20,7 +21,7 @@ public static partial class ArchiveFactory
     /// <param name="filePath">Path to the archive file.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
+    public async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         string filePath,
         CancellationToken cancellationToken = default
     ) =>
@@ -34,7 +35,7 @@ public static partial class ArchiveFactory
     /// <param name="readerOptions">Options controlling archive detection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
+    public async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         string filePath,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
@@ -56,7 +57,7 @@ public static partial class ArchiveFactory
     /// <param name="stream">A readable and seekable stream positioned at the start of the archive.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
+    public async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     ) =>
@@ -70,7 +71,7 @@ public static partial class ArchiveFactory
     /// <param name="readerOptions">Options controlling archive detection.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public static async ValueTask<ArchiveDetection?> DetectArchiveAsync(
+    public async ValueTask<ArchiveDetection?> DetectArchiveAsync(
         Stream stream,
         ReaderOptions? readerOptions,
         CancellationToken cancellationToken = default
@@ -87,7 +88,7 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
-    internal static ValueTask<T> FindFactoryAsync<T>(
+    public ValueTask<T> FindFactoryAsync<T>(
         string filePath,
         CancellationToken cancellationToken = default
     )
@@ -97,7 +98,7 @@ public static partial class ArchiveFactory
         return FindFactoryAsync<T>(new FileInfo(filePath), cancellationToken);
     }
 
-    internal static async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         FileInfo fileInfo,
         CancellationToken cancellationToken = default
     )
@@ -109,7 +110,7 @@ public static partial class ArchiveFactory
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private static async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         FileInfo fileInfo,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
@@ -122,7 +123,7 @@ public static partial class ArchiveFactory
             .ConfigureAwait(false);
     }
 
-    internal static async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
         CancellationToken cancellationToken = default
     )
@@ -140,7 +141,7 @@ public static partial class ArchiveFactory
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private static async ValueTask<T> FindFactoryAsync<T>(
+    public async ValueTask<T> FindFactoryAsync<T>(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
@@ -157,7 +158,7 @@ public static partial class ArchiveFactory
             return typedFactory;
         }
 
-        var extensions = string.Join(", ", Factory.Factories.OfType<T>().Select(item => item.Name));
+        var extensions = string.Join(", ", catalog.Factories.OfType<T>().Select(item => item.Name));
 
         throw new ArchiveOperationException(
             $"Cannot determine compressed stream type. Supported Archive Formats: {extensions}"
@@ -170,7 +171,7 @@ public static partial class ArchiveFactory
     /// Stream position is restored to its value at entry on both success and failure.
     /// </summary>
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private static async ValueTask<IFactory?> TryFindFactoryAsync(
+    public async ValueTask<IFactory?> TryFindFactoryAsync(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
@@ -180,7 +181,8 @@ public static partial class ArchiveFactory
 
         try
         {
-            foreach (var factory in Factory.Factories)
+            // The explicit type lets Zomp resolve probe overloads before Pure.DI emits catalog members.
+            foreach (IFactory factory in catalog.Factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
                 var isArchive = await factory
@@ -268,7 +270,7 @@ public static partial class ArchiveFactory
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private static async ValueTask<ArchiveDetection?> TryDetectArchiveAsync(
+    public async ValueTask<ArchiveDetection?> TryDetectArchiveAsync(
         Stream stream,
         ReaderOptions readerOptions,
         CancellationToken cancellationToken
@@ -278,7 +280,7 @@ public static partial class ArchiveFactory
 
         try
         {
-            foreach (var factory in Factory.Factories)
+            foreach (IFactory factory in catalog.Factories)
             {
                 stream.Seek(startPosition, SeekOrigin.Begin);
                 if (
@@ -326,14 +328,14 @@ public static partial class ArchiveFactory
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    private static async ValueTask<CompressionType?> TryDetectCompressedTarAsync(
+    private async ValueTask<CompressionType?> TryDetectCompressedTarAsync(
         Stream stream,
         ReaderOptions readerOptions,
         long startPosition,
         CancellationToken cancellationToken
     )
     {
-        foreach (var wrapper in TarWrapper.Wrappers)
+        foreach (TarWrapper wrapper in catalog.Wrappers)
         {
 #if !SYNC_ONLY
             cancellationToken.ThrowIfCancellationRequested();

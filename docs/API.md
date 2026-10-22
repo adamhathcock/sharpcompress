@@ -44,14 +44,14 @@ using (var archive = ArchiveFactory.OpenArchive("archive.zip"))
     }
 }
 
-// Detect before opening
-if (ArchiveFactory.IsArchive("archive.zip", out var archiveType))
+// Detect before opening (using SharpCompress.Detection)
+if (ArchiveDetector.IsArchive("archive.zip", out var archiveType))
 {
     Console.WriteLine($"Detected {archiveType}");
 }
 
 // Detect the format and choose an API without enumerating entries.
-var detection = ArchiveFactory.DetectArchive("archive.tar.xz");
+var detection = ArchiveDetector.DetectArchive("archive.tar.xz");
 if (detection is not null)
 {
     Console.WriteLine($"Container: {detection.ContainerType}");
@@ -61,7 +61,7 @@ if (detection is not null)
 
 // InspectArchive parses complete archive metadata. It can be expensive for
 // sequential formats such as TAR and compressed TAR.
-var information = ArchiveFactory.InspectArchive("archive.zip");
+var information = ArchiveInspector.InspectArchive("archive.zip");
 if (information is not null)
 {
     Console.WriteLine($"Entries: {information.EntryCount}");
@@ -69,7 +69,7 @@ if (information is not null)
     Console.WriteLine($"Some ZIP entry sizes arrive after their data: {information.Zip?.HasEntriesWithDeferredSizes}");
 }
 
-var asyncInformation = await ArchiveFactory.InspectArchiveAsync("archive.zip", cancellationToken);
+var asyncInformation = await ArchiveInspector.InspectArchiveAsync("archive.zip", cancellationToken);
 
 // Multi-volume archives
 var parts = ArchiveFactory.GetFileParts("archive.part1.rar")
@@ -85,7 +85,9 @@ using (var archive = ArchiveFactory.OpenArchive(parts))
 
 `InspectArchive` enumerates metadata and returns `ArchiveInformation`. It reports `Partial` status for missing volumes or encrypted headers without a password; malformed archives and incorrect passwords throw. ZIP-specific metadata is exposed through `ArchiveInformation.Zip`.
 
-Detection and inspection result types are in the `SharpCompress.Detection` namespace.
+Detection and inspection entry points and result types are in the `SharpCompress.Detection` namespace.
+
+`ArchiveDetector` also exposes `FindFactory<T>`, `IsArchive`, and `IsArchiveAsync`. `SharpCompress.Archives.ArchiveExtractor.WriteToDirectory(sourceArchive, destinationDirectory, options)` extracts an archive from a file path. The existing `ArchiveFactory` versions of these methods remain available for compatibility but are marked obsolete with warnings directing callers to the replacements. Opening, creating archives, and discovering file parts remain on `ArchiveFactory`.
 
 The stream overloads of `DetectArchive` and `InspectArchive` preserve the supplied stream's position and leave it open, including when `ReaderOptions.LeaveStreamOpen` is `false`.
 
@@ -93,9 +95,9 @@ The stream overloads of `DetectArchive` and `InspectArchive` preserve the suppli
 
 | Removed API | Replacement |
 | --- | --- |
-| `GetArchiveInformation(...)` used only to identify a format | `DetectArchive(...)` |
-| `GetArchiveInformation(...)` used to enumerate archive details | `InspectArchive(...)` |
-| `GetArchiveInformationAsync(...)` | `DetectArchiveAsync(...)` or `InspectArchiveAsync(...)` |
+| `GetArchiveInformation(...)` used only to identify a format | `ArchiveDetector.DetectArchive(...)` |
+| `GetArchiveInformation(...)` used to enumerate archive details | `ArchiveInspector.InspectArchive(...)` |
+| `GetArchiveInformationAsync(...)` | `ArchiveDetector.DetectArchiveAsync(...)` or `ArchiveInspector.InspectArchiveAsync(...)` |
 | `Type` | `Detection.ContainerType` |
 | `SupportsRandomAccess` | `Detection.SupportedApis.HasFlag(ArchiveAccessMode.Archive)` |
 | `ZipDataDescriptorEntryCount` | `Zip.HasEntriesWithDeferredSizes` |

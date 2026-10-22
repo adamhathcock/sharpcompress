@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.SevenZip;
 using SharpCompress.Archives.Zip;
@@ -13,9 +14,9 @@ using SharpCompress.Detection;
 using SharpCompress.Readers;
 using AceMainHeader = SharpCompress.Common.Ace.Headers.AceMainHeader;
 
-namespace SharpCompress.Archives;
+namespace SharpCompress.Services;
 
-public static partial class ArchiveFactory
+internal sealed partial class ArchiveInspector
 {
     private static ArchiveInformation InspectOpenedArchive(
         IArchive archive,
@@ -231,10 +232,10 @@ public static partial class ArchiveFactory
         }
     }
 
-    private static FileInfo[] GetArchiveFileParts(FileInfo firstPart, ReaderOptions options)
+    private FileInfo[] GetArchiveFileParts(FileInfo firstPart, ReaderOptions options)
     {
         using Stream stream = firstPart.OpenRead();
-        var factory = TryFindFactory(stream, options);
+        var factory = detector.TryFindFactory(stream, options);
         if (factory is null)
         {
             return [firstPart];

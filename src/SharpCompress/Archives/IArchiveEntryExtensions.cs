@@ -3,12 +3,15 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
-using SharpCompress.IO;
+using SharpCompress.Services;
 
 namespace SharpCompress.Archives;
 
 public static partial class IArchiveEntryExtensions
 {
+    // Give the sync generator a known receiver type before Pure.DI generates the root property.
+    private static IArchiveEntryExtractor Extractor => LibraryDefaults.EntryExtractor;
+
     /// <param name="archiveEntry">The archive entry to extract.</param>
     extension(IArchiveEntry archiveEntry)
     {
@@ -64,66 +67,17 @@ public static partial class IArchiveEntryExtensions
             ExtractionOptions? options = null,
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
-        )
-        {
-            if (archiveEntry.IsDirectory)
-            {
-                throw new ExtractionException("Entry is a file directory and cannot be extracted.");
-            }
-
-#if SYNC_ONLY
-            using var entryStream = archiveEntry.OpenEntryStream();
-#else
-            var entryStream = await archiveEntry
-                .OpenEntryStreamAsync(cancellationToken)
+        ) =>
+            await Extractor
+                .WriteToAsync(
+                    archiveEntry,
+                    streamToWriteTo,
+                    bufferSize,
+                    options,
+                    progress,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
-            await using var entryStreamScope = entryStream
-                .DisposeAsyncScope()
-                .ConfigureAwait(false);
-#endif
-            var checkedStream = options is null
-                ? entryStream
-                : IEntryExtensions.WrapWithChecksumValidation(archiveEntry, entryStream, options);
-            var sourceStream = WrapWithProgress(checkedStream, archiveEntry, progress);
-            await sourceStream
-                .CopyToAsync(streamToWriteTo, bufferSize ?? Constants.BufferSize, cancellationToken)
-                .ConfigureAwait(false);
-        }
-    }
-
-    private static Stream WrapWithProgress(
-        Stream source,
-        IArchiveEntry entry,
-        IProgress<ProgressReport>? progress
-    )
-    {
-        if (progress is null)
-        {
-            return source;
-        }
-
-        var entryPath = entry.Key ?? string.Empty;
-        var totalBytes = GetEntrySizeSafe(entry);
-        return new ProgressReportingStream(
-            source,
-            progress,
-            entryPath,
-            totalBytes,
-            leaveOpen: true
-        );
-    }
-
-    private static long? GetEntrySizeSafe(IArchiveEntry entry)
-    {
-        try
-        {
-            var size = entry.Size;
-            return size >= 0 ? size : null;
-        }
-        catch (NotImplementedException)
-        {
-            return null;
-        }
     }
 
     extension(IArchiveEntry entry)
@@ -137,14 +91,8 @@ public static partial class IArchiveEntryExtensions
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
         ) =>
-            await entry
-                .WriteEntryToDirectoryAsync(
-                    destinationDirectory,
-                    options,
-                    async (path, ct) =>
-                        await entry.WriteToFileAsync(path, options, ct).ConfigureAwait(false),
-                    cancellationToken
-                )
+            await Extractor
+                .WriteToDirectoryAsync(entry, destinationDirectory, options, cancellationToken)
                 .ConfigureAwait(false);
 
         /// <summary>
@@ -155,28 +103,9 @@ public static partial class IArchiveEntryExtensions
             string destinationFileName,
             ExtractionOptions? options = null,
             CancellationToken cancellationToken = default
-        )
-        {
-            options ??= new ExtractionOptions();
-            await entry
-                .WriteEntryToFileAsync(
-                    destinationFileName,
-                    options,
-                    async (x, fm, ct) =>
-                    {
-#if SYNC_ONLY
-                        using var fs = File.Open(x, fm);
-#else
-                        var fs = File.Open(x, fm);
-                        await using var scope = fs.DisposeAsyncScope().ConfigureAwait(false);
-#endif
-                        await entry
-                            .WriteToAsync(fs, options.BufferSize, options, null, ct)
-                            .ConfigureAwait(false);
-                    },
-                    cancellationToken
-                )
+        ) =>
+            await Extractor
+                .WriteToFileAsync(entry, destinationFileName, options, cancellationToken)
                 .ConfigureAwait(false);
-        }
     }
 }

@@ -10,6 +10,8 @@ using SharpCompress.Readers;
 using SharpCompress.Test.Mocks;
 using Xunit;
 
+#pragma warning disable CS0618 // Intentionally exercise obsolete ArchiveFactory compatibility entry points.
+
 namespace SharpCompress.Test;
 
 public class ArchiveFactoryTests : TestBase
@@ -254,7 +256,7 @@ public class ArchiveFactoryTests : TestBase
         bool expectedRandomAccess
     )
     {
-        var info = ArchiveFactory.DetectArchive(Path.Combine(TEST_ARCHIVES_PATH, archiveName));
+        var info = ArchiveDetector.DetectArchive(Path.Combine(TEST_ARCHIVES_PATH, archiveName));
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.ContainerType);
@@ -270,7 +272,7 @@ public class ArchiveFactoryTests : TestBase
         bool expectedRandomAccess
     )
     {
-        var info = ArchiveFactory.DetectArchive(
+        var info = ArchiveDetector.DetectArchive(
             GetTestArchivePath(archiveName),
             ReaderOptions.ForFilePath.WithLookForHeader(true)
         );
@@ -293,7 +295,7 @@ public class ArchiveFactoryTests : TestBase
         bool expectedRandomAccess
     )
     {
-        var info = await ArchiveFactory.DetectArchiveAsync(
+        var info = await ArchiveDetector.DetectArchiveAsync(
             Path.Combine(TEST_ARCHIVES_PATH, archiveName)
         );
 
@@ -311,7 +313,7 @@ public class ArchiveFactoryTests : TestBase
         bool expectedRandomAccess
     )
     {
-        var info = await ArchiveFactory.DetectArchiveAsync(
+        var info = await ArchiveDetector.DetectArchiveAsync(
             GetTestArchivePath(archiveName),
             ReaderOptions.ForFilePath.WithLookForHeader(true)
         );
@@ -471,7 +473,7 @@ public class ArchiveFactoryTests : TestBase
         bool expectedSeekable
     )
     {
-        var info = ArchiveFactory.DetectArchive(GetTestArchivePath(archiveName));
+        var info = ArchiveDetector.DetectArchive(GetTestArchivePath(archiveName));
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.ContainerType);
@@ -628,7 +630,7 @@ public class ArchiveFactoryTests : TestBase
         bool expectedSeekable
     )
     {
-        var info = await ArchiveFactory.DetectArchiveAsync(GetTestArchivePath(archiveName));
+        var info = await ArchiveDetector.DetectArchiveAsync(GetTestArchivePath(archiveName));
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.ContainerType);
@@ -640,7 +642,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = new MemoryStream(Encoding.ASCII.GetBytes("not an archive"));
 
-        var info = ArchiveFactory.DetectArchive(stream);
+        var info = ArchiveDetector.DetectArchive(stream);
 
         Assert.Null(info);
     }
@@ -650,7 +652,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = new MemoryStream(Encoding.ASCII.GetBytes("not an archive"));
 
-        var info = await ArchiveFactory.DetectArchiveAsync(stream);
+        var info = await ArchiveDetector.DetectArchiveAsync(stream);
 
         Assert.Null(info);
     }
@@ -700,7 +702,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
-        var info = ArchiveFactory.DetectArchive(stream);
+        var info = ArchiveDetector.DetectArchive(stream);
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Tar, info.ContainerType);
@@ -719,7 +721,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
-        var info = await ArchiveFactory.DetectArchiveAsync(stream);
+        var info = await ArchiveDetector.DetectArchiveAsync(stream);
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Tar, info.ContainerType);
@@ -735,7 +737,7 @@ public class ArchiveFactoryTests : TestBase
         using var stream = CreatePrefixedArchiveStream(archiveName, 13);
         var startPosition = stream.Position;
 
-        var info = ArchiveFactory.DetectArchive(stream);
+        var info = ArchiveDetector.DetectArchive(stream);
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.ContainerType);
@@ -753,7 +755,7 @@ public class ArchiveFactoryTests : TestBase
         using var stream = CreatePrefixedArchiveStream(archiveName, 13);
         var startPosition = stream.Position;
 
-        var info = await ArchiveFactory.DetectArchiveAsync(stream);
+        var info = await ArchiveDetector.DetectArchiveAsync(stream);
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.ContainerType);
@@ -772,7 +774,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
-        var info = ArchiveFactory.InspectArchive(stream);
+        var info = ArchiveInspector.InspectArchive(stream);
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Zip, info.Detection.ContainerType);
@@ -789,7 +791,7 @@ public class ArchiveFactoryTests : TestBase
         bool expectedHasEntriesWithDeferredSizes
     )
     {
-        var info = await ArchiveFactory.InspectArchiveAsync(GetTestArchivePath(archiveName));
+        var info = await ArchiveInspector.InspectArchiveAsync(GetTestArchivePath(archiveName));
 
         Assert.NotNull(info);
         Assert.NotNull(info.Zip);
@@ -809,7 +811,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
-        var info = ArchiveFactory.InspectArchive(stream);
+        var info = ArchiveInspector.InspectArchive(stream);
 
         Assert.NotNull(info);
         Assert.Equal(expectedSolid, info.IsSolid);
@@ -826,7 +828,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = File.OpenRead(GetTestArchivePath(archiveName));
 
-        var info = await ArchiveFactory.InspectArchiveAsync(stream);
+        var info = await ArchiveInspector.InspectArchiveAsync(stream);
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.Detection.ContainerType);
@@ -847,7 +849,7 @@ public class ArchiveFactoryTests : TestBase
         using var stream = CreatePrefixedArchiveStream(archiveName, 13);
         var startPosition = stream.Position;
 
-        var info = ArchiveFactory.InspectArchive(stream);
+        var info = ArchiveInspector.InspectArchive(stream);
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.Detection.ContainerType);
@@ -867,7 +869,7 @@ public class ArchiveFactoryTests : TestBase
         using var stream = CreatePrefixedArchiveStream(archiveName, 13);
         var startPosition = stream.Position;
 
-        var info = await ArchiveFactory.InspectArchiveAsync(stream);
+        var info = await ArchiveInspector.InspectArchiveAsync(stream);
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.Detection.ContainerType);
@@ -877,7 +879,7 @@ public class ArchiveFactoryTests : TestBase
     [Fact]
     public void InspectArchive_CompressedTar_ReportsContainerAndWrapper()
     {
-        var info = ArchiveFactory.InspectArchive(GetTestArchivePath("Tar.tar.xz"));
+        var info = ArchiveInspector.InspectArchive(GetTestArchivePath("Tar.tar.xz"));
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Tar, info.Detection.ContainerType);
@@ -892,7 +894,7 @@ public class ArchiveFactoryTests : TestBase
     [InlineData("Ace.method1.ace", false)]
     public void InspectArchive_Ace_ReportsSolidMetadata(string archiveName, bool expectedSolid)
     {
-        var info = ArchiveFactory.InspectArchive(GetTestArchivePath(archiveName));
+        var info = ArchiveInspector.InspectArchive(GetTestArchivePath(archiveName));
 
         Assert.NotNull(info);
         Assert.Equal(expectedSolid, info.IsSolid);
@@ -902,7 +904,7 @@ public class ArchiveFactoryTests : TestBase
     [Fact]
     public void InspectArchive_Arc_ReportsUnavailableUncompressedSizes()
     {
-        var info = ArchiveFactory.InspectArchive(GetTestArchivePath("Arc.uncompressed.arc"));
+        var info = ArchiveInspector.InspectArchive(GetTestArchivePath("Arc.uncompressed.arc"));
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveInformationStatus.Partial, info.Status);
@@ -920,7 +922,7 @@ public class ArchiveFactoryTests : TestBase
         ArchiveInformationStatus expectedStatus
     )
     {
-        var info = ArchiveFactory.InspectArchive(GetTestArchivePath(archiveName));
+        var info = ArchiveInspector.InspectArchive(GetTestArchivePath(archiveName));
 
         Assert.NotNull(info);
         Assert.Equal(expectedType, info.Detection.ContainerType);
@@ -931,7 +933,7 @@ public class ArchiveFactoryTests : TestBase
     [Fact]
     public void InspectArchive_EncryptedHeaders_ReturnsPartialInformation()
     {
-        var info = ArchiveFactory.InspectArchive(
+        var info = ArchiveInspector.InspectArchive(
             GetTestArchivePath("Rar.encrypted_filesAndHeader.rar")
         );
 
@@ -945,7 +947,7 @@ public class ArchiveFactoryTests : TestBase
     [Fact]
     public void InspectArchive_EncryptedHeadersWithPassword_ReportsBothEncryptionScopes()
     {
-        var info = ArchiveFactory.InspectArchive(
+        var info = ArchiveInspector.InspectArchive(
             GetTestArchivePath("Rar.encrypted_filesAndHeader.rar"),
             ReaderOptions.ForFilePath.WithPassword("test")
         );
@@ -964,7 +966,7 @@ public class ArchiveFactoryTests : TestBase
     {
         using var stream = File.OpenRead(GetTestArchivePath("Rar.multi.solid.part01.rar"));
 
-        var info = ArchiveFactory.InspectArchive(stream);
+        var info = ArchiveInspector.InspectArchive(stream);
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveInformationStatus.Partial, info.Status);
@@ -976,7 +978,7 @@ public class ArchiveFactoryTests : TestBase
     [Fact]
     public async ValueTask InspectArchiveAsync_CompressedTar_ReturnsMetadata()
     {
-        var info = await ArchiveFactory.InspectArchiveAsync(GetTestArchivePath("Tar.tar.xz"));
+        var info = await ArchiveInspector.InspectArchiveAsync(GetTestArchivePath("Tar.tar.xz"));
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Tar, info.Detection.ContainerType);
@@ -997,7 +999,7 @@ public class ArchiveFactoryTests : TestBase
             new(GetTestArchivePath("Rar.multi.solid.part06.rar")),
         ];
 
-        var info = ArchiveFactory.InspectArchive(parts);
+        var info = ArchiveInspector.InspectArchive(parts);
 
         Assert.NotNull(info);
         Assert.Equal(ArchiveType.Rar, info.Detection.ContainerType);
@@ -1008,7 +1010,9 @@ public class ArchiveFactoryTests : TestBase
     [Fact]
     public void InspectArchive_MultiVolumeRarPath_DiscoversAllParts()
     {
-        var info = ArchiveFactory.InspectArchive(GetTestArchivePath("Rar.multi.solid.part01.rar"));
+        var info = ArchiveInspector.InspectArchive(
+            GetTestArchivePath("Rar.multi.solid.part01.rar")
+        );
 
         Assert.NotNull(info);
         Assert.Equal(6, info.PhysicalPartCount);
