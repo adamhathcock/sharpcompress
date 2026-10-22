@@ -19,4 +19,4 @@ Use this skill for ZIP container-format work. It provides a local, SharpCompress
 2. Open the relevant section in `references/zip-format.md` and use the source-file pointers before changing code.
 3. For parsing changes, cross-check sync and async header readers: `ZipHeaderFactory.cs`, `ZipHeaderFactory.Async.cs`, `SeekableZipHeaderFactory.cs`, `StreamingZipHeaderFactory.cs`, `ZipFileEntry.cs`, `LocalEntryHeader.cs`, and `DirectoryEntryHeader.cs`.
 4. For writer changes, verify local header, post-data descriptor, central directory, Zip64, and sync/async paths together.
-5. For support claims, keep unsupported features explicit: central directory encryption, strong encryption records, XZ writing, non-standard compression methods, broad extra-field semantics, and non-seekable Zip64 writing.
+5. For support claims, keep unsupported features explicit: central directory encryption, strong encryption records, XZ writing, non-standard compression methods, and broad extra-field semantics.
