@@ -22,12 +22,12 @@
       },
       "JetBrains.Profiler.SelfApi": {
         "type": "Direct",
-        "requested": "[2.5.18, )",
-        "resolved": "2.5.18",
-        "contentHash": "zOHtZGrLzYey6d57XLvLUWbB7tK1WbXz2z3wSwDR6HwV5AEROmtu1di3OZE1kxGXMilPbyzXyKJT5eBwC+j32Q==",
+        "requested": "[2.5.19, )",
+        "resolved": "2.5.19",
+        "contentHash": "5iLUwxNrJaSqIRLwFAKkLt9EUwhPVhtCjmo70s5VjU4j+c7ml0r0yeLQra7hOX1FIshjOD0dxCv5yOH5b0kCnw==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.5.0",
-          "JetBrains.Profiler.Api": "1.4.13"
+          "JetBrains.HabitatDetector": "1.5.1",
+          "JetBrains.Profiler.Api": "1.4.14"
         }
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
@@ -41,13 +41,13 @@
       },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",
-        "requested": "[10.0.401, )",
-        "resolved": "10.0.401",
-        "contentHash": "LGmlwgP1Cx37JEWzyjS0o1/+xs/s/e3E2TBSuogI5ePA/9L0pfIfeYX0k5in7Bfcw8Nn2y2sG9jXxydTjiR2Fg==",
+        "requested": "[10.0.402, )",
+        "resolved": "10.0.402",
+        "contentHash": "YXtBgnbTAhNng4PcEaolRL59UdRg77eYdAHilt9jljp8EuBOubDuHDkmH8Qa9pR2pBGte/FwJgHXQQVi24GOzg==",
         "dependencies": {
-          "Microsoft.Build.Tasks.Git": "10.0.401",
-          "Microsoft.SourceLink.Common": "10.0.401",
-          "System.IO.Hashing": "10.0.12"
+          "Microsoft.Build.Tasks.Git": "10.0.402",
+          "Microsoft.SourceLink.Common": "10.0.402",
+          "System.IO.Hashing": "10.0.13"
         }
       },
       "Microsoft.VisualStudio.Threading.Analyzers": {
@@ -90,31 +90,31 @@
       },
       "JetBrains.FormatRipper": {
         "type": "Transitive",
-        "resolved": "2.4.0",
-        "contentHash": "k5eGab1DArJH0k94ZO9oxDxg8go1KvR1oPGPzyVvfplEHetgrc2hGZ6Cken8fVsdS/Xp3hMnHd9L5MXb7JJM4A=="
+        "resolved": "3.0.0",
+        "contentHash": "0Z0alUaARrTu77rAQrfSehQUbd7g9nw7C+q+9FXE85rK7XxFwECgNemiVP3hLTMY9ERFIrwZlAWVJT+nAc054Q=="
       },
       "JetBrains.HabitatDetector": {
         "type": "Transitive",
-        "resolved": "1.5.0",
-        "contentHash": "GazZUoCunH1vrruUvy147lYfgcm2Ns6MCh76XmKZBViosvvYMLyt+JD2PWL8Lm6Ctdo3iQoPYgkStrxhrHbjEQ==",
+        "resolved": "1.5.1",
+        "contentHash": "t5ZoppnVhltNoqMPsuJ+XWWRMv/OGCiQ9eFSN4Sk8aE3xLqZ+1ZAwQJbIIN7eCuguJS0m2Jn4wOhABUNuMuiAA==",
         "dependencies": {
-          "JetBrains.FormatRipper": "2.4.0"
+          "JetBrains.FormatRipper": "3.0.0"
         }
       },
       "JetBrains.Profiler.Api": {
         "type": "Transitive",
-        "resolved": "1.4.13",
-        "contentHash": "abkSB+SOgLMPfOGJtl2XQ+ioSUYBtZxiKDOGCpNZ4WU7ZbAzhldrpRwDMsQnIJJcNhEawGtbhcI+Gk3ktx2RXQ==",
+        "resolved": "1.4.14",
+        "contentHash": "pF6fIBM4vJu5qJCtdognex0pgarcJuoW2DQU1wru/NxQ9lYs5/Q2VYgaqrWopNaNOWv8KwvKuefcfEfjERkKWQ==",
         "dependencies": {
-          "JetBrains.HabitatDetector": "1.5.0"
+          "JetBrains.HabitatDetector": "1.5.1"
         }
       },
       "Microsoft.Build.Tasks.Git": {
         "type": "Transitive",
-        "resolved": "10.0.401",
-        "contentHash": "ZYctNuT10V9IYyCFydy63DXx0ggZQuynuzQOdLvW62dPgzjIz7f0ISEP75RGiq1jFQh8p6TmGSqxeQZQ87LCig==",
+        "resolved": "10.0.402",
+        "contentHash": "k4TuSlseeYpFMIZP3X/MFHNKe+yNDIfVDlvu2ABiWaFWFQFwdsjqmoLTjtrD6YZ5vS2LT1TEZ9JT2kokfLdd0w==",
         "dependencies": {
-          "System.IO.Hashing": "10.0.12"
+          "System.IO.Hashing": "10.0.13"
         }
       },
       "Microsoft.CodeAnalysis.Analyzers": {
@@ -219,8 +219,8 @@
       },
       "Microsoft.SourceLink.Common": {
         "type": "Transitive",
-        "resolved": "10.0.401",
-        "contentHash": "u3rLxIwi/9MqDFaWGE/QQgLR1NBEzLOW2lv5+9OrZPDBYIAmFdYSWCWrR1ufpXWOqFn+x02TgKropl/oDuHmgA=="
+        "resolved": "10.0.402",
+        "contentHash": "/GC+zNRas+lEu2sBUH1YJ7q/bzb5jrnCCpaQNHvMuwn3Uvq9eOZnjMH2Zd1C9e2cpbHmRwP9N/jSZK0ysdw73Q=="
       },
       "Perfolizer": {
         "type": "Transitive",
@@ -242,8 +242,8 @@
       },
       "System.IO.Hashing": {
         "type": "Transitive",
-        "resolved": "10.0.12",
-        "contentHash": "jDix4bBMYnpZdSPcnY+KDV6ik3SRMzpMKby/bZl/XUwIiflwRNAFZ0oOl61R/pSaveIJ8t1gs2BUlrGsPs/bcg=="
+        "resolved": "10.0.13",
+        "contentHash": "ZlcywyQ7FJmgOV2nctdfOEPGS0kRK8T2CdOoPr6F4HPYpmjSo6GQfj3yTyOzNO6B+2U84/JKSPkJJMWqLmVsMw=="
       },
       "System.Management": {
         "type": "Transitive",
