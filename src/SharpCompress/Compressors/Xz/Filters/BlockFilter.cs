@@ -5,7 +5,7 @@ using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
-public abstract class BlockFilter : ReadOnlyStream
+public abstract partial class BlockFilter : ReadOnlyStream
 {
     private Stream? _ownedStream;
 
@@ -14,6 +14,9 @@ public abstract class BlockFilter : ReadOnlyStream
         _ownedStream?.Dispose();
         BaseStream = _ownedStream = stream;
     }
+
+    internal int ReadBase(byte[] buffer, int offset, int count) =>
+        BaseStream.Read(buffer, offset, count);
 
     protected override void Dispose(bool disposing)
     {

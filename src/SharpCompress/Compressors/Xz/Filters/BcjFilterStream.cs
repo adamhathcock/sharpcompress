@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
@@ -34,6 +35,9 @@ internal sealed partial class BcjFilterStream : ReadOnlyStream
 
     public override bool CanRead => !_isDisposed && BaseStream.CanRead;
 
+    public override int Read(byte[] buffer, int offset, int count) =>
+        ReadCore(buffer, offset, count);
+
     protected override void Dispose(bool disposing)
     {
         if (disposing && !_isDisposed)
@@ -51,6 +55,39 @@ internal sealed partial class BcjFilterStream : ReadOnlyStream
         {
             throw new ObjectDisposedException(nameof(BcjFilterStream));
         }
+    }
+
+    private void ValidateRead(byte[] buffer, int offset, int count)
+    {
+        ThrowIfDisposed();
+        ThrowHelper.ThrowIfNull(buffer);
+        if (offset < 0 || offset > buffer.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        }
+        if (count < 0 || count > buffer.Length - offset)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+    }
+
+    internal bool TryReadBuffered(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken,
+        out int read
+    )
+    {
+        read = 0;
+        if (count < 0 || count > _filtered - _position)
+        {
+            return false;
+        }
+        ValidateRead(buffer, offset, count);
+        cancellationToken.ThrowIfCancellationRequested();
+        read = CopyBuffered(buffer.AsSpan(offset, count));
+        return true;
     }
 
     private int CopyBuffered(Span<byte> destination)

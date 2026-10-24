@@ -6,24 +6,22 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 internal sealed partial class BcjFilterStream
 {
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => ReadCoreAsync(buffer, offset, count, cancellationToken).AsTask();
+
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public override async Task<int> ReadAsync(
+    internal async ValueTask<int> ReadCoreAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
     )
     {
-        ThrowIfDisposed();
-        ThrowHelper.ThrowIfNull(buffer);
-        if (offset < 0 || offset > buffer.Length)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-        if (count < 0 || count > buffer.Length - offset)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
+        ValidateRead(buffer, offset, count);
         cancellationToken.ThrowIfCancellationRequested();
 
         var total = 0;

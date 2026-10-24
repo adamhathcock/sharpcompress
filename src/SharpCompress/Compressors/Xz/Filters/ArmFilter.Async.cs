@@ -7,12 +7,12 @@ namespace SharpCompress.Compressors.Xz.Filters;
 public partial class ArmFilter
 {
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public override async Task<int> ReadAsync(
+    public override Task<int> ReadAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
-    ) => await BaseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
+    ) => ReadBaseAsync(buffer, offset, count, cancellationToken);
 
 #if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(

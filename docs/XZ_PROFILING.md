@@ -215,6 +215,28 @@ not explain the adverse elapsed result by themselves, nor justify a lock rewrite
   no evidence here to justify pooling them. Checksum work must remain enabled in
   future throughput comparisons.
 
+## Follow-up: remove duplicate BCJ result tasks
+
+On `perf/xz-async-decoding`, the first follow-up keeps the internal BCJ read as
+a `ValueTask<int>` and creates a task only at the existing public array boundary.
+Already-buffered reads complete without entering an async state machine. Custom
+subclasses installing a synchronously throwing input stream retain the previous
+faulted/canceled-task behavior; sync signatures are unchanged.
+
+A fresh before/after comparison against the pooled baseline uses the same isolated
+1 MiB x86 workload, 16-byte array reads, two warmups, seven measured drains,
+Release .NET 10, and disabled tiered compilation. Median allocations fall from
+**9,438,376 to 4,719,784 bytes**; median elapsed time is **1.695 to 0.963 ms**.
+This is a small-read wrapper result, not a complete XZ throughput claim. Logs and
+the follow-up harness are in the parent artifact directory as `fix1-before.log`,
+`fix1-after.log`, and `fix1-harness/`.
+
+All **728 targeted Release tests** pass, including allocation guards for all six
+architectures and fault/cancellation regressions. All six library targets build,
+and net48 test compilation passes. The remaining public `Task<int>` result cannot
+be removed without changing that API; a native memory-based XZ chain remains a
+separate follow-up.
+
 ## Artifacts and reproduction
 
 The controlled comparison is isolated from preliminary sample-file measurements:
