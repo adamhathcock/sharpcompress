@@ -128,14 +128,10 @@ public class LzmaModelReuseTests
             }
             previous = current;
 #if !LEGACY_DOTNET
-            if (useAsync)
-            {
-                Assert.Null(GetField(current, "_fLiteral"));
-            }
-            else
-            {
-                Assert.Null(GetField(GetField(current, "_literalDecoder")!, "_models"));
-            }
+            // Both modern read paths now use the same fast probability bank. Neither
+            // should additionally allocate the scalar/per-symbol async model bank.
+            Assert.NotNull(GetField(current, "_fLiteral"));
+            Assert.Null(GetField(GetField(current, "_literalDecoder")!, "_models"));
 #endif
         }
         var end = useAsync

@@ -919,6 +919,14 @@ array-based async signatures are unchanged.
 
 `LzmaStream` also rejects reads and writes after disposal. Failed initialization releases internal buffers without closing the supplied stream; successful construction retains the specified `leaveOpen` semantics. Disposal releases internal buffers even if finalization or underlying stream disposal throws.
 
+On modern .NET targets, async LZMA2 reads may prefetch the current compressed
+chunk (at most 64 KiB) using async I/O before producing output. They never prefetch
+the following chunk header. Decoding the buffered payload uses CPU-only batches
+of at most 16 KiB of output between cancellation checks. Cancellation or failure
+during a partial fill does not permit unsafe decoding of uninitialized bytes;
+disposing the stream returns the input lease. Raw LZMA and legacy-target async
+decoding retain their existing streaming paths.
+
 `SharpCompress.Compressors.LZMA.Utilities.CrcCheckStream` validates its expected CRC on disposal. A mismatch throws `ArchiveOperationException`, but pooled buffers are still released. Repeated disposal is safe, including after failed CRC validation. Once disposed, `CanWrite` is `false`, and `Write` / `WriteAsync` throw `ObjectDisposedException`.
 
 ## Related Documentation

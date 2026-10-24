@@ -32,6 +32,9 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
     private bool _uncompressedChunk;
     private bool _needDictReset = true;
     private bool _needProps = true;
+#if !LEGACY_DOTNET
+    private bool _bufferedAsyncChunkReady;
+#endif
 
     private readonly Encoder? _encoder;
     private byte[]? _asyncHeaderBuffer;

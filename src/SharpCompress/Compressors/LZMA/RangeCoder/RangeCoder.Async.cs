@@ -1,5 +1,6 @@
 #nullable disable
 
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,6 +82,55 @@ internal partial class Encoder
 
 internal partial class Decoder
 {
+#if !LEGACY_DOTNET
+    internal async ValueTask InitLzma2ChunkAsync(
+        Stream stream,
+        int compressedSize,
+        CancellationToken cancellationToken
+    )
+    {
+        // LZMA2 explicitly bounds each compressed payload to at most 64 KiB. Fill the
+        // existing fast input lease asynchronously; decoding can then be CPU-only,
+        // without a synchronous read from the caller's stream or the next chunk header.
+        if (compressedSize < 5 || compressedSize > FastBufferSize)
+        {
+            throw new DataErrorException();
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+        _fastBuffer ??= System.Buffers.ArrayPool<byte>.Shared.Rent(FastBufferSize);
+        var offset = 0;
+        while (offset < compressedSize)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var read = await stream
+                .ReadAsync(_fastBuffer.AsMemory(offset, compressedSize - offset), cancellationToken)
+                .ConfigureAwait(false);
+            if (read == 0)
+            {
+                // A truncated compressed payload is LZMA2 data corruption, not an
+                // incomplete outer header. Keep the decoder's existing error category.
+                throw new DataErrorException();
+            }
+            offset += read;
+        }
+        _stream = null;
+        _range = uint.MaxValue;
+        _code = 0;
+        for (var i = 0; i < 5; i++)
+        {
+            _code = (_code << 8) | _fastBuffer[i];
+        }
+        _total = 5;
+        _fastLimit = compressedSize;
+        _fastBufferPos = 5;
+        _fastBufferLen = compressedSize;
+        // A corrupt payload may request more range bytes. Preserve the fast decoder's
+        // EOF sentinel behavior, but never fetch those bytes from a following chunk.
+        _fastEndOfStream = true;
+        _fastBufferSafeUnbounded = false;
+    }
+#endif
+
     private byte[] SingleByteBuffer => _singleByteBuffer ??= new byte[1];
 
     public async ValueTask InitAsync(Stream stream, CancellationToken cancellationToken = default)

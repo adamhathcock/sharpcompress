@@ -268,6 +268,58 @@ bounded allocations, empty/canceled reads, and checksum corruption. All six
 library targets and net48 test compilation pass. The issue sample still matches
 liblzma in all 24 read-size/overload/offset combinations.
 
+## Follow-up: bounded async LZMA2 fast decoding
+
+The third follow-up changes modern-target LZMA2 async decoding, not raw LZMA or
+legacy-target decoding. Each compressed LZMA2 chunk declares at most 64 KiB of
+compressed data. That payload is filled asynchronously into the range decoder's
+existing pooled fast-input lease. The existing optimized decoder then performs
+CPU-only work on that buffer; it never makes a synchronous call to the supplied
+input stream. There is no second request-sized compressed-input allocation.
+
+CPU-only batches are capped at **16 KiB of output between cancellation checks**,
+even when the caller asks for much more. The fast probability bank is reused
+across continuation chunks and reinitialized on property/state resets. Scalar
+models are not also allocated for that path. The decoder still validates LZMA2
+compressed/uncompressed counts, end markers, pending output, and outer XZ checks.
+
+Input refills are bounded by the declared payload, not the rented array's
+capacity. Incomplete fills cannot enter unsafe decoding; truncation retains the
+`DataErrorException` category, and disposal returns partially filled leases.
+Cancellation after a complete payload fill can resume without losing buffered
+data. Tests exercise yielding async-only non-seekable input, one-byte/short reads,
+following-chunk sentinels, malformed/truncated payloads, retries, oversized
+poisoned rents, cancellation, model reuse, and disposal.
+
+A fresh comparison against `31f3476` reuses the complete **32 MiB** mixed XZ
+workload and 64 KiB native-memory requests. Each version/input runs in a fresh
+process with two warmups and seven measured complete drains; version order is
+reversed for the file scenario. Release .NET 10 uses disabled tiered compilation.
+No builds or tests compete with these measurements.
+
+| Input / memory-async API | Before ms | After ms | Before process CPU ms | After process CPU ms | Before allocated bytes | After allocated bytes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Memory | 5,963.0 | 769.2 | 5,961.2 | 769.2 | 80,672 | 72,600 |
+| File | 6,812.9 | 768.7 | 6,932.0 | 780.6 | 6,195,096 | 3,721,104 |
+
+This workload's elapsed medians improve by approximately **7.8x memory-backed**
+and **8.9x file-backed**; process CPU reductions support the decoding explanation,
+not merely reduced waiting. These results do not establish a speedup for raw
+LZMA, legacy targets, other data distributions, or cold storage. File allocations
+still include suspension costs and pool misses. All original checksum work remains.
+
+Artifacts and hash-checked before/after DLLs are in `fix3-harness/` in the parent
+directory. Its `evaluate.py`, `results.json`, `library-hashes.json`, and raw logs
+record the comparison. Both versions decode to the same byte count; the updated
+build additionally passes full SHA-256 verification of this workload through all
+three read APIs and all 24 byte-for-byte issue-sample combinations.
+
+All **969 targeted Release tests**, including 7z, pass. All six library targets
+and net48 test compilation pass; all 84 benchmark cases still smoke-test cleanly.
+
+The checksum tables remain shared and unchanged: the profiling report identified
+no per-block table-allocation problem to fix.
+
 ## Artifacts and reproduction
 
 The controlled comparison is isolated from preliminary sample-file measurements:
