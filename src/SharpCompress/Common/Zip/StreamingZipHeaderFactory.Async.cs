@@ -128,44 +128,57 @@ internal sealed partial class StreamingZipHeaderFactory
                     lastEntryHeader.Crc = crc;
                     lastEntryHeader.IsCrcAvailable = true;
 
-                    //attempt 32bit read
-                    ulong compressedSize = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
-                    ulong uncompressedSize = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
-                    headerBytes = await _reader
-                        .ReadUInt32Async(_cancellationToken)
-                        .ConfigureAwait(false);
+                    ulong compressedSize;
+                    ulong uncompressedSize;
 
-                    //check for zip64 sentinel or unexpected header
-                    bool isSentinel =
-                        compressedSize == 0xFFFFFFFF || uncompressedSize == 0xFFFFFFFF;
-                    bool isHeader = headerBytes == 0x04034b50 || headerBytes == 0x02014b50;
-
-                    if (!isHeader && !isSentinel)
+                    // A ZIP64 size's low word can equal a header signature. Honor the
+                    // declared width rather than mistaking that word for the next header,
+                    // even if the record following the descriptor is unrecognized.
+                    if (lastEntryHeader.UsesZip64Sizes)
                     {
-                        //reshuffle into 64-bit values
-                        compressedSize = (uncompressedSize << 32) | compressedSize;
-                        // headerBytes holds the low word; the high word follows on the wire.
-                        var highUncompressedSize = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
-                        uncompressedSize = headerBytes | ((ulong)highUncompressedSize << 32);
-                        headerBytes = await _reader
-                            .ReadUInt32Async(_cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-                    else if (isSentinel)
-                    {
-                        //standards-compliant zip64 descriptor
                         compressedSize = await _reader
                             .ReadUInt64Async(_cancellationToken)
                             .ConfigureAwait(false);
                         uncompressedSize = await _reader
                             .ReadUInt64Async(_cancellationToken)
                             .ConfigureAwait(false);
+                        headerBytes = await _reader
+                            .ReadUInt32Async(_cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        // Without ZIP64 metadata, retain compatibility with older writers
+                        // that emitted 64-bit descriptors without declaring them locally.
+                        compressedSize = await _reader
+                            .ReadUInt32Async(_cancellationToken)
+                            .ConfigureAwait(false);
+                        uncompressedSize = await _reader
+                            .ReadUInt32Async(_cancellationToken)
+                            .ConfigureAwait(false);
+                        headerBytes = await _reader
+                            .ReadUInt32Async(_cancellationToken)
+                            .ConfigureAwait(false);
+
+                        // Keep the legacy probe limited to local/central headers: other
+                        // record signatures can be the low word of a 64-bit size.
+                        if (
+                            headerBytes != ENTRY_HEADER_BYTES
+                            && headerBytes != DIRECTORY_START_HEADER_BYTES
+                        )
+                        {
+                            // Descriptor words are size data, including 0xFFFFFFFF; unlike
+                            // local headers, descriptors do not contain size sentinels.
+                            compressedSize = (uncompressedSize << 32) | compressedSize;
+                            // headerBytes holds the low word; the high word follows on the wire.
+                            var highUncompressedSize = await _reader
+                                .ReadUInt32Async(_cancellationToken)
+                                .ConfigureAwait(false);
+                            uncompressedSize = headerBytes | ((ulong)highUncompressedSize << 32);
+                            headerBytes = await _reader
+                                .ReadUInt32Async(_cancellationToken)
+                                .ConfigureAwait(false);
+                        }
                     }
 
                     lastEntryHeader.CompressedSize = (long)compressedSize;
