@@ -88,7 +88,12 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
                         uncompSize = reader.ReadUInt32();
                         headerBytes = reader.ReadUInt32();
 
-                        if (!IsHeader(headerBytes))
+                        // Keep the legacy probe limited to local/central headers: other
+                        // record signatures can be the low word of a 64-bit size.
+                        if (
+                            headerBytes != ENTRY_HEADER_BYTES
+                            && headerBytes != DIRECTORY_START_HEADER_BYTES
+                        )
                         {
                             // Descriptor words are size data, including 0xFFFFFFFF; unlike
                             // local headers, descriptors do not contain size sentinels.

@@ -72,6 +72,61 @@ public class Zip64DescriptorSizeTests
         Assert.Equal("second", secondKey);
     }
 
+    public static IEnumerable<object[]> LegacyDescriptorSizes()
+    {
+        foreach (var useAsync in new[] { false, true })
+        {
+            foreach (var signature in new[] { false, true })
+            {
+                foreach (
+                    var size in new[]
+                    {
+                        0x08074B50UL,
+                        0x05054B50UL,
+                        0x06054B50UL,
+                        0x30304B50UL,
+                        0x06064B50UL,
+                        0x07064B50UL,
+                    }
+                )
+                {
+                    yield return new object[] { useAsync, signature, size };
+                    yield return new object[] { useAsync, signature, size | (1UL << 32) };
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(LegacyDescriptorSizes))]
+    public async Task Legacy_Descriptor_Preserves_Signature_Size_And_Next_Header(
+        bool useAsync,
+        bool signature,
+        ulong size
+    )
+    {
+        var zip = WriteZip64Archive();
+        var descriptor = FindDescriptor(zip);
+        BinaryPrimitives.WriteUInt64LittleEndian(zip.AsSpan(descriptor + 16), size);
+        // Simulate older writers that used 64-bit descriptors without declaring ZIP64.
+        BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(18), 0);
+        BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(22), 0);
+        var extra = 30 + BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(26));
+        BinaryPrimitives.WriteUInt16LittleEndian(zip.AsSpan(extra), 0xFFFF);
+        if (!signature)
+        {
+            zip = zip.Take(descriptor).Concat(zip.Skip(descriptor + 4)).ToArray();
+        }
+
+        var (firstSize, secondKey) = await ReadFirstTwoEntries(
+            zip,
+            useAsync,
+            expectedCompressedSize: 3
+        );
+        Assert.Equal((long)size, firstSize);
+        Assert.Equal("second", secondKey);
+    }
+
     [Theory]
     [InlineData(false, false, 0x04034B50)]
     [InlineData(false, true, 0x04034B50)]
