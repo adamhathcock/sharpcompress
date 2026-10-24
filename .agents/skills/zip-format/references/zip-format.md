@@ -190,8 +190,7 @@ Important SharpCompress behavior:
 
 - `StreamingZipHeaderFactory` reads post-data descriptors after the previous entry stream has been consumed.
 - Streaming descriptor parsing has compatibility logic for 32-bit and 64-bit sizes.
-- `ZipWriter` writes a descriptor with signature for non-seekable output when Zip64 is not required.
-- `ZipWriter` intentionally rejects Zip64 on non-seekable streams.
+- `ZipWriter` writes post-data descriptors for non-seekable output; when `ZipWriterOptions.UseZip64` is enabled, it writes the ZIP64 headers and 64-bit descriptors required by that mode.
 
 ## General Purpose Bit Flags
 
@@ -309,7 +308,7 @@ SharpCompress write behavior:
 
 - `ZipWriterOptions.UseZip64` controls whether local headers reserve Zip64 extra data for entries.
 - `ZipWriter` emits Zip64 EOCD and locator when entry counts, central directory size, or offsets require them.
-- Non-seekable Zip64 writing is rejected because current post-data descriptor handling cannot safely represent the required Zip64 values in all cases.
+- Non-seekable output supports Zip64 when `ZipWriterOptions.UseZip64` is enabled before writing entries; the writer emits the required 64-bit data descriptors.
 
 ## Names, Comments, And Encoding
 
@@ -372,8 +371,8 @@ Current ZIP support summary from `docs/FORMATS.md` and implementation:
 | Shrink | Yes | No | Legacy method 1 |
 | Reduce | Yes | No | Legacy methods 2-5 |
 | Implode | Yes | No | Legacy method 6 |
-| Zip64 | Yes | Yes | Writing requires seekable stream for Zip64 |
-| Data descriptors | Yes | Yes | Writer uses them for non-seekable non-Zip64 output |
+| Zip64 | Yes | Yes | Non-seekable writing is supported when enabled with `ZipWriterOptions.UseZip64` |
+| Data descriptors | Yes | Yes | Non-seekable output uses descriptors; Zip64 mode uses 64-bit descriptors |
 | Traditional PKWARE encryption | Yes | No | Password required |
 | WinZip AES | Yes | No | Method 99 + extra field `0x9901` |
 | Split/multi-volume ZIP | Yes | No | Use Archive API |
@@ -397,8 +396,7 @@ Important writer rules:
 
 - Local headers are written before payload data.
 - Seekable output lets SharpCompress patch CRC and size fields after compression.
-- Non-seekable output uses post-data descriptors for non-Zip64 entries.
-- Zip64 on non-seekable output is rejected.
+- Non-seekable output uses post-data descriptors. Set `ZipWriterOptions.UseZip64` before writing entries that may exceed classic ZIP limits; Zip64 mode emits 64-bit descriptors.
 - Zero-byte file entries are normalized to stored/no compression in the central directory.
 - Central directory entries are written on `Dispose` / `DisposeAsync`; callers must dispose writers to finalize archives.
 
@@ -411,7 +409,6 @@ Keep these limitations explicit in code comments, docs, and tests:
 - No Deflate64, Shrink, Reduce, or Implode writing.
 - No general-purpose central directory encryption support.
 - No broad APPNOTE strong encryption record support beyond current traditional PKWARE and WinZip AES read paths.
-- No non-seekable Zip64 writing.
 - Unknown extra fields are not semantically modeled unless explicitly implemented.
 - ZipReader cannot seek across multi-volume/split archive parts; use ZipArchive for split archives.
 
