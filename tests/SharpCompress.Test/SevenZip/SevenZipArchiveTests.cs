@@ -103,6 +103,29 @@ public class SevenZipArchiveTests : ArchiveTests
             new SevenZipFactory()
         );
 
+    [Theory]
+    [InlineData("7Zip.LZMA.Aes.7z")]
+    [InlineData("7Zip.LZMA2.Aes.7z")]
+    public void SevenZipArchive_Aes_ReportsCompressionType(string testArchive)
+    {
+        // 7-Zip writes 7zAES as the folder's first coder, in front of the codec.
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, testArchive));
+        using var archive = SevenZipArchive.OpenArchive(
+            stream,
+            ReaderOptions.ForExternalStream with
+            {
+                Password = "testpassword",
+            }
+        );
+        var files = archive.Entries.Where(entry => !entry.IsDirectory && entry.Size > 0).ToList();
+        Assert.NotEmpty(files);
+        foreach (var entry in files)
+        {
+            Assert.True(entry.IsEncrypted, entry.Key);
+            Assert.Equal(CompressionType.LZMA, entry.CompressionType);
+        }
+    }
+
     [Fact]
     public void SevenZipArchive_LZMA2AES_StreamRead() =>
         ArchiveStreamRead(

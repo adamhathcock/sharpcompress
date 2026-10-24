@@ -108,7 +108,11 @@ internal class SevenZipFilePart : FilePart
             return CompressionType.None;
         }
 
-        var coder = Folder.NotNull()._coders.First();
+        // 7zAES is a filter in front of the codec (7-Zip writes it as coder 0), so it says
+        // nothing about the compression; report the first real coder instead.
+        var coder =
+            Folder.NotNull()._coders.FirstOrDefault(c => c._methodId._id != CMethodId.K_AES_ID)
+            ?? throw new InvalidFormatException();
         return coder._methodId._id switch
         {
             K_COPY => CompressionType.None,
