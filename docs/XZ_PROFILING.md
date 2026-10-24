@@ -316,6 +316,15 @@ three read APIs and all 24 byte-for-byte issue-sample combinations.
 
 All **969 targeted Release tests**, including 7z, pass. All six library targets
 and net48 test compilation pass; all 84 benchmark cases still smoke-test cleanly.
+The final complete **.NET 10 Release suite passes: 3,629 tests, no failures or skips**.
+
+A final measured-phase async memory trace confirms the intended path change:
+**81.4%** of workload leaf samples are in `CodeFastCore`, **8.2%** in CRC64,
+and **5.5%** in the fast matched-literal helper. Per-bit async decoder helpers no
+longer dominate. This trace contains 1,478 workload samples, one complete measured
+phase, and zero lost events. Its raw trace, Speedscope file, and analysis JSON are
+`fix3-harness/after-memory.*` / `after-memory-analysis.json`. Sampling limitations
+remain the same as in the original evaluation.
 
 The checksum tables remain shared and unchanged: the profiling report identified
 no per-block table-allocation problem to fix.
