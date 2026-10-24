@@ -44,5 +44,5 @@ public partial class PowerPCFilter : BlockFilter
     public override void ValidateFilter() { }
 
     public override void SetBaseStream(Stream stream) =>
-        BaseStream = new BcjFilterStream(stream, BranchExecFilter.PowerPCConverter);
+        SetOwnedStream(new BcjFilterStream(stream, BranchExecFilter.PowerPCConverter));
 }

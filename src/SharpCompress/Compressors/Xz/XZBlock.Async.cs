@@ -17,6 +17,7 @@ public sealed partial class XZBlock
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfDisposed();
         var bytesRead = 0;
         if (!HeaderIsLoaded)
         {

@@ -1,22 +1,56 @@
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
 internal sealed partial class BcjFilterStream : ReadOnlyStream
 {
-    private readonly byte[] _buffer = new byte[8192];
+    private const int BufferSize = 8192;
+    private readonly byte[] _buffer;
+    private readonly ArrayPool<byte> _pool;
     private readonly Func<byte[], int, uint, int> _convert;
     private int _size;
     private int _filtered;
     private int _position;
     private uint _ip;
     private bool _endReached;
+    private bool _isDisposed;
 
     internal BcjFilterStream(Stream stream, Func<byte[], int, uint, int> convert)
+        : this(stream, convert, ArrayPool<byte>.Shared) { }
+
+    internal BcjFilterStream(
+        Stream stream,
+        Func<byte[], int, uint, int> convert,
+        ArrayPool<byte> pool
+    )
     {
         BaseStream = stream;
         _convert = convert;
+        _pool = pool;
+        _buffer = pool.Rent(BufferSize);
+    }
+
+    public override bool CanRead => !_isDisposed && BaseStream.CanRead;
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_isDisposed)
+        {
+            _isDisposed = true;
+            _pool.Return(_buffer);
+        }
+        // The buffer is owned here; the upstream stream remains owned by the caller/filter chain.
+        base.Dispose(disposing);
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(BcjFilterStream));
+        }
     }
 
     private int CopyBuffered(Span<byte> destination)

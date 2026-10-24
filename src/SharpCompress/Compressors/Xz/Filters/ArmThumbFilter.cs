@@ -44,5 +44,5 @@ public partial class ArmThumbFilter : BlockFilter
     public override void ValidateFilter() { }
 
     public override void SetBaseStream(Stream stream) =>
-        BaseStream = new BcjFilterStream(stream, BranchExecFilter.ARMTConverter);
+        SetOwnedStream(new BcjFilterStream(stream, BranchExecFilter.ARMTConverter));
 }

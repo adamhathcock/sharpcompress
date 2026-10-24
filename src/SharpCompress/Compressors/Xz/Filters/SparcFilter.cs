@@ -44,5 +44,5 @@ public partial class SparcFilter : BlockFilter
     public override void ValidateFilter() { }
 
     public override void SetBaseStream(Stream stream) =>
-        BaseStream = new BcjFilterStream(stream, BranchExecFilter.SPARCConverter);
+        SetOwnedStream(new BcjFilterStream(stream, BranchExecFilter.SPARCConverter));
 }

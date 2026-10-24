@@ -44,5 +44,5 @@ public partial class IA64Filter : BlockFilter
     public override void ValidateFilter() { }
 
     public override void SetBaseStream(Stream stream) =>
-        BaseStream = new BcjFilterStream(stream, BranchExecFilter.IA64Converter);
+        SetOwnedStream(new BcjFilterStream(stream, BranchExecFilter.IA64Converter));
 }

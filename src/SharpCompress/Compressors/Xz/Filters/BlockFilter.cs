@@ -7,6 +7,25 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 public abstract class BlockFilter : ReadOnlyStream
 {
+    private Stream? _ownedStream;
+
+    internal void SetOwnedStream(Stream stream)
+    {
+        _ownedStream?.Dispose();
+        BaseStream = _ownedStream = stream;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            var stream = _ownedStream;
+            _ownedStream = null;
+            stream?.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+
     private enum FilterTypes : ulong
     {
         //Delta = 0x03,

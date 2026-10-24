@@ -14,6 +14,7 @@ internal sealed partial class BcjFilterStream
         CancellationToken cancellationToken
     )
     {
+        ThrowIfDisposed();
         ThrowHelper.ThrowIfNull(buffer);
         if (offset < 0 || offset > buffer.Length)
         {
@@ -49,7 +50,7 @@ internal sealed partial class BcjFilterStream
         while (_filtered == 0 && !_endReached)
         {
             var bytesRead = await BaseStream
-                .ReadAsync(_buffer, _size, _buffer.Length - _size, cancellationToken)
+                .ReadAsync(_buffer, _size, BufferSize - _size, cancellationToken)
                 .ConfigureAwait(false);
             ConvertBuffered(bytesRead);
         }
@@ -61,6 +62,7 @@ internal sealed partial class BcjFilterStream
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfDisposed();
         cancellationToken.ThrowIfCancellationRequested();
         var total = 0;
         while (total < buffer.Length)

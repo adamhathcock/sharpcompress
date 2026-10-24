@@ -48,9 +48,11 @@ public partial class X86Filter : BlockFilter
     public override void SetBaseStream(Stream stream)
     {
         _state = 0;
-        BaseStream = new BcjFilterStream(
-            stream,
-            (buffer, count, ip) => BranchExecFilter.X86Converter(buffer, count, ip, ref _state)
+        SetOwnedStream(
+            new BcjFilterStream(
+                stream,
+                (buffer, count, ip) => BranchExecFilter.X86Converter(buffer, count, ip, ref _state)
+            )
         );
     }
 }
