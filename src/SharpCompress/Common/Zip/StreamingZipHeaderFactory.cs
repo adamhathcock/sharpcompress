@@ -68,28 +68,35 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
                     _lastEntryHeader.Crc = crc;
                     _lastEntryHeader.IsCrcAvailable = true;
 
-                    //attempt 32bit read
-                    ulong compSize = reader.ReadUInt32();
-                    ulong uncompSize = reader.ReadUInt32();
-                    headerBytes = reader.ReadUInt32();
+                    ulong compSize;
+                    ulong uncompSize;
 
-                    //check for zip64 sentinel or unexpected header
-                    bool isSentinel = compSize == 0xFFFFFFFF || uncompSize == 0xFFFFFFFF;
-                    bool isHeader = headerBytes == 0x04034b50 || headerBytes == 0x02014b50;
-
-                    if (!isHeader && !isSentinel)
+                    // A ZIP64 size's low word can equal a header signature. Honor the
+                    // declared width rather than mistaking that word for the next header,
+                    // even if the record following the descriptor is unrecognized.
+                    if (_lastEntryHeader.UsesZip64Sizes)
                     {
-                        //reshuffle into 64-bit values
-                        compSize = (uncompSize << 32) | compSize;
-                        // headerBytes holds the low word; the high word follows on the wire.
-                        uncompSize = headerBytes | ((ulong)reader.ReadUInt32() << 32);
-                        headerBytes = reader.ReadUInt32();
-                    }
-                    else if (isSentinel)
-                    {
-                        //standards-compliant zip64 descriptor
                         compSize = reader.ReadUInt64();
                         uncompSize = reader.ReadUInt64();
+                        headerBytes = reader.ReadUInt32();
+                    }
+                    else
+                    {
+                        // Without ZIP64 metadata, retain compatibility with older writers
+                        // that emitted 64-bit descriptors without declaring them locally.
+                        compSize = reader.ReadUInt32();
+                        uncompSize = reader.ReadUInt32();
+                        headerBytes = reader.ReadUInt32();
+
+                        if (!IsHeader(headerBytes))
+                        {
+                            // Descriptor words are size data, including 0xFFFFFFFF; unlike
+                            // local headers, descriptors do not contain size sentinels.
+                            compSize = (uncompSize << 32) | compSize;
+                            // headerBytes holds the low word; the high word follows on the wire.
+                            uncompSize = headerBytes | ((ulong)reader.ReadUInt32() << 32);
+                            headerBytes = reader.ReadUInt32();
+                        }
                     }
 
                     _lastEntryHeader.CompressedSize = (long)compSize;

@@ -56,6 +56,15 @@ internal partial class LocalEntryHeader : ZipFileEntry
         }
 
         var zip64ExtraData = Extra.OfType<Zip64ExtendedInformationExtraField>().FirstOrDefault();
+
+        // Remember ZIP64 before the extra field replaces size sentinels with values
+        // that may be small (or zero placeholders). Descriptor width must not depend
+        // on those values, nor on Version, which other compression methods also raise.
+        UsesZip64Sizes =
+            CompressedSize == uint.MaxValue
+            || UncompressedSize == uint.MaxValue
+            || zip64ExtraData is not null;
+
         if (zip64ExtraData != null)
         {
             zip64ExtraData.Process(UncompressedSize, CompressedSize, 0, 0);
@@ -102,4 +111,10 @@ internal partial class LocalEntryHeader : ZipFileEntry
     }
 
     internal ushort Version { get; private set; }
+
+    /// <summary>
+    /// Whether the local header declares ZIP64 sizes, requiring 8-byte descriptor sizes
+    /// even for small entries (APPNOTE 4.3.9.2).
+    /// </summary>
+    internal bool UsesZip64Sizes { get; private set; }
 }
