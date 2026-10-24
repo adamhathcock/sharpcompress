@@ -160,6 +160,42 @@ is outside the runtime's small integer task cache and passes through multiple
 path has low allocations but substantial call/state-machine overhead for tiny
 reads; low allocations do not imply it is faster than the array path.
 
+### CPU and sampled allocation attribution
+
+All **18 traces** contain one complete measured phase and report **zero lost
+events**. The pooled memory-backed sync trace attributes 82.6% of workload leaf
+samples to `Decoder.CodeFastCore`, 8.8% to CRC64, 4.4% to the fast matched-literal
+helper, and 2.1% to x86 BCJ conversion. The corresponding baseline shares are
+83.2%, 8.4%, 4.8%, and 2.0%: pooling does not move the main CPU bottleneck.
+
+The pooled memory-backed async trace instead attributes 30.6% of workload leaf
+samples to literal `DecodeNormalAsync`, 16.7% to `BitDecoder.DecodeAsync`, 12.6%
+to async builder `Start`, and 11.3% to `Normalize2Async`. These per-symbol async
+operations dominate despite the input being in memory. The corresponding
+baseline distribution is similar. There is no optimized `CodeFastCore` hotspot
+on this path.
+
+The isolated pooled-filter traces attribute 88.4–94.5% of workload leaf samples
+to the architecture's converter (x86 91.5%, ARM 93.6%, ARM-Thumb 92.4%, PowerPC
+94.4%, SPARC 94.5%, IA-64 88.4%). Buffer copying accounts for roughly 4–8%.
+These are instruction-heavy synthetic inputs; their rankings are not a
+cross-architecture throughput prediction for real executables.
+
+Baseline memory-backed XZ allocation ticks attribute approximately 24 MiB across
+three measured extractions to dictionary arrays at `OutWindow.EnsureCapacity`.
+The pooled memory-backed measured phases contain no sampled allocations at that
+site; remaining async samples principally identify `Task<int>` results in the
+read chain. All six pooled isolated-filter traces similarly contain no sampled
+recurring BCJ-buffer allocations at `SetBaseStream`; their output buffers are
+still allocated by the harness. Per-site sampling weights are approximate and
+must not be substituted for the exact allocation table above.
+
+File-backed traces still contain dictionary pool misses and suspended async
+state-machine allocations. Most file-backed thread-time leaf samples are in
+`Monitor.Enter_Slowpath`; these sampled stacks include waits/safepoints and do
+**not** demonstrate that a lock consumes 98% of instruction CPU time. They do
+not explain the adverse elapsed result by themselves, nor justify a lock rewrite.
+
 ## Remaining opportunities
 
 - Async LZMA2 currently calls the per-symbol async decoder, whereas sync decoding
