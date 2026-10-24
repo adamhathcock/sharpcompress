@@ -1,8 +1,6 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
@@ -14,28 +12,12 @@ public partial class SparcFilter
         int offset,
         int count,
         CancellationToken cancellationToken
-    )
-    {
-        var bytesRead = await BaseStream
-            .ReadAsync(buffer, offset, count, cancellationToken)
-            .ConfigureAwait(false);
-        BranchExecFilter.SPARCConverter(buffer, _ip);
-        _ip += (uint)bytesRead;
-        return bytesRead;
-    }
+    ) => await BaseStream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
 
 #if !LEGACY_DOTNET
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
-    )
-    {
-        var bytesRead = await BaseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-        var arrayBuffer = buffer.Slice(0, bytesRead).ToArray();
-        BranchExecFilter.SPARCConverter(arrayBuffer, _ip);
-        arrayBuffer.AsSpan(0, bytesRead).CopyTo(buffer.Span);
-        _ip += (uint)bytesRead;
-        return bytesRead;
-    }
+    ) => await BaseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
 #endif
 }
