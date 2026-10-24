@@ -24,6 +24,7 @@ public partial class SevenZipWriter : AbstractWriter
     private readonly List<PackedStream> packedStreams = [];
     private bool finalized;
     private bool _placeholderWritten;
+    private SevenZipAesEncryption? _encryption;
 
     /// <summary>
     /// Creates a new SevenZipWriter writing to the specified stream.
@@ -40,6 +41,19 @@ public partial class SevenZipWriter : AbstractWriter
             );
         }
 
+        if (options.Password is { Length: 0 })
+        {
+            throw new ArgumentException(
+                "The 7z password must not be empty. Use null for an unencrypted archive.",
+                nameof(options)
+            );
+        }
+
+        if (options.EncryptHeader && options.Password is null)
+        {
+            throw new ArgumentException("EncryptHeader requires a Password.", nameof(options));
+        }
+
         sevenZipOptions = options;
 
         if (options.LeaveStreamOpen)
@@ -49,6 +63,18 @@ public partial class SevenZipWriter : AbstractWriter
 
         InitializeStream(destination);
     }
+
+    /// <summary>
+    /// 7zAES settings for this archive, or null when no password is set. The key is derived on
+    /// first use, once per archive, since deriving it takes 2^19 SHA-256 rounds.
+    /// </summary>
+    private SevenZipAesEncryption? Encryption =>
+        sevenZipOptions.Password is null
+            ? null
+            : _encryption ??= SevenZipAesEncryption.Create(sevenZipOptions.Password);
+
+    private SevenZipAesEncryption? HeaderEncryption =>
+        sevenZipOptions.EncryptHeader ? Encryption : null;
 
     /// <summary>
     /// Ensures the placeholder signature header has been written synchronously.
@@ -122,7 +148,8 @@ public partial class SevenZipWriter : AbstractWriter
         var packed = compressor.Compress(
             progressStream,
             sevenZipOptions.CompressionType,
-            sevenZipOptions.LzmaProperties
+            sevenZipOptions.LzmaProperties,
+            Encryption
         );
 
         // Check if the stream was actually empty (handles non-seekable streams with no data)
@@ -209,7 +236,11 @@ public partial class SevenZipWriter : AbstractWriter
         ArchiveHeaderWriter.WriteRawHeader(headerStream, mainStreamsInfo, filesInfo);
 
         // Optionally compress the header
-        if (sevenZipOptions.CompressHeader && headerStream.Length > 0)
+        // An encrypted header travels as an encoded (compressed) header.
+        if (
+            (sevenZipOptions.CompressHeader || sevenZipOptions.EncryptHeader)
+            && headerStream.Length > 0
+        )
         {
             WriteCompressedHeader(headerStream, endOfPackedData);
         }
@@ -229,7 +260,8 @@ public partial class SevenZipWriter : AbstractWriter
         var headerPacked = headerCompressor.Compress(
             rawHeaderStream,
             CompressionType.LZMA,
-            sevenZipOptions.LzmaProperties
+            sevenZipOptions.LzmaProperties,
+            HeaderEncryption
         );
 
         // Build EncodedHeader StreamsInfo (describes how to decompress the header)

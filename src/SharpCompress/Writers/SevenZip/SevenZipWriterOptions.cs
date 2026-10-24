@@ -87,6 +87,21 @@ public sealed record SevenZipWriterOptions : IWriterOptions
     public LzmaEncoderProperties? LzmaProperties { get; set; }
 
     /// <summary>
+    /// Password for 7zAES encryption (AES-256-CBC with SHA-256 key derivation, as 7-Zip uses).
+    /// When set, every file's data is encrypted. Null (the default) writes an unencrypted archive.
+    /// Empty files have no data stream, so they stay unencrypted, as in 7-Zip.
+    /// </summary>
+    public string? Password { get; set; }
+
+    /// <summary>
+    /// Also encrypts the archive header (file names, sizes, dates and folder structure), like
+    /// 7-Zip's -mhe=on, so nothing is visible without the password. Requires <see cref="Password" />.
+    /// The encrypted header is always LZMA-compressed, whatever <see cref="CompressHeader" /> says.
+    /// Default is false, matching the 7-Zip command line.
+    /// </summary>
+    public bool EncryptHeader { get; set; }
+
+    /// <summary>
     /// Creates a new SevenZipWriterOptions instance with LZMA2 compression (default).
     /// </summary>
     public SevenZipWriterOptions()

@@ -59,7 +59,11 @@ public partial class SevenZipWriter
         ArchiveHeaderWriter.WriteRawHeader(headerStream, mainStreamsInfo, filesInfo);
 
         // Optionally compress the header
-        if (sevenZipOptions.CompressHeader && headerStream.Length > 0)
+        // An encrypted header travels as an encoded (compressed) header.
+        if (
+            (sevenZipOptions.CompressHeader || sevenZipOptions.EncryptHeader)
+            && headerStream.Length > 0
+        )
         {
             await WriteCompressedHeaderAsync(headerStream, endOfPackedData).ConfigureAwait(false);
         }
@@ -80,7 +84,12 @@ public partial class SevenZipWriter
         rawHeaderStream.Position = 0;
         var headerCompressor = new SevenZipStreamsCompressor(output);
         var headerPacked = await headerCompressor
-            .CompressAsync(rawHeaderStream, CompressionType.LZMA, sevenZipOptions.LzmaProperties)
+            .CompressAsync(
+                rawHeaderStream,
+                CompressionType.LZMA,
+                sevenZipOptions.LzmaProperties,
+                HeaderEncryption
+            )
             .ConfigureAwait(false);
 
         // Build EncodedHeader StreamsInfo (describes how to decompress the header)
@@ -197,6 +206,7 @@ public partial class SevenZipWriter
                 progressStream,
                 sevenZipOptions.CompressionType,
                 sevenZipOptions.LzmaProperties,
+                Encryption,
                 cancellationToken
             )
             .ConfigureAwait(false);
