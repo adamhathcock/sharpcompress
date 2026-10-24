@@ -41,15 +41,20 @@ internal sealed partial class BcjFilterStream
         return total;
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask FillAsync(CancellationToken cancellationToken)
     {
         KeepUnfilteredTail();
         while (_filtered == 0 && !_endReached)
         {
+#if LEGACY_DOTNET
             var bytesRead = await BaseStream
                 .ReadAsync(_buffer, _size, BufferSize - _size, cancellationToken)
                 .ConfigureAwait(false);
+#else
+            var bytesRead = await BaseStream
+                .ReadAsync(_buffer.AsMemory(_size, BufferSize - _size), cancellationToken)
+                .ConfigureAwait(false);
+#endif
             ConvertBuffered(bytesRead);
         }
     }

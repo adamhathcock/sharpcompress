@@ -90,6 +90,25 @@ internal sealed partial class BcjFilterStream : ReadOnlyStream
         return true;
     }
 
+#if !LEGACY_DOTNET
+    internal bool TryReadBuffered(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken,
+        out int read
+    )
+    {
+        read = 0;
+        if (buffer.Length > _filtered - _position)
+        {
+            return false;
+        }
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        read = CopyBuffered(buffer.Span);
+        return true;
+    }
+#endif
+
     private int CopyBuffered(Span<byte> destination)
     {
         var count = Math.Min(destination.Length, _filtered - _position);
@@ -106,6 +125,17 @@ internal sealed partial class BcjFilterStream : ReadOnlyStream
         Buffer.BlockCopy(_buffer, _filtered, _buffer, 0, _size);
         _position = 0;
         _filtered = 0;
+    }
+
+    private void Fill()
+    {
+        KeepUnfilteredTail();
+        while (_filtered == 0 && !_endReached)
+        {
+            // Preserve the sync array-based I/O contract; only async reads prefer Memory.
+            var bytesRead = BaseStream.Read(_buffer, _size, BufferSize - _size);
+            ConvertBuffered(bytesRead);
+        }
     }
 
     private void ConvertBuffered(int bytesRead)

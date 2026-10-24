@@ -888,6 +888,31 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 ---
 
+## Low-Level XZ Memory Reads
+
+On .NET 6 and later, `SharpCompress.Compressors.Xz.XZStream` and `XZBlock`
+override `ReadAsync(Memory<byte>, CancellationToken)` with a native ValueTask
+read path. Array-backed and custom/native memory are supported; CRC32, CRC64,
+and SHA-256 checks remain enabled. SHA-256 uses a bounded pooled scratch buffer
+when the destination memory cannot expose an array. Read through EOF to validate
+the complete stream, including its final block check.
+
+```csharp
+using var input = File.OpenRead("input.tar.xz");
+using var xz = new SharpCompress.Compressors.Xz.XZStream(input);
+using var output = File.Create("output.tar");
+var buffer = new byte[65536];
+int read;
+while ((read = await xz.ReadAsync(buffer.AsMemory(), cancellationToken)) != 0)
+{
+    await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+}
+```
+
+Disposing these low-level XZ streams releases their owned filter buffers without
+closing the caller-provided input; dispose the input separately. The existing
+array-based async signatures are unchanged.
+
 ## CRC-Checking Stream Lifetime
 
 `SharpCompressStream` rejects reading and starting recording after disposal. Its pooled ring buffer is released even when disposal of the underlying stream fails.

@@ -18,6 +18,16 @@ public partial class IA64Filter
     public override async ValueTask<int> ReadAsync(
         Memory<byte> buffer,
         CancellationToken cancellationToken = default
-    ) => await BaseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+    )
+    {
+        if (
+            BaseStream is BcjFilterStream filter
+            && filter.TryReadBuffered(buffer, cancellationToken, out var read)
+        )
+        {
+            return read;
+        }
+        return await BaseStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
+    }
 #endif
 }

@@ -198,6 +198,9 @@ not explain the adverse elapsed result by themselves, nor justify a lock rewrite
 
 ## Remaining opportunities
 
+These describe the profiled pooling baseline; completed follow-ups are recorded
+separately below rather than rewriting the historical measurements.
+
 - Async LZMA2 currently calls the per-symbol async decoder, whereas sync decoding
   can use the optimized range-decoder path. A future experiment should separate
   asynchronous input refills from CPU-only decoding. It must not replace async I/O
@@ -236,6 +239,34 @@ architectures and fault/cancellation regressions. All six library targets build,
 and net48 test compilation passes. The remaining public `Task<int>` result cannot
 be removed without changing that API; a native memory-based XZ chain remains a
 separate follow-up.
+
+## Follow-up: native XZ memory read chain
+
+The next change adds native memory/ValueTask reads to `XZStream` and `XZBlock`
+on modern targets, carries memory-based I/O through BCJ refills, and completes
+already-buffered reads without traversing multiple async wrappers. All buffered
+bytes still update the block check exactly once. Array API signatures and sync
+array-based I/O remain unchanged. Native/custom destination memory works with
+all four XZ check types; SHA-256 uses bounded pooled scratch when required.
+
+A fresh comparison against the first follow-up (`de7a5d9`) uses the built-in
+1 MiB x86+LZMA2 fixture, 16-byte memory reads at offset 5, two warmups, seven
+measured complete drains, Release .NET 10, and disabled tiered compilation.
+Median allocations fall from **14,180,048 to 15,056 bytes**, with elapsed medians
+**22.399 to 19.422 ms**. Both builds retain checksum verification and return the
+expected output length. This does not yet address the async range-decoder CPU
+bottleneck or establish file-backed throughput improvements.
+
+Artifacts are `fix2-before.log`, `fix2-after.log`, and `fix2-harness/` in the parent
+directory. The harness's before/after DLLs were explicitly bound and hash-checked
+after observing that MSBuild reused an earlier reference when switching HintPath
+properties; `fix2-harness/comparison.json` records the actual measured hashes.
+
+All **764 targeted Release tests** pass, including yielding async-only input,
+seekable/forward-only streams, native/custom memory, mixed async overloads,
+bounded allocations, empty/canceled reads, and checksum corruption. All six
+library targets and net48 test compilation pass. The issue sample still matches
+liblzma in all 24 read-size/overload/offset combinations.
 
 ## Artifacts and reproduction
 
