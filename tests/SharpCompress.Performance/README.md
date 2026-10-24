@@ -10,6 +10,12 @@ The benchmarks test all major archive formats supported by SharpCompress:
 - **Rar**: Read operations (Archive & Reader API), each with sync and async variants
 - **7Zip**: Read operations for LZMA and LZMA2 compression, each with sync and async variants
 - **GZip**: Compression and decompression, each with sync and async variants
+- **XZ / BCJ**: XZ decompression and isolated x86, ARM, ARM-Thumb, PowerPC, SPARC, and IA-64 filters, using sync and both async read overloads
+
+For the controlled XZ pooling evaluation, workload details, and remaining hotspots,
+see [XZ profiling](../../docs/XZ_PROFILING.md). `XzBcjBenchmarks` uses built-in synthetic
+inputs by default; set `SHARPCOMPRESS_XZ_PROFILE_FILE` to profile a local `.xz` file
+for its XZ cases. Filter cases remain independent of that file.
 
 ## Running Benchmarks
 
