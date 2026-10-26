@@ -4,16 +4,16 @@
     <PackageVersion Include="Bullseye" Version="6.3.0" />
     <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
     <PackageVersion Include="Glob" Version="1.1.9" />
-    <PackageVersion Include="JetBrains.Profiler.SelfApi" Version="2.5.18" />
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="JetBrains.Profiler.SelfApi" Version="2.5.19" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Mono.Posix.NETStandard" Version="1.0.0" />
-    <PackageVersion Include="Pure.DI" Version="2.5.4" />
+    <PackageVersion Include="Pure.DI" Version="2.5.6" />
     <PackageVersion Include="SimpleExec" Version="13.1.0" />
-    <PackageVersion Include="System.Text.Encoding.CodePages" Version="10.0.12" />
-    <PackageVersion Include="xunit.v3" Version="3.2.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <PackageVersion Include="System.Text.Encoding.CodePages" Version="10.0.13" />
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
+    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
     <GlobalPackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <GlobalPackageReference
       Include="Microsoft.VisualStudio.Threading.Analyzers"
