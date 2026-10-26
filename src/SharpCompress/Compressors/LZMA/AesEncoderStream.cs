@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
@@ -16,22 +17,38 @@ namespace SharpCompress.Compressors.LZMA;
 internal sealed class AesEncoderStream : Stream
 {
     private const int BlockSize = 16;
+    private const int BufferSize = 4 << 10;
 
     private readonly Stream _output;
     private readonly ICryptoTransform _encryptor;
     private readonly byte[] _pending = new byte[BlockSize];
-    private readonly byte[] _buffer = new byte[4 << 10];
+    private readonly byte[] _buffer;
+    private readonly ArrayPool<byte> _pool;
     private int _pendingCount;
     private bool _finished;
     private bool _isDisposed;
 
     public AesEncoderStream(Stream output, byte[] key, byte[] iv)
+        : this(output, key, iv, ArrayPool<byte>.Shared) { }
+
+    internal AesEncoderStream(Stream output, byte[] key, byte[] iv, ArrayPool<byte> pool)
     {
         _output = output;
+        _pool = pool;
         using var aes = Aes.Create();
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.None;
         _encryptor = aes.CreateEncryptor(key, iv);
+        try
+        {
+            // Rent only after crypto setup succeeds; failed construction must not leak a lease.
+            _buffer = pool.Rent(BufferSize);
+        }
+        catch
+        {
+            _encryptor.Dispose();
+            throw;
+        }
     }
 
     /// <summary>
@@ -43,7 +60,7 @@ internal sealed class AesEncoderStream : Stream
 
     public override bool CanSeek => false;
 
-    public override bool CanWrite => true;
+    public override bool CanWrite => !_isDisposed && !_finished;
 
     public override long Length => InputLength;
 
@@ -64,6 +81,21 @@ internal sealed class AesEncoderStream : Stream
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
     public override void SetLength(long value) => throw new NotSupportedException();
+
+    public override void WriteByte(byte value)
+    {
+        ThrowIfFinished();
+        InputLength++;
+        // The LZMA range encoder emits bytes individually. Stream's default implementation
+        // allocates a new array for each byte instead of using our pending CBC block.
+        _pending[_pendingCount++] = value;
+        if (_pendingCount == BlockSize)
+        {
+            _pendingCount = 0;
+            var encrypted = _encryptor.TransformBlock(_pending, 0, BlockSize, _buffer, 0);
+            _output.Write(_buffer, 0, encrypted);
+        }
+    }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
@@ -105,6 +137,7 @@ internal sealed class AesEncoderStream : Stream
     /// </summary>
     public void Finish()
     {
+        ThrowIfDisposed();
         var encrypted = FinishBlock();
         if (encrypted > 0)
         {
@@ -117,6 +150,7 @@ internal sealed class AesEncoderStream : Stream
     /// </summary>
     public async ValueTask FinishAsync(CancellationToken cancellationToken)
     {
+        ThrowIfDisposed();
         var encrypted = FinishBlock();
         if (encrypted > 0)
         {
@@ -128,12 +162,18 @@ internal sealed class AesEncoderStream : Stream
 
     protected override void Dispose(bool disposing)
     {
-        if (!_isDisposed)
+        if (disposing && !_isDisposed)
         {
             _isDisposed = true;
-            if (disposing)
+            try
             {
                 _encryptor.Dispose();
+            }
+            finally
+            {
+                // The pooled scratch contains ciphertext only; pending plaintext stays private.
+                Array.Clear(_pending, 0, _pending.Length);
+                _pool.Return(_buffer);
             }
         }
         base.Dispose(disposing);
@@ -163,7 +203,7 @@ internal sealed class AesEncoderStream : Stream
             return _encryptor.TransformBlock(_pending, 0, BlockSize, _buffer, 0);
         }
 
-        var whole = Math.Min(count & ~(BlockSize - 1), _buffer.Length);
+        var whole = Math.Min(count & ~(BlockSize - 1), BufferSize);
         var written = _encryptor.TransformBlock(buffer, offset, whole, _buffer, 0);
         offset += whole;
         count -= whole;
@@ -190,12 +230,21 @@ internal sealed class AesEncoderStream : Stream
 
     private void ThrowIfFinished()
     {
+        ThrowIfDisposed();
         if (_finished)
         {
             throw new ObjectDisposedException(
                 nameof(AesEncoderStream),
                 "Cannot write after the final block has been written."
             );
+        }
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(AesEncoderStream));
         }
     }
 }

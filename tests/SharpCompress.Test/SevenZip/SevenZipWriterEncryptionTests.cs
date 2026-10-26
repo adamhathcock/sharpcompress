@@ -31,6 +31,8 @@ public class SevenZipWriterEncryptionTests : TestBase
     [InlineData(CompressionType.LZMA, true, false)]
     [InlineData(CompressionType.LZMA2, false, true)]
     [InlineData(CompressionType.LZMA2, true, true)]
+    [InlineData(CompressionType.LZMA, false, true)]
+    [InlineData(CompressionType.LZMA, true, true)]
     public async ValueTask SevenZipWriter_Encrypted_RoundTrip(
         CompressionType compressionType,
         bool encryptHeader,

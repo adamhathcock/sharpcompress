@@ -1,5 +1,4 @@
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.IO;
@@ -121,17 +120,25 @@ internal class SevenZipFilePart : FilePart
 
         // 7zAES is a filter in front of the codec (7-Zip writes it as coder 0), so it says
         // nothing about the compression; report the first real coder instead.
-        var coder =
-            Folder.NotNull()._coders.FirstOrDefault(c => c._methodId._id != CMethodId.K_AES_ID)
-            ?? throw new InvalidFormatException();
-        return coder._methodId._id switch
+        var coders = Folder.NotNull()._coders;
+        // Predicate-based LINQ boxes List's enumerator on older supported runtimes.
+        for (var i = 0; i < coders.Count; i++)
         {
-            K_COPY => CompressionType.None,
-            K_LZMA or K_LZMA2 => CompressionType.LZMA,
-            K_PPMD => CompressionType.PPMd,
-            K_B_ZIP2 => CompressionType.BZip2,
-            _ => throw new InvalidFormatException(),
-        };
+            var methodId = coders[i]._methodId._id;
+            if (methodId == CMethodId.K_AES_ID)
+            {
+                continue;
+            }
+            return methodId switch
+            {
+                K_COPY => CompressionType.None,
+                K_LZMA or K_LZMA2 => CompressionType.LZMA,
+                K_PPMD => CompressionType.PPMd,
+                K_B_ZIP2 => CompressionType.BZip2,
+                _ => throw new InvalidFormatException(),
+            };
+        }
+        throw new InvalidFormatException();
     }
 
     internal bool IsEncrypted => !Header.IsDir && Folder?.IsEncrypted() == true;
