@@ -7,6 +7,7 @@ on:
       - 'release'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+-*'
   pull_request:
     branches:
       - 'master'
@@ -21,27 +22,27 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
-    
+
     steps:
     - uses: actions/checkout@v6
       with:
         fetch-depth: 0  # Fetch all history for versioning
-    
+
     - uses: actions/setup-dotnet@v5
       with:
         global-json-file: global.json
-    
+
     # Determine version using C# build target
     - name: Determine Version
       id: version
       run: dotnet run --project build/build.csproj -- determine-version
-    
+
     # Update version in project file using C# build target
     - name: Update Version in Project
       run: dotnet run --project build/build.csproj -- update-version
       env:
         VERSION: ${{ steps.version.outputs.version }}
-    
+
     # Build and test
     - name: Build and Test
       run: dotnet run --project build/build.csproj
@@ -51,14 +52,14 @@ jobs:
       run: |
         dotnet publish tests/SharpCompress.AotSmoke/SharpCompress.AotSmoke.csproj --configuration Release --runtime linux-x64 --self-contained true --output artifacts/aot-smoke
         ./artifacts/aot-smoke/SharpCompress.AotSmoke
-    
+
     # Upload artifacts for verification
     - name: Upload NuGet Package
       uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.os }}-nuget-package
         path: artifacts/*.nupkg
-    
+
     # Push to NuGet.org only for version tag pushes (Windows only)
     - name: Push to NuGet
       if: success() && matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
