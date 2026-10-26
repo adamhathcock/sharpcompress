@@ -238,6 +238,14 @@ public partial class GZipStream : Stream
             {
                 if (disposing && (BaseStream != null))
                 {
+                    if (
+                        BaseStream._wantCompress
+                        && BaseStream._streamMode == ZlibBaseStream.StreamMode.Undefined
+                    )
+                    {
+                        // Nothing was written: still emit the header of an empty GZIP stream
+                        Write(Array.Empty<byte>(), 0, 0);
+                    }
                     BaseStream.Dispose();
                     Crc32 = BaseStream.Crc32;
                 }

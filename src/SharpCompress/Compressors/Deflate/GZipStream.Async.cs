@@ -194,6 +194,17 @@ public partial class GZipStream
             return;
         }
 
+        if (
+            BaseStream != null
+            && BaseStream._wantCompress
+            && BaseStream._streamMode == ZlibBaseStream.StreamMode.Undefined
+        )
+        {
+            // Nothing was written: still emit the header of an empty GZIP stream
+            await WriteAsync(Array.Empty<byte>(), 0, 0, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+
         _disposed = true;
         if (BaseStream != null)
         {
