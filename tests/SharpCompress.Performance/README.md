@@ -8,7 +8,7 @@ The benchmarks test all major archive formats supported by SharpCompress:
 - **Zip**: Read (Archive & Reader API) and Write operations, each with sync and async variants
 - **Tar**: Read (Archive & Reader API) and Write operations, including Tar.GZip, each with sync and async variants
 - **Rar**: Read operations (Archive & Reader API), each with sync and async variants
-- **7Zip**: Read operations for LZMA and LZMA2 compression, each with sync and async variants
+- **7Zip**: Read operations and encrypted/unencrypted writing for LZMA and LZMA2, each with sync and async variants
 - **GZip**: Compression and decompression, each with sync and async variants
 - **XZ / BCJ**: XZ decompression and isolated x86, ARM, ARM-Thumb, PowerPC, SPARC, and IA-64 filters, using sync and both async read overloads
 
@@ -16,6 +16,11 @@ For the controlled XZ pooling evaluation, workload details, and remaining hotspo
 see [XZ profiling](../../docs/XZ_PROFILING.md). `XzBcjBenchmarks` uses built-in synthetic
 inputs by default; set `SHARPCOMPRESS_XZ_PROFILE_FILE` to profile a local `.xz` file
 for its XZ cases. Filter cases remain independent of that file.
+
+`SevenZipEncryptionBenchmarks` covers a 256 KiB file and 100 small files, with
+unencrypted data, encrypted data, and encrypted data plus headers. See
+[7z allocation profiling](../../docs/SEVENZIP_ALLOCATION_PROFILING.md) for the
+controlled before/after results and measurement boundaries.
 
 ## Running Benchmarks
 
