@@ -61,6 +61,75 @@ public sealed partial class XZStream
         return bytesRead;
     }
 
+#if !LEGACY_DOTNET
+    /// <summary>
+    /// Read and validate XZ data without adapting memory reads through Task-based array overloads.
+    /// </summary>
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        if (buffer.IsEmpty || _endOfStream)
+        {
+            return 0;
+        }
+        if (!HeaderIsRead)
+        {
+            await ReadHeaderAsync(cancellationToken).ConfigureAwait(false);
+        }
+        if (
+            _currentBlock is not null
+            && _currentBlock.TryReadBuffered(buffer, cancellationToken, out var buffered)
+        )
+        {
+            return buffered;
+        }
+        var bytesRead = await ReadBlocksAsync(buffer, cancellationToken).ConfigureAwait(false);
+        if (bytesRead < buffer.Length)
+        {
+            _endOfStream = true;
+            await ReadIndexAsync(cancellationToken).ConfigureAwait(false);
+            await ReadFooterAsync(cancellationToken).ConfigureAwait(false);
+        }
+        return bytesRead;
+    }
+
+    private async ValueTask<int> ReadBlocksAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken
+    )
+    {
+        var bytesRead = 0;
+        if (_currentBlock is null)
+        {
+            NextBlock();
+        }
+        while (bytesRead < buffer.Length)
+        {
+            try
+            {
+                var remaining = buffer.Slice(bytesRead);
+                var justRead = await _currentBlock
+                    .ReadAsync(remaining, cancellationToken)
+                    .ConfigureAwait(false);
+                bytesRead += justRead;
+                if (justRead < remaining.Length)
+                {
+                    NextBlock();
+                }
+            }
+            catch (XZIndexMarkerReachedException)
+            {
+                break;
+            }
+        }
+        return bytesRead;
+    }
+#endif
+
     /// <summary>
     /// Asynchronously reads and validates the XZ header.
     /// </summary>

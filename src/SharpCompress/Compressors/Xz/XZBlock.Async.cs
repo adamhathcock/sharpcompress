@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -55,6 +56,118 @@ public sealed partial class XZBlock
 
         return bytesRead;
     }
+
+#if !LEGACY_DOTNET
+    internal bool TryReadBuffered(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken,
+        out int read
+    )
+    {
+        read = 0;
+        if (
+            _streamConnected
+            && !_endOfStream
+            && _decomStream is Filters.BlockFilter filter
+            && filter.BaseStream is Filters.BcjFilterStream buffered
+            && buffered.TryReadBuffered(buffer, cancellationToken, out read)
+        )
+        {
+            // Buffered data still contributes to the same block check, exactly once.
+            UpdateCheck(buffer.Slice(0, read));
+            return true;
+        }
+        return false;
+    }
+
+    public override async ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        if (buffer.IsEmpty)
+        {
+            return 0;
+        }
+        if (!HeaderIsLoaded)
+        {
+            await LoadHeaderAsync(cancellationToken).ConfigureAwait(false);
+        }
+        if (!_streamConnected)
+        {
+            ConnectStream();
+        }
+        var bytesRead = 0;
+        if (!_endOfStream)
+        {
+            bytesRead = await _decomStream
+                .NotNull()
+                .ReadAsync(buffer, cancellationToken)
+                .ConfigureAwait(false);
+            UpdateCheck(buffer.Slice(0, bytesRead));
+        }
+        if (bytesRead != buffer.Length)
+        {
+            _endOfStream = true;
+        }
+        if (_endOfStream && !_paddingSkipped)
+        {
+            await SkipPaddingAsync(cancellationToken).ConfigureAwait(false);
+        }
+        if (_endOfStream && !_crcChecked)
+        {
+            await CheckCrcAsync(cancellationToken).ConfigureAwait(false);
+        }
+        return bytesRead;
+    }
+
+    private void UpdateCheck(ReadOnlyMemory<byte> bytes)
+    {
+        if (bytes.IsEmpty || _checkType == CheckType.NONE)
+        {
+            return;
+        }
+        switch (_checkType)
+        {
+            case CheckType.CRC32:
+                _crc32 = Crc32.Update(_crc32, bytes.Span);
+                break;
+            case CheckType.CRC64:
+                _crc64 = Crc64.UpdateXz(_crc64, bytes.Span);
+                break;
+            case CheckType.SHA256:
+                if (MemoryMarshal.TryGetArray(bytes, out var array))
+                {
+                    _sha256
+                        .NotNull()
+                        .TransformBlock(array.Array!, array.Offset, array.Count, null, 0);
+                }
+                else
+                {
+                    // HashAlgorithm's streaming API needs arrays. Bound the fallback copy for
+                    // native/custom memory instead of allocating a request-sized temporary array.
+                    var scratch = ArrayPool<byte>.Shared.Rent(8192);
+                    try
+                    {
+                        while (!bytes.IsEmpty)
+                        {
+                            var count = Math.Min(bytes.Length, 8192);
+                            bytes.Span.Slice(0, count).CopyTo(scratch);
+                            _sha256.NotNull().TransformBlock(scratch, 0, count, null, 0);
+                            bytes = bytes.Slice(count);
+                        }
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(scratch);
+                    }
+                }
+                break;
+        }
+    }
+#endif
 
     private async ValueTask SkipPaddingAsync(CancellationToken cancellationToken = default)
     {

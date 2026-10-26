@@ -210,5 +210,12 @@ public class BcjBufferLifetimeTests
             int count,
             CancellationToken cancellationToken
         ) => Task.FromException<int>(new IOException("Injected read failure"));
+
+#if !LEGACY_DOTNET
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        ) => new(Task.FromException<int>(new IOException("Injected read failure")));
+#endif
     }
 }

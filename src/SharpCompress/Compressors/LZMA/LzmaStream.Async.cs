@@ -91,6 +91,9 @@ public partial class LzmaStream
 
     private async ValueTask DecodeChunkHeaderAsync(CancellationToken cancellationToken = default)
     {
+#if !LEGACY_DOTNET
+        _bufferedAsyncChunkReady = false;
+#endif
         var headerBuffer = GetAsyncHeaderBuffer();
         await _inputStream!
             .ReadExactAsync(headerBuffer, 0, 1, cancellationToken)
@@ -159,7 +162,18 @@ public partial class LzmaStream
                 _decoder.SetDecoderProperties(Properties);
             }
 
+#if !LEGACY_DOTNET
+            await _rangeDecoder
+                .InitLzma2ChunkAsync(
+                    _inputStream,
+                    checked((int)_rangeDecoderLimit),
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
+            _bufferedAsyncChunkReady = true;
+#else
             await _rangeDecoder.InitAsync(_inputStream, cancellationToken).ConfigureAwait(false);
+#endif
         }
         else if (control > 0x02)
         {
@@ -174,6 +188,25 @@ public partial class LzmaStream
             _availableBytes = (headerBuffer[0] << 8) + headerBuffer[1] + 1;
             _inputPosition += 2;
         }
+    }
+
+    private ValueTask<bool> DecodeBlockAsync(CancellationToken cancellationToken)
+    {
+#if !LEGACY_DOTNET
+        if (_isLzma2)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!_bufferedAsyncChunkReady)
+            {
+                // Do not enter the pointer-based decoder after a canceled/failed payload fill.
+                throw new DataErrorException();
+            }
+#pragma warning disable VSTHRD103 // The bounded LZMA2 payload is already in memory; this call performs CPU work only.
+            return new ValueTask<bool>(_decoder!.Code(_dictionarySize, _outWindow, _rangeDecoder));
+#pragma warning restore VSTHRD103
+        }
+#endif
+        return _decoder!.CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken);
     }
 
     public override async Task<int> ReadAsync(
@@ -225,6 +258,13 @@ public partial class LzmaStream
             {
                 toProcess = (int)_availableBytes;
             }
+#if !LEGACY_DOTNET
+            if (_isLzma2 && !_uncompressedChunk)
+            {
+                // Bound CPU-only work between cancellation checks, even for huge caller buffers.
+                toProcess = Math.Min(toProcess, 16 * 1024);
+            }
+#endif
 
             _outWindow.SetLimit(toProcess);
             if (_uncompressedChunk)
@@ -233,11 +273,7 @@ public partial class LzmaStream
                     .CopyStreamAsync(_inputStream, toProcess, cancellationToken)
                     .ConfigureAwait(false);
             }
-            else if (
-                await _decoder!
-                    .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
-                    .ConfigureAwait(false)
-            )
+            else if (await DecodeBlockAsync(cancellationToken).ConfigureAwait(false))
             {
                 HandleEndMarker();
             }
@@ -265,16 +301,7 @@ public partial class LzmaStream
                 )
                 {
                     _outWindow.SetLimit(toProcess + 1);
-                    if (
-                        !await _decoder!
-                            .CodeAsync(
-                                _dictionarySize,
-                                _outWindow,
-                                _rangeDecoder,
-                                cancellationToken
-                            )
-                            .ConfigureAwait(false)
-                    )
+                    if (!await DecodeBlockAsync(cancellationToken).ConfigureAwait(false))
                     {
                         _rangeDecoder.ReleaseStream();
                         throw new DataErrorException();
@@ -356,6 +383,12 @@ public partial class LzmaStream
             {
                 toProcess = (int)_availableBytes;
             }
+#if !LEGACY_DOTNET
+            if (_isLzma2 && !_uncompressedChunk)
+            {
+                toProcess = Math.Min(toProcess, 16 * 1024);
+            }
+#endif
 
             _outWindow.SetLimit(toProcess);
             if (_uncompressedChunk)
@@ -364,11 +397,7 @@ public partial class LzmaStream
                     .CopyStreamAsync(_inputStream, toProcess, cancellationToken)
                     .ConfigureAwait(false);
             }
-            else if (
-                await _decoder!
-                    .CodeAsync(_dictionarySize, _outWindow, _rangeDecoder, cancellationToken)
-                    .ConfigureAwait(false)
-            )
+            else if (await DecodeBlockAsync(cancellationToken).ConfigureAwait(false))
             {
                 HandleEndMarker();
             }
@@ -396,16 +425,7 @@ public partial class LzmaStream
                 )
                 {
                     _outWindow.SetLimit(toProcess + 1);
-                    if (
-                        !await _decoder!
-                            .CodeAsync(
-                                _dictionarySize,
-                                _outWindow,
-                                _rangeDecoder,
-                                cancellationToken
-                            )
-                            .ConfigureAwait(false)
-                    )
+                    if (!await DecodeBlockAsync(cancellationToken).ConfigureAwait(false))
                     {
                         _rangeDecoder.ReleaseStream();
                         throw new DataErrorException();

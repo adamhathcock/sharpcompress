@@ -6,24 +6,22 @@ namespace SharpCompress.Compressors.Xz.Filters;
 
 internal sealed partial class BcjFilterStream
 {
+    public override Task<int> ReadAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    ) => ReadCoreAsync(buffer, offset, count, cancellationToken).AsTask();
+
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
-    public override async Task<int> ReadAsync(
+    internal async ValueTask<int> ReadCoreAsync(
         byte[] buffer,
         int offset,
         int count,
         CancellationToken cancellationToken
     )
     {
-        ThrowIfDisposed();
-        ThrowHelper.ThrowIfNull(buffer);
-        if (offset < 0 || offset > buffer.Length)
-        {
-            throw new ArgumentOutOfRangeException(nameof(offset));
-        }
-        if (count < 0 || count > buffer.Length - offset)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
+        ValidateRead(buffer, offset, count);
         cancellationToken.ThrowIfCancellationRequested();
 
         var total = 0;
@@ -43,15 +41,20 @@ internal sealed partial class BcjFilterStream
         return total;
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask FillAsync(CancellationToken cancellationToken)
     {
         KeepUnfilteredTail();
         while (_filtered == 0 && !_endReached)
         {
+#if LEGACY_DOTNET
             var bytesRead = await BaseStream
                 .ReadAsync(_buffer, _size, BufferSize - _size, cancellationToken)
                 .ConfigureAwait(false);
+#else
+            var bytesRead = await BaseStream
+                .ReadAsync(_buffer.AsMemory(_size, BufferSize - _size), cancellationToken)
+                .ConfigureAwait(false);
+#endif
             ConvertBuffered(bytesRead);
         }
     }

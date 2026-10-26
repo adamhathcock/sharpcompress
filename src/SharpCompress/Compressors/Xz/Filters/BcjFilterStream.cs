@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Threading;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
@@ -34,6 +35,9 @@ internal sealed partial class BcjFilterStream : ReadOnlyStream
 
     public override bool CanRead => !_isDisposed && BaseStream.CanRead;
 
+    public override int Read(byte[] buffer, int offset, int count) =>
+        ReadCore(buffer, offset, count);
+
     protected override void Dispose(bool disposing)
     {
         if (disposing && !_isDisposed)
@@ -53,6 +57,58 @@ internal sealed partial class BcjFilterStream : ReadOnlyStream
         }
     }
 
+    private void ValidateRead(byte[] buffer, int offset, int count)
+    {
+        ThrowIfDisposed();
+        ThrowHelper.ThrowIfNull(buffer);
+        if (offset < 0 || offset > buffer.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        }
+        if (count < 0 || count > buffer.Length - offset)
+        {
+            throw new ArgumentOutOfRangeException(nameof(count));
+        }
+    }
+
+    internal bool TryReadBuffered(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken,
+        out int read
+    )
+    {
+        read = 0;
+        if (count < 0 || count > _filtered - _position)
+        {
+            return false;
+        }
+        ValidateRead(buffer, offset, count);
+        cancellationToken.ThrowIfCancellationRequested();
+        read = CopyBuffered(buffer.AsSpan(offset, count));
+        return true;
+    }
+
+#if !LEGACY_DOTNET
+    internal bool TryReadBuffered(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken,
+        out int read
+    )
+    {
+        read = 0;
+        if (buffer.Length > _filtered - _position)
+        {
+            return false;
+        }
+        ThrowIfDisposed();
+        cancellationToken.ThrowIfCancellationRequested();
+        read = CopyBuffered(buffer.Span);
+        return true;
+    }
+#endif
+
     private int CopyBuffered(Span<byte> destination)
     {
         var count = Math.Min(destination.Length, _filtered - _position);
@@ -69,6 +125,17 @@ internal sealed partial class BcjFilterStream : ReadOnlyStream
         Buffer.BlockCopy(_buffer, _filtered, _buffer, 0, _size);
         _position = 0;
         _filtered = 0;
+    }
+
+    private void Fill()
+    {
+        KeepUnfilteredTail();
+        while (_filtered == 0 && !_endReached)
+        {
+            // Preserve the sync array-based I/O contract; only async reads prefer Memory.
+            var bytesRead = BaseStream.Read(_buffer, _size, BufferSize - _size);
+            ConvertBuffered(bytesRead);
+        }
     }
 
     private void ConvertBuffered(int bytesRead)

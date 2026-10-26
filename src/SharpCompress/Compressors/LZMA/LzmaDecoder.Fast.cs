@@ -20,7 +20,8 @@ namespace SharpCompress.Compressors.LZMA;
 // call per byte.
 //
 // These tables are separate from (and not kept in sync with) the BitDecoder-based tables used
-// by the async decode path (LzmaDecoder.Async.cs), which remains unchanged on every target.
+// by scalar/per-symbol async decoding (LzmaDecoder.Async.cs). Modern LZMA2 async streams also
+// use this fast bank after asynchronously buffering a bounded compressed chunk.
 // Both sets are kept up to date by SetDecoderProperties/Init, so either decode path can be used
 // on a given Decoder instance, as long as sync and async decoding are not interleaved on the
 // same instance.

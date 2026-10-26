@@ -198,6 +198,9 @@ not explain the adverse elapsed result by themselves, nor justify a lock rewrite
 
 ## Remaining opportunities
 
+These describe the profiled pooling baseline; completed follow-ups are recorded
+separately below rather than rewriting the historical measurements.
+
 - Async LZMA2 currently calls the per-symbol async decoder, whereas sync decoding
   can use the optimized range-decoder path. A future experiment should separate
   asynchronous input refills from CPU-only decoding. It must not replace async I/O
@@ -214,6 +217,117 @@ not explain the adverse elapsed result by themselves, nor justify a lock rewrite
 - Checksum lookup tables are shared, not per-block scratch allocations. There is
   no evidence here to justify pooling them. Checksum work must remain enabled in
   future throughput comparisons.
+
+## Follow-up: remove duplicate BCJ result tasks
+
+On `perf/xz-async-decoding`, the first follow-up keeps the internal BCJ read as
+a `ValueTask<int>` and creates a task only at the existing public array boundary.
+Already-buffered reads complete without entering an async state machine. Custom
+subclasses installing a synchronously throwing input stream retain the previous
+faulted/canceled-task behavior; sync signatures are unchanged.
+
+A fresh before/after comparison against the pooled baseline uses the same isolated
+1 MiB x86 workload, 16-byte array reads, two warmups, seven measured drains,
+Release .NET 10, and disabled tiered compilation. Median allocations fall from
+**9,438,376 to 4,719,784 bytes**; median elapsed time is **1.695 to 0.963 ms**.
+This is a small-read wrapper result, not a complete XZ throughput claim. Logs and
+the follow-up harness are in the parent artifact directory as `fix1-before.log`,
+`fix1-after.log`, and `fix1-harness/`.
+
+All **728 targeted Release tests** pass, including allocation guards for all six
+architectures and fault/cancellation regressions. All six library targets build,
+and net48 test compilation passes. The remaining public `Task<int>` result cannot
+be removed without changing that API; a native memory-based XZ chain remains a
+separate follow-up.
+
+## Follow-up: native XZ memory read chain
+
+The next change adds native memory/ValueTask reads to `XZStream` and `XZBlock`
+on modern targets, carries memory-based I/O through BCJ refills, and completes
+already-buffered reads without traversing multiple async wrappers. All buffered
+bytes still update the block check exactly once. Array API signatures and sync
+array-based I/O remain unchanged. Native/custom destination memory works with
+all four XZ check types; SHA-256 uses bounded pooled scratch when required.
+
+A fresh comparison against the first follow-up (`de7a5d9`) uses the built-in
+1 MiB x86+LZMA2 fixture, 16-byte memory reads at offset 5, two warmups, seven
+measured complete drains, Release .NET 10, and disabled tiered compilation.
+Median allocations fall from **14,180,048 to 15,056 bytes**, with elapsed medians
+**22.399 to 19.422 ms**. Both builds retain checksum verification and return the
+expected output length. This does not yet address the async range-decoder CPU
+bottleneck or establish file-backed throughput improvements.
+
+Artifacts are `fix2-before.log`, `fix2-after.log`, and `fix2-harness/` in the parent
+directory. The harness's before/after DLLs were explicitly bound and hash-checked
+after observing that MSBuild reused an earlier reference when switching HintPath
+properties; `fix2-harness/comparison.json` records the actual measured hashes.
+
+All **764 targeted Release tests** pass, including yielding async-only input,
+seekable/forward-only streams, native/custom memory, mixed async overloads,
+bounded allocations, empty/canceled reads, and checksum corruption. All six
+library targets and net48 test compilation pass. The issue sample still matches
+liblzma in all 24 read-size/overload/offset combinations.
+
+## Follow-up: bounded async LZMA2 fast decoding
+
+The third follow-up changes modern-target LZMA2 async decoding, not raw LZMA or
+legacy-target decoding. Each compressed LZMA2 chunk declares at most 64 KiB of
+compressed data. That payload is filled asynchronously into the range decoder's
+existing pooled fast-input lease. The existing optimized decoder then performs
+CPU-only work on that buffer; it never makes a synchronous call to the supplied
+input stream. There is no second request-sized compressed-input allocation.
+
+CPU-only batches are capped at **16 KiB of output between cancellation checks**,
+even when the caller asks for much more. The fast probability bank is reused
+across continuation chunks and reinitialized on property/state resets. Scalar
+models are not also allocated for that path. The decoder still validates LZMA2
+compressed/uncompressed counts, end markers, pending output, and outer XZ checks.
+
+Input refills are bounded by the declared payload, not the rented array's
+capacity. Incomplete fills cannot enter unsafe decoding; truncation retains the
+`DataErrorException` category, and disposal returns partially filled leases.
+Cancellation after a complete payload fill can resume without losing buffered
+data. Tests exercise yielding async-only non-seekable input, one-byte/short reads,
+following-chunk sentinels, malformed/truncated payloads, retries, oversized
+poisoned rents, cancellation, model reuse, and disposal.
+
+A fresh comparison against `31f3476` reuses the complete **32 MiB** mixed XZ
+workload and 64 KiB native-memory requests. Each version/input runs in a fresh
+process with two warmups and seven measured complete drains; version order is
+reversed for the file scenario. Release .NET 10 uses disabled tiered compilation.
+No builds or tests compete with these measurements.
+
+| Input / memory-async API | Before ms | After ms | Before process CPU ms | After process CPU ms | Before allocated bytes | After allocated bytes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Memory | 5,963.0 | 769.2 | 5,961.2 | 769.2 | 80,672 | 72,600 |
+| File | 6,812.9 | 768.7 | 6,932.0 | 780.6 | 6,195,096 | 3,721,104 |
+
+This workload's elapsed medians improve by approximately **7.8x memory-backed**
+and **8.9x file-backed**; process CPU reductions support the decoding explanation,
+not merely reduced waiting. These results do not establish a speedup for raw
+LZMA, legacy targets, other data distributions, or cold storage. File allocations
+still include suspension costs and pool misses. All original checksum work remains.
+
+Artifacts and hash-checked before/after DLLs are in `fix3-harness/` in the parent
+directory. Its `evaluate.py`, `results.json`, `library-hashes.json`, and raw logs
+record the comparison. Both versions decode to the same byte count; the updated
+build additionally passes full SHA-256 verification of this workload through all
+three read APIs and all 24 byte-for-byte issue-sample combinations.
+
+All **969 targeted Release tests**, including 7z, pass. All six library targets
+and net48 test compilation pass; all 84 benchmark cases still smoke-test cleanly.
+The final complete **.NET 10 Release suite passes: 3,629 tests, no failures or skips**.
+
+A final measured-phase async memory trace confirms the intended path change:
+**81.4%** of workload leaf samples are in `CodeFastCore`, **8.2%** in CRC64,
+and **5.5%** in the fast matched-literal helper. Per-bit async decoder helpers no
+longer dominate. This trace contains 1,478 workload samples, one complete measured
+phase, and zero lost events. Its raw trace, Speedscope file, and analysis JSON are
+`fix3-harness/after-memory.*` / `after-memory-analysis.json`. Sampling limitations
+remain the same as in the original evaluation.
+
+The checksum tables remain shared and unchanged: the profiling report identified
+no per-block table-allocation problem to fix.
 
 ## Artifacts and reproduction
 

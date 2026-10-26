@@ -888,11 +888,44 @@ using (var reader = ReaderFactory.OpenReader(stream))
 
 ---
 
+## Low-Level XZ Memory Reads
+
+On .NET 6 and later, `SharpCompress.Compressors.Xz.XZStream` and `XZBlock`
+override `ReadAsync(Memory<byte>, CancellationToken)` with a native ValueTask
+read path. Array-backed and custom/native memory are supported; CRC32, CRC64,
+and SHA-256 checks remain enabled. SHA-256 uses a bounded pooled scratch buffer
+when the destination memory cannot expose an array. Read through EOF to validate
+the complete stream, including its final block check.
+
+```csharp
+using var input = File.OpenRead("input.tar.xz");
+using var xz = new SharpCompress.Compressors.Xz.XZStream(input);
+using var output = File.Create("output.tar");
+var buffer = new byte[65536];
+int read;
+while ((read = await xz.ReadAsync(buffer.AsMemory(), cancellationToken)) != 0)
+{
+    await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+}
+```
+
+Disposing these low-level XZ streams releases their owned filter buffers without
+closing the caller-provided input; dispose the input separately. The existing
+array-based async signatures are unchanged.
+
 ## CRC-Checking Stream Lifetime
 
 `SharpCompressStream` rejects reading and starting recording after disposal. Its pooled ring buffer is released even when disposal of the underlying stream fails.
 
 `LzmaStream` also rejects reads and writes after disposal. Failed initialization releases internal buffers without closing the supplied stream; successful construction retains the specified `leaveOpen` semantics. Disposal releases internal buffers even if finalization or underlying stream disposal throws.
+
+On modern .NET targets, async LZMA2 reads may prefetch the current compressed
+chunk (at most 64 KiB) using async I/O before producing output. They never prefetch
+the following chunk header. Decoding the buffered payload uses CPU-only batches
+of at most 16 KiB of output between cancellation checks. Cancellation or failure
+during a partial fill does not permit unsafe decoding of uninitialized bytes;
+disposing the stream returns the input lease. Raw LZMA and legacy-target async
+decoding retain their existing streaming paths.
 
 `SharpCompress.Compressors.LZMA.Utilities.CrcCheckStream` validates its expected CRC on disposal. A mismatch throws `ArchiveOperationException`, but pooled buffers are still released. Repeated disposal is safe, including after failed CRC validation. Once disposed, `CanWrite` is `false`, and `Write` / `WriteAsync` throw `ObjectDisposedException`.
 
