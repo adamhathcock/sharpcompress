@@ -42,7 +42,7 @@ internal sealed partial class AesDecoderStream : DecoderStream2
         Init(info, out var numCyclesPower, out var salt, out var seed);
 
         var passwordBytes = Encoding.Unicode.GetBytes(password);
-        var key = InitKey(numCyclesPower, salt, passwordBytes);
+        var key = SevenZipAesKey.Derive(numCyclesPower, salt, passwordBytes);
         if (key is null)
         {
             throw new ArchiveOperationException("Initialized with null key");
@@ -193,52 +193,6 @@ internal sealed partial class AesDecoderStream : DecoderStream2
         for (var i = 0; i < ivSize; i++)
         {
             iv[i] = info[i + saltSize + 2];
-        }
-    }
-
-    private byte[]? InitKey(int mNumCyclesPower, byte[] salt, byte[] pass)
-    {
-        if (mNumCyclesPower == 0x3F)
-        {
-            var key = new byte[32];
-
-            int pos;
-            for (pos = 0; pos < salt.Length; pos++)
-            {
-                key[pos] = salt[pos];
-            }
-
-            for (var i = 0; i < pass.Length && pos < 32; i++)
-            {
-                key[pos++] = pass[i];
-            }
-
-            return key;
-        }
-        else
-        {
-            using var sha = SHA256.Create();
-            var counter = new byte[8];
-            var numRounds = 1L << mNumCyclesPower;
-            for (long round = 0; round < numRounds; round++)
-            {
-                sha.TransformBlock(salt, 0, salt.Length, null, 0);
-                sha.TransformBlock(pass, 0, pass.Length, null, 0);
-                sha.TransformBlock(counter, 0, 8, null, 0);
-
-                // This mirrors the counter so we don't have to convert long to byte[] each round.
-                // (It also ensures the counter is little endian, which BitConverter does not.)
-                for (var i = 0; i < 8; i++)
-                {
-                    if (++counter[i] != 0)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            sha.TransformFinalBlock(counter, 0, 0);
-            return sha.Hash;
         }
     }
 
