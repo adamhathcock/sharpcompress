@@ -31,6 +31,11 @@ public sealed class BranchExecFilter
     //The previous version of the code would corrupt 2 bytes in the Test.exe at 0x6CF9 (3D6D - should be 4000) - Test zip: WinZip27.Xz.zipx
     public static void X86Converter(byte[] buf, uint ip, ref uint state)
     {
+        X86Converter(buf, buf.Length, ip, ref state);
+    }
+
+    internal static int X86Converter(byte[] buf, int count, uint ip, ref uint state)
+    {
         var mask_to_allowed_status = new[] { true, true, true, false, true, false, false, false };
 
         var mask_to_bit_num = new byte[] { 0, 1, 2, 2, 3, 3, 3, 3 };
@@ -44,11 +49,11 @@ public sealed class BranchExecFilter
         byte b;
         var pos = ip;
 
-        var size = (uint)buf.Length;
+        var size = (uint)count;
 
         if (size <= 4)
         {
-            return;
+            return 0;
         }
 
         size -= 4;
@@ -123,13 +128,16 @@ public sealed class BranchExecFilter
         prev_pos = i - prev_pos;
         prev_mask = prev_pos > 3 ? 0 : prev_mask << (prev_pos - 1);
         state = prev_mask;
-        return;
+        return i;
     }
 
-    public static void PowerPCConverter(byte[] data, uint ip)
+    public static void PowerPCConverter(byte[] data, uint ip) =>
+        PowerPCConverter(data, data.Length, ip);
+
+    internal static int PowerPCConverter(byte[] data, int count, uint ip)
     {
         long i = 0;
-        long size = data.Length;
+        long size = count;
         size &= ~(uint)3;
         ip -= 4;
 
@@ -139,7 +147,7 @@ public sealed class BranchExecFilter
             {
                 if (i >= size)
                 {
-                    return;
+                    return (int)i;
                 }
 
                 i += 4;
@@ -166,10 +174,12 @@ public sealed class BranchExecFilter
         }
     }
 
-    public static void ARMConverter(byte[] data, uint ip)
+    public static void ARMConverter(byte[] data, uint ip) => ARMConverter(data, data.Length, ip);
+
+    internal static int ARMConverter(byte[] data, int count, uint ip)
     {
         long i = 0;
-        long size = data.Length;
+        long size = count;
         size &= ~(uint)3;
         ip += 4;
 
@@ -179,7 +189,7 @@ public sealed class BranchExecFilter
             {
                 if (i >= size)
                 {
-                    return;
+                    return (int)i;
                 }
 
                 i += 4;
@@ -200,10 +210,12 @@ public sealed class BranchExecFilter
         }
     }
 
-    public static void ARMTConverter(byte[] data, uint ip)
+    public static void ARMTConverter(byte[] data, uint ip) => ARMTConverter(data, data.Length, ip);
+
+    internal static int ARMTConverter(byte[] data, int count, uint ip)
     {
         long i = 0;
-        long size = data.Length;
+        long size = count;
         size &= ~(uint)1;
         var lim = size - 4;
 
@@ -215,7 +227,7 @@ public sealed class BranchExecFilter
                 uint b3;
                 if (i > lim)
                 {
-                    return;
+                    return (int)i;
                 }
 
                 b1 = data[i + 1];
@@ -248,13 +260,23 @@ public sealed class BranchExecFilter
 
     public static void IA64Converter(byte[] data, uint ip)
     {
-        uint i = 0;
-        long size = data.Length;
-        if (size < 16)
+        if (data.Length < 16)
         {
             throw new InvalidFormatException("Unexpected data size");
         }
 
+        IA64Converter(data, data.Length, ip);
+    }
+
+    internal static int IA64Converter(byte[] data, int count, uint ip)
+    {
+        if (count < 16)
+        {
+            return 0;
+        }
+
+        uint i = 0;
+        long size = count;
         size -= 16;
 
         do
@@ -292,13 +314,16 @@ public sealed class BranchExecFilter
             }
             i += 16;
         } while (i <= size);
-        return;
+        return (int)i;
     }
 
-    public static void SPARCConverter(byte[] data, uint ip)
+    public static void SPARCConverter(byte[] data, uint ip) =>
+        SPARCConverter(data, data.Length, ip);
+
+    internal static int SPARCConverter(byte[] data, int count, uint ip)
     {
         long i = 0;
-        long size = data.Length;
+        long size = count;
         size &= ~(uint)3;
         ip -= 4;
 
@@ -308,7 +333,7 @@ public sealed class BranchExecFilter
             {
                 if (i >= size)
                 {
-                    return;
+                    return (int)i;
                 }
 
                 i += 4;

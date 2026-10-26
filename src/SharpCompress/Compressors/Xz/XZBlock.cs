@@ -31,6 +31,32 @@ public sealed partial class XZBlock : XZReadOnlyStream
     private bool _paddingSkipped;
     private bool _crcChecked;
     private readonly long _startPosition;
+    private bool _isDisposed;
+
+    public override bool CanRead => !_isDisposed && base.CanRead;
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing && !_isDisposed)
+        {
+            _isDisposed = true;
+            foreach (var filter in _filters)
+            {
+                filter.Dispose();
+            }
+            _filters.Clear();
+            _sha256?.Dispose();
+        }
+        base.Dispose(disposing);
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(XZBlock));
+        }
+    }
 
     public XZBlock(Stream stream, CheckType checkType, int checkSize)
         : base(stream)
@@ -46,6 +72,7 @@ public sealed partial class XZBlock : XZReadOnlyStream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        ThrowIfDisposed();
         var bytesRead = 0;
         if (!HeaderIsLoaded)
         {
@@ -199,9 +226,9 @@ public sealed partial class XZBlock : XZReadOnlyStream
     private void ConnectStream()
     {
         _decomStream = BaseStream;
-        while (_filters.Any())
+        // Keep the filters reachable so their owned buffers are released at block end/disposal.
+        foreach (var filter in _filters)
         {
-            var filter = _filters.Pop();
             filter.SetBaseStream(_decomStream);
             _decomStream = filter;
         }

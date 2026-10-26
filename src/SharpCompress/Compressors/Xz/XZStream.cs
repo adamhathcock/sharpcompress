@@ -16,7 +16,24 @@ public sealed partial class XZStream : XZReadOnlyStream
 
     protected override void Dispose(bool disposing)
     {
+        if (disposing && !_isDisposed)
+        {
+            _isDisposed = true;
+            _currentBlock?.Dispose();
+        }
         base.Dispose(disposing);
+    }
+
+    private bool _isDisposed;
+
+    public override bool CanRead => !_isDisposed && base.CanRead;
+
+    private void ThrowIfDisposed()
+    {
+        if (_isDisposed)
+        {
+            throw new ObjectDisposedException(nameof(XZStream));
+        }
     }
 
     public static bool IsXZStream(Stream stream)
@@ -55,6 +72,7 @@ public sealed partial class XZStream : XZReadOnlyStream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
+        ThrowIfDisposed();
         var bytesRead = 0;
         if (_endOfStream)
         {
@@ -125,6 +143,9 @@ public sealed partial class XZStream : XZReadOnlyStream
         return bytesRead;
     }
 
-    private void NextBlock() =>
+    private void NextBlock()
+    {
+        _currentBlock?.Dispose();
         _currentBlock = new XZBlock(BaseStream, Header.BlockCheckType, Header.BlockCheckSize);
+    }
 }

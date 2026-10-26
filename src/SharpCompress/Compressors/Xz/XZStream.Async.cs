@@ -38,6 +38,7 @@ public sealed partial class XZStream
         CancellationToken cancellationToken = default
     )
     {
+        ThrowIfDisposed();
         var bytesRead = 0;
         if (_endOfStream)
         {

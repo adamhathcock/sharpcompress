@@ -6,6 +6,7 @@
 
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Compressors.Filters;
 
 namespace SharpCompress.Compressors.Xz.Filters;
 
@@ -16,8 +17,6 @@ public partial class X86Filter : BlockFilter
     public override bool AllowAsNonLast => true;
 
     public override bool ChangesDataSize => false;
-
-    private uint _ip = 0;
 
     private uint _state = 0;
 
@@ -46,5 +45,14 @@ public partial class X86Filter : BlockFilter
 
     public override void ValidateFilter() { }
 
-    public override void SetBaseStream(Stream stream) => BaseStream = stream;
+    public override void SetBaseStream(Stream stream)
+    {
+        _state = 0;
+        SetOwnedStream(
+            new BcjFilterStream(
+                stream,
+                (buffer, count, ip) => BranchExecFilter.X86Converter(buffer, count, ip, ref _state)
+            )
+        );
+    }
 }
