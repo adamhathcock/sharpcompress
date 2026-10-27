@@ -146,11 +146,8 @@ public partial class LzmaStream
                 await _inputStream!
                     .ReadExactAsync(headerBuffer, 0, 1, cancellationToken)
                     .ConfigureAwait(false);
-                Properties[0] = headerBuffer[0];
                 _inputPosition++;
-
-                _decoder ??= new Decoder();
-                _decoder.SetDecoderProperties(Properties);
+                SetChunkProperties(headerBuffer[0]);
             }
             else if (_needProps)
             {

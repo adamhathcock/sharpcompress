@@ -78,6 +78,34 @@ public class LzmaDecoderSafetyTests
         });
     }
 
+    // LZMA2 chunk with dictionary and properties reset whose properties byte encodes pb > 4.
+    private static readonly byte[] InvalidChunkProperties = { 0xE0, 0, 0, 0, 4, 0xFF, 0, 0, 0, 0 };
+
+    [Fact]
+    public void Lzma2InvalidChunkPropertiesThrowsDataError()
+    {
+        using var input = new MemoryStream(InvalidChunkProperties);
+        using var stream = LzmaStream.Create(new byte[] { 0 }, input, leaveOpen: true);
+        Assert.Throws<DataErrorException>(() => stream.ReadByte());
+    }
+
+    [Fact]
+    public async Task AsyncLzma2InvalidChunkPropertiesThrowsDataError()
+    {
+        using var input = new MemoryStream(InvalidChunkProperties);
+        using var stream = await LzmaStream.CreateAsync(
+            new byte[] { 0 },
+            input,
+            -1,
+            -1,
+            leaveOpen: true
+        );
+        var buffer = new byte[16];
+        await Assert.ThrowsAsync<DataErrorException>(() =>
+            stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken.None)
+        );
+    }
+
 #if !LEGACY_DOTNET
     [Theory]
     [InlineData(false)]
