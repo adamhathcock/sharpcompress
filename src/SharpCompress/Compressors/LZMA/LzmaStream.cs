@@ -547,6 +547,21 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         return value;
     }
 
+    private void SetChunkProperties(byte properties)
+    {
+        // A properties byte encodes (pb * 5 + lp) * 9 + lc with pb <= 4; a larger value is
+        // corrupt stream data, not an invalid caller argument.
+        if (properties >= 9 * 5 * 5)
+        {
+            throw new DataErrorException();
+        }
+        Properties[0] = properties;
+
+        // Properties initialization resets every probability and match-state field.
+        _decoder ??= new Decoder();
+        _decoder.SetDecoderProperties(Properties);
+    }
+
     private void DecodeChunkHeader()
     {
         var control = ReadChunkHeaderByte();
@@ -585,11 +600,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             if (control >= 0xC0)
             {
                 _needProps = false;
-                Properties[0] = (byte)ReadChunkHeaderByte();
-
-                // Properties initialization resets every probability and match-state field.
-                _decoder ??= new Decoder();
-                _decoder.SetDecoderProperties(Properties);
+                SetChunkProperties((byte)ReadChunkHeaderByte());
             }
             else if (_needProps)
             {
