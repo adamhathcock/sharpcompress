@@ -207,9 +207,12 @@ public partial class ZipWriter : AbstractWriter
         {
             stream.Write(stackalloc byte[] { 63, 0 }); //version says we used PPMd or LZMA
         }
-        var flags = Equals(WriterOptions.ArchiveEncoding.GetEncoding(), Encoding.UTF8)
-            ? HeaderFlags.Efs
-            : 0;
+        // Compare code pages: Encoding.Default on .NET Core is a UTF-8 encoding without a BOM,
+        // which isn't Equal to Encoding.UTF8.
+        var flags =
+            WriterOptions.ArchiveEncoding.GetEncoding().CodePage == Encoding.UTF8.CodePage
+                ? HeaderFlags.Efs
+                : 0;
         if (usesDataDescriptor)
         {
             flags |= HeaderFlags.UsePostDataDescriptor;

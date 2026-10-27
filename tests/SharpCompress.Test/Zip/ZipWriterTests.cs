@@ -1,3 +1,5 @@
+using System;
+using System.Buffers.Binary;
 using System.IO;
 using System.Text;
 using SharpCompress.Common;
@@ -45,6 +47,32 @@ public class ZipWriterTests : WriterTests
         }
 
         Assert.True(memoryStream.Length > 0);
+    }
+
+    [Fact]
+    public void Zip_Write_Utf8_Name_Sets_Efs_Flag()
+    {
+        // Encoding.Default is a UTF-8 encoding without a BOM on .NET Core
+        using var memoryStream = new MemoryStream();
+        var options = new WriterOptions(CompressionType.Deflate)
+        {
+            ArchiveEncoding = new ArchiveEncoding { Default = new UTF8Encoding(false) },
+        };
+
+        using (var writer = WriterFactory.OpenWriter(memoryStream, ArchiveType.Zip, options))
+        {
+            writer.Write("d\u00e9j\u00e0-vu.txt", new MemoryStream(new byte[] { 1, 2, 3 }));
+        }
+
+        var zip = memoryStream.ToArray();
+        var central = BinaryPrimitives.ReadInt32LittleEndian(zip.AsSpan(zip.Length - 6));
+
+        // Bit 11 of the general purpose flags marks the name as UTF-8 for other readers
+        Assert.Equal(0x800, BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(6)) & 0x800);
+        Assert.Equal(
+            0x800,
+            BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(central + 8)) & 0x800
+        );
     }
 
     [Fact]
