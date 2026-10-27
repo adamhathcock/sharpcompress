@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Providers;
@@ -39,6 +40,24 @@ public class GZipWriterAsyncTests : WriterTests
             Path.Combine(SCRATCH_FILES_PATH, "Tar.tar.gz"),
             Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz")
         );
+    }
+
+    [Fact]
+    public async ValueTask GZip_Writer_Empty_Entry_Is_A_Valid_Stream_Async()
+    {
+        using var output = new MemoryStream();
+        await using (var writer = new GZipWriter(new AsyncOnlyStream(output)))
+        {
+            await writer.WriteAsync("empty.txt", new MemoryStream(), null);
+        }
+
+        var gz = output.ToArray();
+        Assert.Equal(new byte[] { 0x1f, 0x8b }, gz.Take(2));
+        using var decompressed = new System.IO.Compression.GZipStream(
+            new MemoryStream(gz),
+            System.IO.Compression.CompressionMode.Decompress
+        );
+        Assert.Equal(-1, decompressed.ReadByte());
     }
 
     [Fact]

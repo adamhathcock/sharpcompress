@@ -135,6 +135,7 @@ public class ZipWriterNonSeekableTests
                 $"entry {i}: local header flags 0x{localFlags:x4} lack the data-descriptor bit"
             );
             Assert.Equal(cdFlags, localFlags);
+            Assert.Equal(ReadUInt16(zip, pos + 10), ReadUInt16(zip, localHeaderOffset + 8)); // method
             Assert.Equal(0u, ReadUInt32(zip, localHeaderOffset + 14)); // deferred CRC
             Assert.Equal(0u, ReadUInt32(zip, localHeaderOffset + 18)); // deferred compressed size
             Assert.Equal(0u, ReadUInt32(zip, localHeaderOffset + 22)); // deferred uncompressed size
@@ -173,6 +174,39 @@ public class ZipWriterNonSeekableTests
                 await entryStream.CopyToAsync(extracted);
             }
             Assert.Equal(content, extracted.ToArray());
+        }
+    }
+
+    [Fact]
+    public async Task Zip_NonSeekable_Writes_Empty_Entry()
+    {
+        (string Name, byte[] Content)[] entries =
+        [
+            ("empty.txt", []),
+            ("after.txt", Encoding.UTF8.GetBytes("after the empty entry")),
+        ];
+
+        foreach (
+            var zip in new[]
+            {
+                WriteArchiveToNonSeekableSync(entries),
+                await WriteArchiveToNonSeekableAsync(entries),
+            }
+        )
+        {
+            AssertStreamedZipLayout(zip, entries.Length);
+
+            using var archive = ZipArchive.OpenArchive(new MemoryStream(zip));
+            foreach (var (name, content) in entries)
+            {
+                var entry = archive.Entries.Single(e => e.Key == name);
+                using var extracted = new MemoryStream();
+                using (var entryStream = entry.OpenEntryStream())
+                {
+                    entryStream.CopyTo(extracted);
+                }
+                Assert.Equal(content, extracted.ToArray());
+            }
         }
     }
 
