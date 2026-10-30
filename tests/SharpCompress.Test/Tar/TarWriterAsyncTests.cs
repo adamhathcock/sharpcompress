@@ -124,6 +124,34 @@ public class TarWriterAsyncTests : WriterTests
         );
     }
 
+    [Theory]
+    [InlineData('/')]
+    [InlineData('\\')]
+    public async ValueTask Tar_Ustar_HeaderFormat_WritesLongPathUsingPrefix_Async(char separator)
+    {
+        // 186 bytes: too long for the 100 byte name field, but splittable into prefix + name
+        var longName =
+            new string('a', 60)
+            + separator
+            + new string('b', 60)
+            + separator
+            + new string('c', 60)
+            + ".txt";
+
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
+        await using (var writer = new TarWriter(new AsyncOnlyStream(stream), options))
+        using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
+        {
+            await writer.WriteAsync(longName, content, null);
+        }
+
+        stream.Position = 0;
+        using var archive = TarArchive.OpenArchive(stream);
+        Assert.Single(archive.Entries);
+        Assert.Equal(longName.Replace('\\', '/'), archive.Entries.Single().Key);
+    }
+
     [Fact]
     public async ValueTask Tar_GnuLongLink_HeaderFormat_WritesLongPath_Async()
     {
