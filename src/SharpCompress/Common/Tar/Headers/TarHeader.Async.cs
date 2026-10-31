@@ -47,10 +47,11 @@ internal sealed partial class TarHeader
         {
             string fullName = Name.NotNull("Name is null");
 
+            // NOTE: tar entry names always use '/', TarWriter normalizes them, so don't use Path.DirectorySeparatorChar
             List<int> dirSeps = new List<int>();
             for (int i = 0; i < fullName.Length; i++)
             {
-                if (fullName[i] == Path.DirectorySeparatorChar)
+                if (fullName[i] == '/')
                 {
                     dirSeps.Add(i);
                 }

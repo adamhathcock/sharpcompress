@@ -110,6 +110,34 @@ public class TarWriterTests : WriterTests
         Assert.Throws<InvalidFormatException>(() => writer.Write(longName, content, null));
     }
 
+    [Theory]
+    [InlineData('/')]
+    [InlineData('\\')]
+    public void Tar_Ustar_HeaderFormat_WritesLongPathUsingPrefix(char separator)
+    {
+        // 186 bytes: too long for the 100 byte name field, but splittable into prefix + name
+        var longName =
+            new string('a', 60)
+            + separator
+            + new string('b', 60)
+            + separator
+            + new string('c', 60)
+            + ".txt";
+
+        using var stream = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
+        using (var writer = new TarWriter(stream, options))
+        using (var content = new MemoryStream(Encoding.UTF8.GetBytes("hello")))
+        {
+            writer.Write(longName, content, null);
+        }
+
+        stream.Position = 0;
+        using var archive = TarArchive.OpenArchive(stream);
+        Assert.Single(archive.Entries);
+        Assert.Equal(longName.Replace('\\', '/'), archive.Entries.Single().Key);
+    }
+
     [Fact]
     public void Tar_GnuLongLink_HeaderFormat_WritesLongPath()
     {
