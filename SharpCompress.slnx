@@ -13,9 +13,11 @@
         <File Path="README.md" />
     </Folder>
     <Folder Name="/src/">
+        <Project Path="src/SharpCompress.Cli/SharpCompress.Cli.csproj" />
         <Project Path="src/SharpCompress/SharpCompress.csproj" />
     </Folder>
     <Folder Name="/tests/">
+        <Project Path="tests/SharpCompress.Cli.Test/SharpCompress.Cli.Test.csproj" />
         <Project Path="tests/SharpCompress.AotSmoke/SharpCompress.AotSmoke.csproj" />
         <Project Path="tests/SharpCompress.Performance/SharpCompress.Performance.csproj" />
         <Project Path="tests/SharpCompress.Test/SharpCompress.Test.csproj" />

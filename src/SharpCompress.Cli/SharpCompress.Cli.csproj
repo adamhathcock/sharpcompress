@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>sharpcompress</ToolCommandName>
+    <PackageId>SharpCompress.Tool</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Read-only archive detection, inspection and listing with SharpCompress.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>CLI.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../SharpCompress/SharpCompress.csproj" />
+    <PackageReference Include="System.CommandLine" />
+    <None Include="../../docs/CLI.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

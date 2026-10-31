@@ -1,5 +1,10 @@
 # Formats
 
+`FileDetector.DetectFile` additionally recognizes self-identifying standalone
+BZip2, XZ, LZip and ZStandard streams, without adding Archive/Reader APIs for them.
+GZip and Unix compress retain their existing high-level API support. Recognition
+does not establish integrity; signatureless raw codecs are not autodetected.
+
 ## Accessing Archives
 
 * Archive classes allow random access to a seekable stream.
