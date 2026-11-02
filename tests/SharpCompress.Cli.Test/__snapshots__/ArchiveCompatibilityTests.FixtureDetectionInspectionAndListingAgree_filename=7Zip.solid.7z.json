@@ -1,0 +1,190 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "7Zip.solid.7z",
+      "physicalSize": 58959,
+      "status": "recognized",
+      "detection": {
+        "formatName": "7Zip",
+        "archive": {
+          "containerType": "SevenZip",
+          "formatName": "7Zip",
+          "outerCompressionType": null,
+          "supportedApis": "Archive"
+        },
+        "compression": null,
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "7Zip.solid.7z",
+      "physicalSize": 58959,
+      "detection": {
+        "formatName": "7Zip",
+        "archive": {
+          "containerType": "SevenZip",
+          "formatName": "7Zip",
+          "outerCompressionType": null,
+          "supportedApis": "Archive"
+        },
+        "compression": null,
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "SevenZip",
+          "formatName": "7Zip",
+          "outerCompressionType": null,
+          "supportedApis": "Archive"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "formatVersion": null,
+        "entryCount": 5,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 58959,
+        "compressedPayloadSize": 58731,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": true,
+        "solidStreamCount": 1,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true,
+        "comment": null,
+        "zip": null
+      },
+      "integrity": "notTested",
+      "limitations": null
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "exe",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": null,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": 16
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "jpg",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": null,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 1,
+            "volumeIndexLast": 1,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": 16
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "jpg/test.jpg",
+            "linkTarget": null,
+            "compressionType": "LZMA",
+            "size": 40372,
+            "compressedSize": null,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 2,
+            "volumeIndexLast": 2,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": 32
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "тест.txt",
+            "linkTarget": null,
+            "compressionType": "LZMA",
+            "size": 15498,
+            "compressedSize": null,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": true,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 3,
+            "volumeIndexLast": 3,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": 32
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "exe/test.exe",
+            "linkTarget": null,
+            "compressionType": "LZMA",
+            "size": 45056,
+            "compressedSize": null,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 4,
+            "volumeIndexLast": 4,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": 32
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

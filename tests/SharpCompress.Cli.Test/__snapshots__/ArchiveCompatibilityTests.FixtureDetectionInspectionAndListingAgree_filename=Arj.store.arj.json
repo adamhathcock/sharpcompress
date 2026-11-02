@@ -1,0 +1,144 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Arj.store.arj",
+      "physicalSize": 101138,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Arj",
+        "archive": {
+          "containerType": "Arj",
+          "formatName": "Arj",
+          "outerCompressionType": null,
+          "supportedApis": "Reader"
+        },
+        "compression": null,
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Arj.store.arj",
+      "physicalSize": 101138,
+      "detection": {
+        "formatName": "Arj",
+        "archive": {
+          "containerType": "Arj",
+          "formatName": "Arj",
+          "outerCompressionType": null,
+          "supportedApis": "Reader"
+        },
+        "compression": null,
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Arj",
+          "formatName": "Arj",
+          "outerCompressionType": null,
+          "supportedApis": "Reader"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "formatVersion": null,
+        "entryCount": 3,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 101138,
+        "compressedPayloadSize": 100926,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": false,
+        "solidStreamCount": 0,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true,
+        "comment": null,
+        "zip": null
+      },
+      "integrity": "notTested",
+      "limitations": null
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "TECT.TXT",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 15498,
+            "compressedSize": 15498,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "EXE/TEST.EXE",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 45056,
+            "compressedSize": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "JPG/TEST.JPG",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 40372,
+            "compressedSize": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

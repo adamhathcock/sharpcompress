@@ -1,0 +1,213 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Tar.tar.zst",
+      "physicalSize": 64512,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Tar",
+        "archive": {
+          "containerType": "Tar",
+          "formatName": "Tar",
+          "outerCompressionType": "ZStandard",
+          "supportedApis": "Reader"
+        },
+        "compression": "ZStandard",
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Tar.tar.zst",
+      "physicalSize": 64512,
+      "detection": {
+        "formatName": "Tar",
+        "archive": {
+          "containerType": "Tar",
+          "formatName": "Tar",
+          "outerCompressionType": "ZStandard",
+          "supportedApis": "Reader"
+        },
+        "compression": "ZStandard",
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Tar",
+          "formatName": "Tar",
+          "outerCompressionType": "ZStandard",
+          "supportedApis": "Reader"
+        },
+        "status": "Partial",
+        "limitations": "UnavailableMetadata",
+        "formatVersion": null,
+        "entryCount": 6,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 64512,
+        "compressedPayloadSize": null,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": false,
+        "solidStreamCount": 0,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true,
+        "comment": null,
+        "zip": null
+      },
+      "integrity": "notTested",
+      "limitations": null
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "Empty/",
+            "linkTarget": null,
+            "compressionType": "ZStandard",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "exe/",
+            "linkTarget": null,
+            "compressionType": "ZStandard",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "exe/test.exe",
+            "linkTarget": null,
+            "compressionType": "ZStandard",
+            "size": 45056,
+            "compressedSize": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "jpg/",
+            "linkTarget": null,
+            "compressionType": "ZStandard",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "jpg/test.jpg",
+            "linkTarget": null,
+            "compressionType": "ZStandard",
+            "size": 40372,
+            "compressedSize": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 5,
+          "metadata": {
+            "key": "���.txt",
+            "linkTarget": null,
+            "compressionType": "ZStandard",
+            "size": 15498,
+            "compressedSize": 15498,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

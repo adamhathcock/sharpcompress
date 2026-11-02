@@ -1,0 +1,190 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Ace.store.ace",
+      "physicalSize": 101196,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Ace",
+        "archive": {
+          "containerType": "Ace",
+          "formatName": "Ace",
+          "outerCompressionType": null,
+          "supportedApis": "Reader"
+        },
+        "compression": null,
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Ace.store.ace",
+      "physicalSize": 101196,
+      "detection": {
+        "formatName": "Ace",
+        "archive": {
+          "containerType": "Ace",
+          "formatName": "Ace",
+          "outerCompressionType": null,
+          "supportedApis": "Reader"
+        },
+        "compression": null,
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Ace",
+          "formatName": "Ace",
+          "outerCompressionType": null,
+          "supportedApis": "Reader"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "formatVersion": "ACE 2.0",
+        "entryCount": 5,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 101196,
+        "compressedPayloadSize": 100926,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": true,
+        "solidStreamCount": 1,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true,
+        "comment": null,
+        "zip": null
+      },
+      "integrity": "notTested",
+      "limitations": null
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "exe",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "jpg",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "exe\\test.exe",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 45056,
+            "compressedSize": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "jpg\\test.jpg",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 40372,
+            "compressedSize": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "Tect.txt.txt",
+            "linkTarget": null,
+            "compressionType": "None",
+            "size": 15498,
+            "compressedSize": 15498,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": null,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "createdTime": null,
+            "lastAccessedTime": null,
+            "archivedTime": null,
+            "attributes": null
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}
