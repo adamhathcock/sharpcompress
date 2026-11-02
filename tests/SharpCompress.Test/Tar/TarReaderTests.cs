@@ -84,16 +84,19 @@ public class TarReaderTests : ReaderTests
     }
 
     [Fact]
-    public void TarWrapper_BZip2_MinimumRewindBufferSize_IsMaxBZip2BlockSize()
+    public void TarWrapper_BZip2_MinimumRewindBufferSize_IncludesCompressionOverhead()
     {
         // The BZip2 TarWrapper must declare a MinimumRewindBufferSize large enough
-        // to hold an entire maximum-size compressed BZip2 block (9 × 100 000 bytes).
+        // to hold a maximum-size BZip2 block plus compression overhead.
         var bzip2Wrapper = Array.Find(
             TarWrapper.Wrappers,
             w => w.CompressionType == CompressionType.BZip2
         );
         Assert.NotNull(bzip2Wrapper);
-        Assert.Equal(BZip2Constants.baseBlockSize * 9, bzip2Wrapper.MinimumRewindBufferSize);
+        Assert.Equal(
+            BZip2Constants.baseBlockSize * 9 * 101 / 100 + 600,
+            bzip2Wrapper.MinimumRewindBufferSize
+        );
     }
 
     [Fact]
