@@ -321,9 +321,9 @@
     "net10.0": {
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[10.0.12, )",
-        "resolved": "10.0.12",
-        "contentHash": "xi+BDjFpW+Sb+MHFHaH6Y/gV9I8BluFwRXc1QyCdoZbIK26eNiBeFuMTe/FMwc33G1wdHCyDg7CVTmb8OdQrMQ=="
+        "requested": "[10.0.14, )",
+        "resolved": "10.0.14",
+        "contentHash": "YlTamXppEQls6DYWt7RdUuwWDb0lyw/vXCaGeQpLCpsLmfwGuCkOz/vIGgMTV7ECsJcavkCOkxZXv9s8rdAHkQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
@@ -441,9 +441,9 @@
     "net8.0": {
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[8.0.31, )",
-        "resolved": "8.0.31",
-        "contentHash": "OJdAGATV2QoVWL11zlDLEluA06q8rK+cgZR47ohrO8V+Qj5z9dlvN7bG9/0e5t0IOe+yD8tREC0bpsEgDGrzIQ=="
+        "requested": "[8.0.33, )",
+        "resolved": "8.0.33",
+        "contentHash": "dG9SM/0/zOTIE1UvSrveD1iDyEJjThqPqSnreExgqQWSoGWvze0esDi0faRk3C44IO1kqCeEX6AeCxWmBOppfw=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies": {
         "type": "Direct",
