@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -14,6 +15,28 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     where TVolume : IVolume
     where TOptions : IWriterOptions
 {
+    public override IAsyncEnumerable<TEntry> EntriesAsync => GetCurrentEntriesAsync();
+
+    private async IAsyncEnumerable<TEntry> GetCurrentEntriesAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        await foreach (
+            var entry in OldEntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
+        {
+            yield return entry;
+        }
+        foreach (var entry in newEntries)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!removedEntries.Contains(entry))
+            {
+                yield return entry;
+            }
+        }
+    }
+
     // Async property moved from main file
     private IAsyncEnumerable<TEntry> OldEntriesAsync =>
         base.EntriesAsync.Where(x => !removedEntries.Contains(x));
@@ -22,9 +45,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     {
         if (pauseRebuilding)
         {
+            // Disposing the synchronous pause must not perform synchronous I/O for async callers.
+            asyncRebuildPending = true;
             return;
         }
         hasModifications = true;
+        asyncRebuildPending = false;
         newEntries.RemoveAll(v => removedEntries.Contains(v));
         modifiedEntries.Clear();
         await foreach (var entry in OldEntriesAsync.ConfigureAwait(false))
@@ -49,20 +75,21 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     )
     {
         await foreach (
-            var entry in EntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+            var entry in OldEntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
         {
-            var path = entry.Key;
-            if (path is null)
+            if (entry.Key is { } path && KeysMatch(path, key))
             {
-                continue;
+                return true;
             }
-            var p = path.Replace('/', '\\');
-            if (p.Length > 0 && p[0] == '\\')
+        }
+        foreach (var entry in newEntries)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!removedEntries.Contains(entry) && entry.Key is { } path && KeysMatch(path, key))
             {
-                p = p.Substring(1);
+                return true;
             }
-            return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
         }
         return false;
     }
@@ -116,9 +143,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         CancellationToken cancellationToken = default
     )
     {
+        var activeNewEntries = newEntries.Where(x => !removedEntries.Contains(x)).ToList();
         //reset streams of new entries
-        newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-        await SaveToAsync(stream, options, OldEntriesAsync, newEntries, cancellationToken)
+        activeNewEntries
+            .Cast<IWritableArchiveEntry>()
+            .ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
+        await SaveToAsync(stream, options, OldEntriesAsync, activeNewEntries, cancellationToken)
             .ConfigureAwait(false);
     }
 
