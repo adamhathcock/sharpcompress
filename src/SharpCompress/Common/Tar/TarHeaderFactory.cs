@@ -59,11 +59,12 @@ internal static partial class TarHeaderFactory
 
     private static long PadTo512(long size)
     {
-        var zeros = (int)(size % 512);
-        if (zeros == 0)
+        // PAX size overrides bypass ReadSize, so validate the effective size too.
+        if (size is < 0 or > TarHeader.MAX_ENTRY_SIZE)
         {
-            return size;
+            throw new InvalidFormatException($"Invalid TAR entry size: {size}.");
         }
-        return checked(512 - zeros + size);
+
+        return (size + 511) & ~511L;
     }
 }

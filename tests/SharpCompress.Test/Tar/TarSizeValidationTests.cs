@@ -21,11 +21,13 @@ public class TarSizeValidationTests
     [InlineData(-512L, false)]
     [InlineData(-1024L, false)]
     [InlineData(long.MinValue, false)]
+    [InlineData(long.MaxValue, false)]
+    [InlineData(TarHeader.MAX_ENTRY_SIZE + 1, false)]
     [InlineData(-1L, true)]
     [InlineData(-512L, true)]
     [InlineData(-1024L, true)]
     [InlineData(long.MinValue, true)]
-    public async Task Tar_Header_Rejects_Negative_Size(long size, bool negativeMarker)
+    public async Task Tar_Header_Rejects_Invalid_Size(long size, bool negativeMarker)
     {
         using var stream = new MemoryStream(CreateHeader(size, negativeMarker));
         using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
@@ -39,6 +41,69 @@ public class TarSizeValidationTests
         await Assert.ThrowsAsync<InvalidFormatException>(async () =>
             await header.ReadAsync(asyncReader, cancellationToken: CancellationToken.None)
         );
+    }
+
+    [Theory]
+    [InlineData(TarHeader.MAX_ENTRY_SIZE - 1)]
+    [InlineData(TarHeader.MAX_ENTRY_SIZE)]
+    public async Task Tar_Header_Accepts_Maximum_Paddable_Size(long size)
+    {
+        using var stream = new MemoryStream(CreateHeader(size));
+        using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
+        var header = new TarHeader(new ArchiveEncoding());
+
+        Assert.True(header.Read(reader));
+        Assert.Equal(size, header.Size);
+
+        stream.Position = 0;
+        using var asyncStream = new AsyncOnlyStream(stream, disposeStream: false);
+        using var asyncReader = new AsyncBinaryReader(asyncStream, leaveOpen: true);
+        Assert.True(await header.ReadAsync(asyncReader, cancellationToken: CancellationToken.None));
+        Assert.Equal(size, header.Size);
+    }
+
+    [Theory]
+    [InlineData(124, false)]
+    [InlineData(125, false)]
+    [InlineData(126, false)]
+    [InlineData(127, false)]
+    [InlineData(124, true)]
+    [InlineData(125, true)]
+    [InlineData(126, true)]
+    [InlineData(127, true)]
+    public async Task Tar_ArchiveFactory_Rejects_Binary_Size_With_Ignored_High_Bits(
+        int offset,
+        bool useAsync
+    )
+    {
+        var header = CreateHeader(0);
+        // Keep the binary marker, but encode a size larger than a long can hold.
+        header[offset] |= 0x01;
+        WriteChecksum(header);
+        using var stream = new MemoryStream(header);
+        if (useAsync)
+        {
+            using var asyncStream = new AsyncOnlyStream(stream, disposeStream: false);
+            await Assert.ThrowsAsync<ArchiveOperationException>(async () =>
+            {
+                await using var archive = await ArchiveFactory.OpenAsyncArchive(
+                    asyncStream,
+                    ReaderOptions.ForExternalStream,
+                    CancellationToken.None
+                );
+            });
+        }
+        else
+        {
+            Assert.Throws<ArchiveOperationException>(() =>
+            {
+                using var archive = ArchiveFactory.OpenArchive(
+                    stream,
+                    ReaderOptions.ForExternalStream
+                );
+            });
+        }
+        Assert.True(stream.CanRead);
     }
 
     [Theory]
@@ -262,10 +327,15 @@ public class TarSizeValidationTests
         BinaryPrimitives.WriteInt64BigEndian(header.AsSpan(128, 8), size);
         header[156] = (byte)'0';
         Encoding.ASCII.GetBytes("ustar\0" + "00").CopyTo(header, 257);
+        WriteChecksum(header);
+        return header;
+    }
+
+    private static void WriteChecksum(byte[] header)
+    {
         var checksum = TarHeader.RecalculateChecksum(header);
         Encoding
             .ASCII.GetBytes(Convert.ToString(checksum, 8).PadLeft(6, '0') + "\0 ")
             .CopyTo(header, 148);
-        return header;
     }
 }

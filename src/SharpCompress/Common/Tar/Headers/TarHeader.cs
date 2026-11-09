@@ -37,6 +37,7 @@ internal sealed partial class TarHeader
     internal IArchiveEncoding ArchiveEncoding { get; }
 
     internal const int BLOCK_SIZE = 512;
+    internal const long MAX_ENTRY_SIZE = long.MaxValue - (BLOCK_SIZE - 1);
 
     // Maximum size for long name/link headers to prevent memory exhaustion attacks
     // This is generous enough for most real-world scenarios (32KB)
@@ -631,21 +632,34 @@ internal sealed partial class TarHeader
 
     private static EntryType ReadEntryType(byte[] buffer) => (EntryType)buffer[156];
 
-    private long ReadSize(byte[] buffer)
+    private static long ReadSize(byte[] buffer)
     {
         var size =
-            (buffer[124] & 0x80) == 0x80 // if size in binary
-                ? BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(0x80))
+            (buffer[124] & 0x80) != 0
+                ? ReadBase256Size(buffer)
                 : ReadAsciiInt64Base8(buffer, 124, 11);
 
-        // A negative payload size can rewind seekable archives to the same header.
+        // Negative sizes can rewind seekable archives; oversized sizes overflow padding.
         // Validate here so ordinary entries and metadata use the same sync/async guard.
-        if (size < 0)
+        if (size is < 0 or > MAX_ENTRY_SIZE)
         {
-            throw new InvalidFormatException($"Tar entry size {size} cannot be negative.");
+            throw new InvalidFormatException($"Invalid TAR entry size: {size}.");
         }
 
         return size;
+    }
+
+    private static long ReadBase256Size(byte[] buffer)
+    {
+        // Only the last eight bytes fit in a long. Do not silently truncate the
+        // remaining value bits, including the sign bits of GNU negative sizes.
+        var leadingBits = (buffer[124] & 0x7F) | buffer[125] | buffer[126] | buffer[127];
+        if (leadingBits != 0)
+        {
+            throw new InvalidFormatException("TAR entry size does not fit in 64 bits.");
+        }
+
+        return BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(128, 8));
     }
 
     private static byte[] ReadBlock(BinaryReader reader)
