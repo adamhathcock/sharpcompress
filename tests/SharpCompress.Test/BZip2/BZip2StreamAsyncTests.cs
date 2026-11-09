@@ -2,7 +2,9 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.BZip2;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -11,6 +13,41 @@ namespace SharpCompress.Test.BZip2;
 
 public class BZip2StreamAsyncTests
 {
+    [Fact]
+    public async Task BZip2Stream_Throws_On_Read_After_Corrupt_Checksum_Async()
+    {
+        using var compressed = new MemoryStream();
+        await using (
+            var writer = await BZip2Stream.CreateAsync(
+                new AsyncOnlyStream(compressed),
+                SharpCompress.Compressors.CompressionMode.Compress,
+                false,
+                leaveOpen: true,
+                cancellationToken: CancellationToken.None
+            )
+        )
+        {
+            var data = Encoding.ASCII.GetBytes("BZip2 checksum validation test data.");
+            await writer.WriteAsync(data, 0, data.Length, CancellationToken.None);
+        }
+
+        var bytes = compressed.ToArray();
+        bytes[^5] ^= 1;
+        await using var stream = await BZip2Stream.CreateAsync(
+            new AsyncOnlyStream(new MemoryStream(bytes)),
+            SharpCompress.Compressors.CompressionMode.Decompress,
+            false,
+            cancellationToken: CancellationToken.None
+        );
+
+        await Assert.ThrowsAsync<ArchiveOperationException>(() =>
+            stream.CopyToAsync(Stream.Null, 81920, CancellationToken.None)
+        );
+        await Assert.ThrowsAsync<InvalidFormatException>(() =>
+            stream.ReadAsync(new byte[1], 0, 1, CancellationToken.None)
+        );
+    }
+
     private byte[] CreateTestData(int size)
     {
         var data = new byte[size];

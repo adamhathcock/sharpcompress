@@ -263,17 +263,11 @@ internal partial class CBZip2InputStream : Stream
         var retChar = currentChar;
         switch (currentState)
         {
-            case START_BLOCK_STATE:
-                break;
-            case RAND_PART_A_STATE:
-                break;
             case RAND_PART_B_STATE:
                 SetupRandPartB();
                 break;
             case RAND_PART_C_STATE:
                 SetupRandPartC();
-                break;
-            case NO_RAND_PART_A_STATE:
                 break;
             case NO_RAND_PART_B_STATE:
                 SetupNoRandPartB();
@@ -281,8 +275,13 @@ internal partial class CBZip2InputStream : Stream
             case NO_RAND_PART_C_STATE:
                 SetupNoRandPartC();
                 break;
+            case START_BLOCK_STATE:
+            case RAND_PART_A_STATE:
+            case NO_RAND_PART_A_STATE:
             default:
-                break;
+                // These transitional states can remain after a decoding error. A retry (including
+                // entry disposal) must fail rather than return the same byte indefinitely.
+                throw new InvalidFormatException("BZip2: invalid decoder state");
         }
         return retChar;
     }
