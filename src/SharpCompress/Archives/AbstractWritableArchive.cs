@@ -170,7 +170,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
             }
             return key.Trim('/');
         }
-        return key.StartsWith('/') ? key.Substring(1) : key;
+        return key.Length > 0 && key[0] == '/' ? key.Substring(1) : key;
     }
 
     ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
