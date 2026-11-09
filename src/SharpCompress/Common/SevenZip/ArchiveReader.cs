@@ -92,6 +92,7 @@ internal partial class ArchiveReader
 
     private BitVector ReadBitVector(int length)
     {
+        _currentReader.RequireBytes(((long)length + 7) / 8);
         var bits = new BitVector(length);
 
         byte data = 0;
@@ -202,9 +203,16 @@ internal partial class ArchiveReader
         try
         {
             var numCoders = ReadNum();
+            // CFolder.CheckStructure supports at most 32 coders/bind pairs, but runs
+            // after parsing. Enforce those limits before allocating their lists.
+            if (numCoders == 0 || numCoders > CFolder.MaxCoders)
+            {
+                throw new InvalidFormatException("Invalid number of 7z coders.");
+            }
+            _currentReader.RequireBytes(numCoders);
             folder._coders = new List<CCoderInfo>(numCoders);
-            var numInStreams = 0;
-            var numOutStreams = 0;
+            long numInStreamsTotal = 0;
+            long numOutStreamsTotal = 0;
             for (var i = 0; i < numCoders; i++)
             {
                 try
@@ -241,6 +249,7 @@ internal partial class ArchiveReader
                     if ((mainByte & 0x20) != 0)
                     {
                         var propsSize = ReadNum();
+                        _currentReader.RequireBytes(propsSize);
                         coder._props = new byte[propsSize];
                         ReadBytes(coder._props, 0, propsSize);
                     }
@@ -250,30 +259,48 @@ internal partial class ArchiveReader
                         throw new NotSupportedException();
                     }
 
-                    numInStreams += coder._numInStreams;
-                    numOutStreams += coder._numOutStreams;
+                    if (coder._numInStreams == 0 || coder._numOutStreams == 0)
+                    {
+                        throw new InvalidFormatException("Invalid 7z coder stream count.");
+                    }
+                    numInStreamsTotal += coder._numInStreams;
+                    numOutStreamsTotal += coder._numOutStreams;
                 }
                 finally { }
             }
 
+            if (
+                numOutStreamsTotal - 1 > CFolder.MaxBindPairs
+                || numInStreamsTotal > int.MaxValue
+                || numInStreamsTotal < numOutStreamsTotal
+            )
+            {
+                throw new InvalidFormatException("Invalid 7z folder stream counts.");
+            }
+            var numInStreams = (int)numInStreamsTotal;
+            var numOutStreams = (int)numOutStreamsTotal;
             var numBindPairs = numOutStreams - 1;
+            _currentReader.RequireBytes(2L * numBindPairs);
             folder._bindPairs = new List<CBindPair>(numBindPairs);
             for (var i = 0; i < numBindPairs; i++)
             {
                 var bp = new CBindPair();
                 bp._inIndex = ReadNum();
                 bp._outIndex = ReadNum();
+                if (
+                    bp._inIndex >= numInStreams
+                    || bp._outIndex >= numOutStreams
+                    || folder.FindBindPairForInStream(bp._inIndex) >= 0
+                    || folder.FindBindPairForOutStream(bp._outIndex) >= 0
+                )
+                {
+                    throw new InvalidFormatException("Invalid 7z bind pair.");
+                }
                 folder._bindPairs.Add(bp);
-            }
-
-            if (numInStreams < numBindPairs)
-            {
-                throw new NotSupportedException();
             }
 
             var numPackStreams = numInStreams - numBindPairs;
 
-            //folder.PackStreams.Reserve(numPackStreams);
             if (numPackStreams == 1)
             {
                 for (var i = 0; i < numInStreams; i++)
@@ -292,9 +319,19 @@ internal partial class ArchiveReader
             }
             else
             {
+                _currentReader.RequireBytes(numPackStreams);
+                var packStreams = new HashSet<int>();
                 for (var i = 0; i < numPackStreams; i++)
                 {
                     var num = ReadNum();
+                    if (
+                        num >= numInStreams
+                        || folder.FindBindPairForInStream(num) >= 0
+                        || !packStreams.Add(num)
+                    )
+                    {
+                        throw new InvalidFormatException("Invalid 7z packed stream index.");
+                    }
                     folder._packStreams.Add(num);
                 }
             }
@@ -304,7 +341,23 @@ internal partial class ArchiveReader
 
     private List<uint?> ReadHashDigests(int count)
     {
+        // An all-defined vector has no bitmap, but must have a CRC per item.
+        // Check it before ReadOptionalBitVector allocates the implicit bitmap.
+        var reader = _currentReader.Clone();
+        if (reader.ReadByte() != 0)
+        {
+            reader.RequireBytes(4L * count);
+        }
         var defined = ReadOptionalBitVector(count);
+        long numDefined = 0;
+        for (var i = 0; i < count; i++)
+        {
+            if (defined[i])
+            {
+                numDefined++;
+            }
+        }
+        _currentReader.RequireBytes(4 * numDefined);
         var digests = new List<uint?>(count);
         for (var i = 0; i < count; i++)
         {
@@ -336,6 +389,7 @@ internal partial class ArchiveReader
             var numPackStreams = ReadNum();
 
             WaitAttribute(BlockType.Size);
+            _currentReader.RequireBytes(numPackStreams);
             packSizes = new List<long>(numPackStreams);
             for (var i = 0; i < numPackStreams; i++)
             {
@@ -382,8 +436,9 @@ internal partial class ArchiveReader
             {
                 streamSwitch.Set(this, dataVector ?? []);
 
-                //folders.Clear();
-                //folders.Reserve(numFolders);
+                // Folder definitions may live in an external metadata stream.
+                // Validate against the selected stream, not the outer header.
+                _currentReader.RequireBytes(numFolders);
                 folders = new List<CFolder>(numFolders);
                 var index = 0;
                 for (var i = 0; i < numFolders; i++)
@@ -404,6 +459,10 @@ internal partial class ArchiveReader
                 {
                     var size = checked((long)ReadNumber());
                     folder._unpackSizes.Add(size);
+                }
+                if (!folder.CheckStructure())
+                {
+                    throw new InvalidFormatException("Invalid 7z folder structure.");
                 }
             }
 
@@ -476,6 +535,21 @@ internal partial class ArchiveReader
                 }
             }
 
+            // Every substream except the last in each folder needs an explicit
+            // size. Reject impossible counts before loops or digest allocations.
+            long numExplicitSizes = 0;
+            long numStreamsTotal = 0;
+            foreach (var count in numUnpackStreamsInFolders)
+            {
+                numExplicitSizes += Math.Max(0, count - 1);
+                numStreamsTotal += count;
+            }
+            if (numStreamsTotal > int.MaxValue || (numExplicitSizes != 0 && type != BlockType.Size))
+            {
+                throw new InvalidFormatException("Invalid 7z substream count.");
+            }
+            _currentReader.RequireBytes(numExplicitSizes);
+
             unpackSizes = new List<long>(folders.Count);
             for (var i = 0; i < numUnpackStreamsInFolders.Count; i++)
             {
@@ -492,6 +566,10 @@ internal partial class ArchiveReader
                     if (type == BlockType.Size)
                     {
                         var size = checked((long)ReadNumber());
+                        if (size > folders[i].GetUnpackSize() - sum)
+                        {
+                            throw new InvalidFormatException("Invalid 7z substream size.");
+                        }
                         unpackSizes.Add(size);
                         sum += size;
                     }
@@ -620,6 +698,67 @@ internal partial class ArchiveReader
         finally { }
     }
 
+    private static int GetMetadataSize(CFolder folder)
+    {
+        var size = folder.GetUnpackSize();
+        if (size < 0 || size > int.MaxValue)
+        {
+            throw new InvalidFormatException("7z metadata is too large.");
+        }
+        return (int)size;
+    }
+
+    private void ValidateFileCount(int numFiles, int numStreams)
+    {
+        // Nonempty files correspond to already parsed substreams. Empty files
+        // require one bit each in kEmptyStream, not one byte per file. Preflight
+        // that property before allocating CFileItem objects or implicit vectors.
+        var reader = _currentReader.Clone();
+        var numEmptyStreams = 0;
+        var hasEmptyStreams = false;
+        for (; ; )
+        {
+            var type = reader.ReadNumber();
+            if (type == (ulong)BlockType.End)
+            {
+                break;
+            }
+            var size = reader.ReadNumber();
+            if (size > (ulong)reader.Remaining)
+            {
+                throw new IncompleteArchiveException("Unexpected end of stream.");
+            }
+            var start = reader.Offset;
+            if (type == (ulong)BlockType.EmptyStream)
+            {
+                var bitmapSize = ((long)numFiles + 7) / 8;
+                if (hasEmptyStreams || size < (ulong)bitmapSize)
+                {
+                    throw new InvalidFormatException("Invalid 7z empty stream bitmap.");
+                }
+                hasEmptyStreams = true;
+                byte bits = 0;
+                for (var i = 0; i < numFiles; i++)
+                {
+                    if ((i & 7) == 0)
+                    {
+                        bits = reader.ReadByte();
+                    }
+                    if ((bits & 0x80) != 0)
+                    {
+                        numEmptyStreams++;
+                    }
+                    bits <<= 1;
+                }
+            }
+            reader.SkipData((long)size - (reader.Offset - start));
+        }
+        if ((long)numStreams + numEmptyStreams != numFiles)
+        {
+            throw new InvalidFormatException("7z file count does not match the stream count.");
+        }
+    }
+
     private List<byte[]> ReadAndDecodePackedStreams(long baseOffset, IPasswordProvider pass)
     {
         try
@@ -641,6 +780,7 @@ internal partial class ArchiveReader
             var packIndex = 0;
             foreach (var folder in folders)
             {
+                var unpackSize = GetMetadataSize(folder);
                 var oldDataStartPos = dataStartPos;
                 var myPackSizes = new long[folder._packStreams.Count];
                 for (var i = 0; i < myPackSizes.Length; i++)
@@ -650,7 +790,7 @@ internal partial class ArchiveReader
                     dataStartPos += packSize;
                 }
 
-                var outStream = DecoderStreamHelper.CreateDecoderStream(
+                using var outStream = DecoderStreamHelper.CreateDecoderStream(
                     _stream,
                     oldDataStartPos,
                     myPackSizes,
@@ -658,13 +798,22 @@ internal partial class ArchiveReader
                     pass
                 );
 
-                var unpackSize = checked((int)folder.GetUnpackSize());
-                var data = new byte[unpackSize];
-                outStream.ReadExact(data, 0, data.Length);
+                // Do not reserve the declared unpack size: malformed compressed
+                // metadata can advertise GiB of output without producing a byte.
+                using var decoded = new PooledMemoryStream();
+                var buffer = new byte[8192];
+                for (var remaining = unpackSize; remaining > 0; )
+                {
+                    var count = Math.Min(buffer.Length, remaining);
+                    outStream.ReadExact(buffer, 0, count);
+                    decoded.Write(buffer, 0, count);
+                    remaining -= count;
+                }
                 if (outStream.ReadByte() >= 0)
                 {
                     throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }
+                var data = decoded.ToArray();
                 dataVector.Add(data);
 
                 if (folder.UnpackCrcDefined)
@@ -756,6 +905,7 @@ internal partial class ArchiveReader
             }
 
             var numFiles = ReadNum();
+            ValidateFileCount(numFiles, unpackSizes.Count);
             db._files = new List<CFileItem>(numFiles);
             for (var i = 0; i < numFiles; i++)
             {

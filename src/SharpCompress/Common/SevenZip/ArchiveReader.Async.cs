@@ -193,6 +193,7 @@ internal sealed partial class ArchiveReader
             var packIndex = 0;
             foreach (var folder in folders)
             {
+                var unpackSize = GetMetadataSize(folder);
                 var oldDataStartPos = dataStartPos;
                 var myPackSizes = new long[folder._packStreams.Count];
                 for (var i = 0; i < myPackSizes.Length; i++)
@@ -202,7 +203,7 @@ internal sealed partial class ArchiveReader
                     dataStartPos += packSize;
                 }
 
-                var outStream = await DecoderStreamHelper
+                using var outStream = await DecoderStreamHelper
                     .CreateDecoderStreamAsync(
                         _stream,
                         oldDataStartPos,
@@ -213,15 +214,29 @@ internal sealed partial class ArchiveReader
                     )
                     .ConfigureAwait(false);
 
-                var unpackSize = checked((int)folder.GetUnpackSize());
-                var data = new byte[unpackSize];
-                await outStream
-                    .ReadExactAsync(data, 0, data.Length, cancellationToken)
-                    .ConfigureAwait(false);
-                if (outStream.ReadByte() >= 0)
+                // Grow only as the decoder actually produces metadata, never
+                // from the untrusted unpack-size declaration alone.
+                using var decoded = new PooledMemoryStream();
+                var buffer = new byte[8192];
+                for (var remaining = unpackSize; remaining > 0; )
+                {
+                    var count = Math.Min(buffer.Length, remaining);
+                    await outStream
+                        .ReadExactAsync(buffer, 0, count, cancellationToken)
+                        .ConfigureAwait(false);
+                    await decoded
+                        .WriteAsync(buffer, 0, count, cancellationToken)
+                        .ConfigureAwait(false);
+                    remaining -= count;
+                }
+                if (
+                    await outStream.ReadAsync(buffer, 0, 1, cancellationToken).ConfigureAwait(false)
+                    != 0
+                )
                 {
                     throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }
+                var data = decoded.ToArray();
                 dataVector.Add(data);
 
                 if (folder.UnpackCrcDefined)
@@ -319,6 +334,7 @@ internal sealed partial class ArchiveReader
             }
 
             var numFiles = ReadNum();
+            ValidateFileCount(numFiles, unpackSizes.Count);
             db._files = new List<CFileItem>(numFiles);
             for (var i = 0; i < numFiles; i++)
             {

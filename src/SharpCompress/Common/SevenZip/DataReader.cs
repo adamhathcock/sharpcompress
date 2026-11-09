@@ -45,6 +45,18 @@ internal class DataReader
 
     public int Offset { get; private set; }
 
+    public int Remaining => _ending - Offset;
+
+    public DataReader Clone() => new(_buffer, Offset, Remaining);
+
+    public void RequireBytes(long count)
+    {
+        if (count < 0 || count > Remaining)
+        {
+            throw new IncompleteArchiveException("Unexpected end of stream.");
+        }
+    }
+
     public byte ReadByte()
     {
         if (Offset >= _ending)
@@ -57,10 +69,7 @@ internal class DataReader
 
     public void ReadBytes(byte[] buffer, int offset, int length)
     {
-        if (length > _ending - Offset)
-        {
-            throw new IncompleteArchiveException("Unexpected end of stream.");
-        }
+        RequireBytes(length);
 
         while (length-- > 0)
         {
@@ -70,10 +79,7 @@ internal class DataReader
 
     public void SkipData(long size)
     {
-        if (size > _ending - Offset)
-        {
-            throw new IncompleteArchiveException("Unexpected end of stream.");
-        }
+        RequireBytes(size);
 
         Offset += (int)size;
     }
