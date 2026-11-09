@@ -32,8 +32,8 @@ internal static partial class TarHeaderFactory
                         {
                             header.DataStartPosition = stream.Position;
 
-                            //skip to nearest 512
-                            stream.Position += PadTo512(header.Size);
+                            // Reject padded sizes or end offsets that would wrap into a backward seek.
+                            stream.Position = checked(stream.Position + PadTo512(header.Size));
                         }
                         break;
                     case StreamingMode.Streaming:
@@ -64,6 +64,6 @@ internal static partial class TarHeaderFactory
         {
             return size;
         }
-        return 512 - zeros + size;
+        return checked(512 - zeros + size);
     }
 }

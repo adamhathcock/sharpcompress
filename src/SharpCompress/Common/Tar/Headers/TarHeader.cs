@@ -633,12 +633,19 @@ internal sealed partial class TarHeader
 
     private long ReadSize(byte[] buffer)
     {
-        if ((buffer[124] & 0x80) == 0x80) // if size in binary
+        var size =
+            (buffer[124] & 0x80) == 0x80 // if size in binary
+                ? BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(0x80))
+                : ReadAsciiInt64Base8(buffer, 124, 11);
+
+        // A negative payload size can rewind seekable archives to the same header.
+        // Validate here so ordinary entries and metadata use the same sync/async guard.
+        if (size < 0)
         {
-            return BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(0x80));
+            throw new InvalidFormatException($"Tar entry size {size} cannot be negative.");
         }
 
-        return ReadAsciiInt64Base8(buffer, 124, 11);
+        return size;
     }
 
     private static byte[] ReadBlock(BinaryReader reader)
