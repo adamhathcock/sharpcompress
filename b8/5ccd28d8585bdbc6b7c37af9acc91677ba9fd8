@@ -1,0 +1,19 @@
+src/SharpCompress/Archives/AbstractWritableArchive.cs
+  s_84a67fbf514012::t_5da1108526217f 173
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b85ccd28d8585bdbc6b7c37af9acc91677ba9fd8",
+  "prompts": {},
+  "sessions": {
+    "s_84a67fbf514012": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "392600ca-9f9a-482e-b13e-85cab125106b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Hathcock <ADH@chersoft.com>"
+    }
+  }
+}
