@@ -1,5 +1,7 @@
 #nullable disable
 
+using SharpCompress.Common;
+
 namespace SharpCompress.Compressors.PPMd.I1;
 
 /// Allocate a single, large array and then provide sections of this array to callers.  Callers are provided with
@@ -128,6 +130,9 @@ internal class Allocator
     /// <param name="allocatorSize"></param>
     public void Start(int allocatorSize)
     {
+        // PpmdProperties starts this allocator while parsing ZIP properties, so
+        // enforce the limit here, before any attacker-selected allocation.
+        DictionarySizeLimits.Validate(allocatorSize, DictionarySizeLimits.Ppmd, "PPMd");
         var size = (uint)allocatorSize;
         if (_allocatorSize != size)
         {

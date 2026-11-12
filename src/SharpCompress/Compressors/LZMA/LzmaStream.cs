@@ -4,6 +4,7 @@ using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.IO;
 
@@ -54,6 +55,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         if (!isLzma2)
         {
             _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
+            DictionarySizeLimits.Validate(_dictionarySize, DictionarySizeLimits.Lzma, "LZMA");
             _decoder = new Decoder();
             _decoder.SetDecoderProperties(properties);
             Properties = properties;
@@ -72,6 +74,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             _dictionarySize = 2 | (properties[0] & 1);
             _dictionarySize <<= (properties[0] >> 1) + 11;
+            DictionarySizeLimits.Validate(_dictionarySize, DictionarySizeLimits.Lzma2, "LZMA2");
 
             Properties = new byte[1];
             _availableBytes = 0;
