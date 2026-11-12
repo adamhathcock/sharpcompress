@@ -5,6 +5,7 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 
@@ -268,6 +269,7 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         }
         _outWindow = new OutWindow();
         var blockSize = Math.Max(_dictionarySize, (1 << 12));
+        DictionarySizeLimits.Validate(blockSize, DictionarySizeLimits.Lzma, "LZMA");
         _outWindow.Create(blockSize);
     }
 

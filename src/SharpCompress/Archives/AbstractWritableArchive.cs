@@ -32,7 +32,10 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         public void Dispose()
         {
             archive.pauseRebuilding = false;
-            archive.RebuildModifiedCollection();
+            if (!archive.asyncRebuildPending)
+            {
+                archive.RebuildModifiedCollection();
+            }
         }
     }
 
@@ -42,6 +45,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     private readonly List<TEntry> modifiedEntries = new();
     private bool hasModifications;
     private bool pauseRebuilding;
+    private bool asyncRebuildPending;
 
     internal AbstractWritableArchive(ArchiveType type)
         : base(type) { }
@@ -53,6 +57,10 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     {
         get
         {
+            if (asyncRebuildPending && !pauseRebuilding)
+            {
+                RebuildModifiedCollection();
+            }
             if (hasModifications)
             {
                 return modifiedEntries;
@@ -70,6 +78,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
             return;
         }
         hasModifications = true;
+        asyncRebuildPending = false;
         newEntries.RemoveAll(v => removedEntries.Contains(v));
         modifiedEntries.Clear();
         modifiedEntries.AddRange(OldEntries.Concat(newEntries));
@@ -126,20 +135,42 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
 
     private bool DoesKeyMatchExisting(string key)
     {
-        foreach (var path in Entries.Select(x => x.Key))
+        foreach (
+            var path in OldEntries
+                .Concat(newEntries)
+                .Where(x => !removedEntries.Contains(x))
+                .Select(x => x.Key)
+        )
         {
-            if (path is null)
+            if (path is not null && KeysMatch(path, key))
             {
-                continue;
+                return true;
             }
-            var p = path.Replace('/', '\\');
-            if (p.Length > 0 && p[0] == '\\')
-            {
-                p = p.Substring(1);
-            }
-            return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
         }
         return false;
+    }
+
+    private bool KeysMatch(string left, string right) =>
+        string.Equals(NormalizeKey(left), NormalizeKey(right), StringComparison.OrdinalIgnoreCase);
+
+    private string NormalizeKey(string key)
+    {
+        key = key.Replace('\\', '/');
+        if (Type == ArchiveType.Zip)
+        {
+            // ZipWriter removes drive prefixes and surrounding slashes when writing names.
+#if LEGACY_DOTNET
+            var colon = key.IndexOf(':');
+#else
+            var colon = key.IndexOf(':', StringComparison.Ordinal);
+#endif
+            if (colon >= 0)
+            {
+                key = key.Substring(colon + 1);
+            }
+            return key.Trim('/');
+        }
+        return key.Length > 0 && key[0] == '/' ? key.Substring(1) : key;
     }
 
     ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
@@ -180,9 +211,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
 
     public void SaveTo(Stream stream, TOptions options)
     {
+        var activeNewEntries = newEntries.Where(x => !removedEntries.Contains(x)).ToList();
         //reset streams of new entries
-        newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-        SaveTo(stream, options, OldEntries, newEntries);
+        activeNewEntries
+            .Cast<IWritableArchiveEntry>()
+            .ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
+        SaveTo(stream, options, OldEntries, activeNewEntries);
     }
 
     protected TEntry CreateEntry(

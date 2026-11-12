@@ -21,17 +21,11 @@ internal partial class CBZip2InputStream
         var retChar = currentChar;
         switch (currentState)
         {
-            case START_BLOCK_STATE:
-                break;
-            case RAND_PART_A_STATE:
-                break;
             case RAND_PART_B_STATE:
                 await SetupRandPartBAsync(cancellationToken).ConfigureAwait(false);
                 break;
             case RAND_PART_C_STATE:
                 await SetupRandPartCAsync(cancellationToken).ConfigureAwait(false);
-                break;
-            case NO_RAND_PART_A_STATE:
                 break;
             case NO_RAND_PART_B_STATE:
                 await SetupNoRandPartBAsync(cancellationToken).ConfigureAwait(false);
@@ -39,8 +33,12 @@ internal partial class CBZip2InputStream
             case NO_RAND_PART_C_STATE:
                 await SetupNoRandPartCAsync(cancellationToken).ConfigureAwait(false);
                 break;
+            case START_BLOCK_STATE:
+            case RAND_PART_A_STATE:
+            case NO_RAND_PART_A_STATE:
             default:
-                break;
+                // Match ReadByte(): retries after a decoding error must not generate endless output.
+                throw new InvalidFormatException("BZip2: invalid decoder state");
         }
         return retChar;
     }

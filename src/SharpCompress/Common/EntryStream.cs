@@ -12,13 +12,15 @@ public partial class EntryStream : AsyncDisposableStream
 {
     private readonly IReader _reader;
     private readonly Stream _stream;
+    private readonly bool _rewindDecoderOnDispose;
     private bool _completed;
     private bool _isDisposed;
 
-    internal EntryStream(IReader reader, Stream stream)
+    internal EntryStream(IReader reader, Stream stream, bool rewindDecoderOnDispose = true)
     {
         _reader = reader;
         _stream = stream;
+        _rewindDecoderOnDispose = rewindDecoderOnDispose;
     }
 
     protected override void Dispose(bool disposing)
@@ -34,7 +36,7 @@ public partial class EntryStream : AsyncDisposableStream
         }
 
         //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
-        if (_stream is IStreamStack ss)
+        if (_rewindDecoderOnDispose && _stream is IStreamStack ss)
         {
             if (
                 ss.GetStream<SharpCompress.Compressors.Deflate.DeflateStream>()

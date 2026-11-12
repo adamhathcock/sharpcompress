@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   build-and-publish:
@@ -60,9 +61,16 @@ jobs:
         name: ${{ matrix.os }}-nuget-package
         path: artifacts/*.nupkg
 
+    - name: NuGet login
+      if: success() && matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
+      uses: NuGet/login@v1
+      id: nuget-login
+      with:
+        user: adamhathcock
+
     # Push to NuGet.org only for version tag pushes (Windows only)
     - name: Push to NuGet
       if: success() && matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
       run: dotnet run --project build/build.csproj -- push-to-nuget
       env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
