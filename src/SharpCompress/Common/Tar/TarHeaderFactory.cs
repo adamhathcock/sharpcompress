@@ -32,8 +32,8 @@ internal static partial class TarHeaderFactory
                         {
                             header.DataStartPosition = stream.Position;
 
-                            //skip to nearest 512
-                            stream.Position += PadTo512(header.Size);
+                            // Reject padded sizes or end offsets that would wrap into a backward seek.
+                            stream.Position = checked(stream.Position + PadTo512(header.Size));
                         }
                         break;
                     case StreamingMode.Streaming:
@@ -59,11 +59,12 @@ internal static partial class TarHeaderFactory
 
     private static long PadTo512(long size)
     {
-        var zeros = (int)(size % 512);
-        if (zeros == 0)
+        // PAX size overrides bypass ReadSize, so validate the effective size too.
+        if (size is < 0 or > TarHeader.MAX_ENTRY_SIZE)
         {
-            return size;
+            throw new InvalidFormatException($"Invalid TAR entry size: {size}.");
         }
-        return 512 - zeros + size;
+
+        return (size + 511) & ~511L;
     }
 }
