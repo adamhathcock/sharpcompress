@@ -480,4 +480,6 @@ ARC LZW compressed data is buffered incrementally from the bytes actually presen
 
 ZIP Shrink output buffering grows with decoded output rather than the declared uncompressed size. Invalid codes and output-size mismatches are rejected.
 
+7z header counts and coder property lengths are validated against their backing metadata before allocation. File counts are checked against parsed substreams and empty-stream bitmaps, including external metadata. Encoded headers and additional metadata are buffered incrementally as the decoder produces bytes, rather than preallocating the declared unpacked size.
+
 LZMA/LZMA2 dictionary storage starts small and grows with decoded history, up to the supported dictionary size. These safeguards avoid allocations based solely on forged sizes; they do not impose an overall decompressed-output or process-memory limit.
