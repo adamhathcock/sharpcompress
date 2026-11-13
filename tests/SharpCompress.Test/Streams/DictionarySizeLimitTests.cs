@@ -154,6 +154,23 @@ public class DictionarySizeLimitTests : TestBase
         Assert.Throws<InvalidFormatException>(() => new PpmdProperties(256 << 20, 6));
     }
 
+    [Fact]
+    public void Ppmd_Properties_Preserve_Size_After_Rejected_Change()
+    {
+        using var limits = new DictionarySizeLimitScope();
+        DictionarySizeLimits.Ppmd = 2 << 20;
+        var properties = new PpmdProperties(1 << 20, 6);
+        var originalHeader = properties.Properties;
+
+        Assert.Throws<InvalidFormatException>(() => properties.AllocatorSize = 3 << 20);
+        Assert.Equal(1 << 20, properties.AllocatorSize);
+        Assert.Equal(originalHeader, properties.Properties);
+
+        properties.AllocatorSize = 2 << 20;
+        Assert.Equal(2 << 20, properties.AllocatorSize);
+        Assert.Equal(2 << 20, new PpmdProperties(properties.Properties).AllocatorSize);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
