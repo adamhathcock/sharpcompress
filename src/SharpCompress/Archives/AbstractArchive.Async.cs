@@ -47,7 +47,7 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     private async ValueTask EnsureEntriesLoadedAsync()
     {
-        await _lazyEntriesAsync.EnsureFullyLoaded().ConfigureAwait(false);
+        await foreach (var entry in EntriesAsync.ConfigureAwait(false)) { }
         await _lazyVolumesAsync.EnsureFullyLoaded().ConfigureAwait(false);
     }
 

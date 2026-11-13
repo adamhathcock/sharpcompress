@@ -52,6 +52,56 @@ public class GZipArchiveCacheTests : TestBase
     }
 
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Completeness_Uses_The_Current_Entry_Cache(bool useAsync, bool partial)
+    {
+        using var input = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var archive = GZipArchive.OpenArchive(input, ReaderOptions.ForExternalStream);
+        var asyncArchive = (IAsyncArchive)archive;
+        if (partial)
+        {
+            if (useAsync)
+            {
+                await asyncArchive.EntriesAsync.FirstAsync();
+            }
+            else
+            {
+                _ = archive.Entries.First();
+            }
+        }
+        Assert.True(useAsync ? await asyncArchive.IsCompleteAsync() : archive.IsComplete);
+        var entry = Assert.Single(archive.Entries);
+        Assert.Same(entry, Assert.Single(await asyncArchive.EntriesAsync.ToListAsync()));
+        Assert.True(archive.IsComplete);
+        Assert.True(await asyncArchive.IsCompleteAsync());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Completeness_Does_Not_Reparse_Already_Cached_Entries(bool useAsync)
+    {
+        using var input = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var archive = GZipArchive.OpenArchive(input, ReaderOptions.ForExternalStream);
+        var asyncArchive = (IAsyncArchive)archive;
+        if (useAsync)
+        {
+            Assert.Single(await asyncArchive.EntriesAsync.ToListAsync());
+        }
+        else
+        {
+            Assert.Single(archive.Entries);
+        }
+        // Completeness needs only cached metadata and must not move the source.
+        input.Position = input.Length;
+        Assert.True(useAsync ? await asyncArchive.IsCompleteAsync() : archive.IsComplete);
+        Assert.Equal(input.Length, input.Position);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Extraction_Does_Not_Invalidate_A_Partially_Consumed_Loader(bool asyncFirst)
@@ -76,5 +126,27 @@ public class GZipArchiveCacheTests : TestBase
             ? archive.Entries.ToList()
             : await asyncArchive.EntriesAsync.ToListAsync();
         Assert.Same(first, Assert.Single(entries));
+    }
+
+    [Fact]
+    public async Task Resuming_And_Checking_Completeness_Do_Not_Use_Synchronous_Io()
+    {
+        using var input = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        using var asyncOnly = new AsyncOnlyStream(input, disposeStream: false);
+        await using (
+            var archive = await GZipArchive.OpenAsyncArchive(
+                asyncOnly,
+                ReaderOptions.ForExternalStream,
+                CancellationToken.None
+            )
+        )
+        {
+            var entry = await archive.EntriesAsync.FirstAsync();
+            Assert.True(await archive.IsCompleteAsync());
+            Assert.Same(entry, Assert.Single(await archive.EntriesAsync.ToListAsync()));
+            using var payload = await entry.OpenEntryStreamAsync(CancellationToken.None);
+            await payload.CopyToAsync(Stream.Null, 81920, CancellationToken.None);
+        }
+        Assert.True(input.CanRead);
     }
 }
