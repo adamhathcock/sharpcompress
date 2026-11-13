@@ -52,11 +52,26 @@ public static class DictionarySizeLimits
         set => SetMaximum(ref ppmd, value, nameof(Ppmd));
     }
 
-    /// <summary>Zstandard streaming window limit. Defaults to 128 MiB.</summary>
+    /// <summary>
+    /// Zstandard streaming window limit. Defaults to 128 MiB.
+    /// Must be between 1 KiB and 1 GiB on 32-bit processes or 2 GiB on 64-bit processes.
+    /// </summary>
     public static long ZStandard
     {
         get => Interlocked.Read(ref zStandard);
-        set => SetMaximum(ref zStandard, value, nameof(ZStandard));
+        set
+        {
+            // Match the engine bounds before replacing a working process-wide configuration.
+            var maximum = 1L << (IntPtr.Size == 4 ? 30 : 31);
+            if (value < 1024 || value > maximum)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(ZStandard),
+                    $"Zstandard window limits must be between 1024 and {maximum} bytes."
+                );
+            }
+            SetMaximum(ref zStandard, value, nameof(ZStandard));
+        }
     }
 
     private static void SetMaximum(ref long field, long value, string name)

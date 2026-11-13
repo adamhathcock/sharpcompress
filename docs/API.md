@@ -393,7 +393,9 @@ No reader options or decoder overloads are needed. Settings require positive val
 invalid assignments throw `ArgumentOutOfRangeException` without changing the setting.
 Oversized dictionaries throw `InvalidFormatException`; Zstandard reports
 `ZstdException` with `ZSTD_error_frameParameter_windowTooLarge`. Zstandard's minimum
-configurable window limit is 1 KiB. Format and engine restrictions still apply.
+configurable window limit is 1 KiB, and its maximum is 1 GiB in a 32-bit process
+or 2 GiB in a 64-bit process. Values outside that inclusive range are rejected
+at assignment. Format and engine restrictions still apply.
 
 These are dictionary/window or model limits, not total-memory, output-size, or
 concurrency limits. Pool rounding and allocator overhead can increase actual memory.

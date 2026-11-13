@@ -368,6 +368,28 @@ public class DictionarySizeLimitTests : TestBase
         }
     }
 
+    [Fact]
+    public void Zstandard_Rejects_Unsupported_Limits_Without_Changing_Configuration()
+    {
+        using var limits = new DictionarySizeLimitScope();
+        var original = DictionarySizeLimits.ZStandard;
+        var maximum = 1L << (IntPtr.Size == 4 ? 30 : 31);
+        foreach (var invalid in new[] { 512L, 1023, maximum + 1, long.MaxValue })
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                DictionarySizeLimits.ZStandard = invalid
+            );
+            Assert.Equal(original, DictionarySizeLimits.ZStandard);
+            using var decoder = new Decompressor();
+        }
+        foreach (var valid in new[] { 1024L, maximum })
+        {
+            DictionarySizeLimits.ZStandard = valid;
+            Assert.Equal(valid, DictionarySizeLimits.ZStandard);
+            using var decoder = new Decompressor();
+        }
+    }
+
     public static IEnumerable<object[]> ArchiveCases()
     {
         foreach (
