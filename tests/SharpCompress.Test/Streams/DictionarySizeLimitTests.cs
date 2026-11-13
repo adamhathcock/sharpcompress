@@ -234,6 +234,56 @@ public class DictionarySizeLimitTests : TestBase
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Lzma2_Encoding_Does_Not_Apply_The_Lzma_Input_Limit(bool useAsync)
+    {
+        using var limits = new DictionarySizeLimitScope();
+        DictionarySizeLimits.Lzma = 4096;
+        DictionarySizeLimits.Lzma2 = 8192;
+        var expected = new byte[150000];
+        using var packed = new MemoryStream();
+        byte[] properties;
+        using (var encoder = new Lzma2EncoderStream(packed, 8192, 32))
+        {
+            properties = (byte[])encoder.Properties.Clone();
+            if (useAsync)
+            {
+                await encoder.WriteAsync(expected, 0, expected.Length, CancellationToken.None);
+                await encoder.DisposeAsync();
+            }
+            else
+            {
+                encoder.Write(expected, 0, expected.Length);
+            }
+        }
+        Assert.True(packed.Length < expected.Length / 10, $"Encoded {packed.Length} bytes.");
+        packed.Position = 0;
+        using var output = new MemoryStream();
+        if (useAsync)
+        {
+            await using var decoder = await LzmaStream.CreateAsync(
+                properties,
+                packed,
+                packed.Length,
+                expected.Length
+            );
+            await decoder.CopyToAsync(output, 81920, CancellationToken.None);
+        }
+        else
+        {
+            using var decoder = LzmaStream.Create(
+                properties,
+                packed,
+                packed.Length,
+                expected.Length
+            );
+            decoder.CopyTo(output);
+        }
+        Assert.Equal(expected, output.ToArray());
+    }
+
     [Fact]
     public void Ppmd_Properties_Reject_Large_Models_Before_Eager_Allocation()
     {

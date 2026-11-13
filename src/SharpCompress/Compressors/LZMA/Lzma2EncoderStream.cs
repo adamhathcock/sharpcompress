@@ -368,7 +368,9 @@ internal sealed class Lzma2EncoderStream : Stream
         props[3] = (byte)(_dictionarySize >> 16);
         props[4] = (byte)(_dictionarySize >> 24);
 
-        var decoder = _trialDecoder ??= new Decoder();
+        // This decoder verifies our own output using trusted encoder properties.
+        // An independent LZMA input limit must not disable LZMA2 compression.
+        var decoder = _trialDecoder ??= new Decoder(enforceDictionarySizeLimit: false);
         decoder.SetDecoderProperties(props);
 
         decoder.Code(input, Stream.Null, input.Length, uncompressedSize, null);

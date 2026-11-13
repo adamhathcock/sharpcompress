@@ -253,8 +253,14 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         _rep2,
         _rep3;
 
+    private readonly bool _enforceDictionarySizeLimit;
+
     public Decoder()
+        : this(enforceDictionarySizeLimit: true) { }
+
+    internal Decoder(bool enforceDictionarySizeLimit)
     {
+        _enforceDictionarySizeLimit = enforceDictionarySizeLimit;
         _dictionarySize = -1;
     }
 
@@ -268,7 +274,10 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
             throw new InvalidParamException();
         }
         var blockSize = Math.Max(_dictionarySize, (1 << 12));
-        DictionarySizeLimits.Validate(blockSize, DictionarySizeLimits.Lzma, "LZMA");
+        if (_enforceDictionarySizeLimit)
+        {
+            DictionarySizeLimits.Validate(blockSize, DictionarySizeLimits.Lzma, "LZMA");
+        }
         // Publish only a usable window so a rejected dictionary can be retried.
         var window = new OutWindow();
         window.Create(blockSize);
