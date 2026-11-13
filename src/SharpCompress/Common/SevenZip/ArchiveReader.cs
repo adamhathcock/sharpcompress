@@ -714,8 +714,18 @@ internal partial class ArchiveReader
         return (int)size;
     }
 
-    private void ValidateFileCount(int numFiles, int numStreams)
+    private void ValidateFileCount(int numFiles, int numStreams, bool checkRecordsSize)
     {
+        if (!checkRecordsSize)
+        {
+            // Before 0.3, known properties may have inaccurate sizes, so walking
+            // them by their declared lengths would disagree with the real parser.
+            // Bound the allocation by the minimum possible empty-stream bitmap;
+            // ReadBitVector separately bounds the actual bitmap at its read position.
+            var minimumEmptyStreams = Math.Max(0L, (long)numFiles - numStreams);
+            _currentReader.RequireBytes((minimumEmptyStreams + 7) / 8);
+            return;
+        }
         // Nonempty files correspond to already parsed substreams. Empty files
         // require one bit each in kEmptyStream, not one byte per file. Preflight
         // that property before allocating CFileItem objects or implicit vectors.
@@ -914,7 +924,11 @@ internal partial class ArchiveReader
             }
 
             var numFiles = ReadNum();
-            ValidateFileCount(numFiles, unpackSizes.Count);
+            ValidateFileCount(
+                numFiles,
+                unpackSizes.Count,
+                db._majorVersion > 0 || db._minorVersion > 2
+            );
             db._files = new List<CFileItem>(numFiles);
             for (var i = 0; i < numFiles; i++)
             {

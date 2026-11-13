@@ -338,7 +338,11 @@ internal sealed partial class ArchiveReader
             }
 
             var numFiles = ReadNum();
-            ValidateFileCount(numFiles, unpackSizes.Count);
+            ValidateFileCount(
+                numFiles,
+                unpackSizes.Count,
+                db._majorVersion > 0 || db._minorVersion > 2
+            );
             db._files = new List<CFileItem>(numFiles);
             for (var i = 0; i < numFiles; i++)
             {

@@ -356,6 +356,104 @@ public class SevenZipHeaderAllocationTests
         Assert.True(stream.CanRead);
     }
 
+    [Theory]
+    [InlineData(2, 0, false)]
+    [InlineData(2, 0, true)]
+    [InlineData(2, 127, false)]
+    [InlineData(2, 127, true)]
+    [InlineData(3, 0, false)]
+    [InlineData(3, 0, true)]
+    public async Task SevenZipArchive_Property_Size_Validation_Is_Version_Aware(
+        byte minorVersion,
+        byte declaredSize,
+        bool useAsync
+    )
+    {
+        // Both known properties have deliberately inaccurate sizes, including
+        // a name preceding the empty-stream bitmap.
+        using var stream = CreateArchive([
+            1,
+            5,
+            1,
+            17,
+            declaredSize,
+            0,
+            (byte)'x',
+            0,
+            0,
+            0,
+            14,
+            declaredSize,
+            0x80,
+            0,
+            0,
+        ]);
+        stream.GetBuffer()[7] = minorVersion;
+        if (useAsync)
+        {
+            using var asyncStream = new AsyncOnlyStream(stream, disposeStream: false);
+            await using var archive = await ArchiveFactory.OpenAsyncArchive(
+                asyncStream,
+                cancellationToken: CancellationToken.None
+            );
+            if (minorVersion > 2)
+            {
+                await Assert.ThrowsAnyAsync<SharpCompressException>(async () =>
+                    await archive.EntriesAsync.ToListAsync(CancellationToken.None)
+                );
+            }
+            else
+            {
+                var entry = Assert.Single(
+                    await archive.EntriesAsync.ToListAsync(CancellationToken.None)
+                );
+                Assert.True(entry.IsDirectory);
+                Assert.Equal("x", entry.Key);
+            }
+        }
+        else
+        {
+            using var archive = ArchiveFactory.OpenArchive(stream);
+            if (minorVersion > 2)
+            {
+                Assert.ThrowsAny<SharpCompressException>(() => archive.Entries.ToList());
+            }
+            else
+            {
+                var entry = Assert.Single(archive.Entries);
+                Assert.True(entry.IsDirectory);
+                Assert.Equal("x", entry.Key);
+            }
+        }
+        Assert.True(stream.CanRead);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SevenZipArchive_Legacy_File_Count_Is_Bounded_By_Available_Metadata(
+        bool useAsync
+    )
+    {
+        using var stream = CreateArchive(Join([1, 5], Number(100_000), [14, 0, 0x80, 0]));
+        stream.GetBuffer()[7] = 2;
+        if (useAsync)
+        {
+            await using var archive = await ArchiveFactory.OpenAsyncArchive(
+                stream,
+                cancellationToken: CancellationToken.None
+            );
+            await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+                await archive.EntriesAsync.ToListAsync(CancellationToken.None)
+            );
+        }
+        else
+        {
+            using var archive = ArchiveFactory.OpenArchive(stream);
+            Assert.Throws<IncompleteArchiveException>(() => archive.Entries.ToList());
+        }
+    }
+
     private static byte[] MetadataHeader(
         bool encoded,
         ulong unpackSize,
