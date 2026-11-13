@@ -110,6 +110,7 @@ public partial class GZipArchive
     )
     {
         var stream = (await volumes.SingleAsync().ConfigureAwait(false)).Stream;
+        stream.Position = headerPosition;
         yield return new GZipArchiveEntry(
             this,
             await GZipFilePart
