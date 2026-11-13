@@ -156,9 +156,9 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     private string NormalizeKey(string key)
     {
         key = key.Replace('\\', '/');
-        if (Type == ArchiveType.Zip)
+        if (Type is ArchiveType.Zip or ArchiveType.Tar)
         {
-            // ZipWriter removes drive prefixes and surrounding slashes when writing names.
+            // ZIP and TAR writers remove drive prefixes and surrounding slashes from names.
 #if LEGACY_DOTNET
             var colon = key.IndexOf(':');
 #else

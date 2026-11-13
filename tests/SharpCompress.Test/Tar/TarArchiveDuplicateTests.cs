@@ -22,6 +22,57 @@ public class TarArchiveDuplicateTests
         archive.AddEntry("dir/file", stream, false);
     }
 
+    [Theory]
+    [InlineData("file.txt", "C:/file.txt", false)]
+    [InlineData("file.txt", "//file.txt/", false)]
+    [InlineData("dir/file.txt", "DIR\\FILE.TXT", false)]
+    [InlineData("file.txt", "C:/file.txt", true)]
+    [InlineData("file.txt", "//file.txt/", true)]
+    [InlineData("dir/file.txt", "DIR\\FILE.TXT", true)]
+    public async Task Tar_AddEntry_Rejects_Writer_Normalized_Duplicates(
+        string first,
+        string duplicate,
+        bool useAsync
+    )
+    {
+        using var stream = new MemoryStream();
+        if (useAsync)
+        {
+            await using var archive = await TarArchive.CreateAsyncArchive();
+            await archive.AddEntryAsync(first, stream, false);
+            await Assert.ThrowsAsync<ArchiveException>(async () =>
+                await archive.AddEntryAsync(duplicate, stream, false)
+            );
+        }
+        else
+        {
+            using var archive = TarArchive.CreateArchive();
+            archive.AddEntry(first, stream, false);
+            Assert.Throws<ArchiveException>(() => archive.AddEntry(duplicate, stream, false));
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Tar_AddDirectory_Rejects_Trailing_Slash_Duplicates(bool useAsync)
+    {
+        if (useAsync)
+        {
+            await using var archive = await TarArchive.CreateAsyncArchive();
+            await archive.AddDirectoryEntryAsync("folder");
+            await Assert.ThrowsAsync<ArchiveException>(async () =>
+                await archive.AddDirectoryEntryAsync("folder/")
+            );
+        }
+        else
+        {
+            using var archive = TarArchive.CreateArchive();
+            archive.AddDirectoryEntry("folder");
+            Assert.Throws<ArchiveException>(() => archive.AddDirectoryEntry("folder/"));
+        }
+    }
+
     [Fact]
     public async Task Tar_Async_ChecksPendingEntriesWhileRebuildingIsPaused()
     {
