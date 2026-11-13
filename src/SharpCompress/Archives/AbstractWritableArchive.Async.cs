@@ -37,9 +37,52 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         }
     }
 
-    // Async property moved from main file
     private IAsyncEnumerable<TEntry> OldEntriesAsync =>
-        base.EntriesAsync.Where(x => !removedEntries.Contains(x));
+        LoadOriginalEntriesAsync().Where(x => !removedEntries.Contains(x));
+
+    private async IAsyncEnumerable<TEntry> LoadOriginalEntriesAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        var index = 0;
+        while (true)
+        {
+            while (index < originalEntries.Count)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return originalEntries[index++];
+            }
+            if (originalEntriesLoaded)
+            {
+                yield break;
+            }
+
+            var generation = ++originalEntriesGeneration;
+            await using var source = LoadEntriesAsync(VolumesAsync)
+                .GetAsyncEnumerator(cancellationToken);
+            for (var skipped = 0; skipped < index; skipped++)
+            {
+                if (!await source.MoveNextAsync().ConfigureAwait(false))
+                {
+                    throw new IncompleteArchiveException("Archive entries changed while loading.");
+                }
+            }
+            while (
+                generation == originalEntriesGeneration
+                && await source.MoveNextAsync().ConfigureAwait(false)
+            )
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                originalEntries.Add(source.Current);
+                index++;
+                yield return source.Current;
+            }
+            if (generation == originalEntriesGeneration)
+            {
+                originalEntriesLoaded = true;
+            }
+        }
+    }
 
     private async ValueTask RebuildModifiedCollectionAsync()
     {
@@ -155,6 +198,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync().ConfigureAwait(false);
+        originalEntries.Cast<Entry>().ForEach(x => x.Close());
         newEntries.Cast<Entry>().ForEach(x => x.Close());
         removedEntries.Cast<Entry>().ForEach(x => x.Close());
         modifiedEntries.Cast<Entry>().ForEach(x => x.Close());

@@ -85,7 +85,8 @@ public class GZipArchiveAsyncTests : ArchiveTests
 #endif
         await using (var archive = await GZipArchive.OpenAsyncArchive(new AsyncOnlyStream(stream)))
         {
-            await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            // Shared cached entries avoid synchronous I/O on the async-only source.
+            await Assert.ThrowsAsync<InvalidFormatException>(async () =>
                 await archive.AddEntryAsync("jpg\\test.jpg", File.OpenRead(jpg), closeStream: true)
             );
             await archive.SaveToAsync(

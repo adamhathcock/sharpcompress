@@ -41,6 +41,10 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
 
     private readonly List<TEntry> newEntries = new();
     private readonly List<TEntry> removedEntries = new();
+    private readonly List<TEntry> originalEntries = new();
+    private readonly LazyReadOnlyCollection<TEntry> originalEntriesView;
+    private bool originalEntriesLoaded;
+    private int originalEntriesGeneration;
 
     private readonly List<TEntry> modifiedEntries = new();
     private bool hasModifications;
@@ -48,10 +52,17 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     private bool asyncRebuildPending;
 
     internal AbstractWritableArchive(ArchiveType type)
-        : base(type) { }
+        : base(type)
+    {
+        originalEntriesLoaded = true;
+        originalEntriesView = new LazyReadOnlyCollection<TEntry>(LoadOriginalEntries());
+    }
 
     internal AbstractWritableArchive(ArchiveType type, SourceStream sourceStream)
-        : base(type, sourceStream) { }
+        : base(type, sourceStream)
+    {
+        originalEntriesView = new LazyReadOnlyCollection<TEntry>(LoadOriginalEntries());
+    }
 
     public override ICollection<TEntry> Entries
     {
@@ -65,7 +76,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
             {
                 return modifiedEntries;
             }
-            return base.Entries;
+            return originalEntriesView;
         }
     }
 
@@ -84,7 +95,46 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         modifiedEntries.AddRange(OldEntries.Concat(newEntries));
     }
 
-    private IEnumerable<TEntry> OldEntries => base.Entries.Where(x => !removedEntries.Contains(x));
+    private IEnumerable<TEntry> LoadOriginalEntries()
+    {
+        var index = 0;
+        while (true)
+        {
+            while (index < originalEntries.Count)
+            {
+                yield return originalEntries[index++];
+            }
+            if (originalEntriesLoaded)
+            {
+                yield break;
+            }
+
+            // Both APIs share entry identities. Switching loaders must restart
+            // parsing: the other loader may have moved the archive's source stream.
+            var generation = ++originalEntriesGeneration;
+            using var source = LoadEntries(Volumes).GetEnumerator();
+            for (var skipped = 0; skipped < index; skipped++)
+            {
+                if (!source.MoveNext())
+                {
+                    throw new IncompleteArchiveException("Archive entries changed while loading.");
+                }
+            }
+            while (generation == originalEntriesGeneration && source.MoveNext())
+            {
+                originalEntries.Add(source.Current);
+                index++;
+                yield return source.Current;
+            }
+            if (generation == originalEntriesGeneration)
+            {
+                originalEntriesLoaded = true;
+            }
+        }
+    }
+
+    private IEnumerable<TEntry> OldEntries =>
+        originalEntriesView.Where(x => !removedEntries.Contains(x));
 
     public void RemoveEntry(TEntry entry)
     {
@@ -256,6 +306,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     public override void Dispose()
     {
         base.Dispose();
+        originalEntries.Cast<Entry>().ForEach(x => x.Close());
         newEntries.Cast<Entry>().ForEach(x => x.Close());
         removedEntries.Cast<Entry>().ForEach(x => x.Close());
         modifiedEntries.Cast<Entry>().ForEach(x => x.Close());
