@@ -26,6 +26,8 @@ internal static partial class TarHeaderFactory
                 {
                     yield break;
                 }
+                // PAX metadata can replace the raw size; validate before either mode uses it.
+                var paddedSize = PadTo512(header.Size);
                 switch (mode)
                 {
                     case StreamingMode.Seekable:
@@ -33,7 +35,7 @@ internal static partial class TarHeaderFactory
                             header.DataStartPosition = stream.Position;
 
                             // Reject padded sizes or end offsets that would wrap into a backward seek.
-                            stream.Position = checked(stream.Position + PadTo512(header.Size));
+                            stream.Position = checked(stream.Position + paddedSize);
                         }
                         break;
                     case StreamingMode.Streaming:

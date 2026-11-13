@@ -1,5 +1,6 @@
 using System;
 using System.Buffers.Binary;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -292,6 +293,92 @@ public class TarSizeValidationTests
             Assert.False(reader.MoveToNextEntry());
         }
         Assert.True(stream.CanRead);
+    }
+
+    [Theory]
+    [InlineData(long.MaxValue, false)]
+    [InlineData(long.MaxValue, true)]
+    [InlineData(TarHeader.MAX_ENTRY_SIZE + 1, false)]
+    [InlineData(TarHeader.MAX_ENTRY_SIZE + 1, true)]
+    [InlineData(513L, false)]
+    [InlineData(513L, true)]
+    public async Task Tar_Reader_Validates_Effective_Pax_Size(long size, bool useAsync)
+    {
+        using var data = CreatePaxArchive(size);
+        using var stream = new ForwardOnlyStream(data);
+        var invalid = size > TarHeader.MAX_ENTRY_SIZE;
+        if (useAsync)
+        {
+            using var asyncStream = new AsyncOnlyStream(stream, disposeStream: false);
+            await using var reader = await ReaderFactory.OpenAsyncReader(
+                asyncStream,
+                ReaderOptions.ForExternalStream,
+                CancellationToken.None
+            );
+            Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
+            if (invalid)
+            {
+                await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
+                    await reader.MoveToNextEntryAsync(CancellationToken.None)
+                );
+            }
+            else
+            {
+                Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
+                Assert.Equal(size, reader.Entry.Size);
+                await reader.WriteEntryToAsync(Stream.Null, CancellationToken.None);
+                Assert.False(await reader.MoveToNextEntryAsync(CancellationToken.None));
+            }
+        }
+        else
+        {
+            using var reader = ReaderFactory.OpenReader(stream, ReaderOptions.ForExternalStream);
+            Assert.True(reader.MoveToNextEntry());
+            if (invalid)
+            {
+                Assert.Throws<IncompleteArchiveException>(() => reader.MoveToNextEntry());
+            }
+            else
+            {
+                Assert.True(reader.MoveToNextEntry());
+                Assert.Equal(size, reader.Entry.Size);
+                reader.WriteEntryTo(Stream.Null);
+                Assert.False(reader.MoveToNextEntry());
+            }
+        }
+        Assert.True(stream.CanRead);
+    }
+
+    private static MemoryStream CreatePaxArchive(long size)
+    {
+        var record = $" size={size.ToString(CultureInfo.InvariantCulture)}\n";
+        var length = record.Length + 1;
+        while (length != record.Length + length.ToString(CultureInfo.InvariantCulture).Length)
+        {
+            length = record.Length + length.ToString(CultureInfo.InvariantCulture).Length;
+        }
+        var payload = Encoding.ASCII.GetBytes(
+            length.ToString(CultureInfo.InvariantCulture) + record
+        );
+        var paxHeader = CreateHeader(payload.Length);
+        paxHeader[156] = (byte)'x';
+        WriteChecksum(paxHeader);
+        var stream = new MemoryStream();
+        var firstHeader = CreateHeader(0);
+        stream.Write(firstHeader, 0, firstHeader.Length);
+        stream.Write(paxHeader, 0, paxHeader.Length);
+        stream.Write(payload, 0, payload.Length);
+        stream.SetLength(stream.Length + ((512 - payload.Length % 512) % 512));
+        stream.Position = stream.Length;
+        var header = CreateHeader(0);
+        stream.Write(header, 0, header.Length);
+        if (size >= 0 && size <= 1024)
+        {
+            stream.SetLength(stream.Length + ((size + 511) / 512 * 512));
+        }
+        stream.SetLength(stream.Length + 1024);
+        stream.Position = 0;
+        return stream;
     }
 
     private static MemoryStream CreateArchive(long size)
