@@ -16,6 +16,7 @@ namespace SharpCompress.Common.SevenZip;
 
 internal partial class ArchiveReader
 {
+    private const int MetadataReadBufferSize = 8192;
     private readonly ArrayPool<byte> decoderBufferPool;
 
     internal ArchiveReader(ArrayPool<byte>? decoderBufferPool = null) =>
@@ -34,6 +35,12 @@ internal partial class ArchiveReader
     {
         _readerStack.Push(_currentReader);
         _currentReader = new DataReader(buffer, offset, length);
+    }
+
+    internal void AddByteStream(PooledMemoryStream buffer)
+    {
+        _readerStack.Push(_currentReader);
+        _currentReader = new DataReader(buffer);
     }
 
     internal void DeleteByteStream() => _currentReader = _readerStack.Pop();
@@ -134,12 +141,16 @@ internal partial class ArchiveReader
         return ReadBitVector(length);
     }
 
-    private void ReadNumberVector(List<byte[]>? dataVector, int numFiles, Action<int, long?> action)
+    private void ReadNumberVector(
+        List<PooledMemoryStream>? dataVector,
+        int numFiles,
+        Action<int, long?> action
+    )
     {
         var defined = ReadOptionalBitVector(numFiles);
 
         using var streamSwitch = new CStreamSwitch();
-        streamSwitch.Set(this, dataVector ?? []);
+        streamSwitch.Set(this, dataVector);
 
         for (var i = 0; i < numFiles; i++)
         {
@@ -168,7 +179,7 @@ internal partial class ArchiveReader
     }
 
     private void ReadDateTimeVector(
-        List<byte[]>? dataVector,
+        List<PooledMemoryStream>? dataVector,
         int numFiles,
         Action<int, DateTime?> action
     ) =>
@@ -179,14 +190,14 @@ internal partial class ArchiveReader
         );
 
     private void ReadAttributeVector(
-        List<byte[]>? dataVector,
+        List<PooledMemoryStream>? dataVector,
         int numFiles,
         Action<int, uint?> action
     )
     {
         var boolVector = ReadOptionalBitVector(numFiles);
         using var streamSwitch = new CStreamSwitch();
-        streamSwitch.Set(this, dataVector ?? []);
+        streamSwitch.Set(this, dataVector);
         for (var i = 0; i < numFiles; i++)
         {
             if (boolVector[i])
@@ -431,7 +442,7 @@ internal partial class ArchiveReader
         finally { }
     }
 
-    private void ReadUnpackInfo(List<byte[]>? dataVector, out List<CFolder> folders)
+    private void ReadUnpackInfo(List<PooledMemoryStream>? dataVector, out List<CFolder> folders)
     {
         try
         {
@@ -440,7 +451,7 @@ internal partial class ArchiveReader
 
             using (var streamSwitch = new CStreamSwitch())
             {
-                streamSwitch.Set(this, dataVector ?? []);
+                streamSwitch.Set(this, dataVector);
 
                 // Folder definitions may live in an external metadata stream.
                 // Validate against the selected stream, not the outer header.
@@ -656,7 +667,7 @@ internal partial class ArchiveReader
     }
 
     private void ReadStreamsInfo(
-        List<byte[]>? dataVector,
+        List<PooledMemoryStream>? dataVector,
         out long dataOffset,
         out List<long> packSizes,
         out List<uint?> packCrCs,
@@ -775,8 +786,27 @@ internal partial class ArchiveReader
         }
     }
 
-    private List<byte[]> ReadAndDecodePackedStreams(long baseOffset, IPasswordProvider pass)
+    private sealed class DecodedMetadataStreams(int capacity)
+        : List<PooledMemoryStream>(capacity),
+            IDisposable
     {
+        public void Dispose()
+        {
+            foreach (var stream in this)
+            {
+                stream.Dispose();
+            }
+            Clear();
+        }
+    }
+
+    private DecodedMetadataStreams ReadAndDecodePackedStreams(
+        long baseOffset,
+        IPasswordProvider pass
+    )
+    {
+        DecodedMetadataStreams? dataVector = null;
+        var buffer = decoderBufferPool.Rent(MetadataReadBufferSize);
         try
         {
             ReadStreamsInfo(
@@ -792,7 +822,7 @@ internal partial class ArchiveReader
 
             dataStartPos += baseOffset;
 
-            var dataVector = new List<byte[]>(folders.Count);
+            dataVector = new DecodedMetadataStreams(folders.Count);
             var packIndex = 0;
             foreach (var folder in folders)
             {
@@ -819,28 +849,27 @@ internal partial class ArchiveReader
 
                 // Do not reserve the declared unpack size: malformed compressed
                 // metadata can advertise GiB of output without producing a byte.
-                using var decoded = new PooledMemoryStream();
-                var buffer = new byte[8192];
+                var decoded = new PooledMemoryStream(0, Constants.BufferSize, decoderBufferPool);
+                dataVector.Add(decoded);
+                var crc = Crc.INIT_CRC;
                 for (var remaining = unpackSize; remaining > 0; )
                 {
-                    var count = Math.Min(buffer.Length, remaining);
+                    var count = Math.Min(MetadataReadBufferSize, remaining);
                     outStream.ReadExact(buffer, 0, count);
                     decoded.Write(buffer, 0, count);
+                    if (folder.UnpackCrcDefined)
+                    {
+                        crc = Crc.Update(crc, buffer, 0, count);
+                    }
                     remaining -= count;
                 }
                 if (outStream.ReadByte() >= 0)
                 {
                     throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }
-                var data = decoded.ToArray();
-                dataVector.Add(data);
-
                 if (folder.UnpackCrcDefined)
                 {
-                    if (
-                        Crc.Finish(Crc.Update(Crc.INIT_CRC, data, 0, unpackSize))
-                        != folder._unpackCrc
-                    )
+                    if (Crc.Finish(crc) != folder._unpackCrc)
                     {
                         var exception = new InvalidFormatException(
                             "Decoded stream does not match expected CRC."
@@ -853,7 +882,15 @@ internal partial class ArchiveReader
             }
             return dataVector;
         }
-        finally { }
+        catch
+        {
+            dataVector?.Dispose();
+            throw;
+        }
+        finally
+        {
+            decoderBufferPool.Return(buffer);
+        }
     }
 
     private void ReadHeader(ArchiveDatabase db, IPasswordProvider getTextPassword)
@@ -868,13 +905,12 @@ internal partial class ArchiveReader
                 type = ReadId();
             }
 
-            List<byte[]>? dataVector = null;
-            if (type == BlockType.AdditionalStreamsInfo)
+            using var dataVector =
+                type == BlockType.AdditionalStreamsInfo
+                    ? ReadAndDecodePackedStreams(db._startPositionAfterHeader, getTextPassword)
+                    : null;
+            if (dataVector is not null)
             {
-                dataVector = ReadAndDecodePackedStreams(
-                    db._startPositionAfterHeader,
-                    getTextPassword
-                );
                 type = ReadId();
             }
 
@@ -955,7 +991,7 @@ internal partial class ArchiveReader
                     case BlockType.Name:
                         using (var streamSwitch = new CStreamSwitch())
                         {
-                            streamSwitch.Set(this, dataVector ?? []);
+                            streamSwitch.Set(this, dataVector);
                             for (var i = 0; i < db._files.Count; i++)
                             {
                                 db._files[i].Name = _currentReader.ReadString();
@@ -1241,18 +1277,18 @@ internal partial class ArchiveReader
             streamSwitch.Set(this, header);
 
             var type = ReadId();
-            if (type != BlockType.Header)
+            if (type is not BlockType.Header and not BlockType.EncodedHeader)
             {
-                if (type != BlockType.EncodedHeader)
-                {
-                    throw new ArchiveOperationException();
-                }
+                throw new ArchiveOperationException();
+            }
 
-                var dataVector = ReadAndDecodePackedStreams(
-                    db._startPositionAfterHeader,
-                    db.PasswordProvider
-                );
-
+            // Keep the pooled metadata alive through parsing, including on errors.
+            using var dataVector =
+                type == BlockType.EncodedHeader
+                    ? ReadAndDecodePackedStreams(db._startPositionAfterHeader, db.PasswordProvider)
+                    : null;
+            if (dataVector is not null)
+            {
                 // compressed header without content is odd but ok
                 if (dataVector.Count == 0)
                 {

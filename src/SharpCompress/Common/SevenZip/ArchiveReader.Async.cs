@@ -128,20 +128,22 @@ internal sealed partial class ArchiveReader
             streamSwitch.Set(this, header);
 
             var type = ReadId();
-            if (type != BlockType.Header)
+            if (type is not BlockType.Header and not BlockType.EncodedHeader)
             {
-                if (type != BlockType.EncodedHeader)
-                {
-                    throw new ArchiveOperationException();
-                }
+                throw new ArchiveOperationException();
+            }
 
-                var dataVector = await ReadAndDecodePackedStreamsAsync(
-                        db._startPositionAfterHeader,
-                        db.PasswordProvider,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
-
+            using var dataVector =
+                type == BlockType.EncodedHeader
+                    ? await ReadAndDecodePackedStreamsAsync(
+                            db._startPositionAfterHeader,
+                            db.PasswordProvider,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false)
+                    : null;
+            if (dataVector is not null)
+            {
                 // compressed header without content is odd but ok
                 if (dataVector.Count == 0)
                 {
@@ -168,12 +170,14 @@ internal sealed partial class ArchiveReader
         return db;
     }
 
-    private async ValueTask<List<byte[]>> ReadAndDecodePackedStreamsAsync(
+    private async ValueTask<DecodedMetadataStreams> ReadAndDecodePackedStreamsAsync(
         long baseOffset,
         IPasswordProvider pass,
         CancellationToken cancellationToken
     )
     {
+        DecodedMetadataStreams? dataVector = null;
+        var buffer = decoderBufferPool.Rent(MetadataReadBufferSize);
         try
         {
             ReadStreamsInfo(
@@ -189,7 +193,7 @@ internal sealed partial class ArchiveReader
 
             dataStartPos += baseOffset;
 
-            var dataVector = new List<byte[]>(folders.Count);
+            dataVector = new DecodedMetadataStreams(folders.Count);
             var packIndex = 0;
             foreach (var folder in folders)
             {
@@ -220,17 +224,22 @@ internal sealed partial class ArchiveReader
 
                 // Grow only as the decoder actually produces metadata, never
                 // from the untrusted unpack-size declaration alone.
-                using var decoded = new PooledMemoryStream();
-                var buffer = new byte[8192];
+                var decoded = new PooledMemoryStream(0, Constants.BufferSize, decoderBufferPool);
+                dataVector.Add(decoded);
+                var crc = Crc.INIT_CRC;
                 for (var remaining = unpackSize; remaining > 0; )
                 {
-                    var count = Math.Min(buffer.Length, remaining);
+                    var count = Math.Min(MetadataReadBufferSize, remaining);
                     await outStream
                         .ReadExactAsync(buffer, 0, count, cancellationToken)
                         .ConfigureAwait(false);
                     await decoded
                         .WriteAsync(buffer, 0, count, cancellationToken)
                         .ConfigureAwait(false);
+                    if (folder.UnpackCrcDefined)
+                    {
+                        crc = Crc.Update(crc, buffer, 0, count);
+                    }
                     remaining -= count;
                 }
                 if (
@@ -240,15 +249,9 @@ internal sealed partial class ArchiveReader
                 {
                     throw new InvalidFormatException("Decoded stream is longer than expected.");
                 }
-                var data = decoded.ToArray();
-                dataVector.Add(data);
-
                 if (folder.UnpackCrcDefined)
                 {
-                    if (
-                        Crc.Finish(Crc.Update(Crc.INIT_CRC, data, 0, unpackSize))
-                        != folder._unpackCrc
-                    )
+                    if (Crc.Finish(crc) != folder._unpackCrc)
                     {
                         var exception = new InvalidFormatException(
                             "Decoded stream does not match expected CRC."
@@ -261,7 +264,15 @@ internal sealed partial class ArchiveReader
             }
             return dataVector;
         }
-        finally { }
+        catch
+        {
+            dataVector?.Dispose();
+            throw;
+        }
+        finally
+        {
+            decoderBufferPool.Return(buffer);
+        }
     }
 
     private async ValueTask ReadHeaderAsync(
@@ -280,15 +291,17 @@ internal sealed partial class ArchiveReader
                 type = ReadId();
             }
 
-            List<byte[]>? dataVector = null;
-            if (type == BlockType.AdditionalStreamsInfo)
+            using var dataVector =
+                type == BlockType.AdditionalStreamsInfo
+                    ? await ReadAndDecodePackedStreamsAsync(
+                            db._startPositionAfterHeader,
+                            getTextPassword,
+                            cancellationToken
+                        )
+                        .ConfigureAwait(false)
+                    : null;
+            if (dataVector is not null)
             {
-                dataVector = await ReadAndDecodePackedStreamsAsync(
-                        db._startPositionAfterHeader,
-                        getTextPassword,
-                        cancellationToken
-                    )
-                    .ConfigureAwait(false);
                 type = ReadId();
             }
 
@@ -369,7 +382,7 @@ internal sealed partial class ArchiveReader
                     case BlockType.Name:
                         using (var streamSwitch = new CStreamSwitch())
                         {
-                            streamSwitch.Set(this, dataVector ?? []);
+                            streamSwitch.Set(this, dataVector);
                             for (var i = 0; i < db._files.Count; i++)
                             {
                                 db._files[i].Name = _currentReader.ReadString();

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -29,7 +30,8 @@ internal class DataReader
 
     #region Variables
 
-    private readonly byte[] _buffer;
+    private readonly byte[]? _buffer;
+    private readonly PooledMemoryStream? _pooledBuffer;
     private readonly int _ending;
 
     #endregion
@@ -43,11 +45,28 @@ internal class DataReader
         _ending = offset + length;
     }
 
+    public DataReader(PooledMemoryStream buffer)
+    {
+        _pooledBuffer = buffer;
+        _ending = checked((int)buffer.Length);
+    }
+
+    private DataReader(DataReader source)
+    {
+        _buffer = source._buffer;
+        _pooledBuffer = source._pooledBuffer;
+        _ending = source._ending;
+        Offset = source.Offset;
+    }
+
     public int Offset { get; private set; }
 
     public int Remaining => _ending - Offset;
 
-    public DataReader Clone() => new(_buffer, Offset, Remaining);
+    public DataReader Clone() => new(this);
+
+    private byte GetByte(int offset) =>
+        _buffer is not null ? _buffer[offset] : _pooledBuffer!.ReadByteAt(offset);
 
     public void RequireBytes(long count)
     {
@@ -64,16 +83,22 @@ internal class DataReader
             throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
-        return _buffer[Offset++];
+        return GetByte(Offset++);
     }
 
     public void ReadBytes(byte[] buffer, int offset, int length)
     {
         RequireBytes(length);
 
+        if (_pooledBuffer is not null)
+        {
+            _pooledBuffer.ReadAt(Offset, buffer, offset, length);
+            Offset += length;
+            return;
+        }
         while (length-- > 0)
         {
-            buffer[offset++] = _buffer[Offset++];
+            buffer[offset++] = _buffer![Offset++];
         }
     }
 
@@ -93,7 +118,7 @@ internal class DataReader
             throw new IncompleteArchiveException("Unexpected end of stream.");
         }
 
-        var firstByte = _buffer[Offset++];
+        var firstByte = GetByte(Offset++);
         byte mask = 0x80;
         ulong value = 0;
 
@@ -111,7 +136,7 @@ internal class DataReader
                 throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
-            value |= (ulong)_buffer[Offset++] << (8 * i);
+            value |= (ulong)GetByte(Offset++) << (8 * i);
             mask >>= 1;
         }
 
@@ -131,26 +156,36 @@ internal class DataReader
 
     public uint ReadUInt32()
     {
-        if (Offset + 4 > _ending)
+        RequireBytes(4);
+        if (_buffer is not null)
         {
-            throw new IncompleteArchiveException("Unexpected end of stream.");
+            var res = Get32(_buffer, Offset);
+            Offset += 4;
+            return res;
         }
-
-        var res = Get32(_buffer, Offset);
-        Offset += 4;
-        return res;
+        uint value = 0;
+        for (var i = 0; i < 4; i++)
+        {
+            value |= (uint)ReadByte() << (8 * i);
+        }
+        return value;
     }
 
     public ulong ReadUInt64()
     {
-        if (Offset + 8 > _ending)
+        RequireBytes(8);
+        if (_buffer is not null)
         {
-            throw new IncompleteArchiveException("Unexpected end of stream.");
+            var res = Get64(_buffer, Offset);
+            Offset += 8;
+            return res;
         }
-
-        var res = Get64(_buffer, Offset);
-        Offset += 8;
-        return res;
+        ulong value = 0;
+        for (var i = 0; i < 8; i++)
+        {
+            value |= (ulong)ReadByte() << (8 * i);
+        }
+        return value;
     }
 
     public string ReadString()
@@ -159,12 +194,12 @@ internal class DataReader
 
         for (; ; )
         {
-            if (ending + 2 > _ending)
+            if (_ending - ending < 2)
             {
                 throw new IncompleteArchiveException("Unexpected end of stream.");
             }
 
-            if (_buffer[ending] == 0 && _buffer[ending + 1] == 0)
+            if (GetByte(ending) == 0 && GetByte(ending + 1) == 0)
             {
                 break;
             }
@@ -172,9 +207,34 @@ internal class DataReader
             ending += 2;
         }
 
-        var str = Encoding.Unicode.GetString(_buffer, Offset, ending - Offset);
+        var str = _buffer is not null
+            ? Encoding.Unicode.GetString(_buffer, Offset, ending - Offset)
+            : ReadPooledString(ending - Offset);
         Offset = ending + 2;
         return str;
+    }
+
+    private string ReadPooledString(int length)
+    {
+        if (length == 0)
+        {
+            return string.Empty;
+        }
+        // Decode bounded chunks, preserving surrogate pairs across block boundaries,
+        // rather than copying a potentially header-sized name into a temporary array.
+        var bytes = new byte[Math.Min(length, 256)];
+        var chars = new char[Encoding.Unicode.GetMaxCharCount(bytes.Length)];
+        var decoder = Encoding.Unicode.GetDecoder();
+        var result = new StringBuilder();
+        for (var offset = 0; offset < length; )
+        {
+            var count = Math.Min(bytes.Length, length - offset);
+            _pooledBuffer!.ReadAt(Offset + offset, bytes, 0, count);
+            var charCount = decoder.GetChars(bytes, 0, count, chars, 0, offset + count == length);
+            result.Append(chars, 0, charCount);
+            offset += count;
+        }
+        return result.ToString();
     }
 
     #endregion
