@@ -399,14 +399,12 @@ public class SevenZipHeaderAllocationTests
             if (minorVersion > 2)
             {
                 await Assert.ThrowsAnyAsync<SharpCompressException>(async () =>
-                    await archive.EntriesAsync.ToListAsync(CancellationToken.None)
+                    await archive.EntriesAsync.ToListAsync()
                 );
             }
             else
             {
-                var entry = Assert.Single(
-                    await archive.EntriesAsync.ToListAsync(CancellationToken.None)
-                );
+                var entry = Assert.Single(await archive.EntriesAsync.ToListAsync());
                 Assert.True(entry.IsDirectory);
                 Assert.Equal("x", entry.Key);
             }
@@ -444,7 +442,7 @@ public class SevenZipHeaderAllocationTests
                 cancellationToken: CancellationToken.None
             );
             await Assert.ThrowsAsync<IncompleteArchiveException>(async () =>
-                await archive.EntriesAsync.ToListAsync(CancellationToken.None)
+                await archive.EntriesAsync.ToListAsync()
             );
         }
         else

@@ -149,4 +149,25 @@ public class GZipArchiveCacheTests : TestBase
         }
         Assert.True(input.CanRead);
     }
+
+    [Fact]
+    public async Task Cancelling_An_Enumeration_Does_Not_Poison_The_Shared_Cache()
+    {
+        using var input = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, "Tar.tar.gz"));
+        await using var archive = await GZipArchive.OpenAsyncArchive(
+            input,
+            ReaderOptions.ForExternalStream,
+            CancellationToken.None
+        );
+        using var cancellation = new CancellationTokenSource();
+        await using (var entries = archive.EntriesAsync.GetAsyncEnumerator(cancellation.Token))
+        {
+            Assert.True(await entries.MoveNextAsync());
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<System.OperationCanceledException>(async () =>
+                await entries.MoveNextAsync()
+            );
+        }
+        Assert.Single(await archive.EntriesAsync.ToListAsync());
+    }
 }

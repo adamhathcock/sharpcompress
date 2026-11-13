@@ -21,12 +21,15 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         await foreach (
             var entry in OldEntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
         {
+            cancellationToken.ThrowIfCancellationRequested();
             yield return entry;
         }
+        cancellationToken.ThrowIfCancellationRequested();
         foreach (var entry in newEntries)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -47,6 +50,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         var index = 0;
         while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             while (index < originalEntries.Count)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -57,28 +61,25 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
                 yield break;
             }
 
-            var generation = ++originalEntriesGeneration;
-            await using var source = LoadEntriesAsync(VolumesAsync)
-                .GetAsyncEnumerator(cancellationToken);
-            for (var skipped = 0; skipped < index; skipped++)
+            // The cached loader outlives individual enumerations and must not
+            // retain a caller's cancellation token after that enumeration ends.
+            originalEntriesAsyncSource ??= base.EntriesAsync.GetAsyncEnumerator(
+                CancellationToken.None
+            );
+            while (await originalEntriesAsyncSource.MoveNextAsync().ConfigureAwait(false))
             {
-                if (!await source.MoveNextAsync().ConfigureAwait(false))
+                if (originalEntriesAsyncRead++ < originalEntries.Count)
                 {
-                    throw new IncompleteArchiveException("Archive entries changed while loading.");
+                    cancellationToken.ThrowIfCancellationRequested();
+                    continue;
                 }
+                originalEntries.Add(originalEntriesAsyncSource.Current);
+                break;
             }
-            while (
-                generation == originalEntriesGeneration
-                && await source.MoveNextAsync().ConfigureAwait(false)
-            )
+            if (index == originalEntries.Count)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                originalEntries.Add(source.Current);
-                index++;
-                yield return source.Current;
-            }
-            if (generation == originalEntriesGeneration)
-            {
+                await originalEntriesAsyncSource.DisposeAsync().ConfigureAwait(false);
+                originalEntriesAsyncSource = null;
                 originalEntriesLoaded = true;
             }
         }
@@ -198,6 +199,11 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync().ConfigureAwait(false);
+        originalEntriesSource?.Dispose();
+        if (originalEntriesAsyncSource is not null)
+        {
+            await originalEntriesAsyncSource.DisposeAsync().ConfigureAwait(false);
+        }
         originalEntries.Cast<Entry>().ForEach(x => x.Close());
         newEntries.Cast<Entry>().ForEach(x => x.Close());
         removedEntries.Cast<Entry>().ForEach(x => x.Close());

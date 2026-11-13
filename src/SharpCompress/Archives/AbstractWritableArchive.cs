@@ -44,7 +44,10 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     private readonly List<TEntry> originalEntries = new();
     private readonly LazyReadOnlyCollection<TEntry> originalEntriesView;
     private bool originalEntriesLoaded;
-    private int originalEntriesGeneration;
+    private IEnumerator<TEntry>? originalEntriesSource;
+    private IAsyncEnumerator<TEntry>? originalEntriesAsyncSource;
+    private int originalEntriesRead;
+    private int originalEntriesAsyncRead;
 
     private readonly List<TEntry> modifiedEntries = new();
     private bool hasModifications;
@@ -109,25 +112,23 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
                 yield break;
             }
 
-            // Both APIs share entry identities. Switching loaders must restart
-            // parsing: the other loader may have moved the archive's source stream.
-            var generation = ++originalEntriesGeneration;
-            using var source = LoadEntries(Volumes).GetEnumerator();
-            for (var skipped = 0; skipped < index; skipped++)
+            // Resume the base cache instead of reparsing its prefix on every API
+            // switch. Each loader scans at most once; only the first entry object
+            // seen at each index is exposed to callers and removal checks.
+            originalEntriesSource ??= base.Entries.GetEnumerator();
+            while (originalEntriesSource.MoveNext())
             {
-                if (!source.MoveNext())
+                if (originalEntriesRead++ < originalEntries.Count)
                 {
-                    throw new IncompleteArchiveException("Archive entries changed while loading.");
+                    continue;
                 }
+                originalEntries.Add(originalEntriesSource.Current);
+                break;
             }
-            while (generation == originalEntriesGeneration && source.MoveNext())
+            if (index == originalEntries.Count)
             {
-                originalEntries.Add(source.Current);
-                index++;
-                yield return source.Current;
-            }
-            if (generation == originalEntriesGeneration)
-            {
+                originalEntriesSource.Dispose();
+                originalEntriesSource = null;
                 originalEntriesLoaded = true;
             }
         }
@@ -306,6 +307,7 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     public override void Dispose()
     {
         base.Dispose();
+        originalEntriesSource?.Dispose();
         originalEntries.Cast<Entry>().ForEach(x => x.Close());
         newEntries.Cast<Entry>().ForEach(x => x.Close());
         removedEntries.Cast<Entry>().ForEach(x => x.Close());

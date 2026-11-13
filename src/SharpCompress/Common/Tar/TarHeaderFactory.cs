@@ -14,11 +14,17 @@ internal static partial class TarHeaderFactory
     )
     {
         var globalPaxMetadata = new TarHeader.PaxMetadata();
+        var position = mode == StreamingMode.Seekable ? stream.Position : 0;
         while (true)
         {
             TarHeader? header = null;
             try
             {
+                if (mode == StreamingMode.Seekable)
+                {
+                    // Another entry reader or loader may have moved the shared stream.
+                    stream.Position = position;
+                }
                 var reader = new BinaryReader(stream, archiveEncoding.Default, leaveOpen: false);
                 header = new TarHeader(archiveEncoding);
 
@@ -36,6 +42,7 @@ internal static partial class TarHeaderFactory
 
                             // Reject padded sizes or end offsets that would wrap into a backward seek.
                             stream.Position = checked(stream.Position + paddedSize);
+                            position = stream.Position;
                         }
                         break;
                     case StreamingMode.Streaming:
