@@ -143,11 +143,7 @@ public class Zip64NonSeekableTests
                     continue;
                 }
                 Assert.Equal(entries[index].Name, reader.Entry.Key);
-#if LEGACY_DOTNET
-                using var source = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#else
                 await using var source = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#endif
                 using var extracted = new MemoryStream();
                 await source.CopyToAsync(extracted, 81920, CancellationToken.None);
                 Assert.Equal(entries[index++].Content, extracted.ToArray());

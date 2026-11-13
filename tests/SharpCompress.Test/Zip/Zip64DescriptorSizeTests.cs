@@ -363,11 +363,7 @@ public class Zip64DescriptorSizeTests
             );
             Assert.True(await reader.MoveToNextEntryAsync(CancellationToken.None));
             var first = reader.Entry;
-#if LEGACY_DOTNET
-            using (var stream = await reader.OpenEntryStreamAsync(CancellationToken.None))
-#else
             await using (var stream = await reader.OpenEntryStreamAsync(CancellationToken.None))
-#endif
             {
                 await stream.CopyToAsync(Stream.Null, 81920, CancellationToken.None);
             }
@@ -378,11 +374,7 @@ public class Zip64DescriptorSizeTests
             }
             Assert.Equal("second", reader.Entry.Key);
             using var second = new MemoryStream();
-#if LEGACY_DOTNET
-            using (var stream = await reader.OpenEntryStreamAsync(CancellationToken.None))
-#else
             await using (var stream = await reader.OpenEntryStreamAsync(CancellationToken.None))
-#endif
             {
                 await stream.CopyToAsync(second, 81920, CancellationToken.None);
             }

@@ -102,11 +102,7 @@ public class SevenZipDeflateSolidTests : TestBase
                 continue;
             }
 
-#if LEGACY_DOTNET
-            using var stream = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#else
             await using var stream = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#endif
             if (index == 0 && firstEntryMode == 1)
             {
                 Assert.True(

@@ -77,11 +77,7 @@ public class ZipBZip2CorruptionTests : TestBase
         {
             while (await reader.MoveToNextEntryAsync(CancellationToken.None))
             {
-#if LEGACY_DOTNET
-                using var entry = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#else
                 await using var entry = await reader.OpenEntryStreamAsync(CancellationToken.None);
-#endif
                 if (!skipEntry)
                 {
                     await entry.CopyToAsync(Stream.Null, 81920, CancellationToken.None);
