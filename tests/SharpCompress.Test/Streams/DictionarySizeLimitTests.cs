@@ -120,6 +120,93 @@ public class DictionarySizeLimitTests : TestBase
     }
 
     [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task Direct_Lzma_Decoder_Can_Retry_After_Limit_Rejection(bool useAsync, bool train)
+    {
+        using var limits = new DictionarySizeLimitScope();
+        var expected = new byte[128];
+        using var packed = new MemoryStream();
+        byte[] properties;
+        using (
+            var encoder = LzmaStream.Create(new LzmaEncoderProperties(false, 4096), false, packed)
+        )
+        {
+            properties = (byte[])encoder.Properties.Clone();
+            encoder.Write(expected, 0, expected.Length);
+        }
+        packed.Position = 0;
+        using var output = new MemoryStream();
+        using var decoder = new Decoder();
+        decoder.SetDecoderProperties(properties);
+        DictionarySizeLimits.Lzma = 4095;
+
+        if (useAsync)
+        {
+            await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+            {
+                if (train)
+                {
+                    await decoder.TrainAsync(Stream.Null);
+                }
+                else
+                {
+                    await decoder.CodeAsync(
+                        packed,
+                        output,
+                        packed.Length,
+                        expected.Length,
+                        null!,
+                        CancellationToken.None
+                    );
+                }
+            });
+        }
+        else
+        {
+            Assert.Throws<InvalidFormatException>(() =>
+            {
+                if (train)
+                {
+                    decoder.Train(Stream.Null);
+                }
+                else
+                {
+                    decoder.Code(packed, output, packed.Length, expected.Length, null!);
+                }
+            });
+        }
+        Assert.Equal(0, packed.Position);
+        DictionarySizeLimits.Lzma = 4096;
+        if (useAsync)
+        {
+            if (train)
+            {
+                await decoder.TrainAsync(Stream.Null);
+            }
+            await decoder.CodeAsync(
+                packed,
+                output,
+                packed.Length,
+                expected.Length,
+                null!,
+                CancellationToken.None
+            );
+        }
+        else
+        {
+            if (train)
+            {
+                decoder.Train(Stream.Null);
+            }
+            decoder.Code(packed, output, packed.Length, expected.Length, null!);
+        }
+        Assert.Equal(expected, output.ToArray());
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Lzma2_Static_Limit_Is_Inclusive(bool useAsync)

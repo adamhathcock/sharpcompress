@@ -267,10 +267,12 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         {
             throw new InvalidParamException();
         }
-        _outWindow = new OutWindow();
         var blockSize = Math.Max(_dictionarySize, (1 << 12));
         DictionarySizeLimits.Validate(blockSize, DictionarySizeLimits.Lzma, "LZMA");
-        _outWindow.Create(blockSize);
+        // Publish only a usable window so a rejected dictionary can be retried.
+        var window = new OutWindow();
+        window.Create(blockSize);
+        _outWindow = window;
     }
 
     private void SetLiteralProperties(int lp, int lc)
