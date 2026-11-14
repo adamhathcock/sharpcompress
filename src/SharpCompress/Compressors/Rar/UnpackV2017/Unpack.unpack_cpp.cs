@@ -111,14 +111,22 @@ internal sealed partial class Unpack : BitInput
             WinSize = MinAllocSize;
         }
 
+        // Validate before renting or reusing a solid window. The RAR5 header can
+        // request a huge dictionary even when there are no compressed bytes.
+        DictionarySizeLimits.Validate(
+            WinSize,
+            fileHeader.IsRar5 ? DictionarySizeLimits.Rar5 : DictionarySizeLimits.Rar4,
+            fileHeader.IsRar5 ? "RAR5" : "RAR4"
+        );
+
         if (WinSize <= MaxWinSize) // Use the already allocated window.
         {
             return;
         }
 
-        if ((WinSize >> 16) > 0x10000) // Window size must not exceed 4 GB.
+        if (WinSize > int.MaxValue)
         {
-            return;
+            throw new InvalidFormatException("RAR window exceeds the supported array size.");
         }
 
         // Archiving code guarantees that window size does not grow in the same

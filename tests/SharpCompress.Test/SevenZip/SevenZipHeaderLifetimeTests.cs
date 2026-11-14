@@ -11,6 +11,7 @@ using Xunit;
 
 namespace SharpCompress.Test.SevenZip;
 
+[Collection(nameof(SevenZipHeaderAllocationTests))]
 public class SevenZipHeaderLifetimeTests : TestBase
 {
     [Theory]
@@ -113,14 +114,125 @@ public class SevenZipHeaderLifetimeTests : TestBase
         Assert.True(input.CanRead);
     }
 
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(true, 0)]
+    [InlineData(false, 1)]
+    [InlineData(true, 1)]
+    [InlineData(false, 2)]
+    [InlineData(true, 2)]
+    [InlineData(true, 3)]
+    public async Task Decoded_Metadata_Is_Not_Copied_And_Returns_All_Buffers(
+        bool asyncRead,
+        int failure
+    )
+    {
+        using var decoded = new MemoryStream();
+        decoded.Write(new byte[] { failure == 1 ? (byte)99 : (byte)1, 2, 26 }, 0, 3);
+        decoded.WriteEncodedUInt64(1 << 20);
+        var padding = new byte[1 << 20];
+        decoded.Write(padding, 0, padding.Length);
+        decoded.WriteByte(0);
+        decoded.WriteByte(0);
+        using var encoded = new MemoryStream();
+        encoded.Write(new byte[] { 23, 6, 0, 1, 9 }, 0, 5);
+        encoded.WriteEncodedUInt64((ulong)decoded.Length);
+        encoded.Write(new byte[] { 0, 7, 11, 1, 0, 1, 1, 0, 12 }, 0, 9);
+        encoded.WriteEncodedUInt64((ulong)decoded.Length + (failure == 2 ? 8192ul : 0));
+        encoded.WriteByte(0);
+        encoded.WriteByte(0);
+        var header = encoded.ToArray();
+        using var input = new MemoryStream();
+        SevenZipSignatureHeaderWriter.WriteFinal(
+            input,
+            (ulong)decoded.Length,
+            (ulong)header.Length,
+            Crc32Stream.Compute(header)
+        );
+        decoded.Position = 0;
+        decoded.CopyTo(input);
+        input.Write(header, 0, header.Length);
+        input.Position = 0;
+        using var cancellation = new CancellationTokenSource();
+        var pool = new TrackingPool
+        {
+            OnRent =
+                failure == 3
+                    ? count =>
+                    {
+                        // Scratch and packed-input buffers are rented before metadata storage.
+                        if (count == 3)
+                        {
+                            cancellation.Cancel();
+                        }
+                    }
+                    : null,
+        };
+        var reader = new ArchiveReader(pool);
+        if (asyncRead)
+        {
+            await reader.OpenAsync(input, false, CancellationToken.None);
+        }
+        else
+        {
+            reader.Open(input, false);
+        }
+#if !LEGACY_DOTNET
+        var before = GC.GetTotalAllocatedBytes(precise: true);
+#endif
+        if (failure == 3)
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+                await reader.ReadDatabaseAsync(new NoPassword(), cancellation.Token)
+            );
+        }
+        else if (failure == 0)
+        {
+            var database = asyncRead
+                ? await reader.ReadDatabaseAsync(new NoPassword(), CancellationToken.None)
+                : reader.ReadDatabase(new NoPassword());
+            Assert.Empty(database._files);
+        }
+        else if (asyncRead)
+        {
+            await Assert.ThrowsAnyAsync<SharpCompressException>(async () =>
+                await reader.ReadDatabaseAsync(new NoPassword(), CancellationToken.None)
+            );
+        }
+        else
+        {
+            Assert.ThrowsAny<SharpCompressException>(() => reader.ReadDatabase(new NoPassword()));
+        }
+#if !LEGACY_DOTNET
+        var allocated = GC.GetTotalAllocatedBytes(precise: true) - before;
+        Assert.True(
+            allocated < pool.AllocatedBytes + 512 * 1024,
+            $"Allocated {allocated} bytes including {pool.AllocatedBytes} bytes of pooled storage."
+        );
+#endif
+        Assert.True(pool.Rents > 0);
+        Assert.Equal(1, pool.ScratchRents);
+        Assert.Equal(pool.Rents, pool.Returns);
+        Assert.True(input.CanRead);
+    }
+
     private sealed class TrackingPool : ArrayPool<byte>
     {
         public int Rents { get; private set; }
         public int Returns { get; private set; }
+        public int ScratchRents { get; private set; }
+        public long AllocatedBytes { get; private set; }
+        public Action<int>? OnRent { get; set; }
 
         public override byte[] Rent(int minimumLength)
         {
             Rents++;
+            if (minimumLength == 8192)
+            {
+                ScratchRents++;
+            }
+            AllocatedBytes += minimumLength;
+            OnRent?.Invoke(Rents);
             return new byte[minimumLength];
         }
 

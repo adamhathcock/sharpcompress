@@ -14,11 +14,17 @@ internal static partial class TarHeaderFactory
     )
     {
         var globalPaxMetadata = new TarHeader.PaxMetadata();
+        var position = mode == StreamingMode.Seekable ? stream.Position : 0;
         while (true)
         {
             TarHeader? header = null;
             try
             {
+                if (mode == StreamingMode.Seekable)
+                {
+                    // Another entry reader or loader may have moved the shared stream.
+                    stream.Position = position;
+                }
                 var reader = new BinaryReader(stream, archiveEncoding.Default, leaveOpen: false);
                 header = new TarHeader(archiveEncoding);
 
@@ -26,14 +32,17 @@ internal static partial class TarHeaderFactory
                 {
                     yield break;
                 }
+                // PAX metadata can replace the raw size; validate before either mode uses it.
+                var paddedSize = PadTo512(header.Size);
                 switch (mode)
                 {
                     case StreamingMode.Seekable:
                         {
                             header.DataStartPosition = stream.Position;
 
-                            //skip to nearest 512
-                            stream.Position += PadTo512(header.Size);
+                            // Reject padded sizes or end offsets that would wrap into a backward seek.
+                            stream.Position = checked(stream.Position + paddedSize);
+                            position = stream.Position;
                         }
                         break;
                     case StreamingMode.Streaming:
@@ -59,11 +68,12 @@ internal static partial class TarHeaderFactory
 
     private static long PadTo512(long size)
     {
-        var zeros = (int)(size % 512);
-        if (zeros == 0)
+        // PAX size overrides bypass ReadSize, so validate the effective size too.
+        if (size is < 0 or > TarHeader.MAX_ENTRY_SIZE)
         {
-            return size;
+            throw new InvalidFormatException($"Invalid TAR entry size: {size}.");
         }
-        return 512 - zeros + size;
+
+        return (size + 511) & ~511L;
     }
 }

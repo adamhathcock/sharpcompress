@@ -196,8 +196,12 @@ public partial class SevenZipArchive : AbstractArchive<SevenZipArchiveEntry, Sev
                 );
             }
 
-            return CreateEntryStream(
-                new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true)
+            // Entry boundaries do not end a solid folder's decoder. Its buffered input must
+            // remain intact until the reader advances to another folder or is disposed.
+            return new EntryStream(
+                this,
+                new ReadOnlySubStream(_currentFolderStream, entry.Size, leaveOpen: true),
+                rewindDecoderOnDispose: false
             );
         }
 

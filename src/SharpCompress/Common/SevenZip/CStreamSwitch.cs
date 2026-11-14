@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SharpCompress.Compressors.LZMA;
+using SharpCompress.IO;
 
 namespace SharpCompress.Common.SevenZip;
 
@@ -33,7 +34,16 @@ internal struct CStreamSwitch : IDisposable
         _active = true;
     }
 
-    public void Set(ArchiveReader archive, List<byte[]> dataVector)
+    public void Set(ArchiveReader archive, PooledMemoryStream data)
+    {
+        Dispose();
+        _archive = archive;
+        _archive.AddByteStream(data);
+        _needRemove = true;
+        _active = true;
+    }
+
+    public void Set(ArchiveReader archive, IReadOnlyList<PooledMemoryStream>? dataVector)
     {
         Dispose();
         _active = true;
@@ -42,13 +52,13 @@ internal struct CStreamSwitch : IDisposable
         if (external != 0)
         {
             var dataIndex = archive.ReadNum();
-            if (dataIndex < 0 || dataIndex >= dataVector.Count)
+            if (dataVector is null || dataIndex < 0 || dataIndex >= dataVector.Count)
             {
                 throw new ArchiveOperationException();
             }
 
             _archive = archive;
-            _archive.AddByteStream(dataVector[dataIndex], 0, dataVector[dataIndex].Length);
+            _archive.AddByteStream(dataVector[dataIndex]);
             _needRemove = true;
             _active = true;
         }

@@ -5,6 +5,7 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.Compressors.LZMA.RangeCoder;
 
@@ -252,8 +253,14 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         _rep2,
         _rep3;
 
+    private readonly bool _enforceDictionarySizeLimit;
+
     public Decoder()
+        : this(enforceDictionarySizeLimit: true) { }
+
+    internal Decoder(bool enforceDictionarySizeLimit)
     {
+        _enforceDictionarySizeLimit = enforceDictionarySizeLimit;
         _dictionarySize = -1;
     }
 
@@ -266,9 +273,15 @@ public partial class Decoder : ICoder, ISetDecoderProperties, IDisposable
         {
             throw new InvalidParamException();
         }
-        _outWindow = new OutWindow();
         var blockSize = Math.Max(_dictionarySize, (1 << 12));
-        _outWindow.Create(blockSize);
+        if (_enforceDictionarySizeLimit)
+        {
+            DictionarySizeLimits.Validate(blockSize, DictionarySizeLimits.Lzma, "LZMA");
+        }
+        // Publish only a usable window so a rejected dictionary can be retried.
+        var window = new OutWindow();
+        window.Create(blockSize);
+        _outWindow = window;
     }
 
     private void SetLiteralProperties(int lp, int lc)

@@ -99,7 +99,8 @@ public abstract partial class AbstractArchive<TEntry, TVolume> : IArchive, IAsyn
 
     private void EnsureEntriesLoaded()
     {
-        _lazyEntries.EnsureFullyLoaded();
+        // Writable archives expose a shared view rather than this base cache.
+        Entries.ForEach(_ => { });
         _lazyVolumes.EnsureFullyLoaded();
     }
 

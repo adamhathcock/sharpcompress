@@ -3,6 +3,7 @@
 using System;
 using System.Buffers;
 using System.Text;
+using SharpCompress.Common;
 
 namespace SharpCompress.Compressors.PPMd.H;
 
@@ -155,6 +156,7 @@ internal class SubAllocator : IDisposable
 
     public virtual bool StartSubAllocator(int saSize)
     {
+        DictionarySizeLimits.Validate(saSize, DictionarySizeLimits.Ppmd, "PPMd");
         var t = saSize;
         if (_subAllocatorSize == t)
         {

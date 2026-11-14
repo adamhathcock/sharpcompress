@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -14,17 +15,86 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     where TVolume : IVolume
     where TOptions : IWriterOptions
 {
-    // Async property moved from main file
+    public override IAsyncEnumerable<TEntry> EntriesAsync => GetCurrentEntriesAsync();
+
+    private async IAsyncEnumerable<TEntry> GetCurrentEntriesAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await foreach (
+            var entry in OldEntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return entry;
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+        foreach (var entry in newEntries)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!removedEntries.Contains(entry))
+            {
+                yield return entry;
+            }
+        }
+    }
+
     private IAsyncEnumerable<TEntry> OldEntriesAsync =>
-        base.EntriesAsync.Where(x => !removedEntries.Contains(x));
+        LoadOriginalEntriesAsync().Where(x => !removedEntries.Contains(x));
+
+    private async IAsyncEnumerable<TEntry> LoadOriginalEntriesAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        var index = 0;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            while (index < originalEntries.Count)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                yield return originalEntries[index++];
+            }
+            if (originalEntriesLoaded)
+            {
+                yield break;
+            }
+
+            // The cached loader outlives individual enumerations and must not
+            // retain a caller's cancellation token after that enumeration ends.
+            originalEntriesAsyncSource ??= base.EntriesAsync.GetAsyncEnumerator(
+                CancellationToken.None
+            );
+            while (await originalEntriesAsyncSource.MoveNextAsync().ConfigureAwait(false))
+            {
+                if (originalEntriesAsyncRead++ < originalEntries.Count)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    continue;
+                }
+                originalEntries.Add(originalEntriesAsyncSource.Current);
+                break;
+            }
+            if (index == originalEntries.Count)
+            {
+                await originalEntriesAsyncSource.DisposeAsync().ConfigureAwait(false);
+                originalEntriesAsyncSource = null;
+                originalEntriesLoaded = true;
+            }
+        }
+    }
 
     private async ValueTask RebuildModifiedCollectionAsync()
     {
         if (pauseRebuilding)
         {
+            // Disposing the synchronous pause must not perform synchronous I/O for async callers.
+            asyncRebuildPending = true;
             return;
         }
         hasModifications = true;
+        asyncRebuildPending = false;
         newEntries.RemoveAll(v => removedEntries.Contains(v));
         modifiedEntries.Clear();
         await foreach (var entry in OldEntriesAsync.ConfigureAwait(false))
@@ -49,20 +119,21 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     )
     {
         await foreach (
-            var entry in EntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+            var entry in OldEntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
         )
         {
-            var path = entry.Key;
-            if (path is null)
+            if (entry.Key is { } path && KeysMatch(path, key))
             {
-                continue;
+                return true;
             }
-            var p = path.Replace('/', '\\');
-            if (p.Length > 0 && p[0] == '\\')
+        }
+        foreach (var entry in newEntries)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!removedEntries.Contains(entry) && entry.Key is { } path && KeysMatch(path, key))
             {
-                p = p.Substring(1);
+                return true;
             }
-            return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
         }
         return false;
     }
@@ -116,15 +187,24 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         CancellationToken cancellationToken = default
     )
     {
+        var activeNewEntries = newEntries.Where(x => !removedEntries.Contains(x)).ToList();
         //reset streams of new entries
-        newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-        await SaveToAsync(stream, options, OldEntriesAsync, newEntries, cancellationToken)
+        activeNewEntries
+            .Cast<IWritableArchiveEntry>()
+            .ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
+        await SaveToAsync(stream, options, OldEntriesAsync, activeNewEntries, cancellationToken)
             .ConfigureAwait(false);
     }
 
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync().ConfigureAwait(false);
+        originalEntriesSource?.Dispose();
+        if (originalEntriesAsyncSource is not null)
+        {
+            await originalEntriesAsyncSource.DisposeAsync().ConfigureAwait(false);
+        }
+        originalEntries.Cast<Entry>().ForEach(x => x.Close());
         newEntries.Cast<Entry>().ForEach(x => x.Close());
         removedEntries.Cast<Entry>().ForEach(x => x.Close());
         modifiedEntries.Cast<Entry>().ForEach(x => x.Close());

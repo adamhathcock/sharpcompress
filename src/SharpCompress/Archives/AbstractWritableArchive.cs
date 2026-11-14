@@ -32,32 +32,54 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
         public void Dispose()
         {
             archive.pauseRebuilding = false;
-            archive.RebuildModifiedCollection();
+            if (!archive.asyncRebuildPending)
+            {
+                archive.RebuildModifiedCollection();
+            }
         }
     }
 
     private readonly List<TEntry> newEntries = new();
     private readonly List<TEntry> removedEntries = new();
+    private readonly List<TEntry> originalEntries = new();
+    private readonly LazyReadOnlyCollection<TEntry> originalEntriesView;
+    private bool originalEntriesLoaded;
+    private IEnumerator<TEntry>? originalEntriesSource;
+    private IAsyncEnumerator<TEntry>? originalEntriesAsyncSource;
+    private int originalEntriesRead;
+    private int originalEntriesAsyncRead;
 
     private readonly List<TEntry> modifiedEntries = new();
     private bool hasModifications;
     private bool pauseRebuilding;
+    private bool asyncRebuildPending;
 
     internal AbstractWritableArchive(ArchiveType type)
-        : base(type) { }
+        : base(type)
+    {
+        originalEntriesLoaded = true;
+        originalEntriesView = new LazyReadOnlyCollection<TEntry>(LoadOriginalEntries());
+    }
 
     internal AbstractWritableArchive(ArchiveType type, SourceStream sourceStream)
-        : base(type, sourceStream) { }
+        : base(type, sourceStream)
+    {
+        originalEntriesView = new LazyReadOnlyCollection<TEntry>(LoadOriginalEntries());
+    }
 
     public override ICollection<TEntry> Entries
     {
         get
         {
+            if (asyncRebuildPending && !pauseRebuilding)
+            {
+                RebuildModifiedCollection();
+            }
             if (hasModifications)
             {
                 return modifiedEntries;
             }
-            return base.Entries;
+            return originalEntriesView;
         }
     }
 
@@ -70,12 +92,50 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
             return;
         }
         hasModifications = true;
+        asyncRebuildPending = false;
         newEntries.RemoveAll(v => removedEntries.Contains(v));
         modifiedEntries.Clear();
         modifiedEntries.AddRange(OldEntries.Concat(newEntries));
     }
 
-    private IEnumerable<TEntry> OldEntries => base.Entries.Where(x => !removedEntries.Contains(x));
+    private IEnumerable<TEntry> LoadOriginalEntries()
+    {
+        var index = 0;
+        while (true)
+        {
+            while (index < originalEntries.Count)
+            {
+                yield return originalEntries[index++];
+            }
+            if (originalEntriesLoaded)
+            {
+                yield break;
+            }
+
+            // Resume the base cache instead of reparsing its prefix on every API
+            // switch. Each loader scans at most once; only the first entry object
+            // seen at each index is exposed to callers and removal checks.
+            originalEntriesSource ??= base.Entries.GetEnumerator();
+            while (originalEntriesSource.MoveNext())
+            {
+                if (originalEntriesRead++ < originalEntries.Count)
+                {
+                    continue;
+                }
+                originalEntries.Add(originalEntriesSource.Current);
+                break;
+            }
+            if (index == originalEntries.Count)
+            {
+                originalEntriesSource.Dispose();
+                originalEntriesSource = null;
+                originalEntriesLoaded = true;
+            }
+        }
+    }
+
+    private IEnumerable<TEntry> OldEntries =>
+        originalEntriesView.Where(x => !removedEntries.Contains(x));
 
     public void RemoveEntry(TEntry entry)
     {
@@ -126,20 +186,42 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
 
     private bool DoesKeyMatchExisting(string key)
     {
-        foreach (var path in Entries.Select(x => x.Key))
+        foreach (
+            var path in OldEntries
+                .Concat(newEntries)
+                .Where(x => !removedEntries.Contains(x))
+                .Select(x => x.Key)
+        )
         {
-            if (path is null)
+            if (path is not null && KeysMatch(path, key))
             {
-                continue;
+                return true;
             }
-            var p = path.Replace('/', '\\');
-            if (p.Length > 0 && p[0] == '\\')
-            {
-                p = p.Substring(1);
-            }
-            return string.Equals(p, key, StringComparison.OrdinalIgnoreCase);
         }
         return false;
+    }
+
+    private bool KeysMatch(string left, string right) =>
+        string.Equals(NormalizeKey(left), NormalizeKey(right), StringComparison.OrdinalIgnoreCase);
+
+    private string NormalizeKey(string key)
+    {
+        key = key.Replace('\\', '/');
+        if (Type is ArchiveType.Zip or ArchiveType.Tar)
+        {
+            // ZIP and TAR writers remove drive prefixes and surrounding slashes from names.
+#if LEGACY_DOTNET
+            var colon = key.IndexOf(':');
+#else
+            var colon = key.IndexOf(':', StringComparison.Ordinal);
+#endif
+            if (colon >= 0)
+            {
+                key = key.Substring(colon + 1);
+            }
+            return key.Trim('/');
+        }
+        return key.Length > 0 && key[0] == '/' ? key.Substring(1) : key;
     }
 
     ValueTask IWritableAsyncArchive.RemoveEntryAsync(IArchiveEntry entry) =>
@@ -180,9 +262,12 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
 
     public void SaveTo(Stream stream, TOptions options)
     {
+        var activeNewEntries = newEntries.Where(x => !removedEntries.Contains(x)).ToList();
         //reset streams of new entries
-        newEntries.Cast<IWritableArchiveEntry>().ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
-        SaveTo(stream, options, OldEntries, newEntries);
+        activeNewEntries
+            .Cast<IWritableArchiveEntry>()
+            .ForEach(x => x.Stream.Seek(0, SeekOrigin.Begin));
+        SaveTo(stream, options, OldEntries, activeNewEntries);
     }
 
     protected TEntry CreateEntry(
@@ -222,6 +307,8 @@ public abstract partial class AbstractWritableArchive<TEntry, TVolume, TOptions>
     public override void Dispose()
     {
         base.Dispose();
+        originalEntriesSource?.Dispose();
+        originalEntries.Cast<Entry>().ForEach(x => x.Close());
         newEntries.Cast<Entry>().ForEach(x => x.Close());
         removedEntries.Cast<Entry>().ForEach(x => x.Close());
         modifiedEntries.Cast<Entry>().ForEach(x => x.Close());

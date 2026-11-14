@@ -10,6 +10,7 @@ using Xunit;
 
 namespace SharpCompress.Test.Streams;
 
+[Collection(DictionarySizeLimitCollection.Name)]
 public class LzmaDictionaryAllocationTests
 {
     [Theory]
@@ -22,6 +23,8 @@ public class LzmaDictionaryAllocationTests
         bool direct
     )
     {
+        using var limits = new DictionarySizeLimitScope();
+        DictionarySizeLimits.Lzma = int.MaxValue;
         var expected = new byte[20000];
         new Random(123).NextBytes(expected);
         using var packed = new MemoryStream();
@@ -210,6 +213,8 @@ public class LzmaDictionaryAllocationTests
     [InlineData(true)]
     public async Task Lzma2_Tiny_Stream_With_Huge_Dictionary_Decodes(bool useAsync)
     {
+        using var limits = new DictionarySizeLimitScope();
+        DictionarySizeLimits.Lzma2 = int.MaxValue;
         using var input = new MemoryStream(new byte[] { 1, 0, 0, 65, 0 });
         using var output = new MemoryStream();
         if (useAsync)
