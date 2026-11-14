@@ -46,9 +46,16 @@ public partial class TarWriter
     /// <summary>
     /// Asynchronously writes a directory entry to the TAR archive.
     /// </summary>
-    public override async ValueTask WriteDirectoryAsync(
+    public override ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    ) => WriteDirectoryAsync(directoryName, modificationTime, 0, cancellationToken);
+
+    internal async ValueTask WriteDirectoryAsync(
+        string directoryName,
+        DateTime? modificationTime,
+        long mode,
         CancellationToken cancellationToken = default
     )
     {
@@ -63,6 +70,7 @@ public partial class TarWriter
         header.Name = normalizedName;
         header.Size = 0;
         header.EntryType = EntryType.Directory;
+        header.Mode = mode;
         await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
     }
 
@@ -81,11 +89,20 @@ public partial class TarWriter
     /// <summary>
     /// Asynchronously writes a file entry with optional size specification.
     /// </summary>
-    public async ValueTask WriteAsync(
+    public ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,
         long? size,
+        CancellationToken cancellationToken = default
+    ) => WriteAsync(filename, source, modificationTime, size, 0, cancellationToken);
+
+    internal async ValueTask WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        long? size,
+        long mode,
         CancellationToken cancellationToken = default
     )
     {
@@ -101,6 +118,7 @@ public partial class TarWriter
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
+        header.Mode = mode;
         await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
         var progressStream = WrapWithProgress(source, filename);
         var written = await progressStream

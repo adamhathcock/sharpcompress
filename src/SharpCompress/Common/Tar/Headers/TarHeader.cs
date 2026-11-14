@@ -28,6 +28,9 @@ internal sealed partial class TarHeader
     internal string? LinkName { get; set; }
 
     internal long Mode { get; set; }
+
+    // Permission bits to write; 0777 when the entry has none (a new file)
+    private long ModeToWrite => (Mode & 0xFFF) != 0 ? Mode & 0xFFF : 511;
     internal long UserId { get; set; }
     internal long GroupId { get; set; }
     internal long Size { get; set; }
@@ -124,7 +127,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(511, buffer, 100, 8); // file mode
+        WriteOctalBytes(ModeToWrite, buffer, 100, 8); // file mode
         WriteOctalBytes(0, buffer, 108, 8); // owner ID
         WriteOctalBytes(0, buffer, 116, 8); // group ID
 
@@ -228,7 +231,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(511, buffer, 100, 8); // file mode
+        WriteOctalBytes(ModeToWrite, buffer, 100, 8); // file mode
         WriteOctalBytes(0, buffer, 108, 8); // owner ID
         WriteOctalBytes(0, buffer, 116, 8); // group ID
 

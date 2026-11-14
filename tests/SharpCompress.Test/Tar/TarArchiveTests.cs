@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Tar;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
 using SharpCompress.Readers;
 using SharpCompress.Readers.Tar;
 using SharpCompress.Test.Mocks;
@@ -116,6 +118,56 @@ public class TarArchiveTests : ArchiveTests
         Assert.Contains("z_file 1.txt", archive.Entries.Select(entry => entry.Key));
         Assert.Contains("z_file 2.txt", archive.Entries.Select(entry => entry.Key));
         Assert.Contains("z_file 3.txt", archive.Entries.Select(entry => entry.Key));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Tar_SaveTo_Keeps_Entry_Modes(bool useAsync)
+    {
+        var source = new MemoryStream();
+        using (var writer = new TarWriter(source, new TarWriterOptions(CompressionType.None, true)))
+        {
+            writer.WriteDirectory("private", null, 0x1C0);
+            writer.Write(
+                "run.sh",
+                new MemoryStream(Encoding.UTF8.GetBytes("echo hi")),
+                null,
+                null,
+                0x1ED
+            );
+            writer.Write(
+                "key.pem",
+                new MemoryStream(Encoding.UTF8.GetBytes("secret")),
+                null,
+                null,
+                0x180
+            );
+        }
+        source.Position = 0;
+
+        var saved = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true);
+        if (useAsync)
+        {
+            await using var archive = await TarArchive.OpenAsyncArchive(source);
+            await archive.SaveToAsync(saved, options);
+        }
+        else
+        {
+            using var archive = TarArchive.OpenArchive(source);
+            archive.SaveTo(saved, options);
+        }
+        saved.Position = 0;
+
+        using var reread = TarArchive.OpenArchive(saved);
+        var modes = reread.Entries.ToDictionary(
+            e => e.Key!.TrimEnd('/'),
+            e => ((TarEntry)e).Mode & 0x1FF
+        );
+        Assert.Equal(0x1C0, modes["private"]);
+        Assert.Equal(0x1ED, modes["run.sh"]);
+        Assert.Equal(0x180, modes["key.pem"]);
     }
 
     [Fact]

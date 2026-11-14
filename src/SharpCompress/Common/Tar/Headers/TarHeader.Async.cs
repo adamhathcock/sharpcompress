@@ -35,7 +35,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(511, buffer, 100, 8);
+        WriteOctalBytes(ModeToWrite, buffer, 100, 8);
         WriteOctalBytes(0, buffer, 108, 8);
         WriteOctalBytes(0, buffer, 116, 8);
 
@@ -133,7 +133,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(511, buffer, 100, 8);
+        WriteOctalBytes(ModeToWrite, buffer, 100, 8);
         WriteOctalBytes(0, buffer, 108, 8);
         WriteOctalBytes(0, buffer, 116, 8);
 
