@@ -2,9 +2,6 @@ namespace SharpCompress.Common.Tar;
 
 internal readonly struct TarEntryMetadata
 {
-    internal const long DefaultUserId = 0;
-    internal const long DefaultGroupId = 0;
-
     // Null means unspecified; zero is a real permission mode or numeric owner ID.
     internal long? Mode { get; init; }
     internal long? UserId { get; init; }
@@ -18,15 +15,15 @@ internal readonly struct TarEntryMetadata
         return (long)(permissions & TarPermissions.All);
     }
 
-    internal long GetLegacyMode(bool isDirectory)
+    internal long? GetLegacyMode(bool isDirectory)
     {
-        var permissions = (TarPermissions)(Mode ?? 0);
+        var permissions = (TarPermissions?)Mode;
         // The public API historically marks every directory with 01000, which
         // overlaps the sticky bit. Never add that marker to the stored metadata.
         if (isDirectory)
         {
             permissions |= TarPermissions.Sticky;
         }
-        return (long)permissions;
+        return (long?)permissions;
     }
 }

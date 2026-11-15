@@ -27,7 +27,7 @@ internal sealed partial class TarHeader
     internal string? Name { get; set; }
     internal string? LinkName { get; set; }
 
-    internal TarEntryMetadata Metadata { get; set; }
+    internal TarEntryMetadata? Metadata { get; set; }
     internal long Size { get; set; }
     internal DateTime LastModifiedTime { get; set; }
     internal EntryType EntryType { get; set; }
@@ -91,12 +91,15 @@ internal sealed partial class TarHeader
                 header.LastModifiedTime = LastModifiedTime.Value;
             }
 
-            header.Metadata = new TarEntryMetadata
+            if (Mode.HasValue || UserId.HasValue || GroupId.HasValue)
             {
-                Mode = Mode ?? header.Metadata.Mode,
-                UserId = UserId ?? header.Metadata.UserId,
-                GroupId = GroupId ?? header.Metadata.GroupId,
-            };
+                header.Metadata = new TarEntryMetadata
+                {
+                    Mode = Mode ?? header.Metadata?.Mode,
+                    UserId = UserId ?? header.Metadata?.UserId,
+                    GroupId = GroupId ?? header.Metadata?.GroupId,
+                };
+            }
         }
     }
 
@@ -735,9 +738,10 @@ internal sealed partial class TarHeader
     {
         // Apply defaults only when serializing. Explicit zero values must not be
         // confused with metadata that was never supplied.
-        WriteOctalBytes(Metadata.GetModeForWriting(), buffer, 100, 8);
-        WriteOwnerId(Metadata.UserId ?? TarEntryMetadata.DefaultUserId, buffer, 108);
-        WriteOwnerId(Metadata.GroupId ?? TarEntryMetadata.DefaultGroupId, buffer, 116);
+        var metadata = Metadata.GetValueOrDefault();
+        WriteOctalBytes(metadata.GetModeForWriting(), buffer, 100, 8);
+        WriteOwnerId(metadata.UserId ?? 0, buffer, 108);
+        WriteOwnerId(metadata.GroupId ?? 0, buffer, 116);
     }
 
     private void WriteOwnerId(long value, byte[] buffer, int offset)

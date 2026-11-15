@@ -133,7 +133,7 @@ For each entry, SharpCompress exposes:
 - `LastModifiedTime`
 - `IsDirectory`
 - `Mode`
-- `UserID`
+- `UserId`
 - `GroupId`
 
 Tar entries are always reported as unencrypted and CRC is always `0`.
@@ -379,15 +379,24 @@ Writer metadata is narrower. The writer sets:
 `TarArchive.SaveTo` and `SaveToAsync` preserve existing file and directory permission bits
 (including `0000`, sticky, setuid, and setgid) and numeric owner/group IDs. Ownership is
 preserved together with permissions so a non-root setuid file does not become root-owned.
-New entries and entries written directly through the public `TarWriter` API retain the
-defaults of mode `0777`, owner ID `0`, and group ID `0`.
+`TarEntry.Mode`, `UserId`, and `GroupId` return `long?`. Missing metadata is exposed as
+`null`; zero remains an explicit value. Newly added archive entries retain `null`
+in memory. When serialized, they and entries written directly through the public
+`TarWriter` API use the defaults of mode `0777`, owner ID `0`, and group ID `0`.
+Saving does not populate missing in-memory values; reopening the output exposes
+the values encoded in its headers.
+
+This changes the public properties from `long` to `long?` and renames `UserID` to
+`UserId`. Consumers must update property references and handle unspecified values
+explicitly (for example, `entry.UserId ?? 0` when a numeric fallback is needed).
 
 USTAR owner/group IDs must fit seven octal digits (`0` through `2097151`); saving an
 unrepresentable ID throws `InvalidFormatException` instead of truncating it. GNU output
 also supports signed 63-bit base-256 owner/group IDs.
 
-For backward compatibility, the public `TarEntry.Mode` value includes an additional
-`01000` marker on directories. Saving uses the original header mode, not that marker.
+For backward compatibility, a specified public `TarEntry.Mode` value includes an
+additional `01000` marker on directories; an unspecified mode remains `null`.
+Saving uses the original header mode, not that marker.
 Other metadata, such as owner/group names and extended attributes, is not preserved.
 
 ## Async Behavior

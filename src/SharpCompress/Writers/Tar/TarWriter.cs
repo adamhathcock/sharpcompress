@@ -103,12 +103,12 @@ public partial class TarWriter : AbstractWriter
     }
 
     public override void WriteDirectory(string directoryName, DateTime? modificationTime) =>
-        WriteDirectory(directoryName, modificationTime, default);
+        WriteDirectory(directoryName, modificationTime, null);
 
     internal void WriteDirectory(
         string directoryName,
         DateTime? modificationTime,
-        TarEntryMetadata metadata
+        TarEntryMetadata? metadata
     )
     {
         var normalizedName = NormalizeDirectoryName(directoryName);
@@ -127,14 +127,14 @@ public partial class TarWriter : AbstractWriter
     }
 
     public void Write(string filename, Stream source, DateTime? modificationTime, long? size) =>
-        Write(filename, source, modificationTime, size, default);
+        Write(filename, source, modificationTime, size, null);
 
     internal void Write(
         string filename,
         Stream source,
         DateTime? modificationTime,
         long? size,
-        TarEntryMetadata metadata
+        TarEntryMetadata? metadata
     )
     {
         if (!source.CanSeek && size is null)

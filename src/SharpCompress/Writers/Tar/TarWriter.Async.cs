@@ -51,12 +51,12 @@ public partial class TarWriter
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
-    ) => WriteDirectoryAsync(directoryName, modificationTime, default, cancellationToken);
+    ) => WriteDirectoryAsync(directoryName, modificationTime, null, cancellationToken);
 
     internal async ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
-        TarEntryMetadata metadata,
+        TarEntryMetadata? metadata,
         CancellationToken cancellationToken = default
     )
     {
@@ -96,14 +96,14 @@ public partial class TarWriter
         DateTime? modificationTime,
         long? size,
         CancellationToken cancellationToken = default
-    ) => WriteAsync(filename, source, modificationTime, size, default, cancellationToken);
+    ) => WriteAsync(filename, source, modificationTime, size, null, cancellationToken);
 
     internal async ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,
         long? size,
-        TarEntryMetadata metadata,
+        TarEntryMetadata? metadata,
         CancellationToken cancellationToken = default
     )
     {

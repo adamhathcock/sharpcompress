@@ -22,9 +22,121 @@ public class TarModeTests
     [Fact]
     public void Tar_Metadata_Is_Unspecified_By_Default()
     {
-        var metadata = new TarHeader(new ArchiveEncoding()).Metadata;
+        Assert.Null(new TarHeader(new ArchiveEncoding()).Metadata);
+    }
+
+    [Fact]
+    public void Tar_Empty_Metadata_Fields_Are_Unspecified()
+    {
+        var metadata = new TarEntryMetadata();
         Assert.Null(metadata.Mode);
         Assert.Null(metadata.UserId);
+        Assert.Null(metadata.GroupId);
+    }
+
+    [Theory]
+    [InlineData(false, null, null)]
+    [InlineData(true, null, null)]
+    [InlineData(false, "000", "000")]
+    [InlineData(true, "000", "1000")]
+    [InlineData(false, "700", "700")]
+    [InlineData(true, "700", "1700")]
+    [InlineData(true, "1777", "1777")]
+    public void TarEntry_Mode_Preserves_Null_And_Legacy_Directory_Marker(
+        bool isDirectory,
+        string? octalMode,
+        string? expectedOctalMode
+    )
+    {
+        long? mode = octalMode is null ? null : Convert.ToInt64(octalMode, 8);
+        long? expectedMode = expectedOctalMode is null
+            ? null
+            : Convert.ToInt64(expectedOctalMode, 8);
+        var header = new TarHeader(new ArchiveEncoding())
+        {
+            EntryType = isDirectory ? EntryType.Directory : EntryType.File,
+            Metadata = new TarEntryMetadata { Mode = mode, UserId = 42 },
+        };
+        var entry = new TarEntry(
+            new TarFilePart(header, null),
+            CompressionType.None,
+            ReaderOptions.ForExternalStream
+        );
+
+        Assert.Equal(expectedMode, entry.Mode);
+        Assert.Equal(42, entry.UserId);
+        Assert.Null(entry.GroupId);
+        Assert.Equal(mode, header.Metadata?.Mode);
+    }
+
+    [Theory]
+    [MemberData(nameof(WriterCases))]
+    public async Task TarHeader_Absent_Metadata_Writes_Defaults(
+        bool useAsync,
+        TarHeaderWriteFormat format
+    )
+    {
+        var header = new TarHeader(new ArchiveEncoding(), format)
+        {
+            Name = "entry",
+            LastModifiedTime = TarHeader.EPOCH,
+        };
+        using var saved = new MemoryStream();
+        if (useAsync)
+        {
+            await header.WriteAsync(saved, CancellationToken.None);
+        }
+        else
+        {
+            header.Write(saved);
+        }
+
+        var bytes = saved.ToArray();
+        Assert.Equal(Convert.ToInt64("777", 8), ReadOctal(bytes, 100, 8));
+        Assert.Equal(0, ReadOctal(bytes, 108, 8));
+        Assert.Equal(0, ReadOctal(bytes, 116, 8));
+        Assert.Null(header.Metadata);
+    }
+
+    [Fact]
+    public void Tar_Pax_Metadata_Without_Permissions_Leaves_Metadata_Absent()
+    {
+        var header = new TarHeader(new ArchiveEncoding());
+        new TarHeader.PaxMetadata { Name = "renamed" }.ApplyTo(header);
+
+        Assert.Equal("renamed", header.Name);
+        Assert.Null(header.Metadata);
+    }
+
+    [Fact]
+    public void Tar_Pax_Metadata_Only_Replaces_Specified_Fields()
+    {
+        var header = new TarHeader(new ArchiveEncoding())
+        {
+            Metadata = new TarEntryMetadata
+            {
+                Mode = Convert.ToInt64("700", 8),
+                UserId = 42,
+                GroupId = 73,
+            },
+        };
+        new TarHeader.PaxMetadata { Mode = 0, UserId = 0 }.ApplyTo(header);
+
+        var metadata = Assert.IsType<TarEntryMetadata>(header.Metadata);
+        Assert.Equal(0, metadata.Mode);
+        Assert.Equal(0, metadata.UserId);
+        Assert.Equal(73, metadata.GroupId);
+    }
+
+    [Fact]
+    public void Tar_Pax_Metadata_Only_Creates_Specified_Fields()
+    {
+        var header = new TarHeader(new ArchiveEncoding());
+        new TarHeader.PaxMetadata { UserId = 0 }.ApplyTo(header);
+
+        var metadata = Assert.IsType<TarEntryMetadata>(header.Metadata);
+        Assert.Null(metadata.Mode);
+        Assert.Equal(0, metadata.UserId);
         Assert.Null(metadata.GroupId);
     }
 
@@ -74,9 +186,10 @@ public class TarModeTests
             Assert.Equal(Convert.ToInt64(expectedMode, 8), ReadOctal(bytes, 100, 8));
             Assert.Equal(expectedUserId, ReadOctal(bytes, 108, 8));
             Assert.Equal(expectedGroupId, ReadOctal(bytes, 116, 8));
-            Assert.Equal(mode, header.Metadata.Mode);
-            Assert.Equal(userId, header.Metadata.UserId);
-            Assert.Equal(groupId, header.Metadata.GroupId);
+            var metadata = Assert.IsType<TarEntryMetadata>(header.Metadata);
+            Assert.Equal(mode, metadata.Mode);
+            Assert.Equal(userId, metadata.UserId);
+            Assert.Equal(groupId, metadata.GroupId);
         }
     }
 
@@ -162,7 +275,12 @@ public class TarModeTests
         var entry = (TarEntry)Assert.Single(reread.Entries);
         Assert.Equal(name, entry.Key);
         Assert.Equal(isDirectory, entry.IsDirectory);
-        Assert.Equal(mode, entry.Metadata.Mode);
+        var metadata = Assert.IsType<TarEntryMetadata>(entry.Metadata);
+        Assert.Equal(mode, metadata.Mode);
+        Assert.Equal(0, metadata.UserId);
+        Assert.Equal(0, metadata.GroupId);
+        Assert.Equal(0, entry.UserId);
+        Assert.Equal(0, entry.GroupId);
     }
 
     [Theory]
@@ -243,7 +361,7 @@ public class TarModeTests
         saved.Position = 0;
         using var reread = TarArchive.OpenArchive(saved, ReaderOptions.ForExternalStream);
         var entry = (TarEntry)Assert.Single(reread.Entries);
-        Assert.Equal(userId, entry.UserID);
+        Assert.Equal(userId, entry.UserId);
         Assert.Equal(groupId, entry.GroupId);
     }
 
@@ -337,20 +455,25 @@ public class TarModeTests
                 ReaderOptions.ForExternalStream,
                 cancellation.Token
             );
-            await archive.AddDirectoryEntryAsync("new", cancellationToken: cancellation.Token);
-            await archive.AddEntryAsync(
+            var directory = await archive.AddDirectoryEntryAsync(
+                "new",
+                cancellationToken: cancellation.Token
+            );
+            var file = await archive.AddEntryAsync(
                 "new/file",
                 content,
                 false,
                 cancellationToken: cancellation.Token
             );
+            AssertUnspecifiedMetadata((TarEntry)directory);
+            AssertUnspecifiedMetadata((TarEntry)file);
             await archive.SaveToAsync(saved, options, cancellation.Token);
         }
         else
         {
             using var archive = TarArchive.OpenArchive(source, ReaderOptions.ForExternalStream);
-            archive.AddDirectoryEntry("new");
-            archive.AddEntry("new/file", content, false);
+            AssertUnspecifiedMetadata((TarEntry)archive.AddDirectoryEntry("new"));
+            AssertUnspecifiedMetadata((TarEntry)archive.AddEntry("new/file", content, false));
             archive.SaveTo(saved, options);
         }
 
@@ -425,6 +548,14 @@ public class TarModeTests
             Assert.True(reader.MoveToNextEntry());
             Assert.Equal(Convert.ToInt64("1700", 8), ((TarEntry)reader.Entry).Mode);
         }
+    }
+
+    private static void AssertUnspecifiedMetadata(TarEntry entry)
+    {
+        Assert.Null(entry.Metadata);
+        Assert.Null(entry.Mode);
+        Assert.Null(entry.UserId);
+        Assert.Null(entry.GroupId);
     }
 
     private static MemoryStream CreateArchive(
