@@ -376,7 +376,19 @@ Writer metadata is narrower. The writer sets:
 - `Size`
 - entry type for file or directory
 
-The current writer writes fixed mode, owner id, and group id defaults rather than round-tripping full metadata.
+`TarArchive.SaveTo` and `SaveToAsync` preserve existing file and directory permission bits
+(including `0000`, sticky, setuid, and setgid) and numeric owner/group IDs. Ownership is
+preserved together with permissions so a non-root setuid file does not become root-owned.
+New entries and entries written directly through the public `TarWriter` API retain the
+defaults of mode `0777`, owner ID `0`, and group ID `0`.
+
+USTAR owner/group IDs must fit seven octal digits (`0` through `2097151`); saving an
+unrepresentable ID throws `InvalidFormatException` instead of truncating it. GNU output
+also supports signed 63-bit base-256 owner/group IDs.
+
+For backward compatibility, the public `TarEntry.Mode` value includes an additional
+`01000` marker on directories. Saving uses the original header mode, not that marker.
+Other metadata, such as owner/group names and extended attributes, is not preserved.
 
 ## Async Behavior
 

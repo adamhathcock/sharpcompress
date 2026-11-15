@@ -102,9 +102,15 @@ public partial class TarWriter : AbstractWriter
     }
 
     public override void WriteDirectory(string directoryName, DateTime? modificationTime) =>
-        WriteDirectory(directoryName, modificationTime, 0);
+        WriteDirectory(directoryName, modificationTime, 0x1FF);
 
-    internal void WriteDirectory(string directoryName, DateTime? modificationTime, long mode)
+    internal void WriteDirectory(
+        string directoryName,
+        DateTime? modificationTime,
+        long mode,
+        long userId = 0,
+        long groupId = 0
+    )
     {
         var normalizedName = NormalizeDirectoryName(directoryName);
         if (string.IsNullOrEmpty(normalizedName))
@@ -118,18 +124,22 @@ public partial class TarWriter : AbstractWriter
         header.Size = 0;
         header.EntryType = EntryType.Directory;
         header.Mode = mode;
+        header.UserId = userId;
+        header.GroupId = groupId;
         header.Write(OutputStream.NotNull());
     }
 
     public void Write(string filename, Stream source, DateTime? modificationTime, long? size) =>
-        Write(filename, source, modificationTime, size, 0);
+        Write(filename, source, modificationTime, size, 0x1FF);
 
     internal void Write(
         string filename,
         Stream source,
         DateTime? modificationTime,
         long? size,
-        long mode
+        long mode,
+        long userId = 0,
+        long groupId = 0
     )
     {
         if (!source.CanSeek && size is null)
@@ -145,6 +155,8 @@ public partial class TarWriter : AbstractWriter
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
         header.Mode = mode;
+        header.UserId = userId;
+        header.GroupId = groupId;
         header.Write(OutputStream.NotNull());
         var progressStream = WrapWithProgress(source, filename);
         size = progressStream.TransferTo(

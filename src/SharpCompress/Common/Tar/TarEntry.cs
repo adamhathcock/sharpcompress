@@ -44,7 +44,12 @@ public partial class TarEntry : Entry
 
     public override bool IsSplitAfter => false;
 
-    public long Mode => _filePart?.Header.Mode ?? 0;
+    // Preserve the legacy public directory marker without mixing it into the raw
+    // header mode, where 01000 is the real sticky bit and must round-trip unchanged.
+    public long Mode => _filePart is null ? 0 : _filePart.Header.Mode | (IsDirectory ? 0x200L : 0L);
+
+    // New entries have no header; only those entries use the writer's 0777 default.
+    internal long ModeForWriting => _filePart?.Header.Mode ?? 0x1FF;
 
     public long UserID => _filePart?.Header.UserId ?? 0;
 

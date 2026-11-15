@@ -36,8 +36,8 @@ internal sealed partial class TarHeader
         var buffer = new byte[BLOCK_SIZE];
 
         WriteOctalBytes(ModeToWrite, buffer, 100, 8);
-        WriteOctalBytes(0, buffer, 108, 8);
-        WriteOctalBytes(0, buffer, 116, 8);
+        WriteOwnerId(UserId, buffer, 108);
+        WriteOwnerId(GroupId, buffer, 116);
 
         var nameByteCount = ArchiveEncoding
             .GetEncoding()
@@ -134,8 +134,8 @@ internal sealed partial class TarHeader
         var buffer = new byte[BLOCK_SIZE];
 
         WriteOctalBytes(ModeToWrite, buffer, 100, 8);
-        WriteOctalBytes(0, buffer, 108, 8);
-        WriteOctalBytes(0, buffer, 116, 8);
+        WriteOwnerId(UserId, buffer, 108);
+        WriteOwnerId(GroupId, buffer, 116);
 
         var nameByteCount = ArchiveEncoding
             .GetEncoding()
@@ -287,8 +287,8 @@ internal sealed partial class TarHeader
             }
 
             Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-            UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
-            GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
+            UserId = ReadOwnerId(buffer, 108);
+            GroupId = ReadOwnerId(buffer, 116);
 
             var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
 
@@ -311,11 +311,6 @@ internal sealed partial class TarHeader
         }
 
         pendingMetadata.ApplyTo(this);
-
-        if (entryType == EntryType.Directory)
-        {
-            Mode |= 0b1_000_000_000;
-        }
 
         if (entryType != EntryType.LongName && Name.Length == 0)
         {

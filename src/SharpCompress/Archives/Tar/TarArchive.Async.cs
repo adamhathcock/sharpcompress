@@ -33,7 +33,9 @@ public partial class TarArchive
                     .WriteDirectoryAsync(
                         entry.Key.NotNull("Entry Key is null"),
                         entry.LastModifiedTime,
-                        entry.Mode & 0x1FF,
+                        entry.ModeForWriting,
+                        entry.UserID,
+                        entry.GroupId,
                         cancellationToken
                     )
                     .ConfigureAwait(false);
@@ -52,7 +54,9 @@ public partial class TarArchive
                         entryStream,
                         entry.LastModifiedTime,
                         entry.Size,
-                        entry.Mode,
+                        entry.ModeForWriting,
+                        entry.UserID,
+                        entry.GroupId,
                         cancellationToken
                     )
                     .ConfigureAwait(false);
@@ -66,7 +70,9 @@ public partial class TarArchive
                     .WriteDirectoryAsync(
                         entry.Key.NotNull("Entry Key is null"),
                         entry.LastModifiedTime,
-                        entry.Mode & 0x1FF,
+                        entry.ModeForWriting,
+                        entry.UserID,
+                        entry.GroupId,
                         cancellationToken
                     )
                     .ConfigureAwait(false);
@@ -85,7 +91,9 @@ public partial class TarArchive
                         entryStream,
                         entry.LastModifiedTime,
                         entry.Size,
-                        entry.Mode,
+                        entry.ModeForWriting,
+                        entry.UserID,
+                        entry.GroupId,
                         cancellationToken
                     )
                     .ConfigureAwait(false);

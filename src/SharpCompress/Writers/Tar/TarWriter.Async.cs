@@ -50,12 +50,14 @@ public partial class TarWriter
         string directoryName,
         DateTime? modificationTime,
         CancellationToken cancellationToken = default
-    ) => WriteDirectoryAsync(directoryName, modificationTime, 0, cancellationToken);
+    ) => WriteDirectoryAsync(directoryName, modificationTime, 0x1FF, 0, 0, cancellationToken);
 
     internal async ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
         long mode,
+        long userId,
+        long groupId,
         CancellationToken cancellationToken = default
     )
     {
@@ -71,6 +73,8 @@ public partial class TarWriter
         header.Size = 0;
         header.EntryType = EntryType.Directory;
         header.Mode = mode;
+        header.UserId = userId;
+        header.GroupId = groupId;
         await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
     }
 
@@ -95,7 +99,7 @@ public partial class TarWriter
         DateTime? modificationTime,
         long? size,
         CancellationToken cancellationToken = default
-    ) => WriteAsync(filename, source, modificationTime, size, 0, cancellationToken);
+    ) => WriteAsync(filename, source, modificationTime, size, 0x1FF, 0, 0, cancellationToken);
 
     internal async ValueTask WriteAsync(
         string filename,
@@ -103,6 +107,8 @@ public partial class TarWriter
         DateTime? modificationTime,
         long? size,
         long mode,
+        long userId,
+        long groupId,
         CancellationToken cancellationToken = default
     )
     {
@@ -119,6 +125,8 @@ public partial class TarWriter
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
         header.Mode = mode;
+        header.UserId = userId;
+        header.GroupId = groupId;
         await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
         var progressStream = WrapWithProgress(source, filename);
         var written = await progressStream

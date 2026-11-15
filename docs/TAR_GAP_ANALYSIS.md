@@ -160,7 +160,9 @@ Recommended action:
 
 The writer does not round-trip rich tar metadata beyond the basic fields needed for file and directory entries.
 
-Current write behavior sets fixed defaults for some fields such as mode, owner id, and group id.
+`TarArchive.SaveTo` and `SaveToAsync` preserve file/directory permissions and numeric owner/group IDs.
+New entries and public `TarWriter` calls retain the defaults of mode `0777` and owner/group `0/0`.
+Owner/group names, extended attributes, and other unmodeled metadata are still not preserved.
 
 Impact:
 

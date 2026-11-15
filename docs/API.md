@@ -174,6 +174,12 @@ var options2 = new WriterOptions(CompressionType.Deflate)
 
 `WriterOptions.BufferSize` controls stream copy buffers used while writing archive entries. If it is not set, SharpCompress falls back to `Constants.BufferSize`.
 
+`TarArchive.SaveTo` and `SaveToAsync` preserve existing file/directory permission bits
+(including zero permissions and special bits) and numeric owner/group IDs. Newly added
+entries and public `TarWriter` writes default to mode `0777` and owner/group `0/0`.
+USTAR output rejects owner/group IDs outside `0`–`2097151`; use GNU output for larger IDs.
+See [Tar metadata handling](TAR_SPEC.md#metadata-surface) for compatibility details.
+
 ---
 
 ## Archive API Methods

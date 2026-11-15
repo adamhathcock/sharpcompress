@@ -27,10 +27,9 @@ internal sealed partial class TarHeader
     internal string? Name { get; set; }
     internal string? LinkName { get; set; }
 
-    internal long Mode { get; set; }
+    internal long Mode { get; set; } = 0x1FF;
 
-    // Permission bits to write; 0777 when the entry has none (a new file)
-    private long ModeToWrite => (Mode & 0xFFF) != 0 ? Mode & 0xFFF : 511;
+    private long ModeToWrite => Mode & 0xFFF;
     internal long UserId { get; set; }
     internal long GroupId { get; set; }
     internal long Size { get; set; }
@@ -128,8 +127,8 @@ internal sealed partial class TarHeader
         var buffer = new byte[BLOCK_SIZE];
 
         WriteOctalBytes(ModeToWrite, buffer, 100, 8); // file mode
-        WriteOctalBytes(0, buffer, 108, 8); // owner ID
-        WriteOctalBytes(0, buffer, 116, 8); // group ID
+        WriteOwnerId(UserId, buffer, 108);
+        WriteOwnerId(GroupId, buffer, 116);
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
@@ -232,8 +231,8 @@ internal sealed partial class TarHeader
         var buffer = new byte[BLOCK_SIZE];
 
         WriteOctalBytes(ModeToWrite, buffer, 100, 8); // file mode
-        WriteOctalBytes(0, buffer, 108, 8); // owner ID
-        WriteOctalBytes(0, buffer, 116, 8); // group ID
+        WriteOwnerId(UserId, buffer, 108);
+        WriteOwnerId(GroupId, buffer, 116);
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
@@ -367,8 +366,8 @@ internal sealed partial class TarHeader
         }
 
         Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-        UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
-        GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
+        UserId = ReadOwnerId(buffer, 108);
+        GroupId = ReadOwnerId(buffer, 116);
 
         var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
 
@@ -386,11 +385,6 @@ internal sealed partial class TarHeader
         }
 
         pendingMetadata.ApplyTo(this);
-
-        if (entryType == EntryType.Directory)
-        {
-            Mode |= 0b1_000_000_000;
-        }
 
         if (entryType != EntryType.LongName && Name.Length == 0)
         {
@@ -745,22 +739,43 @@ internal sealed partial class TarHeader
         return Convert.ToInt64(s, 8);
     }
 
-    private static long ReadAsciiInt64Base8oldGnu(byte[] buffer, int offset, int count)
+    private void WriteOwnerId(long value, byte[] buffer, int offset)
     {
-        if (buffer[offset] == 0x80 && buffer[offset + 1] == 0x00)
+        if (value is >= 0 and <= 0x1FFFFF)
         {
-            return buffer[offset + 4] << 24
-                | buffer[offset + 5] << 16
-                | buffer[offset + 6] << 8
-                | buffer[offset + 7];
+            WriteOctalBytes(value, buffer, offset, 8);
+            return;
         }
-        var s = Encoding.UTF8.GetString(buffer, offset, count).TrimNulls();
 
-        if (string.IsNullOrEmpty(s))
+        if (WriteFormat == TarHeaderWriteFormat.USTAR)
         {
-            return 0;
+            throw new InvalidFormatException(
+                $"TAR owner/group ID {value} does not fit USTAR's seven octal digits. Try using GNU Tar format instead."
+            );
         }
-        return Convert.ToInt64(s, 8);
+
+        // The marker consumes one bit; the remaining 63 bits hold a signed value.
+        if (value is < -(1L << 62) or > (1L << 62) - 1)
+        {
+            throw new InvalidFormatException(
+                $"TAR owner/group ID {value} does not fit GNU base-256."
+            );
+        }
+        BinaryPrimitives.WriteInt64BigEndian(buffer.AsSpan(offset, 8), value);
+        buffer[offset] |= 0x80;
+    }
+
+    private static long ReadOwnerId(byte[] buffer, int offset)
+    {
+        if ((buffer[offset] & 0x80) == 0)
+        {
+            return ReadAsciiInt64Base8(buffer, offset, 7);
+        }
+
+        var value = BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(offset, 8));
+        // Negative values are already sign-extended; positive values only need the
+        // base-256 marker cleared. Do not truncate large IDs to a signed 32-bit int.
+        return (buffer[offset] & 0x40) != 0 ? value : value & long.MaxValue;
     }
 
     private static long ReadAsciiInt64(byte[] buffer, int offset, int count)

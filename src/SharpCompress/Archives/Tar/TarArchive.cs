@@ -89,11 +89,12 @@ public partial class TarArchive
         {
             if (entry.IsDirectory)
             {
-                // TarHeader marks directories it reads with 0o1000
                 writer.WriteDirectory(
                     entry.Key.NotNull("Entry Key is null"),
                     entry.LastModifiedTime,
-                    entry.Mode & 0x1FF
+                    entry.ModeForWriting,
+                    entry.UserID,
+                    entry.GroupId
                 );
             }
             else
@@ -104,7 +105,9 @@ public partial class TarArchive
                     entryStream,
                     entry.LastModifiedTime,
                     entry.Size,
-                    entry.Mode
+                    entry.ModeForWriting,
+                    entry.UserID,
+                    entry.GroupId
                 );
             }
         }
