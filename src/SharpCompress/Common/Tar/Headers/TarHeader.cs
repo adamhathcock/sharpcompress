@@ -27,11 +27,7 @@ internal sealed partial class TarHeader
     internal string? Name { get; set; }
     internal string? LinkName { get; set; }
 
-    internal long Mode { get; set; } = 0x1FF;
-
-    private long ModeToWrite => Mode & 0xFFF;
-    internal long UserId { get; set; }
-    internal long GroupId { get; set; }
+    internal TarEntryMetadata Metadata { get; set; }
     internal long Size { get; set; }
     internal DateTime LastModifiedTime { get; set; }
     internal EntryType EntryType { get; set; }
@@ -45,6 +41,11 @@ internal sealed partial class TarHeader
     // This is generous enough for most real-world scenarios (32KB)
     private const int MAX_LONG_NAME_SIZE = 32768;
     private const int MAX_PAX_HEADER_SIZE = 65536;
+    private const long MAX_USTAR_OWNER_ID = 2_097_151;
+    private const long MIN_GNU_OWNER_ID = -4_611_686_018_427_387_904;
+    private const long MAX_GNU_OWNER_ID = 4_611_686_018_427_387_903;
+    private const byte BASE256_MARKER = 128;
+    private const byte BASE256_SIGN_BIT = 64;
 
     internal sealed class PaxMetadata
     {
@@ -90,20 +91,12 @@ internal sealed partial class TarHeader
                 header.LastModifiedTime = LastModifiedTime.Value;
             }
 
-            if (Mode.HasValue)
+            header.Metadata = new TarEntryMetadata
             {
-                header.Mode = Mode.Value;
-            }
-
-            if (UserId.HasValue)
-            {
-                header.UserId = UserId.Value;
-            }
-
-            if (GroupId.HasValue)
-            {
-                header.GroupId = GroupId.Value;
-            }
+                Mode = Mode ?? header.Metadata.Mode,
+                UserId = UserId ?? header.Metadata.UserId,
+                GroupId = GroupId ?? header.Metadata.GroupId,
+            };
         }
     }
 
@@ -126,9 +119,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(ModeToWrite, buffer, 100, 8); // file mode
-        WriteOwnerId(UserId, buffer, 108);
-        WriteOwnerId(GroupId, buffer, 116);
+        WriteMetadata(buffer);
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
@@ -230,9 +221,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(ModeToWrite, buffer, 100, 8); // file mode
-        WriteOwnerId(UserId, buffer, 108);
-        WriteOwnerId(GroupId, buffer, 116);
+        WriteMetadata(buffer);
 
         //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
         var nameByteCount = ArchiveEncoding
@@ -365,9 +354,12 @@ internal sealed partial class TarHeader
             LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
         }
 
-        Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-        UserId = ReadOwnerId(buffer, 108);
-        GroupId = ReadOwnerId(buffer, 116);
+        Metadata = new TarEntryMetadata
+        {
+            Mode = ReadAsciiInt64Base8(buffer, 100, 7),
+            UserId = ReadOwnerId(buffer, 108),
+            GroupId = ReadOwnerId(buffer, 116),
+        };
 
         var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
 
@@ -739,9 +731,18 @@ internal sealed partial class TarHeader
         return Convert.ToInt64(s, 8);
     }
 
+    private void WriteMetadata(byte[] buffer)
+    {
+        // Apply defaults only when serializing. Explicit zero values must not be
+        // confused with metadata that was never supplied.
+        WriteOctalBytes(Metadata.GetModeForWriting(), buffer, 100, 8);
+        WriteOwnerId(Metadata.UserId ?? TarEntryMetadata.DefaultUserId, buffer, 108);
+        WriteOwnerId(Metadata.GroupId ?? TarEntryMetadata.DefaultGroupId, buffer, 116);
+    }
+
     private void WriteOwnerId(long value, byte[] buffer, int offset)
     {
-        if (value is >= 0 and <= 0x1FFFFF)
+        if (value is >= 0 and <= MAX_USTAR_OWNER_ID)
         {
             WriteOctalBytes(value, buffer, offset, 8);
             return;
@@ -755,19 +756,19 @@ internal sealed partial class TarHeader
         }
 
         // The marker consumes one bit; the remaining 63 bits hold a signed value.
-        if (value is < -(1L << 62) or > (1L << 62) - 1)
+        if (value is < MIN_GNU_OWNER_ID or > MAX_GNU_OWNER_ID)
         {
             throw new InvalidFormatException(
                 $"TAR owner/group ID {value} does not fit GNU base-256."
             );
         }
         BinaryPrimitives.WriteInt64BigEndian(buffer.AsSpan(offset, 8), value);
-        buffer[offset] |= 0x80;
+        buffer[offset] |= BASE256_MARKER;
     }
 
     private static long ReadOwnerId(byte[] buffer, int offset)
     {
-        if ((buffer[offset] & 0x80) == 0)
+        if ((buffer[offset] & BASE256_MARKER) == 0)
         {
             return ReadAsciiInt64Base8(buffer, offset, 7);
         }
@@ -775,7 +776,7 @@ internal sealed partial class TarHeader
         var value = BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(offset, 8));
         // Negative values are already sign-extended; positive values only need the
         // base-256 marker cleared. Do not truncate large IDs to a signed 32-bit int.
-        return (buffer[offset] & 0x40) != 0 ? value : value & long.MaxValue;
+        return (buffer[offset] & BASE256_SIGN_BIT) != 0 ? value : value & long.MaxValue;
     }
 
     private static long ReadAsciiInt64(byte[] buffer, int offset, int count)

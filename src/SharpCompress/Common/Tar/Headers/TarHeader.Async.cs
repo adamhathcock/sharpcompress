@@ -35,9 +35,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(ModeToWrite, buffer, 100, 8);
-        WriteOwnerId(UserId, buffer, 108);
-        WriteOwnerId(GroupId, buffer, 116);
+        WriteMetadata(buffer);
 
         var nameByteCount = ArchiveEncoding
             .GetEncoding()
@@ -133,9 +131,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(ModeToWrite, buffer, 100, 8);
-        WriteOwnerId(UserId, buffer, 108);
-        WriteOwnerId(GroupId, buffer, 116);
+        WriteMetadata(buffer);
 
         var nameByteCount = ArchiveEncoding
             .GetEncoding()
@@ -286,9 +282,12 @@ internal sealed partial class TarHeader
                 LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
             }
 
-            Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-            UserId = ReadOwnerId(buffer, 108);
-            GroupId = ReadOwnerId(buffer, 116);
+            Metadata = new TarEntryMetadata
+            {
+                Mode = ReadAsciiInt64Base8(buffer, 100, 7),
+                UserId = ReadOwnerId(buffer, 108),
+                GroupId = ReadOwnerId(buffer, 116),
+            };
 
             var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
 

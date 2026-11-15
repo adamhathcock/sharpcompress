@@ -19,6 +19,67 @@ namespace SharpCompress.Test.Tar;
 
 public class TarModeTests
 {
+    [Fact]
+    public void Tar_Metadata_Is_Unspecified_By_Default()
+    {
+        var metadata = new TarHeader(new ArchiveEncoding()).Metadata;
+        Assert.Null(metadata.Mode);
+        Assert.Null(metadata.UserId);
+        Assert.Null(metadata.GroupId);
+    }
+
+    [Theory]
+    [InlineData(null, null, null, "777", 0L, 0L)]
+    [InlineData("000", null, null, "000", 0L, 0L)]
+    [InlineData(null, 42L, null, "777", 42L, 0L)]
+    [InlineData(null, null, 73L, "777", 0L, 73L)]
+    [InlineData("000", 42L, 73L, "000", 42L, 73L)]
+    [InlineData(null, 0L, 0L, "777", 0L, 0L)]
+    [InlineData("700", null, 73L, "700", 0L, 73L)]
+    [InlineData("100644", 42L, null, "644", 42L, 0L)]
+    public async Task TarHeader_Only_Defaults_Unspecified_Metadata(
+        string? octalMode,
+        long? userId,
+        long? groupId,
+        string expectedMode,
+        long expectedUserId,
+        long expectedGroupId
+    )
+    {
+        long? mode = octalMode is null ? null : Convert.ToInt64(octalMode, 8);
+        foreach (var useAsync in new[] { false, true })
+        {
+            var header = new TarHeader(new ArchiveEncoding())
+            {
+                Name = "entry",
+                LastModifiedTime = TarHeader.EPOCH,
+                Metadata = new TarEntryMetadata
+                {
+                    Mode = mode,
+                    UserId = userId,
+                    GroupId = groupId,
+                },
+            };
+            using var saved = new MemoryStream();
+            if (useAsync)
+            {
+                await header.WriteAsync(saved, CancellationToken.None);
+            }
+            else
+            {
+                header.Write(saved);
+            }
+
+            var bytes = saved.ToArray();
+            Assert.Equal(Convert.ToInt64(expectedMode, 8), ReadOctal(bytes, 100, 8));
+            Assert.Equal(expectedUserId, ReadOctal(bytes, 108, 8));
+            Assert.Equal(expectedGroupId, ReadOctal(bytes, 116, 8));
+            Assert.Equal(mode, header.Metadata.Mode);
+            Assert.Equal(userId, header.Metadata.UserId);
+            Assert.Equal(groupId, header.Metadata.GroupId);
+        }
+    }
+
     public static IEnumerable<object[]> ModeCases()
     {
         foreach (var options in EntryCases())
@@ -101,7 +162,7 @@ public class TarModeTests
         var entry = (TarEntry)Assert.Single(reread.Entries);
         Assert.Equal(name, entry.Key);
         Assert.Equal(isDirectory, entry.IsDirectory);
-        Assert.Equal(isDirectory ? mode | 0x200 : mode, entry.Mode);
+        Assert.Equal(mode, entry.Metadata.Mode);
     }
 
     [Theory]
@@ -114,7 +175,7 @@ public class TarModeTests
     {
         using var source = CreateArchive(
             isDirectory ? "setgid/" : "setuid",
-            0xDED,
+            Convert.ToInt64("6755", 8),
             isDirectory,
             1000,
             1001
@@ -137,7 +198,7 @@ public class TarModeTests
         }
 
         var bytes = saved.ToArray();
-        Assert.Equal(0xDED, ReadOctal(bytes, 100, 8));
+        Assert.Equal(Convert.ToInt64("6755", 8), ReadOctal(bytes, 100, 8));
         Assert.Equal(1000, ReadOctal(bytes, 108, 8));
         Assert.Equal(1001, ReadOctal(bytes, 116, 8));
     }
@@ -155,7 +216,13 @@ public class TarModeTests
         long groupId
     )
     {
-        using var source = CreateArchive("owned", 0x1ED, false, userId, groupId);
+        using var source = CreateArchive(
+            "owned",
+            Convert.ToInt64("755", 8),
+            false,
+            userId,
+            groupId
+        );
         using var saved = new MemoryStream();
         var options = new TarWriterOptions(CompressionType.None, true);
         if (useAsync)
@@ -193,7 +260,13 @@ public class TarModeTests
         long groupId
     )
     {
-        using var source = CreateArchive("owned", 0x1ED, false, userId, groupId);
+        using var source = CreateArchive(
+            "owned",
+            Convert.ToInt64("755", 8),
+            false,
+            userId,
+            groupId
+        );
         using var saved = new MemoryStream();
         var options = new TarWriterOptions(CompressionType.None, true, TarHeaderWriteFormat.USTAR);
         if (useAsync)
@@ -228,8 +301,7 @@ public class TarModeTests
         var header = new TarHeader(new ArchiveEncoding())
         {
             Name = "owned",
-            UserId = userId,
-            GroupId = groupId,
+            Metadata = new TarEntryMetadata { UserId = userId, GroupId = groupId },
         };
         using var saved = new MemoryStream();
         if (useAsync)
@@ -284,8 +356,8 @@ public class TarModeTests
 
         var bytes = saved.ToArray();
         Assert.Equal(0, ReadOctal(bytes, 100, 8));
-        Assert.Equal(0x1FF, ReadOctal(bytes, 512 + 100, 8));
-        Assert.Equal(0x1FF, ReadOctal(bytes, 1024 + 100, 8));
+        Assert.Equal(Convert.ToInt64("777", 8), ReadOctal(bytes, 512 + 100, 8));
+        Assert.Equal(Convert.ToInt64("777", 8), ReadOctal(bytes, 1024 + 100, 8));
         Assert.Equal(0, ReadOctal(bytes, 512 + 108, 8));
         Assert.Equal(0, ReadOctal(bytes, 512 + 116, 8));
         Assert.Equal(0, ReadOctal(bytes, 1024 + 108, 8));
@@ -320,8 +392,8 @@ public class TarModeTests
         }
 
         var bytes = saved.ToArray();
-        Assert.Equal(0x1FF, ReadOctal(bytes, 100, 8));
-        Assert.Equal(0x1FF, ReadOctal(bytes, 512 + 100, 8));
+        Assert.Equal(Convert.ToInt64("777", 8), ReadOctal(bytes, 100, 8));
+        Assert.Equal(Convert.ToInt64("777", 8), ReadOctal(bytes, 512 + 100, 8));
         Assert.Equal(0, ReadOctal(bytes, 108, 8));
         Assert.Equal(0, ReadOctal(bytes, 116, 8));
         Assert.Equal(0, ReadOctal(bytes, 512 + 108, 8));
@@ -335,7 +407,7 @@ public class TarModeTests
     [InlineData(true)]
     public async Task TarReader_Directory_Mode_Keeps_Legacy_Marker(bool useAsync)
     {
-        using var source = CreateArchive("private/", 0x1C0, true);
+        using var source = CreateArchive("private/", Convert.ToInt64("700", 8), true);
         using var cancellation = new CancellationTokenSource();
         if (useAsync)
         {
@@ -345,13 +417,13 @@ public class TarModeTests
                 cancellation.Token
             );
             Assert.True(await reader.MoveToNextEntryAsync(cancellation.Token));
-            Assert.Equal(0x3C0, ((TarEntry)reader.Entry).Mode);
+            Assert.Equal(Convert.ToInt64("1700", 8), ((TarEntry)reader.Entry).Mode);
         }
         else
         {
             using var reader = TarReader.OpenReader(source, ReaderOptions.ForExternalStream);
             Assert.True(reader.MoveToNextEntry());
-            Assert.Equal(0x3C0, ((TarEntry)reader.Entry).Mode);
+            Assert.Equal(Convert.ToInt64("1700", 8), ((TarEntry)reader.Entry).Mode);
         }
     }
 
@@ -396,7 +468,7 @@ public class TarModeTests
 
     private static void WriteOwnerId(byte[] bytes, int offset, long value)
     {
-        if (value is >= 0 and <= 0x1FFFFF)
+        if (value is >= 0 and <= 2_097_151)
         {
             Encoding
                 .ASCII.GetBytes(Convert.ToString(value, 8).PadLeft(7, '0'))

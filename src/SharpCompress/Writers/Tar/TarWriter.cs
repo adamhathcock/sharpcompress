@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.IO;
@@ -102,14 +103,12 @@ public partial class TarWriter : AbstractWriter
     }
 
     public override void WriteDirectory(string directoryName, DateTime? modificationTime) =>
-        WriteDirectory(directoryName, modificationTime, 0x1FF);
+        WriteDirectory(directoryName, modificationTime, default);
 
     internal void WriteDirectory(
         string directoryName,
         DateTime? modificationTime,
-        long mode,
-        long userId = 0,
-        long groupId = 0
+        TarEntryMetadata metadata
     )
     {
         var normalizedName = NormalizeDirectoryName(directoryName);
@@ -123,23 +122,19 @@ public partial class TarWriter : AbstractWriter
         header.Name = normalizedName;
         header.Size = 0;
         header.EntryType = EntryType.Directory;
-        header.Mode = mode;
-        header.UserId = userId;
-        header.GroupId = groupId;
+        header.Metadata = metadata;
         header.Write(OutputStream.NotNull());
     }
 
     public void Write(string filename, Stream source, DateTime? modificationTime, long? size) =>
-        Write(filename, source, modificationTime, size, 0x1FF);
+        Write(filename, source, modificationTime, size, default);
 
     internal void Write(
         string filename,
         Stream source,
         DateTime? modificationTime,
         long? size,
-        long mode,
-        long userId = 0,
-        long groupId = 0
+        TarEntryMetadata metadata
     )
     {
         if (!source.CanSeek && size is null)
@@ -154,9 +149,7 @@ public partial class TarWriter : AbstractWriter
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
-        header.Mode = mode;
-        header.UserId = userId;
-        header.GroupId = groupId;
+        header.Metadata = metadata;
         header.Write(OutputStream.NotNull());
         var progressStream = WrapWithProgress(source, filename);
         size = progressStream.TransferTo(

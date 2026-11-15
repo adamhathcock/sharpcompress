@@ -128,20 +128,24 @@ public class TarArchiveTests : ArchiveTests
         var source = new MemoryStream();
         using (var writer = new TarWriter(source, new TarWriterOptions(CompressionType.None, true)))
         {
-            writer.WriteDirectory("private", null, 0x1C0);
+            writer.WriteDirectory(
+                "private",
+                null,
+                new TarEntryMetadata { Mode = Convert.ToInt64("700", 8) }
+            );
             writer.Write(
                 "run.sh",
                 new MemoryStream(Encoding.UTF8.GetBytes("echo hi")),
                 null,
                 null,
-                0x1ED
+                new TarEntryMetadata { Mode = Convert.ToInt64("755", 8) }
             );
             writer.Write(
                 "key.pem",
                 new MemoryStream(Encoding.UTF8.GetBytes("secret")),
                 null,
                 null,
-                0x180
+                new TarEntryMetadata { Mode = Convert.ToInt64("600", 8) }
             );
         }
         source.Position = 0;
@@ -161,13 +165,11 @@ public class TarArchiveTests : ArchiveTests
         saved.Position = 0;
 
         using var reread = TarArchive.OpenArchive(saved);
-        var modes = reread.Entries.ToDictionary(
-            e => e.Key!.TrimEnd('/'),
-            e => ((TarEntry)e).Mode & 0x1FF
-        );
-        Assert.Equal(0x1C0, modes["private"]);
-        Assert.Equal(0x1ED, modes["run.sh"]);
-        Assert.Equal(0x180, modes["key.pem"]);
+        var modes = reread.Entries.ToDictionary(e => e.Key!.TrimEnd('/'), e => ((TarEntry)e).Mode);
+        // The public directory mode includes the legacy 01000 marker.
+        Assert.Equal(Convert.ToInt64("1700", 8), modes["private"]);
+        Assert.Equal(Convert.ToInt64("755", 8), modes["run.sh"]);
+        Assert.Equal(Convert.ToInt64("600", 8), modes["key.pem"]);
     }
 
     [Fact]

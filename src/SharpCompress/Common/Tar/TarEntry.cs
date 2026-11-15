@@ -46,14 +46,13 @@ public partial class TarEntry : Entry
 
     // Preserve the legacy public directory marker without mixing it into the raw
     // header mode, where 01000 is the real sticky bit and must round-trip unchanged.
-    public long Mode => _filePart is null ? 0 : _filePart.Header.Mode | (IsDirectory ? 0x200L : 0L);
+    public long Mode => _filePart is null ? 0 : Metadata.GetLegacyMode(IsDirectory);
 
-    // New entries have no header; only those entries use the writer's 0777 default.
-    internal long ModeForWriting => _filePart?.Header.Mode ?? 0x1FF;
+    internal TarEntryMetadata Metadata => _filePart?.Header.Metadata ?? default;
 
-    public long UserID => _filePart?.Header.UserId ?? 0;
+    public long UserID => Metadata.UserId ?? 0;
 
-    public long GroupId => _filePart?.Header.GroupId ?? 0;
+    public long GroupId => Metadata.GroupId ?? 0;
 
     internal override IEnumerable<FilePart> Parts => _filePart.Empty();
 
