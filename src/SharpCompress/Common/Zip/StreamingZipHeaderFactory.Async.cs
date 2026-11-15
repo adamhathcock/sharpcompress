@@ -316,7 +316,7 @@ internal sealed partial class StreamingZipHeaderFactory
                         localHeader.IsCrcAvailable = true;
                     }
 
-                    if (_headerFactory.IsResolvedDirectory(localHeader))
+                    if (_headerFactory.IsDirectoryWithoutData(localHeader))
                     {
                         header.HasData = false;
                     }

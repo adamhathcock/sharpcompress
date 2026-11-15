@@ -151,7 +151,7 @@ public abstract partial class AbstractReader<TEntry, TVolume> : IReader, IAsyncR
 
     private void SkipEntry()
     {
-        if (!Entry.IsDirectory)
+        if (Entry.HasData)
         {
             Skip();
         }

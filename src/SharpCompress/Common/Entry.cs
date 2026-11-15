@@ -81,6 +81,9 @@ public abstract class Entry : IEntry
 
     internal abstract IEnumerable<FilePart> Parts { get; }
 
+    // Most formats have no directory payload. ZIP can store a compressed empty stream.
+    internal virtual bool HasData => !IsDirectory;
+
     public bool IsSolid { get; set; }
 
     internal virtual void Close() { }

@@ -178,11 +178,6 @@ internal partial class ZipHeaderFactory
             }
         }
 
-        if (entryHeader.IsDirectory)
-        {
-            return;
-        }
-
         switch (_mode)
         {
             case StreamingMode.Seekable:
