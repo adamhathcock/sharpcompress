@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.Compressors;
 using SharpCompress.IO;
@@ -101,7 +102,14 @@ public partial class TarWriter : AbstractWriter
         return directoryName;
     }
 
-    public override void WriteDirectory(string directoryName, DateTime? modificationTime)
+    public override void WriteDirectory(string directoryName, DateTime? modificationTime) =>
+        WriteDirectory(directoryName, modificationTime, null);
+
+    internal void WriteDirectory(
+        string directoryName,
+        DateTime? modificationTime,
+        TarEntryMetadata? metadata
+    )
     {
         var normalizedName = NormalizeDirectoryName(directoryName);
         if (string.IsNullOrEmpty(normalizedName))
@@ -114,10 +122,20 @@ public partial class TarWriter : AbstractWriter
         header.Name = normalizedName;
         header.Size = 0;
         header.EntryType = EntryType.Directory;
+        header.Metadata = metadata;
         header.Write(OutputStream.NotNull());
     }
 
-    public void Write(string filename, Stream source, DateTime? modificationTime, long? size)
+    public void Write(string filename, Stream source, DateTime? modificationTime, long? size) =>
+        Write(filename, source, modificationTime, size, null);
+
+    internal void Write(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        long? size,
+        TarEntryMetadata? metadata
+    )
     {
         if (!source.CanSeek && size is null)
         {
@@ -131,6 +149,7 @@ public partial class TarWriter : AbstractWriter
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
+        header.Metadata = metadata;
         header.Write(OutputStream.NotNull());
         var progressStream = WrapWithProgress(source, filename);
         size = progressStream.TransferTo(

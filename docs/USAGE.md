@@ -272,6 +272,13 @@ Detection and inspection entry points and result types are in the `SharpCompress
 
 The stream overload preserves the caller's current position and leaves the supplied stream open.
 
+For TAR entry metadata, `TarEntry.Mode`, `UserId`, and `GroupId` are nullable:
+`null` means unspecified, not zero. Use `entry.UserId is long userId` to handle a
+known ID, or `entry.UserId ?? 0` if the application deliberately wants a fallback.
+The former `UserID` property is now named `UserId`. Newly added entries keep null
+metadata in memory; saving supplies mode `0777` and owner/group `0/0` only in the
+output headers.
+
 ### Open multi-volume archives
 
 ```C#

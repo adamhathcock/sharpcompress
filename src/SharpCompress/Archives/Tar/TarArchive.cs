@@ -91,7 +91,8 @@ public partial class TarArchive
             {
                 writer.WriteDirectory(
                     entry.Key.NotNull("Entry Key is null"),
-                    entry.LastModifiedTime
+                    entry.LastModifiedTime,
+                    entry.Metadata
                 );
             }
             else
@@ -101,7 +102,8 @@ public partial class TarArchive
                     entry.Key.NotNull("Entry Key is null"),
                     entryStream,
                     entry.LastModifiedTime,
-                    entry.Size
+                    entry.Size,
+                    entry.Metadata
                 );
             }
         }
