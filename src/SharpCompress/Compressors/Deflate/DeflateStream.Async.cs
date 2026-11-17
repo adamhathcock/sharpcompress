@@ -16,10 +16,8 @@ public partial class DeflateStream
     {
         if (!_disposed)
         {
-            if (!_leaveOpen)
-            {
-                await _baseStream.DisposeAsync().ConfigureAwait(false);
-            }
+            // ZlibBaseStream writes the final block and honours leaveOpen itself.
+            await _baseStream.DisposeAsync().ConfigureAwait(false);
             _disposed = true;
         }
 #if STREAM_DISPOSEASYNC
