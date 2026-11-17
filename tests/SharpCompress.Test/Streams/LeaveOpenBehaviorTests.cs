@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using SharpCompress.Compressors;
 using SharpCompress.Compressors.BZip2;
+using SharpCompress.Compressors.Deflate;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Test.Mocks;
 using Xunit;
@@ -221,5 +223,46 @@ public class LeaveOpenBehaviorTests
         // Should still be able to use the stream
         innerStream.Position = 0;
         Assert.True(innerStream.CanRead);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DeflateStream_Compress_LeaveOpen_True_Writes_Final_Block(bool async)
+    {
+        using var innerStream = new TestStream(new MemoryStream());
+        var deflate = new DeflateStream(
+            innerStream,
+            CompressionMode.Compress,
+            CompressionLevel.Default,
+            leaveOpen: true
+        );
+        var data = CreateTestData();
+        if (async)
+        {
+            await deflate.WriteAsync(data, 0, data.Length);
+            await deflate.DisposeAsync();
+        }
+        else
+        {
+            deflate.Write(data, 0, data.Length);
+            deflate.Dispose();
+        }
+
+        Assert.False(
+            innerStream.IsDisposed,
+            "Inner stream should NOT be disposed when leaveOpen=true"
+        );
+        Assert.True(innerStream.Length > 0);
+
+        innerStream.Position = 0;
+        using var decompressor = new System.IO.Compression.DeflateStream(
+            innerStream,
+            System.IO.Compression.CompressionMode.Decompress,
+            leaveOpen: true
+        );
+        using var decompressed = new MemoryStream();
+        decompressor.CopyTo(decompressed);
+        Assert.Equal(data, decompressed.ToArray());
     }
 }

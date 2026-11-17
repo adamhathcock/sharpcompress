@@ -39,7 +39,6 @@ public partial class DeflateStream : Stream, IStreamStack
 {
     private readonly ZlibBaseStream _baseStream;
     private bool _disposed;
-    private readonly bool _leaveOpen;
 
     public DeflateStream(
         Stream stream,
@@ -57,7 +56,6 @@ public partial class DeflateStream : Stream, IStreamStack
         Encoding? forceEncoding = null
     )
     {
-        _leaveOpen = leaveOpen;
         _baseStream = new ZlibBaseStream(
             stream,
             mode,
@@ -253,7 +251,8 @@ public partial class DeflateStream : Stream, IStreamStack
         {
             if (!_disposed)
             {
-                if (disposing && !_leaveOpen)
+                // ZlibBaseStream writes the final block and honours leaveOpen itself.
+                if (disposing)
                 {
                     _baseStream?.Dispose();
                 }
