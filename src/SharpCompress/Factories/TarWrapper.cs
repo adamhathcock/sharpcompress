@@ -68,10 +68,10 @@ public class TarWrapper(
                     .CreateAsync(stream, CompressionMode.Decompress, false)
                     .ConfigureAwait(false),
             ["tar.bz2", "tb2", "tbz", "tbz2", "tz2"],
-            // BZip2 decompresses in whole blocks; the compressed size of the first block
-            // can be close to the uncompressed maximum (9 × 100 000 = 900 000 bytes).
-            // The ring buffer must hold all compressed bytes read during format detection.
-            minimumRewindBufferSize: BZip2Constants.baseBlockSize * 9
+            // BZip2 decodes a whole block before producing output. Incompressible data can
+            // expand, so allow libbzip2's 1% plus 600 bytes compression-buffer overhead
+            // beyond the maximum 900,000-byte block when recording the probe.
+            minimumRewindBufferSize: BZip2Constants.baseBlockSize * 9 * 101 / 100 + 600
         ),
         new(
             CompressionType.GZip,
