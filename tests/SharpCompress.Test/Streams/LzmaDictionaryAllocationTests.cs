@@ -213,8 +213,6 @@ public class LzmaDictionaryAllocationTests
     [InlineData(true)]
     public async Task Lzma2_Tiny_Stream_With_Huge_Dictionary_Decodes(bool useAsync)
     {
-        using var limits = new DictionarySizeLimitScope();
-        DictionarySizeLimits.Lzma2 = int.MaxValue;
         using var input = new MemoryStream(new byte[] { 1, 0, 0, 65, 0 });
         using var output = new MemoryStream();
         if (useAsync)
