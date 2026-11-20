@@ -91,14 +91,11 @@ public class ServiceCompositionTests : TestBase
             typeof(IWriterFileOperations),
             typeof(IWritableArchiveFileOperations),
         ];
-        Assert.All(
-            serviceTypes,
-            type =>
-            {
-                Assert.False(type.IsVisible);
-                Assert.Equal("SharpCompress.Services", type.Namespace);
-            }
-        );
+        Assert.All(serviceTypes, type =>
+        {
+            Assert.False(type.IsVisible);
+            Assert.Equal("SharpCompress.Services", type.Namespace);
+        });
         Assert.DoesNotContain(
             typeof(ArchiveFactory).Assembly.GetReferencedAssemblies(),
             reference => reference.Name is "Pure.DI" or "Pure.DI.Abstractions"
@@ -132,15 +129,13 @@ public class ServiceCompositionTests : TestBase
                 )
             )
             {
-                Assert.Contains(
-                    contract.GetMethods(),
-                    candidate => candidate.ToString() == method.ToString()
+                Assert.Contains(contract.GetMethods(), candidate =>
+                    candidate.ToString() == method.ToString()
                 );
             }
         }
-        Assert.All(
-            typeof(ServiceComposition).GetProperties(),
-            root => Assert.Contains(services, service => service.Contract == root.PropertyType)
+        Assert.All(typeof(ServiceComposition).GetProperties(), root =>
+            Assert.Contains(services, service => service.Contract == root.PropertyType)
         );
     }
 

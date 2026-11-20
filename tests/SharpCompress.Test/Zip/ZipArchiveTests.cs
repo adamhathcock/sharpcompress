@@ -1112,9 +1112,8 @@ public class ZipArchiveTests : ArchiveTests
             [".signature", "encrypted-zstd-entry.bin", "plain-zstd-entry.bin", "tables.db"],
             entries.Select(x => x.Key.NotNull()).OrderBy(x => x).ToArray()
         );
-        Assert.All(
-            entries,
-            entry => Assert.Equal(CompressionType.ZStandard, entry.CompressionType)
+        Assert.All(entries, entry =>
+            Assert.Equal(CompressionType.ZStandard, entry.CompressionType)
         );
 
         var expectedSizes = new long[] { 160, 64 * 1024, 64 * 1024, 192 * 1024 };

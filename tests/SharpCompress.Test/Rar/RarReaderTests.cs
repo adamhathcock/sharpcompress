@@ -203,8 +203,7 @@ public class RarReaderTests : ReaderTests
                     Assert.Equal(CompressionType.Rar, reader.Entry.CompressionType);
                     using var entryStream = reader.OpenEntryStream();
                     var file = Path.GetFileName(reader.Entry.Key).NotNull();
-                    var folder =
-                        Path.GetDirectoryName(reader.Entry.Key)
+                    var folder = Path.GetDirectoryName(reader.Entry.Key)
                         ?? throw new InvalidOperationException(
                             "Entry key must have a directory name."
                         );

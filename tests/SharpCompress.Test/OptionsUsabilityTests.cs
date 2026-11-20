@@ -540,10 +540,8 @@ public class OptionsUsabilityTests : TestBase
         public EntryStream OpenEntryStream()
         {
             Source.Position = 0;
-            return new TrackingEntryStream(
-                this,
-                Source,
-                bufferSize => EntryStreamCopyBufferSize = bufferSize
+            return new TrackingEntryStream(this, Source, bufferSize =>
+                EntryStreamCopyBufferSize = bufferSize
             );
         }
 

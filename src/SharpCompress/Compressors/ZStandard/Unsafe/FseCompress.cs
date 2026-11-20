@@ -579,6 +579,7 @@ public static unsafe partial class Methods
         new uint[8] { 0, 473195, 504333, 520860, 550000, 700000, 750000, 830000 }
     );
 #endif
+
     /*! FSE_normalizeCount():
     normalize counts so that sum(count[]) == Power_of_2 (2^tableLog)
     'normalizedCounter' is a table of short, of minimum size (maxSymbolValue+1).

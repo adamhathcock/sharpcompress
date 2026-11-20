@@ -157,8 +157,8 @@ SharpCompress supports multiple archive and compression formats:
 ### Generating sync methods from async ones
 Most of the library still keeps a hand-written sync twin beside each async method, usually split as
 `Foo.cs` + `Foo.Async.cs`. Where the two bodies are the same logic, the sync one is generated
-instead, using [Zomp.SyncMethodGenerator](https://github.com/zompinc/sync-method-generator) (already
-referenced for every project via `Directory.Packages.props`).
+instead, using [Zomp.SyncMethodGenerator](https://github.com/zompinc/sync-method-generator) (a
+private package reference in `src/SharpCompress/SharpCompress.csproj`).
 
 - Put `[Zomp.SyncMethodGenerator.CreateSyncVersion]` on the **async** method — that body is then the
   single source of truth — and delete the hand-written sync twin. The generator drops the `Async`

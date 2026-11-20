@@ -33,8 +33,8 @@ public partial class ArjMainHeader : ArjHeader
     public ArjMainHeader(ArchiveEncoding archiveEncoding)
         : base(ArjHeaderType.MainHeader)
     {
-        ArchiveEncoding =
-            archiveEncoding ?? throw new ArgumentNullException(nameof(archiveEncoding));
+        ArchiveEncoding = archiveEncoding
+            ?? throw new ArgumentNullException(nameof(archiveEncoding));
     }
 
     public override ArjHeader? Read(Stream reader)

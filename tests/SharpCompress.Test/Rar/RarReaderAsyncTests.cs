@@ -240,8 +240,7 @@ public class RarReaderAsyncTests : ReaderTests
                     try
                     {
                         var file = Path.GetFileName(reader.Entry.Key).NotNull();
-                        var folder =
-                            Path.GetDirectoryName(reader.Entry.Key)
+                        var folder = Path.GetDirectoryName(reader.Entry.Key)
                             ?? throw new InvalidOperationException(
                                 "Entry key must have a directory name."
                             );

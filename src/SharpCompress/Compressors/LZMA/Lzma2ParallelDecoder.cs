@@ -413,8 +413,8 @@ internal static class Lzma2ParallelDecoder
                 return true;
             }
 
-            var buffer =
-                _buffer ?? throw new ObjectDisposedException(nameof(RandomAccessBlockStream));
+            var buffer = _buffer
+                ?? throw new ObjectDisposedException(nameof(RandomAccessBlockStream));
             var requested = (int)Math.Min(buffer.Length, _length - _position);
             var total = 0;
             while (total < requested)

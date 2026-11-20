@@ -49,9 +49,8 @@ public partial class X86Filter : BlockFilter
     {
         _state = 0;
         SetOwnedStream(
-            new BcjFilterStream(
-                stream,
-                (buffer, count, ip) => BranchExecFilter.X86Converter(buffer, count, ip, ref _state)
+            new BcjFilterStream(stream, (buffer, count, ip) =>
+                BranchExecFilter.X86Converter(buffer, count, ip, ref _state)
             )
         );
     }
