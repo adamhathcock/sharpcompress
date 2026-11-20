@@ -492,6 +492,9 @@ a 256 MiB or 1 GiB window under the default settings.
 
 These settings are **process-wide**, not per-reader options. Configure them once
 at startup if trusted input requires larger dictionaries, for example
-`DictionarySizeLimits.Rar5 = 256L << 20;`. Do not temporarily raise them around
-untrusted requests. Bound extraction output and concurrency separately; dictionary
-limits are not a total-memory budget. See the [API reference](API.md#decompression-dictionary-limits).
+`DictionarySizeLimits.Lzma2 = 256L << 20;` for a trusted 7z or XZ archive that
+exceeds the LZMA2 limit. A limit error does not imply archive corruption. See the
+[0.50.9 compatibility note](RELEASE_NOTES.md#0509) for the change from older
+releases. Do not temporarily raise limits around untrusted requests. Bound
+extraction output and concurrency separately; dictionary limits are not a
+total-memory budget. See the [API reference](API.md#decompression-dictionary-limits).

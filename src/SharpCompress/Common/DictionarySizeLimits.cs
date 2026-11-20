@@ -68,6 +68,12 @@ public static class DictionarySizeLimits
         Interlocked.Exchange(ref field, value);
     }
 
+    internal static InvalidFormatException Lzma2LimitExceeded(long size, long maximum) =>
+        new(
+            $"LZMA2 dictionary requires {size} bytes, exceeding the configured limit of {maximum} bytes. "
+                + $"For trusted input, set {nameof(DictionarySizeLimits)}.{nameof(Lzma2)} at application startup."
+        );
+
     internal static void Validate(long size, long maximum, string format)
     {
         if (size <= 0 || size > maximum)

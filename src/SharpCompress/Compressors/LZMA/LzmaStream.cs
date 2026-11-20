@@ -74,7 +74,11 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             _dictionarySize = 2 | (properties[0] & 1);
             _dictionarySize <<= (properties[0] >> 1) + 11;
-            DictionarySizeLimits.Validate(_dictionarySize, DictionarySizeLimits.Lzma2, "LZMA2");
+            var maximum = DictionarySizeLimits.Lzma2;
+            if (_dictionarySize > maximum)
+            {
+                throw DictionarySizeLimits.Lzma2LimitExceeded(_dictionarySize, maximum);
+            }
 
             Properties = new byte[1];
             _availableBytes = 0;

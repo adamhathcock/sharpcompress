@@ -76,15 +76,15 @@ public class DictionarySizeLimitTests : TestBase
         foreach (var properties in new[] { new byte[] { 0x5d, 0, 0, 0, 0x10 }, new byte[] { 30 } })
         {
             using var input = new MemoryStream();
-            if (useAsync)
-            {
-                await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+            var error = useAsync
+                ? await Assert.ThrowsAsync<InvalidFormatException>(async () =>
                     await LzmaStream.CreateAsync(properties, input, -1, -1)
-                );
-            }
-            else
+                )
+                : Assert.Throws<InvalidFormatException>(() => LzmaStream.Create(properties, input));
+            if (properties.Length == 1)
             {
-                Assert.Throws<InvalidFormatException>(() => LzmaStream.Create(properties, input));
+                Assert.Contains("configured limit of 67108864 bytes", error.Message);
+                Assert.Contains("DictionarySizeLimits.Lzma2", error.Message);
             }
             Assert.True(input.CanRead);
             Assert.Equal(0, input.Position);
