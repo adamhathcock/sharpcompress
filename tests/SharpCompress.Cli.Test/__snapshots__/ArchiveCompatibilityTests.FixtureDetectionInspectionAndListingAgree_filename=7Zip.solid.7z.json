@@ -10,10 +10,8 @@
         "archive": {
           "containerType": "SevenZip",
           "formatName": "7Zip",
-          "outerCompressionType": null,
           "supportedApis": "Archive"
         },
-        "compression": null,
         "isStandaloneCompression": false
       }
     }
@@ -28,22 +26,18 @@
         "archive": {
           "containerType": "SevenZip",
           "formatName": "7Zip",
-          "outerCompressionType": null,
           "supportedApis": "Archive"
         },
-        "compression": null,
         "isStandaloneCompression": false
       },
       "information": {
         "detection": {
           "containerType": "SevenZip",
           "formatName": "7Zip",
-          "outerCompressionType": null,
           "supportedApis": "Archive"
         },
         "status": "Complete",
         "limitations": "None",
-        "formatVersion": null,
         "entryCount": 5,
         "entriesWithUnknownSizeCount": 0,
         "physicalSize": 58959,
@@ -56,12 +50,9 @@
         "isMultiVolume": false,
         "physicalPartCount": 1,
         "logicalVolumeCount": 1,
-        "isComplete": true,
-        "comment": null,
-        "zip": null
+        "isComplete": true
       },
-      "integrity": "notTested",
-      "limitations": null
+      "integrity": "notTested"
     }
   },
   "list": {
@@ -72,10 +63,8 @@
           "index": 0,
           "metadata": {
             "key": "exe",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 0,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -85,9 +74,6 @@
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 16
           }
         },
@@ -95,10 +81,8 @@
           "index": 1,
           "metadata": {
             "key": "jpg",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 0,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -108,9 +92,6 @@
             "volumeIndexFirst": 1,
             "volumeIndexLast": 1,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 16
           }
         },
@@ -118,10 +99,8 @@
           "index": 2,
           "metadata": {
             "key": "jpg/test.jpg",
-            "linkTarget": null,
             "compressionType": "LZMA",
             "size": 40372,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
@@ -131,9 +110,6 @@
             "volumeIndexFirst": 2,
             "volumeIndexLast": 2,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 32
           }
         },
@@ -141,10 +117,8 @@
           "index": 3,
           "metadata": {
             "key": "тест.txt",
-            "linkTarget": null,
             "compressionType": "LZMA",
             "size": 15498,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
@@ -154,9 +128,6 @@
             "volumeIndexFirst": 3,
             "volumeIndexLast": 3,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 32
           }
         },
@@ -164,10 +135,8 @@
           "index": 4,
           "metadata": {
             "key": "exe/test.exe",
-            "linkTarget": null,
             "compressionType": "LZMA",
             "size": 45056,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
@@ -177,9 +146,6 @@
             "volumeIndexFirst": 4,
             "volumeIndexLast": 4,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 32
           }
         }

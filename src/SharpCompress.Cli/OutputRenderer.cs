@@ -11,6 +11,7 @@ internal static class OutputRenderer
     internal static readonly JsonSerializerOptions Json = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters = { new JsonStringEnumConverter() },
     };
     private static readonly JsonSerializerOptions PrettyJson = new(Json) { WriteIndented = true };
@@ -52,18 +53,10 @@ internal static class OutputRenderer
                 await WriteTextAsync(item, output, prefix + index++ + ".").ConfigureAwait(false);
             }
         }
-        else
+        else if (value.ValueKind != JsonValueKind.Null)
         {
             await output
-                .WriteLineAsync(
-                    prefix.TrimEnd('.')
-                        + ": "
-                        + (
-                            value.ValueKind == JsonValueKind.Null
-                                ? "unavailable"
-                                : value.GetRawText()
-                        )
-                )
+                .WriteLineAsync(prefix.TrimEnd('.') + ": " + value.GetRawText())
                 .ConfigureAwait(false);
         }
     }

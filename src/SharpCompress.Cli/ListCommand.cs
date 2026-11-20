@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
 using SharpCompress.Detection;
 using SharpCompress.Readers;
 
@@ -11,6 +13,21 @@ namespace SharpCompress.Cli;
 
 internal static class ListCommand
 {
+    private sealed record EntryRow(long Index, EntryInformation Metadata, TarMetadata? Tar);
+
+    private sealed record TarMetadata(string? Mode, long? UserId, long? GroupId)
+    {
+        internal static TarMetadata FromEntry(TarEntry entry) =>
+            new(
+                // TarEntry.Mode adds a legacy directory marker indistinguishable from the sticky bit.
+                !entry.IsDirectory && entry.Mode is long mode
+                    ? Convert.ToString(mode, 8).PadLeft(4, '0')
+                    : null,
+                entry.UserId,
+                entry.GroupId
+            );
+    }
+
     internal static async Task<int> ExecuteAsync(
         string path,
         FileDetection detection,
@@ -50,7 +67,11 @@ internal static class ListCommand
             var ordinal = index++;
             await AddAsync(
                     longListing || json || ndjson
-                        ? new { Index = ordinal, Metadata = snapshot }
+                        ? new EntryRow(
+                            ordinal,
+                            snapshot,
+                            entry is TarEntry tar ? TarMetadata.FromEntry(tar) : null
+                        )
                         : snapshot.Key ?? "(unnamed)"
                 )
                 .ConfigureAwait(false);
@@ -64,7 +85,6 @@ internal static class ListCommand
                         Kind = "logicalPayload",
                         Name = System.IO.Path.GetFileNameWithoutExtension(path),
                         NameSource = "inferred",
-                        Size = (long?)null,
                         Compression = detection.Compression,
                     }
                 )

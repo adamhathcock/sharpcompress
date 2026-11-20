@@ -10,10 +10,8 @@
         "archive": {
           "containerType": "Lzw",
           "formatName": "Lzw",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       }
     }
@@ -28,27 +26,21 @@
         "archive": {
           "containerType": "Lzw",
           "formatName": "Lzw",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       },
       "information": {
         "detection": {
           "containerType": "Lzw",
           "formatName": "Lzw",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
         "status": "Partial",
         "limitations": "UnavailableMetadata",
-        "formatVersion": null,
         "entryCount": 1,
         "entriesWithUnknownSizeCount": 1,
         "physicalSize": 5348,
-        "compressedPayloadSize": null,
-        "uncompressedPayloadSize": null,
         "isSolid": false,
         "solidStreamCount": 0,
         "encryption": "None",
@@ -56,12 +48,9 @@
         "isMultiVolume": false,
         "physicalPartCount": 1,
         "logicalVolumeCount": 1,
-        "isComplete": true,
-        "comment": null,
-        "zip": null
+        "isComplete": true
       },
-      "integrity": "notTested",
-      "limitations": null
+      "integrity": "notTested"
     }
   },
   "list": {
@@ -72,7 +61,6 @@
           "index": 0,
           "metadata": {
             "key": "large_test.txt",
-            "linkTarget": null,
             "compressionType": "Lzw",
             "size": 0,
             "compressedSize": 0,
@@ -81,14 +69,8 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
-            "volumeIndexLast": 0,
-            "lastModifiedTime": null,
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "volumeIndexLast": 0
           }
         }
       ],

@@ -10,10 +10,8 @@
         "archive": {
           "containerType": "Ace",
           "formatName": "Ace",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       }
     }
@@ -28,17 +26,14 @@
         "archive": {
           "containerType": "Ace",
           "formatName": "Ace",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       },
       "information": {
         "detection": {
           "containerType": "Ace",
           "formatName": "Ace",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
         "status": "Complete",
@@ -56,12 +51,9 @@
         "isMultiVolume": false,
         "physicalPartCount": 1,
         "logicalVolumeCount": 1,
-        "isComplete": true,
-        "comment": null,
-        "zip": null
+        "isComplete": true
       },
-      "integrity": "notTested",
-      "limitations": null
+      "integrity": "notTested"
     }
   },
   "list": {
@@ -72,7 +64,6 @@
           "index": 0,
           "metadata": {
             "key": "exe",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 0,
             "compressedSize": 0,
@@ -81,21 +72,15 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         },
         {
           "index": 1,
           "metadata": {
             "key": "jpg",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 0,
             "compressedSize": 0,
@@ -104,21 +89,15 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         },
         {
           "index": 2,
           "metadata": {
             "key": "exe\\test.exe",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 45056,
             "compressedSize": 45056,
@@ -127,21 +106,15 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         },
         {
           "index": 3,
           "metadata": {
             "key": "jpg\\test.jpg",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 40372,
             "compressedSize": 40372,
@@ -150,21 +123,15 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         },
         {
           "index": 4,
           "metadata": {
             "key": "Tect.txt.txt",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 15498,
             "compressedSize": 15498,
@@ -173,14 +140,9 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         }
       ],

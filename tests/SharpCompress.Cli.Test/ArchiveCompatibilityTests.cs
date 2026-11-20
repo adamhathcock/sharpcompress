@@ -49,7 +49,86 @@ public class ArchiveCompatibilityTests
     }
 
     [Fact]
-    public async Task ReaderOnlyEntriesPreserveUnavailableSizes()
+    public async Task TarLocalPaxMetadataAppliesOnlyToTheNextEntry()
+    {
+        using var document = await RunJsonAsync("list", ArchivePath("Tar.PaxLocalHeader.tar"));
+        var entries = document.RootElement.GetProperty("result").GetProperty("entries");
+        Assert.Equal(2, entries.GetArrayLength());
+        AssertTarEntry(entries[0], 0, "pax/overridden-name.txt", "0640", 1234, 2345);
+        Assert.Equal(10, entries[0].GetProperty("metadata").GetProperty("size").GetInt64());
+        AssertTarEntry(entries[1], 1, "second.txt", "0644", 11, 22);
+        Assert.Equal(2, entries[1].GetProperty("metadata").GetProperty("size").GetInt64());
+    }
+
+    [Fact]
+    public async Task TarGlobalPaxMetadataResumesAfterLocalOverride()
+    {
+        using var document = await RunJsonAsync("list", ArchivePath("Tar.PaxGlobalHeader.tar"));
+        var entries = document.RootElement.GetProperty("result").GetProperty("entries");
+        Assert.Equal(3, entries.GetArrayLength());
+        AssertTarEntry(entries[0], 0, "global-one.txt", "0640", 4000, 5000);
+        AssertTarEntry(entries[1], 1, "global-local-override.txt", "0600", 4010, 5010);
+        AssertTarEntry(entries[2], 2, "global-three.txt", "0640", 4000, 5000);
+    }
+
+    [Fact]
+    public async Task TarDetailAppearsInNdjsonAndLongListingsButNotPlainListings()
+    {
+        var path = ArchivePath("Tar.PaxLocalHeader.tar");
+        using var document = await RunJsonAsync("list", path);
+        var entries = document.RootElement.GetProperty("result").GetProperty("entries");
+        Assert.False(entries[0].GetProperty("metadata").TryGetProperty("linkTarget", out _));
+
+        var ndjson = await RunProcessAsync(["list", path, "--ndjson"]);
+        Assert.Equal(0, ndjson.ExitCode);
+        Assert.Equal("", ndjson.Error);
+        var records = ndjson.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(entries.GetArrayLength(), records.Length);
+        for (var i = 0; i < records.Length; i++)
+        {
+            using var record = JsonDocument.Parse(records[i]);
+            Assert.Equal(1, record.RootElement.GetProperty("schemaVersion").GetInt32());
+            Assert.True(
+                JsonElement.DeepEquals(entries[i], record.RootElement.GetProperty("result"))
+            );
+        }
+
+        var detailed = await RunProcessAsync(["list", path, "--long"]);
+        Assert.Equal(0, detailed.ExitCode);
+        Assert.Equal("", detailed.Error);
+        Assert.Contains("tar.mode: \"0640\"", detailed.Output, StringComparison.Ordinal);
+        Assert.Contains("tar.userId: 1234", detailed.Output, StringComparison.Ordinal);
+        Assert.Contains("tar.groupId: 2345", detailed.Output, StringComparison.Ordinal);
+        Assert.DoesNotContain("metadata.linkTarget:", detailed.Output, StringComparison.Ordinal);
+
+        var plain = await RunProcessAsync(["list", path]);
+        Assert.Equal(0, plain.ExitCode);
+        Assert.Equal("", plain.Error);
+        Assert.Equal(
+            new[] { "pax/overridden-name.txt", "second.txt" },
+            plain
+                .Output.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.TrimEnd('\r'))
+        );
+    }
+
+    [Fact]
+    public async Task TarDirectoryOmitsModeButKeepsZeroOwnershipAndFalseFlags()
+    {
+        using var document = await RunJsonAsync("list", ArchivePath("Tar.tar"));
+        var entry = document.RootElement.GetProperty("result").GetProperty("entries")[0];
+        var metadata = entry.GetProperty("metadata");
+        Assert.True(metadata.GetProperty("isDirectory").GetBoolean());
+        Assert.False(metadata.GetProperty("isEncrypted").GetBoolean());
+        Assert.Equal(0, metadata.GetProperty("size").GetInt64());
+        var tar = entry.GetProperty("tar");
+        Assert.False(tar.TryGetProperty("mode", out _));
+        Assert.Equal(0, tar.GetProperty("userId").GetInt64());
+        Assert.Equal(0, tar.GetProperty("groupId").GetInt64());
+    }
+
+    [Fact]
+    public async Task ReaderOnlyEntriesOmitUnavailableSizes()
     {
         using var document = await RunJsonAsync("list", ArchivePath("Arc.uncompressed.arc"));
         var first = document
@@ -57,9 +136,9 @@ public class ArchiveCompatibilityTests
             .GetProperty("entries")[0]
             .GetProperty("metadata");
         Assert.Equal("TECT.TXT", first.GetProperty("key").GetString());
-        Assert.Equal(JsonValueKind.Null, first.GetProperty("size").ValueKind);
+        Assert.False(first.TryGetProperty("size", out _));
         Assert.Equal(15498, first.GetProperty("compressedSize").GetInt64());
-        Assert.Equal(JsonValueKind.Null, first.GetProperty("isComplete").ValueKind);
+        Assert.False(first.TryGetProperty("isComplete", out _));
     }
 
     [Theory]
@@ -115,7 +194,7 @@ public class ArchiveCompatibilityTests
             Assert.Equal("MissingVolumes", info.GetProperty("limitations").GetString());
             Assert.False(info.GetProperty("isComplete").GetBoolean());
             Assert.Equal(1, info.GetProperty("physicalPartCount").GetInt32());
-            Assert.Equal(JsonValueKind.Null, info.GetProperty("compressedPayloadSize").ValueKind);
+            Assert.False(info.TryGetProperty("compressedPayloadSize", out _));
             JsonSnapshot.Match(
                 Normalize(document, Path.GetFileName(path)).ToJsonString(),
                 nameof(MissingSplitArchivePartsAreReportedAsPartial)
@@ -153,7 +232,7 @@ public class ArchiveCompatibilityTests
         var info = document.RootElement.GetProperty("result").GetProperty("information");
         Assert.Equal("Partial", info.GetProperty("status").GetString());
         Assert.Equal("EncryptedHeaders", info.GetProperty("limitations").GetString());
-        Assert.Equal(JsonValueKind.Null, info.GetProperty("entryCount").ValueKind);
+        Assert.False(info.TryGetProperty("entryCount", out _));
         JsonSnapshot.Match(
             Normalize(document, "Rar.encrypted_filesAndHeader.rar").ToJsonString(),
             nameof(EncryptedHeadersProducePartialInspection)
@@ -237,6 +316,23 @@ public class ArchiveCompatibilityTests
                     .GetString()
             );
         }
+    }
+
+    private static void AssertTarEntry(
+        JsonElement entry,
+        int index,
+        string key,
+        string mode,
+        long userId,
+        long groupId
+    )
+    {
+        Assert.Equal(index, entry.GetProperty("index").GetInt64());
+        Assert.Equal(key, entry.GetProperty("metadata").GetProperty("key").GetString());
+        var tar = entry.GetProperty("tar");
+        Assert.Equal(mode, tar.GetProperty("mode").GetString());
+        Assert.Equal(userId, tar.GetProperty("userId").GetInt64());
+        Assert.Equal(groupId, tar.GetProperty("groupId").GetInt64());
     }
 
     private static async Task<JsonDocument> RunJsonAsync(string command, string path)

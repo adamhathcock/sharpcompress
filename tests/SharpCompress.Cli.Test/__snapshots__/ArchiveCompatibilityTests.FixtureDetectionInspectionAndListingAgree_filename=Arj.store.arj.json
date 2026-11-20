@@ -10,10 +10,8 @@
         "archive": {
           "containerType": "Arj",
           "formatName": "Arj",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       }
     }
@@ -28,22 +26,18 @@
         "archive": {
           "containerType": "Arj",
           "formatName": "Arj",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       },
       "information": {
         "detection": {
           "containerType": "Arj",
           "formatName": "Arj",
-          "outerCompressionType": null,
           "supportedApis": "Reader"
         },
         "status": "Complete",
         "limitations": "None",
-        "formatVersion": null,
         "entryCount": 3,
         "entriesWithUnknownSizeCount": 0,
         "physicalSize": 101138,
@@ -56,12 +50,9 @@
         "isMultiVolume": false,
         "physicalPartCount": 1,
         "logicalVolumeCount": 1,
-        "isComplete": true,
-        "comment": null,
-        "zip": null
+        "isComplete": true
       },
-      "integrity": "notTested",
-      "limitations": null
+      "integrity": "notTested"
     }
   },
   "list": {
@@ -72,7 +63,6 @@
           "index": 0,
           "metadata": {
             "key": "TECT.TXT",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 15498,
             "compressedSize": 15498,
@@ -81,21 +71,15 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         },
         {
           "index": 1,
           "metadata": {
             "key": "EXE/TEST.EXE",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 45056,
             "compressedSize": 45056,
@@ -104,21 +88,15 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         },
         {
           "index": 2,
           "metadata": {
             "key": "JPG/TEST.JPG",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 40372,
             "compressedSize": 40372,
@@ -127,14 +105,9 @@
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
           }
         }
       ],

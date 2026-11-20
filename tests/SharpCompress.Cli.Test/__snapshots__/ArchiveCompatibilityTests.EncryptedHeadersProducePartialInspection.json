@@ -8,39 +8,23 @@
       "archive": {
         "containerType": "Rar",
         "formatName": "Rar",
-        "outerCompressionType": null,
         "supportedApis": "Archive, Reader"
       },
-      "compression": null,
       "isStandaloneCompression": false
     },
     "information": {
       "detection": {
         "containerType": "Rar",
         "formatName": "Rar",
-        "outerCompressionType": null,
         "supportedApis": "Archive, Reader"
       },
       "status": "Partial",
       "limitations": "EncryptedHeaders",
-      "formatVersion": null,
-      "entryCount": null,
-      "entriesWithUnknownSizeCount": null,
       "physicalSize": 60172,
-      "compressedPayloadSize": null,
-      "uncompressedPayloadSize": null,
-      "isSolid": null,
-      "solidStreamCount": null,
       "encryption": "Headers",
       "isEncrypted": true,
-      "isMultiVolume": null,
-      "physicalPartCount": 1,
-      "logicalVolumeCount": null,
-      "isComplete": null,
-      "comment": null,
-      "zip": null
+      "physicalPartCount": 1
     },
-    "integrity": "notTested",
-    "limitations": null
+    "integrity": "notTested"
   }
 }

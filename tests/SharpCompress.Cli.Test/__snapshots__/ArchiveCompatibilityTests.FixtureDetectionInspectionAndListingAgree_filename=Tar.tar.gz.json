@@ -43,11 +43,9 @@
         },
         "status": "Partial",
         "limitations": "UnavailableMetadata",
-        "formatVersion": null,
         "entryCount": 6,
         "entriesWithUnknownSizeCount": 0,
         "physicalSize": 61273,
-        "compressedPayloadSize": null,
         "uncompressedPayloadSize": 100926,
         "isSolid": false,
         "solidStreamCount": 0,
@@ -56,12 +54,9 @@
         "isMultiVolume": false,
         "physicalPartCount": 1,
         "logicalVolumeCount": 1,
-        "isComplete": true,
-        "comment": null,
-        "zip": null
+        "isComplete": true
       },
-      "integrity": "notTested",
-      "limitations": null
+      "integrity": "notTested"
     }
   },
   "list": {
@@ -72,138 +67,117 @@
           "index": 0,
           "metadata": {
             "key": "Empty/",
-            "linkTarget": null,
             "compressionType": "GZip",
-            "size": null,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "userId": 0,
+            "groupId": 0
           }
         },
         {
           "index": 1,
           "metadata": {
             "key": "exe/",
-            "linkTarget": null,
             "compressionType": "GZip",
-            "size": null,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "userId": 0,
+            "groupId": 0
           }
         },
         {
           "index": 2,
           "metadata": {
             "key": "exe/test.exe",
-            "linkTarget": null,
             "compressionType": "GZip",
-            "size": null,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "mode": "100777",
+            "userId": 0,
+            "groupId": 0
           }
         },
         {
           "index": 3,
           "metadata": {
             "key": "jpg/",
-            "linkTarget": null,
             "compressionType": "GZip",
-            "size": null,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "userId": 0,
+            "groupId": 0
           }
         },
         {
           "index": 4,
           "metadata": {
             "key": "jpg/test.jpg",
-            "linkTarget": null,
             "compressionType": "GZip",
-            "size": null,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "mode": "100777",
+            "userId": 0,
+            "groupId": 0
           }
         },
         {
           "index": 5,
           "metadata": {
             "key": "���.txt",
-            "linkTarget": null,
             "compressionType": "GZip",
-            "size": null,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
             "isSolid": false,
             "isSplitAfter": false,
-            "isComplete": null,
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
-            "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
-            "attributes": null
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "mode": "100777",
+            "userId": 0,
+            "groupId": 0
           }
         }
       ],

@@ -10,10 +10,8 @@
         "archive": {
           "containerType": "Rar",
           "formatName": "Rar",
-          "outerCompressionType": null,
           "supportedApis": "Archive, Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       }
     }
@@ -28,17 +26,14 @@
         "archive": {
           "containerType": "Rar",
           "formatName": "Rar",
-          "outerCompressionType": null,
           "supportedApis": "Archive, Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       },
       "information": {
         "detection": {
           "containerType": "Rar",
           "formatName": "Rar",
-          "outerCompressionType": null,
           "supportedApis": "Archive, Reader"
         },
         "status": "Complete",
@@ -56,12 +51,9 @@
         "isMultiVolume": true,
         "physicalPartCount": 6,
         "logicalVolumeCount": 6,
-        "isComplete": true,
-        "comment": null,
-        "zip": null
+        "isComplete": true
       },
-      "integrity": "notTested",
-      "limitations": null
+      "integrity": "notTested"
     }
   },
   "list": {
@@ -72,7 +64,6 @@
           "index": 0,
           "metadata": {
             "key": "Rar.multi.solid/тест.txt",
-            "linkTarget": null,
             "compressionType": "Rar",
             "size": 15498,
             "compressedSize": 2728,
@@ -85,9 +76,6 @@
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 32
           }
         },
@@ -95,10 +83,8 @@
           "index": 1,
           "metadata": {
             "key": "Rar.multi.solid/exe/test.exe",
-            "linkTarget": null,
             "compressionType": "Rar",
             "size": 45056,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
@@ -108,9 +94,6 @@
             "volumeIndexFirst": 0,
             "volumeIndexLast": 2,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 32
           }
         },
@@ -118,10 +101,8 @@
           "index": 2,
           "metadata": {
             "key": "Rar.multi.solid/jpg/test.jpg",
-            "linkTarget": null,
             "compressionType": "Rar",
             "size": 40372,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
@@ -131,9 +112,6 @@
             "volumeIndexFirst": 2,
             "volumeIndexLast": 5,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 32
           }
         },
@@ -141,10 +119,8 @@
           "index": 3,
           "metadata": {
             "key": "Rar.multi.solid/Empty",
-            "linkTarget": null,
             "compressionType": "Rar",
             "size": 0,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -154,9 +130,6 @@
             "volumeIndexFirst": 5,
             "volumeIndexLast": 5,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 16
           }
         },
@@ -164,10 +137,8 @@
           "index": 4,
           "metadata": {
             "key": "Rar.multi.solid/exe",
-            "linkTarget": null,
             "compressionType": "Rar",
             "size": 0,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -177,9 +148,6 @@
             "volumeIndexFirst": 5,
             "volumeIndexLast": 5,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 16
           }
         },
@@ -187,10 +155,8 @@
           "index": 5,
           "metadata": {
             "key": "Rar.multi.solid/jpg",
-            "linkTarget": null,
             "compressionType": "Rar",
             "size": 0,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -200,9 +166,6 @@
             "volumeIndexFirst": 5,
             "volumeIndexLast": 5,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 16
           }
         },
@@ -210,10 +173,8 @@
           "index": 6,
           "metadata": {
             "key": "Rar.multi.solid",
-            "linkTarget": null,
             "compressionType": "Rar",
             "size": 0,
-            "compressedSize": null,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -223,9 +184,6 @@
             "volumeIndexFirst": 5,
             "volumeIndexLast": 5,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": 16
           }
         }

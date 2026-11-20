@@ -280,6 +280,10 @@ public class CommandTests
                     CancellationToken.None
                 )
             );
+            using var document = JsonDocument.Parse(output.ToString());
+            var result = document.RootElement.GetProperty("result");
+            Assert.Equal("unrecognized", result.GetProperty("status").GetString());
+            Assert.False(result.TryGetProperty("detection", out _));
             Assert.Equal(
                 2,
                 await CliApplication.RunAsync(

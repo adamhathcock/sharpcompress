@@ -10,10 +10,8 @@
         "archive": {
           "containerType": "Zip",
           "formatName": "Zip",
-          "outerCompressionType": null,
           "supportedApis": "Archive, Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       }
     }
@@ -28,22 +26,18 @@
         "archive": {
           "containerType": "Zip",
           "formatName": "Zip",
-          "outerCompressionType": null,
           "supportedApis": "Archive, Reader"
         },
-        "compression": null,
         "isStandaloneCompression": false
       },
       "information": {
         "detection": {
           "containerType": "Zip",
           "formatName": "Zip",
-          "outerCompressionType": null,
           "supportedApis": "Archive, Reader"
         },
         "status": "Complete",
         "limitations": "None",
-        "formatVersion": null,
         "entryCount": 2,
         "entriesWithUnknownSizeCount": 2,
         "physicalSize": 744,
@@ -62,8 +56,7 @@
           "hasEntriesWithDeferredSizes": true
         }
       },
-      "integrity": "notTested",
-      "limitations": null
+      "integrity": "notTested"
     }
   },
   "list": {
@@ -74,7 +67,6 @@
           "index": 0,
           "metadata": {
             "key": "first.txt",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 199,
             "compressedSize": 199,
@@ -87,9 +79,6 @@
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": -2119958528
           }
         },
@@ -97,7 +86,6 @@
           "index": 1,
           "metadata": {
             "key": "second.txt",
-            "linkTarget": null,
             "compressionType": "None",
             "size": 197,
             "compressedSize": 197,
@@ -110,9 +98,6 @@
             "volumeIndexFirst": 0,
             "volumeIndexLast": 0,
             "lastModifiedTime": "<timestamp>",
-            "createdTime": null,
-            "lastAccessedTime": null,
-            "archivedTime": null,
             "attributes": -2119958528
           }
         }
