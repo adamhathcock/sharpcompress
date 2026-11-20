@@ -183,10 +183,8 @@ internal partial class ArchiveReader
         int numFiles,
         Action<int, DateTime?> action
     ) =>
-        ReadNumberVector(
-            dataVector,
-            numFiles,
-            (index, value) => action(index, TranslateTime(value))
+        ReadNumberVector(dataVector, numFiles, (index, value) =>
+            action(index, TranslateTime(value))
         );
 
     private void ReadAttributeVector(

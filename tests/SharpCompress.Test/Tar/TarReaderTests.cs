@@ -88,9 +88,8 @@ public class TarReaderTests : ReaderTests
     {
         // The BZip2 TarWrapper must declare a MinimumRewindBufferSize large enough
         // to hold an entire maximum-size compressed BZip2 block (9 × 100 000 bytes).
-        var bzip2Wrapper = Array.Find(
-            TarWrapper.Wrappers,
-            w => w.CompressionType == CompressionType.BZip2
+        var bzip2Wrapper = Array.Find(TarWrapper.Wrappers, w =>
+            w.CompressionType == CompressionType.BZip2
         );
         Assert.NotNull(bzip2Wrapper);
         Assert.Equal(BZip2Constants.baseBlockSize * 9, bzip2Wrapper.MinimumRewindBufferSize);
@@ -101,9 +100,8 @@ public class TarReaderTests : ReaderTests
     {
         // Non-BZip2 wrappers that don't specify a custom size default to
         // Constants.RewindableBufferSize so existing behaviour is unchanged.
-        var noneWrapper = Array.Find(
-            TarWrapper.Wrappers,
-            w => w.CompressionType == CompressionType.None
+        var noneWrapper = Array.Find(TarWrapper.Wrappers, w =>
+            w.CompressionType == CompressionType.None
         );
         Assert.NotNull(noneWrapper);
         Assert.Equal(Common.Constants.RewindableBufferSize, noneWrapper.MinimumRewindBufferSize);
@@ -122,8 +120,7 @@ public class TarReaderTests : ReaderTests
                     Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
                     using var entryStream = reader.OpenEntryStream();
                     var file = Path.GetFileName(reader.Entry.Key);
-                    var folder =
-                        Path.GetDirectoryName(reader.Entry.Key)
+                    var folder = Path.GetDirectoryName(reader.Entry.Key)
                         ?? throw new ArgumentNullException();
                     var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                     if (!Directory.Exists(destdir))

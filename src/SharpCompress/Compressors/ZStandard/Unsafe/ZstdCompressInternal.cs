@@ -468,6 +468,7 @@ public static unsafe partial class Methods
         }
     );
 #endif
+
     /* ZSTD_MLcode() :
      * note : mlBase = matchLength - MINMATCH;
      *        because it's the format it's stored in seqStore->sequences */

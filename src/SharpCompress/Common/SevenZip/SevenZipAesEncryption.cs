@@ -29,8 +29,7 @@ internal sealed class SevenZipAesEncryption
     )
     {
         // 7-Zip hashes the UTF-16LE password, as AesDecoderStream expects.
-        var key =
-            SevenZipAesKey.Derive(numCyclesPower, [], Encoding.Unicode.GetBytes(password))
+        var key = SevenZipAesKey.Derive(numCyclesPower, [], Encoding.Unicode.GetBytes(password))
             ?? throw new ArchiveOperationException("7z AES key derivation failed.");
         return new SevenZipAesEncryption(key, numCyclesPower);
     }

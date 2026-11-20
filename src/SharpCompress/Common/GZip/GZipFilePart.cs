@@ -47,13 +47,8 @@ internal sealed partial class GZipFilePart : FilePart
     }
 
     internal Stream WrapWithChecksumValidation(Stream source, string? entryName) =>
-        new GZipChecksumValidationStream(
-            source,
-            _stream,
-            entryName,
-            Crc,
-            UncompressedSize,
-            () => (_decompressor as DeflateStream)?.InputBuffer
+        new GZipChecksumValidationStream(source, _stream, entryName, Crc, UncompressedSize, () =>
+            (_decompressor as DeflateStream)?.InputBuffer
         );
 
     internal override Stream GetRawStream() => _stream;

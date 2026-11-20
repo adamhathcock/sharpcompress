@@ -44,9 +44,8 @@ public class RarArchiveAsyncTests : ArchiveTests
 
     [Fact]
     public async ValueTask Rar_EncryptedFileAndHeader_NoPasswordExceptionTest_Async() =>
-        await Assert.ThrowsAsync(
-            typeof(CryptographicException),
-            async () => await ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", null)
+        await Assert.ThrowsAsync(typeof(CryptographicException), async () =>
+            await ReadRarPasswordAsync("Rar.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
@@ -55,16 +54,14 @@ public class RarArchiveAsyncTests : ArchiveTests
 
     [Fact]
     public async ValueTask Rar5_EncryptedFileAndHeader_Archive_Err_Async() =>
-        await Assert.ThrowsAsync(
-            typeof(CryptographicException),
-            async () => await ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", "failed")
+        await Assert.ThrowsAsync(typeof(CryptographicException), async () =>
+            await ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", "failed")
         );
 
     [Fact]
     public async ValueTask Rar5_EncryptedFileAndHeader_NoPasswordExceptionTest_Async() =>
-        await Assert.ThrowsAsync(
-            typeof(CryptographicException),
-            async () => await ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", null)
+        await Assert.ThrowsAsync(typeof(CryptographicException), async () =>
+            await ReadRarPasswordAsync("Rar5.encrypted_filesAndHeader.rar", null)
         );
 
     [Fact]
@@ -73,9 +70,8 @@ public class RarArchiveAsyncTests : ArchiveTests
 
     [Fact]
     public async ValueTask Rar_EncryptedFileOnly_Archive_Err_Async() =>
-        await Assert.ThrowsAsync(
-            typeof(CryptographicException),
-            async () => await ReadRarPasswordAsync("Rar5.encrypted_filesOnly.rar", "failed")
+        await Assert.ThrowsAsync(typeof(CryptographicException), async () =>
+            await ReadRarPasswordAsync("Rar5.encrypted_filesOnly.rar", "failed")
         );
 
     [Fact]

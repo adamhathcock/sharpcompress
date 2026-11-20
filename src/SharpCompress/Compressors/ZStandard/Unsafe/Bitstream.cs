@@ -92,6 +92,7 @@ public static unsafe partial class Methods
         }
     );
 #endif
+
     /*-**************************************************************
      *  bitStream encoding
      ****************************************************************/
@@ -443,6 +444,7 @@ public static unsafe partial class Methods
         new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 }
     );
 #endif
+
     /*! BIT_reloadDStream() :
      *  Refill `bitD` from buffer previously set in BIT_initDStream() .
      *  This function is safe, it guarantees it will not never beyond src buffer.
