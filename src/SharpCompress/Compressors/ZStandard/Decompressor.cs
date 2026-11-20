@@ -1,4 +1,5 @@
 ﻿using System;
+using SharpCompress.Common;
 using SharpCompress.Compressors.ZStandard.Unsafe;
 
 namespace SharpCompress.Compressors.ZStandard;
@@ -10,6 +11,21 @@ public unsafe class Decompressor : IDisposable
     public Decompressor()
     {
         handle = SafeDctxHandle.Create();
+        try
+        {
+            using var dctx = handle.Acquire();
+            Unsafe
+                .Methods.ZSTD_DCtx_setMaxWindowSize(
+                    dctx,
+                    checked((nuint)DictionarySizeLimits.ZStandard)
+                )
+                .EnsureZstdSuccess();
+        }
+        catch
+        {
+            handle.Dispose();
+            throw;
+        }
     }
 
     public void SetParameter(ZSTD_dParameter parameter, int value)

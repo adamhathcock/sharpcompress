@@ -84,7 +84,7 @@ public abstract partial class AbstractReader<TEntry, TVolume>
 
     private async ValueTask SkipEntryAsync(CancellationToken cancellationToken)
     {
-        if (!Entry.IsDirectory)
+        if (Entry.HasData)
         {
             await SkipAsync(cancellationToken).ConfigureAwait(false);
         }

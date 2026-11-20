@@ -214,11 +214,6 @@ internal partial class ZipHeaderFactory
             }
         }
 
-        if (entryHeader.IsDirectory)
-        {
-            return;
-        }
-
         //if (FlagUtility.HasFlag(entryHeader.Flags, HeaderFlags.UsePostDataDescriptor))
         //{
         //    entryHeader.PackedStream = new ReadOnlySubStream(stream);

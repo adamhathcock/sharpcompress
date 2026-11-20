@@ -440,7 +440,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var firstEntry = (TarArchiveEntry)
             await archive.EntriesAsync.SingleAsync(entry => entry.Key == "pax/overridden-name.txt");
         Assert.Equal(10, firstEntry.Size);
-        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(1234, firstEntry.UserId);
         Assert.Equal(2345, firstEntry.GroupId);
         Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
 
@@ -450,7 +450,7 @@ public class TarArchiveAsyncTests : ArchiveTests
         var secondEntry = (TarArchiveEntry)
             await archive.EntriesAsync.SingleAsync(entry => entry.Key == "second.txt");
         Assert.Equal(2, secondEntry.Size);
-        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(11, secondEntry.UserId);
         Assert.Equal(22, secondEntry.GroupId);
         Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
     }
@@ -481,7 +481,7 @@ public class TarArchiveAsyncTests : ArchiveTests
 
         var firstEntry = (TarArchiveEntry)
             await archive.EntriesAsync.SingleAsync(entry => entry.Key == "global-one.txt");
-        Assert.Equal(4000, firstEntry.UserID);
+        Assert.Equal(4000, firstEntry.UserId);
         Assert.Equal(5000, firstEntry.GroupId);
         Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
         Assert.Equal(globalTime, firstEntry.LastModifiedTime);
@@ -490,14 +490,14 @@ public class TarArchiveAsyncTests : ArchiveTests
             await archive.EntriesAsync.SingleAsync(entry =>
                 entry.Key == "global-local-override.txt"
             );
-        Assert.Equal(4010, secondEntry.UserID);
+        Assert.Equal(4010, secondEntry.UserId);
         Assert.Equal(5010, secondEntry.GroupId);
         Assert.Equal(Convert.ToInt64("600", 8), secondEntry.Mode);
         Assert.Equal(localOverrideTime, secondEntry.LastModifiedTime);
 
         var thirdEntry = (TarArchiveEntry)
             await archive.EntriesAsync.SingleAsync(entry => entry.Key == "global-three.txt");
-        Assert.Equal(4000, thirdEntry.UserID);
+        Assert.Equal(4000, thirdEntry.UserId);
         Assert.Equal(5000, thirdEntry.GroupId);
         Assert.Equal(Convert.ToInt64("640", 8), thirdEntry.Mode);
         Assert.Equal(globalTime, thirdEntry.LastModifiedTime);
@@ -514,14 +514,14 @@ public class TarArchiveAsyncTests : ArchiveTests
         var globalLink = (TarArchiveEntry)
             await archive.EntriesAsync.SingleAsync(entry => entry.Key == "global-link");
         Assert.Equal("global-target", globalLink.LinkTarget);
-        Assert.Equal(4100, globalLink.UserID);
+        Assert.Equal(4100, globalLink.UserId);
         Assert.Equal(5100, globalLink.GroupId);
         Assert.Equal(Convert.ToInt64("777", 8), globalLink.Mode);
 
         var localOverrideLink = (TarArchiveEntry)
             await archive.EntriesAsync.SingleAsync(entry => entry.Key == "local-link-override");
         Assert.Equal("local-target", localOverrideLink.LinkTarget);
-        Assert.Equal(4100, localOverrideLink.UserID);
+        Assert.Equal(4100, localOverrideLink.UserId);
         Assert.Equal(5100, localOverrideLink.GroupId);
         Assert.Equal(Convert.ToInt64("777", 8), localOverrideLink.Mode);
     }

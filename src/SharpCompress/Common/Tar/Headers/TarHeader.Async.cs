@@ -35,9 +35,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(511, buffer, 100, 8);
-        WriteOctalBytes(0, buffer, 108, 8);
-        WriteOctalBytes(0, buffer, 116, 8);
+        WriteMetadata(buffer);
 
         var nameByteCount = ArchiveEncoding
             .GetEncoding()
@@ -47,10 +45,11 @@ internal sealed partial class TarHeader
         {
             string fullName = Name.NotNull("Name is null");
 
+            // NOTE: tar entry names always use '/', TarWriter normalizes them, so don't use Path.DirectorySeparatorChar
             List<int> dirSeps = new List<int>();
             for (int i = 0; i < fullName.Length; i++)
             {
-                if (fullName[i] == Path.DirectorySeparatorChar)
+                if (fullName[i] == '/')
                 {
                     dirSeps.Add(i);
                 }
@@ -132,9 +131,7 @@ internal sealed partial class TarHeader
     {
         var buffer = new byte[BLOCK_SIZE];
 
-        WriteOctalBytes(511, buffer, 100, 8);
-        WriteOctalBytes(0, buffer, 108, 8);
-        WriteOctalBytes(0, buffer, 116, 8);
+        WriteMetadata(buffer);
 
         var nameByteCount = ArchiveEncoding
             .GetEncoding()
@@ -285,9 +282,12 @@ internal sealed partial class TarHeader
                 LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
             }
 
-            Mode = ReadAsciiInt64Base8(buffer, 100, 7);
-            UserId = ReadAsciiInt64Base8oldGnu(buffer, 108, 7);
-            GroupId = ReadAsciiInt64Base8oldGnu(buffer, 116, 7);
+            Metadata = new TarEntryMetadata
+            {
+                Mode = ReadAsciiInt64Base8(buffer, 100, 7),
+                UserId = ReadOwnerId(buffer, 108),
+                GroupId = ReadOwnerId(buffer, 116),
+            };
 
             var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
 
@@ -310,11 +310,6 @@ internal sealed partial class TarHeader
         }
 
         pendingMetadata.ApplyTo(this);
-
-        if (entryType == EntryType.Directory)
-        {
-            Mode |= 0b1_000_000_000;
-        }
 
         if (entryType != EntryType.LongName && Name.Length == 0)
         {

@@ -55,13 +55,14 @@ public class PpmdProperties
         get => _allocatorSize;
         set
         {
-            _allocatorSize = value;
             if (Version == PpmdVersion.I1)
             {
                 _allocator ??= new Allocator();
 
-                _allocator.Start(_allocatorSize);
+                _allocator.Start(value);
             }
+            // Keep the serialized properties in sync with the allocator if Start rejects the size.
+            _allocatorSize = value;
         }
     }
 

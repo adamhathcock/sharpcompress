@@ -200,7 +200,7 @@ public class TarReaderAsyncTests : ReaderTests
         var firstEntry = (TarEntry)reader.Entry;
         Assert.Equal("pax/overridden-name.txt", firstEntry.Key);
         Assert.Equal(10, firstEntry.Size);
-        Assert.Equal(1234, firstEntry.UserID);
+        Assert.Equal(1234, firstEntry.UserId);
         Assert.Equal(2345, firstEntry.GroupId);
         Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
 
@@ -217,7 +217,7 @@ public class TarReaderAsyncTests : ReaderTests
         Assert.True(await reader.MoveToNextEntryAsync());
         var secondEntry = (TarEntry)reader.Entry;
         Assert.Equal("second.txt", secondEntry.Key);
-        Assert.Equal(11, secondEntry.UserID);
+        Assert.Equal(11, secondEntry.UserId);
         Assert.Equal(22, secondEntry.GroupId);
         Assert.Equal(Convert.ToInt64("644", 8), secondEntry.Mode);
         Assert.Equal(2, secondEntry.Size);
@@ -254,7 +254,7 @@ public class TarReaderAsyncTests : ReaderTests
         Assert.True(await reader.MoveToNextEntryAsync());
         var firstEntry = (TarEntry)reader.Entry;
         Assert.Equal("global-one.txt", firstEntry.Key);
-        Assert.Equal(4000, firstEntry.UserID);
+        Assert.Equal(4000, firstEntry.UserId);
         Assert.Equal(5000, firstEntry.GroupId);
         Assert.Equal(Convert.ToInt64("640", 8), firstEntry.Mode);
         Assert.Equal(globalTime, firstEntry.LastModifiedTime);
@@ -262,7 +262,7 @@ public class TarReaderAsyncTests : ReaderTests
         Assert.True(await reader.MoveToNextEntryAsync());
         var secondEntry = (TarEntry)reader.Entry;
         Assert.Equal("global-local-override.txt", secondEntry.Key);
-        Assert.Equal(4010, secondEntry.UserID);
+        Assert.Equal(4010, secondEntry.UserId);
         Assert.Equal(5010, secondEntry.GroupId);
         Assert.Equal(Convert.ToInt64("600", 8), secondEntry.Mode);
         Assert.Equal(localOverrideTime, secondEntry.LastModifiedTime);
@@ -270,7 +270,7 @@ public class TarReaderAsyncTests : ReaderTests
         Assert.True(await reader.MoveToNextEntryAsync());
         var thirdEntry = (TarEntry)reader.Entry;
         Assert.Equal("global-three.txt", thirdEntry.Key);
-        Assert.Equal(4000, thirdEntry.UserID);
+        Assert.Equal(4000, thirdEntry.UserId);
         Assert.Equal(5000, thirdEntry.GroupId);
         Assert.Equal(Convert.ToInt64("640", 8), thirdEntry.Mode);
         Assert.Equal(globalTime, thirdEntry.LastModifiedTime);
@@ -290,7 +290,7 @@ public class TarReaderAsyncTests : ReaderTests
         var firstEntry = (TarEntry)reader.Entry;
         Assert.Equal("global-link", firstEntry.Key);
         Assert.Equal("global-target", firstEntry.LinkTarget);
-        Assert.Equal(4100, firstEntry.UserID);
+        Assert.Equal(4100, firstEntry.UserId);
         Assert.Equal(5100, firstEntry.GroupId);
         Assert.Equal(Convert.ToInt64("777", 8), firstEntry.Mode);
 
@@ -298,7 +298,7 @@ public class TarReaderAsyncTests : ReaderTests
         var secondEntry = (TarEntry)reader.Entry;
         Assert.Equal("local-link-override", secondEntry.Key);
         Assert.Equal("local-target", secondEntry.LinkTarget);
-        Assert.Equal(4100, secondEntry.UserID);
+        Assert.Equal(4100, secondEntry.UserId);
         Assert.Equal(5100, secondEntry.GroupId);
         Assert.Equal(Convert.ToInt64("777", 8), secondEntry.Mode);
 

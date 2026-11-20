@@ -275,6 +275,13 @@ Detection and inspection entry points and result types are in the `SharpCompress
 
 The stream overload preserves the caller's current position and leaves the supplied stream open.
 
+For TAR entry metadata, `TarEntry.Mode`, `UserId`, and `GroupId` are nullable:
+`null` means unspecified, not zero. Use `entry.UserId is long userId` to handle a
+known ID, or `entry.UserId ?? 0` if the application deliberately wants a fallback.
+The former `UserID` property is now named `UserId`. Newly added entries keep null
+metadata in memory; saving supplies mode `0777` and owner/group `0/0` only in the
+output headers.
+
 ### Open multi-volume archives
 
 ```C#
@@ -528,4 +535,18 @@ ARC LZW compressed data is buffered incrementally from the bytes actually presen
 
 ZIP Shrink output buffering grows with decoded output rather than the declared uncompressed size. Invalid codes and output-size mismatches are rejected.
 
+7z header counts and coder property lengths are validated against their backing metadata before allocation. File counts are checked against parsed substreams and empty-stream bitmaps, including external metadata. Encoded headers and additional metadata are buffered incrementally as the decoder produces bytes, rather than preallocating the declared unpacked size.
+
 LZMA/LZMA2 dictionary storage starts small and grows with decoded history, up to the supported dictionary size. These safeguards avoid allocations based solely on forged sizes; they do not impose an overall decompressed-output or process-memory limit.
+
+Shared codecs also check `SharpCompress.Common.DictionarySizeLimits` before
+allocating dictionaries/windows or PPMd models. Defaults are 4 MiB for RAR4,
+64 MiB for RAR5, LZMA (including LZip), LZMA2 (including XZ), and PPMd, and
+128 MiB for Zstandard streaming windows. A tiny RAR5 entry therefore cannot rent
+a 256 MiB or 1 GiB window under the default settings.
+
+These settings are **process-wide**, not per-reader options. Configure them once
+at startup if trusted input requires larger dictionaries, for example
+`DictionarySizeLimits.Rar5 = 256L << 20;`. Do not temporarily raise them around
+untrusted requests. Bound extraction output and concurrency separately; dictionary
+limits are not a total-memory budget. See the [API reference](API.md#decompression-dictionary-limits).

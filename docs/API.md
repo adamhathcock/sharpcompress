@@ -189,6 +189,21 @@ var options2 = new WriterOptions(CompressionType.Deflate)
 
 `WriterOptions.BufferSize` controls stream copy buffers used while writing archive entries. If it is not set, SharpCompress falls back to `Constants.BufferSize`.
 
+`TarArchive.SaveTo` and `SaveToAsync` preserve existing file/directory permission bits
+(including zero permissions and special bits) and numeric owner/group IDs. Newly added
+entries and public `TarWriter` writes default to mode `0777` and owner/group `0/0`.
+USTAR output rejects owner/group IDs outside `0`–`2097151`; use GNU output for larger IDs.
+See [Tar metadata handling](TAR_SPEC.md#metadata-surface) for compatibility details.
+
+`TarEntry.Mode`, `UserId`, and `GroupId` are `long?`: `null` means unspecified,
+while zero is an explicit mode or owner/group ID. Newly added entries expose `null`
+until saved and reopened; serialization supplies the defaults without changing the
+in-memory properties.
+
+**Breaking change:** `UserID` has been renamed to `UserId`, and these three properties
+now return `long?` instead of `long`. Update property references and handle missing
+values explicitly, for example `long userId = entry.UserId ?? 0;`.
+
 ---
 
 ## Archive API Methods
@@ -382,6 +397,41 @@ await writer.WriteAllAsync("C:\\source", "*", SearchOption.AllDirectories, cance
 ---
 
 ## Common Options
+
+### Decompression dictionary limits
+
+`SharpCompress.Common.DictionarySizeLimits` contains process-wide static size limits
+in bytes. Set them once at application startup, not around individual requests:
+
+```csharp
+// Opt in only when trusted archives require larger dictionaries.
+DictionarySizeLimits.Rar5 = 256L << 20;
+```
+
+| Static property | Default maximum |
+| --- | --- |
+| `Rar4` | 4 MiB (the RAR4 format maximum) |
+| `Rar5` | 64 MiB |
+| `Lzma` (raw LZMA, LZip, ZIP, 7z) | 64 MiB |
+| `Lzma2` (XZ, 7z) | 64 MiB |
+| `Ppmd` (ZIP, 7z, RAR models) | 64 MiB |
+| `ZStandard` (streaming windows) | 128 MiB |
+
+Limits are read directly by the shared codecs before dictionary/model allocation,
+so Archive, Reader, direct decoder, sync, and async paths use the same settings.
+No reader options or decoder overloads are needed. Settings require positive values;
+invalid assignments throw `ArgumentOutOfRangeException` without changing the setting.
+Oversized dictionaries throw `InvalidFormatException`; Zstandard reports
+`ZstdException` with `ZSTD_error_frameParameter_windowTooLarge`. Zstandard's minimum
+configurable window limit is 1 KiB, and its maximum is 1 GiB in a 32-bit process
+or 2 GiB in a 64-bit process. Values outside that inclusive range are rejected
+at assignment. Format and engine restrictions still apply.
+
+These are dictionary/window or model limits, not total-memory, output-size, or
+concurrency limits. Pool rounding and allocator overhead can increase actual memory.
+Shared PPMd allocators also apply the model limit during compression. Fixed/bounded
+codecs retain their format-defined bounds. Custom providers must enforce their own
+limits. Zstandard's one-shot `Unwrap` APIs retain their existing output-size bounds.
 
 ### ReaderOptions
 

@@ -4,6 +4,7 @@ using System.Buffers.Binary;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using SharpCompress.Common;
 using SharpCompress.Compressors.LZMA.LZ;
 using SharpCompress.IO;
 
@@ -65,6 +66,7 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         if (!isLzma2)
         {
             _dictionarySize = BinaryPrimitives.ReadInt32LittleEndian(properties.AsSpan(1));
+            DictionarySizeLimits.Validate(_dictionarySize, DictionarySizeLimits.Lzma, "LZMA");
             _decoder = new Decoder();
             _decoder.SetDecoderProperties(properties);
             Properties = properties;
@@ -76,18 +78,24 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
         }
         else
         {
-            // Larger standard dictionaries exceed this decoder's positive Int32 window range.
-            if (properties[0] > 37)
-            {
-                throw new InvalidParamException();
-            }
-            _dictionarySize = 2 | (properties[0] & 1);
-            _dictionarySize <<= (properties[0] >> 1) + 11;
+            _dictionarySize = GetLzma2DictionarySize(properties[0]);
 
             Properties = new byte[1];
             _availableBytes = 0;
             _outWindow.Create(_dictionarySize);
         }
+    }
+
+    internal static int GetLzma2DictionarySize(byte property)
+    {
+        // Larger standard dictionaries exceed this decoder's positive Int32 window range.
+        if (property > 37)
+        {
+            throw new InvalidParamException();
+        }
+        var size = (2 | (property & 1)) << ((property >> 1) + 11);
+        DictionarySizeLimits.Validate(size, DictionarySizeLimits.Lzma2, "LZMA2");
+        return size;
     }
 
     public static LzmaStream Create(

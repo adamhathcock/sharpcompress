@@ -44,11 +44,15 @@ public partial class TarEntry : Entry
 
     public override bool IsSplitAfter => false;
 
-    public long Mode => _filePart?.Header.Mode ?? 0;
+    // Preserve the legacy public directory marker without mixing it into the raw
+    // header mode, where 01000 is the real sticky bit and must round-trip unchanged.
+    public long? Mode => Metadata?.GetLegacyMode(IsDirectory);
 
-    public long UserID => _filePart?.Header.UserId ?? 0;
+    internal TarEntryMetadata? Metadata => _filePart?.Header.Metadata;
 
-    public long GroupId => _filePart?.Header.GroupId ?? 0;
+    public long? UserId => Metadata?.UserId;
+
+    public long? GroupId => Metadata?.GroupId;
 
     internal override IEnumerable<FilePart> Parts => _filePart.Empty();
 

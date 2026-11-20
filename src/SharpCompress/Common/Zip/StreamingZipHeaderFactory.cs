@@ -230,7 +230,7 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
                         localHeader.IsCrcAvailable = true;
                     }
 
-                    if (IsResolvedDirectory(localHeader))
+                    if (IsDirectoryWithoutData(localHeader))
                     {
                         header.HasData = false;
                     }
@@ -263,4 +263,15 @@ internal sealed partial class StreamingZipHeaderFactory : ZipHeaderFactory
             reader.Dispose();
         }
     }
+
+    private bool IsDirectoryWithoutData(LocalEntryHeader localHeader) =>
+        IsResolvedDirectory(localHeader)
+        // Stored directories have no compressed payload. An unsigned descriptor starts
+        // with a zero CRC, which the generic header peek would otherwise mistake for data.
+        || (
+            localHeader.IsDirectory
+            && localHeader.CompressionMethod == ZipCompressionMethod.None
+            && localHeader.CompressedSize == 0
+            && !localHeader.Flags.HasFlag(HeaderFlags.Encrypted)
+        );
 }

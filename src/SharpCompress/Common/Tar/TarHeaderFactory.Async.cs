@@ -21,25 +21,33 @@ internal static partial class TarHeaderFactory
 #endif
 
         var globalPaxMetadata = new TarHeader.PaxMetadata();
+        var position = mode == StreamingMode.Seekable ? stream.Position : 0;
 
         while (true)
         {
             TarHeader? header = null;
             try
             {
+                if (mode == StreamingMode.Seekable)
+                {
+                    stream.Position = position;
+                }
                 header = new TarHeader(archiveEncoding);
                 if (!await header.ReadAsync(reader, globalPaxMetadata).ConfigureAwait(false))
                 {
                     yield break;
                 }
+                // PAX metadata can replace the raw size; validate before either mode uses it.
+                var paddedSize = PadTo512(header.Size);
                 switch (mode)
                 {
                     case StreamingMode.Seekable:
                         {
                             header.DataStartPosition = stream.Position;
 
-                            //skip to nearest 512
-                            stream.Position += PadTo512(header.Size);
+                            // Reject padded sizes or end offsets that would wrap into a backward seek.
+                            stream.Position = checked(stream.Position + paddedSize);
+                            position = stream.Position;
                         }
                         break;
                     case StreamingMode.Streaming:

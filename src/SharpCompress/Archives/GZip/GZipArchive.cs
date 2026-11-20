@@ -15,8 +15,10 @@ namespace SharpCompress.Archives.GZip;
 public partial class GZipArchive
     : AbstractWritableArchive<GZipArchiveEntry, GZipVolume, GZipWriterOptions>
 {
+    private readonly long headerPosition;
+
     private GZipArchive(SourceStream sourceStream)
-        : base(ArchiveType.GZip, sourceStream) { }
+        : base(ArchiveType.GZip, sourceStream) => headerPosition = sourceStream.Position;
 
     internal GZipArchive()
         : base(ArchiveType.GZip) { }
@@ -49,6 +51,8 @@ public partial class GZipArchive
     {
         // Kept hand-written: the generator cannot map IAsyncEnumerable.SingleAsync to LINQ Single.
         var stream = volumes.Single().Stream;
+        // The other API may already have consumed the header or extracted the entry.
+        stream.Position = headerPosition;
         yield return new GZipArchiveEntry(
             this,
             GZipFilePart.Create(stream, ReaderOptions.ArchiveEncoding, ReaderOptions.Providers),

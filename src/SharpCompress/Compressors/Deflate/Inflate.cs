@@ -109,6 +109,9 @@ internal sealed class InflateBlocks
     internal object checkfn; // check function
     internal InflateCodes codes = new(); // if CODES, current state
     internal int end; // one byte after sliding window
+
+    // Track initialized history separately from the circular read/write pointers.
+    internal int historyBytes;
     internal int[] hufts; // single malloc for tree space
     internal int index; // index into blens (or border)
     internal InfTree inftree = new();
@@ -140,6 +143,7 @@ internal sealed class InflateBlocks
         bitk = 0;
         bitb = 0;
         readAt = writeAt = 0;
+        historyBytes = 0;
 
         if (checkfn != null)
         {
@@ -147,6 +151,8 @@ internal sealed class InflateBlocks
         }
         return oldCheck;
     }
+
+    internal void AddHistory(int count) => historyBytes = Math.Min(end, historyBytes + count);
 
     internal int Process(int r)
     {
@@ -340,6 +346,7 @@ internal sealed class InflateBlocks
                         t = m;
                     }
                     _codec.InputBuffer.AsSpan(p, t).CopyTo(window.Memory.Span.Slice(q));
+                    AddHistory(t);
                     p += t;
                     n -= t;
                     q += t;
@@ -724,6 +731,7 @@ internal sealed class InflateBlocks
     {
         d.AsSpan(start, n).CopyTo(window.Memory.Span.Slice(0, n));
         readAt = writeAt = n;
+        historyBytes = n;
     }
 
     // Returns true if inflate is currently at the end of a block generated
@@ -1174,15 +1182,29 @@ internal sealed class InflateCodes
                     b >>= j;
                     k -= j;
 
+                    if (dist > blocks.historyBytes)
+                    {
+                        mode = BADCODE;
+                        z.Message = "invalid distance too far back";
+                        r = ZlibConstants.Z_DATA_ERROR;
+
+                        blocks.bitb = b;
+                        blocks.bitk = k;
+                        z.AvailableBytesIn = n;
+                        z.TotalBytesIn += p - z.NextIn;
+                        z.NextIn = p;
+                        blocks.writeAt = q;
+                        return blocks.Flush(r);
+                    }
+
                     mode = COPY;
                     goto case COPY;
 
                 case COPY: // o: copying bytes in window, waiting for space
                     f = q - dist;
-                    while (f < 0)
+                    if (f < 0)
                     {
-                        // modulo window size-"while" instead
-                        f += blocks.end; // of "if" handles invalid distances
+                        f += blocks.end;
                     }
                     while (len != 0)
                     {
@@ -1220,6 +1242,7 @@ internal sealed class InflateCodes
                         }
 
                         blocks.window.Memory.Span[q++] = blocks.window.Memory.Span[f++];
+                        blocks.AddHistory(1);
                         m--;
 
                         if (f == blocks.end)
@@ -1266,6 +1289,7 @@ internal sealed class InflateCodes
                     r = ZlibConstants.Z_OK;
 
                     blocks.window.Memory.Span[q++] = (byte)lit;
+                    blocks.AddHistory(1);
                     m--;
 
                     mode = START;
@@ -1403,6 +1427,7 @@ internal sealed class InflateCodes
                 k -= (tp[tp_index_t_3 + 1]);
 
                 s.window.Memory.Span[q++] = (byte)tp[tp_index_t_3 + 2];
+                s.AddHistory(1);
                 m--;
                 continue;
             }
@@ -1458,7 +1483,27 @@ internal sealed class InflateCodes
                             b >>= e;
                             k -= e;
 
+                            if (d > s.historyBytes)
+                            {
+                                z.Message = "invalid distance too far back";
+
+                                c = z.AvailableBytesIn - n;
+                                c = (k >> 3) < c ? k >> 3 : c;
+                                n += c;
+                                p -= c;
+                                k -= c << 3;
+
+                                s.bitb = b;
+                                s.bitk = k;
+                                z.AvailableBytesIn = n;
+                                z.TotalBytesIn += p - z.NextIn;
+                                z.NextIn = p;
+                                s.writeAt = q;
+                                return ZlibConstants.Z_DATA_ERROR;
+                            }
+
                             // do the copy
+                            s.AddHistory(c);
                             m -= c;
                             if (q >= d)
                             {
@@ -1483,11 +1528,7 @@ internal sealed class InflateCodes
                             else
                             {
                                 // else offset after destination
-                                r = q - d;
-                                do
-                                {
-                                    r += s.end; // force pointer in window
-                                } while (r < 0); // covers invalid distances
+                                r = q - d + s.end;
                                 e = s.end - r;
                                 if (c > e)
                                 {
@@ -1570,6 +1611,7 @@ internal sealed class InflateCodes
                         b >>= (tp[tp_index_t_3 + 1]);
                         k -= (tp[tp_index_t_3 + 1]);
                         s.window.Memory.Span[q++] = (byte)tp[tp_index_t_3 + 2];
+                        s.AddHistory(1);
                         m--;
                         break;
                     }

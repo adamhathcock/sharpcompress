@@ -3201,6 +3201,17 @@ public static unsafe partial class Methods
                         }
                     }
 
+                    // Apply the limit before the single-pass shortcut too, so it
+                    // does not depend on the caller's output buffer size.
+                    zds->fParams.windowSize =
+                        zds->fParams.windowSize > 1U << 10 ? zds->fParams.windowSize : 1U << 10;
+                    if (zds->fParams.windowSize > zds->maxWindowSize)
+                    {
+                        return unchecked(
+                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge)
+                        );
+                    }
+
                     if (
                         zds->fParams.frameContentSize != unchecked(0UL - 1)
                         && zds->fParams.frameType != ZSTD_frameType_e.ZSTD_skippableFrame
@@ -3280,15 +3291,6 @@ public static unsafe partial class Methods
 
                         zds->expected = ZSTD_blockHeaderSize;
                         zds->stage = ZSTD_dStage.ZSTDds_decodeBlockHeader;
-                    }
-
-                    zds->fParams.windowSize =
-                        zds->fParams.windowSize > 1U << 10 ? zds->fParams.windowSize : 1U << 10;
-                    if (zds->fParams.windowSize > zds->maxWindowSize)
-                    {
-                        return unchecked(
-                            (nuint)(-(int)ZSTD_ErrorCode.ZSTD_error_frameParameter_windowTooLarge)
-                        );
                     }
 
                     if (zds->maxBlockSizeParam != 0)

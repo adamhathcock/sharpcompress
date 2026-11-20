@@ -24,6 +24,8 @@ public class BZip2StreamTests
         using var output = new MemoryStream();
 
         Assert.Throws<ArchiveOperationException>(() => stream.CopyTo(output));
+        Assert.Throws<InvalidFormatException>(() => stream.ReadByte());
+        Assert.Throws<InvalidFormatException>(() => stream.Read(new byte[1], 0, 1));
     }
 
     // A stream that ends exactly where a block header is expected (no stream footer) is the shape a caller

@@ -631,6 +631,28 @@ public sealed class PooledMemoryStream : MemoryStream
         }
     }
 
+    // Metadata readers keep independent offsets over the same pooled storage.
+    internal byte ReadByteAt(int position)
+    {
+        EnsureNotClosed();
+        if ((uint)position >= (uint)_length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(position));
+        }
+        return _blocks![position / _blockSize][position % _blockSize];
+    }
+
+    internal void ReadAt(int position, byte[] buffer, int offset, int count)
+    {
+        EnsureNotClosed();
+        ValidateReadWriteBufferArguments(buffer, offset, count);
+        if (position < 0 || position > _length || count > _length - position)
+        {
+            throw new ArgumentOutOfRangeException(nameof(position));
+        }
+        CopyFromSegmented(position, buffer, offset, count);
+    }
+
     private void CopyFromSegmented(
         int absoluteSourcePosition,
         byte[] destination,

@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
+using SharpCompress.Common.Tar;
 using SharpCompress.Common.Tar.Headers;
 using SharpCompress.IO;
 using SharpCompress.Providers;
@@ -46,9 +47,16 @@ public partial class TarWriter
     /// <summary>
     /// Asynchronously writes a directory entry to the TAR archive.
     /// </summary>
-    public override async ValueTask WriteDirectoryAsync(
+    public override ValueTask WriteDirectoryAsync(
         string directoryName,
         DateTime? modificationTime,
+        CancellationToken cancellationToken = default
+    ) => WriteDirectoryAsync(directoryName, modificationTime, null, cancellationToken);
+
+    internal async ValueTask WriteDirectoryAsync(
+        string directoryName,
+        DateTime? modificationTime,
+        TarEntryMetadata? metadata,
         CancellationToken cancellationToken = default
     )
     {
@@ -63,6 +71,7 @@ public partial class TarWriter
         header.Name = normalizedName;
         header.Size = 0;
         header.EntryType = EntryType.Directory;
+        header.Metadata = metadata;
         await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
     }
 
@@ -81,11 +90,20 @@ public partial class TarWriter
     /// <summary>
     /// Asynchronously writes a file entry with optional size specification.
     /// </summary>
-    public async ValueTask WriteAsync(
+    public ValueTask WriteAsync(
         string filename,
         Stream source,
         DateTime? modificationTime,
         long? size,
+        CancellationToken cancellationToken = default
+    ) => WriteAsync(filename, source, modificationTime, size, null, cancellationToken);
+
+    internal async ValueTask WriteAsync(
+        string filename,
+        Stream source,
+        DateTime? modificationTime,
+        long? size,
+        TarEntryMetadata? metadata,
         CancellationToken cancellationToken = default
     )
     {
@@ -101,6 +119,7 @@ public partial class TarWriter
         header.LastModifiedTime = modificationTime ?? TarHeader.EPOCH;
         header.Name = NormalizeFilename(filename);
         header.Size = realSize;
+        header.Metadata = metadata;
         await header.WriteAsync(OutputStream.NotNull(), cancellationToken).ConfigureAwait(false);
         var progressStream = WrapWithProgress(source, filename);
         var written = await progressStream

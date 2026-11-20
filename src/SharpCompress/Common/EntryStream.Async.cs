@@ -31,7 +31,7 @@ public partial class EntryStream
         }
 
         //Need a safe standard approach to this - it's okay for compression to overreads. Handling needs to be standardised
-        if (_stream is IStreamStack ss)
+        if (_rewindDecoderOnDispose && _stream is IStreamStack ss)
         {
             if (ss.BaseStream() is SharpCompress.Compressors.Deflate.DeflateStream deflateStream)
             {

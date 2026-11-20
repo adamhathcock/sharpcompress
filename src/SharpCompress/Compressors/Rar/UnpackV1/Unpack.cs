@@ -130,6 +130,7 @@ internal sealed partial class Unpack : BitInput, IRarUnpack
 
     private void Init()
     {
+        DictionarySizeLimits.Validate(PackDef.MAXWINSIZE, DictionarySizeLimits.Rar4, "RAR4");
         if (this.window is null)
         {
             this.window = ArrayPool<byte>.Shared.Rent(PackDef.MAXWINSIZE);

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -47,13 +49,17 @@ public abstract partial class AbstractArchive<TEntry, TVolume>
 
     private async ValueTask EnsureEntriesLoadedAsync()
     {
-        await _lazyEntriesAsync.EnsureFullyLoaded().ConfigureAwait(false);
+        await foreach (var entry in EntriesAsync.ConfigureAwait(false)) { }
         await _lazyVolumesAsync.EnsureFullyLoaded().ConfigureAwait(false);
     }
 
-    private async IAsyncEnumerable<IArchiveEntry> EntriesAsyncCast()
+    private async IAsyncEnumerable<IArchiveEntry> EntriesAsyncCast(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
-        await foreach (var entry in EntriesAsync.ConfigureAwait(false))
+        await foreach (
+            var entry in EntriesAsync.WithCancellation(cancellationToken).ConfigureAwait(false)
+        )
         {
             yield return entry;
         }

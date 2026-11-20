@@ -6,6 +6,9 @@ namespace SharpCompress.Common.SevenZip;
 
 internal class CFolder
 {
+    internal const int MaxCoders = 32;
+    internal const int MaxBindPairs = 32;
+
     internal List<CCoderInfo> _coders = new();
     internal List<CBindPair> _bindPairs = new();
     internal List<int> _packStreams = new();
@@ -98,11 +101,9 @@ internal class CFolder
 
     public bool CheckStructure()
     {
-        const int kNumCodersMax = 32; // don't change it
-        const int kMaskSize = 32; // it must be >= kNumCodersMax
-        const int kNumBindsMax = 32;
+        const int kMaskSize = 32; // it must be >= MaxCoders
 
-        if (_coders.Count > kNumCodersMax || _bindPairs.Count > kNumBindsMax)
+        if (_coders.Count > MaxCoders || _bindPairs.Count > MaxBindPairs)
         {
             return false;
         }

@@ -291,8 +291,12 @@ Parsed metadata surfaced through entries includes:
 - `LastModifiedTime`
 - `IsDirectory`
 - `Mode`
-- `UserID`
+- `UserId`
 - `GroupId`
+
+`Mode`, `UserId`, and `GroupId` are nullable (`long?`); unspecified values remain
+null, while zero is an explicit value. A specified directory `Mode` includes the
+legacy `01000` marker, but saving uses the original header mode.
 
 Tar entries are always reported as unencrypted and CRC is always `0`.
 
@@ -310,7 +314,10 @@ Important writer rules:
 - `GNU_TAR_LONG_LINK` mode writes GNU long-name records for long paths.
 - The public writer supports regular files and directories, not links, devices, FIFOs, sparse maps, or PAX metadata.
 
-Writer metadata is narrower than reader metadata. It writes name, size, last modified time, and file/directory type, and uses fixed mode/user/group defaults in the header.
+Writer metadata is narrower than reader metadata. `TarArchive.SaveTo` and
+`SaveToAsync` preserve existing permission bits and numeric owner/group IDs.
+New entries and public `TarWriter` calls use mode `0777` and owner/group `0/0`
+when serialized; these defaults do not populate missing in-memory metadata.
 
 ## Known Limitations
 
