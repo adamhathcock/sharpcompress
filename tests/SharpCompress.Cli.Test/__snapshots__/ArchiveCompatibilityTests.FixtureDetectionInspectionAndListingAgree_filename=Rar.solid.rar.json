@@ -1,0 +1,176 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Rar.solid.rar",
+      "physicalSize": 60001,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Rar",
+        "archive": {
+          "containerType": "Rar",
+          "formatName": "Rar",
+          "supportedApis": "Archive, Reader"
+        },
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Rar.solid.rar",
+      "physicalSize": 60001,
+      "detection": {
+        "formatName": "Rar",
+        "archive": {
+          "containerType": "Rar",
+          "formatName": "Rar",
+          "supportedApis": "Archive, Reader"
+        },
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Rar",
+          "formatName": "Rar",
+          "supportedApis": "Archive, Reader"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "formatVersion": "RAR 3-4",
+        "entryCount": 6,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 60001,
+        "compressedPayloadSize": 59701,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": true,
+        "solidStreamCount": 1,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "тест.txt",
+            "compressionType": "Rar",
+            "size": 15498,
+            "compressedSize": 2714,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "exe/test.exe",
+            "compressionType": "Rar",
+            "size": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": true,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "jpg/test.jpg",
+            "compressionType": "Rar",
+            "size": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": true,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "Empty",
+            "compressionType": "Rar",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": true,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "exe",
+            "compressionType": "Rar",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": true,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        },
+        {
+          "index": 5,
+          "metadata": {
+            "key": "jpg",
+            "compressionType": "Rar",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": true,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

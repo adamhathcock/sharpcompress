@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <PackAsTool>true</PackAsTool>
+    <PublishAot>true</PublishAot>
+    <!-- The top-level tool package selects a native package built on its target platform. -->
+    <ToolPackageRuntimeIdentifiers>linux-x64;osx-arm64;win-x64</ToolPackageRuntimeIdentifiers>
+    <UseDefaultPublishRuntimeIdentifier>false</UseDefaultPublishRuntimeIdentifier>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <ToolCommandName>sharpcompress</ToolCommandName>
+    <PackageId>SharpCompress.Tool</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Read-only archive detection, inspection and listing with SharpCompress.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>CLI.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../SharpCompress/SharpCompress.csproj" />
+    <PackageReference Include="System.CommandLine" />
+    <None Include="../../docs/CLI.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

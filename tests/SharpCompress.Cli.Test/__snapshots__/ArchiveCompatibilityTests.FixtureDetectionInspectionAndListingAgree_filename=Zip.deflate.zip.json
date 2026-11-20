@@ -1,0 +1,184 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Zip.deflate.zip",
+      "physicalSize": 61017,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Zip",
+        "archive": {
+          "containerType": "Zip",
+          "formatName": "Zip",
+          "supportedApis": "Archive, Reader"
+        },
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Zip.deflate.zip",
+      "physicalSize": 61017,
+      "detection": {
+        "formatName": "Zip",
+        "archive": {
+          "containerType": "Zip",
+          "formatName": "Zip",
+          "supportedApis": "Archive, Reader"
+        },
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Zip",
+          "formatName": "Zip",
+          "supportedApis": "Archive, Reader"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "entryCount": 6,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 61017,
+        "compressedPayloadSize": 60231,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": false,
+        "solidStreamCount": 0,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true,
+        "comment": "",
+        "zip": {
+          "hasEntriesWithDeferredSizes": false
+        }
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "Empty/",
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "exe/",
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "exe/test.exe",
+            "compressionType": "Deflate",
+            "size": 45056,
+            "compressedSize": 18628,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "jpg/",
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "jpg/test.jpg",
+            "compressionType": "Deflate",
+            "size": 40372,
+            "compressedSize": 38908,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        },
+        {
+          "index": 5,
+          "metadata": {
+            "key": "���.txt",
+            "compressionType": "Deflate",
+            "size": 15498,
+            "compressedSize": 2695,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

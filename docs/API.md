@@ -1,5 +1,20 @@
 # API Quick Reference
 
+## General file detection and entry snapshots
+
+`SharpCompress.Detection.FileDetector.DetectFile(pathOrStream, options)` and
+`DetectFileAsync(pathOrStream, options, cancellationToken)` recognize archives and
+self-identifying standalone compression streams. An unrecognized input returns null;
+malformed recognized inputs can throw. Stream inputs must be readable and seekable;
+their position and ownership are preserved. `FileDetection.Archive` is null for a
+standalone stream without an archive API; `Compression` identifies its codec.
+Existing `ArchiveDetector` behavior is unchanged.
+
+`EntryInformation.FromEntry(IEntry)` takes a detached metadata snapshot without
+opening entry data. Nullable sizes/attributes represent unavailable values, including
+deferred ZIP sizes and GZip placeholders. It does not verify checksums or expose
+raw parser structures. Existing `IEntry` signatures remain unchanged.
+
 Quick reference for commonly used SharpCompress APIs.
 
 ## Factory Methods

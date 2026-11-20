@@ -1,0 +1,80 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "large_test.txt.Z",
+      "physicalSize": 5348,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Lzw",
+        "archive": {
+          "containerType": "Lzw",
+          "formatName": "Lzw",
+          "supportedApis": "Reader"
+        },
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "large_test.txt.Z",
+      "physicalSize": 5348,
+      "detection": {
+        "formatName": "Lzw",
+        "archive": {
+          "containerType": "Lzw",
+          "formatName": "Lzw",
+          "supportedApis": "Reader"
+        },
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Lzw",
+          "formatName": "Lzw",
+          "supportedApis": "Reader"
+        },
+        "status": "Partial",
+        "limitations": "UnavailableMetadata",
+        "entryCount": 1,
+        "entriesWithUnknownSizeCount": 1,
+        "physicalSize": 5348,
+        "isSolid": false,
+        "solidStreamCount": 0,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "large_test.txt",
+            "compressionType": "Lzw",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

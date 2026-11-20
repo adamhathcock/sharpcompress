@@ -1,0 +1,152 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Ace.store.ace",
+      "physicalSize": 101196,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Ace",
+        "archive": {
+          "containerType": "Ace",
+          "formatName": "Ace",
+          "supportedApis": "Reader"
+        },
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Ace.store.ace",
+      "physicalSize": 101196,
+      "detection": {
+        "formatName": "Ace",
+        "archive": {
+          "containerType": "Ace",
+          "formatName": "Ace",
+          "supportedApis": "Reader"
+        },
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Ace",
+          "formatName": "Ace",
+          "supportedApis": "Reader"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "formatVersion": "ACE 2.0",
+        "entryCount": 5,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 101196,
+        "compressedPayloadSize": 100926,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": true,
+        "solidStreamCount": 1,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "exe",
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "jpg",
+            "compressionType": "None",
+            "size": 0,
+            "compressedSize": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "exe\\test.exe",
+            "compressionType": "None",
+            "size": 45056,
+            "compressedSize": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "jpg\\test.jpg",
+            "compressionType": "None",
+            "size": 40372,
+            "compressedSize": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "Tect.txt.txt",
+            "compressionType": "None",
+            "size": 15498,
+            "compressedSize": 15498,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}
