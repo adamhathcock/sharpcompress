@@ -1,5 +1,12 @@
 # Release compatibility notes
 
+## Unreleased
+
+LZMA2 now checks the same 64 MiB default against retained decoder history, not
+the declared dictionary size. Small 7z and XZ streams can declare a larger
+dictionary and still extract. Archives whose history grows past the limit
+still need the startup override below.
+
 ## 0.50.9
 
 0.50.9 introduced process-wide [decompression dictionary limits](API.md#decompression-dictionary-limits).

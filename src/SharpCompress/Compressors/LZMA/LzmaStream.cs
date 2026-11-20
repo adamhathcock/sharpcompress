@@ -74,15 +74,12 @@ public partial class LzmaStream : Stream, IStreamStack, IAsyncDisposable
             }
             _dictionarySize = 2 | (properties[0] & 1);
             _dictionarySize <<= (properties[0] >> 1) + 11;
-            var maximum = DictionarySizeLimits.Lzma2;
-            if (_dictionarySize > maximum)
-            {
-                throw DictionarySizeLimits.Lzma2LimitExceeded(_dictionarySize, maximum);
-            }
 
             Properties = new byte[1];
             _availableBytes = 0;
-            _outWindow.Create(_dictionarySize);
+            // Keep the declared window for ring positions and match distances, but limit storage
+            // as history grows. A small stream need not fill its declared window.
+            _outWindow.Create(_dictionarySize, DictionarySizeLimits.Lzma2);
         }
     }
 
