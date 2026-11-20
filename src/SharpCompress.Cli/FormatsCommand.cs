@@ -23,18 +23,14 @@ internal static class FormatsCommand
         var rows = Factory
             .Factories.OrderBy(f => f.Name, StringComparer.Ordinal)
             .Where(f => path is null || f.Name.Equals(path, StringComparison.OrdinalIgnoreCase))
-            .Select(f =>
-                (object)
-                    new
-                    {
-                        Kind = "archive",
-                        f.Name,
-                        Extensions = f.GetSupportedExtensions().ToArray(),
-                        Archive = f is IArchiveFactory,
-                        Reader = f is IReaderFactory,
-                        Writer = f is IWriterFactory,
-                    }
-            )
+            .Select(f => new FormatRow(
+                "archive",
+                f.Name,
+                f.GetSupportedExtensions().ToArray(),
+                f is IArchiveFactory,
+                f is IReaderFactory,
+                f is IWriterFactory
+            ))
             .ToList();
         foreach (
             var wrapper in TarWrapper.Wrappers.Where(w => w.CompressionType != CompressionType.None)
@@ -49,17 +45,23 @@ internal static class FormatsCommand
             )
             {
                 rows.Add(
-                    new
-                    {
-                        Kind = "compressionStream",
-                        Name = wrapper.CompressionType.ToString(),
-                        Read = provider?.SupportsDecompression == true,
-                        Write = provider?.SupportsCompression == true,
-                    }
+                    new FormatRow(
+                        "compressionStream",
+                        wrapper.CompressionType.ToString(),
+                        Read: provider?.SupportsDecompression == true,
+                        Write: provider?.SupportsCompression == true
+                    )
                 );
             }
         }
-        await OutputRenderer.RenderAsync(rows, output, json, ndjson).ConfigureAwait(false);
+        if (ndjson)
+        {
+            await OutputRenderer.WriteRowsAsync(rows, output).ConfigureAwait(false);
+        }
+        else
+        {
+            await OutputRenderer.RenderAsync(rows, output, json, false).ConfigureAwait(false);
+        }
         return rows.Count == 0 ? 1 : 0;
     }
 }

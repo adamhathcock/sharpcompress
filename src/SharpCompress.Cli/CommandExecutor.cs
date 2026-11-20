@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -76,13 +75,12 @@ internal static class CommandExecutor
             {
                 await OutputRenderer
                     .RenderAsync(
-                        new
-                        {
-                            Path = path,
-                            PhysicalSize = file.Length,
-                            Status = detection is null ? "unrecognized" : "recognized",
-                            Detection = detection,
-                        },
+                        new DetectResult(
+                            path,
+                            file.Length,
+                            detection is null ? "unrecognized" : "recognized",
+                            detection
+                        ),
                         output,
                         json,
                         ndjson
@@ -99,17 +97,15 @@ internal static class CommandExecutor
                         .ConfigureAwait(false);
                 await OutputRenderer
                     .RenderAsync(
-                        new
-                        {
-                            Path = path,
-                            PhysicalSize = file.Length,
-                            Detection = detection,
-                            Information = information,
-                            Integrity = "notTested",
-                            Limitations = information is null
+                        new InspectResult(
+                            path,
+                            file.Length,
+                            detection,
+                            information,
+                            information is null
                                 ? "Standalone stream metadata is unavailable without payload processing."
-                                : null,
-                        },
+                                : null
+                        ),
                         output,
                         json,
                         ndjson
@@ -132,20 +128,8 @@ internal static class CommandExecutor
         }
         catch (OperationCanceledException)
         {
-            await error
-                .WriteLineAsync(
-                    json || ndjson
-                        ? JsonSerializer.Serialize(
-                            new
-                            {
-                                SchemaVersion = 1,
-                                Error = "Cancelled.",
-                                ExitCode = 130,
-                            },
-                            OutputRenderer.Json
-                        )
-                        : "Cancelled."
-                )
+            await OutputRenderer
+                .WriteErrorAsync(error, json || ndjson, "Cancelled.", 130)
                 .ConfigureAwait(false);
             return 130;
         }
@@ -167,20 +151,8 @@ internal static class CommandExecutor
                 exception is ArgumentException
                     ? exception.Message
                     : "Unable to process input (" + exception.GetType().Name + ").";
-            await error
-                .WriteLineAsync(
-                    json || ndjson
-                        ? JsonSerializer.Serialize(
-                            new
-                            {
-                                SchemaVersion = 1,
-                                Error = message,
-                                ExitCode = code,
-                            },
-                            OutputRenderer.Json
-                        )
-                        : message
-                )
+            await OutputRenderer
+                .WriteErrorAsync(error, json || ndjson, message, code)
                 .ConfigureAwait(false);
             return code;
         }

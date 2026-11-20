@@ -14,6 +14,52 @@ namespace SharpCompress.Cli.Test;
 
 public class ArchiveCompatibilityTests
 {
+    private static readonly string? InstalledTool = Environment.GetEnvironmentVariable(
+        "SHARPCOMPRESS_TEST_CLI"
+    );
+
+    [Fact]
+    public async Task FormatsUsesTheSameRowsInJsonAndNdjson()
+    {
+        var json = await RunProcessAsync(["formats", "--json"]);
+        Assert.Equal(0, json.ExitCode);
+        Assert.Equal("", json.Error);
+        using var document = JsonDocument.Parse(json.Output);
+        var rows = document.RootElement.GetProperty("result");
+        Assert.Contains(
+            rows.EnumerateArray(),
+            row => row.GetProperty("kind").GetString() == "archive"
+        );
+        Assert.Contains(
+            rows.EnumerateArray(),
+            row => row.GetProperty("kind").GetString() == "compressionStream"
+        );
+
+        var ndjson = await RunProcessAsync(["formats", "--ndjson"]);
+        Assert.Equal(0, ndjson.ExitCode);
+        Assert.Equal("", ndjson.Error);
+        var records = ndjson.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(rows.GetArrayLength(), records.Length);
+        for (var i = 0; i < records.Length; i++)
+        {
+            using var record = JsonDocument.Parse(records[i]);
+            Assert.Equal(1, record.RootElement.GetProperty("schemaVersion").GetInt32());
+            Assert.True(JsonElement.DeepEquals(rows[i], record.RootElement.GetProperty("result")));
+        }
+    }
+
+    [Fact]
+    public async Task MissingInputIsReportedAsJsonByTheTool()
+    {
+        var result = await RunProcessAsync(["inspect", "--json"]);
+        Assert.Equal(2, result.ExitCode);
+        Assert.Equal("", result.Output);
+        using var error = JsonDocument.Parse(result.Error);
+        Assert.Equal(1, error.RootElement.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal(2, error.RootElement.GetProperty("exitCode").GetInt32());
+        Assert.False(string.IsNullOrEmpty(error.RootElement.GetProperty("error").GetString()));
+    }
+
     [Theory]
     [InlineData("Zip.deflate.zip")]
     [InlineData("Zip.none.datadescriptors.zip")]
@@ -387,6 +433,14 @@ public class ArchiveCompatibilityTests
 
     private static async Task<JsonDocument> RunJsonAsync(string command, string path)
     {
+        if (!string.IsNullOrEmpty(InstalledTool))
+        {
+            var result = await RunProcessAsync([command, path, "--json"]);
+            Assert.True(result.ExitCode == 0, $"{command}: {result.Error}");
+            Assert.Equal("", result.Error);
+            return JsonDocument.Parse(result.Output);
+        }
+
         using var output = new StringWriter();
         using var error = new StringWriter();
         var exit = await CliApplication.RunAsync(
@@ -435,13 +489,18 @@ public class ArchiveCompatibilityTests
         string? password = null
     )
     {
-        var start = new ProcessStartInfo("dotnet")
+        var start = new ProcessStartInfo(
+            string.IsNullOrEmpty(InstalledTool) ? "dotnet" : InstalledTool
+        )
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
         };
-        start.ArgumentList.Add(typeof(CliApplication).Assembly.Location);
+        if (string.IsNullOrEmpty(InstalledTool))
+        {
+            start.ArgumentList.Add(typeof(CliApplication).Assembly.Location);
+        }
         foreach (var argument in arguments)
         {
             start.ArgumentList.Add(argument);

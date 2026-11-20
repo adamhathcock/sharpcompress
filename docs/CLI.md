@@ -1,6 +1,8 @@
 # SharpCompress command-line tool
 
-The `SharpCompress.Tool` .NET tool targets .NET 10 and provides four read-only commands:
+The SharpCompress CLI supports Native AOT on Linux x64, macOS arm64, and
+Windows x64. Building uses the .NET 10 SDK; the native executable does not
+require a separate .NET runtime. It provides four read-only commands:
 
 ```sh
 sharpcompress formats [name]
@@ -11,10 +13,19 @@ sharpcompress list backup.zip --ndjson
 ```
 
 For development, run `dotnet run --project src/SharpCompress.Cli -- COMMAND ...`.
-Build a tool package using `dotnet pack src/SharpCompress.Cli -c Release -o artifacts`.
-Install it with `dotnet tool install --add-source ./artifacts SharpCompress.Tool --version 0.1.0`.
-Run local-source installation from outside this repository if its NuGet source mapping
-rejects `--add-source`, or supply a dedicated NuGet configuration for the local feed.
+To build and run the native executable, use a matching host with the
+[.NET Native AOT prerequisites][aot] installed (macOS arm64 shown here):
+
+```sh
+dotnet publish src/SharpCompress.Cli -c Release -r osx-arm64 \
+  -p:NuGetLockFilePath=obj/packages.aot.lock.json -o ./cli-native
+./cli-native/SharpCompress.Cli formats --json
+```
+
+The **Native CLI packages** workflow in GitHub Actions builds, installs, and
+tests the CLI on all three platforms.
+
+[aot]: https://learn.microsoft.com/dotnet/core/deploying/native-aot/#prerequisites
 
 `--json` emits a versioned result document; `--ndjson` emits individual versioned records.
 Unavailable fields are omitted from both formats and from detailed text output.

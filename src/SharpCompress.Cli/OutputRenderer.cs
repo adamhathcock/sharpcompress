@@ -1,39 +1,48 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 
 namespace SharpCompress.Cli;
 
 internal static class OutputRenderer
 {
-    internal static readonly JsonSerializerOptions Json = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        Converters = { new JsonStringEnumConverter() },
-    };
-    private static readonly JsonSerializerOptions PrettyJson = new(Json) { WriteIndented = true };
+    private static readonly CliJsonContext PrettyJson = new(
+        new JsonSerializerOptions(CliJsonContext.Default.Options) { WriteIndented = true }
+    );
 
-    internal static Task RenderAsync(object value, TextWriter output, bool json, bool ndjson)
+    internal static Task RenderAsync<T>(T value, TextWriter output, bool json, bool ndjson)
     {
+        var context = json ? PrettyJson : CliJsonContext.Default;
+        var typeInfo =
+            (JsonTypeInfo<ResultDocument<T>>?)context.GetTypeInfo(typeof(ResultDocument<T>))
+            ?? throw new InvalidOperationException($"Missing CLI JSON metadata for {typeof(T)}.");
+        var document = new ResultDocument<T>(value);
         if (!json && !ndjson)
         {
-            return WriteTextAsync(JsonSerializer.SerializeToElement(value, Json), output, "");
-        }
-        if (ndjson && value is IEnumerable<object> rows)
-        {
-            return WriteRowsAsync(rows, output);
+            var element = JsonSerializer.SerializeToElement(document, typeInfo);
+            return WriteTextAsync(element.GetProperty("result"), output, "");
         }
 
-        return output.WriteLineAsync(
-            JsonSerializer.Serialize(
-                new { SchemaVersion = 1, Result = value },
-                ndjson ? Json : PrettyJson
-            )
-        );
+        return output.WriteLineAsync(JsonSerializer.Serialize(document, typeInfo));
     }
+
+    internal static Task WriteErrorAsync(
+        TextWriter output,
+        bool structured,
+        string message,
+        int code
+    ) =>
+        output.WriteLineAsync(
+            structured
+                ? JsonSerializer.Serialize(
+                    new ErrorDocument(message, code),
+                    CliJsonContext.Default.ErrorDocument
+                )
+                : message
+        );
 
     private static async Task WriteTextAsync(JsonElement value, TextWriter output, string prefix)
     {
@@ -61,7 +70,7 @@ internal static class OutputRenderer
         }
     }
 
-    private static async Task WriteRowsAsync(IEnumerable<object> rows, TextWriter output)
+    internal static async Task WriteRowsAsync<T>(IEnumerable<T> rows, TextWriter output)
     {
         foreach (var row in rows)
         {

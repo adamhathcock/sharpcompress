@@ -14,27 +14,15 @@ namespace SharpCompress.Cli;
 
 internal static class ListCommand
 {
-    private sealed record EntryRow(
-        long Index,
-        EntryInformation Metadata,
-        TarMetadata? Tar,
-        ZipMetadata? Zip
-    );
-
-    private sealed record ZipMetadata(string Comment);
-
-    private sealed record TarMetadata(string? Mode, long? UserId, long? GroupId)
-    {
-        internal static TarMetadata FromEntry(TarEntry entry) =>
-            new(
-                // TarEntry.Mode adds a legacy directory marker indistinguishable from the sticky bit.
-                !entry.IsDirectory && entry.Mode is long mode
-                    ? Convert.ToString(mode, 8).PadLeft(4, '0')
-                    : null,
-                entry.UserId,
-                entry.GroupId
-            );
-    }
+    private static TarMetadata ReadTarMetadata(TarEntry entry) =>
+        new(
+            // TarEntry.Mode adds a legacy directory marker indistinguishable from the sticky bit.
+            !entry.IsDirectory && entry.Mode is long mode
+                ? Convert.ToString(mode, 8).PadLeft(4, '0')
+                : null,
+            entry.UserId,
+            entry.GroupId
+        );
 
     internal static async Task<int> ExecuteAsync(
         string path,
@@ -47,9 +35,9 @@ internal static class ListCommand
         CancellationToken cancellationToken
     )
     {
-        var entries = new List<object>();
+        var entries = new List<EntryRow>();
         long index = 0;
-        async Task AddAsync(object entry)
+        async Task AddAsync(EntryRow entry)
         {
             if (ndjson)
             {
@@ -58,10 +46,6 @@ internal static class ListCommand
             else if (json)
             {
                 entries.Add(entry);
-            }
-            else if (entry is string text)
-            {
-                await output.WriteLineAsync(text).ConfigureAwait(false);
             }
             else
             {
@@ -73,31 +57,33 @@ internal static class ListCommand
             cancellationToken.ThrowIfCancellationRequested();
             var snapshot = EntryInformation.FromEntry(entry);
             var ordinal = index++;
+            if (!longListing && !json && !ndjson)
+            {
+                await output.WriteLineAsync(snapshot.Key ?? "(unnamed)").ConfigureAwait(false);
+                return;
+            }
             await AddAsync(
-                    longListing || json || ndjson
-                        ? new EntryRow(
-                            ordinal,
-                            snapshot,
-                            entry is TarEntry tar ? TarMetadata.FromEntry(tar) : null,
-                            entry is ZipEntry { Comment: { Length: > 0 } comment }
-                                ? new ZipMetadata(comment)
-                                : null
-                        )
-                        : snapshot.Key ?? "(unnamed)"
+                    new EntryRow(
+                        ordinal,
+                        snapshot,
+                        entry is TarEntry tar ? ReadTarMetadata(tar) : null,
+                        entry is ZipEntry { Comment: { Length: > 0 } comment }
+                            ? new ZipMetadata(comment)
+                            : null
+                    )
                 )
                 .ConfigureAwait(false);
         }
         if (detection.Archive is null)
         {
             await AddAsync(
-                    new
-                    {
-                        Index = index++,
-                        Kind = "logicalPayload",
-                        Name = System.IO.Path.GetFileNameWithoutExtension(path),
-                        NameSource = "inferred",
-                        Compression = detection.Compression,
-                    }
+                    new EntryRow(
+                        index++,
+                        Kind: "logicalPayload",
+                        Name: System.IO.Path.GetFileNameWithoutExtension(path),
+                        NameSource: "inferred",
+                        Compression: detection.Compression
+                    )
                 )
                 .ConfigureAwait(false);
         }
@@ -128,12 +114,7 @@ internal static class ListCommand
         if (json)
         {
             await OutputRenderer
-                .RenderAsync(
-                    new { Entries = entries, Integrity = "notTested" },
-                    output,
-                    true,
-                    false
-                )
+                .RenderAsync(new ListResult(entries), output, true, false)
                 .ConfigureAwait(false);
         }
 

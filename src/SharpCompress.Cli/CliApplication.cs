@@ -2,7 +2,6 @@ using System.CommandLine;
 using System.CommandLine.Help;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -119,21 +118,7 @@ public static class CliApplication
         {
             var machine = result.GetValue(jsonOption) || result.GetValue(ndjsonOption);
             var message = string.Join(" ", result.Errors.Select(e => e.Message));
-            await error
-                .WriteLineAsync(
-                    machine
-                        ? JsonSerializer.Serialize(
-                            new
-                            {
-                                SchemaVersion = 1,
-                                Error = message,
-                                ExitCode = 2,
-                            },
-                            OutputRenderer.Json
-                        )
-                        : message
-                )
-                .ConfigureAwait(false);
+            await OutputRenderer.WriteErrorAsync(error, machine, message, 2).ConfigureAwait(false);
             return 2;
         }
         return await result
