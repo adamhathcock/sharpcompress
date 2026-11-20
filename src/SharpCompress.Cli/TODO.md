@@ -7,7 +7,7 @@ contracts such as stream ownership, forward-only reads, cancellation, and writin
 - [x] Add TAR mode, UID, and GID to detailed listings. Use `Tar.PaxLocalHeader.tar`
   and `Tar.PaxGlobalHeader.tar` to check that local overrides do not leak into
   subsequent entries. Preserve the plain names-only listing.
-- [ ] Expose ZIP entry comments in detailed listings. Use `Zip.EntryComment.zip`,
+- [x] Expose ZIP entry comments in detailed listings. Use `Zip.EntryComment.zip`,
   and keep the entry comment distinct from the archive comment in `inspect`.
 - [ ] Add `--force-encoding NAME` without changing the fallback behavior of
   `--encoding`. Use `Zip.UnicodePathExtra.zip` to test both decoded names.

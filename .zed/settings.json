@@ -1,0 +1,11 @@
+{
+  "file_scan_exclusions": [
+    ".idea/**",
+    ".vscode/**",
+    "**/bin",
+    "**/binagent",
+    "**/obj",
+    "**/TestResults",
+    "..."
+  ]
+}

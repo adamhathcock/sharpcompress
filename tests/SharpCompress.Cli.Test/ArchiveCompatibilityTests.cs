@@ -153,6 +153,56 @@ public class ArchiveCompatibilityTests
     }
 
     [Fact]
+    public async Task ZipEntryCommentAppearsOnlyInDetailedListings()
+    {
+        const string comment = "This is a comment on test.txt";
+        var path = ArchivePath("Zip.EntryComment.zip");
+        using var document = await RunJsonAsync("list", path);
+        var entry = Assert.Single(
+            document.RootElement.GetProperty("result").GetProperty("entries").EnumerateArray()
+        );
+        Assert.Equal("test.txt", entry.GetProperty("metadata").GetProperty("key").GetString());
+        Assert.Equal(comment, entry.GetProperty("zip").GetProperty("comment").GetString());
+
+        var ndjson = await RunProcessAsync(["list", path, "--ndjson"]);
+        Assert.Equal(0, ndjson.ExitCode);
+        Assert.Equal("", ndjson.Error);
+        using var record = JsonDocument.Parse(ndjson.Output);
+        Assert.True(JsonElement.DeepEquals(entry, record.RootElement.GetProperty("result")));
+
+        var detailed = await RunProcessAsync(["list", path, "--long"]);
+        Assert.Equal(0, detailed.ExitCode);
+        Assert.Equal("", detailed.Error);
+        Assert.Contains($"zip.comment: \"{comment}\"", detailed.Output, StringComparison.Ordinal);
+
+        var plain = await RunProcessAsync(["list", path]);
+        Assert.Equal(0, plain.ExitCode);
+        Assert.Equal("", plain.Error);
+        Assert.Equal("test.txt" + Environment.NewLine, plain.Output);
+    }
+
+    [Fact]
+    public async Task ZipArchiveCommentIsNotUsedAsAnEntryComment()
+    {
+        var path = ArchivePath("Zip.LongComment.zip");
+        using var inspected = await RunJsonAsync("inspect", path);
+        var comment = inspected
+            .RootElement.GetProperty("result")
+            .GetProperty("information")
+            .GetProperty("comment")
+            .GetString();
+        Assert.StartsWith("Lorem ipsum dolor sit amet", comment, StringComparison.Ordinal);
+
+        using var listed = await RunJsonAsync("list", path);
+        var entries = listed.RootElement.GetProperty("result").GetProperty("entries");
+        Assert.NotEmpty(entries.EnumerateArray());
+        Assert.All(
+            entries.EnumerateArray(),
+            entry => Assert.False(entry.TryGetProperty("zip", out _))
+        );
+    }
+
+    [Fact]
     public async Task ZipDataDescriptorsAreIdentifiedInInspection()
     {
         using var document = await RunJsonAsync(

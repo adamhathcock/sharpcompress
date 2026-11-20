@@ -36,6 +36,10 @@ object alongside each entry's `metadata`. `mode` is an octal string (for example
 library's public mode adds a marker that overlaps the sticky bit. Plain `list`
 still prints only names.
 
+A detailed ZIP listing includes `zip.comment` for entries with a non-empty
+comment. The ZIP archive comment is separate and appears as `information.comment`
+in `inspect`.
+
 Detection recognizes supported archives, compressed TAR, and self-identifying standalone
 BZip2, XZ, LZip and ZStandard streams in addition to GZip and Unix compress.
 A standalone stream without an archive API is listed as one logical payload; its

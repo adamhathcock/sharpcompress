@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Common.Tar;
+using SharpCompress.Common.Zip;
 using SharpCompress.Detection;
 using SharpCompress.Readers;
 
@@ -13,7 +14,14 @@ namespace SharpCompress.Cli;
 
 internal static class ListCommand
 {
-    private sealed record EntryRow(long Index, EntryInformation Metadata, TarMetadata? Tar);
+    private sealed record EntryRow(
+        long Index,
+        EntryInformation Metadata,
+        TarMetadata? Tar,
+        ZipMetadata? Zip
+    );
+
+    private sealed record ZipMetadata(string Comment);
 
     private sealed record TarMetadata(string? Mode, long? UserId, long? GroupId)
     {
@@ -70,7 +78,10 @@ internal static class ListCommand
                         ? new EntryRow(
                             ordinal,
                             snapshot,
-                            entry is TarEntry tar ? TarMetadata.FromEntry(tar) : null
+                            entry is TarEntry tar ? TarMetadata.FromEntry(tar) : null,
+                            entry is ZipEntry { Comment: { Length: > 0 } comment }
+                                ? new ZipMetadata(comment)
+                                : null
                         )
                         : snapshot.Key ?? "(unnamed)"
                 )
