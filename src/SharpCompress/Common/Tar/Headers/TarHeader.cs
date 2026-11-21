@@ -47,6 +47,10 @@ internal sealed partial class TarHeader
     private const byte BASE256_MARKER = 128;
     private const byte BASE256_SIGN_BIT = 64;
 
+    // Largest value of a twelve-byte numeric field written as eleven octal digits
+    // plus a terminator (077777777777).
+    private const long MAX_OCTAL_FIELD_VALUE = 0x1FFFFFFFF;
+
     internal sealed class PaxMetadata
     {
         internal string? Name { get; set; }
@@ -203,9 +207,8 @@ internal sealed partial class TarHeader
             WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
         }
 
-        WriteOctalBytes(Size, buffer, 124, 12);
-        var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
-        WriteOctalBytes(time, buffer, 136, 12);
+        WriteSize(buffer);
+        WriteModificationTime(buffer);
         buffer[156] = (byte)EntryType;
 
         // write ustar magic field
@@ -240,18 +243,9 @@ internal sealed partial class TarHeader
         else
         {
             WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
-            WriteOctalBytes(Size, buffer, 124, 12);
-            var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
-            WriteOctalBytes(time, buffer, 136, 12);
+            WriteSize(buffer);
+            WriteModificationTime(buffer);
             buffer[156] = (byte)EntryType;
-
-            if (Size >= 0x1FFFFFFFF)
-            {
-                Span<byte> bytes12 = stackalloc byte[12];
-                BinaryPrimitives.WriteInt64BigEndian(bytes12.Slice(4), Size);
-                bytes12[0] |= 0x80;
-                bytes12.CopyTo(buffer.AsSpan(124));
-            }
         }
 
         var crc = RecalculateChecksum(buffer);
@@ -364,9 +358,7 @@ internal sealed partial class TarHeader
             GroupId = ReadOwnerId(buffer, 116),
         };
 
-        var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
-
-        LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
+        LastModifiedTime = ReadModificationTime(buffer);
         Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
 
         if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic, StringComparison.Ordinal))
@@ -768,6 +760,90 @@ internal sealed partial class TarHeader
         }
         BinaryPrimitives.WriteInt64BigEndian(buffer.AsSpan(offset, 8), value);
         buffer[offset] |= BASE256_MARKER;
+    }
+
+    private void WriteSize(byte[] buffer)
+    {
+        if (Size <= MAX_OCTAL_FIELD_VALUE)
+        {
+            WriteOctalBytes(Size, buffer, 124, 12);
+            return;
+        }
+
+        if (WriteFormat == TarHeaderWriteFormat.USTAR)
+        {
+            throw new InvalidFormatException(
+                $"TAR entry size {Size} does not fit USTAR's eleven octal digits. Try using GNU Tar format instead."
+            );
+        }
+
+        WriteBase256(Size, buffer, 124);
+    }
+
+    private void WriteModificationTime(byte[] buffer)
+    {
+        var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
+        if (time is >= 0 and <= MAX_OCTAL_FIELD_VALUE)
+        {
+            WriteOctalBytes(time, buffer, 136, 12);
+            return;
+        }
+
+        // Octal cannot hold times before 1970 or after 2242-03-16; writing them
+        // anyway spills into the size and checksum fields.
+        if (WriteFormat == TarHeaderWriteFormat.USTAR)
+        {
+            throw new InvalidFormatException(
+                $"TAR modification time {LastModifiedTime.ToUniversalTime():u} does not fit USTAR's eleven octal digits. Try using GNU Tar format instead."
+            );
+        }
+
+        WriteBase256(time, buffer, 136);
+    }
+
+    // GNU base-256: a twelve-byte big-endian two's complement value with the top
+    // bit set as a marker. Negative values already have the top bit set.
+    private static void WriteBase256(long value, byte[] buffer, int offset)
+    {
+        var field = buffer.AsSpan(offset, 12);
+        field.Slice(0, 4).Fill(value < 0 ? (byte)0xFF : (byte)0);
+        BinaryPrimitives.WriteInt64BigEndian(field.Slice(4), value);
+        field[0] |= BASE256_MARKER;
+    }
+
+    private static DateTime ReadModificationTime(byte[] buffer)
+    {
+        long seconds;
+        if ((buffer[136] & BASE256_MARKER) == 0)
+        {
+            seconds = ReadAsciiInt64Base8(buffer, 136, 11);
+        }
+        else
+        {
+            // GNU tar writes times before 1970 (and after 2242) in base-256.
+            var negative = (buffer[136] & BASE256_SIGN_BIT) != 0;
+            var extension = negative ? (byte)0xFF : (byte)0;
+            seconds = BinaryPrimitives.ReadInt64BigEndian(buffer.AsSpan(140, 8));
+            if (
+                buffer[136] != (negative ? (byte)0xFF : BASE256_MARKER)
+                || buffer[137] != extension
+                || buffer[138] != extension
+                || buffer[139] != extension
+                || seconds < 0 != negative
+            )
+            {
+                throw new InvalidFormatException("TAR modification time does not fit in 64 bits.");
+            }
+        }
+
+        try
+        {
+            return EPOCH.AddSeconds(seconds).ToLocalTime();
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            throw new InvalidFormatException($"Invalid TAR modification time: {seconds}.", ex);
+        }
     }
 
     private static long ReadOwnerId(byte[] buffer, int offset)
