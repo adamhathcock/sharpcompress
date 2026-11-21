@@ -1232,12 +1232,9 @@ internal sealed partial class CBZip2OutputStream : Stream
         return b;
     }
 
-    internal class StackElem
-    {
-        internal int ll;
-        internal int hh;
-        internal int dd;
-    }
+    private int[] stackLl;
+    private int[] stackHh;
+    private int[] stackDd;
 
     private void QSort3(int loSt, int hiSt, int dSt)
     {
@@ -1252,17 +1249,15 @@ internal sealed partial class CBZip2OutputStream : Stream
             lo,
             hi,
             d;
-        var stack = new StackElem[QSORT_STACK_SIZE];
-        for (var count = 0; count < QSORT_STACK_SIZE; count++)
-        {
-            stack[count] = new StackElem();
-        }
+        var stackLl = this.stackLl ??= new int[QSORT_STACK_SIZE];
+        var stackHh = this.stackHh ??= new int[QSORT_STACK_SIZE];
+        var stackDd = this.stackDd ??= new int[QSORT_STACK_SIZE];
 
         sp = 0;
 
-        stack[sp].ll = loSt;
-        stack[sp].hh = hiSt;
-        stack[sp].dd = dSt;
+        stackLl[sp] = loSt;
+        stackHh[sp] = hiSt;
+        stackDd[sp] = dSt;
         sp++;
 
         while (sp > 0)
@@ -1273,9 +1268,9 @@ internal sealed partial class CBZip2OutputStream : Stream
             }
 
             sp--;
-            lo = stack[sp].ll;
-            hi = stack[sp].hh;
-            d = stack[sp].dd;
+            lo = stackLl[sp];
+            hi = stackHh[sp];
+            d = stackDd[sp];
 
             if (hi - lo < SMALL_THRESH || d > DEPTH_THRESH)
             {
@@ -1359,9 +1354,9 @@ internal sealed partial class CBZip2OutputStream : Stream
 
             if (gtHi < ltLo)
             {
-                stack[sp].ll = lo;
-                stack[sp].hh = hi;
-                stack[sp].dd = d + 1;
+                stackLl[sp] = lo;
+                stackHh[sp] = hi;
+                stackDd[sp] = d + 1;
                 sp++;
                 continue;
             }
@@ -1374,19 +1369,19 @@ internal sealed partial class CBZip2OutputStream : Stream
             n = lo + unLo - ltLo - 1;
             m = hi - (gtHi - unHi) + 1;
 
-            stack[sp].ll = lo;
-            stack[sp].hh = n;
-            stack[sp].dd = d;
+            stackLl[sp] = lo;
+            stackHh[sp] = n;
+            stackDd[sp] = d;
             sp++;
 
-            stack[sp].ll = n + 1;
-            stack[sp].hh = m - 1;
-            stack[sp].dd = d + 1;
+            stackLl[sp] = n + 1;
+            stackHh[sp] = m - 1;
+            stackDd[sp] = d + 1;
             sp++;
 
-            stack[sp].ll = m;
-            stack[sp].hh = hi;
-            stack[sp].dd = d;
+            stackLl[sp] = m;
+            stackHh[sp] = hi;
+            stackDd[sp] = d;
             sp++;
         }
     }
