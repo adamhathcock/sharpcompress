@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -414,6 +416,52 @@ public class ArchiveCompatibilityTests
         }
     }
 
+    [Fact]
+    public async Task PlainNamesAreEscapedButStructuredNamesAreUnchanged()
+    {
+        const string name = "café\u001b\r\n\t\u0085\u2028\u2029.txt";
+        var path = Path.GetTempFileName();
+        try
+        {
+            using (var file = File.Create(path))
+            using (var zip = new ZipArchive(file, ZipArchiveMode.Create))
+            {
+                zip.CreateEntry(name);
+                zip.CreateEntry("second.txt");
+            }
+
+            var plain = await RunProcessAsync(["list", path]);
+            Assert.Equal(0, plain.ExitCode);
+            Assert.Equal("", plain.Error);
+            Assert.Equal(
+                @"café\u001B\u000D\u000A\u0009\u0085\u2028\u2029.txt"
+                    + Environment.NewLine
+                    + "second.txt"
+                    + Environment.NewLine,
+                plain.Output
+            );
+
+            var structured = await RunProcessAsync(["list", path, "--ndjson"]);
+            Assert.Equal(0, structured.ExitCode);
+            Assert.Equal("", structured.Error);
+            var lines = structured.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            Assert.Equal(2, lines.Length);
+            using var first = JsonDocument.Parse(lines[0]);
+            Assert.Equal(
+                name,
+                first
+                    .RootElement.GetProperty("result")
+                    .GetProperty("metadata")
+                    .GetProperty("key")
+                    .GetString()
+            );
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     private static void AssertTarEntry(
         JsonElement entry,
         int index,
@@ -510,6 +558,8 @@ public class ArchiveCompatibilityTests
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
             UseShellExecute = false,
         };
         if (string.IsNullOrEmpty(InstalledTool))

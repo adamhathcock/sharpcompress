@@ -46,6 +46,8 @@ object alongside each entry's `metadata`. `mode` is an octal string (for example
 `groupId` are numbers. Directory modes are currently omitted because the
 library's public mode adds a marker that overlaps the sticky bit. Plain `list`
 still prints only names.
+Control characters and Unicode line separators in plain names are escaped as `\uXXXX`;
+JSON and NDJSON retain the original key values.
 
 A detailed ZIP listing includes `zip.comment` for entries with a non-empty
 comment. The ZIP archive comment is separate and appears as `information.comment`

@@ -55,17 +55,16 @@ internal static class ListCommand
         async Task AddEntryAsync(IEntry entry)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var snapshot = EntryInformation.FromEntry(entry);
             var ordinal = index++;
             if (!longListing && !json && !ndjson)
             {
-                await output.WriteLineAsync(snapshot.Key ?? "(unnamed)").ConfigureAwait(false);
+                await OutputRenderer.WriteEntryNameAsync(output, entry.Key).ConfigureAwait(false);
                 return;
             }
             await AddAsync(
                     new EntryRow(
                         ordinal,
-                        snapshot,
+                        EntryInformation.FromEntry(entry),
                         entry is TarEntry tar ? ReadTarMetadata(tar) : null,
                         entry is ZipEntry { Comment: { Length: > 0 } comment }
                             ? new ZipMetadata(comment)

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
@@ -43,6 +45,26 @@ internal static class OutputRenderer
                 )
                 : message
         );
+
+    internal static Task WriteEntryNameAsync(TextWriter output, string? name)
+    {
+        name ??= "(unnamed)";
+        StringBuilder? escaped = null;
+        for (var i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            if (char.IsControl(c) || c is '\u2028' or '\u2029')
+            {
+                escaped ??= new StringBuilder(name.Length).Append(name, 0, i);
+                escaped.Append(@"\u").Append(((int)c).ToString("X4", CultureInfo.InvariantCulture));
+            }
+            else
+            {
+                escaped?.Append(c);
+            }
+        }
+        return output.WriteLineAsync(escaped?.ToString() ?? name);
+    }
 
     private static async Task WriteTextAsync(JsonElement value, TextWriter output, string prefix)
     {
