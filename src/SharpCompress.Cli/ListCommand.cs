@@ -35,6 +35,7 @@ internal static class ListCommand
         CancellationToken cancellationToken
     )
     {
+        var namesOnly = !longListing && !json && !ndjson;
         var entries = new List<EntryRow>();
         long index = 0;
         async Task AddAsync(EntryRow entry)
@@ -56,7 +57,7 @@ internal static class ListCommand
         {
             cancellationToken.ThrowIfCancellationRequested();
             var ordinal = index++;
-            if (!longListing && !json && !ndjson)
+            if (namesOnly)
             {
                 await OutputRenderer.WriteEntryNameAsync(output, entry.Key).ConfigureAwait(false);
                 return;
@@ -75,11 +76,18 @@ internal static class ListCommand
         }
         if (detection.Archive is null)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            var name = Path.GetFileNameWithoutExtension(path);
+            if (namesOnly)
+            {
+                await OutputRenderer.WriteEntryNameAsync(output, name).ConfigureAwait(false);
+                return 0;
+            }
             await AddAsync(
                     new EntryRow(
                         index++,
                         Kind: "logicalPayload",
-                        Name: System.IO.Path.GetFileNameWithoutExtension(path),
+                        Name: name,
                         NameSource: "inferred",
                         Compression: detection.Compression
                     )

@@ -113,7 +113,8 @@ public class CommandTests
     [InlineData(CompressionType.ZStandard)]
     public async Task StandaloneStreamsAreNotMisclassifiedAsArchives(CompressionType compression)
     {
-        var path = Path.GetTempFileName();
+        var directory = Directory.CreateTempSubdirectory();
+        var path = Path.Combine(directory.FullName, "standalone.txt.compressed");
         try
         {
             await using (var file = File.Create(path))
@@ -150,10 +151,20 @@ public class CommandTests
                 )
             );
             Assert.Contains("logicalPayload", output.ToString(), StringComparison.Ordinal);
+            Assert.Equal("", error.ToString());
+
+            using var plain = new StringWriter();
+            Assert.Equal(
+                0,
+                await CliApplication.RunAsync(["list", path], plain, error, CancellationToken.None)
+            );
+            Assert.Equal("standalone.txt" + Environment.NewLine, plain.ToString());
+            Assert.Equal("", error.ToString());
         }
         finally
         {
             File.Delete(path);
+            directory.Delete();
         }
     }
 
