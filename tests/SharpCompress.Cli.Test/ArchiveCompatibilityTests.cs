@@ -468,6 +468,21 @@ public class ArchiveCompatibilityTests
         {
             result["path"] = filename;
         }
+        // RAR exposes entry keys with platform-native separators.
+        if (
+            filename.EndsWith(".rar", StringComparison.OrdinalIgnoreCase)
+            && node["result"]?["entries"] is JsonArray entries
+        )
+        {
+            foreach (var entry in entries)
+            {
+                if (entry?["metadata"]?["key"] is JsonValue key)
+                {
+                    entry["metadata"]!["key"] = key.GetValue<string>()
+                        .Replace(Path.DirectorySeparatorChar, '/');
+                }
+            }
+        }
         return node;
     }
 
