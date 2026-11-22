@@ -12,8 +12,8 @@ Existing `ArchiveDetector` behavior is unchanged.
 
 `EntryInformation.FromEntry(IEntry)` takes a detached metadata snapshot without
 opening entry data. Nullable sizes/attributes represent unavailable values, including
-deferred ZIP sizes and standalone GZip placeholders. Wrapped TAR entries retain
-known uncompressed sizes but omit compressed sizes. The snapshot does not verify
+deferred ZIP sizes and standalone GZip and Unix compress placeholders. Wrapped TAR
+entries retain known uncompressed sizes but omit compressed sizes. The snapshot does not verify
 checksums or expose raw parser structures. Existing `IEntry` signatures remain unchanged.
 
 Quick reference for commonly used SharpCompress APIs.

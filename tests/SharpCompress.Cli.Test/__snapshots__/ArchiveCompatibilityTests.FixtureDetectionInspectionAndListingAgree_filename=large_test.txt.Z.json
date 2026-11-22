@@ -62,8 +62,6 @@
           "metadata": {
             "key": "large_test.txt",
             "compressionType": "Lzw",
-            "size": 0,
-            "compressedSize": 0,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,

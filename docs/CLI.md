@@ -61,8 +61,8 @@ and detection result, not decoded sizes or format-specific block metadata.
 Ordinary files report `unrecognized`, not an empty archive. Raw signatureless codecs
 are not guessed. Extensionless inputs use content detection.
 
-Deferred ZIP sizes, standalone GZip size placeholders, and shared compressed sizes
-(including those of wrapped TAR entries) are omitted. Checksums are
+Deferred ZIP sizes, standalone GZip and Unix compress size placeholders, and shared
+compressed sizes (including those of wrapped TAR entries) are omitted. Checksums are
 not included until their algorithm and availability can be exposed reliably.
 Sequential listings/inspection can scan or decompress the whole input. None of these
 commands claims payload integrity verification or recursively browses nested archives.

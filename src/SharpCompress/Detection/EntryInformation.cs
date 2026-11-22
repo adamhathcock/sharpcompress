@@ -2,6 +2,7 @@ using System;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
+using SharpCompress.Common.Lzw;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
@@ -54,9 +55,9 @@ public sealed class EntryInformation
                 }
             }
         }
-        // Standalone GZip does not expose reliable sizes. A compressed TAR still
+        // Standalone entries do not expose reliable sizes. A compressed TAR still
         // has uncompressed sizes in its headers, but no per-entry compressed sizes.
-        var unknown = deferred || entry is GZipEntry;
+        var unknown = deferred || entry is GZipEntry or LzwEntry;
         var compressedTar = entry is TarEntry && entry.CompressionType != CompressionType.None;
         return new EntryInformation
         {
