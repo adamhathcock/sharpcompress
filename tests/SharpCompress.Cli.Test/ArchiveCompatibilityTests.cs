@@ -63,6 +63,33 @@ public class ArchiveCompatibilityTests
     }
 
     [Fact]
+    public async Task RelativePathStartingWithAtSignIsTreatedAsAFile()
+    {
+        const string filename = "@archive.zip";
+        var directory = Directory.CreateTempSubdirectory();
+        var path = Path.Combine(directory.FullName, filename);
+        try
+        {
+            File.Copy(ArchivePath("Zip.deflate.zip"), path);
+            var result = await RunProcessAsync(
+                ["detect", filename, "--json"],
+                workingDirectory: directory.FullName
+            );
+            Assert.Equal(0, result.ExitCode);
+            Assert.Equal("", result.Error);
+            using var document = JsonDocument.Parse(result.Output);
+            var detection = document.RootElement.GetProperty("result");
+            Assert.Equal(filename, detection.GetProperty("path").GetString());
+            Assert.Equal("recognized", detection.GetProperty("status").GetString());
+        }
+        finally
+        {
+            File.Delete(path);
+            directory.Delete();
+        }
+    }
+
+    [Fact]
     public async Task TruncatedArchiveIsReportedAsCorruptByTheTool()
     {
         var path = Path.GetTempFileName();
@@ -640,7 +667,8 @@ public class ArchiveCompatibilityTests
 
     private static async Task<(int ExitCode, string Output, string Error)> RunProcessAsync(
         string[] arguments,
-        string? password = null
+        string? password = null,
+        string? workingDirectory = null
     )
     {
         var start = new ProcessStartInfo(
@@ -652,6 +680,7 @@ public class ArchiveCompatibilityTests
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8,
             UseShellExecute = false,
+            WorkingDirectory = workingDirectory ?? "",
         };
         if (string.IsNullOrEmpty(InstalledTool))
         {

@@ -113,7 +113,10 @@ public static class CliApplication
             );
             root.Subcommands.Add(command);
         }
-        var result = root.Parse(args.Length == 0 ? ["--help"] : args);
+        var result = root.Parse(
+            args.Length == 0 ? ["--help"] : args,
+            new ParserConfiguration { ResponseFileTokenReplacer = null }
+        );
         if (result.Errors.Count > 0 && result.Action is not HelpAction)
         {
             var machine = result.GetValue(jsonOption) || result.GetValue(ndjsonOption);
