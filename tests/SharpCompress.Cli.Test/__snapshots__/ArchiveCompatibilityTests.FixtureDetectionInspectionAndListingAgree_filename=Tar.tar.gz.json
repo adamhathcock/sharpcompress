@@ -68,6 +68,7 @@
           "metadata": {
             "key": "Empty/",
             "compressionType": "GZip",
+            "size": 0,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -87,6 +88,7 @@
           "metadata": {
             "key": "exe/",
             "compressionType": "GZip",
+            "size": 0,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -106,6 +108,7 @@
           "metadata": {
             "key": "exe/test.exe",
             "compressionType": "GZip",
+            "size": 45056,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
@@ -126,6 +129,7 @@
           "metadata": {
             "key": "jpg/",
             "compressionType": "GZip",
+            "size": 0,
             "hasDeferredSizes": false,
             "isDirectory": true,
             "isEncrypted": false,
@@ -145,6 +149,7 @@
           "metadata": {
             "key": "jpg/test.jpg",
             "compressionType": "GZip",
+            "size": 40372,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,
@@ -165,6 +170,7 @@
           "metadata": {
             "key": "���.txt",
             "compressionType": "GZip",
+            "size": 15498,
             "hasDeferredSizes": false,
             "isDirectory": false,
             "isEncrypted": false,

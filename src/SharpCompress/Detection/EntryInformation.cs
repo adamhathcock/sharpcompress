@@ -1,6 +1,8 @@
 using System;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using SharpCompress.Common.GZip;
+using SharpCompress.Common.Tar;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
 
@@ -52,9 +54,10 @@ public sealed class EntryInformation
                 }
             }
         }
-        // GZip exposes placeholder sizes before its trailer is consumed. Shared compressed
-        // streams likewise cannot reliably attribute a compressed byte count to each file.
-        var unknown = deferred || entry.CompressionType == CompressionType.GZip;
+        // Standalone GZip does not expose reliable sizes. A compressed TAR still
+        // has uncompressed sizes in its headers, but no per-entry compressed sizes.
+        var unknown = deferred || entry is GZipEntry;
+        var compressedTar = entry is TarEntry && entry.CompressionType != CompressionType.None;
         return new EntryInformation
         {
             Key = entry.Key,
@@ -64,6 +67,7 @@ public sealed class EntryInformation
             CompressedSize =
                 unknown
                 || entry.IsSolid
+                || compressedTar
                 || entry is SharpCompress.Archives.SevenZip.SevenZipArchiveEntry
                     ? null
                     : Available(() => entry.CompressedSize),
