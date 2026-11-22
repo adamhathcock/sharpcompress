@@ -290,6 +290,7 @@ public static unsafe partial class Methods
         }
     );
 #endif
+
     /* ZSTD_rescaleFreqs() :
      * if first block (detected by optPtr->litLengthSum == 0) : init statistics
      *    take hints from dictionary if there is one

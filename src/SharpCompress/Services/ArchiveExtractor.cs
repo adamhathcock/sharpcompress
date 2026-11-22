@@ -70,10 +70,8 @@ internal sealed partial class ArchiveExtractor(
                 continue;
             }
 
-            entry.WriteEntryToDirectoryCore(
-                fullDestinationDirectoryPath,
-                options,
-                path => entries.WriteToFile(entry, path, options)
+            entry.WriteEntryToDirectoryCore(fullDestinationDirectoryPath, options, path =>
+                entries.WriteToFile(entry, path, options)
             );
 
             bytesRead += entry.Size;

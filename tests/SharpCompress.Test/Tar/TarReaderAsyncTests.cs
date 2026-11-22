@@ -120,8 +120,8 @@ public class TarReaderAsyncTests : ReaderTests
                 Assert.Equal(CompressionType.BZip2, reader.Entry.CompressionType);
                 using var entryStream = await reader.OpenEntryStreamAsync();
                 var file = Path.GetFileName(reader.Entry.Key);
-                var folder =
-                    Path.GetDirectoryName(reader.Entry.Key) ?? throw new ArgumentNullException();
+                var folder = Path.GetDirectoryName(reader.Entry.Key)
+                    ?? throw new ArgumentNullException();
                 var destdir = Path.Combine(SCRATCH_FILES_PATH, folder);
                 if (!Directory.Exists(destdir))
                 {

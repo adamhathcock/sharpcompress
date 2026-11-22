@@ -43,10 +43,8 @@ internal sealed partial class ReaderExtractor : IReaderExtractor
         string destinationDirectory,
         ExtractionOptions? options = null
     ) =>
-        reader.Entry.WriteEntryToDirectory(
-            destinationDirectory,
-            options,
-            (path) => WriteEntryToFile(reader, path, options)
+        reader.Entry.WriteEntryToDirectory(destinationDirectory, options, (path) =>
+            WriteEntryToFile(reader, path, options)
         );
 
     /// <summary>
@@ -59,15 +57,11 @@ internal sealed partial class ReaderExtractor : IReaderExtractor
     )
     {
         options ??= new ExtractionOptions();
-        reader.Entry.WriteEntryToFile(
-            destinationFileName,
-            options,
-            (x, fm) =>
-            {
-                using var fs = File.Open(x, fm);
-                CopyEntryTo(reader, fs, options ?? new ExtractionOptions());
-            }
-        );
+        reader.Entry.WriteEntryToFile(destinationFileName, options, (x, fm) =>
+        {
+            using var fs = File.Open(x, fm);
+            CopyEntryTo(reader, fs, options ?? new ExtractionOptions());
+        });
     }
 
     private static void CopyEntryTo(

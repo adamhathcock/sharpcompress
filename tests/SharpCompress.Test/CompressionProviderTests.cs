@@ -488,10 +488,7 @@ public class CompressionProviderTests
         };
 
         // Clone using 'with' expression
-        var clone = original with
-        {
-            LeaveStreamOpen = true,
-        };
+        var clone = original with { LeaveStreamOpen = true };
 
         clone.CompressionType.Should().Be(original.CompressionType);
         clone.CompressionLevel.Should().Be(original.CompressionLevel);
@@ -512,10 +509,7 @@ public class CompressionProviderTests
         };
 
         // Clone using 'with' expression
-        var clone = original with
-        {
-            LeaveStreamOpen = true,
-        };
+        var clone = original with { LeaveStreamOpen = true };
 
         clone.Providers.Should().BeSameAs(original.Providers);
         clone.LeaveStreamOpen.Should().BeTrue();
