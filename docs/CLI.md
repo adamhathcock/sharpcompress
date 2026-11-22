@@ -62,7 +62,8 @@ Ordinary files report `unrecognized`, not an empty archive. Raw signatureless co
 are not guessed. Extensionless inputs use content detection.
 
 Deferred ZIP sizes, standalone GZip and Unix compress size placeholders, and shared
-compressed sizes (including those of wrapped TAR entries) are omitted. Checksums are
+compressed sizes (including those of wrapped TAR entries) are omitted. Per-entry
+7z volume indexes are also omitted because the volume mapping is unavailable. Checksums are
 not included until their algorithm and availability can be exposed reliably.
 Sequential listings/inspection can scan or decompress the whole input. None of these
 commands claims payload integrity verification or recursively browses nested archives.

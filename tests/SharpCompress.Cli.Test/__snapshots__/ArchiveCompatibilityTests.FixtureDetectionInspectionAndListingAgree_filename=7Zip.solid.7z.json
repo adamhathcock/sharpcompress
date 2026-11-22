@@ -71,8 +71,6 @@
             "isSolid": false,
             "isSplitAfter": false,
             "isComplete": true,
-            "volumeIndexFirst": 0,
-            "volumeIndexLast": 0,
             "lastModifiedTime": "<timestamp>",
             "attributes": 16
           }
@@ -89,8 +87,6 @@
             "isSolid": false,
             "isSplitAfter": false,
             "isComplete": true,
-            "volumeIndexFirst": 1,
-            "volumeIndexLast": 1,
             "lastModifiedTime": "<timestamp>",
             "attributes": 16
           }
@@ -107,8 +103,6 @@
             "isSolid": false,
             "isSplitAfter": false,
             "isComplete": true,
-            "volumeIndexFirst": 2,
-            "volumeIndexLast": 2,
             "lastModifiedTime": "<timestamp>",
             "attributes": 32
           }
@@ -125,8 +119,6 @@
             "isSolid": true,
             "isSplitAfter": false,
             "isComplete": true,
-            "volumeIndexFirst": 3,
-            "volumeIndexLast": 3,
             "lastModifiedTime": "<timestamp>",
             "attributes": 32
           }
@@ -143,8 +135,6 @@
             "isSolid": false,
             "isSplitAfter": false,
             "isComplete": true,
-            "volumeIndexFirst": 4,
-            "volumeIndexLast": 4,
             "lastModifiedTime": "<timestamp>",
             "attributes": 32
           }

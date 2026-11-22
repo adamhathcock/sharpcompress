@@ -3,6 +3,7 @@ using SharpCompress.Archives;
 using SharpCompress.Common;
 using SharpCompress.Common.GZip;
 using SharpCompress.Common.Lzw;
+using SharpCompress.Common.SevenZip;
 using SharpCompress.Common.Tar;
 using SharpCompress.Common.Zip;
 using SharpCompress.Common.Zip.Headers;
@@ -25,8 +26,8 @@ public sealed class EntryInformation
     public bool IsSolid { get; private set; }
     public bool IsSplitAfter { get; private set; }
     public bool? IsComplete { get; private set; }
-    public int VolumeIndexFirst { get; private set; }
-    public int VolumeIndexLast { get; private set; }
+    public int? VolumeIndexFirst { get; private set; }
+    public int? VolumeIndexLast { get; private set; }
     public DateTime? LastModifiedTime { get; private set; }
     public DateTime? CreatedTime { get; private set; }
     public DateTime? LastAccessedTime { get; private set; }
@@ -59,6 +60,8 @@ public sealed class EntryInformation
         // has uncompressed sizes in its headers, but no per-entry compressed sizes.
         var unknown = deferred || entry is GZipEntry or LzwEntry;
         var compressedTar = entry is TarEntry && entry.CompressionType != CompressionType.None;
+        // The 7z entry exposes its file ordinal, not a mapping to physical volumes.
+        var sevenZip = entry is SevenZipEntry;
         return new EntryInformation
         {
             Key = entry.Key,
@@ -66,10 +69,7 @@ public sealed class EntryInformation
             CompressionType = entry.CompressionType,
             Size = unknown ? null : Available(() => entry.Size),
             CompressedSize =
-                unknown
-                || entry.IsSolid
-                || compressedTar
-                || entry is SharpCompress.Archives.SevenZip.SevenZipArchiveEntry
+                unknown || entry.IsSolid || compressedTar || sevenZip
                     ? null
                     : Available(() => entry.CompressedSize),
             HasDeferredSizes = deferred,
@@ -78,8 +78,8 @@ public sealed class EntryInformation
             IsSolid = entry.IsSolid,
             IsSplitAfter = entry.IsSplitAfter,
             IsComplete = (entry as IArchiveEntry)?.IsComplete,
-            VolumeIndexFirst = entry.VolumeIndexFirst,
-            VolumeIndexLast = entry.VolumeIndexLast,
+            VolumeIndexFirst = sevenZip ? null : entry.VolumeIndexFirst,
+            VolumeIndexLast = sevenZip ? null : entry.VolumeIndexLast,
             LastModifiedTime = entry.LastModifiedTime,
             CreatedTime = entry.CreatedTime,
             LastAccessedTime = entry.LastAccessedTime,
