@@ -143,10 +143,13 @@ internal static class CommandExecutor
                         or NotImplementedException
             )
         {
-            var code =
-                exception is ArgumentException ? 2
-                : exception is IOException or UnauthorizedAccessException ? 3
-                : 4;
+            var code = exception switch
+            {
+                ArgumentException => 2,
+                EndOfStreamException => 4,
+                IOException or UnauthorizedAccessException => 3,
+                _ => 4,
+            };
             // Library exception messages can include input data; never echo password sources.
             var message =
                 exception is ArgumentException

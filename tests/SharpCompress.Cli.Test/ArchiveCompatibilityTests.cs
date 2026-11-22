@@ -62,6 +62,30 @@ public class ArchiveCompatibilityTests
         Assert.False(string.IsNullOrEmpty(error.RootElement.GetProperty("error").GetString()));
     }
 
+    [Fact]
+    public async Task TruncatedArchiveIsReportedAsCorruptByTheTool()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            var fixture = await File.ReadAllBytesAsync(ArchivePath("Rar5.comment.plain.rar"));
+            var commentOffset = fixture.AsSpan().IndexOf("123456789012345é"u8);
+            Assert.True(commentOffset >= 0);
+            await File.WriteAllBytesAsync(path, fixture[..(commentOffset + 5)]);
+
+            var result = await RunProcessAsync(["list", path, "--json"]);
+            Assert.Equal(4, result.ExitCode);
+            Assert.Equal("", result.Output);
+            using var error = JsonDocument.Parse(result.Error);
+            Assert.Equal(4, error.RootElement.GetProperty("exitCode").GetInt32());
+            Assert.Contains("EndOfStreamException", result.Error, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     [Theory]
     [InlineData("Zip.deflate.zip")]
     [InlineData("Zip.none.datadescriptors.zip")]
