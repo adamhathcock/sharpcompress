@@ -55,10 +55,20 @@ jobs:
         env:
           TOOL_VERSION: ${{ steps.pack.outputs.version }}
         run: |
+          $toolPath = Join-Path $env:RUNNER_TEMP 'cli-tool'
+          $packages = Join-Path $env:RUNNER_TEMP 'cli-packages'
           Push-Location $env:RUNNER_TEMP
-          dotnet tool install SharpCompress.Tool --version $env:TOOL_VERSION --add-source "$env:RUNNER_TEMP/cli-packages" --tool-path "$env:RUNNER_TEMP/cli-tool"
+          dotnet tool install SharpCompress.Tool --version $env:TOOL_VERSION --add-source $packages --tool-path $toolPath
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Pop-Location
-          $env:SHARPCOMPRESS_TEST_CLI = "$env:RUNNER_TEMP/cli-tool/sharpcompress"
-          if ($IsWindows) { $env:SHARPCOMPRESS_TEST_CLI += ".exe" }
+          $shim = Join-Path $toolPath ($IsWindows ? 'sharpcompress.cmd' : 'sharpcompress')
+          & $shim formats --json | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:SHARPCOMPRESS_TEST_CLI = $shim
+          if ($IsWindows) {
+            # Launch the installed binary directly in tests to preserve the argument list.
+            $executables = @(Get-ChildItem -LiteralPath $toolPath -Recurse -Force -File -Filter 'SharpCompress.Cli.exe')
+            if ($executables.Count -ne 1) { throw "Expected one installed native executable, found $($executables.Count)." }
+            $env:SHARPCOMPRESS_TEST_CLI = $executables[0].FullName
+          }
           dotnet test tests/SharpCompress.Cli.Test/SharpCompress.Cli.Test.csproj --framework net10.0 -p:RestoreLockedMode=true
