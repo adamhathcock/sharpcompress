@@ -140,6 +140,7 @@ internal static class CommandExecutor
                         or UnauthorizedAccessException
                         or SharpCompressException
                         or NotSupportedException
+                        or NotImplementedException
             )
         {
             var code =
