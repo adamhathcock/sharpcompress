@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Cli;
+using SharpCompress.Common;
+using SharpCompress.Writers.Zip;
 using Xunit;
 
 namespace SharpCompress.Cli.Test;
@@ -289,6 +291,34 @@ public class ArchiveCompatibilityTests
     }
 
     [Fact]
+    public async Task EmptyZipEntryWithDataDescriptorKeepsKnownZeroSizes()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            using var stream = new NonSeekableMemoryStream();
+            using (var zip = new ZipWriter(stream, new ZipWriterOptions(CompressionType.None)))
+            {
+                zip.Write("empty.txt", Stream.Null, new ZipWriterEntryOptions());
+            }
+            await File.WriteAllBytesAsync(path, stream.ToArray());
+
+            using var document = await RunJsonAsync("list", path);
+            var entry = Assert.Single(
+                document.RootElement.GetProperty("result").GetProperty("entries").EnumerateArray()
+            );
+            var metadata = entry.GetProperty("metadata");
+            Assert.Equal(0, metadata.GetProperty("size").GetInt64());
+            Assert.Equal(0, metadata.GetProperty("compressedSize").GetInt64());
+            Assert.False(metadata.GetProperty("hasDeferredSizes").GetBoolean());
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
     public async Task SplitArchivePartsAreDiscovered()
     {
         using var document = await RunJsonAsync(
@@ -484,6 +514,11 @@ public class ArchiveCompatibilityTests
         {
             File.Delete(path);
         }
+    }
+
+    private sealed class NonSeekableMemoryStream : MemoryStream
+    {
+        public override bool CanSeek => false;
     }
 
     private static void AssertTarEntry(

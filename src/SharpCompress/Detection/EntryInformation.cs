@@ -42,11 +42,13 @@ public sealed class EntryInformation
                 if (
                     part is ZipFilePart file
                     && FlagUtility.HasFlag(file.Header.Flags, HeaderFlags.UsePostDataDescriptor)
+                    && !file.Header.IsCrcAvailable
                     && file.Header.CompressedSize == 0
                     && file.Header.UncompressedSize == 0
                 )
                 {
                     deferred = true;
+                    break;
                 }
             }
         }
