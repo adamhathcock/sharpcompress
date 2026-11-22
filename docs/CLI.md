@@ -31,7 +31,8 @@ tests the CLI on all three platforms.
 Unavailable fields are omitted from both formats and from detailed text output.
 Known values such as `0` and `false` are still printed.
 Listing preserves order and duplicate names with zero-based indexes. JSON output buffers
-the listing; NDJSON streams records, and a later failure can leave a partial listing.
+the listing; text and NDJSON stream it, so a later failure (such as a missing archive
+volume needed to complete an entry) can leave a partial listing.
 Errors go to stderr. Exit codes: 0 success, 1 unrecognized input/no catalog match,
 2 invalid arguments, 3 file access failure, 4 unsupported/corrupt/encrypted input,
 130 cancellation. Partial inspection due to unavailable metadata is not an error.

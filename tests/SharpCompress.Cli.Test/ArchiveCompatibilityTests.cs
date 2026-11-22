@@ -30,13 +30,11 @@ public class ArchiveCompatibilityTests
         Assert.Equal("", json.Error);
         using var document = JsonDocument.Parse(json.Output);
         var rows = document.RootElement.GetProperty("result");
-        Assert.Contains(
-            rows.EnumerateArray(),
-            row => row.GetProperty("kind").GetString() == "archive"
+        Assert.Contains(rows.EnumerateArray(), row =>
+            row.GetProperty("kind").GetString() == "archive"
         );
-        Assert.Contains(
-            rows.EnumerateArray(),
-            row => row.GetProperty("kind").GetString() == "compressionStream"
+        Assert.Contains(rows.EnumerateArray(), row =>
+            row.GetProperty("kind").GetString() == "compressionStream"
         );
 
         var ndjson = await RunProcessAsync(["formats", "--ndjson"]);
@@ -270,9 +268,8 @@ public class ArchiveCompatibilityTests
         using var listed = await RunJsonAsync("list", path);
         var entries = listed.RootElement.GetProperty("result").GetProperty("entries");
         Assert.NotEmpty(entries.EnumerateArray());
-        Assert.All(
-            entries.EnumerateArray(),
-            entry => Assert.False(entry.TryGetProperty("zip", out _))
+        Assert.All(entries.EnumerateArray(), entry =>
+            Assert.False(entry.TryGetProperty("zip", out _))
         );
     }
 
@@ -356,6 +353,41 @@ public class ArchiveCompatibilityTests
         {
             File.Delete(path);
             Directory.Delete(directory);
+        }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("--long")]
+    [InlineData("--json")]
+    [InlineData("--ndjson")]
+    public async Task ListingFailsWhenSplitArchivePartsAreMissing(string? option)
+    {
+        var filename = "Rar.multi.solid.part01.rar";
+        var directory = Directory.CreateTempSubdirectory();
+        var path = Path.Combine(directory.FullName, filename);
+        try
+        {
+            File.Copy(ArchivePath(filename), path);
+            var result = await RunProcessAsync(
+                option is null ? ["list", path] : ["list", path, option]
+            );
+            Assert.Equal(4, result.ExitCode);
+            Assert.Contains("IncompleteArchiveException", result.Error, StringComparison.Ordinal);
+            if (option is "--json" or "--ndjson")
+            {
+                using var error = JsonDocument.Parse(result.Error);
+                Assert.Equal(4, error.RootElement.GetProperty("exitCode").GetInt32());
+            }
+            if (option == "--json")
+            {
+                Assert.Equal("", result.Output);
+            }
+        }
+        finally
+        {
+            File.Delete(path);
+            directory.Delete();
         }
     }
 
@@ -633,8 +665,7 @@ public class ArchiveCompatibilityTests
         {
             start.Environment["SHARPCOMPRESS_CLI_TEST_PASSWORD"] = password;
         }
-        using var process =
-            Process.Start(start)
+        using var process = Process.Start(start)
             ?? throw new InvalidOperationException("Could not start CLI process.");
         var output = process.StandardOutput.ReadToEndAsync();
         var error = process.StandardError.ReadToEndAsync();

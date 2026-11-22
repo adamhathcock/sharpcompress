@@ -97,6 +97,10 @@ internal static class ListCommand
                     .ConfigureAwait(false)
             )
             {
+                if (!entry.IsComplete)
+                {
+                    throw new IncompleteArchiveException("Cannot list an incomplete archive.");
+                }
                 await AddEntryAsync(entry).ConfigureAwait(false);
             }
         }
