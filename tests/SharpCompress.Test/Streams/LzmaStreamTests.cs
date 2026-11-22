@@ -902,9 +902,8 @@ public class LzmaStreamTests
 
             var actual = File.ReadAllBytes(outputPath);
             Assert.Equal(expected, actual);
-            Assert.All(
-                bufferPool.RentRequests,
-                request => Assert.InRange(request, 1, Lzma2ParallelDecoder.BlockOutputBufferSize)
+            Assert.All(bufferPool.RentRequests, request =>
+                Assert.InRange(request, 1, Lzma2ParallelDecoder.BlockOutputBufferSize)
             );
             Assert.Equal(bufferPool.RentRequests.Count, bufferPool.ReturnedLengths.Count);
             Assert.Equal(0, bufferPool.OutstandingRentals);
@@ -1016,9 +1015,8 @@ public class LzmaStreamTests
             }
 
             Assert.Equal(expected, File.ReadAllBytes(outputPath));
-            Assert.All(
-                bufferPool.RentRequests,
-                request => Assert.InRange(request, 1, Lzma2ParallelDecoder.BlockOutputBufferSize)
+            Assert.All(bufferPool.RentRequests, request =>
+                Assert.InRange(request, 1, Lzma2ParallelDecoder.BlockOutputBufferSize)
             );
         }
         finally

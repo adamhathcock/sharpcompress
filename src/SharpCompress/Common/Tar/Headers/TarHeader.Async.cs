@@ -109,9 +109,8 @@ internal sealed partial class TarHeader
             WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
         }
 
-        WriteOctalBytes(Size, buffer, 124, 12);
-        var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
-        WriteOctalBytes(time, buffer, 136, 12);
+        WriteSize(buffer);
+        WriteModificationTime(buffer);
         buffer[156] = (byte)EntryType;
 
         WriteStringBytes(Encoding.ASCII.GetBytes("ustar"), buffer, 257, 6);
@@ -145,18 +144,9 @@ internal sealed partial class TarHeader
         else
         {
             WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
-            WriteOctalBytes(Size, buffer, 124, 12);
-            var time = (long)(LastModifiedTime.ToUniversalTime() - EPOCH).TotalSeconds;
-            WriteOctalBytes(time, buffer, 136, 12);
+            WriteSize(buffer);
+            WriteModificationTime(buffer);
             buffer[156] = (byte)EntryType;
-
-            if (Size >= 0x1FFFFFFFF)
-            {
-                Span<byte> bytes12 = stackalloc byte[12];
-                BinaryPrimitives.WriteInt64BigEndian(bytes12.Slice(4), Size);
-                bytes12[0] |= 0x80;
-                bytes12.CopyTo(buffer.AsSpan(124));
-            }
         }
 
         var crc = RecalculateChecksum(buffer);
@@ -289,9 +279,7 @@ internal sealed partial class TarHeader
                 GroupId = ReadOwnerId(buffer, 116),
             };
 
-            var unixTimeStamp = ReadAsciiInt64Base8(buffer, 136, 11);
-
-            LastModifiedTime = EPOCH.AddSeconds(unixTimeStamp).ToLocalTime();
+            LastModifiedTime = ReadModificationTime(buffer);
             Magic = ArchiveEncoding.Decode(buffer, 257, 6).TrimNulls();
 
             if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic, StringComparison.Ordinal))

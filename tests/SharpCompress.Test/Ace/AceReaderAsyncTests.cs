@@ -60,9 +60,8 @@ public class AceReaderAsyncTests : ReaderTests
     public async ValueTask Ace_Multi_Reader_Async()
     {
         var exception = await Assert.ThrowsAsync<MultiVolumeExtractionException>(() =>
-            DoMultiReaderAsync(
-                new[] { "Ace.store.split.ace", "Ace.store.split.c01" },
-                streams => AceReader.OpenAsyncReader(streams, null)
+            DoMultiReaderAsync(new[] { "Ace.store.split.ace", "Ace.store.split.c01" }, streams =>
+                AceReader.OpenAsyncReader(streams, null)
             )
         );
     }

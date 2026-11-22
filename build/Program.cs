@@ -25,451 +25,408 @@ const string DisplayBenchmarkResults = "display-benchmark-results";
 const string CompareBenchmarkResults = "compare-benchmark-results";
 const string GenerateBaseline = "generate-baseline";
 
-Target(
-    Clean,
-    ["**/bin", "**/obj"],
-    dir =>
+Target(Clean, ["**/bin", "**/obj"], dir =>
+{
+    IEnumerable<string> GetDirectories(string d)
     {
-        IEnumerable<string> GetDirectories(string d)
-        {
-            return Glob.Directories(".", d);
-        }
+        return Glob.Directories(".", d);
+    }
 
-        void RemoveDirectory(string d)
+    void RemoveDirectory(string d)
+    {
+        if (Directory.Exists(d))
         {
-            if (Directory.Exists(d))
-            {
-                Console.WriteLine(d);
-                Directory.Delete(d, true);
-            }
-        }
-
-        foreach (var d in GetDirectories(dir))
-        {
-            RemoveDirectory(d);
+            Console.WriteLine(d);
+            Directory.Delete(d, true);
         }
     }
-);
 
-Target(
-    Format,
-    () =>
+    foreach (var d in GetDirectories(dir))
     {
-        Run("dotnet", "tool restore");
-        Run("dotnet", "csharpier format .");
+        RemoveDirectory(d);
     }
-);
-Target(
-    CheckFormat,
-    () =>
-    {
-        Run("dotnet", "tool restore");
-        Run("dotnet", "csharpier check .");
-    }
-);
+});
+
+Target(Format, () =>
+{
+    Run("dotnet", "tool restore");
+    Run("dotnet", "csharpier format .");
+});
+Target(CheckFormat, () =>
+{
+    Run("dotnet", "tool restore");
+    Run("dotnet", "csharpier check .");
+});
 Target(Restore, [CheckFormat], () => Run("dotnet", "restore --locked-mode"));
 Target(UpdateLocks, [CheckFormat], () => Run("dotnet", "restore --force-evaluate"));
 
-Target(
-    Build,
-    [Restore],
-    () =>
+Target(Build, [Restore], () =>
+{
+    Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release --no-restore");
+});
+
+Target(Test, [Build], ["net10.0", "net48"], framework =>
+{
+    IEnumerable<string> GetFiles(string d)
     {
-        Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release --no-restore");
+        return Glob.Files(".", d);
     }
-);
 
-Target(
-    Test,
-    [Build],
-    ["net10.0", "net48"],
-    framework =>
+    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net48")
     {
-        IEnumerable<string> GetFiles(string d)
-        {
-            return Glob.Files(".", d);
-        }
-
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && framework == "net48")
-        {
-            return;
-        }
-
-        foreach (var file in GetFiles("**/*.Test.csproj"))
-        {
-            Run(
-                "dotnet",
-                $"test --project {file} -c Release -f {framework} --no-restore --verbosity=normal"
-            );
-        }
+        return;
     }
-);
 
-Target(
-    Publish,
-    [Test],
-    () =>
+    foreach (var file in GetFiles("**/*.Test.csproj"))
     {
-        Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/");
-    }
-);
-
-Target(
-    DetermineVersion,
-    async () =>
-    {
-        var (version, isPrerelease) = await GetVersion();
-        Console.WriteLine($"VERSION={version}");
-        Console.WriteLine(
-            $"PRERELEASE={isPrerelease.ToString().ToLower(CultureInfo.InvariantCulture)}"
-        );
-
-        // Write to environment file for GitHub Actions
-        var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
-        if (!string.IsNullOrEmpty(githubOutput))
-        {
-            File.AppendAllText(githubOutput, $"version={version}\n");
-            File.AppendAllText(
-                githubOutput,
-                $"prerelease={isPrerelease.ToString().ToLower(CultureInfo.InvariantCulture)}\n"
-            );
-        }
-    }
-);
-
-Target(
-    UpdateVersion,
-    async () =>
-    {
-        var version = Environment.GetEnvironmentVariable("VERSION");
-        if (string.IsNullOrEmpty(version))
-        {
-            var (detectedVersion, _) = await GetVersion();
-            version = detectedVersion;
-        }
-
-        Console.WriteLine($"Updating project file with version: {version}");
-
-        var projectPath = "src/SharpCompress/SharpCompress.csproj";
-        var content = File.ReadAllText(projectPath);
-
-        // Get base version (without prerelease suffix)
-        var baseVersion = version.Split('-')[0];
-
-        // Update VersionPrefix
-        content = Regex.Replace(
-            content,
-            @"<VersionPrefix>[^<]*</VersionPrefix>",
-            $"<VersionPrefix>{version}</VersionPrefix>"
-        );
-
-        // Update AssemblyVersion
-        content = Regex.Replace(
-            content,
-            @"<AssemblyVersion>[^<]*</AssemblyVersion>",
-            $"<AssemblyVersion>{baseVersion}</AssemblyVersion>"
-        );
-
-        // Update FileVersion
-        content = Regex.Replace(
-            content,
-            @"<FileVersion>[^<]*</FileVersion>",
-            $"<FileVersion>{baseVersion}</FileVersion>"
-        );
-
-        File.WriteAllText(projectPath, content);
-        Console.WriteLine($"Updated VersionPrefix to: {version}");
-        Console.WriteLine($"Updated AssemblyVersion and FileVersion to: {baseVersion}");
-    }
-);
-
-Target(
-    PushToNuGet,
-    () =>
-    {
-        var apiKey = Environment.GetEnvironmentVariable("NUGET_API_KEY");
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            Console.WriteLine(
-                "NUGET_API_KEY environment variable is not set. Skipping NuGet push."
-            );
-            return;
-        }
-
-        var packages = Directory.GetFiles("artifacts", "*.nupkg");
-        if (packages.Length == 0)
-        {
-            Console.WriteLine("No packages found in artifacts directory.");
-            return;
-        }
-
-        foreach (var package in packages)
-        {
-            Console.WriteLine($"Pushing {package} to NuGet.org");
-            try
-            {
-                // Note: API key is passed via command line argument which is standard practice for dotnet nuget push
-                // The key is already in an environment variable and not displayed in normal output
-                Run(
-                    "dotnet",
-                    $"nuget push \"{package}\" --api-key {apiKey} --source https://api.nuget.org/v3/index.json --skip-duplicate"
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to push {package}: {ex.Message}");
-                throw;
-            }
-        }
-    }
-);
-
-Target(
-    DisplayBenchmarkResults,
-    () =>
-    {
-        var githubStepSummary = Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY");
-        var resultsDir = "benchmark-results/results";
-
-        if (!Directory.Exists(resultsDir))
-        {
-            Console.WriteLine("No benchmark results found.");
-            return;
-        }
-
-        var markdownFiles = Directory
-            .GetFiles(resultsDir, "*-report-github.md")
-            .OrderBy(f => f)
-            .ToList();
-
-        if (markdownFiles.Count == 0)
-        {
-            Console.WriteLine("No benchmark markdown reports found.");
-            return;
-        }
-
-        var output = new List<string> { "## Benchmark Results", "" };
-
-        foreach (var file in markdownFiles)
-        {
-            Console.WriteLine($"Processing {Path.GetFileName(file)}");
-            var content = File.ReadAllText(file);
-            output.Add(content);
-            output.Add("");
-        }
-
-        // Write to GitHub Step Summary if available
-        if (!string.IsNullOrEmpty(githubStepSummary))
-        {
-            File.AppendAllLines(githubStepSummary, output);
-            Console.WriteLine($"Benchmark results written to GitHub Step Summary");
-        }
-        else
-        {
-            // Write to console if not in GitHub Actions
-            foreach (var line in output)
-            {
-                Console.WriteLine(line);
-            }
-        }
-    }
-);
-
-Target(
-    CompareBenchmarkResults,
-    () =>
-    {
-        var githubStepSummary = Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY");
-        var baselinePath = "tests/SharpCompress.Performance/baseline-results.md";
-        var resultsDir = "benchmark-results/results";
-
-        var output = new List<string> { "## Comparison with Baseline", "" };
-
-        if (!File.Exists(baselinePath))
-        {
-            Console.WriteLine("Baseline file not found");
-            output.Add("⚠️ Baseline file not found. Run `generate-baseline` to create it.");
-            WriteOutput(output, githubStepSummary);
-            return;
-        }
-
-        if (!Directory.Exists(resultsDir))
-        {
-            Console.WriteLine("No current benchmark results found.");
-            output.Add("⚠️ No current benchmark results found. Showing baseline only.");
-            output.Add("");
-            output.Add("### Baseline Results");
-            output.AddRange(File.ReadAllLines(baselinePath));
-            WriteOutput(output, githubStepSummary);
-            return;
-        }
-
-        var markdownFiles = Directory
-            .GetFiles(resultsDir, "*-report-github.md")
-            .OrderBy(f => f)
-            .ToList();
-
-        if (markdownFiles.Count == 0)
-        {
-            Console.WriteLine("No current benchmark markdown reports found.");
-            output.Add("⚠️ No current benchmark results found. Showing baseline only.");
-            output.Add("");
-            output.Add("### Baseline Results");
-            output.AddRange(File.ReadAllLines(baselinePath));
-            WriteOutput(output, githubStepSummary);
-            return;
-        }
-
-        Console.WriteLine("Parsing baseline results...");
-        var baselineMetrics = ParseBenchmarkResults(File.ReadAllText(baselinePath));
-
-        Console.WriteLine("Parsing current results...");
-        var currentText = string.Join("\n", markdownFiles.Select(f => File.ReadAllText(f)));
-        var currentMetrics = ParseBenchmarkResults(currentText);
-
-        Console.WriteLine("Comparing results...");
-        output.Add("### Performance Comparison");
-        output.Add("");
-        output.Add(
-            "| Benchmark | Baseline Mean | Current Mean | Change | Baseline Memory | Current Memory | Change |"
-        );
-        output.Add(
-            "|-----------|---------------|--------------|--------|-----------------|----------------|--------|"
-        );
-
-        var hasRegressions = false;
-        var hasImprovements = false;
-
-        foreach (var method in currentMetrics.Keys.Union(baselineMetrics.Keys).OrderBy(k => k))
-        {
-            var hasCurrent = currentMetrics.TryGetValue(method, out var current);
-            var hasBaseline = baselineMetrics.TryGetValue(method, out var baseline);
-
-            if (!hasCurrent)
-            {
-                output.Add(
-                    $"| {method} | {baseline!.Mean} | ❌ Missing | N/A | {baseline.Memory} | N/A | N/A |"
-                );
-                continue;
-            }
-
-            if (!hasBaseline)
-            {
-                output.Add(
-                    $"| {method} | ❌ New | {current!.Mean} | N/A | N/A | {current.Memory} | N/A |"
-                );
-                continue;
-            }
-
-            var timeChange = CalculateChange(baseline!.MeanValue, current!.MeanValue);
-            var memChange = CalculateChange(baseline.MemoryValue, current.MemoryValue);
-
-            var timeIcon =
-                timeChange > 25 ? "🔴"
-                : timeChange < -25 ? "🟢"
-                : "⚪";
-            var memIcon =
-                memChange > 25 ? "🔴"
-                : memChange < -25 ? "🟢"
-                : "⚪";
-
-            if (timeChange > 25 || memChange > 25)
-            {
-                hasRegressions = true;
-            }
-            if (timeChange < -25 || memChange < -25)
-            {
-                hasImprovements = true;
-            }
-
-            output.Add(
-                $"| {method} | {baseline.Mean} | {current.Mean} | {timeIcon} {timeChange:+0.0;-0.0;0}% | {baseline.Memory} | {current.Memory} | {memIcon} {memChange:+0.0;-0.0;0}% |"
-            );
-        }
-
-        output.Add("");
-        output.Add("**Legend:**");
-        output.Add("- 🔴 Regression (>25% slower/more memory)");
-        output.Add("- 🟢 Improvement (>25% faster/less memory)");
-        output.Add("- ⚪ No significant change");
-
-        if (hasRegressions)
-        {
-            output.Add("");
-            output.Add(
-                "⚠️ **Warning**: Performance regressions detected. Review the changes carefully."
-            );
-        }
-        else if (hasImprovements)
-        {
-            output.Add("");
-            output.Add("✅ Performance improvements detected!");
-        }
-        else
-        {
-            output.Add("");
-            output.Add("✅ Performance is stable compared to baseline.");
-        }
-
-        WriteOutput(output, githubStepSummary);
-    }
-);
-
-Target(
-    GenerateBaseline,
-    () =>
-    {
-        var perfProject = "tests/SharpCompress.Performance/SharpCompress.Performance.csproj";
-        var baselinePath = "tests/SharpCompress.Performance/baseline-results.md";
-        var artifactsDir = "baseline-artifacts";
-
-        Console.WriteLine("Building performance project...");
-        Run("dotnet", $"build {perfProject} --configuration Release");
-
-        Console.WriteLine("Running benchmarks to generate baseline...");
         Run(
             "dotnet",
-            $"run --project {perfProject} --configuration Release --no-build -- --filter \"*\" --exporters markdown --artifacts {artifactsDir}"
+            $"test --project {file} -c Release -f {framework} --no-restore --verbosity=normal"
         );
+    }
+});
 
-        var resultsDir = Path.Combine(artifactsDir, "results");
-        if (!Directory.Exists(resultsDir))
+Target(Publish, [Test], () =>
+{
+    Run("dotnet", "pack src/SharpCompress/SharpCompress.csproj -c Release -o artifacts/");
+});
+
+Target(DetermineVersion, async () =>
+{
+    var (version, isPrerelease) = await GetVersion();
+    Console.WriteLine($"VERSION={version}");
+    Console.WriteLine(
+        $"PRERELEASE={isPrerelease.ToString().ToLower(CultureInfo.InvariantCulture)}"
+    );
+
+    // Write to environment file for GitHub Actions
+    var githubOutput = Environment.GetEnvironmentVariable("GITHUB_OUTPUT");
+    if (!string.IsNullOrEmpty(githubOutput))
+    {
+        File.AppendAllText(githubOutput, $"version={version}\n");
+        File.AppendAllText(
+            githubOutput,
+            $"prerelease={isPrerelease.ToString().ToLower(CultureInfo.InvariantCulture)}\n"
+        );
+    }
+});
+
+Target(UpdateVersion, async () =>
+{
+    var version = Environment.GetEnvironmentVariable("VERSION");
+    if (string.IsNullOrEmpty(version))
+    {
+        var (detectedVersion, _) = await GetVersion();
+        version = detectedVersion;
+    }
+
+    Console.WriteLine($"Updating project file with version: {version}");
+
+    var projectPath = "src/SharpCompress/SharpCompress.csproj";
+    var content = File.ReadAllText(projectPath);
+
+    // Get base version (without prerelease suffix)
+    var baseVersion = version.Split('-')[0];
+
+    // Update VersionPrefix
+    content = Regex.Replace(
+        content,
+        @"<VersionPrefix>[^<]*</VersionPrefix>",
+        $"<VersionPrefix>{version}</VersionPrefix>"
+    );
+
+    // Update AssemblyVersion
+    content = Regex.Replace(
+        content,
+        @"<AssemblyVersion>[^<]*</AssemblyVersion>",
+        $"<AssemblyVersion>{baseVersion}</AssemblyVersion>"
+    );
+
+    // Update FileVersion
+    content = Regex.Replace(
+        content,
+        @"<FileVersion>[^<]*</FileVersion>",
+        $"<FileVersion>{baseVersion}</FileVersion>"
+    );
+
+    File.WriteAllText(projectPath, content);
+    Console.WriteLine($"Updated VersionPrefix to: {version}");
+    Console.WriteLine($"Updated AssemblyVersion and FileVersion to: {baseVersion}");
+});
+
+Target(PushToNuGet, () =>
+{
+    var apiKey = Environment.GetEnvironmentVariable("NUGET_API_KEY");
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        Console.WriteLine("NUGET_API_KEY environment variable is not set. Skipping NuGet push.");
+        return;
+    }
+
+    var packages = Directory.GetFiles("artifacts", "*.nupkg");
+    if (packages.Length == 0)
+    {
+        Console.WriteLine("No packages found in artifacts directory.");
+        return;
+    }
+
+    foreach (var package in packages)
+    {
+        Console.WriteLine($"Pushing {package} to NuGet.org");
+        try
         {
-            Console.WriteLine("ERROR: No benchmark results generated.");
-            return;
+            // Note: API key is passed via command line argument which is standard practice for dotnet nuget push
+            // The key is already in an environment variable and not displayed in normal output
+            Run(
+                "dotnet",
+                $"nuget push \"{package}\" --api-key {apiKey} --source https://api.nuget.org/v3/index.json --skip-duplicate"
+            );
         }
-
-        var markdownFiles = Directory
-            .GetFiles(resultsDir, "*-report-github.md")
-            .OrderBy(f => f)
-            .ToList();
-
-        if (markdownFiles.Count == 0)
+        catch (Exception ex)
         {
-            Console.WriteLine("ERROR: No markdown reports found.");
-            return;
-        }
-
-        Console.WriteLine($"Combining {markdownFiles.Count} benchmark reports...");
-        var baselineContent = new List<string>();
-
-        foreach (var file in markdownFiles)
-        {
-            var lines = File.ReadAllLines(file);
-            baselineContent.AddRange(lines.Select(l => l.Trim()).Where(l => l.StartsWith('|')));
-        }
-
-        File.WriteAllText(baselinePath, string.Join(Environment.NewLine, baselineContent));
-        Console.WriteLine($"Baseline written to {baselinePath}");
-
-        // Clean up artifacts directory
-        if (Directory.Exists(artifactsDir))
-        {
-            Directory.Delete(artifactsDir, true);
-            Console.WriteLine("Cleaned up artifacts directory.");
+            Console.WriteLine($"Failed to push {package}: {ex.Message}");
+            throw;
         }
     }
-);
+});
+
+Target(DisplayBenchmarkResults, () =>
+{
+    var githubStepSummary = Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY");
+    var resultsDir = "benchmark-results/results";
+
+    if (!Directory.Exists(resultsDir))
+    {
+        Console.WriteLine("No benchmark results found.");
+        return;
+    }
+
+    var markdownFiles = Directory
+        .GetFiles(resultsDir, "*-report-github.md")
+        .OrderBy(f => f)
+        .ToList();
+
+    if (markdownFiles.Count == 0)
+    {
+        Console.WriteLine("No benchmark markdown reports found.");
+        return;
+    }
+
+    var output = new List<string> { "## Benchmark Results", "" };
+
+    foreach (var file in markdownFiles)
+    {
+        Console.WriteLine($"Processing {Path.GetFileName(file)}");
+        var content = File.ReadAllText(file);
+        output.Add(content);
+        output.Add("");
+    }
+
+    // Write to GitHub Step Summary if available
+    if (!string.IsNullOrEmpty(githubStepSummary))
+    {
+        File.AppendAllLines(githubStepSummary, output);
+        Console.WriteLine($"Benchmark results written to GitHub Step Summary");
+    }
+    else
+    {
+        // Write to console if not in GitHub Actions
+        foreach (var line in output)
+        {
+            Console.WriteLine(line);
+        }
+    }
+});
+
+Target(CompareBenchmarkResults, () =>
+{
+    var githubStepSummary = Environment.GetEnvironmentVariable("GITHUB_STEP_SUMMARY");
+    var baselinePath = "tests/SharpCompress.Performance/baseline-results.md";
+    var resultsDir = "benchmark-results/results";
+
+    var output = new List<string> { "## Comparison with Baseline", "" };
+
+    if (!File.Exists(baselinePath))
+    {
+        Console.WriteLine("Baseline file not found");
+        output.Add("⚠️ Baseline file not found. Run `generate-baseline` to create it.");
+        WriteOutput(output, githubStepSummary);
+        return;
+    }
+
+    if (!Directory.Exists(resultsDir))
+    {
+        Console.WriteLine("No current benchmark results found.");
+        output.Add("⚠️ No current benchmark results found. Showing baseline only.");
+        output.Add("");
+        output.Add("### Baseline Results");
+        output.AddRange(File.ReadAllLines(baselinePath));
+        WriteOutput(output, githubStepSummary);
+        return;
+    }
+
+    var markdownFiles = Directory
+        .GetFiles(resultsDir, "*-report-github.md")
+        .OrderBy(f => f)
+        .ToList();
+
+    if (markdownFiles.Count == 0)
+    {
+        Console.WriteLine("No current benchmark markdown reports found.");
+        output.Add("⚠️ No current benchmark results found. Showing baseline only.");
+        output.Add("");
+        output.Add("### Baseline Results");
+        output.AddRange(File.ReadAllLines(baselinePath));
+        WriteOutput(output, githubStepSummary);
+        return;
+    }
+
+    Console.WriteLine("Parsing baseline results...");
+    var baselineMetrics = ParseBenchmarkResults(File.ReadAllText(baselinePath));
+
+    Console.WriteLine("Parsing current results...");
+    var currentText = string.Join("\n", markdownFiles.Select(f => File.ReadAllText(f)));
+    var currentMetrics = ParseBenchmarkResults(currentText);
+
+    Console.WriteLine("Comparing results...");
+    output.Add("### Performance Comparison");
+    output.Add("");
+    output.Add(
+        "| Benchmark | Baseline Mean | Current Mean | Change | Baseline Memory | Current Memory | Change |"
+    );
+    output.Add(
+        "|-----------|---------------|--------------|--------|-----------------|----------------|--------|"
+    );
+
+    var hasRegressions = false;
+    var hasImprovements = false;
+
+    foreach (var method in currentMetrics.Keys.Union(baselineMetrics.Keys).OrderBy(k => k))
+    {
+        var hasCurrent = currentMetrics.TryGetValue(method, out var current);
+        var hasBaseline = baselineMetrics.TryGetValue(method, out var baseline);
+
+        if (!hasCurrent)
+        {
+            output.Add(
+                $"| {method} | {baseline!.Mean} | ❌ Missing | N/A | {baseline.Memory} | N/A | N/A |"
+            );
+            continue;
+        }
+
+        if (!hasBaseline)
+        {
+            output.Add(
+                $"| {method} | ❌ New | {current!.Mean} | N/A | N/A | {current.Memory} | N/A |"
+            );
+            continue;
+        }
+
+        var timeChange = CalculateChange(baseline!.MeanValue, current!.MeanValue);
+        var memChange = CalculateChange(baseline.MemoryValue, current.MemoryValue);
+
+        var timeIcon =
+            timeChange > 25 ? "🔴"
+            : timeChange < -25 ? "🟢"
+            : "⚪";
+        var memIcon =
+            memChange > 25 ? "🔴"
+            : memChange < -25 ? "🟢"
+            : "⚪";
+
+        if (timeChange > 25 || memChange > 25)
+        {
+            hasRegressions = true;
+        }
+        if (timeChange < -25 || memChange < -25)
+        {
+            hasImprovements = true;
+        }
+
+        output.Add(
+            $"| {method} | {baseline.Mean} | {current.Mean} | {timeIcon} {timeChange:+0.0;-0.0;0}% | {baseline.Memory} | {current.Memory} | {memIcon} {memChange:+0.0;-0.0;0}% |"
+        );
+    }
+
+    output.Add("");
+    output.Add("**Legend:**");
+    output.Add("- 🔴 Regression (>25% slower/more memory)");
+    output.Add("- 🟢 Improvement (>25% faster/less memory)");
+    output.Add("- ⚪ No significant change");
+
+    if (hasRegressions)
+    {
+        output.Add("");
+        output.Add(
+            "⚠️ **Warning**: Performance regressions detected. Review the changes carefully."
+        );
+    }
+    else if (hasImprovements)
+    {
+        output.Add("");
+        output.Add("✅ Performance improvements detected!");
+    }
+    else
+    {
+        output.Add("");
+        output.Add("✅ Performance is stable compared to baseline.");
+    }
+
+    WriteOutput(output, githubStepSummary);
+});
+
+Target(GenerateBaseline, () =>
+{
+    var perfProject = "tests/SharpCompress.Performance/SharpCompress.Performance.csproj";
+    var baselinePath = "tests/SharpCompress.Performance/baseline-results.md";
+    var artifactsDir = "baseline-artifacts";
+
+    Console.WriteLine("Building performance project...");
+    Run("dotnet", $"build {perfProject} --configuration Release");
+
+    Console.WriteLine("Running benchmarks to generate baseline...");
+    Run(
+        "dotnet",
+        $"run --project {perfProject} --configuration Release --no-build -- --filter \"*\" --exporters markdown --artifacts {artifactsDir}"
+    );
+
+    var resultsDir = Path.Combine(artifactsDir, "results");
+    if (!Directory.Exists(resultsDir))
+    {
+        Console.WriteLine("ERROR: No benchmark results generated.");
+        return;
+    }
+
+    var markdownFiles = Directory
+        .GetFiles(resultsDir, "*-report-github.md")
+        .OrderBy(f => f)
+        .ToList();
+
+    if (markdownFiles.Count == 0)
+    {
+        Console.WriteLine("ERROR: No markdown reports found.");
+        return;
+    }
+
+    Console.WriteLine($"Combining {markdownFiles.Count} benchmark reports...");
+    var baselineContent = new List<string>();
+
+    foreach (var file in markdownFiles)
+    {
+        var lines = File.ReadAllLines(file);
+        baselineContent.AddRange(lines.Select(l => l.Trim()).Where(l => l.StartsWith('|')));
+    }
+
+    File.WriteAllText(baselinePath, string.Join(Environment.NewLine, baselineContent));
+    Console.WriteLine($"Baseline written to {baselinePath}");
+
+    // Clean up artifacts directory
+    if (Directory.Exists(artifactsDir))
+    {
+        Directory.Delete(artifactsDir, true);
+        Console.WriteLine("Cleaned up artifacts directory.");
+    }
+});
 
 Target("default", [Publish], () => Console.WriteLine("Done!"));
 

@@ -18,8 +18,8 @@ internal static class OutputRenderer
     internal static Task RenderAsync<T>(T value, TextWriter output, bool json, bool ndjson)
     {
         var context = json ? PrettyJson : CliJsonContext.Default;
-        var typeInfo =
-            (JsonTypeInfo<ResultDocument<T>>?)context.GetTypeInfo(typeof(ResultDocument<T>))
+        var typeInfo = (JsonTypeInfo<ResultDocument<T>>?)
+            context.GetTypeInfo(typeof(ResultDocument<T>))
             ?? throw new InvalidOperationException($"Missing CLI JSON metadata for {typeof(T)}.");
         var document = new ResultDocument<T>(value);
         if (!json && !ndjson)

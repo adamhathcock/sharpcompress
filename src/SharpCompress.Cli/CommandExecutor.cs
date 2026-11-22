@@ -39,8 +39,7 @@ internal static class CommandExecutor
             {
                 options = options with
                 {
-                    Password =
-                        Environment.GetEnvironmentVariable(passwordEnvironment)
+                    Password = Environment.GetEnvironmentVariable(passwordEnvironment)
                         ?? throw new ArgumentException("Password environment variable is not set."),
                 };
             }
