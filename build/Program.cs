@@ -79,6 +79,11 @@ Target(Test, [Build], ["net10.0", "net48"], framework =>
 
     foreach (var file in GetFiles("**/*.Test.csproj"))
     {
+        // Not every test project multi-targets net48.
+        if (!File.ReadAllText(file).Contains(framework, StringComparison.Ordinal))
+        {
+            continue;
+        }
         Run(
             "dotnet",
             $"test --project {file} -c Release -f {framework} --no-restore --verbosity=normal"
