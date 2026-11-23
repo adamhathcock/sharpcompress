@@ -340,7 +340,7 @@ internal sealed partial class TarHeader
             return false;
         }
 
-        Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+        Name = DecodeNullTerminated(buffer, 0, 100);
         EntryType = entryType;
         Size = ReadSize(buffer);
         LinkName = null;
@@ -348,7 +348,7 @@ internal sealed partial class TarHeader
         // for symlinks, additionally read the linkname
         if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
         {
-            LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+            LinkName = DecodeNullTerminated(buffer, 157, 100);
         }
 
         Metadata = new TarEntryMetadata
@@ -363,7 +363,7 @@ internal sealed partial class TarHeader
 
         if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic, StringComparison.Ordinal))
         {
-            var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
+            var namePrefix = DecodeNullTerminated(buffer, 345, 157);
 
             if (!string.IsNullOrEmpty(namePrefix))
             {
@@ -384,7 +384,23 @@ internal sealed partial class TarHeader
     private string ReadLongName(BinaryReader reader, byte[] buffer)
     {
         var nameBytes = ReadMetadataPayload(reader, buffer, MAX_LONG_NAME_SIZE, "Long name");
-        return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
+        return DecodeNullTerminated(nameBytes, 0, nameBytes.Length);
+    }
+
+    // Name fields end at the first NUL (or fill the field). Spaces are part of
+    // the name, so do not trim them. A field that starts with NUL keeps the
+    // lenient reading, so damaged headers are not mistaken for the end of the
+    // archive.
+    private string DecodeNullTerminated(byte[] buffer, int offset, int count)
+    {
+        var end = Array.IndexOf(buffer, (byte)0, offset, count);
+        if (end == offset)
+        {
+            return ArchiveEncoding.Decode(buffer, offset, count).TrimNulls();
+        }
+
+        var length = end < 0 ? count : end - offset;
+        return ArchiveEncoding.Decode(buffer, offset, length);
     }
 
     private void ReadPaxMetadata(BinaryReader reader, byte[] buffer, PaxMetadata pendingMetadata)
