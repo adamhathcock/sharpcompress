@@ -60,6 +60,40 @@ public class TarHeaderNameTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task Names_Round_Trip_With_Utf16_Encoding(bool useAsync)
+    {
+        // UTF-16LE encodes ASCII characters with a zero byte, so the name must
+        // be decoded before looking for the NUL terminator.
+        string[] names = ["notes.txt", " lead.txt", "dir/trail.txt "];
+        var encoding = new ArchiveEncoding { Default = Encoding.Unicode };
+
+        using var saved = new MemoryStream();
+        var options = new TarWriterOptions(CompressionType.None, true)
+        {
+            ArchiveEncoding = encoding,
+        };
+        using (var writer = new TarWriter(saved, options))
+        {
+            foreach (var name in names)
+            {
+                writer.Write(name, new MemoryStream(Encoding.ASCII.GetBytes("x")), Modified);
+            }
+        }
+
+        saved.Position = 0;
+        Assert.Equal(
+            names,
+            await ReadKeys(
+                saved,
+                useAsync,
+                ReaderOptions.ForExternalStream.WithArchiveEncoding(encoding)
+            )
+        );
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task Ustar_Prefix_And_Link_Target_Keep_Spaces(bool useAsync)
     {
         using var saved = new MemoryStream();
@@ -92,14 +126,19 @@ public class TarHeaderNameTests
         }
     }
 
-    private static async Task<List<string?>> ReadKeys(Stream stream, bool useAsync)
+    private static async Task<List<string?>> ReadKeys(
+        Stream stream,
+        bool useAsync,
+        ReaderOptions? options = null
+    )
     {
+        options ??= ReaderOptions.ForExternalStream;
         var keys = new List<string?>();
         if (useAsync)
         {
             await using var reader = await TarReader.OpenAsyncReader(
                 new AsyncOnlyStream(stream, false),
-                ReaderOptions.ForExternalStream,
+                options,
                 CancellationToken.None
             );
             while (await reader.MoveToNextEntryAsync(CancellationToken.None))
@@ -109,7 +148,7 @@ public class TarHeaderNameTests
         }
         else
         {
-            using var reader = TarReader.OpenReader(stream, ReaderOptions.ForExternalStream);
+            using var reader = TarReader.OpenReader(stream, options);
             while (reader.MoveToNextEntry())
             {
                 keys.Add(reader.Entry.Key);

@@ -388,19 +388,24 @@ internal sealed partial class TarHeader
     }
 
     // Name fields end at the first NUL (or fill the field). Spaces are part of
-    // the name, so do not trim them. A field that starts with NUL keeps the
-    // lenient reading, so damaged headers are not mistaken for the end of the
-    // archive.
+    // the name, so do not trim them. The field is decoded before looking for
+    // the NUL, so encodings such as UTF-16 are not split mid-character. A
+    // field that starts with NUL keeps the lenient reading, so damaged headers
+    // are not mistaken for the end of the archive.
     private string DecodeNullTerminated(byte[] buffer, int offset, int count)
     {
-        var end = Array.IndexOf(buffer, (byte)0, offset, count);
-        if (end == offset)
+        var decoded = ArchiveEncoding.Decode(buffer, offset, count);
+#if LEGACY_DOTNET
+        var end = decoded.IndexOf('\0');
+#else
+        var end = decoded.IndexOf('\0', StringComparison.Ordinal);
+#endif
+        if (end == 0)
         {
-            return ArchiveEncoding.Decode(buffer, offset, count).TrimNulls();
+            return decoded.TrimNulls();
         }
 
-        var length = end < 0 ? count : end - offset;
-        return ArchiveEncoding.Decode(buffer, offset, length);
+        return end < 0 ? decoded : decoded.Substring(0, end);
     }
 
     private void ReadPaxMetadata(BinaryReader reader, byte[] buffer, PaxMetadata pendingMetadata)
