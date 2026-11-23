@@ -1,0 +1,19 @@
+build/Program.cs
+  s_31c47f3925d27b::t_a1a7a39c527571 82-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b3ce4dd6cb6b6bb396b11f142037424a0f0ff8cc",
+  "prompts": {},
+  "sessions": {
+    "s_31c47f3925d27b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a7a5723-b8b9-4be6-b4d5-b3a403ec8730",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Adam Hathcock <ADH@chersoft.com>"
+    }
+  }
+}
