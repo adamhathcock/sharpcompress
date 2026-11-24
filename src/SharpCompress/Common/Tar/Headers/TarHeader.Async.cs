@@ -261,7 +261,7 @@ internal sealed partial class TarHeader
                 return false;
             }
 
-            Name = ArchiveEncoding.Decode(buffer, 0, 100).TrimNulls();
+            Name = DecodeNullTerminated(buffer, 0, 100);
             EntryType = entryType;
             Size = ReadSize(buffer);
             LinkName = null;
@@ -269,7 +269,7 @@ internal sealed partial class TarHeader
             // for symlinks, additionally read the linkname
             if (entryType == EntryType.SymLink || entryType == EntryType.HardLink)
             {
-                LinkName = ArchiveEncoding.Decode(buffer, 157, 100).TrimNulls();
+                LinkName = DecodeNullTerminated(buffer, 157, 100);
             }
 
             Metadata = new TarEntryMetadata
@@ -284,7 +284,7 @@ internal sealed partial class TarHeader
 
             if (!string.IsNullOrEmpty(Magic) && "ustar".Equals(Magic, StringComparison.Ordinal))
             {
-                var namePrefix = ArchiveEncoding.Decode(buffer, 345, 157).TrimNulls();
+                var namePrefix = DecodeNullTerminated(buffer, 345, 157);
 
                 if (!string.IsNullOrEmpty(namePrefix))
                 {
@@ -339,7 +339,7 @@ internal sealed partial class TarHeader
             )
             .ConfigureAwait(false);
 
-        return ArchiveEncoding.Decode(nameBytes, 0, nameBytes.Length).TrimNulls();
+        return DecodeNullTerminated(nameBytes, 0, nameBytes.Length);
     }
 
     private async ValueTask ReadPaxMetadataAsync(
