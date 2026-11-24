@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using SharpCompress.Compressors.LZMA;
 using SharpCompress.Compressors.LZMA.Utilities;
 using SharpCompress.IO;
@@ -272,9 +273,19 @@ internal partial class ArchiveDatabase
                 Math.Min(Environment.ProcessorCount, Lzma2ParallelDecoder.MaxThreads)
             );
         }
-        catch
+        catch (Exception exception)
         {
             tempFile.Dispose();
+            // History limits are checked during decoding. Keep the same format error as
+            // sequential extraction when every failed worker reports a format error.
+            if (
+                exception is AggregateException aggregate
+                && aggregate.InnerExceptions.Count > 0
+                && aggregate.InnerExceptions.All(error => error is InvalidFormatException)
+            )
+            {
+                ExceptionDispatchInfo.Capture(aggregate.InnerExceptions[0]).Throw();
+            }
             throw;
         }
 

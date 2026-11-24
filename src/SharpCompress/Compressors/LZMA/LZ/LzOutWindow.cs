@@ -20,6 +20,8 @@ internal partial class OutWindow : IDisposable
 
     private byte[] _buffer;
     private int _windowSize;
+    private int _maximumCapacity;
+    private int _usableCapacity;
     private int _pos;
     private int _streamPos;
     private int _pendingLen;
@@ -64,16 +66,17 @@ internal partial class OutWindow : IDisposable
 
     internal int BufferCapacity => _buffer?.Length ?? 0;
 
-    public void Create(int windowSize)
+    public void Create(int windowSize, long maximumCapacity = int.MaxValue)
     {
         if (windowSize <= 0)
         {
             throw new InvalidFormatException($"LZMA: invalid dictionary size {windowSize}");
         }
-        if (_windowSize != windowSize || _buffer is null)
+        var capacity = (int)Math.Min(windowSize, maximumCapacity);
+        if (_windowSize != windowSize || _maximumCapacity != capacity || _buffer is null)
         {
             // Allocate first so failed growth leaves the existing buffer owned by this window.
-            var replacement = _pool.Rent(Math.Min(windowSize, 4096));
+            var replacement = _pool.Rent(Math.Min(capacity, 4096));
             if (_buffer is not null)
             {
                 _pool.Return(_buffer);
@@ -81,6 +84,8 @@ internal partial class OutWindow : IDisposable
             _buffer = replacement;
         }
         _windowSize = windowSize;
+        _maximumCapacity = capacity;
+        _usableCapacity = Math.Min(_buffer.Length, capacity);
         _pos = 0;
         _streamPos = 0;
         _pendingLen = 0;
@@ -90,16 +95,23 @@ internal partial class OutWindow : IDisposable
 
     private void EnsureCapacity(int required)
     {
-        if (required <= _buffer.Length)
+        // The pool may return a larger array; never allow that to extend the configured limit.
+        if (required <= _usableCapacity)
         {
             return;
         }
+        if (required > _maximumCapacity)
+        {
+            throw DictionarySizeLimits.Lzma2LimitExceeded(required, _maximumCapacity);
+        }
         // Grow from emitted history, never from the advertised dictionary or output size.
-        var capacity = (int)Math.Min(_windowSize, Math.Max(required, (long)_buffer.Length * 2));
+        var capacity = (int)
+            Math.Min(_maximumCapacity, Math.Max(required, (long)_buffer.Length * 2));
         var replacement = _pool.Rent(capacity);
         _buffer.AsSpan(0, _pos).CopyTo(replacement);
         _pool.Return(_buffer);
         _buffer = replacement;
+        _usableCapacity = Math.Min(replacement.Length, _maximumCapacity);
     }
 
     public void Dispose()
@@ -123,7 +135,7 @@ internal partial class OutWindow : IDisposable
     public void Reset()
     {
         ReleaseStream();
-        Create(_windowSize);
+        Create(_windowSize, _maximumCapacity);
     }
 
     public void Init(Stream stream)
