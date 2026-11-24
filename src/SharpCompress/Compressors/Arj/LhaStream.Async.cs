@@ -1,6 +1,6 @@
 using System;
-using System.IO;
-using System.IO.Compression;
+using System.Buffers;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
@@ -9,6 +9,7 @@ namespace SharpCompress.Compressors.Arj;
 
 public sealed partial class LhaStream<TDecoderConfig>
 {
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     public override async Task<int> ReadAsync(
         byte[] buffer,
         int offset,
@@ -31,8 +32,8 @@ public sealed partial class LhaStream<TDecoderConfig>
             return 0;
         }
 
-        int bytesRead = await FillBufferAsync(buffer, cancellationToken).ConfigureAwait(false);
-        return bytesRead;
+        return await FillBufferAsync(buffer, offset, count, cancellationToken)
+            .ConfigureAwait(false);
     }
 
 #if !LEGACY_DOTNET
@@ -55,6 +56,7 @@ public sealed partial class LhaStream<TDecoderConfig>
     }
 #endif
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask<byte> ReadCodeLengthAsync(CancellationToken cancellationToken)
     {
         byte len = (byte)await _bitReader.ReadBitsAsync(3, cancellationToken).ConfigureAwait(false);
@@ -72,6 +74,7 @@ public sealed partial class LhaStream<TDecoderConfig>
         return len;
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask<int> ReadCodeSkipAsync(
         int skipRange,
         CancellationToken cancellationToken
@@ -98,6 +101,7 @@ public sealed partial class LhaStream<TDecoderConfig>
         return skip + increment;
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask ReadTempTreeAsync(CancellationToken cancellationToken)
     {
         byte[] codeLengths = new byte[NUM_TEMP_CODELEN];
@@ -143,6 +147,7 @@ public sealed partial class LhaStream<TDecoderConfig>
         _offsetTree.BuildTree(codeLengths, numCodes);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask ReadCommandTreeAsync(CancellationToken cancellationToken)
     {
         byte[] codeLengths = new byte[NUM_COMMANDS];
@@ -193,6 +198,7 @@ public sealed partial class LhaStream<TDecoderConfig>
         _commandTree.BuildTree(codeLengths, numCodes);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask ReadOffsetTreeAsync(CancellationToken cancellationToken)
     {
         int numCodes = await _bitReader
@@ -222,6 +228,7 @@ public sealed partial class LhaStream<TDecoderConfig>
         _offsetTree.BuildTree(codeLengths, numCodes);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask BeginNewBlockAsync(CancellationToken cancellationToken)
     {
         await ReadTempTreeAsync(cancellationToken).ConfigureAwait(false);
@@ -229,9 +236,11 @@ public sealed partial class LhaStream<TDecoderConfig>
         await ReadOffsetTreeAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private ValueTask<int> ReadCommandAsync(CancellationToken cancellationToken) =>
         _commandTree.ReadEntryAsync(_bitReader, cancellationToken);
 
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
     private async ValueTask<int> ReadOffsetAsync(CancellationToken cancellationToken)
     {
         int bits = await _offsetTree
@@ -246,44 +255,41 @@ public sealed partial class LhaStream<TDecoderConfig>
         return res | (1 << (bits - 1));
     }
 
-    public async ValueTask<int> FillBufferAsync(byte[] buffer, CancellationToken cancellationToken)
-    {
-        int bufLen = buffer.Length;
-        int bufIndex = 0;
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    public ValueTask<int> FillBufferAsync(byte[] buffer, CancellationToken cancellationToken) =>
+        FillBufferAsync(buffer, 0, buffer.Length, cancellationToken);
 
-        // stop when we reached original size
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    private async ValueTask<int> FillBufferAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
+    {
         if (_producedBytes >= _originalSize)
         {
             return 0;
         }
 
-        // calculate limit, so that we don't go over the original size
-        int remaining = (int)Math.Min(bufLen, _originalSize - _producedBytes);
+        int limit = Math.Min(count, _originalSize - _producedBytes);
+        int produced = 0;
 
-        while (bufIndex < remaining)
+        while (produced < limit)
         {
-            if (_copyProgress.HasValue)
+            if (_pendingCopyCount > 0)
             {
-                var (offset, count) = _copyProgress.Value;
-                int copied = CopyFromHistory(
-                    buffer,
-                    bufIndex,
-                    offset,
-                    (int)Math.Min(count, remaining - bufIndex)
-                );
-                bufIndex += copied;
-                _copyProgress = null;
+                produced += CopyFromHistory(buffer, offset + produced, limit - produced);
+                continue;
             }
 
             if (_remainingCommands == 0)
             {
+                // A block header is the 16-bit command count followed by its Huffman tables;
+                // both must be consumed together to keep the bit stream in sync.
                 _remainingCommands = await _bitReader
                     .ReadBitsAsync(16, cancellationToken)
                     .ConfigureAwait(false);
-                if (bufIndex + _remainingCommands > remaining)
-                {
-                    break;
-                }
                 await BeginNewBlockAsync(cancellationToken).ConfigureAwait(false);
             }
 
@@ -294,20 +300,18 @@ public sealed partial class LhaStream<TDecoderConfig>
             if (command >= 0 && command <= 0xFF)
             {
                 byte value = (byte)command;
-                buffer[bufIndex++] = value;
+                buffer[offset + produced++] = value;
                 _ringBuffer.Push(value);
             }
             else
             {
-                int count = command - 0x100 + 3;
-                int offset = await ReadOffsetAsync(cancellationToken).ConfigureAwait(false);
-                int copyCount = (int)Math.Min(count, remaining - bufIndex);
-                bufIndex += CopyFromHistory(buffer, bufIndex, offset, copyCount);
+                _pendingCopyCount = command - 0x100 + 3;
+                _pendingCopyOffset = await ReadOffsetAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
-        _producedBytes += bufIndex;
-        return bufIndex;
+        _producedBytes += produced;
+        return produced;
     }
 
 #if !LEGACY_DOTNET
@@ -316,85 +320,30 @@ public sealed partial class LhaStream<TDecoderConfig>
         CancellationToken cancellationToken
     )
     {
-        int bufLen = buffer.Length;
-        int bufIndex = 0;
-
-        // stop when we reached original size
-        if (_producedBytes >= _originalSize)
+        if (MemoryMarshal.TryGetArray<byte>(buffer, out var segment))
         {
-            return 0;
+            return await FillBufferAsync(
+                    segment.Array!,
+                    segment.Offset,
+                    segment.Count,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
 
-        // calculate limit, so that we don't go over the original size
-        int remaining = (int)Math.Min(bufLen, _originalSize - _producedBytes);
-
-        while (bufIndex < remaining)
+        // Spans cannot cross an await, so memory not backed by an array is filled via a pooled array.
+        byte[] rented = ArrayPool<byte>.Shared.Rent(buffer.Length);
+        try
         {
-            if (_copyProgress.HasValue)
-            {
-                var (offset, count) = _copyProgress.Value;
-                int copied = CopyFromHistory(
-                    buffer.Span,
-                    bufIndex,
-                    offset,
-                    (int)Math.Min(count, remaining - bufIndex)
-                );
-                bufIndex += copied;
-                _copyProgress = null;
-            }
-
-            if (_remainingCommands == 0)
-            {
-                _remainingCommands = await _bitReader
-                    .ReadBitsAsync(16, cancellationToken)
-                    .ConfigureAwait(false);
-                if (bufIndex + _remainingCommands > remaining)
-                {
-                    break;
-                }
-                await BeginNewBlockAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            _remainingCommands--;
-
-            int command = await ReadCommandAsync(cancellationToken).ConfigureAwait(false);
-
-            if (command >= 0 && command <= 0xFF)
-            {
-                byte value = (byte)command;
-                buffer.Span[bufIndex++] = value;
-                _ringBuffer.Push(value);
-            }
-            else
-            {
-                int count = command - 0x100 + 3;
-                int offset = await ReadOffsetAsync(cancellationToken).ConfigureAwait(false);
-                int copyCount = (int)Math.Min(count, remaining - bufIndex);
-                bufIndex += CopyFromHistory(buffer.Span, bufIndex, offset, copyCount);
-            }
+            int read = await FillBufferAsync(rented, 0, buffer.Length, cancellationToken)
+                .ConfigureAwait(false);
+            rented.AsSpan(0, read).CopyTo(buffer.Span);
+            return read;
         }
-
-        _producedBytes += bufIndex;
-        return bufIndex;
-    }
-
-    private int CopyFromHistory(Span<byte> target, int targetIndex, int offset, int count)
-    {
-        var historyIter = _ringBuffer.IterFromOffset(offset);
-        int copied = 0;
-
-        while (copied < count && historyIter.MoveNext() && (targetIndex + copied) < target.Length)
+        finally
         {
-            target[targetIndex + copied] = historyIter.Current;
-            copied++;
+            ArrayPool<byte>.Shared.Return(rented);
         }
-
-        if (copied < count)
-        {
-            _copyProgress = (offset, count - copied);
-        }
-
-        return copied;
     }
 #endif
 }
