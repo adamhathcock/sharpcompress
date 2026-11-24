@@ -25,11 +25,13 @@ internal sealed class WritableArchiveFileOperations : IWritableArchiveFileOperat
             )
             {
                 var fileInfo = new FileInfo(filePath);
+                // The stream follows a symlink; FileInfo.Length is the link's own size on Unix
+                var stream = fileInfo.OpenRead();
                 writableArchive.AddEntry(
                     filePath.Substring(directoryPath.Length),
-                    fileInfo.OpenRead(),
+                    stream,
                     true,
-                    fileInfo.Length,
+                    stream.Length,
                     fileInfo.LastWriteTime
                 );
             }
@@ -51,12 +53,13 @@ internal sealed class WritableArchiveFileOperations : IWritableArchiveFileOperat
             )
             {
                 var fileInfo = new FileInfo(filePath);
+                var stream = fileInfo.OpenRead();
                 await writableArchive
                     .AddEntryAsync(
                         filePath.Substring(directoryPath.Length),
-                        fileInfo.OpenRead(),
+                        stream,
                         true,
-                        fileInfo.Length,
+                        stream.Length,
                         fileInfo.LastWriteTime,
                         cancellationToken
                     )
@@ -71,13 +74,8 @@ internal sealed class WritableArchiveFileOperations : IWritableArchiveFileOperat
         {
             throw new ArgumentException("FileInfo does not exist.");
         }
-        return writableArchive.AddEntry(
-            key,
-            fileInfo.OpenRead(),
-            true,
-            fileInfo.Length,
-            fileInfo.LastWriteTime
-        );
+        var stream = fileInfo.OpenRead();
+        return writableArchive.AddEntry(key, stream, true, stream.Length, fileInfo.LastWriteTime);
     }
 
     public ValueTask<IArchiveEntry> AddEntryAsync(
@@ -91,11 +89,12 @@ internal sealed class WritableArchiveFileOperations : IWritableArchiveFileOperat
         {
             throw new ArgumentException("FileInfo does not exist.");
         }
+        var stream = fileInfo.OpenRead();
         return writableArchive.AddEntryAsync(
             key,
-            fileInfo.OpenRead(),
+            stream,
             true,
-            fileInfo.Length,
+            stream.Length,
             fileInfo.LastWriteTime,
             cancellationToken
         );
