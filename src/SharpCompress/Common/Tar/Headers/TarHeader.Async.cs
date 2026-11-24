@@ -132,18 +132,17 @@ internal sealed partial class TarHeader
 
         WriteMetadata(buffer);
 
-        var nameByteCount = ArchiveEncoding
-            .GetEncoding()
-            .GetByteCount(Name.NotNull("Name is null"));
-        if (nameByteCount > 100)
+        var name = Name.NotNull("Name is null");
+        var longNamePayload = GetGnuLongNamePayload(name);
+        if (longNamePayload is not null)
         {
             WriteStringBytes("././@LongLink", buffer, 0, 100);
             buffer[156] = (byte)EntryType.LongName;
-            WriteOctalBytes(nameByteCount + 1, buffer, 124, 12);
+            WriteOctalBytes(longNamePayload.Length, buffer, 124, 12);
         }
         else
         {
-            WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
+            WriteStringBytes(ArchiveEncoding.Encode(name), buffer, 100);
             WriteSize(buffer);
             WriteModificationTime(buffer);
             buffer[156] = (byte)EntryType;
@@ -154,11 +153,12 @@ internal sealed partial class TarHeader
 
         await output.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
 
-        if (nameByteCount > 100)
+        if (longNamePayload is not null)
         {
-            await WriteLongFilenameHeaderAsync(output, cancellationToken).ConfigureAwait(false);
+            await WriteLongNamePayloadAsync(output, longNamePayload, cancellationToken)
+                .ConfigureAwait(false);
             Name = ArchiveEncoding.Decode(
-                ArchiveEncoding.Encode(Name.NotNull("Name is null")),
+                ArchiveEncoding.Encode(name),
                 0,
                 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
             );
@@ -166,25 +166,23 @@ internal sealed partial class TarHeader
         }
     }
 
-    private async ValueTask WriteLongFilenameHeaderAsync(
+    private static async ValueTask WriteLongNamePayloadAsync(
         Stream output,
+        byte[] payload,
         CancellationToken cancellationToken
     )
     {
-        var nameBytes = ArchiveEncoding.Encode(Name.NotNull("Name is null"));
         await output
-            .WriteAsync(nameBytes, 0, nameBytes.Length, cancellationToken)
+            .WriteAsync(payload, 0, payload.Length, cancellationToken)
             .ConfigureAwait(false);
 
-        var numPaddingBytes = BLOCK_SIZE - (nameBytes.Length % BLOCK_SIZE);
-        if (numPaddingBytes == 0)
+        var paddingLength = GetPaddingLength(payload.Length);
+        if (paddingLength > 0)
         {
-            numPaddingBytes = BLOCK_SIZE;
+            await output
+                .WriteAsync(new byte[paddingLength], 0, paddingLength, cancellationToken)
+                .ConfigureAwait(false);
         }
-
-        await output
-            .WriteAsync(new byte[numPaddingBytes], 0, numPaddingBytes, cancellationToken)
-            .ConfigureAwait(false);
     }
 
     internal ValueTask<bool> ReadAsync(
