@@ -4,11 +4,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using SharpCompress.Common;
+using SharpCompress.IO;
 
 namespace SharpCompress.Compressors.Arj;
 
 [CLSCompliant(true)]
-public sealed partial class LhaStream<TDecoderConfig> : Stream
+public sealed partial class LhaStream<TDecoderConfig> : Stream, IFaultableStream
     where TDecoderConfig : ILhaDecoderConfig, new()
 {
     private readonly BitReader _bitReader;
@@ -29,6 +30,12 @@ public sealed partial class LhaStream<TDecoderConfig> : Stream
 
     private readonly int _originalSize;
     private int _producedBytes = 0;
+
+    // Set when a read is canceled after it has started consuming decoder state; the
+    // decoder can no longer be trusted to be in sync with the bit stream.
+    private bool _faulted;
+
+    bool IFaultableStream.IsFaulted => _faulted;
 
     public LhaStream(Stream compressedStream, int originalSize)
     {

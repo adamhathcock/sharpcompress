@@ -210,6 +210,40 @@ public class ArjReaderAsyncTests : ReaderTests
         }
     }
 
+    [Fact]
+    public async ValueTask Arj_LargeFile_ReadCanceledWhileDecoding_FaultsStream_Async()
+    {
+        using var fileStream = File.OpenRead(
+            Path.Combine(TEST_ARCHIVES_PATH, "Arj.method1.largefile.arj")
+        );
+        var stream = new CancelOnReadStream(fileStream);
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            stream,
+            ReaderOptions.ForExternalStream
+        );
+        Assert.True(await reader.MoveToNextEntryAsync());
+
+        var entryStream = await reader.OpenEntryStreamAsync();
+        var buffer = new byte[200_000];
+        Assert.Equal(1000, await entryStream.ReadAsync(buffer, 0, 1000));
+
+        using var cts = new CancellationTokenSource();
+        stream.CancelOnNextRead = cts;
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await entryStream.ReadAsync(buffer, 0, buffer.Length, cts.Token)
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await entryStream.ReadAsync(buffer, 0, buffer.Length)
+        );
+
+        await entryStream.DisposeAsync();
+        Assert.True(reader.Cancelled);
+        await Assert.ThrowsAsync<ReaderCancelledException>(async () =>
+            await reader.MoveToNextEntryAsync()
+        );
+    }
+
     private static async Task<int> ReadOneByteAsync(
         Stream stream,
         byte[] buffer,
@@ -299,6 +333,43 @@ public class ArjReaderAsyncTests : ReaderTests
             foreach (var stream in streams)
             {
                 stream.Dispose();
+            }
+        }
+    }
+
+    private sealed class CancelOnReadStream(Stream stream) : AsyncOnlyStream(stream, false)
+    {
+        public CancellationTokenSource? CancelOnNextRead { get; set; }
+
+        public override Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
+        {
+            CancelIfRequested(cancellationToken);
+            return base.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
+#if NET8_0_OR_GREATER
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
+        {
+            CancelIfRequested(cancellationToken);
+            return base.ReadAsync(buffer, cancellationToken);
+        }
+#endif
+
+        private void CancelIfRequested(CancellationToken cancellationToken)
+        {
+            if (CancelOnNextRead is { } cts)
+            {
+                CancelOnNextRead = null;
+                cts.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
     }

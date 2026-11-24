@@ -269,12 +269,43 @@ public sealed partial class LhaStream<TDecoderConfig>
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (_faulted)
+        {
+            throw new InvalidOperationException(
+                "The stream cannot be read after a read was canceled while decoding."
+            );
+        }
+
         if (_producedBytes >= _originalSize)
         {
             return 0;
         }
 
         int limit = Math.Min(count, _originalSize - _producedBytes);
+        int produced;
+        try
+        {
+            produced = await DecodeAsync(buffer, offset, limit, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            _faulted = true;
+            throw;
+        }
+
+        _producedBytes += produced;
+        return produced;
+    }
+
+    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    private async ValueTask<int> DecodeAsync(
+        byte[] buffer,
+        int offset,
+        int limit,
+        CancellationToken cancellationToken
+    )
+    {
         int produced = 0;
 
         while (produced < limit)
@@ -312,7 +343,6 @@ public sealed partial class LhaStream<TDecoderConfig>
             }
         }
 
-        _producedBytes += produced;
         return produced;
     }
 
