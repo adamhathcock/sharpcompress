@@ -267,6 +267,8 @@ public sealed partial class LhaStream<TDecoderConfig>
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (_producedBytes >= _originalSize)
         {
             return 0;

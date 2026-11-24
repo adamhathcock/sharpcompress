@@ -173,6 +173,59 @@ public class ArjReaderAsyncTests : ReaderTests
     }
 #endif
 
+    [Theory]
+    [InlineData("Arj.method1.largefile.arj", false)]
+#if !LEGACY_DOTNET
+    [InlineData("Arj.method1.largefile.arj", true)]
+#endif
+    public async ValueTask Arj_LargeFile_CanceledReadDoesNotConsumeDecoderState_Async(
+        string fileName,
+        bool useMemory
+    )
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            ReaderOptions.ForExternalStream
+        );
+        Assert.True(await reader.MoveToNextEntryAsync());
+
+        await using var entryStream = await reader.OpenEntryStreamAsync();
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
+
+        var expected = File.ReadAllBytes(Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt"));
+        var buffer = new byte[1];
+
+        // Interleaving a canceled read before every byte hits reads that are served from a
+        // pending back-reference, which never reach the underlying stream.
+        for (var i = 0; i < 4096; i++)
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+                await ReadOneByteAsync(entryStream, buffer, useMemory, canceled.Token)
+            );
+
+            Assert.Equal(1, await ReadOneByteAsync(entryStream, buffer, useMemory, default));
+            Assert.Equal(expected[i], buffer[0]);
+        }
+    }
+
+    private static async Task<int> ReadOneByteAsync(
+        Stream stream,
+        byte[] buffer,
+        bool useMemory,
+        CancellationToken cancellationToken
+    )
+    {
+#if !LEGACY_DOTNET
+        if (useMemory)
+        {
+            return await stream.ReadAsync(buffer.AsMemory(0, 1), cancellationToken);
+        }
+#endif
+        return await stream.ReadAsync(buffer, 0, 1, cancellationToken);
+    }
+
     private async Task ReadAsync(string testArchive, CompressionType? expectedCompression = null)
     {
         testArchive = Path.Combine(TEST_ARCHIVES_PATH, testArchive);
