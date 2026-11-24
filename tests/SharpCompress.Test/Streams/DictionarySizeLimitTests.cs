@@ -257,6 +257,48 @@ public class DictionarySizeLimitTests : TestBase
     }
 
     [Theory]
+    [InlineData(false, 65)]
+    [InlineData(true, 65)]
+    [InlineData(false, 66)]
+    [InlineData(true, 66)]
+    public async Task Lzma2_Compressed_Chunk_Respects_History_Limit(bool useAsync, int length)
+    {
+        using var limits = new DictionarySizeLimitScope();
+        // Use a limit between pool bucket sizes so the rental has spare bytes.
+        const int limit = 65;
+        var expected = Enumerable.Repeat((byte)'A', length).ToArray();
+        using var packed = new MemoryStream();
+        byte[] properties;
+        using (var encoder = new Lzma2EncoderStream(packed, 4096, 32))
+        {
+            properties = encoder.Properties;
+            encoder.Write(expected, 0, length);
+        }
+        Assert.True(packed.GetBuffer()[0] >= 0x80, "Expected a compressed LZMA2 chunk.");
+        packed.Position = 0;
+        DictionarySizeLimits.Lzma2 = limit;
+        using var decoder = useAsync
+            ? await LzmaStream.CreateAsync(properties, packed, -1, -1)
+            : LzmaStream.Create(properties, packed);
+        var actual = new byte[length];
+        async Task<int> ReadChunk() =>
+            useAsync
+                ? await decoder.ReadAsync(actual, 0, length, CancellationToken.None)
+                : decoder.Read(actual, 0, length);
+
+        if (length == limit)
+        {
+            Assert.Equal(length, await ReadChunk());
+            Assert.Equal(expected, actual);
+        }
+        else
+        {
+            var error = await Assert.ThrowsAsync<InvalidFormatException>(ReadChunk);
+            Assert.Contains("DictionarySizeLimits.Lzma2", error.Message);
+        }
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Lzma2_Encoding_Does_Not_Apply_The_Lzma_Input_Limit(bool useAsync)

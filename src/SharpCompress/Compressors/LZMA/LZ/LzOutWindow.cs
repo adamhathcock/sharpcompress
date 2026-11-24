@@ -51,6 +51,7 @@ internal partial class OutWindow : IDisposable
         set => _total = value;
     }
     internal int FastWindowSize => _windowSize;
+    internal int FastUsableCapacity => _usableCapacity;
     internal long FastLimit => _limit;
 
     internal void EnsureFastCapacity() => EnsureCapacity(_pos + 1);
