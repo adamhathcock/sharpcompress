@@ -229,20 +229,18 @@ internal sealed partial class TarHeader
 
         WriteMetadata(buffer);
 
-        //ArchiveEncoding.UTF8.GetBytes("magic").CopyTo(buffer, 257);
-        var nameByteCount = ArchiveEncoding
-            .GetEncoding()
-            .GetByteCount(Name.NotNull("Name is null"));
-        if (nameByteCount > 100)
+        var name = Name.NotNull("Name is null");
+        var longNamePayload = GetGnuLongNamePayload(name);
+        if (longNamePayload is not null)
         {
             // Set mock filename and filetype to indicate the next block is the actual name of the file
             WriteStringBytes("././@LongLink", buffer, 0, 100);
             buffer[156] = (byte)EntryType.LongName;
-            WriteOctalBytes(nameByteCount + 1, buffer, 124, 12);
+            WriteOctalBytes(longNamePayload.Length, buffer, 124, 12);
         }
         else
         {
-            WriteStringBytes(ArchiveEncoding.Encode(Name.NotNull("Name is null")), buffer, 100);
+            WriteStringBytes(ArchiveEncoding.Encode(name), buffer, 100);
             WriteSize(buffer);
             WriteModificationTime(buffer);
             buffer[156] = (byte)EntryType;
@@ -253,18 +251,13 @@ internal sealed partial class TarHeader
 
         output.Write(buffer, 0, buffer.Length);
 
-        if (nameByteCount > 100)
+        if (longNamePayload is not null)
         {
-            WriteLongFilenameHeader(output);
-            // update to short name lower than 100 - [max bytes of one character].
-            // subtracting bytes is needed because preventing infinite loop(example code is here).
-            //
-            // var bytes = Encoding.UTF8.GetBytes(new string(0x3042, 100));
-            // var truncated = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(bytes, 0, 100));
-            //
-            // and then infinite recursion is occured in WriteLongFilenameHeader because truncated.Length is 102.
+            WriteLongNamePayload(output, longNamePayload);
+            // Leave room for a replacement character if truncation splits a multibyte
+            // sequence, so the fallback fits without another long-name record.
             Name = ArchiveEncoding.Decode(
-                ArchiveEncoding.Encode(Name.NotNull("Name is null")),
+                ArchiveEncoding.Encode(name),
                 0,
                 100 - ArchiveEncoding.GetEncoding().GetMaxByteCount(1)
             );
@@ -272,18 +265,23 @@ internal sealed partial class TarHeader
         }
     }
 
-    private void WriteLongFilenameHeader(Stream output)
-    {
-        var nameBytes = ArchiveEncoding.Encode(Name.NotNull("Name is null"));
-        output.Write(nameBytes, 0, nameBytes.Length);
+    // The declared payload includes the encoded NUL, which can use more than one byte.
+    private byte[]? GetGnuLongNamePayload(string name) =>
+        ArchiveEncoding.GetEncoding().GetByteCount(name) > 100
+            ? ArchiveEncoding.Encode(name + '\0')
+            : null;
 
-        // pad to multiple of BlockSize bytes, and make sure a terminating null is added
-        var numPaddingBytes = BLOCK_SIZE - (nameBytes.Length % BLOCK_SIZE);
-        if (numPaddingBytes == 0)
+    private static void WriteLongNamePayload(Stream output, byte[] payload)
+    {
+        output.Write(payload, 0, payload.Length);
+
+        var paddingLength = GetPaddingLength(payload.Length);
+        if (paddingLength > 0)
         {
-            numPaddingBytes = BLOCK_SIZE;
+            Span<byte> padding = stackalloc byte[paddingLength];
+            padding.Clear();
+            output.Write(padding);
         }
-        output.Write(stackalloc byte[numPaddingBytes]);
     }
 
     internal bool Read(BinaryReader reader, PaxMetadata? globalPaxMetadata = null)

@@ -94,6 +94,51 @@ public class TarHeaderNameTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task Gnu_Long_Names_Round_Trip_With_Utf16_Encoding(bool useAsync)
+    {
+        // Including the two-byte NUL, the first long name fills one tar block
+        // exactly and the second needs padding in another block.
+        string[] names = [new string('n', 254) + " ", new string('n', 256), "next.txt"];
+        var encoding = new ArchiveEncoding { Default = Encoding.Unicode };
+        var options = new TarWriterOptions(CompressionType.None, true)
+        {
+            ArchiveEncoding = encoding,
+        };
+
+        using var saved = new MemoryStream();
+        if (useAsync)
+        {
+            await using var writer = new TarWriter(new AsyncOnlyStream(saved, false), options);
+            foreach (var name in names)
+            {
+                using var content = new MemoryStream([1]);
+                await writer.WriteAsync(name, content, Modified, CancellationToken.None);
+            }
+        }
+        else
+        {
+            using var writer = new TarWriter(saved, options);
+            foreach (var name in names)
+            {
+                using var content = new MemoryStream([1]);
+                writer.Write(name, content, Modified);
+            }
+        }
+
+        saved.Position = 0;
+        Assert.Equal(
+            names,
+            await ReadKeys(
+                saved,
+                useAsync,
+                ReaderOptions.ForExternalStream.WithArchiveEncoding(encoding)
+            )
+        );
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task Ustar_Prefix_And_Link_Target_Keep_Spaces(bool useAsync)
     {
         using var saved = new MemoryStream();
