@@ -41,27 +41,26 @@ public class Lzma2ParallelDictionaryLimitTests : TestBase
             ReaderOptions.ForFilePath.WithEnableParallelism(parallel)
         );
         var entry = Assert.Single(archive.Entries);
-        Assert.Throws<InvalidFormatException>(() =>
+        var error = Assert.Throws<InvalidFormatException>(() =>
         {
             using var stream = entry.OpenEntryStream();
             stream.CopyTo(Stream.Null);
         });
+        Assert.Contains("DictionarySizeLimits.Lzma2", error.Message);
     }
 
 #if !LEGACY_DOTNET
     [Fact]
     public void Parallel_Dictionary_Validation_Runs_Before_Workers()
     {
-        using var limits = new DictionarySizeLimitScope();
-        DictionarySizeLimits.Lzma2 = 4096;
         var path = Path.Combine(SCRATCH_FILES_PATH, "parallel-dictionary-workers.bin");
         using var input = File.Create(path);
         using var output = File.Create(path + ".out");
         var blocks = new[] { new Lzma2Block(0, 1, 0, 1), new Lzma2Block(1, 1, 1, 1) };
-        Assert.Throws<InvalidFormatException>(() =>
+        Assert.Throws<InvalidParamException>(() =>
             Lzma2ParallelDecoder.DecodeBlocksParallel(
                 input.SafeFileHandle,
-                new byte[] { 2 },
+                new byte[] { 38 },
                 0,
                 blocks,
                 output.SafeFileHandle,
@@ -69,6 +68,31 @@ public class Lzma2ParallelDictionaryLimitTests : TestBase
             )
         );
         Assert.Equal(0, output.Length);
+    }
+
+    [Fact]
+    public void Parallel_Blocks_Accept_Declared_Dictionary_Above_History_Limit()
+    {
+        using var limits = new DictionarySizeLimitScope();
+        DictionarySizeLimits.Lzma2 = 3;
+        var path = Path.Combine(SCRATCH_FILES_PATH, "parallel-dictionary-history.bin");
+        File.WriteAllBytes(path, new byte[] { 1, 0, 2, 65, 66, 67, 1, 0, 2, 68, 69, 70, 0 });
+        using var input = File.OpenRead(path);
+        using var output = File.Create(path + ".out");
+        var blocks = new[] { new Lzma2Block(0, 6, 0, 3), new Lzma2Block(6, 7, 3, 3) };
+
+        Lzma2ParallelDecoder.DecodeBlocksParallel(
+            input.SafeFileHandle,
+            new byte[] { 28 },
+            0,
+            blocks,
+            output.SafeFileHandle,
+            2
+        );
+
+        var decoded = new byte[6];
+        output.ReadExactly(decoded, 0, decoded.Length);
+        Assert.Equal(new byte[] { 65, 66, 67, 68, 69, 70 }, decoded);
     }
 #endif
 }

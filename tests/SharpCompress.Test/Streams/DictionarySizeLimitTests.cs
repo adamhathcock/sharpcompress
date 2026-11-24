@@ -71,24 +71,22 @@ public class DictionarySizeLimitTests : TestBase
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Lzma_And_Lzma2_Reject_Excessive_Declared_Dictionaries(bool useAsync)
+    public async Task Lzma_Rejects_Excessive_Declared_Dictionary(bool useAsync)
     {
-        foreach (var properties in new[] { new byte[] { 0x5d, 0, 0, 0, 0x10 }, new byte[] { 30 } })
+        var properties = new byte[] { 0x5d, 0, 0, 0, 0x10 };
+        using var input = new MemoryStream();
+        if (useAsync)
         {
-            using var input = new MemoryStream();
-            if (useAsync)
-            {
-                await Assert.ThrowsAsync<InvalidFormatException>(async () =>
-                    await LzmaStream.CreateAsync(properties, input, -1, -1)
-                );
-            }
-            else
-            {
-                Assert.Throws<InvalidFormatException>(() => LzmaStream.Create(properties, input));
-            }
-            Assert.True(input.CanRead);
-            Assert.Equal(0, input.Position);
+            await Assert.ThrowsAsync<InvalidFormatException>(async () =>
+                await LzmaStream.CreateAsync(properties, input, -1, -1)
+            );
         }
+        else
+        {
+            Assert.Throws<InvalidFormatException>(() => LzmaStream.Create(properties, input));
+        }
+        Assert.True(input.CanRead);
+        Assert.Equal(0, input.Position);
     }
 
     [Theory]
@@ -207,30 +205,96 @@ public class DictionarySizeLimitTests : TestBase
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Lzma2_Static_Limit_Is_Inclusive(bool useAsync)
+    [InlineData(false, 1)]
+    [InlineData(true, 1)]
+    [InlineData(false, 2)]
+    [InlineData(true, 2)]
+    public async Task Lzma2_Static_Limit_Applies_To_History_Between_Resets(
+        bool useAsync,
+        byte secondChunkControl
+    )
     {
         using var limits = new DictionarySizeLimitScope();
-        using var input = new MemoryStream(new byte[] { 1, 0, 0, 65, 0 });
-        DictionarySizeLimits.Lzma2 = 4095;
-        if (useAsync)
+        DictionarySizeLimits.Lzma2 = 3;
+        using var input = new MemoryStream(
+            new byte[] { 1, 0, 2, 65, 66, 67, secondChunkControl, 0, 0, 68, 0 }
+        );
+        var properties = new byte[] { 28 }; // Declared 256 MiB; only the decoded history counts.
+        using var decoder = useAsync
+            ? await LzmaStream.CreateAsync(properties, input, -1, -1)
+            : LzmaStream.Create(properties, input);
+        var prefix = new byte[3];
+        var count = useAsync
+            ? await decoder.ReadAsync(prefix, 0, prefix.Length, CancellationToken.None)
+            : decoder.Read(prefix, 0, prefix.Length);
+        Assert.Equal(3, count);
+        Assert.Equal(new byte[] { 65, 66, 67 }, prefix);
+
+        using var output = new MemoryStream();
+        async Task CopyRemaining()
         {
-            await Assert.ThrowsAsync<InvalidFormatException>(async () =>
-                await LzmaStream.CreateAsync(new byte[] { 0 }, input, -1, -1)
-            );
-            DictionarySizeLimits.Lzma2 = 4096;
-            using var decoder = await LzmaStream.CreateAsync(new byte[] { 0 }, input, -1, -1);
-            var buffer = new byte[1];
-            Assert.Equal(1, await decoder.ReadAsync(buffer, 0, 1, CancellationToken.None));
-            Assert.Equal(65, buffer[0]);
+            if (useAsync)
+            {
+                await decoder.CopyToAsync(output, 16, CancellationToken.None);
+            }
+            else
+            {
+                decoder.CopyTo(output);
+            }
+        }
+        if (secondChunkControl == 1)
+        {
+            await CopyRemaining();
+            Assert.Equal(new byte[] { 68 }, output.ToArray());
         }
         else
         {
-            Assert.Throws<InvalidFormatException>(() => LzmaStream.Create(new byte[] { 0 }, input));
-            DictionarySizeLimits.Lzma2 = 4096;
-            using var decoder = LzmaStream.Create(new byte[] { 0 }, input);
-            Assert.Equal(65, decoder.ReadByte());
+            var error = await Assert.ThrowsAsync<InvalidFormatException>(CopyRemaining);
+            Assert.Contains("configured limit of 3 bytes", error.Message);
+            Assert.Contains("DictionarySizeLimits.Lzma2", error.Message);
+            Assert.Equal(0, output.Length);
+        }
+    }
+
+    [Theory]
+    [InlineData(false, 65)]
+    [InlineData(true, 65)]
+    [InlineData(false, 66)]
+    [InlineData(true, 66)]
+    public async Task Lzma2_Compressed_Chunk_Respects_History_Limit(bool useAsync, int length)
+    {
+        using var limits = new DictionarySizeLimitScope();
+        // Use a limit between pool bucket sizes so the rental has spare bytes.
+        const int limit = 65;
+        var expected = Enumerable.Repeat((byte)'A', length).ToArray();
+        using var packed = new MemoryStream();
+        byte[] properties;
+        using (var encoder = new Lzma2EncoderStream(packed, 4096, 32))
+        {
+            properties = encoder.Properties;
+            encoder.Write(expected, 0, length);
+        }
+        Assert.True(packed.GetBuffer()[0] >= 0x80, "Expected a compressed LZMA2 chunk.");
+        packed.Position = 0;
+        DictionarySizeLimits.Lzma2 = limit;
+        using var decoder = useAsync
+            ? await LzmaStream.CreateAsync(properties, packed, -1, -1)
+            : LzmaStream.Create(properties, packed);
+        var actual = new byte[length];
+        async Task<int> ReadChunk() =>
+            useAsync
+                ? await decoder.ReadAsync(actual, 0, length, CancellationToken.None)
+                : decoder.Read(actual, 0, length);
+
+        if (length == limit)
+        {
+            Assert.Equal(length, await ReadChunk());
+            Assert.Equal(expected, actual);
+        }
+        else
+        {
+            var error = await Assert.ThrowsAsync<InvalidFormatException>(ReadChunk);
+            Assert.Contains("DictionarySizeLimits.Lzma2", error.Message);
         }
     }
 
@@ -282,6 +346,17 @@ public class DictionarySizeLimitTests : TestBase
             decoder.CopyTo(output);
         }
         Assert.Equal(expected, output.ToArray());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SevenZip_Lzma2_Accepts_Declared_Dictionary_Above_History_Limit(bool useAsync)
+    {
+        using var limits = new DictionarySizeLimitScope();
+        // The existing archive advertises 128 KiB; its largest solid block is under 64 KiB.
+        DictionarySizeLimits.Lzma2 = 64 << 10;
+        await Extract("7Zip.LZMA2.7z", archiveApi: true, useAsync);
     }
 
     [Fact]
