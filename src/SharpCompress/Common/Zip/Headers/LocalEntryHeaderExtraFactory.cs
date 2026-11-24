@@ -95,15 +95,13 @@ internal sealed class Zip64ExtendedInformationExtraField : ExtraData
 
         if (uncompressedFileSize == uint.MaxValue)
         {
-            UncompressedSize = BinaryPrimitives.ReadInt64LittleEndian(
-                DataBytes.AsSpan(currentIndex)
-            );
+            UncompressedSize = ReadSize(DataBytes.AsSpan(currentIndex));
             currentIndex += 8;
         }
 
         if (compressedFileSize == uint.MaxValue)
         {
-            CompressedSize = BinaryPrimitives.ReadInt64LittleEndian(DataBytes.AsSpan(currentIndex));
+            CompressedSize = ReadSize(DataBytes.AsSpan(currentIndex));
             currentIndex += 8;
         }
 
@@ -119,6 +117,16 @@ internal sealed class Zip64ExtendedInformationExtraField : ExtraData
         {
             VolumeNumber = BinaryPrimitives.ReadUInt32LittleEndian(DataBytes.AsSpan(currentIndex));
         }
+    }
+
+    private static long ReadSize(ReadOnlySpan<byte> bytes)
+    {
+        var size = BinaryPrimitives.ReadUInt64LittleEndian(bytes);
+        if (size > long.MaxValue)
+        {
+            throw new ArchiveException("Zip64 entry size exceeds the supported range.");
+        }
+        return (long)size;
     }
 
     /// <summary>
