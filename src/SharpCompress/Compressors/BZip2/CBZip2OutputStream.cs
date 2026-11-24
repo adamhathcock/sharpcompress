@@ -1652,6 +1652,8 @@ internal sealed partial class CBZip2OutputStream : Stream
     {
         int i;
 
+        EnsureSortStructures();
+
         workLimit = workFactor * last;
         workDone = 0;
         blockRandomised = false;
@@ -1860,15 +1862,20 @@ internal sealed partial class CBZip2OutputStream : Stream
     {
         var n = BZip2Constants.baseBlockSize * blockSize100k;
         block = new char[(n + 1 + BZip2Constants.NUM_OVERSHOOT_BYTES)];
+        ftab = new int[65537];
+    }
+
+    // The sort and MTF arrays are sized to the block actually being compressed, so
+    // a small input does not pay for a full-size block. They only grow, and are reused.
+    private void EnsureSortStructures()
+    {
+        var n = last + 1;
+        if (zptr is not null && zptr.Length >= n)
+        {
+            return;
+        }
         quadrant = new int[(n + BZip2Constants.NUM_OVERSHOOT_BYTES)];
         zptr = new int[n];
-        ftab = new int[65537];
-
-        if (block is null || quadrant is null || zptr is null || ftab is null)
-        {
-            //int totalDraw = (n + 1 + NUM_OVERSHOOT_BYTES) + (n + NUM_OVERSHOOT_BYTES) + n + 65537;
-            //compressOutOfMemory ( totalDraw, n );
-        }
 
         /*
         The back end needs a place to store the MTF values
