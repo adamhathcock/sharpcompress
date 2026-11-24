@@ -198,8 +198,9 @@ public class ArjReaderAsyncTests : ReaderTests
         var buffer = new byte[1];
 
         // Interleaving a canceled read before every byte hits reads that are served from a
-        // pending back-reference, which never reach the underlying stream.
-        for (var i = 0; i < 4096; i++)
+        // pending back-reference, which never reach the underlying stream. The first one
+        // starts at byte 3 of this file.
+        for (var i = 0; i < 4; i++)
         {
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
                 await ReadOneByteAsync(entryStream, buffer, useMemory, canceled.Token)
