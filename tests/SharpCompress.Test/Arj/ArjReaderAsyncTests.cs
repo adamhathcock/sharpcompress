@@ -1,8 +1,10 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -64,21 +66,10 @@ public class ArjReaderAsyncTests : ReaderTests
     }
 
     [Theory]
+    [InlineData("Arj.store.largefile.arj", CompressionType.None)]
     [InlineData("Arj.method1.largefile.arj", CompressionType.ArjLZ77)]
     [InlineData("Arj.method2.largefile.arj", CompressionType.ArjLZ77)]
     [InlineData("Arj.method3.largefile.arj", CompressionType.ArjLZ77)]
-    public async ValueTask Arj_LargeFile_ShouldThrow_Async(
-        string fileName,
-        CompressionType compressionType
-    )
-    {
-        var exception = await Assert.ThrowsAsync<NotSupportedException>(() =>
-            ReadForBufferBoundaryCheckAsync(fileName, compressionType)
-        );
-    }
-
-    [Theory]
-    [InlineData("Arj.store.largefile.arj", CompressionType.None)]
     [InlineData("Arj.method4.largefile.arj", CompressionType.ArjLZ77)]
     public async ValueTask Arj_LargeFileTest_Read_Async(
         string fileName,
@@ -86,6 +77,188 @@ public class ArjReaderAsyncTests : ReaderTests
     )
     {
         await ReadForBufferBoundaryCheckAsync(fileName, compressionType);
+    }
+
+    [Theory]
+    [InlineData("Arj.method1.arj")]
+    [InlineData("Arj.method2.arj")]
+    [InlineData("Arj.method3.arj")]
+    [InlineData("Arj.method4.arj")]
+    public async ValueTask Arj_CompressedEntryOver2GB_Throws_Async(string fileName)
+    {
+        using var stream = new MemoryStream(
+            ArjTestArchives.WithFirstEntryOriginalSize(
+                Path.Combine(TEST_ARCHIVES_PATH, fileName),
+                0xC0000000
+            )
+        );
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            ReaderOptions.ForExternalStream
+        );
+        Assert.True(await reader.MoveToNextEntryAsync());
+
+        Assert.Equal(0xC0000000L, reader.Entry.Size);
+        await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            await reader.OpenEntryStreamAsync()
+        );
+    }
+
+    [Theory]
+    [InlineData("Arj.method1.largefile.arj", 1)]
+    [InlineData("Arj.method1.largefile.arj", 4093)]
+    [InlineData("Arj.method2.largefile.arj", 13)]
+    [InlineData("Arj.method3.largefile.arj", 13)]
+    public async ValueTask Arj_LargeFile_ReadInSmallChunks_Async(string fileName, int chunkSize)
+    {
+        using var cts = new CancellationTokenSource();
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            ReaderOptions.ForExternalStream,
+            cts.Token
+        );
+        Assert.True(await reader.MoveToNextEntryAsync(cts.Token));
+
+        await using var entryStream = await reader.OpenEntryStreamAsync(cts.Token);
+        using var output = new MemoryStream();
+
+        // Read into the middle of a larger buffer to verify offset and count are honoured.
+        var buffer = new byte[chunkSize + 10];
+        int read;
+        while ((read = await entryStream.ReadAsync(buffer, 5, chunkSize, cts.Token)) > 0)
+        {
+            output.Write(buffer, 5, read);
+        }
+
+        Assert.Equal(
+            File.ReadAllBytes(Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt")),
+            output.ToArray()
+        );
+    }
+
+#if !LEGACY_DOTNET
+    [Theory]
+    [InlineData("Arj.method1.largefile.arj", 13)]
+    [InlineData("Arj.method1.largefile.arj", 4093)]
+    public async ValueTask Arj_LargeFile_ReadNonArrayMemoryInSmallChunks_Async(
+        string fileName,
+        int chunkSize
+    )
+    {
+        using var cts = new CancellationTokenSource();
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            ReaderOptions.ForExternalStream,
+            cts.Token
+        );
+        Assert.True(await reader.MoveToNextEntryAsync(cts.Token));
+
+        await using var entryStream = await reader.OpenEntryStreamAsync(cts.Token);
+        using var output = new MemoryStream();
+
+        var bytes = new byte[chunkSize];
+        var memory = new NonArrayMemory(bytes).Memory;
+        int read;
+        while ((read = await entryStream.ReadAsync(memory, cts.Token)) > 0)
+        {
+            output.Write(bytes, 0, read);
+        }
+
+        Assert.Equal(
+            File.ReadAllBytes(Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt")),
+            output.ToArray()
+        );
+    }
+#endif
+
+    [Theory]
+    [InlineData("Arj.method1.largefile.arj", false)]
+#if !LEGACY_DOTNET
+    [InlineData("Arj.method1.largefile.arj", true)]
+#endif
+    public async ValueTask Arj_LargeFile_CanceledReadDoesNotConsumeDecoderState_Async(
+        string fileName,
+        bool useMemory
+    )
+    {
+        using var stream = File.OpenRead(Path.Combine(TEST_ARCHIVES_PATH, fileName));
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            new AsyncOnlyStream(stream),
+            ReaderOptions.ForExternalStream
+        );
+        Assert.True(await reader.MoveToNextEntryAsync());
+
+        await using var entryStream = await reader.OpenEntryStreamAsync();
+        using var canceled = new CancellationTokenSource();
+        canceled.Cancel();
+
+        var expected = File.ReadAllBytes(Path.Combine(MISC_TEST_FILES_PATH, "alice29.txt"));
+        var buffer = new byte[1];
+
+        // Interleaving a canceled read before every byte hits reads that are served from a
+        // pending back-reference, which never reach the underlying stream. The first one
+        // starts at byte 3 of this file.
+        for (var i = 0; i < 4; i++)
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+                await ReadOneByteAsync(entryStream, buffer, useMemory, canceled.Token)
+            );
+
+            Assert.Equal(1, await ReadOneByteAsync(entryStream, buffer, useMemory, default));
+            Assert.Equal(expected[i], buffer[0]);
+        }
+    }
+
+    [Fact]
+    public async ValueTask Arj_LargeFile_ReadCanceledWhileDecoding_FaultsStream_Async()
+    {
+        using var fileStream = File.OpenRead(
+            Path.Combine(TEST_ARCHIVES_PATH, "Arj.method1.largefile.arj")
+        );
+        var stream = new CancelOnReadStream(fileStream);
+        await using var reader = await ReaderFactory.OpenAsyncReader(
+            stream,
+            ReaderOptions.ForExternalStream
+        );
+        Assert.True(await reader.MoveToNextEntryAsync());
+
+        var entryStream = await reader.OpenEntryStreamAsync();
+        var buffer = new byte[200_000];
+        Assert.Equal(1000, await entryStream.ReadAsync(buffer, 0, 1000));
+
+        using var cts = new CancellationTokenSource();
+        stream.CancelOnNextRead = cts;
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await entryStream.ReadAsync(buffer, 0, buffer.Length, cts.Token)
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await entryStream.ReadAsync(buffer, 0, buffer.Length)
+        );
+
+        await entryStream.DisposeAsync();
+        Assert.True(reader.Cancelled);
+        await Assert.ThrowsAsync<ReaderCancelledException>(async () =>
+            await reader.MoveToNextEntryAsync()
+        );
+    }
+
+    private static async Task<int> ReadOneByteAsync(
+        Stream stream,
+        byte[] buffer,
+        bool useMemory,
+        CancellationToken cancellationToken
+    )
+    {
+#if !LEGACY_DOTNET
+        if (useMemory)
+        {
+            return await stream.ReadAsync(buffer.AsMemory(0, 1), cancellationToken);
+        }
+#endif
+        return await stream.ReadAsync(buffer, 0, 1, cancellationToken);
     }
 
     private async Task ReadAsync(string testArchive, CompressionType? expectedCompression = null)
@@ -164,4 +337,54 @@ public class ArjReaderAsyncTests : ReaderTests
             }
         }
     }
+
+    private sealed class CancelOnReadStream(Stream stream) : AsyncOnlyStream(stream, false)
+    {
+        public CancellationTokenSource? CancelOnNextRead { get; set; }
+
+        public override Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
+        {
+            CancelIfRequested(cancellationToken);
+            return base.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
+#if NET8_0_OR_GREATER
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
+        {
+            CancelIfRequested(cancellationToken);
+            return base.ReadAsync(buffer, cancellationToken);
+        }
+#endif
+
+        private void CancelIfRequested(CancellationToken cancellationToken)
+        {
+            if (CancelOnNextRead is { } cts)
+            {
+                CancelOnNextRead = null;
+                cts.Cancel();
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+    }
+
+#if !LEGACY_DOTNET
+    private sealed class NonArrayMemory(byte[] bytes) : MemoryManager<byte>
+    {
+        public override Span<byte> GetSpan() => bytes;
+
+        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotSupportedException();
+
+        public override void Unpin() { }
+
+        protected override void Dispose(bool disposing) { }
+    }
+#endif
 }
