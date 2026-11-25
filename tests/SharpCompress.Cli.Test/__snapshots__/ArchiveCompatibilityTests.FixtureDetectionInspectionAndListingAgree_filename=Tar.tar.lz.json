@@ -1,0 +1,193 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Tar.tar.lz",
+      "physicalSize": 59244,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Tar",
+        "archive": {
+          "containerType": "Tar",
+          "formatName": "Tar",
+          "outerCompressionType": "LZip",
+          "supportedApis": "Reader"
+        },
+        "compression": "LZip",
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Tar.tar.lz",
+      "physicalSize": 59244,
+      "detection": {
+        "formatName": "Tar",
+        "archive": {
+          "containerType": "Tar",
+          "formatName": "Tar",
+          "outerCompressionType": "LZip",
+          "supportedApis": "Reader"
+        },
+        "compression": "LZip",
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Tar",
+          "formatName": "Tar",
+          "outerCompressionType": "LZip",
+          "supportedApis": "Reader"
+        },
+        "status": "Partial",
+        "limitations": "UnavailableMetadata",
+        "entryCount": 6,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 59244,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": false,
+        "solidStreamCount": 0,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "Empty/",
+            "compressionType": "LZip",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "userId": 0,
+            "groupId": 0
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "exe/",
+            "compressionType": "LZip",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "userId": 0,
+            "groupId": 0
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "exe/test.exe",
+            "compressionType": "LZip",
+            "size": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "mode": "100777",
+            "userId": 0,
+            "groupId": 0
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "jpg/",
+            "compressionType": "LZip",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "userId": 0,
+            "groupId": 0
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "jpg/test.jpg",
+            "compressionType": "LZip",
+            "size": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "mode": "100777",
+            "userId": 0,
+            "groupId": 0
+          }
+        },
+        {
+          "index": 5,
+          "metadata": {
+            "key": "���.txt",
+            "compressionType": "LZip",
+            "size": 15498,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>"
+          },
+          "tar": {
+            "mode": "100777",
+            "userId": 0,
+            "groupId": 0
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

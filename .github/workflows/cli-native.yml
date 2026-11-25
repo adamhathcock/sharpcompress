@@ -1,0 +1,74 @@
+name: Native CLI packages
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/cli-native.yml'
+      - 'src/SharpCompress.Cli/**'
+      - 'src/SharpCompress/**'
+      - 'tests/SharpCompress.Cli.Test/**'
+      - 'tests/TestArchives/**'
+      - 'docs/CLI.md'
+      - 'global.json'
+      - 'Directory.*.props'
+      - 'NuGet.config'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pack-and-test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-15
+            rid: osx-arm64
+          - os: windows-latest
+            rid: win-x64
+    runs-on: ${{ matrix.os }}
+    env:
+      RID: ${{ matrix.rid }}
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Pack CLI
+        id: pack
+        run: |
+          $version = dotnet msbuild src/SharpCompress.Cli/SharpCompress.Cli.csproj -getProperty:Version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          # .NET 11 packs the manifest and the host's native tool together. Restore the host RID
+          # without narrowing the manifest to that RID or changing the managed lock file.
+          dotnet pack src/SharpCompress.Cli -c Release --output "$env:RUNNER_TEMP/cli-packages" "-p:RuntimeIdentifiers=$env:RID" -p:NuGetLockFilePath=obj/packages.aot.lock.json
+
+      - name: Install and test native tool
+        env:
+          TOOL_VERSION: ${{ steps.pack.outputs.version }}
+        run: |
+          $toolPath = Join-Path $env:RUNNER_TEMP 'cli-tool'
+          $packages = Join-Path $env:RUNNER_TEMP 'cli-packages'
+          Push-Location $env:RUNNER_TEMP
+          dotnet tool install SharpCompress.Tool --version $env:TOOL_VERSION --add-source $packages --tool-path $toolPath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Pop-Location
+          $shim = Join-Path $toolPath ($IsWindows ? 'sharpcompress.cmd' : 'sharpcompress')
+          & $shim formats --json | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:SHARPCOMPRESS_TEST_CLI = $shim
+          if ($IsWindows) {
+            # Launch the installed binary directly in tests to preserve the argument list.
+            $executables = @(Get-ChildItem -LiteralPath $toolPath -Recurse -Force -File -Filter 'SharpCompress.Cli.exe')
+            if ($executables.Count -ne 1) { throw "Expected one installed native executable, found $($executables.Count)." }
+            $env:SHARPCOMPRESS_TEST_CLI = $executables[0].FullName
+          }
+          dotnet test --project tests/SharpCompress.Cli.Test/SharpCompress.Cli.Test.csproj --framework net11.0 -p:RestoreLockedMode=true

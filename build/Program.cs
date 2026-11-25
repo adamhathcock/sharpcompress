@@ -65,7 +65,7 @@ Target(Build, [Restore], () =>
     Run("dotnet", "build src/SharpCompress/SharpCompress.csproj -c Release --no-restore");
 });
 
-Target(Test, [Build], ["net10.0", "net48"], framework =>
+Target(Test, [Build], ["net10.0", "net11.0", "net48"], framework =>
 {
     IEnumerable<string> GetFiles(string d)
     {
@@ -79,6 +79,11 @@ Target(Test, [Build], ["net10.0", "net48"], framework =>
 
     foreach (var file in GetFiles("**/*.Test.csproj"))
     {
+        // Run each test project only on frameworks it targets.
+        if (!File.ReadAllText(file).Contains(framework, StringComparison.Ordinal))
+        {
+            continue;
+        }
         Run(
             "dotnet",
             $"test --project {file} -c Release -f {framework} --no-restore --verbosity=normal"

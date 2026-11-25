@@ -1,0 +1,110 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Arc.uncompressed.arc",
+      "physicalSize": 101015,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Arc",
+        "archive": {
+          "containerType": "Arc",
+          "formatName": "Arc",
+          "supportedApis": "Reader"
+        },
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Arc.uncompressed.arc",
+      "physicalSize": 101015,
+      "detection": {
+        "formatName": "Arc",
+        "archive": {
+          "containerType": "Arc",
+          "formatName": "Arc",
+          "supportedApis": "Reader"
+        },
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Arc",
+          "formatName": "Arc",
+          "supportedApis": "Reader"
+        },
+        "status": "Partial",
+        "limitations": "UnavailableMetadata",
+        "entryCount": 3,
+        "entriesWithUnknownSizeCount": 3,
+        "physicalSize": 101015,
+        "compressedPayloadSize": 100926,
+        "isSolid": false,
+        "solidStreamCount": 0,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "TECT.TXT",
+            "compressionType": "None",
+            "compressedSize": 15498,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "TEST.EXE",
+            "compressionType": "None",
+            "compressedSize": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "TEST.JPG",
+            "compressionType": "None",
+            "compressedSize": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

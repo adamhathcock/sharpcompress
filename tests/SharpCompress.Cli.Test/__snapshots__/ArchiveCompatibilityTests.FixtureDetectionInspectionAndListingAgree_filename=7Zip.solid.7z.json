@@ -1,0 +1,146 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "7Zip.solid.7z",
+      "physicalSize": 58959,
+      "status": "recognized",
+      "detection": {
+        "formatName": "7Zip",
+        "archive": {
+          "containerType": "SevenZip",
+          "formatName": "7Zip",
+          "supportedApis": "Archive"
+        },
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "7Zip.solid.7z",
+      "physicalSize": 58959,
+      "detection": {
+        "formatName": "7Zip",
+        "archive": {
+          "containerType": "SevenZip",
+          "formatName": "7Zip",
+          "supportedApis": "Archive"
+        },
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "SevenZip",
+          "formatName": "7Zip",
+          "supportedApis": "Archive"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "entryCount": 5,
+        "entriesWithUnknownSizeCount": 0,
+        "physicalSize": 58959,
+        "compressedPayloadSize": 58731,
+        "uncompressedPayloadSize": 100926,
+        "isSolid": true,
+        "solidStreamCount": 1,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "exe",
+            "compressionType": "None",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "jpg",
+            "compressionType": "None",
+            "size": 0,
+            "hasDeferredSizes": false,
+            "isDirectory": true,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 16
+          }
+        },
+        {
+          "index": 2,
+          "metadata": {
+            "key": "jpg/test.jpg",
+            "compressionType": "LZMA",
+            "size": 40372,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        },
+        {
+          "index": 3,
+          "metadata": {
+            "key": "тест.txt",
+            "compressionType": "LZMA",
+            "size": 15498,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": true,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        },
+        {
+          "index": 4,
+          "metadata": {
+            "key": "exe/test.exe",
+            "compressionType": "LZMA",
+            "size": 45056,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": 32
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

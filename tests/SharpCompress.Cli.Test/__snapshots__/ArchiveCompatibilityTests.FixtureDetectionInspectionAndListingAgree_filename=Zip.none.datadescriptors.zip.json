@@ -1,0 +1,108 @@
+﻿{
+  "detect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Zip.none.datadescriptors.zip",
+      "physicalSize": 744,
+      "status": "recognized",
+      "detection": {
+        "formatName": "Zip",
+        "archive": {
+          "containerType": "Zip",
+          "formatName": "Zip",
+          "supportedApis": "Archive, Reader"
+        },
+        "isStandaloneCompression": false
+      }
+    }
+  },
+  "inspect": {
+    "schemaVersion": 1,
+    "result": {
+      "path": "Zip.none.datadescriptors.zip",
+      "physicalSize": 744,
+      "detection": {
+        "formatName": "Zip",
+        "archive": {
+          "containerType": "Zip",
+          "formatName": "Zip",
+          "supportedApis": "Archive, Reader"
+        },
+        "isStandaloneCompression": false
+      },
+      "information": {
+        "detection": {
+          "containerType": "Zip",
+          "formatName": "Zip",
+          "supportedApis": "Archive, Reader"
+        },
+        "status": "Complete",
+        "limitations": "None",
+        "entryCount": 2,
+        "entriesWithUnknownSizeCount": 2,
+        "physicalSize": 744,
+        "compressedPayloadSize": 396,
+        "uncompressedPayloadSize": 396,
+        "isSolid": false,
+        "solidStreamCount": 0,
+        "encryption": "None",
+        "isEncrypted": false,
+        "isMultiVolume": false,
+        "physicalPartCount": 1,
+        "logicalVolumeCount": 1,
+        "isComplete": true,
+        "comment": "",
+        "zip": {
+          "hasEntriesWithDeferredSizes": true
+        }
+      },
+      "integrity": "notTested"
+    }
+  },
+  "list": {
+    "schemaVersion": 1,
+    "result": {
+      "entries": [
+        {
+          "index": 0,
+          "metadata": {
+            "key": "first.txt",
+            "compressionType": "None",
+            "size": 199,
+            "compressedSize": 199,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": -2119958528
+          }
+        },
+        {
+          "index": 1,
+          "metadata": {
+            "key": "second.txt",
+            "compressionType": "None",
+            "size": 197,
+            "compressedSize": 197,
+            "hasDeferredSizes": false,
+            "isDirectory": false,
+            "isEncrypted": false,
+            "isSolid": false,
+            "isSplitAfter": false,
+            "isComplete": true,
+            "volumeIndexFirst": 0,
+            "volumeIndexLast": 0,
+            "lastModifiedTime": "<timestamp>",
+            "attributes": -2119958528
+          }
+        }
+      ],
+      "integrity": "notTested"
+    }
+  }
+}

@@ -14,6 +14,7 @@
     <PackageVersion Include="PolySharp" Version="1.17.1" />
     <PackageVersion Include="Pure.DI" Version="2.5.10" />
     <PackageVersion Include="SimpleExec" Version="13.1.0" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.14" />
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="10.0.15" />
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />

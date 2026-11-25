@@ -1,5 +1,8 @@
 # SharpCompress Usage
 
+For read-only command-line format discovery, detection, inspection and entry listings,
+see [the .NET CLI tool](CLI.md).
+
 ## Async/Await Support
 
 SharpCompress now provides full async/await support for all I/O operations. All `Read`, `Write`, and extraction operations have async equivalents ending in `Async` that accept an optional `CancellationToken`. This enables better performance and scalability for I/O-bound operations.
