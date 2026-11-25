@@ -26,6 +26,17 @@ public class ArjFilePart : FilePart
 
     internal override Stream GetCompressedStream()
     {
+        // The decompressors track the entry size as an int.
+        if (
+            Header.CompressionMethod != CompressionMethod.Stored
+            && Header.OriginalSize > int.MaxValue
+        )
+        {
+            throw new NotSupportedException(
+                "Compressed ARJ entries larger than 2GB are not supported."
+            );
+        }
+
         Stream compressedStream;
         switch (Header.CompressionMethod)
         {
@@ -39,12 +50,6 @@ public class ArjFilePart : FilePart
             case CompressionMethod.CompressedMost:
             case CompressionMethod.Compressed:
             case CompressionMethod.CompressedFaster:
-                if (Header.OriginalSize > 128 * 1024)
-                {
-                    throw new NotSupportedException(
-                        "CompressionMethod: " + Header.CompressionMethod + " with size > 128KB"
-                    );
-                }
                 compressedStream = new LhaStream<Lh7DecoderCfg>(_stream, (int)Header.OriginalSize);
                 break;
             case CompressionMethod.CompressedFastest:

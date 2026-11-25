@@ -100,8 +100,8 @@ public partial class ArjLocalHeader : ArjHeader
         var rawTimestamp = ReadInt32();
         DateTimeModified = rawTimestamp != 0 ? new DosDateTime(rawTimestamp) : new DosDateTime(0);
 
-        CompressedSize = ReadInt32();
-        OriginalSize = ReadInt32();
+        CompressedSize = (uint)ReadInt32();
+        OriginalSize = (uint)ReadInt32();
         OriginalCrc32 = ReadInt32();
         FileSpecPosition = ReadInt16();
         FileAccessMode = ReadInt16();
@@ -122,7 +122,7 @@ public partial class ArjLocalHeader : ArjHeader
                 DateTimeAccessed = rawTimestamp != 0 ? new DosDateTime(rawTimestamp) : null;
                 rawTimestamp = ReadInt32();
                 DateTimeCreated = rawTimestamp != 0 ? new DosDateTime(rawTimestamp) : null;
-                OriginalSizeEvenForVolumes = ReadInt32();
+                OriginalSizeEvenForVolumes = (uint)ReadInt32();
             }
         }
 

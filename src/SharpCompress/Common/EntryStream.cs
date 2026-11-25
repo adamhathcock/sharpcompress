@@ -30,7 +30,7 @@ public partial class EntryStream : AsyncDisposableStream
             return;
         }
         _isDisposed = true;
-        if (!(_completed || _reader.Cancelled))
+        if (ShouldSkipToEndOfEntry())
         {
             SkipEntry();
         }
@@ -55,6 +55,24 @@ public partial class EntryStream : AsyncDisposableStream
         }
         base.Dispose(disposing);
         _stream.Dispose();
+    }
+
+    private bool ShouldSkipToEndOfEntry()
+    {
+        if (_completed || _reader.Cancelled)
+        {
+            return false;
+        }
+
+        // A faulted decoder cannot be drained to the entry boundary, so the reader is left
+        // mid-entry and must be cancelled rather than reporting an unrelated error from the skip.
+        if (_stream is IFaultableStream { IsFaulted: true })
+        {
+            _reader.Cancel();
+            return false;
+        }
+
+        return true;
     }
 
     public override bool CanRead => true;

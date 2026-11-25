@@ -25,7 +25,7 @@ public partial class EntryStream
             return;
         }
         _isDisposed = true;
-        if (!(_completed || _reader.Cancelled))
+        if (ShouldSkipToEndOfEntry())
         {
             await SkipEntryAsync().ConfigureAwait(false);
         }
