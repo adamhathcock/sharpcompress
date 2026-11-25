@@ -47,9 +47,9 @@ jobs:
           $version = dotnet msbuild src/SharpCompress.Cli/SharpCompress.Cli.csproj -getProperty:Version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "version=$version" >> $env:GITHUB_OUTPUT
-          dotnet pack src/SharpCompress.Cli -c Release --output "$env:RUNNER_TEMP/cli-packages" -p:RestoreLockedMode=true
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet pack src/SharpCompress.Cli -c Release -r $env:RID --output "$env:RUNNER_TEMP/cli-packages" -p:NuGetLockFilePath=obj/packages.aot.lock.json
+          # .NET 11 packs the manifest and the host's native tool together. Restore the host RID
+          # without narrowing the manifest to that RID or changing the managed lock file.
+          dotnet pack src/SharpCompress.Cli -c Release --output "$env:RUNNER_TEMP/cli-packages" "-p:RuntimeIdentifiers=$env:RID" -p:NuGetLockFilePath=obj/packages.aot.lock.json
 
       - name: Install and test native tool
         env:
@@ -71,4 +71,4 @@ jobs:
             if ($executables.Count -ne 1) { throw "Expected one installed native executable, found $($executables.Count)." }
             $env:SHARPCOMPRESS_TEST_CLI = $executables[0].FullName
           }
-          dotnet test tests/SharpCompress.Cli.Test/SharpCompress.Cli.Test.csproj --framework net10.0 -p:RestoreLockedMode=true
+          dotnet test --project tests/SharpCompress.Cli.Test/SharpCompress.Cli.Test.csproj --framework net11.0 -p:RestoreLockedMode=true

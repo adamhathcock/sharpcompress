@@ -33,7 +33,7 @@ The workflow automatically determines the version based on whether the commit is
 The workflow runs on a matrix of operating systems (Windows and Ubuntu):
 
 1. **Checkout**: Fetches the repository with full history for version detection
-2. **Setup .NET**: Installs .NET 10.0
+2. **Setup .NET**: Installs the .NET 11 SDK and the .NET 10 SDK to provide the runtime for the build and library tests
 3. **Determine Version**: Runs `determine-version` build target to check for tags and determine version
 4. **Update Version**: Runs `update-version` build target to update the version in the project file
 5. **Build and Test**: Runs the full build and test suite on both platforms

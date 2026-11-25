@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <PackAsTool>true</PackAsTool>
     <PublishAot>true</PublishAot>
     <!-- The top-level tool package selects a native package built on its target platform. -->

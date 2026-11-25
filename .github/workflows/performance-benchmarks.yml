@@ -26,6 +26,7 @@ jobs:
     - uses: actions/setup-dotnet@v5
       with:
         global-json-file: global.json
+        dotnet-version: '10.0.x'
     
     - name: Build Performance Project
       run: dotnet build tests/SharpCompress.Performance/SharpCompress.Performance.csproj --configuration Release

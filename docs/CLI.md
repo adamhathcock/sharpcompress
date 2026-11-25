@@ -1,7 +1,7 @@
 # SharpCompress command-line tool
 
 The SharpCompress CLI supports Native AOT on Linux x64, macOS arm64, and
-Windows x64. Building uses the .NET 10 SDK; the native executable does not
+Windows x64. Building uses the .NET 11 SDK; the native executable does not
 require a separate .NET runtime. It provides four read-only commands:
 
 ```sh
@@ -23,7 +23,14 @@ dotnet publish src/SharpCompress.Cli -c Release -r osx-arm64 \
 ```
 
 The **Native CLI packages** workflow in GitHub Actions builds, installs, and
-tests the CLI on all three platforms.
+tests the CLI on all three platforms. To build the tool packages locally, pass
+the host RID as a restore property so `dotnet pack` can build both the tool
+manifest package and the host's native package:
+
+```sh
+dotnet pack src/SharpCompress.Cli -c Release -o ./cli-packages \
+  -p:RuntimeIdentifiers=osx-arm64 -p:NuGetLockFilePath=obj/packages.aot.lock.json
+```
 
 [aot]: https://learn.microsoft.com/dotnet/core/deploying/native-aot/#prerequisites
 
