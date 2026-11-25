@@ -296,10 +296,10 @@ public partial class Decoder
                 Pos = outWindow.FastPos,
                 Total = outWindow.FastTotal,
                 WindowSize = outWindow.FastWindowSize,
-                // The next decode call can grow the dictionary after this pin is released.
+                // Stop at the usable history boundary even if the pool supplied a larger array.
                 Limit = Math.Min(
                     outWindow.FastLimit,
-                    outWindow.FastTotal + dic.Length - outWindow.FastPos
+                    outWindow.FastTotal + (outWindow.FastUsableCapacity - outWindow.FastPos)
                 ),
                 OutWindow = outWindow,
             };

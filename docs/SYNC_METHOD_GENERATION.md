@@ -25,7 +25,8 @@ the verification workflow, and the record of what is blocked and why.
 | 0 | `Archives/IArchiveEntryExtensions` (5 methods) | done — `c303856c` |
 | 1 | `Compressors/Filters/Filter` + 6 XZ branch filters + `Lzma2Filter` (9 methods, 147 lines) | done — verified identical on net48 + net10.0 |
 | 2 | `IO/` leaf stream shims + `Common/EntryStream` (17 methods, 190 lines) | done — verified identical on net48 + net10.0 |
-| 3–5 | below | to do |
+| 3–4 | below | to do |
+| 5 | ACE + ARJ parsing | `LhaStream` done; remaining ACE/ARJ types to do |
 | 6 | ZIP parts & header factories | 6a done; header factories remain |
 | 7 | Concrete writers | ZIP done; Tar, SevenZip, and remaining writers to do |
 | 8 | 7-Zip | to do |
@@ -207,11 +208,15 @@ the async one `new byte[4]`, and the method is 4 lines — `SYNC_ONLY` would be 
   `[MethodImpl(AggressiveInlining)]` on the hot `Normalize2` is not carried over. `SYNC_ONLY` is the
   fix if the benchmarks move.
 
-### 5 — ACE + ARJ parsing · ~200 lines · low risk
+### 5 — ACE + ARJ parsing · ~200 lines · low risk · **in progress**
 
-`Ace/Headers/AceFileHeader` (`ReadAsync` 94 identical lines), `AceMainHeader` (63), `AceHeader`,
-`Arj/HuffmanTree`, `Arj/BitReader`, `Arj/LhaStream` (11 pairs, all ≥0.99), `Arj/LHDecoderStream`,
-`Squeezed/BitReader`. Best win per line of review — pure parsing, all clean.
+`Arj/LhaStream` — **done**, 11 methods, ~245 lines. `Read(byte[],int,int)`, both `byte[]`
+`FillBuffer` overloads and the block/table readers are generated. Not attributed: the
+`Memory<byte>` overloads of `ReadAsync`/`FillBufferAsync`, which have no `Span<byte>` twin.
+
+Remaining: `Ace/Headers/AceFileHeader` (`ReadAsync` 94 identical lines), `AceMainHeader` (63),
+`AceHeader`, `Arj/HuffmanTree`, `Arj/BitReader`, `Arj/LHDecoderStream`, `Squeezed/BitReader`. Best
+win per line of review — pure parsing, all clean.
 
 ### 6 — Zip parts & header factories · ~250 lines · med risk · **in progress**
 

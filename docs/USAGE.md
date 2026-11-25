@@ -545,8 +545,16 @@ allocating dictionaries/windows or PPMd models. Defaults are 4 MiB for RAR4,
 128 MiB for Zstandard streaming windows. A tiny RAR5 entry therefore cannot rent
 a 256 MiB or 1 GiB window under the default settings.
 
+LZMA2 applies its limit to retained decoder history. It can decode a stream
+with a larger declared dictionary if the history stays within the limit.
+This is not a cap on total decoded bytes: a dictionary reset starts new history,
+and a dictionary that fits can be reused as decoding continues.
+
 These settings are **process-wide**, not per-reader options. Configure them once
 at startup if trusted input requires larger dictionaries, for example
-`DictionarySizeLimits.Rar5 = 256L << 20;`. Do not temporarily raise them around
-untrusted requests. Bound extraction output and concurrency separately; dictionary
-limits are not a total-memory budget. See the [API reference](API.md#decompression-dictionary-limits).
+`DictionarySizeLimits.Lzma2 = 256L << 20;` for a trusted 7z or XZ archive that
+exceeds the LZMA2 limit. A limit error does not imply archive corruption. See the
+[0.50.9 compatibility note](RELEASE_NOTES.md#0509) for the change from older
+releases. Do not temporarily raise limits around untrusted requests. Bound
+extraction output and concurrency separately; dictionary limits are not a
+total-memory budget. See the [API reference](API.md#decompression-dictionary-limits).

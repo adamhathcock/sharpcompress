@@ -45,9 +45,9 @@
       },
       "Pure.DI": {
         "type": "Direct",
-        "requested": "[2.5.8, )",
-        "resolved": "2.5.8",
-        "contentHash": "6NKBFL78JaMrSOLV7JxiPF5AVBsapqckR8dQQMQTuBK+ijunMhNAXxtjz84FHpu1Hfr5gctEJJGBXZxguKzxXg=="
+        "requested": "[2.5.10, )",
+        "resolved": "2.5.10",
+        "contentHash": "ecjqmzmlU7kMiP4E8e2ZAt0XI9iTdHV6gROEdgT9Cv5TE2ELB7v0RH61igAXiUyNnLHFP4q4WgjSxVuSH/GkDA=="
       },
       "System.Text.Encoding.CodePages": {
         "type": "Direct",
@@ -176,9 +176,9 @@
       },
       "Pure.DI": {
         "type": "Direct",
-        "requested": "[2.5.8, )",
-        "resolved": "2.5.8",
-        "contentHash": "6NKBFL78JaMrSOLV7JxiPF5AVBsapqckR8dQQMQTuBK+ijunMhNAXxtjz84FHpu1Hfr5gctEJJGBXZxguKzxXg=="
+        "requested": "[2.5.10, )",
+        "resolved": "2.5.10",
+        "contentHash": "ecjqmzmlU7kMiP4E8e2ZAt0XI9iTdHV6gROEdgT9Cv5TE2ELB7v0RH61igAXiUyNnLHFP4q4WgjSxVuSH/GkDA=="
       },
       "System.Text.Encoding.CodePages": {
         "type": "Direct",
@@ -289,9 +289,9 @@
       },
       "Pure.DI": {
         "type": "Direct",
-        "requested": "[2.5.8, )",
-        "resolved": "2.5.8",
-        "contentHash": "6NKBFL78JaMrSOLV7JxiPF5AVBsapqckR8dQQMQTuBK+ijunMhNAXxtjz84FHpu1Hfr5gctEJJGBXZxguKzxXg=="
+        "requested": "[2.5.10, )",
+        "resolved": "2.5.10",
+        "contentHash": "ecjqmzmlU7kMiP4E8e2ZAt0XI9iTdHV6gROEdgT9Cv5TE2ELB7v0RH61igAXiUyNnLHFP4q4WgjSxVuSH/GkDA=="
       },
       "System.Text.Encoding.CodePages": {
         "type": "Direct",
@@ -364,9 +364,9 @@
       },
       "Pure.DI": {
         "type": "Direct",
-        "requested": "[2.5.8, )",
-        "resolved": "2.5.8",
-        "contentHash": "6NKBFL78JaMrSOLV7JxiPF5AVBsapqckR8dQQMQTuBK+ijunMhNAXxtjz84FHpu1Hfr5gctEJJGBXZxguKzxXg=="
+        "requested": "[2.5.10, )",
+        "resolved": "2.5.10",
+        "contentHash": "ecjqmzmlU7kMiP4E8e2ZAt0XI9iTdHV6gROEdgT9Cv5TE2ELB7v0RH61igAXiUyNnLHFP4q4WgjSxVuSH/GkDA=="
       },
       "Zomp.SyncMethodGenerator": {
         "type": "Direct",
@@ -419,9 +419,9 @@
       },
       "Pure.DI": {
         "type": "Direct",
-        "requested": "[2.5.8, )",
-        "resolved": "2.5.8",
-        "contentHash": "6NKBFL78JaMrSOLV7JxiPF5AVBsapqckR8dQQMQTuBK+ijunMhNAXxtjz84FHpu1Hfr5gctEJJGBXZxguKzxXg=="
+        "requested": "[2.5.10, )",
+        "resolved": "2.5.10",
+        "contentHash": "ecjqmzmlU7kMiP4E8e2ZAt0XI9iTdHV6gROEdgT9Cv5TE2ELB7v0RH61igAXiUyNnLHFP4q4WgjSxVuSH/GkDA=="
       },
       "Zomp.SyncMethodGenerator": {
         "type": "Direct",
@@ -480,9 +480,9 @@
       },
       "Pure.DI": {
         "type": "Direct",
-        "requested": "[2.5.8, )",
-        "resolved": "2.5.8",
-        "contentHash": "6NKBFL78JaMrSOLV7JxiPF5AVBsapqckR8dQQMQTuBK+ijunMhNAXxtjz84FHpu1Hfr5gctEJJGBXZxguKzxXg=="
+        "requested": "[2.5.10, )",
+        "resolved": "2.5.10",
+        "contentHash": "ecjqmzmlU7kMiP4E8e2ZAt0XI9iTdHV6gROEdgT9Cv5TE2ELB7v0RH61igAXiUyNnLHFP4q4WgjSxVuSH/GkDA=="
       },
       "Zomp.SyncMethodGenerator": {
         "type": "Direct",

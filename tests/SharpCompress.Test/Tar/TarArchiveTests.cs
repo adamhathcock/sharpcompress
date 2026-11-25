@@ -358,6 +358,40 @@ public class TarArchiveTests : ArchiveTests
         CompareArchivesByPath(unmodified, scratchPath);
     }
 
+#if NET8_0_OR_GREATER
+    [Fact]
+    public void Tar_Create_New_Stores_Symlinked_File_Contents()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var data = Enumerable.Range(0, 1000).Select(i => (byte)i).ToArray();
+        File.WriteAllBytes(Path.Combine(SCRATCH2_FILES_PATH, "data.bin"), data);
+        File.CreateSymbolicLink(Path.Combine(SCRATCH2_FILES_PATH, "link.bin"), "data.bin");
+
+        using var stream = new MemoryStream();
+        using (var archive = TarArchive.CreateArchive())
+        {
+            archive.AddAllFromDirectory(SCRATCH2_FILES_PATH);
+            archive.SaveTo(stream, new TarWriterOptions(CompressionType.None, true));
+        }
+
+        stream.Position = 0;
+        using var reader = TarArchive.OpenArchive(stream);
+        var link = reader.Entries.Single(entry =>
+            entry.Key.NotNull().EndsWith("link.bin", StringComparison.Ordinal)
+        );
+        using var content = new MemoryStream();
+        using (var entryStream = link.OpenEntryStream())
+        {
+            entryStream.CopyTo(content);
+        }
+        Assert.Equal(data, content.ToArray());
+    }
+#endif
+
     [Fact]
     public void Tar_Random_Write_Add()
     {

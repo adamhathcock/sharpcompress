@@ -61,12 +61,18 @@ internal sealed partial class SeekableZipHeaderFactory
             stream.Position = position;
             var signature = await reader.ReadUInt32Async().ConfigureAwait(false);
             var nextHeader = await ReadHeader(signature, reader, _zip64).ConfigureAwait(false);
-            position = stream.Position;
 
             if (nextHeader is null)
             {
                 yield break;
             }
+
+            var nextPosition = stream.Position;
+            if (nextPosition <= position)
+            {
+                throw new ArchiveException("ZIP central directory parsing did not advance.");
+            }
+            position = nextPosition;
 
             if (nextHeader is DirectoryEntryHeader entryHeader)
             {

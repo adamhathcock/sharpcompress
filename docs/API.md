@@ -415,12 +415,13 @@ DictionarySizeLimits.Rar5 = 256L << 20;
 | `Rar4` | 4 MiB (the RAR4 format maximum) |
 | `Rar5` | 64 MiB |
 | `Lzma` (raw LZMA, LZip, ZIP, 7z) | 64 MiB |
-| `Lzma2` (XZ, 7z) | 64 MiB |
+| `Lzma2` (retained history in XZ, 7z) | 64 MiB |
 | `Ppmd` (ZIP, 7z, RAR models) | 64 MiB |
 | `ZStandard` (streaming windows) | 128 MiB |
 
-Limits are read directly by the shared codecs before dictionary/model allocation,
-so Archive, Reader, direct decoder, sync, and async paths use the same settings.
+Limits are read directly by the shared codecs, so Archive, Reader, direct decoder,
+sync, and async paths use the same settings. LZMA2 checks the retained history
+before growing the dictionary, rather than rejecting a large declared window.
 No reader options or decoder overloads are needed. Settings require positive values;
 invalid assignments throw `ArgumentOutOfRangeException` without changing the setting.
 Oversized dictionaries throw `InvalidFormatException`; Zstandard reports

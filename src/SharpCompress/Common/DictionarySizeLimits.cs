@@ -38,7 +38,7 @@ public static class DictionarySizeLimits
         set => SetMaximum(ref lzma, value, nameof(Lzma));
     }
 
-    /// <summary>LZMA2 dictionary limit, including XZ and 7z. Defaults to 64 MiB.</summary>
+    /// <summary>LZMA2 retained dictionary history limit, including XZ and 7z. Defaults to 64 MiB.</summary>
     public static long Lzma2
     {
         get => Interlocked.Read(ref lzma2);
@@ -82,6 +82,12 @@ public static class DictionarySizeLimits
         }
         Interlocked.Exchange(ref field, value);
     }
+
+    internal static InvalidFormatException Lzma2LimitExceeded(long size, long maximum) =>
+        new(
+            $"LZMA2 dictionary history needs at least {size} bytes, exceeding the configured limit of {maximum} bytes. "
+                + $"For trusted input, set {nameof(DictionarySizeLimits)}.{nameof(Lzma2)} at application startup."
+        );
 
     internal static void Validate(long size, long maximum, string format)
     {
