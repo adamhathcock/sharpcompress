@@ -193,13 +193,11 @@ internal sealed class UnixTimeExtraField : ExtraData
                 modifiedTime = DateTimeOffset.FromUnixTimeSeconds(modifiedEpochTime).UtcDateTime;
             }
 
-            if (isLastAccessTimeSpecified)
+            // The central directory copy holds only the modification time, while
+            // its flags still describe the local header. Treat a flagged time
+            // that is not present as missing instead of dropping all of them.
+            if (isLastAccessTimeSpecified && currentIndex + 4 <= DataBytes.Length)
             {
-                if (currentIndex + 4 > DataBytes.Length)
-                {
-                    return Tuple.Create<DateTime?, DateTime?, DateTime?>(null, null, null);
-                }
-
                 var lastAccessEpochTime = BinaryPrimitives.ReadInt32LittleEndian(
                     DataBytes.AsSpan(currentIndex, 4)
                 );
@@ -210,13 +208,8 @@ internal sealed class UnixTimeExtraField : ExtraData
                     .UtcDateTime;
             }
 
-            if (isCreationTimeSpecified)
+            if (isCreationTimeSpecified && currentIndex + 4 <= DataBytes.Length)
             {
-                if (currentIndex + 4 > DataBytes.Length)
-                {
-                    return Tuple.Create<DateTime?, DateTime?, DateTime?>(null, null, null);
-                }
-
                 var creationTimeEpochTime = BinaryPrimitives.ReadInt32LittleEndian(
                     DataBytes.AsSpan(currentIndex, 4)
                 );
